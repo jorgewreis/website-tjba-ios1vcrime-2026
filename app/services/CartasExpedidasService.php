@@ -14,7 +14,6 @@ require_once __DIR__ . '/DataJudService.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
-require_once __DIR__ . '/../helpers/CartorioProdutividade.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
 
@@ -55,15 +54,7 @@ final class CartasExpedidasService
         foreach ($rows as $i => $row) {
             $idCarta = (string) ($row['IdCarta'] ?? '');
             if ($idCarta !== '') {
-                $this->subtarefasRepository->ensureInformacoesDevolucaoPair($idCarta);
-                $cartaCompleta = $this->repository->find($idCarta);
-                if (is_array($cartaCompleta)) {
-                    $rows[$i]['numero_processo_destino'] = $cartaCompleta['numero_processo_destino'] ?? null;
-                    $rows[$i]['vara_destino_nome'] = $cartaCompleta['vara_destino_nome'] ?? null;
-                    $this->sincronizarSubtarefaInformacoesComCarta($idCarta, array_merge($row, $cartaCompleta));
-                } else {
-                    $this->sincronizarSubtarefaInformacoesComCarta($idCarta, $row);
-                }
+                $this->subtarefasRepository->autoConcluirSubtarefasDescontinuadas($idCarta);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
                 $alocadosRaw = $this->alocadosRepository->findByCartaId($idCarta);
@@ -94,58 +85,6 @@ final class CartasExpedidasService
             'rows' => $rows,
             'total' => $this->repository->count($filters),
         ];
-    }
-
-    private function sincronizarSubtarefaInformacoesComCarta(string $cartaId, array $row): void
-    {
-        $numeroDestino = trim((string) ($row['NumeroProcessoDestino'] ?? $row['numero_processo_destino'] ?? ''));
-        $varaDestino = trim((string) ($row['VaraDestino'] ?? $row['vara_destino_nome'] ?? $row['vara_destino'] ?? ''));
-        $ordem5 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 5);
-
-        if ($ordem5 === null) {
-            return;
-        }
-
-        if (($numeroDestino === '' || $varaDestino === '') && !empty($ordem5['dados_especificos'])) {
-            $dadosOrdem5 = json_decode((string) $ordem5['dados_especificos'], true);
-            if (is_array($dadosOrdem5)) {
-                if ($numeroDestino === '') {
-                    $numeroDestino = trim((string) ($dadosOrdem5['numero_processo_destino'] ?? ''));
-                }
-                if ($varaDestino === '') {
-                    $varaDestino = trim((string) ($dadosOrdem5['vara_destino'] ?? ''));
-                }
-            }
-        }
-
-        $statusOrdem5 = trim((string) ($ordem5['status'] ?? ''));
-        $temNumero = $numeroDestino !== '';
-        $temVara = $varaDestino !== '';
-
-        if ($temNumero && $temVara) {
-            if ($statusOrdem5 !== 'concluida') {
-                $dadosOrdem5 = [];
-                $rawDados = trim((string) ($ordem5['dados_especificos'] ?? ''));
-                if ($rawDados !== '') {
-                    $decoded = json_decode($rawDados, true);
-                    if (is_array($decoded)) {
-                        $dadosOrdem5 = $decoded;
-                    }
-                }
-                $dadosOrdem5['numero_processo_destino'] = $numeroDestino;
-                $dadosOrdem5['vara_destino'] = $varaDestino;
-                $dadosJson = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao(
-                    $this->connection,
-                    json_encode($dadosOrdem5, JSON_UNESCAPED_UNICODE)
-                );
-                $this->subtarefasRepository->marcarConcluidaComDados((string) $ordem5['id'], $dadosJson);
-            }
-            return;
-        }
-
-        if ($statusOrdem5 === 'concluida') {
-            $this->subtarefasRepository->atualizarStatus((string) $ordem5['id'], 'em_andamento');
-        }
     }
 
     public function getStatusCounts(array $filters): array
@@ -320,22 +259,6 @@ final class CartasExpedidasService
             null
         );
 
-        if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
-            $cartaComClasse = $this->repository->findWithClasseProcessualNome($idCarta)
-                ?? $this->repository->find($idCarta)
-                ?? [];
-            $nomeClasse = trim((string) ($cartaComClasse['classe_nome_processual'] ?? ''));
-            $tipoCarta = CartorioProdutividade::labelClasseCarta($nomeClasse);
-            CartorioProdutividade::record($this->connection, $usuarioCadastroId, 'cartorio-cartas-expedidas.create', [
-                'referencia_item_id' => $idCarta,
-                'referencia_sistema' => 'cartorio-cartas-expedidas',
-                'numero_processo' => $numeroFormatado,
-                'classe_processo' => $tipoCarta,
-                'tipo_carta' => $tipoCarta,
-                'finalidade' => CartorioProdutividade::nonEmpty($finalidade, 'finalidade não informada'),
-            ]);
-        }
-
         return $idCarta;
     }
 
@@ -350,10 +273,18 @@ final class CartasExpedidasService
 
         $ordem = (int) ($subtarefa['ordem'] ?? 0);
         $cartaId = trim((string) ($subtarefa['carta_expedida_id'] ?? ''));
+        $tipoSubtarefaAtual = trim((string) ($subtarefa['tipo'] ?? ''));
 
         if ($cartaId === '') {
             throw new InvalidArgumentException('Carta da subtarefa não identificada.');
         }
+
+        if (!CartasExpedidasSubtarefasRepository::isOrdemAtiva($ordem)
+            || in_array($tipoSubtarefaAtual, CartasExpedidasSubtarefasRepository::TIPOS_DESCONTINUADOS, true)) {
+            throw new InvalidArgumentException('Esta subtarefa foi descontinuada. Atualize a página.');
+        }
+
+        $this->subtarefasRepository->autoConcluirSubtarefasDescontinuadas($cartaId);
 
         $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
@@ -372,139 +303,40 @@ final class CartasExpedidasService
             }
         }
 
-        // Quando a subtarefa for de "Aguardando informações" (ordem 5),
-        // persiste os dados de processo/vara destino diretamente em cartas_expedidas.
-        if ($ordem === 5 && !empty($dadosArray)) {
-            $numeroDestino = trim((string) ($dadosArray['numero_processo_destino'] ?? ''));
-            $varaDestinoNome = trim((string) ($dadosArray['vara_destino'] ?? ''));
-            if ($numeroDestino !== '' || $varaDestinoNome !== '') {
-                $cartaRow = $this->repository->find($cartaId);
-                if ($cartaRow !== null) {
-                    $update = [];
-                    if ($numeroDestino !== '') {
-                        $update['numero_processo_destino'] = $numeroDestino;
-                    }
-                    if ($varaDestinoNome !== '') {
-                        $comarcaDestinoId = (string) ($cartaRow['comarca_destino_id'] ?? '');
-                        if ($comarcaDestinoId !== '') {
-                            $varaId = $this->varasRepository->ensureVara($comarcaDestinoId, $varaDestinoNome, null);
-                            $update['vara_destino_id'] = $varaId;
-                            $update['vara_destino_nome'] = $varaDestinoNome;
-                        }
-                    }
-                    if (!empty($update)) {
-                        try {
-                            $this->repository->update($cartaId, $update);
-                        } catch (\PDOException $e) {
-                            $isNumeroDestinoDuplicado = isset($update['numero_processo_destino'])
-                                && str_contains(strtolower((string) $e->getMessage()), 'numero_processo_destino');
-                            if (!$isNumeroDestinoDuplicado) {
-                                throw $e;
-                            }
-
-                            // Se o número de processo de destino já existir em outra carta (índice único),
-                            // mantém a conclusão da subtarefa e persiste os dados em dados_especificos.
-                            $fallback = array_intersect_key($update, array_flip(['vara_destino_id', 'vara_destino_nome']));
-                            if (!empty($fallback)) {
-                                $this->repository->update($cartaId, $fallback);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Corrige cartas antigas para manter as ordens 5 e 6 sincronizadas.
-        if ($ordem >= 5) {
-            $this->subtarefasRepository->ensureInformacoesDevolucaoPair($cartaId);
-        }
-
-        if ($ordem === 6) {
-            $todas = $this->subtarefasRepository->findByCartaId($cartaId);
-            foreach ($todas as $st) {
-                if ((int) ($st['ordem'] ?? 0) === 5 && trim((string) ($st['status'] ?? '')) !== 'concluida') {
-                    $dadosJsonOrdem5 = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao($this->connection, null);
-                    $this->subtarefasRepository->marcarConcluidaComDados((string) $st['id'], $dadosJsonOrdem5);
-                }
-            }
-        }
-
         $this->subtarefasRepository->marcarConcluidaComDados($subtarefaId, $dadosJson);
-        $tipoSubtarefa = trim((string) ($subtarefa['tipo'] ?? ''));
-        if ($usuarioIdMovimentacao !== '' && $usuarioIdMovimentacao !== 'sistema' && $tipoSubtarefa !== '') {
-            $cartaAtual = $this->repository->findWithClasseProcessualNome($cartaId)
-                ?? $this->repository->find($cartaId)
-                ?? [];
-            $nomeClasse = trim((string) ($cartaAtual['classe_nome_processual'] ?? ''));
-            $tipoCarta = CartorioProdutividade::labelClasseCarta($nomeClasse);
-            $cidadeDestino = trim((string) ($cartaAtual['cidade_destino'] ?? ''));
-            $ufDestino = trim((string) ($cartaAtual['uf_destino'] ?? ''));
-            $comarcaDestino = $cidadeDestino !== '' ? $cidadeDestino . ($ufDestino !== '' ? '/' . $ufDestino : '') : '';
-            $ctxExp = [
-                'referencia_item_id' => $subtarefaId,
-                'referencia_sistema' => 'cartorio-cartas-expedidas',
-                'numero_processo' => (string) ($cartaAtual['numero_processo_origem'] ?? ''),
-                'classe_processo' => $tipoCarta,
-                'tipo_carta' => $tipoCarta,
-                'finalidade' => CartorioProdutividade::nonEmpty((string) ($cartaAtual['finalidade'] ?? ''), 'finalidade não informada'),
-                'comarca_destino' => CartorioProdutividade::nonEmpty($comarcaDestino, 'destino não informado'),
-            ];
-            if ($tipoSubtarefa === 'aguardando_gerar_pdf') {
-                $ctxExp['pdf_documentos_count'] = max(0, (int) ($dadosArray['qtd_docs_gerados'] ?? 0));
-            }
-            CartorioProdutividade::record($this->connection, $usuarioIdMovimentacao, 'cartorio-cartas-expedidas.subtarefa.' . $tipoSubtarefa, $ctxExp);
-        }
 
-        $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
-        if ($proximoTipo !== null) {
-            $proximaOrdem = $ordem + 1;
-            if ($proximaOrdem === 5) {
-                $ordem5 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 5);
-                if ($ordem5 === null) {
-                    $this->subtarefasRepository->create($cartaId, CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5, 5, 'em_andamento', null);
-                } else {
-                    $status5 = trim((string) ($ordem5['status'] ?? ''));
-                    if ($status5 !== 'concluida') {
-                        $this->subtarefasRepository->atualizarStatus((string) ($ordem5['id'] ?? ''), 'em_andamento');
-                    }
-                }
-
-                $ordem6 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 6);
-                if ($ordem6 === null) {
-                    $this->subtarefasRepository->create($cartaId, CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6, 6, 'pendente', null);
-                }
-            } elseif ($proximaOrdem === 6) {
-                $ordem6 = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, 6);
-                if ($ordem6 === null) {
-                    $this->subtarefasRepository->create($cartaId, CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6, 6, 'em_andamento', null);
-                } else {
-                    $status6 = trim((string) ($ordem6['status'] ?? ''));
-                    if ($status6 !== 'concluida') {
-                        $this->subtarefasRepository->atualizarStatus((string) ($ordem6['id'] ?? ''), 'em_andamento');
-                    }
-                }
-            } else {
+        $proximaOrdem = $this->subtarefasRepository->obterProximaOrdem($ordem);
+        if ($proximaOrdem !== null) {
+            $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
+            $existente = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, $proximaOrdem);
+            if ($existente === null) {
                 $this->subtarefasRepository->create($cartaId, $proximoTipo, $proximaOrdem, 'em_andamento', null);
+            } else {
+                $statusProx = trim((string) ($existente['status'] ?? ''));
+                if ($statusProx !== 'concluida') {
+                    $this->subtarefasRepository->atualizarStatus((string) ($existente['id'] ?? ''), 'em_andamento');
+                }
             }
             $statusCarta = $proximaOrdem === 6 ? 'pendente' : 'em_andamento';
             $this->repository->update($cartaId, ['status' => $statusCarta]);
             return ['tarefa_principal_concluida' => false];
-        } else {
-            $this->repository->update($cartaId, ['status' => 'concluída']);
-            $carta = $this->repository->find($cartaId);
-            $processo = trim((string) ($carta['numero_processo_origem'] ?? ''));
-            $finalidade = trim((string) ($carta['finalidade'] ?? ''));
-            $cidade = trim((string) ($carta['cidade_destino'] ?? ''));
-            $uf = trim((string) ($carta['uf_destino'] ?? ''));
-            $msg = 'Tarefa principal concluída automaticamente: carta expedida do processo '
-                . ($processo !== '' ? $processo : 'não informado')
-                . ' (' . ($finalidade !== '' ? $finalidade : 'finalidade não informada')
-                . ' para ' . (($cidade !== '' ? $cidade : 'comarca não informada') . ($uf !== '' ? '/' . $uf : '')) . ').';
-            return [
-                'tarefa_principal_concluida' => true,
-                'tarefa_principal_mensagem' => $msg,
-            ];
         }
+
+        $this->repository->update($cartaId, ['status' => 'concluída']);
+        $carta = $this->repository->find($cartaId);
+        $processo = trim((string) ($carta['numero_processo_origem'] ?? ''));
+        $finalidade = trim((string) ($carta['finalidade'] ?? ''));
+        $cidade = trim((string) ($carta['cidade_destino'] ?? ''));
+        $uf = trim((string) ($carta['uf_destino'] ?? ''));
+        $msg = 'Tarefa principal concluída automaticamente: carta expedida do processo '
+            . ($processo !== '' ? $processo : 'não informado')
+            . ' (' . ($finalidade !== '' ? $finalidade : 'finalidade não informada')
+            . ' para ' . (($cidade !== '' ? $cidade : 'comarca não informada') . ($uf !== '' ? '/' . $uf : '')) . ').';
+
+        return [
+            'tarefa_principal_concluida' => true,
+            'tarefa_principal_mensagem' => $msg,
+        ];
     }
 
     private function normalizeTipoAlocado(string $tipo): string

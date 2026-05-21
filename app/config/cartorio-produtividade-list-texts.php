@@ -39,34 +39,6 @@ return array (
   array (
     'observacao' => 'Termo de envio da {tipo_guia} juntado.',
   ),
-  'cartorio-cartas-expedidas.create' => 
-  array (
-    'observacao' => 'Carta Precatória cadastrada — finalidade: {finalidade}.',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_assinatura' => 
-  array (
-    'observacao' => 'Carta Precatória assinada pela magistrada.',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_gerar_pdf' => 
-  array (
-    'observacao' => 'PDF da Carta Precatória gerado.',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_envio' => 
-  array (
-    'observacao' => 'Carta Precatória enviada para {comarca_destino}.',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_juntada_termo' => 
-  array (
-    'observacao' => 'Termo de envio da Carta Precatória juntado.',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_informacoes' => 
-  array (
-    'observacao' => 'Informações de destino da Carta Precatória registradas.',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_devolucao' => 
-  array (
-    'observacao' => 'Juntada de Carta Precatória devolvida.',
-  ),
   'cartorio-oficios.create' => 
   array (
     'observacao' => '{tipo_oficio} cadastrado.',

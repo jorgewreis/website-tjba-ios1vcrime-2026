@@ -75,62 +75,6 @@ return array (
     'quantidade_default' => 1,
     'referencia_sistema' => 'cartorio-guias',
   ),
-  'cartorio-cartas-expedidas.create' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cartas-expedidas.create',
-    'sistema_modulo' => 'cartorio-cartas-expedidas',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cartas-expedidas',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_assinatura' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cartas-expedidas.subtarefa.aguardando_assinatura',
-    'sistema_modulo' => 'cartorio-cartas-expedidas',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cartas-expedidas',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_gerar_pdf' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cartas-expedidas.subtarefa.aguardando_gerar_pdf',
-    'sistema_modulo' => 'cartorio-cartas-expedidas',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cartas-expedidas',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_envio' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cartas-expedidas.subtarefa.aguardando_envio',
-    'sistema_modulo' => 'cartorio-cartas-expedidas',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cartas-expedidas',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_juntada_termo' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cartas-expedidas.subtarefa.aguardando_juntada_termo',
-    'sistema_modulo' => 'cartorio-cartas-expedidas',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cartas-expedidas',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_informacoes' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cartas-expedidas.subtarefa.aguardando_informacoes',
-    'sistema_modulo' => 'cartorio-cartas-expedidas',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cartas-expedidas',
-  ),
-  'cartorio-cartas-expedidas.subtarefa.aguardando_devolucao' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cartas-expedidas.subtarefa.aguardando_devolucao',
-    'sistema_modulo' => 'cartorio-cartas-expedidas',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cartas-expedidas',
-  ),
   'cartorio-oficios.create' => 
   array (
     'tipo_ato' => 'Cartório',

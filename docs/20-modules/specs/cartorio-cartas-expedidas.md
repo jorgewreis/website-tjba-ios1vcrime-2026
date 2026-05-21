@@ -30,11 +30,15 @@ Submódulo do Módulo de Cartório (m4) para gestão de **cartas expedidas** (pr
 
 Quando todas as subtarefas estão concluídas, a tarefa é **Concluída** (status-finished).
 
-## 5. Subtarefas (ordem fixa)
+## 5. Subtarefas (fluxo ativo)
 
-Tipos internos em `CartasExpedidasSubtarefasRepository`: `aguardando_assinatura`, `aguardando_gerar_pdf`, `aguardando_envio`, `aguardando_juntada_termo`, `aguardando_informacoes`, `aguardando_devolucao`.
+Tipos ativos em `CartasExpedidasSubtarefasRepository` (ordens 1 → 3 → 6): `aguardando_assinatura`, `aguardando_envio`, `aguardando_devolucao`.
 
-### 5.1 Subtarefa 1: Aguardando assinatura
+Tipos descontinuados (auto-concluídos em cartas antigas): `aguardando_gerar_pdf`, `aguardando_juntada_termo`, `aguardando_informacoes`.
+
+O módulo **não** registra produtividade (`CartorioProdutividade`).
+
+### 5.1 Subtarefa 1: Aguardando assinatura (ordem 1)
 
 - **Status da subtarefa:** status-pending  
 - **Status da tarefa:** Pendente (status-pending)  
@@ -46,55 +50,19 @@ Tipos internos em `CartasExpedidasSubtarefasRepository`: `aguardando_assinatura`
 - **Status Timeline (concluída):** Carta assinada pela juíza em [data] - [hora]  
 - **Complemento Timeline (concluída):** Informação confirmada por [usuario] em [data] - [hora]  
 
-### 5.2 Subtarefa 2: Gerar PDF
-
-- **Status da subtarefa:** status-current (quando em andamento)  
-- **Status da tarefa:** Em andamento (status-current)  
-- **Complemento:** Input numérico — Qtd de docs gerados (2 a 10)  
-- **Title da Tarefa:** Aguardando impressão de documentos em PDF  
-- **Title do Button da Subtarefa:** Informar impressão em PDF  
-- **Status Timeline (sem fazer):** Aguardando impressão de documentos em PDF  
-- **Complemento Timeline (sem fazer):** —  
-- **Status Timeline (concluída):** [qtd] documentos impressos em PDF  
-- **Complemento Timeline (concluída):** Impressão realizada por [usuario] em [data] - [hora]  
-
-### 5.3 Subtarefa 3: Aguardando envio
+### 5.2 Subtarefa 2: Aguardando envio (ordem 3)
 
 - **Status da subtarefa:** status-pending  
 - **Status da tarefa:** Em andamento (status-current)  
 - **Complemento:** Select — E-mail, Malote Digital, PJe, eSAJ, ePROC  
 - **Title da Tarefa:** Aguardando envio de Carta  
 - **Title do Button da Subtarefa:** Informar envio  
-- **Status Timeline (sem fazer):** Aguardando envio de [qtd] documentos  
+- **Status Timeline (sem fazer):** Aguardando envio de documentos  
 - **Complemento Timeline (sem fazer):** —  
 - **Status Timeline (concluída):** Carta enviada para [sigla TJ - nome tribunal] - Comarca de [nome comarca envio] pelo/por [tipo envio]  
 - **Complemento Timeline (concluída):** Envio realizado por [usuario] em [data] - [hora]  
 
-### 5.4 Subtarefa 4: Juntada de termo de envio
-
-- **Status da subtarefa:** status-current (quando em andamento)  
-- **Status da tarefa:** Em andamento (status-current)  
-- **Complemento:** —  
-- **Title da Tarefa:** Aguardando comprovante de envio  
-- **Title do Button da Subtarefa:** Informar juntada  
-- **Status Timeline (sem fazer):** Aguardando juntada de termo de envio  
-- **Complemento Timeline (sem fazer):** —  
-- **Status Timeline (concluída):** Juntada do termo de envio realizado  
-- **Complemento Timeline (concluída):** Comprovante juntado por [usuario] em [data] - [hora]  
-
-### 5.5 Subtarefa 5: Aguardando cumprimento (informações)
-
-- **Status da subtarefa:** status-pending  
-- **Status da tarefa:** Em andamento (status-current)  
-- **Complemento:** Input — Número do processo de destino; manter também Vara destino (opcional).  
-- **Title da Tarefa:** Aguardando cumprimento  
-- **Title do Button da Subtarefa:** Informar número do processo no Juízo Deprecado  
-- **Status Timeline (sem fazer):** Aguardando juntada de informações  
-- **Complemento Timeline (sem fazer):** —  
-- **Status Timeline (concluída):** Número de processo no Juízo Deprecante: [processo]  
-- **Complemento Timeline (concluída):** Informação verificada por [usuario] em [data] - [hora]  
-
-### 5.6 Subtarefa 6: Devolução
+### 5.3 Subtarefa 3: Devolução (ordem 6)
 
 - **Status da subtarefa:** status-pending  
 - **Status da tarefa:** Em andamento (status-current)  
@@ -106,7 +74,7 @@ Tipos internos em `CartasExpedidasSubtarefasRepository`: `aguardando_assinatura`
 - **Status Timeline (concluída):** Carta devolvida [complemento] (ex.: Cumprida integralmente)  
 - **Complemento Timeline (concluída):** Juntada de carta devolvida realizada por [usuario] em [data] - [hora]  
 
-### 5.7 Valores de resultado de devolução (backend)
+### 5.4 Valores de resultado de devolução (backend)
 
 Valores armazenados em `dados_especificos.resultado_devolucao` e rótulos exibidos:
 
@@ -119,7 +87,7 @@ Valores armazenados em `dados_especificos.resultado_devolucao` e rótulos exibid
 
 ## 6. Regras de validação
 
-- Ao concluir uma subtarefa que exige complemento (qtd docs, método de envio, número processo, resultado devolução), o sistema deve bloquear a conclusão se o complemento não estiver preenchido.
+- Ao concluir uma subtarefa que exige complemento (método de envio, resultado devolução), o sistema deve bloquear a conclusão se o complemento não estiver preenchido.
 
 ## 7. Referências
 

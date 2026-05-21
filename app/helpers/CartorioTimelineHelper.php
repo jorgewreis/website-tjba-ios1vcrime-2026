@@ -18,13 +18,6 @@ if (!function_exists('cartorioTimelineGetConfig')) {
                             'button_title' => 'Informar assinatura',
                             'pending_text' => 'Aguardando assinatura pela juiza',
                         ],
-                        2 => [
-                            'type' => 'aguardando_gerar_pdf',
-                            'label' => 'Gerar PDF',
-                            'task_title' => 'Aguardando impressao de documentos em PDF',
-                            'button_title' => 'Informar impressao em PDF',
-                            'pending_text' => 'Aguardando impressao de documentos em PDF',
-                        ],
                         3 => [
                             'type' => 'aguardando_envio',
                             'label' => 'Aguardando envio',
@@ -32,24 +25,10 @@ if (!function_exists('cartorioTimelineGetConfig')) {
                             'button_title' => 'Informar envio',
                             'pending_text' => 'Aguardando envio de documentos',
                         ],
-                        4 => [
-                            'type' => 'aguardando_juntada_termo',
-                            'label' => 'Juntada de termo de envio',
-                            'task_title' => 'Aguardando comprovante de envio',
-                            'button_title' => 'Informar juntada',
-                            'pending_text' => 'Aguardando juntada de termo de envio',
-                        ],
-                        5 => [
-                            'type' => 'aguardando_informacoes',
-                            'label' => 'Aguardando cumprimento',
-                            'task_title' => 'Aguardando cumprimento',
-                            'button_title' => 'Informar numero do processo no Juizo Deprecado',
-                            'pending_text' => 'Aguardando juntada de informacoes',
-                        ],
                         6 => [
                             'type' => 'aguardando_devolucao',
                             'label' => 'Devolucao',
-                            'task_title' => 'Aguardando cumprimento',
+                            'task_title' => 'Aguardando devolucao da Carta',
                             'button_title' => 'Informar juntada de carta devolvida',
                             'pending_text' => 'Aguardando devolucao da Carta',
                         ],
@@ -457,15 +436,6 @@ if (!function_exists('cartorioTimelineGetConfig')) {
 
     function cartorioTimelinePendingText(string $module, int $ordem, array $definition, array $subtarefasPorOrdem, array $task): string
     {
-        if ($module === 'cartas_expedidas' && $ordem === 3) {
-            $pdfData = cartorioTimelineDecodeData($subtarefasPorOrdem[2] ?? null);
-            $qtd = (int) ($pdfData['qtd_docs_gerados'] ?? $pdfData['qtd_docs'] ?? 0);
-            if ($qtd < 2) {
-                $qtd = 2;
-            }
-            return 'Aguardando envio de ' . $qtd . ' documentos';
-        }
-
         return $definition['pending_text'];
     }
 

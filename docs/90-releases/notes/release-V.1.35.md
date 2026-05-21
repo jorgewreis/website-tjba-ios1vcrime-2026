@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 18 de maio de 2026
 
 # V. 1.35
 
-> feat: enhance Produtividade module with distinct catalog values and improved UI for rule creation and editing
+> refactor: update release notes and enhance tooltip styling
 
 ## Nível de Impacto
 
@@ -12,10 +12,7 @@
 
 ## Alterações
 
-- **fix: update option text for new entry in pauta-edit.js to improve clarity** `[1912f4e]`
-- **chore: update .gitignore to include schema SQL files and enhance database documentation** `[a9449e0]`
-- **Feat: Produtividade - Fase 2 - implementação de Base** `[2720009]`
-- **feat: enhance Produtividade module with distinct catalog values and improved UI for rule creation and editing** `[906ea7c]`
+- **refactor: update release notes and enhance tooltip styling** `[b9ee9c93]`
 
 ---
 

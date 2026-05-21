@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../services/CartasExpedidasService.php';
+require_once __DIR__ . '/../../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
@@ -95,34 +96,23 @@ $statusCounts['em_andamento'] = (int) ($statusCounts['em_andamento'] ?? 0) + (in
 
 $subtarefaLabels = [
     'aguardando_assinatura' => 'Assinar Carta expedida (Magistrada)',
-    'aguardando_gerar_pdf' => 'Imprimir peças em PDF',
     'aguardando_envio' => 'Enviar Carta expedida',
-    'aguardando_juntada_termo' => 'Juntar comprovante de envio',
-    'aguardando_informacoes' => 'Informar detalhes',
     'aguardando_devolucao' => 'Juntar carta devolvida',
 ];
 $taskTitleByTipo = [
     'aguardando_assinatura' => 'Aguardando assinatura',
-    'aguardando_gerar_pdf' => 'Aguardando impressão em PDF',
     'aguardando_envio' => 'Aguardando envio',
-    'aguardando_juntada_termo' => 'Ag. juntada de Termo',
-    'aguardando_informacoes' => 'Aguardando cumprimento',
     'aguardando_devolucao' => 'Aguardando devolução',
 ];
 $buttonTitleByTipo = [
     'aguardando_assinatura' => 'Informar assinatura',
-    'aguardando_gerar_pdf' => 'Informar impressão em PDF',
     'aguardando_envio' => 'Informar envio',
-    'aguardando_juntada_termo' => 'Informar juntada',
-    'aguardando_informacoes' => 'Informar complementos',
     'aguardando_devolucao' => 'Informar juntada de carta devolvida',
 ];
+$ordensSubtarefasAtivas = CartasExpedidasSubtarefasRepository::ORDENS_ATIVAS;
 $ordemLabels = [
     1 => $subtarefaLabels['aguardando_assinatura'],
-    2 => $subtarefaLabels['aguardando_gerar_pdf'],
     3 => $subtarefaLabels['aguardando_envio'],
-    4 => $subtarefaLabels['aguardando_juntada_termo'],
-    5 => $subtarefaLabels['aguardando_informacoes'],
     6 => $subtarefaLabels['aguardando_devolucao'],
 ];
 
@@ -383,28 +373,6 @@ if ($totalPages > 0) {
                     $subtarefas = $row['Subtarefas'] ?? [];
                     $statusTarefa = (string) ($row['Status'] ?? '');
                     $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
-                    $numeroProcessoDestinoAtual = trim((string) ($row['NumeroProcessoDestino'] ?? $row['numero_processo_destino'] ?? ''));
-                    $varaDestinoAtual = trim((string) ($row['VaraDestino'] ?? $row['vara_destino_nome'] ?? $row['vara_destino'] ?? ''));
-                    if (($numeroProcessoDestinoAtual === '' || $varaDestinoAtual === '') && is_array($subtarefas)) {
-                        foreach ($subtarefas as $stInfoTmp) {
-                            if (($stInfoTmp['tipo'] ?? '') !== 'aguardando_informacoes' || empty($stInfoTmp['dados_especificos'])) {
-                                continue;
-                            }
-                            $dadosInfoTmp = json_decode((string) $stInfoTmp['dados_especificos'], true);
-                            if (!is_array($dadosInfoTmp)) {
-                                continue;
-                            }
-                            if ($numeroProcessoDestinoAtual === '') {
-                                $numeroProcessoDestinoAtual = trim((string) ($dadosInfoTmp['numero_processo_destino'] ?? ''));
-                            }
-                            if ($varaDestinoAtual === '') {
-                                $varaDestinoAtual = trim((string) ($dadosInfoTmp['vara_destino'] ?? ''));
-                            }
-                            if ($numeroProcessoDestinoAtual !== '' && $varaDestinoAtual !== '') {
-                                break;
-                            }
-                        }
-                    }
                 ?>
 
                     <!-- LINHA COMPLETA DO REGISTRO -->
@@ -471,20 +439,27 @@ if ($totalPages > 0) {
                             <?php
                             $st = $row['Status'] ?? '';
                             $allSt = $row['SubtarefasAll'] ?? [];
-                            $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente', 'pendente', 'pendente'];
+                            $progressStatuses = [];
+                            foreach ($ordensSubtarefasAtivas as $ordemAtiva) {
+                                $progressStatuses[$ordemAtiva] = 'pendente';
+                            }
                             foreach ($allSt as $s) {
                                 $o = (int) ($s['ordem'] ?? 0);
-                                if ($o >= 1 && $o <= 6) {
-                                    $progressStatuses[$o - 1] = (string) ($s['status'] ?? 'pendente');
+                                if (CartasExpedidasSubtarefasRepository::isOrdemAtiva($o)) {
+                                    $progressStatuses[$o] = (string) ($s['status'] ?? 'pendente');
                                 }
                             }
                             $currentSubtarefaTitle = '';
                             foreach ($allSt as $s) {
-                                if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                                    $tipoAtual = $s['tipo'] ?? '';
-                                    $currentSubtarefaTitle = $taskTitleByTipo[$tipoAtual] ?? $subtarefaLabels[$tipoAtual] ?? $tipoAtual;
-                                    break;
+                                if (trim((string) ($s['status'] ?? '')) !== 'em_andamento') {
+                                    continue;
                                 }
+                                $tipoAtual = (string) ($s['tipo'] ?? '');
+                                if (!CartasExpedidasSubtarefasRepository::isTipoAtivo($tipoAtual)) {
+                                    continue;
+                                }
+                                $currentSubtarefaTitle = $taskTitleByTipo[$tipoAtual] ?? $subtarefaLabels[$tipoAtual] ?? $tipoAtual;
+                                break;
                             }
                             if ($currentSubtarefaTitle === '' && $st === 'pendente') {
                                 $currentSubtarefaTitle = $taskTitleByTipo['aguardando_assinatura'] ?? 'Carta aguardando assinatura';
@@ -493,15 +468,15 @@ if ($totalPages > 0) {
                             } elseif ($currentSubtarefaTitle === '') {
                                 $currentSubtarefaTitle = $row['Status'] ?? 'Em andamento';
                             }
-                            $isEmAndamento = in_array($st, ['em_andamento', 'aguardando assinatura', 'aguardando envio', 'aguardando juntada do termo', 'aguardando juntada de termo', 'aguardando cumprimento'], true);
+                            $isEmAndamento = in_array($st, ['em_andamento', 'aguardando assinatura', 'aguardando envio'], true);
                             $mostrarBarraStatus = ($st !== 'concluída' && $st !== 'cancelada');
                             $segmentosBarra = [];
                             if ($mostrarBarraStatus) {
                                 $segmentosBarra[] = ['class' => 'concluida', 'title' => 'Carta expedida e cadastrada'];
-                                for ($i = 0; $i < 6; $i++) {
-                                    $statusSeg = $progressStatuses[$i] ?? 'pendente';
+                                foreach ($ordensSubtarefasAtivas as $ordemAtiva) {
+                                    $statusSeg = $progressStatuses[$ordemAtiva] ?? 'pendente';
                                     $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
-                                    $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$i + 1] ?? ''];
+                                    $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$ordemAtiva] ?? ''];
                                 }
                             }
                             ?>
@@ -516,8 +491,9 @@ if ($totalPages > 0) {
                                     $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
                                     echo '<div class="status width-300 ' . $classStatus . ' status-with-progress">';
                                     echo '<span class="status-task-label" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
-                                    $concluidosBarra = 1 + count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
-                                    echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="7" aria-label="Progresso das subtarefas">';
+                                    $concluidosBarra = 1 + count(array_filter($progressStatuses, static fn ($x) => $x === 'concluida'));
+                                    $maxBarra = 1 + count($ordensSubtarefasAtivas);
+                                    echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="' . $maxBarra . '" aria-label="Progresso das subtarefas">';
                                     foreach ($segmentosBarra as $seg) {
                                         echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
                                     }
@@ -539,10 +515,11 @@ if ($totalPages > 0) {
                             <?php foreach ($subtarefas as $st):
                                 $stId = $st['id'] ?? '';
                                 $stTipo = $st['tipo'] ?? '';
+                                if (!CartasExpedidasSubtarefasRepository::isTipoAtivo((string) $stTipo)) {
+                                    continue;
+                                }
                                 $stTipoNormalizado = strtolower(trim((string) $stTipo));
-                                $isGerarPdf = in_array($stTipoNormalizado, ['aguardando_gerar_pdf', 'gerar_pdf', 'geracao_pdf'], true);
                                 $isEnvio = in_array($stTipoNormalizado, ['aguardando_envio', 'envio_processo', 'enviar_processo', 'envio'], true);
-                                $isInformacoes = in_array($stTipoNormalizado, ['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes', 'Aguardando cumprimento'], true);
                                 $isDevolucao = in_array($stTipoNormalizado, ['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao', 'juntar_devolucao', 'Aguardando devolução'], true);
                                 $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
                             ?>
@@ -551,11 +528,7 @@ if ($totalPages > 0) {
                                         <div class="col task-status">
                                             <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
                                         </div>
-                                        <?php if ($isGerarPdf): ?>
-                                            <div class="col">
-                                                <input type="number" class="width-100 height-sm subtask-qtd-docs" value="2" min="2" max="10" placeholder="Qtd de docs (2 a 10)" title="Qtd de docs gerados" />
-                                            </div>
-                                        <?php elseif ($isEnvio): ?>
+                                        <?php if ($isEnvio): ?>
                                             <div class="col">
                                                 <select class="width-400 height-sm subtask-metodo-envio" title="Método de envio">
                                                     <option value="" selected disabled>Selecione aqui</option>
@@ -565,13 +538,6 @@ if ($totalPages > 0) {
                                                     <option value="eSAJ">eSAJ</option>
                                                     <option value="ePROC">ePROC</option>
                                                 </select>
-                                            </div>
-                                        <?php elseif ($isInformacoes): ?>
-                                            <div class="col">
-                                                <input type="text" class="width-400 height-sm subtask-numero-destino" placeholder="Nº processo" title="Número processo destino" value="<?php echo htmlspecialchars($numeroProcessoDestinoAtual, ENT_QUOTES); ?>" />
-                                            </div>
-                                            <div class="col">
-                                                <input type="text" class="width-600 height-sm subtask-vara-destino" placeholder="Vara destino" title="Vara destino" value="<?php echo htmlspecialchars($varaDestinoAtual, ENT_QUOTES); ?>" />
                                             </div>
                                         <?php elseif ($isDevolucao): ?>
                                             <div class="col">
@@ -767,25 +733,12 @@ if ($totalPages > 0) {
                             if (!subtarefaId) return;
                             const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
                             const tipo = normalizeTipo(block ? (block.getAttribute('data-subtarefa-tipo') || '') : '');
-                            const qtdEl = block ? block.querySelector('.subtask-qtd-docs') : null;
-                            const numeroDestino = block ? block.querySelector('.subtask-numero-destino') : null;
                             const resultadoDevolucao = block ? block.querySelector('.subtask-resultado-devolucao') : null;
                             const metodoEnvio = block ? block.querySelector('.subtask-metodo-envio') : null;
 
-                            if (['aguardando_gerar_pdf', 'gerar_pdf'].includes(tipo)) {
-                                var qtd = qtdEl ? (parseInt(qtdEl.value, 10) || 0) : 0;
-                                if (qtd < 2 || qtd > 10) {
-                                    notify('error', 'Atenção', 'Informe a quantidade de documentos gerados (2 a 10).');
-                                    return;
-                                }
-                            } else if (['aguardando_envio', 'envio_processo', 'enviar_processo'].includes(tipo)) {
+                            if (['aguardando_envio', 'envio_processo', 'enviar_processo'].includes(tipo)) {
                                 if (!metodoEnvio || !metodoEnvio.value || !metodoEnvio.value.trim()) {
                                     notify('error', 'Atenção', 'Selecione o método de envio.');
-                                    return;
-                                }
-                            } else if (['aguardando_informacoes', 'informar_dados', 'detalhamento_informacoes'].includes(tipo)) {
-                                if (!numeroDestino || !numeroDestino.value.trim()) {
-                                    notify('error', 'Atenção', 'Informe o número do processo no Juízo Deprecante.');
                                     return;
                                 }
                             } else if (['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao'].includes(tipo)) {
@@ -797,11 +750,7 @@ if ($totalPages > 0) {
 
                             let dadosEspecificos = null;
                             if (block) {
-                                const varaDestino = block.querySelector('.subtask-vara-destino');
                                 const obj = {};
-                                if (qtdEl) obj.qtd_docs_gerados = parseInt(qtdEl.value, 10) || 2;
-                                if (numeroDestino && numeroDestino.value.trim()) obj.numero_processo_destino = numeroDestino.value.trim();
-                                if (varaDestino && varaDestino.value.trim()) obj.vara_destino = varaDestino.value.trim();
                                 if (resultadoDevolucao && resultadoDevolucao.value) obj.resultado_devolucao = resultadoDevolucao.value;
                                 if (metodoEnvio && metodoEnvio.value && metodoEnvio.value.trim()) obj.metodo_envio = metodoEnvio.value.trim();
                                 if (Object.keys(obj).length > 0) dadosEspecificos = JSON.stringify(obj);

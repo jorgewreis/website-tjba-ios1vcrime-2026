@@ -77,7 +77,7 @@ if ($carta !== null) {
     $comarcaDestinoId = trim((string) ($carta['comarca_destino_id'] ?? ''));
 
     $subtarefasRepo = new CartasExpedidasSubtarefasRepository($connection);
-    $subtarefasRepo->ensureInformacoesDevolucaoPair($idCarta);
+    $subtarefasRepo->autoConcluirSubtarefasDescontinuadas($idCarta);
     $subtarefas = $subtarefasRepo->findByCartaId($idCarta);
     $tribunaisRepo = new TribunaisRepository($connection);
     $subtarefasPorOrdem = [];
@@ -86,26 +86,17 @@ if ($carta !== null) {
     }
     $subtarefaLabels = [
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando assinatura',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Gerar PDF',
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Juntada de termo de envio',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando cumprimento',
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Devolução',
     ];
     $taskTitleByTipo = [
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Carta aguardando assinatura',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando impressão de documentos em PDF',
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio de Carta',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando comprovante de envio',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando cumprimento',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando cumprimento',
+        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução da Carta',
     ];
     $ordemParaTipo = [
         1 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1,
-        2 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2,
         3 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3,
-        4 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4,
-        5 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5,
         6 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6,
     ];
     $temSubtarefas = count($subtarefas) > 0;
@@ -119,10 +110,7 @@ if ($carta !== null) {
     }
     $timelineMinorPendente = [
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando assinatura pela juíza',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_2 => 'Aguardando impressão de documentos em PDF',
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio de documentos',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_4 => 'Aguardando juntada de termo de envio',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando juntada de informações',
         CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução da Carta',
     ];
 }
