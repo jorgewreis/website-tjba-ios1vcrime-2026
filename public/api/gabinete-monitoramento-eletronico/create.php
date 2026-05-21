@@ -5,9 +5,10 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
-require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/GabineteMonitoramentoEletronicoService.php';
+require_once __DIR__ . '/_auth.php';
 
+$usuarioId = gmeRequirePageAccess('monitoramentogabinetecreate', true);
 $connection = Conection::getInstance()->getConnection();
 
 $payload = file_get_contents('php://input') ?: '';
@@ -32,6 +33,7 @@ function assertCnjFormattedValueMon(array $input, string $key, string $fieldLabe
 
 try {
     assertCnjFormattedValueMon($parsed, 'numero_processo', 'Número do processo');
+    $parsed['usuario_cadastro_id'] = $usuarioId;
 
     $service = new GabineteMonitoramentoEletronicoService($connection);
     $newId = $service->create($parsed);

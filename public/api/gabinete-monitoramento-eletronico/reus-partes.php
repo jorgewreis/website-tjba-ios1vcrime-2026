@@ -5,16 +5,11 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
-require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/GabineteMonitoramentoEletronicoService.php';
+require_once __DIR__ . '/_auth.php';
 
+gmeRequirePageAccess('monitoramentogabinetecreate');
 $connection = Conection::getInstance()->getConnection();
-
-if (empty($_SESSION['id_usuario'] ?? null)) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Não autenticado.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
 
 $processoId = trim((string) ($_GET['processo_id'] ?? ''));
 $numeroProcesso = trim((string) ($_GET['numero_processo'] ?? ''));

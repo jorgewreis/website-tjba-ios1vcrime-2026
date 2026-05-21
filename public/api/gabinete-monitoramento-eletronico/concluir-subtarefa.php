@@ -5,9 +5,10 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
-require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/GabineteMonitoramentoEletronicoService.php';
+require_once __DIR__ . '/_auth.php';
 
+gmeRequirePageAccess('monitoramentogabinete', true);
 $connection = Conection::getInstance()->getConnection();
 
 $rawPayload = file_get_contents('php://input') ?: '';
