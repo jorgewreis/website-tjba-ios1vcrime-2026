@@ -292,8 +292,52 @@
         return currentAudienciaSnapshot() !== initialAudienciaSnapshot;
     }
 
+    function pickNonEmptyPautaId(candidates) {
+        for (var i = 0; i < candidates.length; i += 1) {
+            var s = String(candidates[i] == null ? '' : candidates[i]).trim();
+            if (s !== '') {
+                return s;
+            }
+        }
+        return '';
+    }
+
+    function resolvePautaEditId() {
+        var fromGlobal = pickNonEmptyPautaId([window.PAUTA_EDIT_ID]);
+        if (fromGlobal) {
+            return fromGlobal;
+        }
+        var hiddenEl = document.getElementById('audiencia-edit-id');
+        var fromHidden = pickNonEmptyPautaId([hiddenEl ? hiddenEl.value : '']);
+        if (fromHidden) {
+            return fromHidden;
+        }
+        try {
+            var params = new URLSearchParams(window.location.search || '');
+            return pickNonEmptyPautaId([params.get('id'), params.get('id_pauta')]);
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function syncHiddenPautaEditId() {
+        var id = resolvePautaEditId();
+        var hiddenEl = document.getElementById('audiencia-edit-id');
+        if (!hiddenEl || !id) {
+            return;
+        }
+        if (!String(hiddenEl.value || '').trim()) {
+            hiddenEl.value = id;
+        }
+    }
+
     function saveAudiencia(autoMessage) {
-        var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+        var id = resolvePautaEditId();
+        if (!id) {
+            notify('error', 'Erro', 'Não foi possível identificar a audiência. Volte à pauta e abra a edição novamente.');
+            return Promise.resolve(false);
+        }
+        syncHiddenPautaEditId();
         return fetch('/api/sala-audiencias-pauta/update.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -310,7 +354,9 @@
         })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
-                if (res.ok && res.j && res.j.success) {
+                var body = res.j && typeof res.j === 'object' ? res.j : {};
+                var saved = res.ok && (body.success === true || body.success === 1 || body.success === '1');
+                if (saved) {
                     initialAudienciaSnapshot = currentAudienciaSnapshot();
                     if (autoMessage) {
                         notifyByKey(
@@ -325,7 +371,8 @@
                     }
                     return true;
                 }
-                notifyByKey('audiencias.pauta.update.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao salvar.');
+                var errMsg = body.error ? String(body.error) : 'Falha ao salvar.';
+                notifyByKey('audiencias.pauta.update.error', {}, 'error', 'Erro', errMsg);
                 return false;
             })
             .catch(function () {
@@ -392,7 +439,12 @@
                 notifyByKey('audiencias.validation.required.field', { campo: missing }, 'error', 'Validacao', 'Informe: ' + missing + '.');
                 return;
             }
-            var idPauta = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+            var idPauta = resolvePautaEditId();
+            if (!idPauta) {
+                notify('error', 'Erro', 'Não foi possível identificar a audiência. Volte à pauta e abra a edição novamente.');
+                return;
+            }
+            syncHiddenPautaEditId();
             fetch('/api/sala-audiencias-pauta/partes-create.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -472,7 +524,12 @@
     });
 
     document.getElementById('btn-audiencia-edit-cancelar')?.addEventListener('click', function () {
-        var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+        var id = resolvePautaEditId();
+        if (!id) {
+            notify('error', 'Erro', 'Não foi possível identificar a audiência. Volte à pauta e abra a edição novamente.');
+            return;
+        }
+        syncHiddenPautaEditId();
         fetch('/api/sala-audiencias-pauta/cancel.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -487,7 +544,12 @@
     });
     document.getElementById('btn-audiencia-edit-excluir')?.addEventListener('click', function () {
         if (!requireSecondClick('pauta-excluir-audiencia', pautaDeleteConfirmMessage)) return;
-        var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+        var id = resolvePautaEditId();
+        if (!id) {
+            notify('error', 'Erro', 'Não foi possível identificar a audiência. Volte à pauta e abra a edição novamente.');
+            return;
+        }
+        syncHiddenPautaEditId();
         fetch('/api/sala-audiencias-pauta/delete.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -679,7 +741,7 @@
     }
 
     function buildUrlOccupiedSlots(data) {
-        var id = String(document.getElementById('audiencia-edit-id')?.value || '').trim();
+        var id = resolvePautaEditId();
         var q = '?data=' + encodeURIComponent(data);
         if (id) {
             q += '&except_id=' + encodeURIComponent(id);
@@ -742,7 +804,7 @@
     });
 
     document.getElementById('btn-pauta-alocar')?.addEventListener('click', function () {
-        var idPauta = String(window.PAUTA_EDIT_ID || document.getElementById('audiencia-edit-id')?.value || '').trim();
+        var idPauta = resolvePautaEditId();
         var sel = document.getElementById('pauta-alocar-usuario');
         var uid = sel ? String(sel.value || '').trim() : '';
         if (!idPauta) {
@@ -788,6 +850,8 @@
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
             });
     });
+
+    syncHiddenPautaEditId();
 
     initParteNomeSelectFromProcesso();
     updateParteAddButtonState();

@@ -287,13 +287,7 @@ final class SalaAudienciasPautaService
             'atualizado_por' => $usuarioId,
         ]);
         if ($ok) {
-            $this->pautaRepository->ensureEffectiveTimesByStatus($id, $status, $usuarioId);
-            $this->sincronizarDuracaoEHorariosPauta($id);
-            $usuarioAloc = trim((string) ($payload['usuario_id'] ?? ''));
-            if ($usuarioAloc !== '') {
-                $this->addAlocadoUsuario($id, $usuarioAloc);
-            }
-            $this->tryEnsureSalaMidiasAutoFromPauta($id, $usuarioId);
+            $this->executarPosUpdatePauta($id, $status, $payload, $usuarioId);
         }
 
         return $ok;
@@ -1078,6 +1072,36 @@ final class SalaAudienciasPautaService
         } catch (Throwable $e) {
             error_log('SalaMidias auto from pauta falhou: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Pós-processamento após UPDATE principal. Falhas aqui não devem invalidar o salvamento
+     * (evita toast de erro com dados já persistidos).
+     */
+    private function executarPosUpdatePauta(string $id, string $status, array $payload, ?string $usuarioId): void
+    {
+        try {
+            $this->pautaRepository->ensureEffectiveTimesByStatus($id, $status, $usuarioId);
+        } catch (Throwable $e) {
+            error_log('[SalaAudienciasPauta.update] ensureEffectiveTimesByStatus: ' . $e->getMessage());
+        }
+
+        try {
+            $this->sincronizarDuracaoEHorariosPauta($id);
+        } catch (Throwable $e) {
+            error_log('[SalaAudienciasPauta.update] sincronizarDuracaoEHorariosPauta: ' . $e->getMessage());
+        }
+
+        $usuarioAloc = trim((string) ($payload['usuario_id'] ?? ''));
+        if ($usuarioAloc !== '') {
+            try {
+                $this->addAlocadoUsuario($id, $usuarioAloc);
+            } catch (Throwable $e) {
+                error_log('[SalaAudienciasPauta.update] addAlocadoUsuario: ' . $e->getMessage());
+            }
+        }
+
+        $this->tryEnsureSalaMidiasAutoFromPauta($id, $usuarioId);
     }
 }
 
