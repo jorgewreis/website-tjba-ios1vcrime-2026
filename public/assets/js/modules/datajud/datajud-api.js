@@ -518,10 +518,39 @@
 
         var rawDigits = String(detail.digits != null ? detail.digits : '').replace(/\D/g, '');
 
+        if (typeof window.normalizeAndValidateCNJValue === 'function') {
+            var cnjCheck = window.normalizeAndValidateCNJValue(processoInput.value, { toastOnInvalid: false });
+            if (!cnjCheck.ok) {
+                processoInput.value = '';
+                delete processoInput.dataset.lastCnjDispatchedDigits;
+                if (typeof window.dispatchEvent === 'function') {
+                    window.dispatchEvent(new CustomEvent('cnjInvalid', {
+                        detail: { inputId: processoInput.id || '' },
+                    }));
+                }
+                return;
+            }
+            if (cnjCheck.formatted) {
+                processoInput.value = cnjCheck.formatted;
+            }
+            rawDigits = cnjCheck.digits || rawDigits;
+        }
+
         if (rawDigits.length !== 20) {
 
             return;
 
+        }
+
+        if (typeof window.validarCNJ === 'function' && !window.validarCNJ(rawDigits)) {
+            processoInput.value = '';
+            delete processoInput.dataset.lastCnjDispatchedDigits;
+            if (typeof window.dispatchEvent === 'function') {
+                window.dispatchEvent(new CustomEvent('cnjInvalid', {
+                    detail: { inputId: processoInput.id || '' },
+                }));
+            }
+            return;
         }
 
 

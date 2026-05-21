@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../DataJud/DataJudResponseMapper.php';
 require_once __DIR__ . '/../DataJud/DataJudTribunalResolver.php';
 
@@ -24,10 +25,7 @@ final class DataJudService
      */
     public function searchProcesso(string $numero): array
     {
-        $numero = trim(preg_replace('/\D+/', '', $numero));
-        if ($numero === '' || strlen($numero) !== 20) {
-            throw new InvalidArgumentException('Número do processo inválido. Forneça 20 dígitos.');
-        }
+        $numero = CnjValidator::digits20OrThrow($numero);
 
         $baseUrl = $this->getBaseUrl();
         $defaultAlias = $this->getDefaultAlias();

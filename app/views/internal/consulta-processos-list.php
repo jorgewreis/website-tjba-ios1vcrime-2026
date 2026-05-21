@@ -102,6 +102,20 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
         <?php /* Apenas formatação CNJ no filtro; não inclui consulta de classe ao DataJud (lista local). */ ?>
         <script src="/assets/js/modules/datajud/cnj.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/datajud/cnj.js') ?: time(); ?>"></script>
+        <script>
+        (function () {
+            function boot() {
+                if (typeof window.bindAllCNJInputs === 'function') {
+                    window.bindAllCNJInputs(document);
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', boot);
+            } else {
+                boot();
+            }
+        })();
+        </script>
     </head>
 <body class="page-internal">
 

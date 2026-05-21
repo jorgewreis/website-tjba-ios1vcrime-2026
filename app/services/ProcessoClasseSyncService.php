@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
@@ -40,10 +41,7 @@ final class ProcessoClasseSyncService
      */
     public function readByNumero20(string $digits20): array
     {
-        $digits20 = preg_replace('/\D+/', '', $digits20);
-        if (strlen($digits20) !== 20) {
-            throw new InvalidArgumentException('Número do processo deve ter 20 dígitos.');
-        }
+        $digits20 = CnjValidator::digits20OrThrow($digits20);
 
         $processo = $this->processosRepository->findByNumero($digits20);
         if ($processo === null) {
@@ -78,10 +76,7 @@ final class ProcessoClasseSyncService
      */
     public function syncFromDataJud(string $digits20, string $codigoRaw, string $descricaoRaw): array
     {
-        $digits20 = preg_replace('/\D+/', '', $digits20);
-        if (strlen($digits20) !== 20) {
-            throw new InvalidArgumentException('Número do processo deve ter 20 dígitos.');
-        }
+        $digits20 = CnjValidator::digits20OrThrow($digits20);
 
         $codigo = ClassesRepository::normalizeCodigo($codigoRaw);
         if ($codigo === '') {

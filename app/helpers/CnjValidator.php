@@ -26,6 +26,22 @@ final class CnjValidator
         return $dv === $dvCalculado;
     }
 
+    /**
+     * Normaliza para 20 dígitos e valida DV; lança InvalidArgumentException se inválido.
+     */
+    public static function digits20OrThrow(string $value): string
+    {
+        $digits = self::onlyDigits($value);
+        if (strlen($digits) !== 20) {
+            throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
+        }
+        if (!self::isValid($digits)) {
+            throw new InvalidArgumentException('Número do processo inválido. Verifique o dígito verificador.');
+        }
+
+        return $digits;
+    }
+
     private static function modulo97(string $value): int
     {
         $resto = 0;

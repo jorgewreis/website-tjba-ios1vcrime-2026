@@ -15,7 +15,8 @@ Uniformizar o comportamento do botão de cadastro em telas que possuem `numero_p
 
 ## Eventos de integração
 
-- `cnjValidated`: usado para iniciar busca DataJud.
+- `cnjValidated`: disparado somente após **20 dígitos com DV válido** (no `input` ao completar o número ou no `blur`); inicia busca DataJud.
+- CNJ inválido (DV incorreto): campo **limpo**, evento `cnjInvalid`, **sem** chamada DataJud.
 - `cnjInvalid`: usado para forçar estado `Erro`.
 - `datajudClasseResolved`: usado para liberar estado `Cadastrar`.
 

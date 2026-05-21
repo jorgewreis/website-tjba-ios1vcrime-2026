@@ -10,5 +10,19 @@ $cycleM = @filemtime($djBase . '/datajud-cycle-helper.js') ?: time();
 $apiM = @filemtime($djBase . '/datajud-api.js') ?: time();
 ?>
 <script src="/assets/js/modules/datajud/cnj.js?v=<?php echo $cnjM; ?>"></script>
+<script>
+(function () {
+    function bootCnjBindings() {
+        if (typeof window.bindAllCNJInputs === 'function') {
+            window.bindAllCNJInputs(document);
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootCnjBindings);
+    } else {
+        bootCnjBindings();
+    }
+})();
+</script>
 <script src="/assets/js/modules/datajud/datajud-cycle-helper.js?v=<?php echo $cycleM; ?>"></script>
 <script src="/assets/js/modules/datajud/datajud-api.js?v=<?php echo $apiM; ?>"></script>

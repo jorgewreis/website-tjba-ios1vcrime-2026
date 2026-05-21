@@ -6,6 +6,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/CnjValidator.php';
 require_once $basePath . '/app/services/ProcessoAssuntoSyncService.php';
 
 $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
@@ -14,7 +15,6 @@ if (!is_array($payload)) {
 }
 
 $numero = isset($payload['numero']) ? (string) $payload['numero'] : '';
-$digits = preg_replace('/\D+/', '', $numero);
 $assuntos = $payload['assuntos'] ?? [];
 if (!is_array($assuntos)) {
     $assuntos = [];
@@ -28,9 +28,11 @@ try {
         exit;
     }
 
-    if (strlen($digits) !== 20) {
+    try {
+        $digits = CnjValidator::digits20OrThrow($numero);
+    } catch (InvalidArgumentException $e) {
         http_response_code(400);
-        echo json_encode(['error' => 'Número do processo inválido (20 dígitos).'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
         exit;
     }
 

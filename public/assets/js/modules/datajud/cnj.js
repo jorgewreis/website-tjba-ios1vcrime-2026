@@ -1,11 +1,13 @@
 // cnj.js
 // Padronização de número do processo CNJ
 // Regra: se receber 13 dígitos (ou 15 chars mascarados equivalentes), completa com ".8.05.0103",
-// valida e, se inválido, limpa o campo (sem toast no fluxo DataJud).
+// valida DV e, se inválido com 20 dígitos, limpa o campo e dispara cnjInvalid (sem toast no fluxo DataJud).
 
 const CNJ_SUFFIX = '.8.05.0103';
 const CNJ_SUFFIX_DIGITS = '8050103';
 const CNJ_MAX_DIGITS = 20;
+
+const CNJ_INPUT_SELECTOR = 'input[id="filter-processo"], input[id="gab-mon-processo"], input[id="filter-numero"], input[id="audiencia-processo"], input[id="audiencia-edit-processo"], input[id="midias-edit-processo"], input[data-cnj-input="true"]';
 
 function onlyDigits(value) {
     return String(value || '').replace(/\D/g, '');
@@ -61,7 +63,6 @@ function formatarCNJParcial(valor) {
 function completarComSufixoSeElegivel(rawValue) {
     const raw = String(rawValue || '').trim();
     let digits = onlyDigits(raw);
-    // 13 dígitos puros ou 15 caracteres com máscara parcial (equivalente a 13 dígitos)
     const elegivel = digits.length === 13 || (raw.length === 15 && digits.length === 13);
     if (elegivel) {
         digits += CNJ_SUFFIX_DIGITS;
@@ -95,7 +96,18 @@ function dispatchCnjValidated(valor) {
     if (!valor || typeof window === 'undefined') return;
     const digits = onlyDigits(valor);
     window.dispatchEvent(new CustomEvent('cnjValidated', {
-        detail: { numero: valor, digits },
+        detail: { numero: valor, digits, inputId: '' },
+    }));
+}
+
+function dispatchCnjValidatedFromInput(input, formatted, digits) {
+    if (typeof window === 'undefined' || !input) return;
+    window.dispatchEvent(new CustomEvent('cnjValidated', {
+        detail: {
+            numero: formatted,
+            digits: digits,
+            inputId: input.id || '',
+        },
     }));
 }
 
@@ -106,6 +118,44 @@ function dispatchCnjInvalid(inputId) {
     }));
 }
 
+/**
+ * Valida CNJ completo no input: limpa se DV inválido; formata e dispara cnjValidated se válido.
+ * @returns {{ ok: boolean, empty?: boolean, digits: string, formatted: string }}
+ */
+function applyCnjValidationToInput(input, options) {
+    const opts = Object.assign({ dispatchValidated: true }, options || {});
+    if (!input || input.readOnly || input.disabled) {
+        return { ok: false, empty: true, digits: '', formatted: '' };
+    }
+
+    const result = normalizeAndValidateCNJValue(input.value, { toastOnInvalid: false });
+    if (result.empty) {
+        input.value = '';
+        delete input.dataset.lastCnjDispatchedDigits;
+        return result;
+    }
+
+    if (!result.ok) {
+        const digitCount = onlyDigits(input.value).length;
+        input.value = '';
+        delete input.dataset.lastCnjDispatchedDigits;
+        if (digitCount >= CNJ_MAX_DIGITS) {
+            dispatchCnjInvalid(input.id || '');
+        }
+        return result;
+    }
+
+    input.value = result.formatted;
+    const prev = input.dataset.lastCnjDispatchedDigits || '';
+    if (prev !== result.digits) {
+        input.dataset.lastCnjDispatchedDigits = result.digits;
+        if (opts.dispatchValidated) {
+            dispatchCnjValidatedFromInput(input, result.formatted, result.digits);
+        }
+    }
+    return result;
+}
+
 function bindProcessoInput(input) {
     if (!input || input.readOnly || input.disabled) return;
     if (input.dataset.cnjBound === '1') return;
@@ -113,49 +163,22 @@ function bindProcessoInput(input) {
 
     input.addEventListener('input', function () {
         this.value = formatarCNJParcial(this.value);
-        const result = normalizeAndValidateCNJValue(this.value, { toastOnInvalid: false });
-        if (!result.ok || result.empty) {
-            if (!result.empty && onlyDigits(this.value).length === CNJ_MAX_DIGITS) {
-                dispatchCnjInvalid(this.id || '');
-            }
-            if (onlyDigits(this.value).length < 20) {
-                delete this.dataset.lastCnjDispatchedDigits;
-            }
+        const digits = onlyDigits(this.value);
+        if (digits.length < CNJ_MAX_DIGITS) {
+            delete this.dataset.lastCnjDispatchedDigits;
             return;
         }
-        const shouldDispatchOnInput = (this.id || '') !== 'filter-processo';
-        if (!shouldDispatchOnInput) {
-            return;
-        }
-        const prev = this.dataset.lastCnjDispatchedDigits || '';
-        if (prev === result.digits) {
-            return;
-        }
-        this.dataset.lastCnjDispatchedDigits = result.digits;
-        this.value = result.formatted;
-        dispatchCnjValidated(result.formatted);
+        applyCnjValidationToInput(this);
     });
 
     input.addEventListener('blur', function () {
-        const result = normalizeAndValidateCNJValue(this.value, { toastOnInvalid: false });
-        if (result.empty) {
+        const digits = onlyDigits(this.value);
+        if (digits.length === 0) {
             this.value = '';
             delete this.dataset.lastCnjDispatchedDigits;
             return;
         }
-        if (!result.ok) {
-            dispatchCnjInvalid(this.id || '');
-            this.value = '';
-            delete this.dataset.lastCnjDispatchedDigits;
-            return;
-        }
-        this.value = result.formatted;
-        const prev = this.dataset.lastCnjDispatchedDigits || '';
-        if (prev === result.digits) {
-            return;
-        }
-        this.dataset.lastCnjDispatchedDigits = result.digits;
-        dispatchCnjValidated(result.formatted);
+        applyCnjValidationToInput(this);
     });
 }
 
@@ -165,27 +188,31 @@ function bindFormSubmitValidation(input) {
     if (form.dataset.cnjBound === '1') return;
 
     form.addEventListener('submit', function (event) {
-        const cnjInputs = form.querySelectorAll('input[id="filter-processo"], input[id="gab-mon-processo"], input[id="filter-numero"], input[id="audiencia-processo"], input[data-cnj-input="true"]');
+        const cnjInputs = form.querySelectorAll(CNJ_INPUT_SELECTOR);
         for (let i = 0; i < cnjInputs.length; i += 1) {
-            const input = cnjInputs[i];
-            if (input.readOnly || input.disabled) continue;
-            const result = normalizeAndValidateCNJValue(input.value, { toastOnInvalid: false });
+            const el = cnjInputs[i];
+            if (el.readOnly || el.disabled) continue;
+            const result = normalizeAndValidateCNJValue(el.value, { toastOnInvalid: false });
             if (result.empty) continue;
             if (!result.ok) {
-                input.value = '';
+                el.value = '';
+                delete el.dataset.lastCnjDispatchedDigits;
+                dispatchCnjInvalid(el.id || '');
                 event.preventDefault();
-                input.focus();
+                el.focus();
                 return;
             }
-            input.value = result.formatted;
+            el.value = result.formatted;
+            el.dataset.lastCnjDispatchedDigits = result.digits;
         }
     });
 
     form.dataset.cnjBound = '1';
 }
 
-function bindAllCNJInputs() {
-    const inputs = document.querySelectorAll('input[id="filter-processo"], input[id="gab-mon-processo"], input[id="filter-numero"], input[id="audiencia-processo"], input[data-cnj-input="true"]');
+function bindAllCNJInputs(root) {
+    const scope = root && root.querySelectorAll ? root : document;
+    const inputs = scope.querySelectorAll(CNJ_INPUT_SELECTOR);
     inputs.forEach(function (input) {
         bindProcessoInput(input);
         bindFormSubmitValidation(input);
@@ -197,9 +224,11 @@ if (typeof window !== 'undefined') {
     window.validarCNJ = validarCNJ;
     window.formatarCNJ = formatarCNJ;
     window.onlyDigitsCNJ = onlyDigits;
+    window.bindAllCNJInputs = bindAllCNJInputs;
+    window.applyCnjValidationToInput = applyCnjValidationToInput;
 
     window.addEventListener('DOMContentLoaded', function () {
-        bindAllCNJInputs();
+        bindAllCNJInputs(document);
     });
 }
 
@@ -210,5 +239,7 @@ if (typeof module !== 'undefined' && module.exports) {
         formatarCNJ,
         onlyDigits,
         normalizeAndValidateCNJValue,
+        bindAllCNJInputs,
+        applyCnjValidationToInput,
     };
 }

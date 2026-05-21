@@ -17,13 +17,15 @@ if (!is_array($payload)) {
 }
 
 $numero = isset($payload['numero']) ? (string) $payload['numero'] : '';
-$numero = trim(preg_replace('/\D+/', '', $numero));
 
-if ($numero === '' || strlen($numero) !== 20) {
-    respond(['error' => 'Número do processo inválido. Forneça 20 dígitos sem pontuação.'], 400);
-}
-
+require_once dirname(__DIR__, 3) . '/app/helpers/CnjValidator.php';
 require_once dirname(__DIR__, 3) . '/app/services/DataJudService.php';
+
+try {
+    $numero = CnjValidator::digits20OrThrow($numero);
+} catch (InvalidArgumentException $e) {
+    respond(['error' => $e->getMessage()], 400);
+}
 
 try {
     $service = new DataJudService($config);

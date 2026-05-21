@@ -6,6 +6,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/CnjValidator.php';
 require_once $basePath . '/app/services/ProcessoClasseSyncService.php';
 
 $rawNumero = $_GET['numero'] ?? '';
@@ -16,8 +17,6 @@ if ($rawNumero === '' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
 }
 
-$digits = preg_replace('/\D+/', '', (string) $rawNumero);
-
 try {
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
     if ($usuarioId === '') {
@@ -26,9 +25,11 @@ try {
         exit;
     }
 
-    if (strlen($digits) !== 20) {
+    try {
+        $digits = CnjValidator::digits20OrThrow((string) $rawNumero);
+    } catch (InvalidArgumentException $e) {
         http_response_code(400);
-        echo json_encode(['error' => 'Informe o número do processo com 20 dígitos.'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
