@@ -306,11 +306,13 @@ foreach ($tipos as $tpItem) {
             if ($statusAtualEdit === 'adiada') {
                 $statusAtualEdit = 'redesignada';
             }
+            if ($statusAtualEdit === 'realizada') {
+                $statusAtualEdit = 'finalizada';
+            }
             $statusOpcoesEdit = [
                 'designada' => 'Designada',
                 'em_andamento' => 'Em andamento',
                 'finalizada' => 'Finalizada',
-                'realizada' => 'Realizada',
                 'redesignada' => 'Redesignada',
                 'cancelada' => 'Cancelada',
             ];

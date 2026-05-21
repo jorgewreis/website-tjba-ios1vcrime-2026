@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 21 de maio de 2026
 
 # V. 1.41
 
-> feat: implement pagination and improved display for Produtividade list and rules views, enhancing user navigation and feedback
+> refactor: implement CNJ validation in multiple services and scripts
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: implement pagination and improved display for Produtividade list and rules views, enhancing user navigation and feedback** `[bfedb2f]`
+- **refactor: implement CNJ validation in multiple services and scripts** `[9843273a]`
 
 ---
 

@@ -254,11 +254,22 @@ final class SalaAudienciasPautaService
         if ($atual === null) {
             throw new InvalidArgumentException('Audiência não encontrada.');
         }
-        $status = $this->finalizeStatusPauta($statusIn, trim((string) ($atual['status'] ?? 'designada')));
+        $statusAtualNorm = $this->normalizeLegacyStatus(trim((string) ($atual['status'] ?? 'designada')));
+        $status = $this->finalizeStatusPauta($statusIn, $statusAtualNorm);
+        $dataAtual = trim((string) ($atual['data_audiencia'] ?? ''));
+        $horaAtualRaw = trim((string) ($atual['hora_audiencia'] ?? ''));
 
         if ($status === 'designada') {
-            $this->assertDataAudienciaNaoPassada($data);
-            $hora = $this->normalizarHoraNaGradeCadastro($hora);
+            // Na edição, só exige data futura ao (re)designar ou ao alterar a data; registros antigos
+            // podem permanecer designados com data passada até mudarem de situação ou de data.
+            if ($statusAtualNorm !== 'designada' || $data !== $dataAtual) {
+                $this->assertDataAudienciaNaoPassada($data);
+            }
+            if ($statusAtualNorm !== 'designada' || $this->horaAudienciaAlterada($hora, $horaAtualRaw)) {
+                $hora = $this->normalizarHoraNaGradeCadastro($hora);
+            } else {
+                $hora = $this->normalizarHoraAudienciaArmazenamento($hora);
+            }
             if ($this->pautaRepository->existsActiveSlotEm($data, $hora, $id)) {
                 throw new InvalidArgumentException('Já existe audiência designada neste dia e horário. Escolha outro horário.');
             }
@@ -769,14 +780,14 @@ final class SalaAudienciasPautaService
             $s = strtolower(trim($whenEmpty));
         }
         $s = $this->normalizeLegacyStatus($s);
-        if (!in_array($s, ['designada', 'realizada', 'redesignada', 'cancelada', 'em_andamento', 'finalizada'], true)) {
+        if (!in_array($s, ['designada', 'redesignada', 'cancelada', 'em_andamento', 'finalizada'], true)) {
             return 'designada';
         }
 
         return $s;
     }
 
-    /** Compatível com valores antigos armazenados ou enviados pelo cliente (agendada / adiada). */
+    /** Compatível com valores antigos armazenados ou enviados pelo cliente (agendada / adiada / realizada). */
     private function normalizeLegacyStatus(string $s): string
     {
         $s = strtolower(trim($s));
@@ -785,6 +796,9 @@ final class SalaAudienciasPautaService
         }
         if ($s === 'adiada') {
             return 'redesignada';
+        }
+        if ($s === 'realizada') {
+            return 'finalizada';
         }
 
         return $s;
@@ -872,6 +886,20 @@ final class SalaAudienciasPautaService
             return sprintf('%02d:%02d:%02d', (int) $m[1], (int) $m[2], (int) $m[3]);
         }
         throw new InvalidArgumentException('Hora da audiência inválida.');
+    }
+
+    private function horaAudienciaAlterada(string $horaNova, string $horaAtualRaw): bool
+    {
+        $horaAtualRaw = trim($horaAtualRaw);
+        if ($horaAtualRaw === '') {
+            return true;
+        }
+        try {
+            return $this->normalizarHoraAudienciaArmazenamento($horaNova)
+                !== $this->normalizarHoraAudienciaArmazenamento($horaAtualRaw);
+        } catch (InvalidArgumentException $e) {
+            return true;
+        }
     }
 
     /** @return array{0:string,1:string} */
