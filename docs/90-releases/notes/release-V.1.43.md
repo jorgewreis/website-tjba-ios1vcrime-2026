@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 02 de abril de 2026
+**Data de Lançamento:** 21 de maio de 2026
 
 # V. 1.43
 
-> feat: enhance ProdutividadeService with target normalization for sectors and profiles, and update UI for export functionality across various views
+> refactor: streamline post-update processing in SalaAudienciasPautaService
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: enhance ProdutividadeService with target normalization for sectors and profiles, and update UI for export functionality across various views** `[36d3a90]`
+- **refactor: streamline post-update processing in SalaAudienciasPautaService** `[76f0b556]`
 
 ---
 

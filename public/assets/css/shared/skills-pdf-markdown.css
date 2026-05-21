@@ -1,0 +1,93 @@
+.skills-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 16px;
+}
+
+.skills-dropzone {
+    width: calc(100% - 32px);
+    margin: 0 16px 16px;
+    border: 2px dashed rgba(0, 0, 0, 0.18);
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 26px 16px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.skills-dropzone-title {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.skills-dropzone-subtitle {
+    display: block;
+    color: #4a5568;
+    font-size: 13px;
+}
+
+.skills-dropzone.is-drag-over {
+    border-color: var(--color-primary, #5e50ee);
+    background: #f1f3ff;
+}
+
+.skills-pdf-list-wrap {
+    padding: 0 16px 16px;
+}
+
+.skills-pdf-list-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.skills-pdf-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.skills-pdf-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px 12px;
+}
+
+.skills-pdf-meta {
+    min-width: 0;
+}
+
+.skills-pdf-name {
+    font-weight: 600;
+    margin-bottom: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.skills-pdf-status {
+    color: #4a5568;
+    font-size: 13px;
+}
+
+.skills-pdf-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+@media (max-width: 768px) {
+    .skills-pdf-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

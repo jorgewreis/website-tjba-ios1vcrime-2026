@@ -27,7 +27,7 @@ try {
         exit;
     }
     $perfilsEfetivos = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
-    if (!AccessEvaluator::canAccessPage('estudaata', $perfilsEfetivos)) {
+    if (!AccessEvaluator::canAccessPage('estudapainel', $perfilsEfetivos)) {
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);
         exit;

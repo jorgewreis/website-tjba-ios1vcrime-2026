@@ -445,15 +445,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 $classeStatusEst = 'status-finished';
             }
 
-            $idAtaMinhas = trim((string) ($m['id_ata'] ?? ''));
-            $expiresAtMinhasRaw = trim((string) ($m['expires_at'] ?? ''));
-            $arquivoAtaMinhas = trim((string) ($m['arquivo_relativo'] ?? ''));
-            $atasDisponivel = false;
-            if ($idAtaMinhas !== '' && $arquivoAtaMinhas !== '' && $expiresAtMinhasRaw !== '') {
-                $expiresTs = strtotime($expiresAtMinhasRaw);
-                $atasDisponivel = $expiresTs !== false && $expiresTs > time();
-            }
-
             $midiaStatusMinhas = strtolower(trim((string) ($m['midia_status'] ?? '')));
             $midiaLabel = '';
             if ($midiaStatusMinhas === 'concluida') {
@@ -466,7 +457,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 $midiaLabel = 'Não disponibilizada';
             }
 
-            $audienciaRealizada = in_array($stRow, ['realizada', 'finalizada'], true);
             $row = $m;
             ?>
         <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
@@ -499,17 +489,8 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 <?php endif; ?>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-sm align-center padding-x-md">
-                <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $audienciaRealizada ? ' style="display:none;"' : ''; ?>>
+                <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
                     <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
-                </div>
-                <div class="width-300" data-ata-info="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"<?php echo !$audienciaRealizada ? ' style="display:none;"' : ''; ?>>
-                    <?php if ($atasDisponivel): ?>
-                    <button type="button" class="btn btn-primary-outline height-sm" data-nav-href="/api/sala-audiencias-ata/download.php?pauta=<?php echo urlencode($idPautaMinhasRaw); ?>" data-nav-target="_blank" title="Baixar PDF da ata desta audiência">Baixar ata</button>
-                    <?php elseif (SalaAudienciasAtaService::ocultarDaListagemAtasPorPrazoSemDownload($m)): ?>
-                    <span class="minor-info">Documento expirado.</span>
-                    <?php else: ?>
-                    <span class="minor-info">Ata ainda não disponível.</span>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>

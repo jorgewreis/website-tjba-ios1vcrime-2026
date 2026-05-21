@@ -97,7 +97,6 @@ final class PageAccessRegistry
             'salapainel' => $areaAudiencias,
             'salapaineldia' => $areaAudiencias,
             'estudapauta' => ['kind' => 'estudantes_readonly'],
-            'estudaata' => ['kind' => 'estudantes_readonly'],
             'estudapainel' => ['kind' => 'estudantes_readonly'],
             'salapautacreate' => $areaAudiencias,
             'salapautaedit' => $areaAudiencias,
@@ -116,6 +115,8 @@ final class PageAccessRegistry
             'usuarioslist' => ['kind' => 'gestao'],
             'usuarioscreate' => ['kind' => 'gestao'],
             'usuariosedit' => ['kind' => 'gestao'],
+            'skills' => ['kind' => 'exact', 'profiles' => ['ADMIN']],
+            'skillspdfmarkdown' => ['kind' => 'exact', 'profiles' => ['ADMIN']],
             'feriadoscreate' => ['kind' => 'gestao'],
             'feriadosedit' => ['kind' => 'gestao'],
 

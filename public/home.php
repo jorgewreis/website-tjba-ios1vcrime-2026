@@ -610,7 +610,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         /** Consultor externo: partes, instituições e CEP (alinhado a frame.php — ConsultasPartesInstituicoes + ConsultasCep). */
         const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes', 'instituicoespublicas', 'consultacep']);
         /** Estudante externo: CEP + recursos de audiências para estudantes. */
-        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['consultacep', 'estudapauta', 'estudaata', 'estudapainel']);
+        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['consultacep', 'estudapauta', 'estudapainel']);
 
         /** Mesma regra de app/access/AccessEvaluator.php (recalculada no cliente após fetch de perfis). */
         const COMPOSITE_PROFILE_RE = /^(ESTAGIARIO|SERVIDOR)-(CARTORIO|GABINETE|AUDIENCIAS)$/;
@@ -657,7 +657,6 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Estudantes',
                 items: [
                     { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'estudapauta' },
-                    { icon: 'fi fi-rs-document', label: 'Atas de Audiências', target: 'estudaata' },
                     { icon: 'fi fi-rs-screen', label: 'Painel em tempo real', target: 'estudapainel' }
                 ]
             },
@@ -675,6 +674,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Admin',
                 items: [
                     { icon: 'fi fi-rs-id-badge', label: 'Usuários', target: 'usuarioslist', allowedPerfis: ['ADMIN'] },
+                    { icon: 'fi fi-rs-magic-wand', label: 'Skills', target: 'skills', allowedPerfis: ['ADMIN'] },
                     { icon: 'fi fi-rs-calendar', label: 'Feriados', target: 'feriadoslist', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA'] },
                     { icon: 'fi fi-rs-clock-up-arrow', label: 'Regras de Produtividade', target: 'produtividaderegras', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'] },
                     { icon: 'fi fi-rs-target', label: 'Metas de Produtividade', target: 'produtividademetas', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'] }

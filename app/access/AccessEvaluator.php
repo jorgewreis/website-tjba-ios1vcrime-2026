@@ -52,7 +52,7 @@ final class AccessEvaluator
         if ($page === 'consultacep') {
             return true;
         }
-        if (($page === 'estudapauta' || $page === 'estudaata' || $page === 'estudapainel') && $temEstudante) {
+        if (($page === 'estudapauta' || $page === 'estudapainel') && $temEstudante) {
             return true;
         }
         if ($page === 'consultapartes' || $page === 'instituicoespublicas' || $page === 'partesinstituicoeslist') {
