@@ -16,8 +16,6 @@ Definir um padrão único para alocação de usuários nas telas de cartório (l
 Aplica-se aos módulos de cartório:
 
 - Guias
-- CEAPA
-- Cejusc
 - Cartas Expedidas
 - Cartas Recebidas
 - Medidas Protetivas

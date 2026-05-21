@@ -4,8 +4,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/../services/FeriadosService.php';
 require_once __DIR__ . '/../services/UsuariosService.php';
 require_once __DIR__ . '/../services/GuiasService.php';
-require_once __DIR__ . '/../services/CejuscService.php';
-require_once __DIR__ . '/../services/CeapaService.php';
 require_once __DIR__ . '/../services/EditaisService.php';
 require_once __DIR__ . '/../services/MedidasProtetivasService.php';
 require_once __DIR__ . '/../services/OficiosCartorioService.php';
@@ -53,8 +51,6 @@ final class InternalListExportHandlers
             'feriadoslist' => [self::class, 'feriados'],
             'usuarioslist' => [self::class, 'usuarios'],
             'guias' => [self::class, 'guias'],
-            'cejusc' => [self::class, 'cejusc'],
-            'ceapa' => [self::class, 'ceapa'],
             'editais' => [self::class, 'editais'],
             'medidasprotetivas' => [self::class, 'medidasProtetivas'],
             'oficioscartorio' => [self::class, 'oficiosCartorio'],
@@ -286,62 +282,6 @@ final class InternalListExportHandlers
                 ['key' => 'Denunciado', 'label' => 'Denunciado'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
-            ],
-            'rows' => $rows,
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $get
-     */
-    private static function cejusc(PDO $pdo, string $userId, array $get): array
-    {
-        $filters = [
-            'status' => trim((string) ($get['status'] ?? '')),
-            'processo' => trim((string) ($get['processo'] ?? '')),
-        ];
-        $service = new CejuscService($pdo);
-        $rows = self::withExportPrincipalStatusTitle(
-            $service->listTarefas($filters, self::MAX_ROWS, 0)['rows'] ?? [],
-            ListExportPrincipalStatusTitle::MODULE_CEJUSC
-        );
-
-        return [
-            'title' => 'Lista de tarefas CEJUSC',
-            'slug' => 'cejusc',
-            'columns' => [
-                ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ReuNome', 'label' => 'Réu'],
-                ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
-            ],
-            'rows' => $rows,
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $get
-     */
-    private static function ceapa(PDO $pdo, string $userId, array $get): array
-    {
-        $filters = [
-            'status' => trim((string) ($get['status'] ?? '')),
-            'processo' => trim((string) ($get['processo'] ?? '')),
-            'tipo_suspensao' => trim((string) ($get['tipo_suspensao'] ?? '')),
-        ];
-        $service = new CeapaService($pdo);
-        $rows = $service->listTarefas($filters, self::MAX_ROWS, 0)['rows'] ?? [];
-
-        return [
-            'title' => 'Lista de tarefas CEAPA',
-            'slug' => 'ceapa',
-            'columns' => [
-                ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'TipoSuspensao', 'label' => 'Tipo de suspensão'],
-                ['key' => 'DecisaoCumprir', 'label' => 'Decisão a cumprir'],
-                ['key' => 'DataDecisao', 'label' => 'Data da decisão'],
-                ['key' => 'ReuNome', 'label' => 'Réu'],
-                ['key' => 'Alocados', 'label' => 'Alocações'],
             ],
             'rows' => $rows,
         ];

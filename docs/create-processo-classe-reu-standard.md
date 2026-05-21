@@ -28,11 +28,9 @@ Padronizar o comportamento das telas `app/views/internal/*-create.php` para gara
 ### Create e fluxos equivalentes
 
 - `app/views/internal/sala-audiencias-pauta-create.php`
-- `app/views/internal/cartorio-cejusc-create.php`
 - `app/views/internal/cartorio-editais-create.php`
 - `app/views/internal/cartorio-guias-create.php`
 - `app/views/internal/cartorio-medidas-protetivas-create.php`
-- `app/views/internal/cartorio-ceapa-create.php`
 - `app/views/internal/cartorio-cartas-recebidas-create.php`
 - `app/views/internal/cartorio-cartas-expedidas-create.php`
 - `app/views/internal/gabinete-monitoramento-eletronico-create.php`
@@ -45,7 +43,6 @@ Padronizar o comportamento das telas `app/views/internal/*-create.php` para gara
 ### Edição com o mesmo trio (exceções de negócio podem usar `DATAJUD_SKIP_CLASSE_SYNC`)
 
 - `app/views/internal/gabinete-reus-presos-edit.php`
-- `app/views/internal/cartorio-ceapa-edit.php` (sync desativado quando a classe está travada no registro CEAPA)
 
 ### Somente CNJ (`cnj.js` sem consulta automática de classe DataJud nesta tela)
 

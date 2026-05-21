@@ -199,9 +199,6 @@
         .col-tipo-guia {
             display: none;
         }
-        .col-cejusc {
-            display: none;
-        }
         .parte-nome {
             display: flex;
         }
@@ -466,10 +463,6 @@
 
     /* COLUMNS WITH ID FIX */    
     .col-comarca {
-        display: flex;
-        margin-right: 4vw;
-    }    
-    .col-cejusc {
         display: flex;
         margin-right: 4vw;
     }

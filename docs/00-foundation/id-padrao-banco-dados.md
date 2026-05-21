@@ -39,9 +39,6 @@
 | CES     | cartas_expedidas_subtarefas |
 | CRA     | cartas_recebidas_alocados |
 | CEA     | cartas_expedidas_alocados |
-| CJT     | cejusc_tarefas           |
-| CJS     | cejusc_subtarefas        |
-| CJA     | cejusc_alocados          |
 | GUI     | guias                    |
 | GUS     | guias_subtarefas         |
 | GUA     | guias_alocados           |

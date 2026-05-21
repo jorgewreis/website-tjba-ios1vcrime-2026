@@ -91,22 +91,6 @@ return array (
   array (
     'observacao' => '{tipo_edital} — certificação de decurso de prazo (término {data_decurso_prazo}).',
   ),
-  'cartorio-cejusc.create' => 
-  array (
-    'observacao' => 'Tarefa CEJUSC cadastrada — {reu_nome}.',
-  ),
-  'cartorio-cejusc.subtarefa.gerar_pdf_decisao' => 
-  array (
-    'observacao' => 'PDF da decisão CEJUSC gerado — {reu_nome}.',
-  ),
-  'cartorio-cejusc.subtarefa.enviar_decisao' => 
-  array (
-    'observacao' => 'Decisão enviada para o CEJUSC — {reu_nome}.',
-  ),
-  'cartorio-cejusc.subtarefa.juntar_termo_envio' => 
-  array (
-    'observacao' => 'Termo de envio da decisão CEJUSC juntado — {reu_nome}.',
-  ),
   'cartorio-cartas-recebidas.create' => 
   array (
     'observacao' => '{tipo_carta} cadastrada — finalidade: {finalidade}.',
@@ -138,10 +122,6 @@ return array (
   'cartorio-cartas-recebidas.subtarefa.arquivamento_definitivo' => 
   array (
     'observacao' => 'Arquivamento definitivo com baixa da {tipo_carta}',
-  ),
-  'cartorio-ceapa.create' => 
-  array (
-    'observacao' => 'Tarefa CEAPA cadastrada — {tipo_suspensao}.',
   ),
   'sala-midias.create' =>
   array (

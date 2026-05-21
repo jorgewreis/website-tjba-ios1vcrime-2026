@@ -16,7 +16,7 @@ Formatação centralizada em `RegistroMetadataHelper::formatarLinhaAutor` e `for
 
 Módulos com `movement_from_subtarefa` em `RegistroMetadataHelper::MODULES`:
 
-- cartas_recebidas, cartas_expedidas, guias, editais, cejusc, medidas_protetivas
+- cartas_recebidas, cartas_expedidas, guias, editais, medidas_protetivas
 
 **Atualização na coluna** = última subtarefa com `status = concluida` em `SubtarefasAll`, usando:
 
@@ -39,7 +39,6 @@ Cadastro da tarefa pai: `criado_por` no `INSERT` + join `CriadoPorNome` na lista
 
 | Módulo | Atualização na coluna |
 |--------|----------------------|
-| CEAPA | `atualizado_por` da tarefa → `UltimoEditorNome` |
 | Ofícios (cartório/gabinete) | `OficioRegistroMetadataHelper` → `atualizado_por` do ofício |
 | Gabinete monitoramento | Subtarefas sem JSON; `UltimoEditorNome` da tarefa |
 | Sala pauta / mídias | `atualizado_por` / `atualizado_em` |
@@ -60,4 +59,4 @@ Por módulo com subtarefas:
 3. Cancelamento (se aplicável): **Cancelado em … por Nome**.
 4. Registro antigo sem `usuario_id` no JSON: atualização pode aparecer só com data (sem `por`).
 
-Exceções (CEAPA, ofícios, sala, monitoramento): validar `por Nome` via `atualizado_por` quando a tarefa foi editada/cancelada no fluxo do módulo.
+Exceções (ofícios, sala, monitoramento): validar `por Nome` via `atualizado_por` quando a tarefa foi editada/cancelada no fluxo do módulo.

@@ -47,8 +47,6 @@ $__cartorioSimpleEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cart
 $__cartorioSimpleEditV = @filemtime($__cartorioSimpleEditPath) ?: time();
 $__cartorioGuiasEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-guias-edit.js';
 $__cartorioGuiasEditV = @filemtime($__cartorioGuiasEditPath) ?: time();
-$__cartorioCejuscListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-cejusc-list.js';
-$__cartorioCejuscListV = @filemtime($__cartorioCejuscListPath) ?: time();
 $__cartorioEditaisListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-editais-list.js';
 $__cartorioEditaisListV = @filemtime($__cartorioEditaisListPath) ?: time();
 $__cartorioMedidasListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-medidas-protetivas-list.js';
@@ -99,12 +97,6 @@ $__processosPartesCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/p
 $__processosPartesCreateV = @filemtime($__processosPartesCreatePath) ?: time();
 $__processosPartesEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/processos-partes-edit.js';
 $__processosPartesEditV = @filemtime($__processosPartesEditPath) ?: time();
-$__ceapaCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/ceapa-create.js';
-$__ceapaCreateV = @filemtime($__ceapaCreatePath) ?: time();
-$__ceapaEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/ceapa-edit.js';
-$__ceapaEditV = @filemtime($__ceapaEditPath) ?: time();
-$__ceapaListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/ceapa-list.js';
-$__ceapaListV = @filemtime($__ceapaListPath) ?: time();
 $__usuariosCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/usuarios-create.js';
 $__usuariosCreateV = @filemtime($__usuariosCreatePath) ?: time();
 $__usuariosEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/usuarios-edit.js';
@@ -168,7 +160,6 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/gme-create.js?v=<?php echo (int) $__gmeCreateV; ?>"></script>
 <script src="/assets/js/shared/cartorio-simple-edit.js?v=<?php echo (int) $__cartorioSimpleEditV; ?>"></script>
 <script src="/assets/js/shared/cartorio-guias-edit.js?v=<?php echo (int) $__cartorioGuiasEditV; ?>"></script>
-<script src="/assets/js/shared/cartorio-cejusc-list.js?v=<?php echo (int) $__cartorioCejuscListV; ?>"></script>
 <script src="/assets/js/shared/cartorio-editais-list.js?v=<?php echo (int) $__cartorioEditaisListV; ?>"></script>
 <script src="/assets/js/shared/cartorio-medidas-protetivas-list.js?v=<?php echo (int) $__cartorioMedidasListV; ?>"></script>
 <script src="/assets/js/shared/cartorio-guias-list.js?v=<?php echo (int) $__cartorioGuiasListV; ?>"></script>
@@ -194,9 +185,6 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/partes-instituicoes-edit.js?v=<?php echo (int) $__partesInstituicoesEditV; ?>"></script>
 <script src="/assets/js/shared/processos-partes-create.js?v=<?php echo (int) $__processosPartesCreateV; ?>"></script>
 <script src="/assets/js/shared/processos-partes-edit.js?v=<?php echo (int) $__processosPartesEditV; ?>"></script>
-<script src="/assets/js/shared/ceapa-create.js?v=<?php echo (int) $__ceapaCreateV; ?>"></script>
-<script src="/assets/js/shared/ceapa-edit.js?v=<?php echo (int) $__ceapaEditV; ?>"></script>
-<script src="/assets/js/shared/ceapa-list.js?v=<?php echo (int) $__ceapaListV; ?>"></script>
 <script src="/assets/js/shared/usuarios-create.js?v=<?php echo (int) $__usuariosCreateV; ?>"></script>
 <script src="/assets/js/shared/usuarios-edit.js?v=<?php echo (int) $__usuariosEditV; ?>"></script>
 <script src="/assets/js/shared/alterar-dados-pessoais.js?v=<?php echo (int) $__alterarDadosV; ?>"></script>

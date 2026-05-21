@@ -14,7 +14,6 @@ require_once __DIR__ . '/../repositories/GabineteMonitoramentoEletronicoSubtaref
 final class ListExportPrincipalStatusTitle
 {
     public const MODULE_GUIAS = 'guias';
-    public const MODULE_CEJUSC = 'cejusc';
     public const MODULE_EDITAIS = 'editais';
     public const MODULE_MEDIDAS = 'medidas';
     public const MODULE_OFICIOS_CARTORIO = 'oficios_cartorio';
@@ -29,7 +28,6 @@ final class ListExportPrincipalStatusTitle
     {
         return match ($module) {
             self::MODULE_GUIAS => self::guias($row),
-            self::MODULE_CEJUSC => self::cejusc($row),
             self::MODULE_EDITAIS => self::editais($row),
             self::MODULE_MEDIDAS => self::medidas($row),
             self::MODULE_OFICIOS_CARTORIO => self::oficiosCartorio($row),
@@ -109,45 +107,6 @@ final class ListExportPrincipalStatusTitle
             $current = 'Todas as etapas concluídas';
         } elseif ($current === '') {
             $current = $st === 'cancelada' ? 'Cancelada' : 'Em andamento';
-        }
-
-        return $current;
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     */
-    private static function cejusc(array $row): string
-    {
-        $subtarefaLabels = [
-            'gerar_pdf_decisao' => 'Gerar PDF da decisão',
-            'enviar_decisao' => 'Envio da decisão por e-mail',
-            'juntar_termo_envio' => 'Juntada de termo de envio',
-        ];
-        $ordemLabels = [
-            1 => $subtarefaLabels['gerar_pdf_decisao'],
-            2 => $subtarefaLabels['enviar_decisao'],
-            3 => $subtarefaLabels['juntar_termo_envio'],
-        ];
-
-        $st = (string) ($row['Status'] ?? '');
-        $allSt = self::subtarefasAll($row);
-        $current = '';
-        foreach ($allSt as $s) {
-            if (!is_array($s)) {
-                continue;
-            }
-            if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                $current = $subtarefaLabels[$s['tipo'] ?? ''] ?? (string) ($s['tipo'] ?? '');
-                break;
-            }
-        }
-        if ($current === '' && $st === 'pendente') {
-            $current = $ordemLabels[1] ?? 'Gerar PDF da decisão';
-        } elseif ($current === '' && in_array($st, ['concluída', 'concluida', 'finalizada'], true)) {
-            $current = 'Todas as etapas concluídas';
-        } elseif ($current === '') {
-            $current = (string) ($row['Status'] ?? 'Em andamento');
         }
 
         return $current;

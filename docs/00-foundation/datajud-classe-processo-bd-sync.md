@@ -38,7 +38,6 @@ Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud
 | **DataJud falha** | Não chama sync; UI pode manter classe só do BD (*Classe do cadastro local*). Com classe já vinda do BD: **sem** toast de erro; só mensagem de contexto no rótulo/auxiliar. |
 | **BD com classe** | Enquanto o DataJud carrega: input em **`status-finished`**, botões **desbloqueados** (`startLoading` com `bancoPrefilled`). |
 | **BD com placeholder** | Se `classe-read` trouxer texto equivalente a **`Classe não informada`** (`DataJudCycle.FALLBACK_CLASSE`), **sem diferenciar maiúsculas/minúsculas** (ex.: “Classe Não Informada”), trata-se como **sem classe**: não preenche o input, usa placeholder de consulta ao DataJud e **`status-warning`**. |
-| **CEAPA edit travado** | `DATAJUD_SKIP_CLASSE_SYNC` — não grava via sync; DataJud ainda preenche visualmente. |
 | **Retries** | `postSyncClasse` em `datajud-api.js`: até **3** tentativas com atraso em **rede** ou **HTTP 5xx**. O corpo da resposta é lido como **texto** e parseado com `JSON.parse` seguro; corpo inválido ou vazio **não** dispara retry (evita confundir HTML/erro de proxy com falha de rede). |
 | **Reconsulta** | Sem botão dedicado; novo ciclo ao **revalidar o CNJ** (`cnjValidated`). |
 | **Botão de cadastro** | Contrato único: inicia `Aguarde...` (disabled), vira `Erro` em CNJ inválido, consulta DataJud quando válido e volta para `Cadastrar` habilitado quando o DataJud finaliza (sucesso ou falha). |
@@ -66,8 +65,6 @@ Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud
 | [`public/assets/js/modules/datajud/cnj.js`](../../public/assets/js/modules/datajud/cnj.js) | Validação CNJ e `cnjValidated`. |
 | [`public/assets/js/modules/datajud/datajud-cycle-helper.js`](../../public/assets/js/modules/datajud/datajud-cycle-helper.js) | Lock de UI, `finishSuccess` / `finishFailure`, preservação BD/`data-datajud-initial`. |
 | [`public/assets/js/modules/datajud/datajud-api.js`](../../public/assets/js/modules/datajud/datajud-api.js) | Orquestra BD → DataJud → `postSyncClasse` (retries). |
-| [`app/views/internal/cartorio-ceapa-edit.php`](../../app/views/internal/cartorio-ceapa-edit.php) | `DATAJUD_SKIP_CLASSE_SYNC`, `data-datajud-initial` quando aplicável. |
-
 Documentação de apoio: [`public/assets/js/modules/datajud/README.md`](../../public/assets/js/modules/datajud/README.md), [`docs/create-processo-classe-reu-standard.md`](../create-processo-classe-reu-standard.md).
 
 ---
@@ -86,13 +83,13 @@ Documentação de apoio: [`public/assets/js/modules/datajud/README.md`](../../pu
 ## Comparação de código de classe (única fonte)
 
 - [`ClassesRepository::normalizeCodigo()`](../../app/repositories/ClassesRepository.php)
-- [`ClassesRepository::codigosEquivalentes()`](../../app/repositories/ClassesRepository.php) — ex.: regra CEAPA ao comparar payload com registro existente.
+- [`ClassesRepository::codigosEquivalentes()`](../../app/repositories/ClassesRepository.php) — equivalência de códigos ao comparar payload com registro existente.
 
 ---
 
 ## Atributo `data-datajud-initial` (UI)
 
-Usado quando a **classe vem do PHP** no primeiro render (ex.: CEAPA com classe travada). O helper **não zera** o valor ao entrar em “Consultando…”. Removido quando o CNJ validado **muda**, quando o BD preenche `data-preserve-banco`, após sucesso DataJud, ou quando o usuário edita o campo manualmente (`input`).
+Usado quando a **classe vem do PHP** no primeiro render. O helper **não zera** o valor ao entrar em “Consultando…”. Removido quando o CNJ validado **muda**, quando o BD preenche `data-preserve-banco`, após sucesso DataJud, ou quando o usuário edita o campo manualmente (`input`).
 
 ---
 
@@ -112,7 +109,7 @@ Usado quando a **classe vem do PHP** no primeiro render (ex.: CEAPA com classe t
 | 1 | **Escopo A:** todas as telas com trio completo (inventário canônico). |
 | 2 | **Processo inexistente A:** sync pode criar linha mínima em `processos` quando o DataJud trouxer classe. |
 | 3 | **Diferença A:** comparar pelo **código** normalizado; igual → `noop`. |
-| 4 | **Bloqueio C:** trava sobretudo em **edição** (ex.: CEAPA); **create** com sync normal. |
+| 4 | **Bloqueio C:** trava sobretudo em **edição** quando o produto exigir (`DATAJUD_SKIP_CLASSE_SYNC`); **create** com sync normal. |
 | 5 | **Sem classe no DataJud A:** manter cadastro local quando o índice não trouxer classe. |
 | 6 | **Auditoria B:** sem log dedicado por sync. |
 | 7 | **Falha sync C:** retries automáticos limitados — **implementado** em `postSyncClasse` (`SYNC_MAX_ATTEMPTS`, rede e 5xx). |
@@ -134,7 +131,7 @@ Usado quando a **classe vem do PHP** no primeiro render (ex.: CEAPA com classe t
 
 ## Exceções de produto
 
-- **CEAPA edição com classe travada** — [`cartorio-ceapa-edit.php`](../../app/views/internal/cartorio-ceapa-edit.php): `window.DATAJUD_SKIP_CLASSE_SYNC = true`; consulta DataJud e UI seguem; **POST** `classe-sync` não é enviado.
+- Telas com `window.DATAJUD_SKIP_CLASSE_SYNC = true`: consulta DataJud e UI seguem; **POST** `classe-sync` não é enviado.
 
 ---
 
@@ -146,14 +143,13 @@ Usado quando a **classe vem do PHP** no primeiro render (ex.: CEAPA com classe t
 - [ ] DataJud **sem** classe; BD tinha classe → *Classe do cadastro local* / fallback; sem toast de erro.
 - [ ] Falha de rede no sync após DataJud OK → retries; **sem** toast de erro; valores DataJud mantidos.
 - [ ] BD já trouxe classe → `status-finished` e botões liberados enquanto DataJud carrega.
-- [ ] CEAPA `lockClasse` → sem `POST` em `classe-sync`.
 - [ ] **Troca de CNJ** → novo ciclo sem valor fantasma.
 
 ### Por área (amostragem mínima por release)
 
 | Área | Fluxos |
 |------|--------|
-| **Cartório** | Guias, cartas, CEAPA create/edit, ofícios list, medidas, editais, CEJUSC create. |
+| **Cartório** | Guias, cartas, ofícios list, medidas, editais. |
 | **Gabinete** | Ofícios list, monitoramento create, réus presos edit. |
 | **Audiências** | Pauta create. |
 

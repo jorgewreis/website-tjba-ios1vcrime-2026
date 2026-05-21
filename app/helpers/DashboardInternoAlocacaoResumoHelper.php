@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/GuiasRepository.php';
-require_once __DIR__ . '/../repositories/CeapaRepository.php';
-require_once __DIR__ . '/../repositories/CejuscRepository.php';
 require_once __DIR__ . '/../repositories/CartasExpedidasRepository.php';
 require_once __DIR__ . '/../repositories/CartasRecebidasRepository.php';
 require_once __DIR__ . '/../repositories/EditaisRepository.php';
@@ -18,8 +16,6 @@ final class DashboardInternoAlocacaoResumoHelper
 {
     private const REGRA_POR_TABELA_ALOCADOS = [
         'guias_alocados' => 'ALLOCATE-GUIAS',
-        'ceapa_alocados' => 'ALLOCATE-CEAPA',
-        'cejusc_alocados' => 'ALLOCATE-CEJUSC',
         'cartas_expedidas_alocados' => 'ALLOCATE-CARTASEXPEDIDAS',
         'cartas_recebidas_alocados' => 'ALLOCATE-CARTASRECEBIDAS',
         'editais_alocados' => 'ALLOCATE-EDITAIS',
@@ -29,8 +25,6 @@ final class DashboardInternoAlocacaoResumoHelper
 
     private const ORDEM_REGRAS = [
         'ALLOCATE-GUIAS',
-        'ALLOCATE-CEAPA',
-        'ALLOCATE-CEJUSC',
         'ALLOCATE-CARTASEXPEDIDAS',
         'ALLOCATE-CARTASRECEBIDAS',
         'ALLOCATE-EDITAIS',
@@ -50,20 +44,6 @@ final class DashboardInternoAlocacaoResumoHelper
             'status_col' => 'status',
             'aloc_table' => 'guias_alocados',
             'aloc_fk' => 'guia_id',
-        ],
-        'ALLOCATE-CEAPA' => [
-            'main_table' => 'ceapa_tarefas',
-            'main_pk' => 'id',
-            'status_col' => 'status_cumprimento',
-            'aloc_table' => 'ceapa_alocados',
-            'aloc_fk' => 'ceapa_id',
-        ],
-        'ALLOCATE-CEJUSC' => [
-            'main_table' => 'cejusc_tarefas',
-            'main_pk' => 'id',
-            'status_col' => 'status',
-            'aloc_table' => 'cejusc_alocados',
-            'aloc_fk' => 'cejusc_tarefa_id',
         ],
         'ALLOCATE-CARTASEXPEDIDAS' => [
             'main_table' => 'cartas_expedidas',
@@ -197,34 +177,6 @@ final class DashboardInternoAlocacaoResumoHelper
                     'em_andamento_label' => 'Em andamento',
                     'em_andamento_title' => 'Guias com status «em andamento» na tarefa principal.',
                     'status_blocos' => self::blocosGuias($byStatus),
-                ];
-
-            case 'ALLOCATE-CEAPA':
-                $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
-
-                return [
-                    'regra' => $code,
-                    'titulo' => 'CEAPA',
-                    'frame_page' => 'ceapa',
-                    'total' => $total,
-                    'em_andamento' => $emAnd,
-                    'em_andamento_label' => 'Em andamento',
-                    'em_andamento_title' => 'Registros CEAPA com status de cumprimento «em andamento».',
-                    'status_blocos' => self::blocosCeapa($byStatus),
-                ];
-
-            case 'ALLOCATE-CEJUSC':
-                $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
-
-                return [
-                    'regra' => $code,
-                    'titulo' => 'Cejusc',
-                    'frame_page' => 'cejusc',
-                    'total' => $total,
-                    'em_andamento' => $emAnd,
-                    'em_andamento_label' => 'Em andamento',
-                    'em_andamento_title' => 'Tarefas Cejusc com status «em andamento».',
-                    'status_blocos' => self::blocosCejusc($byStatus),
                 ];
 
             case 'ALLOCATE-CARTASEXPEDIDAS':
@@ -364,33 +316,6 @@ final class DashboardInternoAlocacaoResumoHelper
      * @param array<string, int> $byStatus
      * @return list<array{label:string,count:int,title:string}>
      */
-    private static function blocosCeapa(array $byStatus): array
-    {
-        $map = [
-            'pendente' => ['Pendente', 'CEAPA com cumprimento «pendente».'],
-            'em_andamento' => ['Em andamento', 'CEAPA com cumprimento «em andamento».'],
-            'finalizada' => ['Finalizada', 'CEAPA com cumprimento «finalizada».'],
-        ];
-
-        return self::buildBlocosFromMap($byStatus, $map);
-    }
-
-    /**
-     * @param array<string, int> $byStatus
-     * @return list<array{label:string,count:int,title:string}>
-     */
-    private static function blocosCejusc(array $byStatus): array
-    {
-        $map = [
-            'pendente' => ['Pendente', 'Tarefas Cejusc «pendente».'],
-            'em_andamento' => ['Em andamento', 'Tarefas Cejusc «em andamento».'],
-            'concluída' => ['Concluídas', 'Tarefas Cejusc «concluída».'],
-            'cancelada' => ['Canceladas', 'Tarefas Cejusc «cancelada».'],
-        ];
-
-        return self::buildBlocosFromMap($byStatus, $map);
-    }
-
     /**
      * @param array<string, int> $byStatus
      * @return list<array{label:string,count:int,title:string}>

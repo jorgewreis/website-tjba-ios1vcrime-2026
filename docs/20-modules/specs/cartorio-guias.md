@@ -2,7 +2,7 @@
 
 ## 1. Visão geral
 
-Submódulo do Módulo de Cartório (m4) para gestão de **guias** de execução e recolhimento. Fluxo: **Cadastro** + **8 subtarefas** — Detalhamento de informações → Cálculo da pena de multa → Expedição da Guia → Assinatura da Juíza → Juntada automática → Geração de PDFs → Envio da Guia → Juntada de termo de envio. Implementação alinhada aos padrões de Cartas Expedidas, Cartas Recebidas e Cejusc.
+Submódulo do Módulo de Cartório (m4) para gestão de **guias** de execução e recolhimento. Fluxo: **Cadastro** + **8 subtarefas** — Detalhamento de informações → Cálculo da pena de multa → Expedição da Guia → Assinatura da Juíza → Juntada automática → Geração de PDFs → Envio da Guia → Juntada de termo de envio. Implementação alinhada aos padrões de Cartas Expedidas e Cartas Recebidas.
 
 ## 2. Entidade principal: Guia
 
@@ -82,4 +82,4 @@ Submódulo do Módulo de Cartório (m4) para gestão de **guias** de execução 
 
 - [docs/00-foundation/escopo-projeto.md](../../00-foundation/escopo-projeto.md) — Módulo Cartório, submódulo Guias.
 - [docs/00-foundation/padrao-inputs-formularios.md](../../00-foundation/padrao-inputs-formularios.md) — Processo (CNJ) e nome (text-formatter).
-- Implementação espelhada em Cartas Recebidas e Cejusc (views, repositórios, serviço, APIs, toasts).
+- Implementação espelhada em Cartas Recebidas (views, repositórios, serviço, APIs, toasts).

@@ -202,26 +202,6 @@
                 searchMode: 'enter',
                 apply: buildFilterNavigator(settings.routePage || 'medidasprotetivas')
             },
-            buttons: [
-                {
-                    selector: '.btn-open-cejusc',
-                    onClick: function (button, event, ctx) {
-                        const cejuscId = (button.getAttribute('data-cejusc-id') || '').trim();
-                        if (!cejuscId) {
-                            notifyByKey(
-                                ctx,
-                                'cartorio.medidas.cejusc.id.required',
-                                {},
-                                'error',
-                                'Erro',
-                                'Identificador da tarefa do Cejusc não encontrado.'
-                            );
-                            return;
-                        }
-                        global.location.href = '/frame.php?page=cejuscedit&id=' + encodeURIComponent(cejuscId);
-                    }
-                }
-            ],
             onReady: function (ctx) {
                 bindConcludeButtons(ctx, settings.concludeEndpoint || '/api/cartorio-medidas-protetivas/concluir-subtarefa.php');
 

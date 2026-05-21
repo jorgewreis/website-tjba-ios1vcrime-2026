@@ -137,7 +137,7 @@ $ordemParaTipo = [
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar Medida Protetiva</h1>
-        <p class="description-page">Acompanhe o cadastro das partes no PJe, a expedição dos mandados e o vínculo automático com o Cejusc.</p>
+        <p class="description-page">Acompanhe o cadastro das partes no PJe e a expedição dos mandados.</p>
     </div>
 
     <div class="container-full card-page">
@@ -238,14 +238,6 @@ $ordemParaTipo = [
                         <?php endif; ?>
                     </div>
                 </div>
-                <?php if (!empty($medida['cejusc_tarefa_id'])): ?>
-                    <div class="col filter">
-                        <label>Cejusc</label>
-                        <div class="badge-line">
-                            <button type="button" class="btn btn-secondary-outline" id="abrir-cejusc-btn" data-cejusc-id="<?php echo htmlspecialchars((string) $medida['cejusc_tarefa_id'], ENT_QUOTES); ?>">Abrir tarefa Cejusc</button>
-                        </div>
-                    </div>
-                <?php endif; ?>
             </div>
 
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
@@ -313,11 +305,6 @@ $ordemParaTipo = [
                     entityId: window.__currentMedidaId,
                     backButtonId: 'voltar-btn',
                     backHref: '/frame.php?page=medidasprotetivas',
-                    linkedButtonId: 'abrir-cejusc-btn',
-                    linkedHrefBuilder: function (button) {
-                        var cejuscId = (button.getAttribute('data-cejusc-id') || '').trim();
-                        return cejuscId ? ('/frame.php?page=cejuscedit&id=' + encodeURIComponent(cejuscId)) : '';
-                    },
                     saveButtonId: 'salvar-btn',
                     observationFieldId: 'edit-observacoes',
                     initialObservation: window.__initialObservacoes || '',

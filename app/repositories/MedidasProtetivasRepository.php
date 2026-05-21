@@ -34,7 +34,7 @@ final class MedidasProtetivasRepository
         $fromClause = $this->buildFromClause();
         $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('mp');
         $sql = sprintf(
-            'SELECT mp.`id` AS `IdMedida`, COALESCE(p.`numero_processo`, \'\') AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, COALESCE(pr.`nome_completo`, \'\') AS `ReuNome`, mp.`status` AS `Status`, mp.`cejusc_tarefa_id` AS `CejuscTarefaId`, mp.`created_at` AS `Data`, mp.`observacoes`%s
+            'SELECT mp.`id` AS `IdMedida`, COALESCE(p.`numero_processo`, \'\') AS `Processo`, COALESCE(cl.`nome`, \'\') AS `Classe`, COALESCE(pr.`nome_completo`, \'\') AS `ReuNome`, mp.`status` AS `Status`, mp.`created_at` AS `Data`, mp.`observacoes`%s
              FROM %s
              %s
              ORDER BY %s, mp.`created_at` DESC
@@ -135,14 +135,13 @@ final class MedidasProtetivasRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `processo_id`, `parte_reu_id`, `cejusc_tarefa_id`, `status`, `observacoes`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :parte_reu_id, :cejusc_tarefa_id, :status, :observacoes, :criado_por, :atualizado_por, NOW(), NOW())',
+                'INSERT INTO `%s` (`id`, `processo_id`, `parte_reu_id`, `status`, `observacoes`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_id, :parte_reu_id, :status, :observacoes, :criado_por, :atualizado_por, NOW(), NOW())',
                 $this->table
             )
         );
         $statement->bindValue(':id', $row['id']);
         $statement->bindValue(':processo_id', $row['processo_id'] ?? null);
         $statement->bindValue(':parte_reu_id', $row['parte_reu_id'] ?? null);
-        $statement->bindValue(':cejusc_tarefa_id', $row['cejusc_tarefa_id'] ?? null);
         $statement->bindValue(':status', $row['status']);
         $statement->bindValue(':observacoes', $row['observacoes'] ?? null);
         $cp = $row['criado_por'] ?? null;
@@ -155,7 +154,7 @@ final class MedidasProtetivasRepository
 
     public function update(string $id, array $payload): bool
     {
-        $allowed = ['processo_id', 'parte_reu_id', 'cejusc_tarefa_id', 'status', 'observacoes'];
+        $allowed = ['processo_id', 'parte_reu_id', 'status', 'observacoes'];
         $set = [];
         $params = [':id' => trim($id)];
 

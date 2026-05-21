@@ -18,7 +18,7 @@ O texto informativo (*obrigatório / *automatizado) deve ser curto e em fonte re
 <label for="filter-classe" id="processo-ap-info">Classe <span class="label-hint-automatizado">*automatizado</span></label>
 ```
 
-Páginas que já seguem o padrão: Guias (create/edit), Cartas Expedidas (create/edit), Cartas Recebidas (create/edit), Cejusc (create/edit).
+Páginas que já seguem o padrão: Guias (create/edit), Cartas Expedidas (create/edit), Cartas Recebidas (create/edit).
 
 ## Regras por tipo de campo
 
@@ -41,7 +41,6 @@ Páginas que já seguem o padrão: Guias (create/edit), Cartas Expedidas (create
 
 ## Páginas que já seguem o padrão
 
-- **cartorio-cejusc-create.php**: processo (cnj.js) + nome do réu (text-formatter); blur antes do submit.
 - **cartorio-cartas-recebidas-create.php**: processo (cnj.js) + cidade (text-formatter); blur antes do submit.
 - **cartorio-cartas-expedidas-create.php**: processo (cnj.js) + cidade (text-formatter); blur antes do submit.
 

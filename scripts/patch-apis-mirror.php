@@ -6,9 +6,7 @@ $msgs = [
     'cartorio-oficios' => ['Ofício cancelado.', 'Ofício excluído.'],
     'cartorio-medidas-protetivas' => ['Medida protetiva cancelada.', 'Medida protetiva excluída.'],
     'cartorio-editais' => ['Edital cancelado.', 'Edital excluído.'],
-    'cartorio-cejusc' => ['Tarefa CEJUSC cancelada.', 'Tarefa CEJUSC excluída.'],
     'cartorio-cartas-recebidas' => ['Carta recebida cancelada.', 'Carta recebida excluída.'],
-    'cartorio-ceapa' => ['Tarefa CEAPA excluída.', 'Tarefa CEAPA excluída.'],
 ];
 function folderFromPath(string $root, string $path): string {
     $normRoot = rtrim(str_replace('\\', '/', $root), '/');

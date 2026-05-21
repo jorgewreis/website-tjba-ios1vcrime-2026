@@ -15,7 +15,6 @@ final class OrphanSubtarefasCleaner
             ['sub' => 'cartas_recebidas_subtarefas', 'fk' => 'carta_recebida_id', 'main' => 'cartas_recebidas'],
             ['sub' => 'editais_subtarefas', 'fk' => 'edital_id', 'main' => 'editais'],
             ['sub' => 'guias_subtarefas', 'fk' => 'guia_id', 'main' => 'guias'],
-            ['sub' => 'cejusc_subtarefas', 'fk' => 'cejusc_tarefa_id', 'main' => 'cejusc_tarefas'],
             ['sub' => 'medidas_protetivas_subtarefas', 'fk' => 'medida_id', 'main' => 'medidas_protetivas'],
         ];
 

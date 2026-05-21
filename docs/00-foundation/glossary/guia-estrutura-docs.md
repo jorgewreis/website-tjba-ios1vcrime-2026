@@ -178,8 +178,6 @@ No repositório SGC, as especificações por módulo costumam ficar em **`docs/2
 |-----------|---------|
 | [modulo-produtividade-interna.md](../../20-modules/specs/modulo-produtividade-interna.md) | Produtividade interna: o que já está implementado, legado, Fases 3 e 4 (ranking/metas/export vs. automação/badges/dashboard) |
 | [cartorio-guias.md](../../20-modules/specs/cartorio-guias.md) | Cartório — guias |
-| [cartorio-cejusc.md](../../20-modules/specs/cartorio-cejusc.md) | Cartório — CEJUSC |
-| [cartorio-ceapa.md](../../20-modules/specs/cartorio-ceapa.md) | Cartório — CEAPA |
 | [cartorio-cartas-recebidas.md](../../20-modules/specs/cartorio-cartas-recebidas.md) | Cartório — cartas recebidas |
 | [cartorio-cartas-expedidas.md](../../20-modules/specs/cartorio-cartas-expedidas.md) | Cartório — cartas expedidas |
 

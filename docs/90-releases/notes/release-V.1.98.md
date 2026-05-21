@@ -29,8 +29,8 @@
 - **refactor(cartas-expedidas): streamline HTML structure and improve readability** `[7db183a]`
 - **refactor(cartas-expedidas): adjust default items per page for improved pagination** `[39d463e]`
 - **refactor(cartas-recebidas): update default items per page and enhance HTML structure** `[4af9f7b]`
-- **refactor(cartorio-cejusc-list): enhance HTML structure and improve filter functionality** `[3ab9709]`
-- **refactor(cartorio-ceapa-list): update default items per page and enhance HTML structure** `[0f980b1]`
+- ~~**refactor(cartorio-cejusc-list):** …~~ *(descontinuado em V.1.45 — submódulo CEJUSC removido)*
+- ~~**refactor(cartorio-ceapa-list):** …~~ *(descontinuado em V.1.45 — submódulo CEAPA removido)*
 - **refactor(cartorio-views): standardize "no records found" message and enhance HTML structure** `[ae62d47]`
 - **refactor(cartorio-views): enhance filter display and HTML structure** `[ff767af]`
 - **refactor(cartorio-views): standardize search input width and improve HTML structure** `[aff8e9d]`

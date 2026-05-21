@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /** @var PDO $connection */
-/** @var string $cartorioAlocacaoPrefix prefixo único para ids (ex.: guias, ceapa) */
+/** @var string $cartorioAlocacaoPrefix prefixo único para ids (ex.: guias, editais) */
 
 if (!isset($connection) || !isset($cartorioAlocacaoPrefix) || !$connection instanceof PDO) {
     return;

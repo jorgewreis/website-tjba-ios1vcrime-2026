@@ -29,17 +29,10 @@ final class ListExportFilterSummary
                 self::pair($parts, 'Processo', (string) ($get['processo'] ?? ''));
                 break;
 
-            case 'cejusc':
             case 'editais':
             case 'medidasprotetivas':
                 self::pair($parts, 'Status', (string) ($get['status'] ?? ''));
                 self::pair($parts, 'Processo', (string) ($get['processo'] ?? ''));
-                break;
-
-            case 'ceapa':
-                self::pair($parts, 'Status', (string) ($get['status'] ?? ''));
-                self::pair($parts, 'Processo', (string) ($get['processo'] ?? ''));
-                self::pair($parts, 'Tipo de suspensão', (string) ($get['tipo_suspensao'] ?? ''));
                 break;
 
             case 'oficioscartorio':

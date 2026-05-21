@@ -6,7 +6,7 @@ declare(strict_types=1);
  *
  * Variáveis esperadas:
  * - $connection (PDO)
- * - $cartorioAlocacaoPrefix string (ex.: guias, ceapa)
+ * - $cartorioAlocacaoPrefix string (ex.: guias, editais)
  * - $cartorioAlocacaoEntityId string
  * - $cartorioAlocacaoDesalocarEndpoint string (ex.: /api/cartorio-guias/desalocar.php)
  * - $cartorioAlocacaoAlocarEndpoint string

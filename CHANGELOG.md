@@ -6,6 +6,7 @@
 
 - refactor: integrate ClasseProcessualListagemHelper for consistent class handling across views
 - remove(consulta-cep): descontinua página, API, busca ViaCEP, menu, acesso, toasts e regra de produtividade (ver `database/migrations/20260521_remove_consulta_cep.sql`)
+- remove(cejusc-ceapa): descontinua submódulos CEJUSC/CEAPA (ver `database/migrations/20260521_drop_cejusc_ceapa.sql`)
 
 ## V. 1.99
 

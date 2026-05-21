@@ -33,7 +33,6 @@ Padronizacao estrutural, visual e comportamental das paginas `*-edit.php` para a
   - **Antes:** estrutura hibrida `row table` e cancelamento sem feedback claro.
   - **Depois:** layout convergente com `create/list`, toast em cancelamento e padrao de feedback consistente.
 
-- `app/views/internal/cartorio-cejusc-edit.php`
   - **Antes:** secoes em `row table` e exclusao com confirmacao nativa.
   - **Depois:** secoes em `display-flex`, feedback de cancelamento/exclusao padronizado e confirmacao de exclusao alinhada ao contrato vigente.
 

@@ -166,11 +166,6 @@
                 })
                 .then(function (data) {
                     feedback('Medida protetiva cadastrada.', 'success');
-                    if (data && data.cejusc_criada === true) {
-                        feedback('Tarefa do Cejusc criada automaticamente e vinculada à medida protetiva.', 'info');
-                    } else if (data && data.cejusc_criada === false) {
-                        feedback('Tarefa do Cejusc não foi criada, pois já existe uma tarefa para o mesmo processo e réu.', 'warning');
-                    }
                     gate.setInitial();
                     global.location.href = settings.successRedirect || '/frame.php?page=medidasprotetivas';
                 })

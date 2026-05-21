@@ -81,15 +81,6 @@ foreach ($edSubs as $tipo => $label) {
     $add($registry, $texts, $code, $def($m, $code), $label . ' Processo {numero_processo}.');
 }
 
-// --- CEJUSC ---
-$m = 'cartorio-cejusc';
-$add($registry, $texts, 'cartorio-cejusc.create', $def($m, 'cartorio-cejusc.create'), 'Tarefa CEJUSC cadastrada. Processo {numero_processo}.');
-$cjSubs = ['gerar_pdf_decisao', 'enviar_decisao', 'juntar_termo_envio'];
-foreach ($cjSubs as $tipo) {
-    $code = 'cartorio-cejusc.subtarefa.' . $tipo;
-    $add($registry, $texts, $code, $def($m, $code), 'CEJUSC: subtarefa ' . str_replace('_', ' ', $tipo) . ' concluída. Processo {numero_processo}.');
-}
-
 // --- Cartas recebidas ---
 $m = 'cartorio-cartas-recebidas';
 $add($registry, $texts, 'cartorio-cartas-recebidas.create', $def($m, 'cartorio-cartas-recebidas.create'), 'Carta recebida cadastrada. Processo {numero_processo}.');
@@ -101,10 +92,6 @@ foreach ($crSubs as $tipo) {
     $code = 'cartorio-cartas-recebidas.subtarefa.' . $tipo;
     $add($registry, $texts, $code, $def($m, $code), 'Carta recebida: ' . str_replace('_', ' ', $tipo) . ' concluída. Processo {numero_processo}.');
 }
-
-// --- CEAPA ---
-$m = 'cartorio-ceapa';
-$add($registry, $texts, 'cartorio-ceapa.create', $def($m, 'cartorio-ceapa.create'), 'Tarefa CEAPA cadastrada. Processo {numero_processo}.');
 
 // Estorno (texto exibido quando saldo zerado após cancel/delete)
 $add($registry, $texts, 'cartorio-interno.estorno-saldo', $def('cartorio-interno', 'cartorio-interno.estorno-saldo'), 'Estorno de produtividade (encerramento de tarefa).');

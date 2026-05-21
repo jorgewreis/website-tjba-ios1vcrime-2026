@@ -56,15 +56,9 @@ Cada linha é o valor de `tipo` persistido no repositório de subtarefas (ou ope
 | Editais | `envio_djen` | `cartorio-editais.subtarefa.envio_djen` |
 | Editais | `certificacao_publicacao` | `cartorio-editais.subtarefa.certificacao_publicacao` |
 | Editais | `certificacao_decurso_prazo` | `cartorio-editais.subtarefa.certificacao_decurso_prazo` |
-| **CEJUSC** | *(create)* | `cartorio-cejusc.create` |
-| CEJUSC | `gerar_pdf_decisao` | `cartorio-cejusc.subtarefa.gerar_pdf_decisao` |
-| CEJUSC | `enviar_decisao` | `cartorio-cejusc.subtarefa.enviar_decisao` |
-| CEJUSC | `juntar_termo_envio` | `cartorio-cejusc.subtarefa.juntar_termo_envio` |
-| **CEAPA** | *(create)* | `cartorio-ceapa.create` |
-
 **Guias — aliases legados** (normalizados em `GuiasService::canonicalTipoSubtarefaGuia` antes do `event_code`): `geracao_pdf` / `pdf` → `gerar_pdf`; `expedir_guia` / `expedicao` → `expedicao_guia`; etc.
 
-**PDF (guias, cartas expedidas, CEJUSC):** pontos efetivos = 1 + 0,1 × documentos (`CartorioProdutividade::pontosFormulaGeracaoPdf`); regra em BD é apenas referência (`pontos_calculados_override`).
+**PDF (guias, cartas expedidas):** pontos efetivos = 1 + 0,1 × documentos (`CartorioProdutividade::pontosFormulaGeracaoPdf`); regra em BD é apenas referência (`pontos_calculados_override`).
 
 ## Estorno visível na lista
 

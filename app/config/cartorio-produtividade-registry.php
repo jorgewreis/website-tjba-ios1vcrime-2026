@@ -179,38 +179,6 @@ return array (
     'quantidade_default' => 1,
     'referencia_sistema' => 'cartorio-editais',
   ),
-  'cartorio-cejusc.create' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cejusc.create',
-    'sistema_modulo' => 'cartorio-cejusc',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cejusc',
-  ),
-  'cartorio-cejusc.subtarefa.gerar_pdf_decisao' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cejusc.subtarefa.gerar_pdf_decisao',
-    'sistema_modulo' => 'cartorio-cejusc',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cejusc',
-  ),
-  'cartorio-cejusc.subtarefa.enviar_decisao' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cejusc.subtarefa.enviar_decisao',
-    'sistema_modulo' => 'cartorio-cejusc',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cejusc',
-  ),
-  'cartorio-cejusc.subtarefa.juntar_termo_envio' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-cejusc.subtarefa.juntar_termo_envio',
-    'sistema_modulo' => 'cartorio-cejusc',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-cejusc',
-  ),
   'cartorio-cartas-recebidas.create' => 
   array (
     'tipo_ato' => 'Cartório',
@@ -274,14 +242,6 @@ return array (
     'sistema_modulo' => 'cartorio-cartas-recebidas',
     'quantidade_default' => 1,
     'referencia_sistema' => 'cartorio-cartas-recebidas',
-  ),
-  'cartorio-ceapa.create' => 
-  array (
-    'tipo_ato' => 'Cartório',
-    'tipo_documento' => 'cartorio-ceapa.create',
-    'sistema_modulo' => 'cartorio-ceapa',
-    'quantidade_default' => 1,
-    'referencia_sistema' => 'cartorio-ceapa',
   ),
   'sala-midias.create' =>
   array (

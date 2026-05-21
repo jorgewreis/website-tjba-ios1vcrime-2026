@@ -11,7 +11,6 @@ require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
-require_once __DIR__ . '/../services/CejuscService.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
@@ -38,7 +37,6 @@ final class MedidasProtetivasService
     private ProcessoPrioridadesService $processoPrioridadesService;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
-    private CejuscService $cejuscService;
 
     private const REGRA_ALOCAR_MP = 'ALLOCATE-MEDIDASPROTETIVAS';
 
@@ -54,7 +52,6 @@ final class MedidasProtetivasService
         $this->processoPrioridadesService = new ProcessoPrioridadesService($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
-        $this->cejuscService = new CejuscService($connection);
     }
 
     public function listMedidasProtetivas(array $filters, int $limit, int $offset): array
@@ -128,7 +125,7 @@ final class MedidasProtetivasService
     }
 
     /**
-     * @return array{id: string, cejusc_tarefa_id: string, cejusc_criada: bool}
+     * @return array{id: string}
      */
     public function create(array $payload): array
     {
@@ -246,16 +243,6 @@ final class MedidasProtetivasService
                 }
             );
 
-            $cejuscResult = $this->cejuscService->createFromMedidaIfNotExists([
-                'numero_processo_origem' => $numeroFormatado,
-                'parte_id' => $parteReuId,
-                'classe_codigo' => $classeCodigo,
-                'classe_descricao' => $classeDescricao,
-                'usuario_cadastro_id' => $usuarioCadastroId,
-            ]);
-            $cejuscId = trim((string) ($cejuscResult['id'] ?? ''));
-            $this->repository->update($medidaId, ['cejusc_tarefa_id' => $cejuscId]);
-
             $this->processoPrioridadesService->registrarPrioridadesCadastroMedidaProtetiva($processoId);
 
             if ($usuarioCadastroId !== '' && $usuarioCadastroId !== 'sistema') {
@@ -274,8 +261,6 @@ final class MedidasProtetivasService
             $this->connection->commit();
             return [
                 'id' => $medidaId,
-                'cejusc_tarefa_id' => $cejuscId,
-                'cejusc_criada' => (bool) ($cejuscResult['created'] ?? false),
             ];
         } catch (Throwable $exception) {
             if ($this->connection->inTransaction()) {
@@ -427,7 +412,7 @@ final class MedidasProtetivasService
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
-        $allowed = ['observacoes', 'status', 'cejusc_tarefa_id'];
+        $allowed = ['observacoes', 'status'];
         $data = [];
         foreach ($allowed as $key) {
             if (array_key_exists($key, $payload)) {

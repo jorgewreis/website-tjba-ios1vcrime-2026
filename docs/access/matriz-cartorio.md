@@ -4,7 +4,6 @@ Todas as rotas abaixo usam **modo A** (`area_a` + `CARTORIO`), salvo entrada exp
 
 | page (frame.php) | Modo | Perfis |
 |------------------|------|--------|
-| cejusc, cejuscedit, cejusccreate, cejuscrules | A | `*-CARTORIO` |
 | editais, editaisedit, editaiscreate, editaisrules | A | `*-CARTORIO` |
 | guias, guiasedit, guiascreate, guiasrules | A | `*-CARTORIO` |
 | medidasprotetivas, medidasprotetivasedit, medidasprotetivascreate, medidasprotetivasrules | A | `*-CARTORIO` |

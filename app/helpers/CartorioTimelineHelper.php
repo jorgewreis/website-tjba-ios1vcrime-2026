@@ -180,32 +180,6 @@ if (!function_exists('cartorioTimelineGetConfig')) {
                         ],
                     ],
                 ],
-                'cejusc' => [
-                    'cadastro_label' => 'Tarefa cadastrada',
-                    'subtasks' => [
-                        1 => [
-                            'type' => 'gerar_pdf_decisao',
-                            'label' => 'Gerar PDF da decisao',
-                            'task_title' => 'Aguardando geracao de decisao em PDF',
-                            'button_title' => 'Informar impressao em PDF',
-                            'pending_text' => 'Aguardando impressao da decisao em PDF',
-                        ],
-                        2 => [
-                            'type' => 'envio_email_decisao',
-                            'label' => 'Envio da decisao por e-mail',
-                            'task_title' => 'Aguardando envio da decisao por e-mail',
-                            'button_title' => 'Informar envio por e-mail',
-                            'pending_text' => 'Aguardando envio da decisao por e-mail',
-                        ],
-                        3 => [
-                            'type' => 'juntar_termo_envio',
-                            'label' => 'Juntada de termo de envio',
-                            'task_title' => 'Aguardando juntada de termo de envio da decisao',
-                            'button_title' => 'Informar juntada de termo de envio',
-                            'pending_text' => 'Aguardando juntada de termo de envio da decisao',
-                        ],
-                    ],
-                ],
             ];
         }
 
@@ -386,8 +360,6 @@ if (!function_exists('cartorioTimelineGetConfig')) {
             $dateLabel = $createdAt !== '' ? ('Guia cadastrada em ' . $createdAt) : 'Guia cadastrada';
         } elseif ($module === 'medidas_protetivas') {
             $dateLabel = $createdAt !== '' ? ('Cadastro realizado em ' . $createdAt) : 'Cadastro realizado';
-        } elseif ($module === 'cejusc') {
-            $dateLabel = $createdAt !== '' ? ('Tarefa cadastrada em ' . $createdAt) : 'Tarefa cadastrada';
         }
 
         return [

@@ -207,14 +207,7 @@ Etapas:
 - vinculação de partes ao processo com papéis e polos distintos  
 - cadastro de partes no PJe  
 - expedição de mandados de intimação  
-- integração automática com CEJUSC  
 - registro e consulta de prioridades processuais por vítima
-
-#### 4.6.8 Submódulo — CEJUSC
-
-- envio de decisão  
-- juntada de comprovantes  
-- encerramento de curso
 
 ---
 

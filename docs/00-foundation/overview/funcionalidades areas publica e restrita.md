@@ -205,13 +205,6 @@ Etapas:
 - conferência de partes  
 - mandados para requerido e requerente  
 - ofícios condicionais  
-- integração com CEJUSC  
-
-#### 4.6.8 Submódulo — CEJUSC
-
-- envio de decisão  
-- juntada de comprovantes  
-- encerramento de curso  
 
 ---
 

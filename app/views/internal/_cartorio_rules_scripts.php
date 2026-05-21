@@ -7,7 +7,7 @@ declare(strict_types=1);
  * Variáveis esperadas:
  * - $successMessage (string)
  * - $errors (array)
- * - $voltarPage (string) — valor de page= na URL (ex.: ceapa), sem ? nem frame.php
+ * - $voltarPage (string) — valor de page= na URL (ex.: guias), sem ? nem frame.php
  */
 $successMessage = (string) ($successMessage ?? '');
 $errors = isset($errors) && is_array($errors) ? $errors : [];

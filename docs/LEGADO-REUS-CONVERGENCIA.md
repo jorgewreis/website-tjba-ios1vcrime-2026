@@ -4,7 +4,7 @@
 
 O sistema possui dois modelos de vínculo pessoa–processo:
 
-- **Legado:** tabelas `reus` e `processoReus` (número do processo + id_reu), usadas por Guias, Cejusc e Medidas Protetivas.
+- **Legado:** tabelas `reus` e `processoReus` (número do processo + id_reu), usadas por Guias e Medidas Protetivas.
 - **Canônico:** tabelas `partes` e `processos_partes` (processo_id, parte_id, tipo_parte, polo), usado pelo módulo Consulta Partes / Consulta Processos.
 
 A longo prazo, o modelo canônico deve ser a única fonte de verdade. Este documento descreve onde está o legado e como convergir.
@@ -16,16 +16,13 @@ A longo prazo, o modelo canônico deve ser a única fonte de verdade. Este docum
 | `app/services/ReuManager.php` | CRUD em `reus` e `processoReus`; listar réus por processo; vincular réu a processo. |
 | `app/services/GuiasService.php` | ReuManager para garantir/cadastrar réu e vincular ao processo. |
 | `app/services/MedidasProtetivasService.php` | ReuManager para réu da medida. |
-| `app/services/CejuscService.php` | ReuManager. |
 | `app/services/Guias.php` | ReuManager; join com `reus` em listagem. |
-| `app/repositories/CejuscRepository.php` | JOIN com tabela `reus` (reu_id). |
 | `public/api/cartorio-guias/reus-por-processo.php` | Lista réus do processo (legado); **atualizado para incluir também partes do modelo canônico** quando o processo existir em `processos` e tiver vínculos em `processos_partes`. |
 | `app/views/internal/cartorio-guias-create.php` | Select de denunciado alimentado por reus-por-processo. |
-| `app/views/internal/cartorio-cejusc-create.php` | Select de réu alimentado por reus-por-processo. |
 
 ## Ajustes já realizados
 
-- **API reus-por-processo.php:** passa a consultar também `processos` + `processos_partes` + `partes`. Réus do legado e partes do modelo canônico (tipos réu/indiciado/requerido/sentenciado no polo passivo) são mesclados na resposta, para que telas de Guias e Cejusc possam exibir pessoas cadastradas no novo módulo sem quebrar o contrato da API.
+- **API reus-por-processo.php:** passa a consultar também `processos` + `processos_partes` + `partes`. Réus do legado e partes do modelo canônico (tipos réu/indiciado/requerido/sentenciado no polo passivo) são mesclados na resposta, para que telas de Guias possam exibir pessoas cadastradas no novo módulo sem quebrar o contrato da API.
 
 ## Próximos passos sugeridos
 

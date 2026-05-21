@@ -91,7 +91,7 @@ Além dessas áreas, existe uma pasta `api/` na raiz do repositório contendo sc
 
 Os endpoints oficiais atuais estão organizados por domínio funcional, com grupos como:
 
-- cartório (`cartorio-cartas-expedidas`, `cartorio-cartas-recebidas`, `cartorio-guias`, `cartorio-oficios`, `cartorio-medidas-protetivas`, `cartorio-cejusc`, `cartorio-ceapa`, `cartorio-editais`);
+- cartório (`cartorio-cartas-expedidas`, `cartorio-cartas-recebidas`, `cartorio-guias`, `cartorio-oficios`, `cartorio-medidas-protetivas`, `cartorio-editais`);
 - gabinete (`gabinete-reus-presos`, `gabinete-oficios`, `gabinete-monitoramento-eletronico`);
 - audiências (`sala-audiencias-pauta`, `sala-audiencias-ata`);
 - entidades auxiliares (`pessoas`, `instituicoes-publicas`, `processos`, `processos-partes`, `consulta-processos`, `datajud`);
