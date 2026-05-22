@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 04 de abril de 2026
+**Data de Lançamento:** 22 de maio de 2026
 
 # V. 1.53
 
-> refactor: remove fallback user profile handling and update user context management to prevent legacy profile pollution
+> refactor: enhance cartas expedidas and metadata handling
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: remove fallback user profile handling and update user context management to prevent legacy profile pollution** `[450fc60]`
+- **refactor: enhance cartas expedidas and metadata handling** `[c5b90111]`
 
 ---
 

@@ -164,6 +164,12 @@ final class RegistroMetadataHelper
         $status = strtolower(trim(self::pick($row, $config['status_keys'] ?? ['Status', 'status'])));
         $id = trim(self::pick($row, $config['id_keys'] ?? ['id']));
         $criador = trim(self::pick($row, $config['criador_keys'] ?? ['CriadoPorNome']));
+        if ($criador === '' && $connection instanceof PDO) {
+            $criadoPorId = trim(self::pick($row, ['CriadoPor', 'criado_por']));
+            if ($criadoPorId !== '') {
+                $criador = self::buscarNomeUsuarioPorId($connection, $criadoPorId);
+            }
+        }
         if ($criador === '') {
             $criador = self::resolverNomeCriadorFallback($row);
         }
@@ -569,11 +575,12 @@ final class RegistroMetadataHelper
         $a = preg_replace('/[^a-zA-Z0-9_]/', '', $alias) ?: 't';
 
         return sprintf(
-            ', %1$s.`updated_at` AS `DataAtualizacao`,'
+            ', %1$s.`updated_at` AS `DataAtualizacao`, %1$s.`%3$s` AS `CriadoPor`,'
             . ' TRIM(CONCAT(COALESCE(ucr_%2$s.`nome`, \'\'), \' \', COALESCE(ucr_%2$s.`sobrenome`, \'\'))) AS `CriadoPorNome`,'
             . ' TRIM(CONCAT(COALESCE(ued_%2$s.`nome`, \'\'), \' \', COALESCE(ued_%2$s.`sobrenome`, \'\'))) AS `UltimoEditorNome`',
             $a,
-            $a
+            $a,
+            $criadoPorCol
         );
     }
 
@@ -603,16 +610,18 @@ final class RegistroMetadataHelper
             return '';
         }
 
-        foreach ($alocados as $alocado) {
-            if (!is_array($alocado)) {
-                continue;
-            }
-            if (trim((string) ($alocado['tipo'] ?? '')) !== 'all') {
-                continue;
-            }
-            $nome = trim((string) ($alocado['nome_completo'] ?? ''));
-            if ($nome !== '') {
-                return $nome;
+        foreach (['all', 'rule'] as $tipoPreferido) {
+            foreach ($alocados as $alocado) {
+                if (!is_array($alocado)) {
+                    continue;
+                }
+                if (trim((string) ($alocado['tipo'] ?? '')) !== $tipoPreferido) {
+                    continue;
+                }
+                $nome = trim((string) ($alocado['nome_completo'] ?? ''));
+                if ($nome !== '') {
+                    return $nome;
+                }
             }
         }
 
@@ -627,6 +636,32 @@ final class RegistroMetadataHelper
         }
 
         return '';
+    }
+
+    private static function buscarNomeUsuarioPorId(PDO $connection, string $usuarioId): string
+    {
+        $usuarioId = trim($usuarioId);
+        if ($usuarioId === '') {
+            return '';
+        }
+
+        static $cache = [];
+        if (array_key_exists($usuarioId, $cache)) {
+            return $cache[$usuarioId];
+        }
+
+        $coll = self::COLLATION;
+        $statement = $connection->prepare(
+            'SELECT TRIM(CONCAT(COALESCE(`nome`, \'\'), \' \', COALESCE(`sobrenome`, \'\'))) AS `nome_completo`'
+            . ' FROM `usuarios` WHERE `id_usuario` COLLATE ' . $coll . ' = :id COLLATE ' . $coll . ' LIMIT 1'
+        );
+        $statement->bindValue(':id', $usuarioId);
+        $statement->execute();
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        $nome = is_array($row) ? trim((string) ($row['nome_completo'] ?? '')) : '';
+        $cache[$usuarioId] = $nome;
+
+        return $nome;
     }
 
     /**

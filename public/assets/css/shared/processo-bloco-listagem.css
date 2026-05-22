@@ -568,8 +568,16 @@
     flex-wrap: wrap;
 }
 
-.register.register-with-metadata.register-line > .display-flex.row-fit.justify-end {
+.register.register-with-metadata.register-line > .display-flex.row-fit.justify-end,
+.register.register-with-metadata .register-line > .display-flex.row-fit.justify-end {
     flex: 0 0 auto;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.register.register-with-metadata .register-line {
+    flex-wrap: nowrap;
+    gap: 10px;
     align-items: center;
 }
 

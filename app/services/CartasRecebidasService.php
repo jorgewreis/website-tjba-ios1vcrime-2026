@@ -71,6 +71,24 @@ final class CartasRecebidasService
                     return ($order[$a['tipo']] ?? 9) <=> ($order[$b['tipo']] ?? 9);
                 });
                 $rows[$i]['Alocados'] = $alocados;
+                $criadoPorNome = trim((string) ($rows[$i]['CriadoPorNome'] ?? ''));
+                if ($criadoPorNome === '') {
+                    foreach (['all', 'rule', 'specific'] as $tipoPreferido) {
+                        foreach ($alocados as $alocado) {
+                            if (($alocado['tipo'] ?? '') !== $tipoPreferido) {
+                                continue;
+                            }
+                            $nome = trim((string) ($alocado['nome_completo'] ?? ''));
+                            if ($nome !== '') {
+                                $criadoPorNome = $nome;
+                                break 2;
+                            }
+                        }
+                    }
+                    if ($criadoPorNome !== '') {
+                        $rows[$i]['CriadoPorNome'] = $criadoPorNome;
+                    }
+                }
             } else {
                 $rows[$i]['Subtarefas'] = [];
                 $rows[$i]['SubtarefasAll'] = [];
