@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/CartasExpedidasUiCopy.php';
 require_once __DIR__ . '/CartasRecebidasUiCopy.php';
 require_once __DIR__ . '/EditaisUiCopy.php';
+require_once __DIR__ . '/../repositories/EditaisSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/CartasRecebidasSubtarefasRepository.php';
 
@@ -135,6 +136,14 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         $subtarefasPorOrdem = [];
         foreach ($subtarefas as $subtarefa) {
             $ordem = (int) ($subtarefa['ordem'] ?? 0);
+            if ($module === 'editais') {
+                $tipo = trim((string) ($subtarefa['tipo'] ?? ''));
+                if ($tipo === EditaisSubtarefasRepository::TIPO_PUBLICACAO || $ordem === 3) {
+                    $ordem = EditaisSubtarefasRepository::ORDEM_PUBLICACAO;
+                } elseif ($tipo === EditaisSubtarefasRepository::TIPO_DECURSO || $ordem === 4) {
+                    $ordem = EditaisSubtarefasRepository::ORDEM_DECURSO;
+                }
+            }
             if ($ordem > 0) {
                 $subtarefasPorOrdem[$ordem] = $subtarefa;
             }
@@ -242,6 +251,12 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         if ($taskStatus === CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO) {
             return ['label' => 'Aguardando devolução', 'class' => 'status-current'];
         }
+        if ($taskStatus === EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO) {
+            return ['label' => 'Aguardando publicação', 'class' => 'status-current'];
+        }
+        if ($taskStatus === EditaisUiCopy::STATUS_AGUARDANDO_DECURSO) {
+            return ['label' => 'Aguardando decurso', 'class' => 'status-current'];
+        }
 
         return ['label' => 'Em andamento', 'class' => 'status-current'];
     }
@@ -286,6 +301,16 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         }
         if ($taskStatus === CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO) {
             $def = $definitions[CartasRecebidasSubtarefasRepository::ORDEM_CUMPRIMENTO] ?? null;
+
+            return is_array($def) ? (string) ($def['task_title'] ?? $statusLabel) : $statusLabel;
+        }
+        if ($taskStatus === EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO) {
+            $def = $definitions[EditaisSubtarefasRepository::ORDEM_PUBLICACAO] ?? null;
+
+            return is_array($def) ? (string) ($def['task_title'] ?? $statusLabel) : $statusLabel;
+        }
+        if ($taskStatus === EditaisUiCopy::STATUS_AGUARDANDO_DECURSO) {
+            $def = $definitions[EditaisSubtarefasRepository::ORDEM_DECURSO] ?? null;
 
             return is_array($def) ? (string) ($def['task_title'] ?? $statusLabel) : $statusLabel;
         }

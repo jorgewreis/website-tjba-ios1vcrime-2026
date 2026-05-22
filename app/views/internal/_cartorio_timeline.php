@@ -12,7 +12,7 @@ if (!isset($timelineData) || !is_array($timelineData)) {
     <div class="col filter" title="<?php echo htmlspecialchars((string) ($timelineData['currentTaskTitle'] ?? ''), ENT_QUOTES); ?>">
         <?php if (!empty($timelineData['showProgress'])): ?>
             <div class="width-300 status <?php echo htmlspecialchars((string) ($timelineData['statusClass'] ?? 'status-current'), ENT_QUOTES); ?> status-with-progress" style="border: 1px solid var(--color-gray-500);">
-                <span class="status-task-label"><?php echo htmlspecialchars((string) ($timelineData['statusLabel'] ?? 'Em andamento'), ENT_QUOTES); ?></span>
+                <span class="status-task-label"><?php echo htmlspecialchars((string) (($timelineData['currentTaskTitle'] ?? '') !== '' ? $timelineData['currentTaskTitle'] : ($timelineData['statusLabel'] ?? 'Em andamento')), ENT_QUOTES); ?></span>
                 <div class="status-task-progress" role="progressbar" aria-valuenow="<?php echo (int) ($timelineData['progressValue'] ?? 0); ?>" aria-valuemin="0" aria-valuemax="<?php echo (int) ($timelineData['progressMax'] ?? 0); ?>" aria-label="Progresso das subtarefas">
                     <?php foreach (($timelineData['segments'] ?? []) as $segment): ?>
                         <div class="status-task-progress-segment <?php echo htmlspecialchars((string) ($segment['class'] ?? 'pendente'), ENT_QUOTES); ?>" title="<?php echo htmlspecialchars((string) ($segment['title'] ?? ''), ENT_QUOTES); ?>"></div>

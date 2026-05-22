@@ -21,9 +21,9 @@ final class EditaisUiCopy
         EditaisSubtarefasRepository::TIPO_PUBLICACAO => [
             'ordem' => EditaisSubtarefasRepository::ORDEM_PUBLICACAO,
             'label' => 'Data da publicação',
-            'task_title' => 'Aguardando certificação da publicação',
-            'button_title' => 'Certificar publicação',
-            'pending_text' => 'Aguardando certificação da publicação do edital',
+            'task_title' => 'Aguardando publicação',
+            'button_title' => 'Informar publicação',
+            'pending_text' => 'Aguardando publicação',
         ],
         EditaisSubtarefasRepository::TIPO_DECURSO => [
             'ordem' => EditaisSubtarefasRepository::ORDEM_DECURSO,
@@ -107,6 +107,10 @@ final class EditaisUiCopy
             }
         }
 
+        if ($statusNorm === self::STATUS_AGUARDANDO_PUBLICACAO) {
+            return self::ETAPAS[EditaisSubtarefasRepository::TIPO_PUBLICACAO]['task_title'];
+        }
+
         if ($statusNorm === self::STATUS_AGUARDANDO_DECURSO || $statusNorm === 'em_andamento') {
             return self::ETAPAS[EditaisSubtarefasRepository::TIPO_DECURSO]['task_title'];
         }
@@ -169,7 +173,7 @@ final class EditaisUiCopy
             return self::ETAPAS[$tipo]['label'] ?? $tipo;
         }
         if ($statusNorm === 'em_andamento') {
-            return (self::ETAPAS[$tipo]['pending_text'] ?? $tipo) . ' (em andamento)';
+            return self::ETAPAS[$tipo]['task_title'] ?? self::ETAPAS[$tipo]['pending_text'] ?? $tipo;
         }
 
         return self::ETAPAS[$tipo]['pending_text'] ?? $tipo;

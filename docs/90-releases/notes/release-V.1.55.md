@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 04 de abril de 2026
+**Data de Lançamento:** 22 de maio de 2026
 
 # V. 1.55
 
-> refactor: simplify button styling in admin mode toggle for improved UI consistency
+> refactor: update Editais repository and service to enhance subtask management
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: simplify button styling in admin mode toggle for improved UI consistency** `[2c19c8b]`
+- **refactor: update Editais repository and service to enhance subtask management** `[81df5c96]`
 
 ---
 
