@@ -90,8 +90,8 @@ final class PageAccessRegistry
             'usuarioslist' => ['kind' => 'gestao'],
             'usuarioscreate' => ['kind' => 'gestao'],
             'usuariosedit' => ['kind' => 'gestao'],
-            'skills' => ['kind' => 'exact', 'profiles' => ['ADMIN']],
-            'skillspdfmarkdown' => ['kind' => 'exact', 'profiles' => ['ADMIN']],
+            'skills' => ['kind' => 'all_internal'],
+            'skillspdfmarkdown' => ['kind' => 'all_internal'],
             'feriadoscreate' => ['kind' => 'gestao'],
             'feriadosedit' => ['kind' => 'gestao'],
 

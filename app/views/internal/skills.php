@@ -20,7 +20,7 @@ Security::requireAuthentication();
 
 <div class="header-page">
     <div class="location">
-        <span class="all">Interno - Admin -</span>
+        <span class="all">Interno - Ferramentas -</span>
         <span class="specific">Skills</span>
     </div>
     <h1 class="title-page">Skills</h1>

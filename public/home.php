@@ -607,8 +607,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         const IS_USUARIO_EXTERNO = <?php echo json_encode($isUsuarioExterno, JSON_UNESCAPED_UNICODE); ?>;
         /** Perfil ESTUDANTE no cadastro (externo: recursos em Estudantes; ver public/frame.php). */
         const HAS_PERFIL_ESTUDANTE = <?php echo json_encode($hasPerfilEstudante, JSON_UNESCAPED_UNICODE); ?>;
-        /** Consultor externo: partes e instituições (alinhado a frame.php — consultas_partes). */
-        const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes', 'instituicoespublicas']);
+        /** Consultor externo: consulta de partes (alinhado a frame.php — consultas_partes). */
+        const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes']);
         /** Estudante externo: pauta e painel na seção Estudantes. */
         const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['estudapauta', 'estudapainel']);
 
@@ -660,15 +660,19 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 items: [
                     { icon: 'fi fi-rs-users-alt', label: 'Consulta Partes', target: 'consultapartes' },
                     { icon: 'fi fi-rs-folder-open', label: 'Consulta Processos', target: 'consultaprocessos' },
-                    { icon: 'fi fi-rs-sensor-on', label: 'Monitoramento Eletrônico', target: 'monitoramentogabinete' },
-                    { icon: 'fi fi-rs-building', label: 'Instituições Públicas', target: 'instituicoespublicas' }
+                    { icon: 'fi fi-rs-sensor-on', label: 'Monitoramento Eletrônico', target: 'monitoramentogabinete' }
+                ]
+            },
+            {
+                section: 'Ferramentas',
+                items: [
+                    { icon: 'fi fi-rs-magic-wand', label: 'Skills', target: 'skills' }
                 ]
             },
             {
                 section: 'Admin',
                 items: [
                     { icon: 'fi fi-rs-id-badge', label: 'Usuários', target: 'usuarioslist', allowedPerfis: ['ADMIN'] },
-                    { icon: 'fi fi-rs-magic-wand', label: 'Skills', target: 'skills', allowedPerfis: ['ADMIN'] },
                     { icon: 'fi fi-rs-calendar', label: 'Feriados', target: 'feriadoslist', allowedPerfis: ['ADMIN', 'CHEFIA', 'DIRETORA'] }
                 ]
             }
@@ -790,7 +794,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 return ['Consultas'];
             }
             if (norm.includes('ADMIN') || norm.includes('CHEFIA')) {
-                const comAcessoAmplo = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Consultas'];
+                const comAcessoAmplo = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Consultas', 'Ferramentas'];
                 if (norm.includes('ADMIN')) {
                     comAcessoAmplo.push('Estudantes');
                 }
@@ -821,7 +825,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             if (hasComposite) {
                 sections.push('Consultas');
             }
-            const order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Admin'];
+            sections.push('Ferramentas');
+            const order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Ferramentas', 'Admin'];
             const uniq = [...new Set(sections)];
             const ordered = [];
             order.forEach((label) => {

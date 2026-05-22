@@ -20,7 +20,7 @@ Security::requireAuthentication();
 
 <div class="header-page">
     <div class="location">
-        <span class="all">Interno - Admin - Skills -</span>
+        <span class="all">Interno - Ferramentas - Skills -</span>
         <span class="specific">PDF para Markdown</span>
     </div>
     <h1 class="title-page">PDF para Markdown</h1>
