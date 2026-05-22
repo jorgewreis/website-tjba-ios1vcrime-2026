@@ -13,7 +13,6 @@ require_once __DIR__ . '/../helpers/SalaAudienciasDuracaoEstimadaHelper.php';
 require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
-require_once __DIR__ . '/SalaMidiasService.php';
 require_once __DIR__ . '/../helpers/ProcessoBlocoListagemHelper.php';
 
 final class SalaAudienciasPautaService
@@ -354,7 +353,6 @@ final class SalaAudienciasPautaService
             throw new RuntimeException('Não foi possível atualizar a audiência.');
         }
         $this->sincronizarDuracaoEHorariosPauta($idPauta);
-        $this->tryEnsureSalaMidiasAutoFromPauta($idPauta, $usuarioId);
     }
 
     public function findIdEmAndamentoNaData(string $dataYmd): ?string
@@ -1060,20 +1058,6 @@ final class SalaAudienciasPautaService
         $this->processoPrioridadesService()->removerPorCodigoOuRotulo($processoId, $prioridade, $nPauta);
     }
 
-    private function tryEnsureSalaMidiasAutoFromPauta(string $idPauta, ?string $usuarioId): void
-    {
-        $idPauta = trim($idPauta);
-        if ($idPauta === '') {
-            return;
-        }
-        try {
-            $service = new SalaMidiasService($this->connection);
-            $service->ensureAutoFromPautaIfEligible($idPauta, $usuarioId);
-        } catch (Throwable $e) {
-            error_log('SalaMidias auto from pauta falhou: ' . $e->getMessage());
-        }
-    }
-
     /**
      * Pós-processamento após UPDATE principal. Falhas aqui não devem invalidar o salvamento
      * (evita toast de erro com dados já persistidos).
@@ -1101,7 +1085,6 @@ final class SalaAudienciasPautaService
             }
         }
 
-        $this->tryEnsureSalaMidiasAutoFromPauta($id, $usuarioId);
     }
 }
 

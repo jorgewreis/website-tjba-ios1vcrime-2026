@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 04 de abril de 2026
+**Data de Lançamento:** 22 de maio de 2026
 
 # V. 1.57
 
-> refactor: simplify access evaluation logic by consolidating role checks and updating section visibility
+> refactor: streamline cartas expedidas view and simplify subtask handling
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: simplify access evaluation logic by consolidating role checks and updating section visibility** `[d809db3]`
+- **refactor: streamline cartas expedidas view and simplify subtask handling** `[730cb941]`
 
 ---
 

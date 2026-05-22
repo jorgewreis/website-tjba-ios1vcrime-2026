@@ -47,7 +47,7 @@ Padronizacao estrutural, visual e comportamental das paginas `*-edit.php` para a
 
 - `app/views/internal/consulta-partes-edit.php`
   - **Antes:** secoes e listas auxiliares em `row table`; operacoes com reload sem toast de sucesso em todos os fluxos.
-  - **Depois:** secoes/listas em `display-flex`, toasts de sucesso em adicionar/remover telefone e endereco, desvinculo de instituicao com feedback padronizado.
+  - **Depois:** secoes/listas em `display-flex`, toasts de sucesso em adicionar/remover telefone, desvinculo de instituicao com feedback padronizado.
 
 - `app/views/internal/consulta-processos-edit.php`
   - **Antes:** estrutura hibrida, desvinculo com reload sem toast de sucesso.
@@ -68,7 +68,7 @@ Padronizacao estrutural, visual e comportamental das paginas `*-edit.php` para a
   - **Depois:** secoes migradas para `display-flex row row-full`, mantendo regras de negocio e validacoes existentes.
 
 - `app/views/internal/instituicoes-publicas-edit.php`
-  - **Antes:** secoes de dados/enderecos/telefones/setores em `row table`; toasts mistos.
+  - **Antes:** secoes de dados/telefones/setores em `row table`; toasts mistos.
   - **Depois:** secoes padronizadas em `display-flex`, toasts uniformes e feedback de sucesso em todas as operacoes de add/remove.
 
 - `app/views/internal/feriados-edit.php`

@@ -187,14 +187,12 @@ final class SalaAudienciasEstudanteInscricaoRepository
                     a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                     p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
                     COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`,
-                    ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at`, ata.`arquivo_relativo`,
-                    mt.`status` AS `midia_status`
+                    ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at`, ata.`arquivo_relativo`
              FROM `%s` i
              INNER JOIN `sala_audiencias_pauta` a ON a.`id_pauta` = i.`pauta` AND a.`ativo` = 1
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
              LEFT JOIN `sala_audiencias_ata` ata ON ata.`pauta` = i.`pauta`
-             LEFT JOIN `sala_midias_tarefa` mt ON mt.`pauta_id` = i.`pauta` AND mt.`ativo` = 1
              WHERE i.`usuario` = :u
                AND (
                     ata.`id_ata` IS NULL

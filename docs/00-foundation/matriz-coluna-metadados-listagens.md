@@ -12,7 +12,6 @@ Auditoria da última coluna (`container-data-create` / `_registro_metadata.php`)
 | 6 | gabinete-oficios-list | OficioRegistroMetadataHelper | idem | idem | idem | idem | OK (exceção) |
 | 7 | gabinete-monitoramento-eletronico-list | `gabinete_monitoramento` | SQL | `UltimoEditorNome` (subtarefa sem JSON) | `criado_por` | `atualizado_por` tarefa pai | OK (exceção) |
 | 8 | sala-audiencias-pauta-list | `sala_pauta` | SQL | `UltimoEditorNome` | `criado_por` | `atualizado_por` | OK (exceção) |
-| 9 | sala-midias-list | `sala_midias` | SQL | `UltimoEditorNome` | `criado_por` | `atualizado_em` | OK (exceção) |
 | 10 | sala-audiencias-atas-list | `sala_atas` | "Cadastrado pelo sistema" | Upload / subtarefa mídia / pauta | regras SQL | `fromListRowSalaAtas` | OK (exceção) |
 | 11 | Outras `*-list` cartório | — | — | — | — | — | Nenhuma pendente de migração encontrada |
 

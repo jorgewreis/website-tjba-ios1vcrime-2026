@@ -16,7 +16,6 @@ require_once __DIR__ . '/../services/SalaAudienciasAtaService.php';
 require_once __DIR__ . '/../services/PessoasService.php';
 require_once __DIR__ . '/../services/ConsultaProcessosService.php';
 require_once __DIR__ . '/../services/InstituicoesPublicasService.php';
-require_once __DIR__ . '/../services/ProdutividadeService.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasAtaRepository.php';
 require_once __DIR__ . '/../repositories/PartesTelefonesRepository.php';
 require_once __DIR__ . '/../repositories/PartesInstituicoesRepository.php';
@@ -66,7 +65,6 @@ final class InternalListExportHandlers
             'instituicoespublicas' => [self::class, 'instituicoesPublicas'],
             'processosparteslist' => [self::class, 'processosPartes'],
             'partesinstituicoeslist' => [self::class, 'partesInstituicoes'],
-            'produtividaderegras' => [self::class, 'produtividadeRegras'],
         ];
     }
 
@@ -963,53 +961,6 @@ final class InternalListExportHandlers
                 ['key' => 'data_inclusao', 'label' => 'Data inclusão'],
             ],
             'rows' => $out,
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $get
-     */
-    private static function produtividadeRegras(PDO $pdo, string $userId, array $get): array
-    {
-        $filters = [
-            'q' => trim((string) ($get['q'] ?? '')),
-            'ativo' => $get['ativo'] ?? null,
-        ];
-        if ($filters['ativo'] === '' || $filters['ativo'] === null) {
-            unset($filters['ativo']);
-        }
-        $service = new ProdutividadeService($pdo);
-        $rows = [];
-        $offset = 0;
-        while (count($rows) < self::MAX_ROWS) {
-            $batch = $service->listRules($userId, $filters, self::CHUNK_200, $offset)['rows'] ?? [];
-            if ($batch === []) {
-                break;
-            }
-            foreach ($batch as $r) {
-                $rows[] = $r;
-            }
-            if (count($batch) < self::CHUNK_200) {
-                break;
-            }
-            $offset += self::CHUNK_200;
-        }
-        $rows = array_slice($rows, 0, self::MAX_ROWS);
-
-        return [
-            'title' => 'Lista de regras de produtividade',
-            'slug' => 'produtividade-regras',
-            'columns' => [
-                ['key' => 'tipo_ato', 'label' => 'Tipo ato'],
-                ['key' => 'tipo_documento', 'label' => 'Tipo documento'],
-                ['key' => 'sistema_modulo', 'label' => 'Módulo'],
-                ['key' => 'pontos_por_ato', 'label' => 'Pontos/ato'],
-                ['key' => 'pontos_multiplicador', 'label' => 'Multiplicador'],
-                ['key' => 'ativo', 'label' => 'Ativo'],
-                ['key' => 'observacoes', 'label' => 'Observações'],
-                ['key' => 'criado_em', 'label' => 'Criado em'],
-            ],
-            'rows' => $rows,
         ];
     }
 

@@ -7,7 +7,7 @@ const CNJ_SUFFIX = '.8.05.0103';
 const CNJ_SUFFIX_DIGITS = '8050103';
 const CNJ_MAX_DIGITS = 20;
 
-const CNJ_INPUT_SELECTOR = 'input[id="filter-processo"], input[id="gab-mon-processo"], input[id="filter-numero"], input[id="audiencia-processo"], input[id="audiencia-edit-processo"], input[id="midias-edit-processo"], input[data-cnj-input="true"]';
+const CNJ_INPUT_SELECTOR = 'input[id="filter-processo"], input[id="gab-mon-processo"], input[id="filter-numero"], input[id="audiencia-processo"], input[id="audiencia-edit-processo"], input[data-cnj-input="true"]';
 
 function onlyDigits(value) {
     return String(value || '').replace(/\D/g, '');

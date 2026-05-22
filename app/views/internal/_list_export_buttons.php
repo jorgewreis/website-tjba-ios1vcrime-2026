@@ -3,7 +3,7 @@ declare(strict_types=1);
 /**
  * Select de exportação CSV/PDF (listagens internas).
  *
- * Modo A — URLs explícitas (ex.: produtividade):
+ * Modo A — URLs explícitas (exportação dedicada):
  *   - string $listExportCsvUrl, $listExportPdfUrl
  *   - string $listExportControlId (recomendado) — sufixo estável para id do <select>
  *

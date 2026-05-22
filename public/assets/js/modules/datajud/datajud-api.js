@@ -36,8 +36,6 @@
 
                 || document.getElementById('audiencia-edit-classe')
 
-                || document.getElementById('midias-edit-classe')
-
                 || document.getElementById('gab-mon-classe')
 
                 || document.getElementById('filter-classe'),
@@ -45,8 +43,6 @@
             processoInput: document.getElementById('audiencia-processo')
 
                 || document.getElementById('audiencia-edit-processo')
-
-                || document.getElementById('midias-edit-processo')
 
                 || document.getElementById('gab-mon-processo')
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * Monta o JSON de dados_especificos nas APIs de concluir subtarefa do cartório,
- * sempre com usuario_id da sessão quando existir (obrigatório para produtividade automática).
+ * sempre com usuario_id da sessão quando existir.
  *
  * Antes, usuario_id só era enviado quando nome+sobrenome geravam texto não vazio,
  * o que impedia o lançamento para vários usuários (ex.: gerar PDF em guias).

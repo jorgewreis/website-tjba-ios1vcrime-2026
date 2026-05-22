@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Texto da linha de filtros para exportações CSV/PDF (listagens internas e produtividade).
+ * Texto da linha de filtros para exportações CSV/PDF (listagens internas).
  */
 final class ListExportFilterSummary
 {
@@ -107,43 +107,8 @@ final class ListExportFilterSummary
                 self::pair($parts, 'Instituição (ID)', (string) ($get['instituicao_id'] ?? ''));
                 break;
 
-            case 'produtividaderegras':
-                self::pair($parts, 'Busca', (string) ($get['q'] ?? ''));
-                self::pairAtivo($parts, $get['ativo'] ?? null);
-                break;
-
             default:
                 $parts[] = 'Filtros: conforme parâmetros informados na exportação.';
-        }
-
-        return implode(' | ', $parts);
-    }
-
-    /**
-     * @param array<string, mixed> $get
-     */
-    public static function forProdutividadeLancamentos(array $get, ?float $sumPontos = null): string
-    {
-        $parts = [];
-        $uid = trim((string) ($get['usuario_id'] ?? ''));
-        $parts[] = 'Usuário: ' . ($uid === '' ? 'Todos' : $uid);
-
-        $st = trim((string) ($get['status'] ?? 'ativo'));
-        $parts[] = 'Status: ' . ($st === '' ? 'Todos' : $st);
-
-        $tl = trim((string) ($get['tipo_lancamento'] ?? 'manual'));
-        $parts[] = 'Tipo de lançamento: ' . ($tl === '' ? 'Todos' : $tl);
-
-        $di = trim((string) ($get['data_inicio'] ?? ''));
-        $df = trim((string) ($get['data_fim'] ?? ''));
-        if ($di !== '' || $df !== '') {
-            $parts[] = 'Período: ' . ($di !== '' ? $di : '…') . ' a ' . ($df !== '' ? $df : '…');
-        } else {
-            $parts[] = 'Período: Todos';
-        }
-
-        if ($sumPontos !== null) {
-            $parts[] = 'Total de pontos (filtro): ' . number_format($sumPontos, 2, ',', '.');
         }
 
         return implode(' | ', $parts);

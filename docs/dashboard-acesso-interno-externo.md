@@ -26,7 +26,7 @@
 | Partes / instituições (listagens) | Não | Sim | Sim |
 | Processos | Não | Não | Sim |
 
-A **consulta de CEP** (página dedicada, API e busca ViaCEP em formulários) foi **descontinuada**; o campo CEP em endereços permanece apenas para digitação manual.
+A **consulta de CEP** (página dedicada, API e busca ViaCEP) foi **descontinuada**. O cadastro de endereços em instituições públicas e pessoas (consulta partes) também foi removido.
 
 ## UI (`public/home.php`)
 

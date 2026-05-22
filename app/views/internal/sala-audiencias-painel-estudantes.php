@@ -445,18 +445,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 $classeStatusEst = 'status-finished';
             }
 
-            $midiaStatusMinhas = strtolower(trim((string) ($m['midia_status'] ?? '')));
-            $midiaLabel = '';
-            if ($midiaStatusMinhas === 'concluida') {
-                $midiaLabel = 'Sincronizada';
-            } elseif ($midiaStatusMinhas === 'em_andamento') {
-                $midiaLabel = 'Em processamento';
-            } elseif ($midiaStatusMinhas === 'pendente') {
-                $midiaLabel = 'Aguardando upload';
-            } elseif ($midiaStatusMinhas === 'cancelada') {
-                $midiaLabel = 'Não disponibilizada';
-            }
-
             $row = $m;
             ?>
         <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
@@ -481,12 +469,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 <div class="col width-500 col-process">
                     <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                 </div>
-                <?php if ($midiaLabel !== ''): ?>
-                <div class="col width-400">
-                    <span class="minor-info">Mídia</span>
-                    <span class="major-info"><?php echo htmlspecialchars($midiaLabel, ENT_QUOTES, 'UTF-8'); ?></span>
-                </div>
-                <?php endif; ?>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-sm align-center padding-x-md">
                 <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">

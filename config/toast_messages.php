@@ -271,58 +271,6 @@ return [
         ],
 
         // =========================
-        // PRODUTIVIDADE
-        // =========================
-        'produtividade.manual.create.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'Produtividade registrada com sucesso.',
-            'vars' => [],
-        ],
-        'produtividade.manual.cancel.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'Produtividade cancelada com sucesso.',
-            'vars' => [],
-        ],
-        'produtividade.rule.required.error' => [
-            'type' => 'error',
-            'title' => 'Erro',
-            'message' => 'Selecione uma regra válida.',
-            'vars' => [],
-        ],
-        'produtividade.datajud.wait.error' => [
-            'type' => 'error',
-            'title' => 'Erro',
-            'message' => 'Aguarde a consulta ao DataJud terminar antes de cadastrar.',
-            'vars' => [],
-        ],
-        'produtividade.manual.cancel.reason.required' => [
-            'type' => 'error',
-            'title' => 'Erro',
-            'message' => 'Motivo da anulação é obrigatório.',
-            'vars' => [],
-        ],
-        'produtividade.filter.period.invalid' => [
-            'type' => 'error',
-            'title' => 'Erro',
-            'message' => 'Período inválido. Use datas válidas para filtrar.',
-            'vars' => [],
-        ],
-        'produtividade.filter.period.start_after_end' => [
-            'type' => 'error',
-            'title' => 'Erro',
-            'message' => 'A data inicial não pode ser maior que a data final.',
-            'vars' => [],
-        ],
-        'produtividade.filter.period.max_range.error' => [
-            'type' => 'error',
-            'title' => 'Erro',
-            'message' => 'O intervalo entre data inicial e data final não pode ultrapassar 60 dias.',
-            'vars' => [],
-        ],
-
-        // =========================
         // AUDIENCIAS
         // =========================
         'audiencias.pauta.create.success' => [
@@ -401,30 +349,6 @@ return [
             'type' => 'success',
             'title' => 'Sucesso',
             'message' => 'Inscrição realizada.',
-            'vars' => [],
-        ],
-        'audiencias.midias.task.create.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'Tarefa de mídia cadastrada com sucesso.',
-            'vars' => [],
-        ],
-        'audiencias.midias.task.update.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'Alterações salvas com sucesso.',
-            'vars' => [],
-        ],
-        'audiencias.midias.task.delete.confirm' => [
-            'type' => 'info',
-            'title' => 'Confirmação',
-            'message' => 'Clique novamente em Excluir tarefa em até 5 segundos para confirmar a exclusão desta tarefa e de todas as subtarefas vinculadas.',
-            'vars' => [],
-        ],
-        'audiencias.midias.subtask.conclude.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'Subtarefa concluída com sucesso.',
             'vars' => [],
         ],
         'audiencias.prioridade.add.success' => [
@@ -535,42 +459,6 @@ return [
             'message' => 'Falha no envio (HTTP {status}).',
             'vars' => ['status'],
         ],
-        'audiencias.midias.schedule.empty.info' => [
-            'type' => 'info',
-            'title' => 'Sem audiências',
-            'message' => 'Não há audiências finalizadas para os filtros informados.',
-            'vars' => [],
-        ],
-        'audiencias.midias.create.required.error' => [
-            'type' => 'error',
-            'title' => 'Validação',
-            'message' => 'Preencha processo, classe, data e audiência finalizada.',
-            'vars' => [],
-        ],
-        'audiencias.midias.create.date.future.error' => [
-            'type' => 'error',
-            'title' => 'Validação',
-            'message' => 'A data da audiência não pode ser futura.',
-            'vars' => [],
-        ],
-        'audiencias.midias.edit.record.invalid.update' => [
-            'type' => 'error',
-            'title' => 'Erro',
-            'message' => 'Registro inválido para atualização.',
-            'vars' => [],
-        ],
-        'audiencias.midias.edit.record.invalid.delete' => [
-            'type' => 'error',
-            'title' => 'Erro',
-            'message' => 'Registro inválido para exclusão.',
-            'vars' => [],
-        ],
-        'audiencias.midias.subtask.quantity.invalid' => [
-            'type' => 'error',
-            'title' => 'Validação',
-            'message' => 'Informe uma quantidade de mídias válida para o download.',
-            'vars' => [],
-        ],
         'audiencias.prioridade.required.error' => [
             'type' => 'error',
             'title' => 'Validação',
@@ -675,18 +563,6 @@ return [
             'message' => 'Telefone removido com sucesso.',
             'vars' => [],
         ],
-        'generic.address.add.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'Endereço adicionado com sucesso.',
-            'vars' => [],
-        ],
-        'generic.address.remove.success' => [
-            'type' => 'success',
-            'title' => 'Sucesso',
-            'message' => 'Endereço removido com sucesso.',
-            'vars' => [],
-        ],
         'generic.department.add.success' => [
             'type' => 'success',
             'title' => 'Sucesso',
@@ -739,12 +615,6 @@ return [
             'type' => 'error',
             'title' => 'Erro',
             'message' => 'Informe o nome do setor.',
-            'vars' => [],
-        ],
-        'generic.validation.address.minimum.required' => [
-            'type' => 'error',
-            'title' => 'Erro',
-            'message' => 'Informe ao menos logradouro ou cidade.',
             'vars' => [],
         ],
         'generic.validation.person.institution.required' => [

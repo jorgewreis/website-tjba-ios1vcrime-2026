@@ -20,7 +20,7 @@
 | Toast (iframe) | `app/views/internal/_toast_script.php` | `toast.js` + `toast-helper.js` (`showToast`). Ver `docs/00-foundation/sistema-toast.md`. |
 | Navegação UI | `public/assets/js/shared/navigate-buttons.js` | Abrir processo via `data-nav-href` em elemento com `role="button"`. |
 
-**Exemplo de uso em listagem:** `app/views/internal/sala-midias-list.php` (include do partial + CSS + scripts no final do `body`).
+**Exemplo de uso em listagem:** `app/views/internal/cartorio-cartas-expedidas-list.php` (include do partial + CSS + scripts no final do `body`).
 
 ---
 

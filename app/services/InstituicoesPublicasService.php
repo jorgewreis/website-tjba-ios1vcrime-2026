@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/InstituicoesPublicasRepository.php';
-require_once __DIR__ . '/../repositories/InstituicoesEnderecosRepository.php';
 require_once __DIR__ . '/../repositories/InstituicoesTelefonesRepository.php';
 require_once __DIR__ . '/../repositories/InstituicoesSetoresRepository.php';
 
@@ -10,7 +9,6 @@ final class InstituicoesPublicasService
 {
     private PDO $connection;
     private InstituicoesPublicasRepository $repository;
-    private InstituicoesEnderecosRepository $enderecosRepository;
     private InstituicoesTelefonesRepository $telefonesRepository;
     private InstituicoesSetoresRepository $setoresRepository;
 
@@ -18,7 +16,6 @@ final class InstituicoesPublicasService
     {
         $this->connection = $connection;
         $this->repository = new InstituicoesPublicasRepository($connection);
-        $this->enderecosRepository = new InstituicoesEnderecosRepository($connection);
         $this->telefonesRepository = new InstituicoesTelefonesRepository($connection);
         $this->setoresRepository = new InstituicoesSetoresRepository($connection);
     }
@@ -38,7 +35,6 @@ final class InstituicoesPublicasService
         if ($instituicao === null) {
             return null;
         }
-        $instituicao['enderecos'] = $this->enderecosRepository->findByInstituicaoId($id);
         $instituicao['telefones'] = $this->telefonesRepository->findByInstituicaoId($id);
         $instituicao['setores'] = $this->setoresRepository->findByInstituicaoId($id);
         return $instituicao;
@@ -74,22 +70,6 @@ final class InstituicoesPublicasService
             return true;
         }
         return $this->repository->update($id, $data);
-    }
-
-    public function addEndereco(string $instituicaoId, array $row): string
-    {
-        $row['instituicao_id'] = $instituicaoId;
-        return $this->enderecosRepository->insert($row);
-    }
-
-    public function updateEndereco(string $id, array $payload): bool
-    {
-        return $this->enderecosRepository->update($id, $payload);
-    }
-
-    public function deleteEndereco(string $id): bool
-    {
-        return $this->enderecosRepository->delete($id);
     }
 
     public function addTelefone(string $instituicaoId, array $row): string

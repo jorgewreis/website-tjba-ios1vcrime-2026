@@ -7,7 +7,6 @@ require_once __DIR__ . '/../helpers/ParteDocumentoHelper.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/PartesDocumentosRepository.php';
 require_once __DIR__ . '/../repositories/PartesTelefonesRepository.php';
-require_once __DIR__ . '/../repositories/PartesEnderecosRepository.php';
 require_once __DIR__ . '/../repositories/PartesInstituicoesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 
@@ -17,7 +16,6 @@ final class PessoasService
     private PartesRepository $partesRepository;
     private PartesDocumentosRepository $documentosRepository;
     private PartesTelefonesRepository $telefonesRepository;
-    private PartesEnderecosRepository $enderecosRepository;
     private PartesInstituicoesRepository $partesInstituicoesRepository;
     private ProcessosPartesRepository $processosPartesRepository;
 
@@ -27,7 +25,6 @@ final class PessoasService
         $this->partesRepository = new PartesRepository($connection);
         $this->documentosRepository = new PartesDocumentosRepository($connection);
         $this->telefonesRepository = new PartesTelefonesRepository($connection);
-        $this->enderecosRepository = new PartesEnderecosRepository($connection);
         $this->partesInstituicoesRepository = new PartesInstituicoesRepository($connection);
         $this->processosPartesRepository = new ProcessosPartesRepository($connection);
     }
@@ -65,7 +62,6 @@ final class PessoasService
         }
         $parte['documentos'] = $this->documentosRepository->findByParteId($id);
         $parte['telefones'] = $this->telefonesRepository->findByParteId($id);
-        $parte['enderecos'] = $this->enderecosRepository->findByParteId($id);
         $parte['vinculos_instituicoes'] = $this->partesInstituicoesRepository->findByParteId($id, null);
         $parte['vinculos_processos'] = $this->processosPartesRepository->findByParteId($id);
         return $parte;
@@ -103,32 +99,6 @@ final class PessoasService
                             'parte_id' => $id,
                             'tipo' => trim((string) ($tel['tipo'] ?? '')) ?: null,
                             'numero' => $numero,
-                        ]);
-                    }
-                }
-            }
-
-            $enderecos = $payload['enderecos'] ?? [];
-            if (is_array($enderecos)) {
-                foreach ($enderecos as $end) {
-                    $cep = trim((string) ($end['cep'] ?? ''));
-                    $logradouro = trim((string) ($end['logradouro'] ?? ''));
-                    $numero = trim((string) ($end['numero'] ?? ''));
-                    $complemento = trim((string) ($end['complemento'] ?? ''));
-                    $bairro = trim((string) ($end['bairro'] ?? ''));
-                    $cidade = trim((string) ($end['cidade'] ?? ''));
-                    $uf = trim((string) ($end['uf'] ?? ''));
-                    if ($cep !== '' || $logradouro !== '' || $numero !== '' || $complemento !== '' || $bairro !== '' || $cidade !== '' || $uf !== '') {
-                        $this->enderecosRepository->insert([
-                            'parte_id' => $id,
-                            'cep' => $cep ?: null,
-                            'logradouro' => $logradouro ?: null,
-                            'numero' => $numero ?: null,
-                            'complemento' => $complemento ?: null,
-                            'bairro' => $bairro ?: null,
-                            'cidade' => $cidade ?: null,
-                            'uf' => $uf ?: null,
-                            'principal' => isset($end['principal']) ? (int) (bool) $end['principal'] : 0,
                         ]);
                     }
                 }
@@ -227,35 +197,6 @@ final class PessoasService
     public function deleteTelefone(string $id): bool
     {
         return $this->telefonesRepository->delete($id);
-    }
-
-    public function addEndereco(string $parteId, array $row): string
-    {
-        $data = [
-            'parte_id' => $parteId,
-            'cep' => isset($row['cep']) ? (trim((string) $row['cep']) ?: null) : null,
-            'logradouro' => isset($row['logradouro']) ? (trim((string) $row['logradouro']) ?: null) : null,
-            'numero' => isset($row['numero']) ? (trim((string) $row['numero']) ?: null) : null,
-            'complemento' => isset($row['complemento']) ? (trim((string) $row['complemento']) ?: null) : null,
-            'bairro' => isset($row['bairro']) ? (trim((string) $row['bairro']) ?: null) : null,
-            'cidade' => isset($row['cidade']) ? (trim((string) $row['cidade']) ?: null) : null,
-            'uf' => isset($row['uf']) ? (trim((string) $row['uf']) ?: null) : null,
-            'principal' => isset($row['principal']) ? (int) (bool) $row['principal'] : 0,
-        ];
-        if (array_key_exists('ativo', $row)) {
-            $data['ativo'] = (int) (bool) $row['ativo'];
-        }
-        return $this->enderecosRepository->insert($data);
-    }
-
-    public function updateEndereco(string $id, array $payload): bool
-    {
-        return $this->enderecosRepository->update($id, $payload);
-    }
-
-    public function deleteEndereco(string $id): bool
-    {
-        return $this->enderecosRepository->delete($id);
     }
 
     public function addVinculoInstituicao(string $parteId, array $row): string

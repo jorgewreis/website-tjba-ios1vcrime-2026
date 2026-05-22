@@ -53,53 +53,6 @@ if ($inst === null) { header('Location: /frame.php?page=instituicoespublicas'); 
             </div>
         </div>
 
-        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Endereços</h2></div>
-        <div id="enderecos-list">
-            <?php foreach ($inst['enderecos'] ?? [] as $e): ?>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">
-                <div class="col"><?php echo htmlspecialchars(trim(($e['logradouro'] ?? '') . ($e['numero'] ? ' ' . $e['numero'] : '') . ($e['bairro'] ? ' - ' . $e['bairro'] : '') . ($e['cidade'] ? ' - ' . $e['cidade'] : '') . ($e['uf'] ? '/' . $e['uf'] : ''))); ?></div>
-                <div class="col"><?php echo !empty($e['principal']) ? 'Principal' : '—'; ?></div>
-                <div class="col"><button type="button" class="btn btn-primary-outline btn-del-end" data-id="<?php echo htmlspecialchars($e['id'] ?? ''); ?>">Excluir</button></div>
-            </div>
-            <?php endforeach; ?>
-        </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col">
-                <label for="new-end-cep">CEP</label>
-                <input type="text" class="width-400 height-md white" id="new-end-cep" placeholder="00000-000" maxlength="9">
-            </div>
-        </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col">
-                <label for="new-end-logradouro">Logradouro</label>
-                <input type="text" class="width-600 height-md white" id="new-end-logradouro" placeholder="Rua, avenida...">
-            </div>
-            <div class="col">
-                <label for="new-end-numero">Número</label>
-                <input type="text" class="width-200 height-md white" id="new-end-numero" placeholder="Nº">
-            </div>
-            <div class="col">
-                <label for="new-end-complemento">Complemento</label>
-                <input type="text" class="width-400 height-md white" id="new-end-complemento" placeholder="Sala, andar...">
-            </div>
-        </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col">
-                <label for="new-end-bairro">Bairro</label>
-                <input type="text" class="width-400 height-md white" id="new-end-bairro" placeholder="Bairro">
-            </div>
-            <div class="col">
-                <label for="new-end-cidade">Cidade</label>
-                <input type="text" class="width-300 height-md white" id="new-end-cidade" placeholder="Cidade">
-            </div>
-            <div class="col">
-                <label for="new-end-uf">UF</label>
-                <input type="text" class="width-100 height-md white" id="new-end-uf" placeholder="UF" maxlength="2">
-            </div>
-            <label class="inline"><input type="checkbox" id="new-end-principal"> Principal</label>
-            <button type="button" class="btn btn-secondary-outline" id="add-end-btn">Adicionar endereço</button>
-        </div>
-
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Telefones</h2></div>
         <div id="telefones-list">
             <?php foreach ($inst['telefones'] ?? [] as $t): ?>
