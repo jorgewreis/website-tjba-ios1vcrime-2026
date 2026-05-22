@@ -323,11 +323,8 @@ final class DashboardInternoAlocacaoResumoHelper
     private static function blocosCartasExpedidas(array $byStatus): array
     {
         $map = [
-            'pendente' => ['Pendente', 'Cartas expedidas «pendente».'],
-            'em_andamento' => ['Em andamento', 'Cartas expedidas «em andamento».'],
-            'aguardando assinatura' => ['Aguardando assinatura', 'Aguardando assinatura da magistrada.'],
+            'em_andamento' => ['Aguardando envio', 'Cartas expedidas aguardando envio.'],
             'aguardando envio' => ['Aguardando envio', 'Aguardando envio da carta.'],
-            'aguardando juntada do termo' => ['Aguardando juntada do termo', 'Aguardando juntada do termo de envio.'],
             'aguardando cumprimento' => ['Aguardando cumprimento', 'Aguardando cumprimento.'],
             'concluída' => ['Concluídas', 'Cartas expedidas concluídas.'],
             'cancelada' => ['Canceladas', 'Cartas expedidas canceladas.'],

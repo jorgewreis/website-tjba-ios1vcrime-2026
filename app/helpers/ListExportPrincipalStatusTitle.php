@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/GuiasSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/CartasRecebidasSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/CartasExpedidasSubtarefasRepository.php';
+require_once __DIR__ . '/CartasExpedidasUiCopy.php';
 require_once __DIR__ . '/../repositories/OficiosCartorioSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/GabineteMonitoramentoEletronicoSubtarefasRepository.php';
 
@@ -288,45 +289,10 @@ final class ListExportPrincipalStatusTitle
      */
     private static function cartasExpedidas(array $row): string
     {
-        $subtarefaLabels = [
-            'aguardando_assinatura' => 'Assinar Carta expedida (Magistrada)',
-            'aguardando_gerar_pdf' => 'Imprimir peças em PDF',
-            'aguardando_envio' => 'Enviar Carta expedida',
-            'aguardando_juntada_termo' => 'Juntar comprovante de envio',
-            'aguardando_informacoes' => 'Informar detalhes',
-            'aguardando_devolucao' => 'Juntar carta devolvida',
-        ];
-        $taskTitleByTipo = [
-            'aguardando_assinatura' => 'Aguardando assinatura pela Magistrada',
-            'aguardando_gerar_pdf' => 'Aguardando impressão de peças em PDF',
-            'aguardando_envio' => 'Aguardando envio de Carta expedida',
-            'aguardando_juntada_termo' => 'Aguardando comprovante de envio',
-            'aguardando_informacoes' => 'Aguardando cumprimento',
-            'aguardando_devolucao' => 'Aguardando devolução',
-        ];
-
-        $st = (string) ($row['Status'] ?? '');
-        $allSt = self::subtarefasAll($row);
-        $current = '';
-        foreach ($allSt as $s) {
-            if (!is_array($s)) {
-                continue;
-            }
-            if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                $tipoAtual = (string) ($s['tipo'] ?? '');
-                $current = $taskTitleByTipo[$tipoAtual] ?? $subtarefaLabels[$tipoAtual] ?? $tipoAtual;
-                break;
-            }
-        }
-        if ($current === '' && $st === 'pendente') {
-            $current = $taskTitleByTipo[CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1] ?? 'Carta aguardando assinatura';
-        } elseif ($current === '' && ($st === 'concluída' || $st === 'finalizada')) {
-            $current = 'Todas as etapas concluídas';
-        } elseif ($current === '') {
-            $current = (string) ($row['Status'] ?? 'Em andamento');
-        }
-
-        return $current;
+        return CartasExpedidasUiCopy::resolverTituloTarefaListagem(
+            (string) ($row['Status'] ?? ''),
+            self::subtarefasAll($row)
+        );
     }
 
     /**

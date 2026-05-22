@@ -30,11 +30,7 @@ Cada linha é o valor de `tipo` persistido no repositório de subtarefas (ou ope
 | Guias | `envio_guia` | `cartorio-guias.subtarefa.envio_guia` |
 | Guias | `juntada_termo_envio` | `cartorio-guias.subtarefa.juntada_termo_envio` |
 | **Cartas expedidas** | *(create)* | `cartorio-cartas-expedidas.create` |
-| Cartas expedidas | `aguardando_assinatura` | `cartorio-cartas-expedidas.subtarefa.aguardando_assinatura` |
-| Cartas expedidas | `aguardando_gerar_pdf` | `cartorio-cartas-expedidas.subtarefa.aguardando_gerar_pdf` |
 | Cartas expedidas | `aguardando_envio` | `cartorio-cartas-expedidas.subtarefa.aguardando_envio` |
-| Cartas expedidas | `aguardando_juntada_termo` | `cartorio-cartas-expedidas.subtarefa.aguardando_juntada_termo` |
-| Cartas expedidas | `aguardando_informacoes` | `cartorio-cartas-expedidas.subtarefa.aguardando_informacoes` |
 | Cartas expedidas | `aguardando_devolucao` | `cartorio-cartas-expedidas.subtarefa.aguardando_devolucao` |
 | **Cartas recebidas** | *(create)* | `cartorio-cartas-recebidas.create` |
 | Cartas recebidas | `ato_ordinatorio_cumprimento` | `cartorio-cartas-recebidas.subtarefa.ato_ordinatorio_cumprimento` |

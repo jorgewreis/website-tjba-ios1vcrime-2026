@@ -36,7 +36,7 @@ $finalidadeValue = '';
 $cidadeValue = '';
 $ufValue = 'BA';
 $prazoAtual = 30;
-$statusAtual = 'aguardando assinatura';
+$statusAtual = 'em_andamento';
 $observacoesValue = '';
 $comarcaDestinoId = '';
 
@@ -71,34 +71,18 @@ if ($carta !== null) {
     }
     $statusAtual = trim((string) ($carta['status'] ?? ''));
     if ($statusAtual === '') {
-        $statusAtual = 'aguardando assinatura';
+        $statusAtual = 'em_andamento';
     }
     $observacoesValue = trim((string) ($carta['observacoes'] ?? ''));
     $comarcaDestinoId = trim((string) ($carta['comarca_destino_id'] ?? ''));
 
     $subtarefasRepo = new CartasExpedidasSubtarefasRepository($connection);
-    $subtarefasRepo->autoConcluirSubtarefasDescontinuadas($idCarta);
     $subtarefas = $subtarefasRepo->findByCartaId($idCarta);
     $tribunaisRepo = new TribunaisRepository($connection);
     $subtarefasPorOrdem = [];
     foreach ($subtarefas as $st) {
         $subtarefasPorOrdem[(int) $st['ordem']] = $st;
     }
-    $subtarefaLabels = [
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando assinatura',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Devolução',
-    ];
-    $taskTitleByTipo = [
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Carta aguardando assinatura',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio de Carta',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução da Carta',
-    ];
-    $ordemParaTipo = [
-        1 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1,
-        3 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3,
-        6 => CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6,
-    ];
     $temSubtarefas = count($subtarefas) > 0;
     $temEmAndamentoOuPendente = false;
     foreach ($subtarefas as $st) {
@@ -108,11 +92,6 @@ if ($carta !== null) {
             break;
         }
     }
-    $timelineMinorPendente = [
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1 => 'Aguardando assinatura pela juíza',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_3 => 'Aguardando envio de documentos',
-        CartasExpedidasSubtarefasRepository::TIPO_ORDEM_6 => 'Aguardando devolução da Carta',
-    ];
 }
 
 $ruleServidor = '?';
@@ -151,9 +130,8 @@ $finalidadeOptions = [
 $deadlineOptions = ['5 dias', '10 dias', '15 dias', '30 dias', '60 dias', '90 dias'];
 
 $statusOptions = [
-    'aguardando assinatura' => 'Aguardando assinatura',
+    'em_andamento' => 'Aguardando envio',
     'aguardando envio' => 'Aguardando envio',
-    'aguardando juntada do termo' => 'Aguardando juntada de termo',
     'aguardando cumprimento' => 'Aguardando cumprimento',
     'concluída' => 'Concluída',
     'cancelada' => 'Cancelada',

@@ -9,6 +9,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/CartasExpedidasService.php';
 require_once __DIR__ . '/../../repositories/CartasExpedidasSubtarefasRepository.php';
+require_once __DIR__ . '/../../helpers/CartasExpedidasUiCopy.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
@@ -80,41 +81,23 @@ $documentsLabel = $totalDocuments === 1 ? 'documento' : 'documentos';
 $pagesLabel = $totalPages === 1 ? 'página' : 'páginas';
 $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
-$statusOptions = [
-    'pendente',
-    'em_andamento',
-    'aguardando assinatura',
-    'aguardando envio',
-    'aguardando juntada do termo',
-    'aguardando cumprimento',
+$statusFilterKeys = [
+    'aguardando_envio',
+    'aguardando_cumprimento',
     'concluída',
     'cancelada',
 ];
 
-$statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
-$statusCounts['em_andamento'] = (int) ($statusCounts['em_andamento'] ?? 0) + (int) ($statusCounts['aguardando assinatura'] ?? 0) + (int) ($statusCounts['aguardando envio'] ?? 0) + (int) ($statusCounts['aguardando juntada do termo'] ?? 0) + (int) ($statusCounts['aguardando juntada de termo'] ?? 0) + (int) ($statusCounts['aguardando cumprimento'] ?? 0);
+$rawStatusCounts = $service->getStatusCounts($filters);
+$statusCounts = [
+    'aguardando_envio' => (int) ($rawStatusCounts['em_andamento'] ?? 0) + (int) ($rawStatusCounts['aguardando envio'] ?? 0),
+    'aguardando_cumprimento' => (int) ($rawStatusCounts['aguardando cumprimento'] ?? 0),
+    'concluída' => (int) ($rawStatusCounts['concluída'] ?? 0),
+    'cancelada' => (int) ($rawStatusCounts['cancelada'] ?? 0),
+];
 
-$subtarefaLabels = [
-    'aguardando_assinatura' => 'Assinar Carta expedida (Magistrada)',
-    'aguardando_envio' => 'Enviar Carta expedida',
-    'aguardando_devolucao' => 'Juntar carta devolvida',
-];
-$taskTitleByTipo = [
-    'aguardando_assinatura' => 'Aguardando assinatura',
-    'aguardando_envio' => 'Aguardando envio',
-    'aguardando_devolucao' => 'Aguardando devolução',
-];
-$buttonTitleByTipo = [
-    'aguardando_assinatura' => 'Informar assinatura',
-    'aguardando_envio' => 'Informar envio',
-    'aguardando_devolucao' => 'Informar juntada de carta devolvida',
-];
 $ordensSubtarefasAtivas = CartasExpedidasSubtarefasRepository::ORDENS_ATIVAS;
-$ordemLabels = [
-    1 => $subtarefaLabels['aguardando_assinatura'],
-    3 => $subtarefaLabels['aguardando_envio'],
-    6 => $subtarefaLabels['aguardando_devolucao'],
-];
+$ordemLabels = CartasExpedidasUiCopy::mapaLegendaEtapaPorOrdem();
 
 $defaultFinalidades = [
     'Intimação para Audiência',
@@ -255,11 +238,11 @@ if ($totalPages > 0) {
                 <!-- Filtro - Status -->
                 <select class="width-500 height-md" id="filter-status">
                     <option value="" <?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
-                    <option value="pendente" <?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
-                        Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
+                    <option value="aguardando_envio" <?php echo $statusFilter === 'aguardando_envio' ? ' selected' : ''; ?>>
+                        Aguardando envio (<?php echo htmlspecialchars((string) ($statusCounts['aguardando_envio'] ?? 0)); ?>)
                     </option>
-                    <option value="em_andamento" <?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
-                        Em andamento (<?php echo htmlspecialchars((string) ($statusCounts['em_andamento'] ?? 0)); ?>)
+                    <option value="aguardando_cumprimento" <?php echo $statusFilter === 'aguardando_cumprimento' ? ' selected' : ''; ?>>
+                        Aguardando cumprimento (<?php echo htmlspecialchars((string) ($statusCounts['aguardando_cumprimento'] ?? 0)); ?>)
                     </option>
                     <option value="concluída" <?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
                         Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
@@ -318,8 +301,8 @@ if ($totalPages > 0) {
             $activeFilters = [];
             if ($statusFilter !== '') {
                 $statusFilterLabels = [
-                    'pendente' => 'Pendente',
-                    'em_andamento' => 'Em andamento',
+                    'aguardando_envio' => 'Aguardando envio',
+                    'aguardando_cumprimento' => 'Aguardando cumprimento',
                     'concluída' => 'Finalizada',
                     'cancelada' => 'Cancelada',
                 ];
@@ -449,30 +432,11 @@ if ($totalPages > 0) {
                                     $progressStatuses[$o] = (string) ($s['status'] ?? 'pendente');
                                 }
                             }
-                            $currentSubtarefaTitle = '';
-                            foreach ($allSt as $s) {
-                                if (trim((string) ($s['status'] ?? '')) !== 'em_andamento') {
-                                    continue;
-                                }
-                                $tipoAtual = (string) ($s['tipo'] ?? '');
-                                if (!CartasExpedidasSubtarefasRepository::isTipoAtivo($tipoAtual)) {
-                                    continue;
-                                }
-                                $currentSubtarefaTitle = $taskTitleByTipo[$tipoAtual] ?? $subtarefaLabels[$tipoAtual] ?? $tipoAtual;
-                                break;
-                            }
-                            if ($currentSubtarefaTitle === '' && $st === 'pendente') {
-                                $currentSubtarefaTitle = $taskTitleByTipo['aguardando_assinatura'] ?? 'Carta aguardando assinatura';
-                            } elseif ($currentSubtarefaTitle === '' && ($st === 'concluída' || $st === 'finalizada')) {
-                                $currentSubtarefaTitle = 'Todas as etapas concluídas';
-                            } elseif ($currentSubtarefaTitle === '') {
-                                $currentSubtarefaTitle = $row['Status'] ?? 'Em andamento';
-                            }
-                            $isEmAndamento = in_array($st, ['em_andamento', 'aguardando assinatura', 'aguardando envio'], true);
+                            $currentSubtarefaTitle = CartasExpedidasUiCopy::resolverTituloTarefaListagem((string) $st, $allSt);
                             $mostrarBarraStatus = ($st !== 'concluída' && $st !== 'cancelada');
                             $segmentosBarra = [];
                             if ($mostrarBarraStatus) {
-                                $segmentosBarra[] = ['class' => 'concluida', 'title' => 'Carta expedida e cadastrada'];
+                                $segmentosBarra[] = ['class' => 'concluida', 'title' => CartasExpedidasUiCopy::CADASTRO_ETAPA];
                                 foreach ($ordensSubtarefasAtivas as $ordemAtiva) {
                                     $statusSeg = $progressStatuses[$ordemAtiva] ?? 'pendente';
                                     $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
@@ -482,14 +446,14 @@ if ($totalPages > 0) {
                             ?>
                             <div class="col<?php echo $mostrarBarraStatus && $st !== 'concluída' && $st !== 'cancelada' ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                                 <?php
-                                if ($st === 'concluída') {
-                                    echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
+                                if ($st === 'concluída' || $st === 'concluida' || $st === 'finalizada') {
+                                    echo '<div class="width-300 padding-x-lg status status-finished">' . htmlspecialchars(CartasExpedidasUiCopy::rotuloBadgeStatusTarefa((string) $st), ENT_QUOTES) . '</div>';
                                 } elseif ($st === 'cancelada') {
-                                    echo '<div class="padding-x-lg status status-cancelled">Cancelada</div>';
+                                    echo '<div class="padding-x-lg status status-cancelled">' . htmlspecialchars(CartasExpedidasUiCopy::rotuloBadgeStatusTarefa((string) $st), ENT_QUOTES) . '</div>';
                                 } elseif ($mostrarBarraStatus) {
-                                    $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
-                                    $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
-                                    echo '<div class="status width-300 ' . $classStatus . ' status-with-progress">';
+                                    $labelStatus = CartasExpedidasUiCopy::rotuloBadgeStatusTarefa((string) $st);
+                                    $classStatus = CartasExpedidasUiCopy::classeCssBadgeStatusTarefa((string) $st);
+                                    echo '<div class="status width-300 ' . htmlspecialchars($classStatus, ENT_QUOTES) . ' status-with-progress">';
                                     echo '<span class="status-task-label" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
                                     $concluidosBarra = 1 + count(array_filter($progressStatuses, static fn ($x) => $x === 'concluida'));
                                     $maxBarra = 1 + count($ordensSubtarefasAtivas);
@@ -500,7 +464,7 @@ if ($totalPages > 0) {
                                     echo '</div>';
                                     echo '</div>';
                                 } else {
-                                    echo '<div class="width-300 padding-x-lg status status-pending">Pendente</div>';
+                                    echo '<div class="width-300 padding-x-lg status ' . htmlspecialchars(CartasExpedidasUiCopy::classeCssBadgeStatusTarefa((string) $st), ENT_QUOTES) . '">' . htmlspecialchars(CartasExpedidasUiCopy::rotuloBadgeStatusTarefa((string) $st), ENT_QUOTES) . '</div>';
                                 }
                                 ?>
                             </div>
@@ -521,12 +485,15 @@ if ($totalPages > 0) {
                                 $stTipoNormalizado = strtolower(trim((string) $stTipo));
                                 $isEnvio = in_array($stTipoNormalizado, ['aguardando_envio', 'envio_processo', 'enviar_processo', 'envio'], true);
                                 $isDevolucao = in_array($stTipoNormalizado, ['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao', 'juntar_devolucao', 'Aguardando devolução'], true);
-                                $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                                $stStatusRaw = trim((string) ($st['status'] ?? 'pendente'));
+                                $stSpanTexto = CartasExpedidasUiCopy::textoSpanStatusSubtarefa((string) $stTipo, $stStatusRaw);
+                                $stSpanClasse = CartasExpedidasUiCopy::classeCssSpanStatusSubtarefa($stStatusRaw);
+                                $btnTitle = CartasExpedidasUiCopy::tituloBotaoPorTipo((string) $stTipo);
                             ?>
                                 <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                                     <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
                                         <div class="col task-status">
-                                            <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                            <div class="padding-x-lg height-sm status <?php echo htmlspecialchars($stSpanClasse, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stSpanTexto, ENT_QUOTES); ?>"><?php echo htmlspecialchars($stSpanTexto, ENT_QUOTES); ?></div>
                                         </div>
                                         <?php if ($isEnvio): ?>
                                             <div class="col">
@@ -552,8 +519,8 @@ if ($totalPages > 0) {
                                         <?php endif; ?>
                                     </div>
                                     <div class="display-flex row row-fit justify-end align-center">
-                                        <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?>">
-                                            <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
+                                        <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>">
+                                            <span class="value-button"><?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?></span>
                                         </button>
                                     </div>
                                 </div>

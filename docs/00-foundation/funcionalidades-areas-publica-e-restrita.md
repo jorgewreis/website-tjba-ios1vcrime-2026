@@ -173,11 +173,9 @@ Regra especial para oitiva/interrogatório vinculada à audiência.
 
 Etapas:
 
-- expedir carta  
-- gerar PDF  
-- enviar  
-- ofício  
-- juntadas
+- cadastro da carta  
+- enviar (método de envio)  
+- juntar devolução (resultado do cumprimento)
 
 #### 4.6.4 Submódulo — Editais
 

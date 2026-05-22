@@ -54,7 +54,6 @@ final class CartasExpedidasService
         foreach ($rows as $i => $row) {
             $idCarta = (string) ($row['IdCarta'] ?? '');
             if ($idCarta !== '') {
-                $this->subtarefasRepository->autoConcluirSubtarefasDescontinuadas($idCarta);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
                 $alocadosRaw = $this->alocadosRepository->findByCartaId($idCarta);
@@ -205,7 +204,7 @@ final class CartasExpedidasService
             'numero_processo_destino' => null,
             'vara_destino_id' => null,
             'vara_destino_nome' => null,
-            'status' => 'pendente',
+            'status' => 'em_andamento',
             'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
         ];
 
@@ -253,9 +252,16 @@ final class CartasExpedidasService
 
         $this->subtarefasRepository->create(
             $idCarta,
-            CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1,
-            1,
+            CartasExpedidasSubtarefasRepository::TIPO_ENVIO,
+            CartasExpedidasSubtarefasRepository::ORDEM_ENVIO,
             'em_andamento',
+            null
+        );
+        $this->subtarefasRepository->create(
+            $idCarta,
+            CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO,
+            CartasExpedidasSubtarefasRepository::ORDEM_DEVOLUCAO,
+            'pendente',
             null
         );
 
@@ -280,11 +286,9 @@ final class CartasExpedidasService
         }
 
         if (!CartasExpedidasSubtarefasRepository::isOrdemAtiva($ordem)
-            || in_array($tipoSubtarefaAtual, CartasExpedidasSubtarefasRepository::TIPOS_DESCONTINUADOS, true)) {
-            throw new InvalidArgumentException('Esta subtarefa foi descontinuada. Atualize a página.');
+            || !CartasExpedidasSubtarefasRepository::isTipoAtivo($tipoSubtarefaAtual)) {
+            throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual. Atualize a página.');
         }
-
-        $this->subtarefasRepository->autoConcluirSubtarefasDescontinuadas($cartaId);
 
         $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
@@ -310,15 +314,14 @@ final class CartasExpedidasService
             $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
             $existente = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, $proximaOrdem);
             if ($existente === null) {
-                $this->subtarefasRepository->create($cartaId, $proximoTipo, $proximaOrdem, 'em_andamento', null);
+                $this->subtarefasRepository->create($cartaId, $proximoTipo, $proximaOrdem, 'pendente', null);
             } else {
                 $statusProx = trim((string) ($existente['status'] ?? ''));
                 if ($statusProx !== 'concluida') {
-                    $this->subtarefasRepository->atualizarStatus((string) ($existente['id'] ?? ''), 'em_andamento');
+                    $this->subtarefasRepository->atualizarStatus((string) ($existente['id'] ?? ''), 'pendente');
                 }
             }
-            $statusCarta = $proximaOrdem === 6 ? 'pendente' : 'em_andamento';
-            $this->repository->update($cartaId, ['status' => $statusCarta]);
+            $this->repository->update($cartaId, ['status' => 'aguardando cumprimento']);
             return ['tarefa_principal_concluida' => false];
         }
 
@@ -538,7 +541,7 @@ final class CartasExpedidasService
     }
 
     /**
-     * Cria a primeira subtarefa (ordem 1 - Assinar carta expedida) quando a carta ainda não possui nenhuma.
+     * Cria as subtarefas iniciais (envio + devolução pendente) quando a carta ainda não possui nenhuma.
      *
      * @param string|null $usuarioId Usuário que está criando; se informado, é alocado na tarefa principal.
      * @throws InvalidArgumentException Se a carta não existir ou já possuir subtarefas.
@@ -558,12 +561,19 @@ final class CartasExpedidasService
         }
         $this->subtarefasRepository->create(
             $cartaId,
-            CartasExpedidasSubtarefasRepository::TIPO_ORDEM_1,
-            1,
+            CartasExpedidasSubtarefasRepository::TIPO_ENVIO,
+            CartasExpedidasSubtarefasRepository::ORDEM_ENVIO,
             'em_andamento',
             null
         );
-        $this->repository->update($cartaId, ['status' => 'pendente']);
+        $this->subtarefasRepository->create(
+            $cartaId,
+            CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO,
+            CartasExpedidasSubtarefasRepository::ORDEM_DEVOLUCAO,
+            'pendente',
+            null
+        );
+        $this->repository->update($cartaId, ['status' => 'em_andamento']);
         if ($usuarioId !== null && trim($usuarioId) !== '') {
             $this->alocadosRepository->addAlocado($cartaId, trim($usuarioId));
         }

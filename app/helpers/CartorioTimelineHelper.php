@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/CartasExpedidasUiCopy.php';
+require_once __DIR__ . '/../repositories/CartasExpedidasSubtarefasRepository.php';
+
 if (!function_exists('cartorioTimelineGetConfig')) {
     function cartorioTimelineGetConfig(string $module): array
     {
@@ -8,32 +11,7 @@ if (!function_exists('cartorioTimelineGetConfig')) {
 
         if ($configs === null) {
             $configs = [
-                'cartas_expedidas' => [
-                    'cadastro_label' => 'Carta expedida e cadastrada',
-                    'subtasks' => [
-                        1 => [
-                            'type' => 'aguardando_assinatura',
-                            'label' => 'Aguardando assinatura',
-                            'task_title' => 'Carta aguardando assinatura',
-                            'button_title' => 'Informar assinatura',
-                            'pending_text' => 'Aguardando assinatura pela juiza',
-                        ],
-                        3 => [
-                            'type' => 'aguardando_envio',
-                            'label' => 'Aguardando envio',
-                            'task_title' => 'Aguardando envio de Carta',
-                            'button_title' => 'Informar envio',
-                            'pending_text' => 'Aguardando envio de documentos',
-                        ],
-                        6 => [
-                            'type' => 'aguardando_devolucao',
-                            'label' => 'Devolucao',
-                            'task_title' => 'Aguardando devolucao da Carta',
-                            'button_title' => 'Informar juntada de carta devolvida',
-                            'pending_text' => 'Aguardando devolucao da Carta',
-                        ],
-                    ],
-                ],
+                'cartas_expedidas' => CartasExpedidasUiCopy::timelineModuleConfig(),
                 'cartas_recebidas' => [
                     'cadastro_label' => 'Carta recebida e cadastrada',
                     'subtasks' => [
@@ -339,7 +317,7 @@ if (!function_exists('cartorioTimelineGetConfig')) {
             return is_array($first) ? (string) ($first['task_title'] ?? $statusLabel) : $statusLabel;
         }
         if ($taskStatus === 'concluída' || $taskStatus === 'concluida') {
-            return 'Todas as etapas concluidas';
+            return CartasExpedidasUiCopy::TODAS_ETAPAS_CONCLUIDAS;
         }
 
         return $statusLabel;
@@ -381,18 +359,7 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         $user = cartorioTimelineResolveUser($dados, (array) ($options['usuarioNomesPorId'] ?? []));
 
         if ($module === 'cartas_expedidas') {
-            if ($ordem === 1) {
-                $stamp = $movementDate !== '' ? $movementDate : '—';
-                return cartorioTimelineContent('Carta assinada pela juiza em ' . $stamp, 'Informacao confirmada por ' . $user . ' em ' . $stamp);
-            }
-            if ($ordem === 2) {
-                $qtd = (int) ($dados['qtd_docs_gerados'] ?? $dados['qtd_docs'] ?? 0);
-                if ($qtd < 2) {
-                    $qtd = 2;
-                }
-                return cartorioTimelineContent($qtd . ' documentos impressos em PDF', 'Impressao realizada por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 3) {
+            if ($ordem === CartasExpedidasSubtarefasRepository::ORDEM_ENVIO) {
                 $tribunal = cartorioTimelineResolveTribunalDestino($task, $dados, $options['tribunaisRepo'] ?? null, 'destino');
                 $comarca = trim((string) ($dados['comarca_envio'] ?? $dados['cidade_destino'] ?? $task['cidade_destino'] ?? ''));
                 $metodo = cartorioTimelineNormalizeEnvio((string) ($dados['metodo_envio'] ?? ''));
@@ -405,14 +372,6 @@ if (!function_exists('cartorioTimelineGetConfig')) {
                     $frase .= ' ' . $preposicao . ' ' . $metodo;
                 }
                 return cartorioTimelineContent($frase, 'Envio realizado por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 4) {
-                return cartorioTimelineContent('Juntada do termo de envio realizado', 'Comprovante juntado por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 5) {
-                $numero = trim((string) ($dados['numero_processo_destino'] ?? $task['numero_processo_destino'] ?? ''));
-                $frase = $numero !== '' ? 'Numero de processo no Juizo Deprecante: ' . $numero : 'Numero de processo no Juizo Deprecante: —';
-                return cartorioTimelineContent($frase, 'Informacao verificada por ' . $user . ' em ' . $movementDate);
             }
             $resultado = cartorioTimelineResultadoDevolucao((string) ($dados['resultado_devolucao'] ?? $dados['status_devolucao'] ?? ''));
             $frase = $resultado !== '' ? 'Carta devolvida ' . $resultado : 'Carta devolvida';

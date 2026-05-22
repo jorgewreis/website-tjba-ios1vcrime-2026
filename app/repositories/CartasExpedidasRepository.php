@@ -12,11 +12,8 @@ final class CartasExpedidasRepository
     private const COLLATION = 'utf8mb4_unicode_ci';
 
     private const STATUS_ORDER = [
-        'pendente',
         'em_andamento',
-        'aguardando assinatura',
         'aguardando envio',
-        'aguardando juntada do termo',
         'aguardando cumprimento',
         'concluída',
         'cancelada',
@@ -309,8 +306,8 @@ final class CartasExpedidasRepository
 
         if (isset($filters['status']) && $filters['status'] !== '') {
             $statusVal = trim($filters['status']);
-            if ($statusVal === 'em_andamento') {
-                $statusList = ['em_andamento', 'aguardando assinatura', 'aguardando envio', 'aguardando juntada do termo', 'aguardando juntada de termo', 'aguardando cumprimento'];
+            if ($statusVal === 'aguardando_envio') {
+                $statusList = ['em_andamento', 'aguardando envio'];
                 $placeholders = [];
                 foreach ($statusList as $i => $s) {
                     $key = ':status_' . $i;
@@ -318,6 +315,9 @@ final class CartasExpedidasRepository
                     $params[$key] = $s;
                 }
                 $clauses[] = '(' . implode(' OR ', $placeholders) . ')';
+            } elseif ($statusVal === 'aguardando_cumprimento') {
+                $clauses[] = $prefix . "`status` COLLATE {$coll} = :status";
+                $params[':status'] = 'aguardando cumprimento';
             } else {
                 $clauses[] = $prefix . "`status` COLLATE {$coll} = :status";
                 $params[':status'] = $statusVal;

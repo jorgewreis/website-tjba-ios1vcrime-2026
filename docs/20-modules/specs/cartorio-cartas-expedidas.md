@@ -2,81 +2,61 @@
 
 ## 1. Visão geral
 
-Submódulo do Módulo de Cartório (m4) para gestão de **cartas expedidas** (precatórias, rogatórias e de ordem expedidas pelo cartório). Controle do fluxo desde o cadastro até a juntada da carta devolvida.
+Submódulo do Módulo de Cartório (m4) para gestão de **cartas expedidas** (precatórias, rogatórias e de ordem expedidas pelo cartório). Fluxo de **duas etapas**: envio da carta e juntada da devolução.
 
 ## 2. Fluxo geral
 
-1. Expedição da Carta  
-2. Cadastro no sistema  
-3. Juíza assina  
-4. Gera PDF's da carta e documentos correlatos  
-5. Envia documentos  
-6. Juntada de termo de envio  
-7. Juntada de informações do andamento  
-8. Juntada da carta devolvida  
+1. Cadastro no sistema  
+2. **Enviar** — método de envio (e-mail, malote, PJe, etc.)  
+3. **Juntar** — resultado da devolução da carta  
 
 ## 3. Entidade principal: Carta Expedida
 
 - **Tabela:** `cartas_expedidas`
-- **Identificador:** `id` (prefixo CEP, 30 caracteres)
+- **Identificador:** `id` (prefixo CPE, 30 caracteres)
 - **Campos principais:** processo_origem_id, numero_processo_origem, finalidade, cidade_destino, uf_destino, comarca_destino_id, prazo_dias, status, observacoes, created_at, updated_at.
 
 ## 4. Status da tarefa principal
 
-- `pendente` — exibido como **Pendente** (status-pending)
-- `em_andamento` — exibido como **Em andamento** (status-current)
-- `concluída` — exibido como **Finalizada** (status-finished)
-- `cancelada` — exibido como **Cancelada** (status-cancelled)
+| Status (BD) | Exibição (UI) | Classe CSS |
+|-------------|---------------|------------|
+| `em_andamento` | Aguardando envio | status-current |
+| `aguardando envio` | Aguardando envio | status-current |
+| `aguardando cumprimento` | Aguardando cumprimento | status-pending |
+| `concluída` | Finalizada | status-finished |
+| `cancelada` | Cancelada | status-cancelled |
 
-Quando todas as subtarefas estão concluídas, a tarefa é **Concluída** (status-finished).
+A UI **não** exibe o rótulo genérico «Em andamento» nem o valor bruto `em_andamento` ao usuário.
 
-## 5. Subtarefas (fluxo ativo)
+Quando as duas subtarefas estão concluídas, a tarefa passa a **concluída**.
 
-Tipos ativos em `CartasExpedidasSubtarefasRepository` (ordens 1 → 3 → 6): `aguardando_assinatura`, `aguardando_envio`, `aguardando_devolucao`.
+## 5. Subtarefas (2 etapas)
 
-Tipos descontinuados (auto-concluídos em cartas antigas): `aguardando_gerar_pdf`, `aguardando_juntada_termo`, `aguardando_informacoes`.
+Tipos em `CartasExpedidasSubtarefasRepository`: `aguardando_envio` (ordem **1**), `aguardando_devolucao` (ordem **2**).
 
 O módulo **não** registra produtividade (`CartorioProdutividade`).
 
-### 5.1 Subtarefa 1: Aguardando assinatura (ordem 1)
+### 5.1 Envio (ordem 1)
 
-- **Status da subtarefa:** status-pending  
-- **Status da tarefa:** Pendente (status-pending)  
-- **Title da Tarefa:** Carta aguardando assinatura  
-- **Title do Button da Subtarefa:** Informar assinatura  
-- **Complemento:** —  
-- **Status Timeline (sem fazer):** Aguardando assinatura pela juíza  
-- **Complemento Timeline (sem fazer):** —  
-- **Status Timeline (concluída):** Carta assinada pela juíza em [data] - [hora]  
-- **Complemento Timeline (concluída):** Informação confirmada por [usuario] em [data] - [hora]  
-
-### 5.2 Subtarefa 2: Aguardando envio (ordem 3)
-
-- **Status da subtarefa:** status-pending  
-- **Status da tarefa:** Em andamento (status-current)  
+- **Status da subtarefa (ativa):** `em_andamento` — span «Aguardando envio de documentos» (status-current)  
+- **Status da tarefa:** `em_andamento` — badge «Aguardando envio»  
+- **Title da Tarefa (lista):** Aguardando envio  
+- **Botão:** **Enviar**  
 - **Complemento:** Select — E-mail, Malote Digital, PJe, eSAJ, ePROC  
-- **Title da Tarefa:** Aguardando envio de Carta  
-- **Title do Button da Subtarefa:** Informar envio  
-- **Status Timeline (sem fazer):** Aguardando envio de documentos  
-- **Complemento Timeline (sem fazer):** —  
-- **Status Timeline (concluída):** Carta enviada para [sigla TJ - nome tribunal] - Comarca de [nome comarca envio] pelo/por [tipo envio]  
-- **Complemento Timeline (concluída):** Envio realizado por [usuario] em [data] - [hora]  
+- **Timeline (pendente):** Aguardando envio de documentos  
+- **Timeline (concluída):** Carta enviada para [tribunal]… / Envio realizado por [usuario] em [data]  
 
-### 5.3 Subtarefa 3: Devolução (ordem 6)
+### 5.2 Devolução (ordem 2)
 
-- **Status da subtarefa:** status-pending  
-- **Status da tarefa:** Em andamento (status-current)  
+- **Status da subtarefa (ativa):** `pendente` — span «Aguardando cumprimento» (status-pending)  
+- **Status da tarefa:** `aguardando cumprimento` — badge «Aguardando cumprimento» (status-pending)  
+- **Title da Tarefa (lista):** Aguardando cumprimento  
+- **Botão:** **Juntar**  
 - **Complemento:** Select — Não cumprida, Cumprida negativamente, Cumprida parcialmente, Cumprida integralmente  
-- **Title da Tarefa:** Aguardando cumprimento  
-- **Title do Button da Subtarefa:** Informar juntada de carta devolvida  
-- **Status Timeline (sem fazer):** Aguardando devolução da Carta  
-- **Complemento Timeline (sem fazer):** —  
-- **Status Timeline (concluída):** Carta devolvida [complemento] (ex.: Cumprida integralmente)  
-- **Complemento Timeline (concluída):** Juntada de carta devolvida realizada por [usuario] em [data] - [hora]  
+- **Timeline (pendente):** Aguardando cumprimento  
+- **Timeline (concluída):** Carta devolvida [resultado] / Juntada de carta devolvida realizada por [usuario] em [data]  
 
-### 5.4 Valores de resultado de devolução (backend)
-
-Valores armazenados em `dados_especificos.resultado_devolucao` e rótulos exibidos:
+### 5.3 Valores de resultado de devolução (backend)
 
 | Valor (backend)              | Rótulo exibido           |
 |------------------------------|--------------------------|
@@ -85,12 +65,26 @@ Valores armazenados em `dados_especificos.resultado_devolucao` e rótulos exibid
 | `cumprida_parcialmente`     | Cumprida parcialmente    |
 | `cumprida_positivamente`    | Cumprida integralmente   |
 
-## 6. Regras de validação
+## 6. Filtros da listagem
 
-- Ao concluir uma subtarefa que exige complemento (método de envio, resultado devolução), o sistema deve bloquear a conclusão se o complemento não estiver preenchido.
+- Aguardando envio (`em_andamento` + `aguardando envio`)  
+- Aguardando cumprimento  
+- Finalizada / Cancelada  
 
-## 7. Referências
+## 7. Regras de validação
 
-- [CartasExpedidasSubtarefasRepository](../../../app/repositories/CartasExpedidasSubtarefasRepository.php) — constantes de tipo e ordem.
-- Views: [cartorio-cartas-expedidas-list.php](../../../app/views/internal/cartorio-cartas-expedidas-list.php), [cartorio-cartas-expedidas-edit.php](../../../app/views/internal/cartorio-cartas-expedidas-edit.php).
-- [cartorio-cartas-recebidas.md](cartorio-cartas-recebidas.md) — submódulo espelhado (cartas recebidas).
+- Ao concluir envio ou devolução, o complemento obrigatório (método de envio ou resultado) deve estar preenchido.
+
+## 8. Migração de dados legados
+
+Script único: `scripts/migrate-cartas-expedidas-fluxo-2-etapas.php` — remove subtarefas antigas, renumerar ordens 1/2 e normaliza status de tarefas abertas.
+
+## 9. Textos de UI (fonte única)
+
+- [CartasExpedidasUiCopy.php](../../../app/helpers/CartasExpedidasUiCopy.php) — títulos, timeline, botões Enviar/Juntar, badges.
+
+## 10. Referências
+
+- [CartasExpedidasSubtarefasRepository](../../../app/repositories/CartasExpedidasSubtarefasRepository.php)
+- Views: [cartorio-cartas-expedidas-list.php](../../../app/views/internal/cartorio-cartas-expedidas-list.php), [cartorio-cartas-expedidas-edit.php](../../../app/views/internal/cartorio-cartas-expedidas-edit.php)
+- [cartorio-cartas-recebidas.md](cartorio-cartas-recebidas.md)
