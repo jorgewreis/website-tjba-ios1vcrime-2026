@@ -79,9 +79,6 @@ final class SalaAudienciasAtaService
         $rows = $this->inscricaoRepository->listHojeDesignadasElegiveis($usuarioId);
         $out = [];
         foreach ($rows as $row) {
-            if (SalaAudienciasAtaSigiloHelper::linhaIndicaProcessoSigiloso($row)) {
-                continue;
-            }
             $processoSigiloso = (int) ($row['processo_sigiloso'] ?? 0) !== 0;
             $envolveMenor = (int) ($row['qtd_menor'] ?? 0) > 0;
             $temPrioridadeBloqueio = (int) ($row['tem_prioridade_bloqueio'] ?? 0) !== 0;

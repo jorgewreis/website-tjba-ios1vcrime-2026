@@ -12,6 +12,25 @@ final class SalaAudienciasAtaSigiloHelper
     public const MSG_PROCESSO_SIGILOSO = 'Processos sigilosos não permitem cadastro, envio nem consulta de atas de audiência.';
 
     /**
+     * Expressão SQL (0|1): processo sigiloso por flag em `processos` ou prioridade `sigiloso`.
+     */
+    public static function sqlProcessoSigilosoEfetivo(string $aliasProcesso = 'p', string $aliasPauta = 'a'): string
+    {
+        $codigo = PrioridadesProcessuaisCatalog::codigoSigiloso();
+
+        return sprintf(
+            'CASE WHEN COALESCE(%1$s.`sigiloso`, 0) = 1 OR EXISTS (
+                SELECT 1 FROM `processo_prioridades` pri
+                WHERE pri.`processo_id` = %2$s.`processo`
+                  AND pri.`codigo` = %3$s
+              ) THEN 1 ELSE 0 END',
+            $aliasProcesso,
+            $aliasPauta,
+            self::quoteSqlLiteral($codigo)
+        );
+    }
+
+    /**
      * Fragmento SQL: exclui pautas cujo processo é sigiloso (flag ou prioridade).
      */
     public static function sqlExcluirProcessoSigiloso(string $aliasPauta = 'a', string $aliasProcesso = 'p'): string

@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 04 de abril de 2026
+**Data de Lançamento:** 21 de maio de 2026
 
 # V. 1.44
 
-> feat: implement badges management in Produtividade, including CRUD operations and UI integration for dashboard and lists
+> refactor: update access control and remove deprecated page references
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: implement badges management in Produtividade, including CRUD operations and UI integration for dashboard and lists** `[6e6d7cd]`
+- **refactor: update access control and remove deprecated page references** `[076d7e97]`
 
 ---
 

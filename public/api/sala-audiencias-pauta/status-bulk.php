@@ -13,6 +13,7 @@ require_once $basePath . '/app/access/ProfileNormalizer.php';
 require_once $basePath . '/app/helpers/UserAccessHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasAtaService.php';
 require_once $basePath . '/app/helpers/PrioridadesProcessuaisCatalog.php';
+require_once $basePath . '/app/helpers/SalaAudienciasAtaSigiloHelper.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -122,7 +123,7 @@ try {
      * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
      */
     $sql = "SELECT a.`id_pauta`, a.`status`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
-                   COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`,
+                   " . SalaAudienciasAtaSigiloHelper::sqlProcessoSigilosoEfetivo('p', 'a') . " AS `processo_sigiloso`,
                    CASE WHEN i.`id` IS NOT NULL THEN 1 ELSE 0 END AS `ja_inscrito`,
                    (SELECT COUNT(*) FROM `sala_audiencias_pauta_parte` pp WHERE pp.`pauta` = a.`id_pauta` AND pp.`ativo` = 1 AND pp.`maioridade` = 'menor') AS `qtd_menor`,
                    (SELECT COUNT(*) FROM `sala_audiencias_estudante_inscricao` inv WHERE inv.`pauta` = a.`id_pauta`) AS `total_inscritos_pauta`,

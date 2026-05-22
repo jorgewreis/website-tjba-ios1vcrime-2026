@@ -338,7 +338,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     <?php elseif ($lotado): ?>
                     <span class="minor-info text-error">Vagas esgotadas.</span>
                     <?php elseif ($sigiloso): ?>
-                    <span class="minor-info text-error">Inscricao indisponivel.</span>
+                    <span class="minor-info text-error">Processo sigiloso — inscrição indisponível.</span>
                     <?php elseif ($menor): ?>
                     <span class="minor-info text-error">Inscricao indisponivel.</span>
                     <?php elseif ($prioridadeBloqueio): ?>
@@ -676,7 +676,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             } else if (lotado) {
                 wrapper.innerHTML = '<span class="minor-info text-error">Vagas esgotadas.</span>';
             } else if (sigiloso) {
-                wrapper.innerHTML = '<span class="minor-info text-error">Processo sigiloso.</span>';
+                wrapper.innerHTML = '<span class="minor-info text-error">Processo sigiloso — inscrição indisponível.</span>';
             } else if (menor) {
                 wrapper.innerHTML = '<span class="minor-info text-error">Proibida inscrição de estudantes.</span>';
             } else if (prioridadeBloqueio) {
