@@ -424,6 +424,7 @@ if ($totalPages > 0) {
                             <?php
                             $st = $row['Status'] ?? '';
                             $allSt = $row['SubtarefasAll'] ?? [];
+                            $subtarefaAtivaUi = CartasExpedidasSubtarefasRepository::resolverSubtarefaAtivaPorLista($allSt);
                             $progressStatuses = [];
                             foreach ($ordensSubtarefasAtivas as $ordemAtiva) {
                                 $progressStatuses[$ordemAtiva] = 'pendente';
@@ -434,7 +435,9 @@ if ($totalPages > 0) {
                                     $progressStatuses[$o] = (string) ($s['status'] ?? 'pendente');
                                 }
                             }
-                            $currentSubtarefaTitle = CartasExpedidasUiCopy::resolverTituloTarefaListagem((string) $st, $allSt);
+                            $currentSubtarefaTitle = CartasExpedidasUiCopy::resolverTituloTarefaListagem((string) $st, $allSt, $subtarefaAtivaUi);
+                            $badgeStatusTarefa = CartasExpedidasUiCopy::rotuloBadgeStatusTarefaListagem((string) $st, $subtarefaAtivaUi);
+                            $classeBadgeStatusTarefa = CartasExpedidasUiCopy::classeCssBadgeStatusTarefaListagem((string) $st, $subtarefaAtivaUi);
                             $mostrarBarraStatus = ($st !== 'concluída' && $st !== 'cancelada');
                             $segmentosBarra = [];
                             if ($mostrarBarraStatus) {
@@ -453,9 +456,7 @@ if ($totalPages > 0) {
                                 } elseif ($st === 'cancelada') {
                                     echo '<div class="padding-x-lg status status-cancelled">' . htmlspecialchars(CartasExpedidasUiCopy::rotuloBadgeStatusTarefa((string) $st), ENT_QUOTES) . '</div>';
                                 } elseif ($mostrarBarraStatus) {
-                                    $labelStatus = CartasExpedidasUiCopy::rotuloBadgeStatusTarefa((string) $st);
-                                    $classStatus = CartasExpedidasUiCopy::classeCssBadgeStatusTarefa((string) $st);
-                                    echo '<div class="status width-300 ' . htmlspecialchars($classStatus, ENT_QUOTES) . ' status-with-progress">';
+                                    echo '<div class="status width-300 ' . htmlspecialchars($classeBadgeStatusTarefa, ENT_QUOTES) . ' status-with-progress">';
                                     echo '<span class="status-task-label" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
                                     $concluidosBarra = 1 + count(array_filter($progressStatuses, static fn ($x) => $x === 'concluida'));
                                     $maxBarra = 1 + count($ordensSubtarefasAtivas);
@@ -466,7 +467,7 @@ if ($totalPages > 0) {
                                     echo '</div>';
                                     echo '</div>';
                                 } else {
-                                    echo '<div class="width-300 padding-x-lg status ' . htmlspecialchars(CartasExpedidasUiCopy::classeCssBadgeStatusTarefa((string) $st), ENT_QUOTES) . '">' . htmlspecialchars(CartasExpedidasUiCopy::rotuloBadgeStatusTarefa((string) $st), ENT_QUOTES) . '</div>';
+                                    echo '<div class="width-300 padding-x-lg status ' . htmlspecialchars($classeBadgeStatusTarefa, ENT_QUOTES) . '">' . htmlspecialchars($badgeStatusTarefa, ENT_QUOTES) . '</div>';
                                 }
                                 ?>
                             </div>
@@ -478,7 +479,9 @@ if ($totalPages > 0) {
                     <!-- SUBTAREFAS DO REGISTRO -->
                     <?php if (!$tarefaConcluida): ?>
                         <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-hidden="true">
-                            <?php foreach ($subtarefas as $st):
+                            <?php
+                            $subtarefasExibir = $subtarefaAtivaUi !== null ? [$subtarefaAtivaUi] : [];
+                            foreach ($subtarefasExibir as $st):
                                 $stId = $st['id'] ?? '';
                                 $stTipo = $st['tipo'] ?? '';
                                 if (!CartasExpedidasSubtarefasRepository::isTipoAtivo((string) $stTipo)) {

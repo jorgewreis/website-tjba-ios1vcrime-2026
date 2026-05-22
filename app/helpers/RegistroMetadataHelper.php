@@ -164,6 +164,9 @@ final class RegistroMetadataHelper
         $status = strtolower(trim(self::pick($row, $config['status_keys'] ?? ['Status', 'status'])));
         $id = trim(self::pick($row, $config['id_keys'] ?? ['id']));
         $criador = trim(self::pick($row, $config['criador_keys'] ?? ['CriadoPorNome']));
+        if ($criador === '') {
+            $criador = self::resolverNomeCriadorFallback($row);
+        }
         $editor = trim(self::pick($row, $config['editor_keys'] ?? ['UltimoEditorNome', 'AtualizadoPorNome']));
         $createdRaw = trim(self::pick($row, $config['data_keys'] ?? ['Data', 'created_at']));
         $updatedRaw = trim(self::pick($row, $config['updated_keys'] ?? ['DataAtualizacao', 'updated_at']));
@@ -586,6 +589,44 @@ final class RegistroMetadataHelper
             $a,
             $a
         );
+    }
+
+    /**
+     * Quando `criado_por` não está no banco, usa o alocado tipo `all` (quem cadastrou) ou o primeiro nome disponível.
+     *
+     * @param array<string, mixed> $row
+     */
+    private static function resolverNomeCriadorFallback(array $row): string
+    {
+        $alocados = $row['Alocados'] ?? [];
+        if (!is_array($alocados)) {
+            return '';
+        }
+
+        foreach ($alocados as $alocado) {
+            if (!is_array($alocado)) {
+                continue;
+            }
+            if (trim((string) ($alocado['tipo'] ?? '')) !== 'all') {
+                continue;
+            }
+            $nome = trim((string) ($alocado['nome_completo'] ?? ''));
+            if ($nome !== '') {
+                return $nome;
+            }
+        }
+
+        foreach ($alocados as $alocado) {
+            if (!is_array($alocado)) {
+                continue;
+            }
+            $nome = trim((string) ($alocado['nome_completo'] ?? ''));
+            if ($nome !== '') {
+                return $nome;
+            }
+        }
+
+        return '';
     }
 
     /**

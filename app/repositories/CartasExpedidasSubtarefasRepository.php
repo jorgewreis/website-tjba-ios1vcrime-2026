@@ -147,47 +147,70 @@ final class CartasExpedidasSubtarefasRepository
     }
 
     /**
+     * Subtarefa em que o usuário deve agir agora: envio enquanto não concluída; depois devolução.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    public static function resolverSubtarefaAtivaPorLista(array $rows): ?array
+    {
+        $envio = null;
+        $devolucao = null;
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $tipo = trim((string) ($row['tipo'] ?? ''));
+            if (!self::isTipoAtivo($tipo)) {
+                continue;
+            }
+            if ($tipo === self::TIPO_ENVIO) {
+                $envio = $row;
+            }
+            if ($tipo === self::TIPO_DEVOLUCAO) {
+                $devolucao = $row;
+            }
+        }
+
+        if ($envio !== null && trim((string) ($envio['status'] ?? '')) !== self::STATUS_CONCLUIDA) {
+            return $envio;
+        }
+        if ($devolucao !== null && trim((string) ($devolucao['status'] ?? '')) !== self::STATUS_CONCLUIDA) {
+            return $devolucao;
+        }
+
+        return null;
+    }
+
+    /**
      * Retorna a subtarefa ativa para ação na listagem (no máximo uma por carta).
      */
     public function findPendenteOuEmAndamentoByCartaId(string $cartaId): array
     {
-        $candidatas = [];
+        $ativa = self::resolverSubtarefaAtivaPorLista($this->findByCartaId($cartaId));
 
-        foreach ($this->findByCartaId($cartaId) as $row) {
-            $ordem = (int) ($row['ordem'] ?? 0);
-            $tipo = trim((string) ($row['tipo'] ?? ''));
-            if (!self::isOrdemAtiva($ordem) || !self::isTipoAtivo($tipo)) {
-                continue;
-            }
-            $status = (string) ($row['status'] ?? '');
-            if ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE) {
-                $candidatas[] = $row;
-            }
+        return $ativa !== null ? [$ativa] : [];
+    }
+
+    /**
+     * Status da tarefa principal coerente com as subtarefas (envio → em_andamento; devolução → aguardando cumprimento).
+     */
+    public function inferirStatusTarefaPrincipal(string $cartaId): ?string
+    {
+        $ativa = self::resolverSubtarefaAtivaPorLista($this->findByCartaId($cartaId));
+        if ($ativa === null) {
+            return null;
         }
 
-        if ($candidatas === []) {
-            return [];
+        $tipo = trim((string) ($ativa['tipo'] ?? ''));
+        if ($tipo === self::TIPO_ENVIO) {
+            return 'em_andamento';
+        }
+        if ($tipo === self::TIPO_DEVOLUCAO) {
+            return 'aguardando cumprimento';
         }
 
-        usort($candidatas, static function (array $a, array $b): int {
-            $prio = static function (array $row): int {
-                $status = (string) ($row['status'] ?? '');
-                if ($status === self::STATUS_EM_ANDAMENTO) {
-                    return 0;
-                }
-
-                return 1;
-            };
-
-            $cmp = $prio($a) <=> $prio($b);
-            if ($cmp !== 0) {
-                return $cmp;
-            }
-
-            return ((int) ($a['ordem'] ?? 0)) <=> ((int) ($b['ordem'] ?? 0));
-        });
-
-        return [reset($candidatas)];
+        return null;
     }
 
     /**
@@ -213,18 +236,14 @@ final class CartasExpedidasSubtarefasRepository
             }
         }
 
-        $faseCumprimento = $statusNorm === 'aguardando cumprimento';
-
         if (!isset($porTipo[self::TIPO_ENVIO])) {
             $this->create(
                 $cartaId,
                 self::TIPO_ENVIO,
                 self::ORDEM_ENVIO,
-                $faseCumprimento ? self::STATUS_CONCLUIDA : self::STATUS_EM_ANDAMENTO,
+                self::STATUS_EM_ANDAMENTO,
                 null
             );
-        } elseif ($faseCumprimento && trim((string) ($porTipo[self::TIPO_ENVIO]['status'] ?? '')) !== self::STATUS_CONCLUIDA) {
-            $this->marcarConcluida((string) ($porTipo[self::TIPO_ENVIO]['id'] ?? ''));
         }
 
         if (!isset($porTipo[self::TIPO_DEVOLUCAO])) {

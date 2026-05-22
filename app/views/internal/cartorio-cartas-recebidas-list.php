@@ -389,8 +389,9 @@ if ($totalPages > 0) {
             <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_recebidas', $registroListViewerContext, $connection); ?>
             <div class="display-flex col col-full register register-with-metadata border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
 
-                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                <div class="register-line" style="border-bottom: 0;">
+
+                    <div class="register-line-left">
                         <div class="col">
                             <?php if ($podeExpandirSubtarefas): ?>
                                 <label class="button-table" title="Expandir detalhes">
@@ -409,6 +410,7 @@ if ($totalPages > 0) {
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars($row['Finalidade']); ?> — <?php echo htmlspecialchars($row['Prazo'] . ' dias'); ?></span>
                         </div>
                     </div>
+
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
                             <?php
@@ -501,6 +503,7 @@ if ($totalPages > 0) {
                         </div>
                         <?php include __DIR__ . '/_registro_metadata.php'; ?>
                     </div>
+
                 </div>
 
                 <?php if ($podeExpandirSubtarefas): ?>

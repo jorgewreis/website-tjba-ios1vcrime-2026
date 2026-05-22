@@ -57,6 +57,11 @@ final class CartasExpedidasService
                 $statusCarta = trim((string) ($row['Status'] ?? ''));
                 if (!in_array($statusCarta, ['concluída', 'concluida', 'finalizada', 'cancelada'], true)) {
                     $this->subtarefasRepository->garantirSubtarefasFluxo($idCarta, $statusCarta);
+                    $statusInferido = $this->subtarefasRepository->inferirStatusTarefaPrincipal($idCarta);
+                    if ($statusInferido !== null && $statusInferido !== $statusCarta) {
+                        $this->repository->update($idCarta, ['status' => $statusInferido]);
+                        $rows[$i]['Status'] = $statusInferido;
+                    }
                 }
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
