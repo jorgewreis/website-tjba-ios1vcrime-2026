@@ -79,21 +79,8 @@ if ($carta !== null) {
     $comarcaDestinoId = trim((string) ($carta['comarca_origem_id'] ?? ''));
 
     $subtarefasRepo = new CartasRecebidasSubtarefasRepository($connection);
-    $subtarefasRepo->autoConcluirSubtarefasDescontinuadas($idCarta);
     $subtarefas = $subtarefasRepo->findByCartaId($idCarta);
     $tribunaisRepo = new TribunaisRepository($connection);
-    $subtarefasPorOrdem = [];
-    foreach ($subtarefas as $st) {
-        $subtarefasPorOrdem[(int) $st['ordem']] = $st;
-    }
-    $subtarefaLabels = [
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolução da Carta',
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivamento definitivo',
-    ];
-    $ordemParaTipo = [
-        5 => CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5,
-        7 => CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7,
-    ];
     $temSubtarefas = count($subtarefas) > 0;
     $temEmAndamentoOuPendente = false;
     foreach ($subtarefas as $st) {
@@ -103,10 +90,6 @@ if ($carta !== null) {
             break;
         }
     }
-    $timelineMinorPendente = [
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando envio do processo ao juízo de origem',
-        CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando arquivamento definitivo da carta',
-    ];
 }
 
 $ruleServidor = '?';
@@ -146,7 +129,7 @@ $deadlineOptions = ['5 dias', '10 dias', '15 dias', '30 dias', '60 dias', '90 di
 
 $statusOptions = [
     'aguardando cumprimento' => 'Aguardando cumprimento',
-    'em_andamento' => 'Em andamento',
+    'aguardando devolução' => 'Aguardando devolução',
     'concluída' => 'Concluída',
     'cancelada' => 'Cancelada',
 ];

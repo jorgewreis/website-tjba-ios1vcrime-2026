@@ -14,6 +14,7 @@ require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
+require_once __DIR__ . '/../helpers/CartasRecebidasUiCopy.php';
 
 final class CartasRecebidasService
 {
@@ -50,7 +51,6 @@ final class CartasRecebidasService
         foreach ($rows as $i => $row) {
             $idCarta = (string) ($row['IdCarta'] ?? '');
             if ($idCarta !== '') {
-                $this->subtarefasRepository->autoConcluirSubtarefasDescontinuadas($idCarta);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
                 $alocadosRaw = $this->alocadosRepository->findByCartaId($idCarta);
@@ -206,10 +206,10 @@ final class CartasRecebidasService
         );
 
         $repo = $this->subtarefasRepository;
-        $repo->create($idCarta, $repo::TIPO_ORDEM_5, 5, 'em_andamento', null);
-        $repo->create($idCarta, $repo::TIPO_ORDEM_7, 7, 'pendente', null);
+        $repo->create($idCarta, $repo::TIPO_CUMPRIMENTO, $repo::ORDEM_CUMPRIMENTO, 'em_andamento', null);
+        $repo->create($idCarta, $repo::TIPO_DEVOLUCAO, $repo::ORDEM_DEVOLUCAO, 'pendente', null);
 
-        $this->repository->update($idCarta, ['status' => 'aguardando cumprimento']);
+        $this->repository->update($idCarta, ['status' => CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO]);
 
         return $idCarta;
     }
@@ -234,10 +234,8 @@ final class CartasRecebidasService
 
         if (!CartasRecebidasSubtarefasRepository::isOrdemAtiva($ordem)
             || !CartasRecebidasSubtarefasRepository::isTipoAtivo($tipoAtual)) {
-            throw new InvalidArgumentException('Esta subtarefa foi descontinuada. Atualize a página.');
+            throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual.');
         }
-
-        $this->subtarefasRepository->autoConcluirSubtarefasDescontinuadas($cartaId);
 
         $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
@@ -253,23 +251,6 @@ final class CartasRecebidasService
                 $this->alocadosRepository->addAlocado($cartaId, $usuarioIdMovimentacao);
             } catch (RuntimeException $e) {
                 // limite ou duplicata
-            }
-        }
-
-        $tipo = $tipoAtual;
-
-        $tiposEnvioDevolucao = [
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5,
-            'envio_processo',
-            'enviar_processo',
-            'devolucao_origem',
-            'devolução_origem',
-        ];
-
-        if (in_array($tipo, $tiposEnvioDevolucao, true)) {
-            $tipoEnvio = trim((string) ($dadosArray['tipo_envio'] ?? ''));
-            if ($tipoEnvio === '') {
-                throw new InvalidArgumentException('Selecione o tipo de envio para informar a devolução.');
             }
         }
 
@@ -290,7 +271,8 @@ final class CartasRecebidasService
                     $this->subtarefasRepository->atualizarStatus((string) ($existente['id'] ?? ''), 'em_andamento');
                 }
             }
-            $this->repository->update($cartaId, ['status' => 'em_andamento']);
+            $this->repository->update($cartaId, ['status' => CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO]);
+
             return ['tarefa_principal_concluida' => false];
         }
 
@@ -479,9 +461,9 @@ final class CartasRecebidasService
             throw new InvalidArgumentException('Esta carta já possui subtarefas.');
         }
         $repo = $this->subtarefasRepository;
-        $repo->create($cartaId, $repo::TIPO_ORDEM_5, 5, 'em_andamento', null);
-        $repo->create($cartaId, $repo::TIPO_ORDEM_7, 7, 'pendente', null);
-        $this->repository->update($cartaId, ['status' => 'aguardando cumprimento']);
+        $repo->create($cartaId, $repo::TIPO_CUMPRIMENTO, $repo::ORDEM_CUMPRIMENTO, 'em_andamento', null);
+        $repo->create($cartaId, $repo::TIPO_DEVOLUCAO, $repo::ORDEM_DEVOLUCAO, 'pendente', null);
+        $this->repository->update($cartaId, ['status' => CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO]);
         if ($usuarioId !== null && trim($usuarioId) !== '') {
             $this->alocadosRepository->addAlocado($cartaId, trim($usuarioId));
         }

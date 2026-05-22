@@ -2,7 +2,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/CartasExpedidasUiCopy.php';
+require_once __DIR__ . '/CartasRecebidasUiCopy.php';
 require_once __DIR__ . '/../repositories/CartasExpedidasSubtarefasRepository.php';
+require_once __DIR__ . '/../repositories/CartasRecebidasSubtarefasRepository.php';
 
 if (!function_exists('cartorioTimelineGetConfig')) {
     function cartorioTimelineGetConfig(string $module): array
@@ -12,25 +14,7 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         if ($configs === null) {
             $configs = [
                 'cartas_expedidas' => CartasExpedidasUiCopy::timelineModuleConfig(),
-                'cartas_recebidas' => [
-                    'cadastro_label' => 'Carta recebida e cadastrada',
-                    'subtasks' => [
-                        5 => [
-                            'type' => 'envio_processo',
-                            'label' => 'Devolucao da Carta',
-                            'task_title' => 'Aguardando devolucao da Carta ao Juizo Deprecante',
-                            'button_title' => 'Informar devolucao',
-                            'pending_text' => 'Aguardando envio do processo ao juizo de origem',
-                        ],
-                        7 => [
-                            'type' => 'arquivamento_definitivo',
-                            'label' => 'Arquivamento definitivo',
-                            'task_title' => 'Aguardando arquivamento definitivo',
-                            'button_title' => 'Informar arquivamento definitivo',
-                            'pending_text' => 'Aguardando arquivamento definitivo da carta',
-                        ],
-                    ],
-                ],
+                'cartas_recebidas' => CartasRecebidasUiCopy::timelineModuleConfig(),
                 'editais' => [
                     'cadastro_label' => 'Edital cadastrado',
                     'subtasks' => [
@@ -283,6 +267,13 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         if ($taskStatus === 'pendente') {
             return ['label' => 'Pendente', 'class' => 'status-pending'];
         }
+        if ($taskStatus === CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO) {
+            return ['label' => 'Aguardando cumprimento', 'class' => 'status-pending'];
+        }
+        if ($taskStatus === CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO) {
+            return ['label' => 'Aguardando devolução', 'class' => 'status-current'];
+        }
+
         return ['label' => 'Em andamento', 'class' => 'status-current'];
     }
 
@@ -317,7 +308,17 @@ if (!function_exists('cartorioTimelineGetConfig')) {
             return is_array($first) ? (string) ($first['task_title'] ?? $statusLabel) : $statusLabel;
         }
         if ($taskStatus === 'concluída' || $taskStatus === 'concluida') {
-            return CartasExpedidasUiCopy::TODAS_ETAPAS_CONCLUIDAS;
+            return CartasRecebidasUiCopy::TODAS_ETAPAS_CONCLUIDAS;
+        }
+        if ($taskStatus === CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO) {
+            $def = $definitions[CartasRecebidasSubtarefasRepository::ORDEM_DEVOLUCAO] ?? null;
+
+            return is_array($def) ? (string) ($def['task_title'] ?? $statusLabel) : $statusLabel;
+        }
+        if ($taskStatus === CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO) {
+            $def = $definitions[CartasRecebidasSubtarefasRepository::ORDEM_CUMPRIMENTO] ?? null;
+
+            return is_array($def) ? (string) ($def['task_title'] ?? $statusLabel) : $statusLabel;
         }
 
         return $statusLabel;
@@ -379,41 +380,11 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         }
 
         if ($module === 'cartas_recebidas') {
-            if ($ordem === 1) {
-                return cartorioTimelineContent('Ato ordinatorio de cumprimento registrado', 'Informacao registrada por ' . $user . ' em ' . $movementDate);
+            if ($ordem === CartasRecebidasSubtarefasRepository::ORDEM_CUMPRIMENTO) {
+                return cartorioTimelineContent('Cumprimento registrado', 'Informacao registrada por ' . $user . ' em ' . $movementDate);
             }
-            if ($ordem === 2) {
-                return cartorioTimelineContent('Documento expedido para cumprimento da carta', 'Expedicao informada por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 3) {
-                $resultado = cartorioTimelineResultadoCumprimento((string) ($dados['resultado_cumprimento'] ?? ''));
-                $frase = 'Certidao do oficial de justica juntada aos autos';
-                if ($resultado !== '') {
-                    $frase .= ' - ' . $resultado;
-                }
-                return cartorioTimelineContent($frase, 'Certidao confirmada por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 4) {
-                return cartorioTimelineContent('Ato ordinatorio de devolucao expedido', 'Informacao registrada por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 5) {
-                $tribunal = cartorioTimelineResolveTribunalDestino($task, $dados, $options['tribunaisRepo'] ?? null, 'origem');
-                $comarca = trim((string) ($task['cidade_origem'] ?? ''));
-                $metodo = cartorioTimelineNormalizeEnvio((string) ($dados['tipo_envio'] ?? ''));
-                $preposicao = cartorioTimelineMetodoPreposicao($metodo);
-                $frase = 'Processo enviado para ' . ($tribunal !== '' ? $tribunal : '—');
-                if ($comarca !== '') {
-                    $frase .= ' - Comarca de ' . $comarca;
-                }
-                if ($metodo !== '') {
-                    $frase .= ' ' . $preposicao . ' ' . $metodo;
-                }
-                return cartorioTimelineContent($frase, 'Envio realizado por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 6) {
-                return cartorioTimelineContent('Juntada do termo de envio realizada', 'Comprovante juntado por ' . $user . ' em ' . $movementDate);
-            }
-            return cartorioTimelineContent('Carta arquivada definitivamente', 'Arquivamento registrado por ' . $user . ' em ' . $movementDate);
+
+            return cartorioTimelineContent('Carta devolvida ao juizo deprecante', 'Devolucao registrada por ' . $user . ' em ' . $movementDate);
         }
 
         if ($module === 'editais') {
@@ -501,9 +472,6 @@ if (!function_exists('cartorioTimelineGetConfig')) {
     {
         if ($module === 'guias' && $ordem === 1) {
             return cartorioTimelineContent('Detalhamento de informacoes cancelado', '-');
-        }
-        if ($module === 'cartas_recebidas' && $ordem === 1) {
-            return cartorioTimelineContent('Ato ordinatorio de cumprimento cancelado', '-');
         }
         return cartorioTimelineContent($definition['label'] . ' cancelada', $movementDate !== '' ? $movementDate : '-');
     }

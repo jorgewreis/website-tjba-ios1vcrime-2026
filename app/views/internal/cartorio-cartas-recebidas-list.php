@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../services/CartasRecebidasService.php';
 require_once __DIR__ . '/../../repositories/CartasRecebidasSubtarefasRepository.php';
+require_once __DIR__ . '/../../helpers/CartasRecebidasUiCopy.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
@@ -81,71 +82,22 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
 $statusOptions = [
     'pendente',
-    'em_andamento',
+    CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO,
+    CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO,
     'concluída',
     'cancelada',
 ];
 
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
-$statusCounts['em_andamento'] = (int) ($statusCounts['em_andamento'] ?? 0) + (int) ($statusCounts['aguardando cumprimento'] ?? 0);
+$legacyEmAndamento = (int) ($statusCounts['em_andamento'] ?? 0);
+if ($legacyEmAndamento > 0) {
+    $statusCounts[CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO] =
+        (int) ($statusCounts[CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO] ?? 0) + $legacyEmAndamento;
+    unset($statusCounts['em_andamento']);
+}
 
-$subtarefaLabels = [
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolver Carta ao Juízo Deprecante',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivar definitivamente com baixa',
-    'envio_processo' => 'Devolver Carta ao Juízo Deprecante',
-    'devolucao_origem' => 'Devolver Carta ao Juízo Deprecante',
-    'devolução_origem' => 'Devolver Carta ao Juízo Deprecante',
-];
 $ordensSubtarefasAtivas = CartasRecebidasSubtarefasRepository::ORDENS_ATIVAS;
-$ordemLabels = [
-    5 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5],
-    7 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7],
-];
-$taskTitleByTipo = [
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Ag. devolução da Carta',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Ag. arquivamento definitivo',
-    'envio_processo' => 'Ag. devolução da Carta',
-    'devolucao_origem' => 'Ag. devolução da Carta',
-    'devolução_origem' => 'Ag. devolução da Carta',
-];
-$buttonTitleByTipo = [
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Informar devolução',
-    CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Informar arquivamento definitivo',
-    'envio_processo' => 'Informar devolução',
-    'devolucao_origem' => 'Informar devolução',
-    'devolução_origem' => 'Informar devolução',
-];
-$resolverTituloSubtarefaAtiva = static function (array $subtarefaRow) use ($taskTitleByTipo, $subtarefaLabels, $ordemLabels): string {
-    $tipo = trim((string) ($subtarefaRow['tipo'] ?? ''));
-    if ($tipo !== '') {
-        if (isset($taskTitleByTipo[$tipo])) {
-            return $taskTitleByTipo[$tipo];
-        }
-        $tipoNorm = strtolower($tipo);
-        if (isset($taskTitleByTipo[$tipoNorm])) {
-            return $taskTitleByTipo[$tipoNorm];
-        }
-        if (isset($subtarefaLabels[$tipo])) {
-            return $subtarefaLabels[$tipo];
-        }
-        if (isset($subtarefaLabels[$tipoNorm])) {
-            return $subtarefaLabels[$tipoNorm];
-        }
-    }
-    $ordem = (int) ($subtarefaRow['ordem'] ?? 0);
-    if ($ordem >= 1 && $ordem <= 7 && isset($ordemLabels[$ordem])) {
-        return $ordemLabels[$ordem];
-    }
-
-    return '';
-};
-$tipoEnvioOptions = [
-    'E-mail' => 'E-mail',
-    'Malote Digital' => 'Malote Digital',
-    'PJe' => 'PJe',
-    'eSAJ' => 'eSAJ',
-    'ePROC' => 'ePROC',
-];
+$ordemLabels = CartasRecebidasUiCopy::mapaLegendaEtapaPorOrdem();
 
 $defaultFinalidades = [
     'Intimação para Audiência',
@@ -286,8 +238,11 @@ if ($totalPages > 0) {
                     <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
                         Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
                     </option>
-                    <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
-                        Em andamento (<?php echo htmlspecialchars((string) ($statusCounts['em_andamento'] ?? 0)); ?>)
+                    <option value="<?php echo htmlspecialchars(CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO, ENT_QUOTES); ?>"<?php echo $statusFilter === CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO ? ' selected' : ''; ?>>
+                        Aguardando cumprimento (<?php echo htmlspecialchars((string) ($statusCounts[CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO] ?? 0)); ?>)
+                    </option>
+                    <option value="<?php echo htmlspecialchars(CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO, ENT_QUOTES); ?>"<?php echo $statusFilter === CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO ? ' selected' : ''; ?>>
+                        Aguardando devolução (<?php echo htmlspecialchars((string) ($statusCounts[CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO] ?? 0)); ?>)
                     </option>
                     <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
                         Finalizada (<?php echo htmlspecialchars((string) ($statusCounts['concluída'] ?? 0)); ?>)
@@ -347,7 +302,9 @@ if ($totalPages > 0) {
                 if ($statusFilter !== '') {
                     $statusFilterLabels = [
                         'pendente' => 'Pendente',
-                        'em_andamento' => 'Em andamento',
+                        CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO => 'Aguardando cumprimento',
+                        CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO => 'Aguardando devolução',
+                        'em_andamento' => 'Aguardando devolução',
                         'concluída' => 'Finalizada',
                         'cancelada' => 'Cancelada',
                     ];
@@ -403,8 +360,31 @@ if ($totalPages > 0) {
                 if ($statusTarefaNorm === 'concluída') {
                     $statusTarefaNorm = 'concluida';
                 }
+                if ($statusTarefaNorm === 'em_andamento') {
+                    $statusTarefaNorm = CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO;
+                }
                 $tarefaConcluida = in_array($statusTarefaNorm, ['concluida', 'finalizada'], true);
-                $podeExpandirSubtarefas = !$tarefaConcluida && $subtarefas !== [];
+                $allStRow = $row['SubtarefasAll'] ?? [];
+                $subtarefasExpansao = [];
+                foreach ($allStRow as $stRow) {
+                    if (!is_array($stRow)) {
+                        continue;
+                    }
+                    if (!CartasRecebidasSubtarefasRepository::isTipoAtivo((string) ($stRow['tipo'] ?? ''))) {
+                        continue;
+                    }
+                    $statusStRow = strtolower(trim((string) ($stRow['status'] ?? '')));
+                    if ($statusStRow === 'concluída') {
+                        $statusStRow = 'concluida';
+                    }
+                    if (in_array($statusStRow, ['pendente', 'em_andamento'], true)) {
+                        $subtarefasExpansao[] = $stRow;
+                    }
+                }
+                usort($subtarefasExpansao, static function (array $a, array $b): int {
+                    return ((int) ($a['ordem'] ?? 0)) <=> ((int) ($b['ordem'] ?? 0));
+                });
+                $podeExpandirSubtarefas = !$tarefaConcluida && $subtarefasExpansao !== [];
             ?>
             <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_recebidas', $registroListViewerContext, $connection); ?>
             <div class="display-flex col col-full register register-with-metadata border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
@@ -483,41 +463,11 @@ if ($totalPages > 0) {
                                 $progressStatuses[$o] = $statusProg;
                             }
                         }
-                        $subtarefaAtivaRow = null;
-                        foreach ($allSt as $s) {
-                            $statusSub = strtolower(trim((string) ($s['status'] ?? '')));
-                            if ($statusSub === 'em_andamento') {
-                                $subtarefaAtivaRow = $s;
-                                break;
-                            }
-                        }
-                        if ($subtarefaAtivaRow === null && $subtarefas !== []) {
-                            $subtarefaAtivaRow = $subtarefas[0];
-                        }
-                        if ($subtarefaAtivaRow === null) {
-                            foreach ($allSt as $s) {
-                                $statusSub = strtolower(trim((string) ($s['status'] ?? '')));
-                                if ($statusSub === 'pendente') {
-                                    $subtarefaAtivaRow = $s;
-                                    break;
-                                }
-                            }
-                        }
-                        $currentSubtarefaTitle = $subtarefaAtivaRow !== null
-                            ? $resolverTituloSubtarefaAtiva($subtarefaAtivaRow)
-                            : '';
-                        if ($currentSubtarefaTitle === '' && in_array($statusTarefaNorm, ['pendente', 'aguardando cumprimento'], true)) {
-                            $currentSubtarefaTitle = $taskTitleByTipo[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5] ?? $ordemLabels[5];
-                        } elseif ($currentSubtarefaTitle === '' && in_array($statusTarefaNorm, ['concluida', 'finalizada'], true)) {
-                            $currentSubtarefaTitle = 'Todas as etapas concluídas';
-                        } elseif ($currentSubtarefaTitle === '' && $statusTarefaNorm === 'cancelada') {
-                            $currentSubtarefaTitle = 'Cancelada';
-                        }
-                        $isEmAndamento = in_array($statusTarefaNorm, ['em_andamento', 'aguardando cumprimento'], true);
+                        $currentSubtarefaTitle = CartasRecebidasUiCopy::resolverTituloTarefaListagem($statusTarefa, $allSt);
                         $mostrarBarraStatus = !in_array($statusTarefaNorm, ['concluida', 'cancelada'], true);
                         $segmentosBarra = [];
                         if ($mostrarBarraStatus) {
-                            $segmentosBarra[] = ['class' => 'concluida', 'title' => 'Carta recebida e cadastrada'];
+                            $segmentosBarra[] = ['class' => 'concluida', 'title' => CartasRecebidasUiCopy::CADASTRO_ETAPA];
                             foreach ($ordensSubtarefasAtivas as $ordemAtiva) {
                                 $statusSeg = $progressStatuses[$ordemAtiva] ?? 'pendente';
                                 $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : ($statusSeg === 'cancelada' ? 'cancelada' : 'pendente'));
@@ -532,13 +482,8 @@ if ($totalPages > 0) {
                             } elseif ($statusTarefaNorm === 'cancelada') {
                                 echo '<div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>';
                             } elseif ($mostrarBarraStatus) {
-                                if ($statusTarefaNorm === 'aguardando cumprimento') {
-                                    $labelStatus = 'Aguardando cumprimento';
-                                    $classStatus = 'status-pending';
-                                } else {
-                                    $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
-                                    $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
-                                }
+                                $labelStatus = CartasRecebidasUiCopy::rotuloBadgeStatusTarefa($statusTarefa);
+                                $classStatus = CartasRecebidasUiCopy::classeCssBadgeStatusTarefa($statusTarefa);
                                 echo '<div class="width-300 status ' . $classStatus . ' status-with-progress">';
                                 echo '<span class="status-task-label width-300" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
                                 $concluidosBarra = 1 + count(array_filter($progressStatuses, function ($x) { return $x === 'concluida' || $x === 'cancelada'; }));
@@ -560,47 +505,27 @@ if ($totalPages > 0) {
 
                 <?php if ($podeExpandirSubtarefas): ?>
                 <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-hidden="true">
-                    <?php foreach ($subtarefas as $st):
+                    <?php foreach ($subtarefasExpansao as $st):
                         $stId = $st['id'] ?? '';
-                        $stTipo = $st['tipo'] ?? '';
-                        if (!CartasRecebidasSubtarefasRepository::isTipoAtivo((string) $stTipo)) {
-                            continue;
+                        $stTipo = trim((string) ($st['tipo'] ?? ''));
+                        $stStatus = strtolower(trim((string) ($st['status'] ?? '')));
+                        if ($stStatus === 'concluída') {
+                            $stStatus = 'concluida';
                         }
-                        $stTipoNormalizado = strtolower(trim((string) $stTipo));
-                        $stLabel = $subtarefaLabels[$stTipo] ?? $subtarefaLabels[$stTipoNormalizado] ?? $stTipo;
-                        $btnTitle = $buttonTitleByTipo[$stTipo] ?? $buttonTitleByTipo[$stTipoNormalizado] ?? $stLabel;
-                        $isOrdem5 = in_array(
-                            $stTipoNormalizado,
-                            [
-                                strtolower(CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5),
-                                'envio_processo',
-                                'enviar_processo',
-                                'envio',
-                                'devolucao_origem',
-                                'devolução_origem',
-                            ],
-                            true
-                        );
+                        $stLabel = CartasRecebidasUiCopy::textoSpanStatusSubtarefa($stTipo, $stStatus);
+                        $btnTitle = CartasRecebidasUiCopy::tituloBotaoPorTipo($stTipo);
+                        $podeConcluir = $stStatus === 'em_andamento';
+                        $statusClass = CartasRecebidasUiCopy::classeCssSpanStatusSubtarefa($stStatus);
                     ?>
-                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
+                    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars((string) $stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                         <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
                             <div class="col task-status">
-                                <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                <div class="padding-x-lg height-sm status <?php echo htmlspecialchars($statusClass, ENT_QUOTES); ?>"><?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?></div>
                             </div>
-                            <?php if ($isOrdem5): ?>
-                                <div class="col">
-                                <select class="subtask-tipo-envio width-400 height-sm" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="Tipo de envio">
-                                    <option value="">Selecione o tipo de envio</option>
-                                    <?php foreach ($tipoEnvioOptions as $val => $label): ?>
-                                        <option value="<?php echo htmlspecialchars($val, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                </div>
-                            <?php endif; ?>
                         </div>
                         <div class="display-flex row row-fit justify-end align-center gap-y-sm">
-                            <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>">
-                                <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
+                            <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars((string) $stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>"<?php echo $podeConcluir ? '' : ' disabled'; ?>>
+                                <span class="value-button"><?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?></span>
                             </button>
                         </div>
                     </div>
@@ -782,20 +707,7 @@ if ($totalPages > 0) {
                                 }
                                 return el && typeof el.value !== 'undefined' ? String(el.value || '').trim() : '';
                             };
-                            const subtarefaTipo = normalizeTipo(
-                                this.getAttribute('data-subtarefa-tipo') ||
-                                (block ? block.getAttribute('data-subtarefa-tipo') : '')
-                            );
-                            const obj = {};
-                            const tipoEnvioValue = getFieldValue('subtask-tipo-envio');
-                            if (tipoEnvioValue) {
-                                obj.tipo_envio = tipoEnvioValue;
-                            }
-                            if (['envio_processo', 'enviar_processo', 'envio', 'devolucao_origem', 'devolução_origem'].includes(subtarefaTipo) && !(obj.tipo_envio)) {
-                                notify('error', 'Atenção', 'Selecione o tipo de envio.');
-                                return;
-                            }
-                            const dadosEspecificos = Object.keys(obj).length > 0 ? JSON.stringify(obj) : null;
+                            const dadosEspecificos = null;
                             btn.disabled = true;
                             fetch('/api/cartorio-cartas-recebidas/concluir-subtarefa.php', {
                                 method: 'POST',

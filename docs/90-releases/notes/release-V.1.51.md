@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 04 de abril de 2026
+**Data de Lançamento:** 22 de maio de 2026
 
 # V. 1.51
 
-> feat: enhance productivity handling by introducing regra_id management and normalizing input values in ProdutividadeRegrasRepository
+> refactor: streamline cartas expedidas workflow by consolidating subtasks and updating status handling
 
 ## Nível de Impacto
 
@@ -12,8 +12,7 @@
 
 ## Alterações
 
-- **fix: prevent nested transactions in ProdutividadeService by checking existing transaction state before beginning or committing transactions** `[e99eb63]`
-- **feat: enhance productivity handling by introducing regra_id management and normalizing input values in ProdutividadeRegrasRepository** `[b9beac2]`
+- **refactor: streamline cartas expedidas workflow by consolidating subtasks and updating status handling** `[3185f38c]`
 
 ---
 

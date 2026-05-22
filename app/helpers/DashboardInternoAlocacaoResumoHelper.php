@@ -194,16 +194,17 @@ final class DashboardInternoAlocacaoResumoHelper
                 ];
 
             case 'ALLOCATE-CARTASRECEBIDAS':
-                $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
+                $aguardandoDevolucao = (int) ($byStatus['aguardando devolução'] ?? 0)
+                    + (int) ($byStatus['em_andamento'] ?? 0);
 
                 return [
                     'regra' => $code,
                     'titulo' => 'Cartas recebidas',
                     'frame_page' => 'cartasrecebidas',
                     'total' => $total,
-                    'em_andamento' => $emAnd,
-                    'em_andamento_label' => 'Em andamento',
-                    'em_andamento_title' => 'Cartas recebidas com status «em andamento».',
+                    'em_andamento' => $aguardandoDevolucao,
+                    'em_andamento_label' => 'Aguardando devolução',
+                    'em_andamento_title' => 'Cartas recebidas com status «aguardando devolução».',
                     'status_blocos' => self::blocosCartasRecebidas($byStatus),
                 ];
 
@@ -339,14 +340,22 @@ final class DashboardInternoAlocacaoResumoHelper
      */
     private static function blocosCartasRecebidas(array $byStatus): array
     {
+        $byStatusNormalizado = $byStatus;
+        if (isset($byStatus['em_andamento'])) {
+            $byStatusNormalizado['aguardando devolução'] = (int) ($byStatusNormalizado['aguardando devolução'] ?? 0)
+                + (int) $byStatus['em_andamento'];
+            unset($byStatusNormalizado['em_andamento']);
+        }
+
         $map = [
             'pendente' => ['Pendente', 'Cartas recebidas «pendente».'],
-            'em_andamento' => ['Em andamento', 'Cartas recebidas «em andamento».'],
+            'aguardando cumprimento' => ['Aguardando cumprimento', 'Cartas recebidas «aguardando cumprimento».'],
+            'aguardando devolução' => ['Aguardando devolução', 'Cartas recebidas «aguardando devolução».'],
             'concluída' => ['Concluídas', 'Cartas recebidas «concluída».'],
             'cancelada' => ['Canceladas', 'Cartas recebidas «cancelada».'],
         ];
 
-        return self::buildBlocosFromMap($byStatus, $map);
+        return self::buildBlocosFromMap($byStatusNormalizado, $map);
     }
 
     /**

@@ -147,31 +147,95 @@ final class CartasExpedidasSubtarefasRepository
     }
 
     /**
-     * Retorna a subtarefa ativa pendente ou em andamento (no máximo uma por carta).
+     * Retorna a subtarefa ativa para ação na listagem (no máximo uma por carta).
      */
     public function findPendenteOuEmAndamentoByCartaId(string $cartaId): array
     {
-        $all = $this->findByCartaId($cartaId);
-        $emAndamento = [];
+        $candidatas = [];
 
-        foreach ($all as $row) {
+        foreach ($this->findByCartaId($cartaId) as $row) {
             $ordem = (int) ($row['ordem'] ?? 0);
-            if (!self::isOrdemAtiva($ordem)) {
+            $tipo = trim((string) ($row['tipo'] ?? ''));
+            if (!self::isOrdemAtiva($ordem) || !self::isTipoAtivo($tipo)) {
                 continue;
             }
             $status = (string) ($row['status'] ?? '');
             if ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE) {
-                $emAndamento[] = $row;
+                $candidatas[] = $row;
             }
         }
 
-        if ($emAndamento === []) {
+        if ($candidatas === []) {
             return [];
         }
 
-        usort($emAndamento, static fn (array $a, array $b): int => ((int) ($a['ordem'] ?? 0)) <=> ((int) ($b['ordem'] ?? 0)));
+        usort($candidatas, static function (array $a, array $b): int {
+            $prio = static function (array $row): int {
+                $status = (string) ($row['status'] ?? '');
+                if ($status === self::STATUS_EM_ANDAMENTO) {
+                    return 0;
+                }
 
-        return [reset($emAndamento)];
+                return 1;
+            };
+
+            $cmp = $prio($a) <=> $prio($b);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            return ((int) ($a['ordem'] ?? 0)) <=> ((int) ($b['ordem'] ?? 0));
+        });
+
+        return [reset($candidatas)];
+    }
+
+    /**
+     * Garante as duas subtarefas do fluxo (envio + devolução) em cartas abertas.
+     */
+    public function garantirSubtarefasFluxo(string $cartaId, string $statusCarta): void
+    {
+        $cartaId = trim($cartaId);
+        if ($cartaId === '') {
+            return;
+        }
+
+        $statusNorm = mb_strtolower(trim($statusCarta), 'UTF-8');
+        if (in_array($statusNorm, ['concluída', 'concluida', 'finalizada', 'cancelada'], true)) {
+            return;
+        }
+
+        $porTipo = [];
+        foreach ($this->findByCartaId($cartaId) as $row) {
+            $tipo = trim((string) ($row['tipo'] ?? ''));
+            if ($tipo !== '') {
+                $porTipo[$tipo] = $row;
+            }
+        }
+
+        $faseCumprimento = $statusNorm === 'aguardando cumprimento';
+
+        if (!isset($porTipo[self::TIPO_ENVIO])) {
+            $this->create(
+                $cartaId,
+                self::TIPO_ENVIO,
+                self::ORDEM_ENVIO,
+                $faseCumprimento ? self::STATUS_CONCLUIDA : self::STATUS_EM_ANDAMENTO,
+                null
+            );
+        } elseif ($faseCumprimento && trim((string) ($porTipo[self::TIPO_ENVIO]['status'] ?? '')) !== self::STATUS_CONCLUIDA) {
+            $this->marcarConcluida((string) ($porTipo[self::TIPO_ENVIO]['id'] ?? ''));
+        }
+
+        if (!isset($porTipo[self::TIPO_DEVOLUCAO])) {
+            $this->create(
+                $cartaId,
+                self::TIPO_DEVOLUCAO,
+                self::ORDEM_DEVOLUCAO,
+                self::STATUS_PENDENTE,
+                null
+            );
+        }
     }
 
     public function marcarConcluida(string $id): void

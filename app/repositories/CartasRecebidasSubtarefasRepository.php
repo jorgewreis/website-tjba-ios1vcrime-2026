@@ -8,31 +8,21 @@ final class CartasRecebidasSubtarefasRepository
     private PDO $connection;
     private string $table;
 
-    public const TIPO_ORDEM_5 = 'envio_processo';
-    public const TIPO_ORDEM_7 = 'arquivamento_definitivo';
+    public const TIPO_CUMPRIMENTO = 'cumprimento';
+    public const TIPO_DEVOLUCAO = 'devolucao';
 
-    /** Tipos removidos do fluxo (registros antigos são auto-concluídos). */
-    public const TIPOS_DESCONTINUADOS = [
-        'ato_ordinatorio_cumprimento',
-        'expedicao_documento',
-        'juntada_certidao_oficial',
-        'ato_ordinatorio_devolucao',
-        'juntada_termo_envio',
-        'certidao_oficial_justica',
-        'juntada_certidao',
-        'confirmar_juntada',
-        'juntada_certidao_oficial_justica',
-    ];
+    public const ORDEM_CUMPRIMENTO = 1;
+    public const ORDEM_DEVOLUCAO = 2;
 
-    public const ORDENS_ATIVAS = [5, 7];
+    public const ORDENS_ATIVAS = [self::ORDEM_CUMPRIMENTO, self::ORDEM_DEVOLUCAO];
 
     private const ORDEM_POR_TIPO = [
-        self::TIPO_ORDEM_5 => 5,
-        self::TIPO_ORDEM_7 => 7,
+        self::TIPO_CUMPRIMENTO => self::ORDEM_CUMPRIMENTO,
+        self::TIPO_DEVOLUCAO => self::ORDEM_DEVOLUCAO,
     ];
 
     private const PROXIMA_ORDEM = [
-        5 => 7,
+        self::ORDEM_CUMPRIMENTO => self::ORDEM_DEVOLUCAO,
     ];
 
     private const STATUS_EM_ANDAMENTO = 'em_andamento';
@@ -63,7 +53,7 @@ final class CartasRecebidasSubtarefasRepository
         $cartaId = trim($cartaId);
         $tipo = trim($tipo);
         if ($cartaId === '' || $tipo === '' || !self::isOrdemAtiva($ordem)) {
-            throw new InvalidArgumentException('carta_recebida_id, tipo e ordem ativa (5 ou 7) são obrigatórios.');
+            throw new InvalidArgumentException('carta_recebida_id, tipo e ordem ativa (1 ou 2) são obrigatórios.');
         }
         if (!isset(self::ORDEM_POR_TIPO[$tipo]) || self::ORDEM_POR_TIPO[$tipo] !== $ordem) {
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
@@ -113,6 +103,7 @@ final class CartasRecebidasSubtarefasRepository
         while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
             $rows[] = $row;
         }
+
         return $rows;
     }
 
@@ -132,7 +123,7 @@ final class CartasRecebidasSubtarefasRepository
     public function findByCartaIdEOrdem(string $cartaId, int $ordem): ?array
     {
         $cartaId = trim($cartaId);
-        if ($cartaId === '' || $ordem < 1 || $ordem > 7) {
+        if ($cartaId === '' || !self::isOrdemAtiva($ordem)) {
             return null;
         }
 
@@ -151,11 +142,12 @@ final class CartasRecebidasSubtarefasRepository
         $statement->execute();
 
         $row = $statement->fetch(PDO::FETCH_ASSOC);
+
         return $row === false ? null : $row;
     }
 
     /**
-     * Retorna a subtarefa ativa para a listagem (uma por vez), apenas ordens 5 e 7.
+     * Retorna subtarefas ativas para a listagem (em_andamento ou primeira pendente).
      *
      * @return list<array<string, mixed>>
      */
@@ -182,30 +174,6 @@ final class CartasRecebidasSubtarefasRepository
         }
 
         return $primeiraPendente !== null ? [$primeiraPendente] : [];
-    }
-
-    /**
-     * Conclui automaticamente subtarefas de etapas removidas do fluxo.
-     */
-    public function autoConcluirSubtarefasDescontinuadas(string $cartaId): void
-    {
-        $cartaId = trim($cartaId);
-        if ($cartaId === '') {
-            return;
-        }
-
-        foreach ($this->findByCartaId($cartaId) as $row) {
-            $tipo = trim((string) ($row['tipo'] ?? ''));
-            $ordem = (int) ($row['ordem'] ?? 0);
-            if (self::isOrdemAtiva($ordem) && self::isTipoAtivo($tipo)) {
-                continue;
-            }
-            $status = self::normalizarStatus((string) ($row['status'] ?? ''));
-            if (self::isStatusTerminal($status)) {
-                continue;
-            }
-            $this->marcarConcluidaComDados((string) ($row['id'] ?? ''), null);
-        }
     }
 
     private static function normalizarStatus(string $status): string
@@ -298,6 +266,7 @@ final class CartasRecebidasSubtarefasRepository
         $statement->execute();
 
         $row = $statement->fetch(PDO::FETCH_ASSOC);
+
         return $row === false ? null : $row;
     }
 
@@ -335,18 +304,5 @@ final class CartasRecebidasSubtarefasRepository
         }
 
         throw new InvalidArgumentException('Ordem de subtarefa ativa inválida.');
-    }
-
-    public function getOrdenMaximaPorCarta(string $cartaId): int
-    {
-        $all = $this->findByCartaId($cartaId);
-        $max = 0;
-        foreach ($all as $row) {
-            $o = (int) ($row['ordem'] ?? 0);
-            if ($o > $max) {
-                $max = $o;
-            }
-        }
-        return $max;
     }
 }

@@ -109,17 +109,29 @@
 
     function bindSubtaskExpansion(radioName) {
         const name = radioName || 'open-subtask';
+
+        function toggleSubtaskPanel(radio) {
+            if (!radio || !radio.value) {
+                return;
+            }
+
+            const targetId = 'subtask-' + radio.value;
+            global.document.querySelectorAll('.col.subtask').forEach(function (subtaskRow) {
+                const isTarget = subtaskRow.id === targetId;
+                subtaskRow.classList.toggle('subtask-collapsed', !isTarget);
+                subtaskRow.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
+            });
+            global.document.querySelectorAll('input[name="' + name + '"]').forEach(function (entry) {
+                entry.setAttribute('aria-expanded', entry.value === radio.value ? 'true' : 'false');
+            });
+        }
+
         global.document.querySelectorAll('input[name="' + name + '"]').forEach(function (radio) {
             radio.addEventListener('change', function () {
-                const targetId = 'subtask-' + this.value;
-                global.document.querySelectorAll('.col.subtask').forEach(function (subtaskRow) {
-                    const isTarget = subtaskRow.id === targetId;
-                    subtaskRow.classList.toggle('subtask-collapsed', !isTarget);
-                    subtaskRow.setAttribute('aria-hidden', isTarget ? 'false' : 'true');
-                });
-                global.document.querySelectorAll('input[name="' + name + '"]').forEach(function (entry) {
-                    entry.setAttribute('aria-expanded', entry.value === radio.value ? 'true' : 'false');
-                });
+                toggleSubtaskPanel(this);
+            });
+            radio.addEventListener('click', function () {
+                toggleSubtaskPanel(this);
             });
         });
     }
@@ -314,6 +326,7 @@
     }
 
     App.CartorioTaskList = {
-        initialize: initialize
+        initialize: initialize,
+        bindSubtaskExpansion: bindSubtaskExpansion
     };
 })(window);

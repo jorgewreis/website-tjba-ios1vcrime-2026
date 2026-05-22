@@ -54,6 +54,10 @@ final class CartasExpedidasService
         foreach ($rows as $i => $row) {
             $idCarta = (string) ($row['IdCarta'] ?? '');
             if ($idCarta !== '') {
+                $statusCarta = trim((string) ($row['Status'] ?? ''));
+                if (!in_array($statusCarta, ['concluída', 'concluida', 'finalizada', 'cancelada'], true)) {
+                    $this->subtarefasRepository->garantirSubtarefasFluxo($idCarta, $statusCarta);
+                }
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
                 $alocadosRaw = $this->alocadosRepository->findByCartaId($idCarta);

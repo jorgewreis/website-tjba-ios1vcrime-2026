@@ -33,13 +33,8 @@ Cada linha é o valor de `tipo` persistido no repositório de subtarefas (ou ope
 | Cartas expedidas | `aguardando_envio` | `cartorio-cartas-expedidas.subtarefa.aguardando_envio` |
 | Cartas expedidas | `aguardando_devolucao` | `cartorio-cartas-expedidas.subtarefa.aguardando_devolucao` |
 | **Cartas recebidas** | *(create)* | `cartorio-cartas-recebidas.create` |
-| Cartas recebidas | `ato_ordinatorio_cumprimento` | `cartorio-cartas-recebidas.subtarefa.ato_ordinatorio_cumprimento` |
-| Cartas recebidas | `expedicao_documento` | `cartorio-cartas-recebidas.subtarefa.expedicao_documento` |
-| Cartas recebidas | `juntada_certidao_oficial` | `cartorio-cartas-recebidas.subtarefa.juntada_certidao_oficial` |
-| Cartas recebidas | `ato_ordinatorio_devolucao` | `cartorio-cartas-recebidas.subtarefa.ato_ordinatorio_devolucao` |
-| Cartas recebidas | `envio_processo` | `cartorio-cartas-recebidas.subtarefa.envio_processo` |
-| Cartas recebidas | `juntada_termo_envio` | `cartorio-cartas-recebidas.subtarefa.juntada_termo_envio` |
-| Cartas recebidas | `arquivamento_definitivo` | `cartorio-cartas-recebidas.subtarefa.arquivamento_definitivo` |
+| Cartas recebidas | `cumprimento` | `cartorio-cartas-recebidas.subtarefa.cumprimento` |
+| Cartas recebidas | `devolucao` | `cartorio-cartas-recebidas.subtarefa.devolucao` |
 | **Ofícios** | *(create)* | `cartorio-oficios.create` |
 | Ofícios | `enviar_oficio` | `cartorio-oficios.subtarefa.enviar_oficio` |
 | Ofícios | `juntar_termo_envio` | `cartorio-oficios.subtarefa.juntar_termo_envio` |

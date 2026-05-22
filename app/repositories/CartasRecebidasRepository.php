@@ -14,7 +14,7 @@ final class CartasRecebidasRepository
     private const STATUS_ORDER = [
         'pendente',
         'aguardando cumprimento',
-        'em_andamento',
+        'aguardando devolução',
         'concluída',
         'cancelada',
     ];

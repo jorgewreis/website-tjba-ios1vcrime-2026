@@ -300,44 +300,11 @@ final class ListExportPrincipalStatusTitle
      */
     private static function cartasRecebidas(array $row): string
     {
-        $subtarefaLabels = [
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Devolver Carta ao Juízo Deprecante',
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Arquivar definitivamente com baixa',
-            'devolucao_origem' => 'Devolver Carta ao Juízo Deprecante',
-            'devolução_origem' => 'Devolver Carta ao Juízo Deprecante',
-        ];
-        $ordemLabels = [
-            5 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5],
-            7 => $subtarefaLabels[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7],
-        ];
-        $taskTitleByTipo = [
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5 => 'Aguardando devolução da Carta ao Juízo Deprecante',
-            CartasRecebidasSubtarefasRepository::TIPO_ORDEM_7 => 'Aguardando arquivamento definitivo com baixa',
-            'devolucao_origem' => 'Aguardando devolução da Carta ao Juízo Deprecante',
-            'devolução_origem' => 'Aguardando devolução da Carta ao Juízo Deprecante',
-        ];
+        require_once __DIR__ . '/CartasRecebidasUiCopy.php';
 
-        $st = (string) ($row['Status'] ?? '');
-        $allSt = self::subtarefasAll($row);
-        $current = '';
-        foreach ($allSt as $s) {
-            if (!is_array($s)) {
-                continue;
-            }
-            if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                $tipo = (string) ($s['tipo'] ?? '');
-                $current = $taskTitleByTipo[$tipo] ?? $subtarefaLabels[$tipo] ?? $tipo;
-                break;
-            }
-        }
-        if ($current === '' && in_array($st, ['pendente', 'aguardando cumprimento'], true)) {
-            $current = $taskTitleByTipo[CartasRecebidasSubtarefasRepository::TIPO_ORDEM_5] ?? $ordemLabels[5];
-        } elseif ($current === '' && ($st === 'concluída' || $st === 'finalizada')) {
-            $current = 'Todas as etapas concluídas';
-        } elseif ($current === '') {
-            $current = (string) ($row['Status'] ?? 'Em andamento');
-        }
-
-        return $current;
+        return CartasRecebidasUiCopy::resolverTituloTarefaListagem(
+            (string) ($row['Status'] ?? ''),
+            self::subtarefasAll($row)
+        );
     }
 }

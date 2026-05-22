@@ -360,7 +360,9 @@ if ($totalPages > 0) {
 
                     <!-- LINHA COMPLETA DO REGISTRO -->
                     <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_expedidas', $registroListViewerContext, $connection); ?>
-                    <div class="register-line register-with-metadata" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
+                    <div class="display-flex col col-full register register-with-metadata border-bottom" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idCarta); ?>">
+
+                        <div class="register-line" style="border-bottom: 0;">
 
                         <!-- Lado esquerdo da linha -->
                         <div class="register-line-left">
@@ -471,11 +473,11 @@ if ($totalPages > 0) {
                             <?php include __DIR__ . '/_registro_metadata.php'; ?>
                         </div>
 
-                    </div>
+                        </div>
 
                     <!-- SUBTAREFAS DO REGISTRO -->
                     <?php if (!$tarefaConcluida): ?>
-                        <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta); ?>" aria-hidden="true">
+                        <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-hidden="true">
                             <?php foreach ($subtarefas as $st):
                                 $stId = $st['id'] ?? '';
                                 $stTipo = $st['tipo'] ?? '';
@@ -528,6 +530,8 @@ if ($totalPages > 0) {
 
                         </div>
                     <?php endif; ?>
+
+                    </div>
                 <?php endforeach; ?>
         </div>
     <?php endif; ?>
@@ -652,6 +656,10 @@ if ($totalPages > 0) {
             }
 
             initializeListSectionToggles();
+
+            if (window.App && App.CartorioTaskList && typeof App.CartorioTaskList.bindSubtaskExpansion === 'function') {
+                App.CartorioTaskList.bindSubtaskExpansion('open-subtask');
+            }
 
             if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
                 window.CartasExpedidasSearch.initializeProcessSearch({
