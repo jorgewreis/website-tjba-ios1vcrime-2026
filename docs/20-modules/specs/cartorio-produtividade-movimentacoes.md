@@ -43,8 +43,6 @@ Cada linha é o valor de `tipo` persistido no repositório de subtarefas (ou ope
 | Medidas protetivas | `expedicao_mandados_intimacao` | `cartorio-medidas-protetivas.subtarefa.expedicao_mandados_intimacao` |
 | Medidas protetivas | `cadastro_bnmp` | `cartorio-medidas-protetivas.subtarefa.cadastro_bnmp` |
 | **Editais** | *(create)* | `cartorio-editais.create` |
-| Editais | `expedicao_edital` | `cartorio-editais.subtarefa.expedicao_edital` |
-| Editais | `envio_djen` | `cartorio-editais.subtarefa.envio_djen` |
 | Editais | `certificacao_publicacao` | `cartorio-editais.subtarefa.certificacao_publicacao` |
 | Editais | `certificacao_decurso_prazo` | `cartorio-editais.subtarefa.certificacao_decurso_prazo` |
 **Guias — aliases legados** (normalizados em `GuiasService::canonicalTipoSubtarefaGuia` antes do `event_code`): `geracao_pdf` / `pdf` → `gerar_pdf`; `expedir_guia` / `expedicao` → `expedicao_guia`; etc.

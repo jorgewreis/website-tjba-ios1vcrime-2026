@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../repositories/EditaisSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
+require_once __DIR__ . '/../../helpers/EditaisUiCopy.php';
 require_once __DIR__ . '/../../services/EditaisService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -37,29 +38,21 @@ $tipoEditalValue = '';
 $prazoDiasValue = '';
 $subtarefas = [];
 $subtarefasPorOrdem = [];
-$subtarefaLabels = [
-    EditaisSubtarefasRepository::TIPO_ORDEM_1 => 'Expedição de Edital',
-    EditaisSubtarefasRepository::TIPO_ORDEM_2 => 'Envio para publicação no DJEN',
-    EditaisSubtarefasRepository::TIPO_ORDEM_3 => 'Certificação da publicação',
-    EditaisSubtarefasRepository::TIPO_ORDEM_4 => 'Certificação de decurso do prazo',
-];
-$taskTitleByOrdem = [
-    1 => 'Aguardando expedição do edital',
-    2 => 'Aguardando envio para publicação',
-    3 => 'Aguardando certificação da publicação do edital',
-    4 => 'Aguardando certificação de decurso do prazo do edital',
-];
-$timelineMinorPendente = [
-    1 => 'Aguardando expedição do edital',
-    2 => 'Aguardando envio do edital para publicação no DJEN',
-    3 => 'Aguardando certificação da publicação do edital',
-    4 => 'Aguardando certificação de decurso do prazo do edital',
-];
+$ordemLabels = EditaisUiCopy::mapaLegendaEtapaPorOrdem();
+$taskTitleByOrdem = [];
+$timelineMinorPendente = [];
+foreach (EditaisSubtarefasRepository::ORDENS_ATIVAS as $ordemAtiva) {
+    $tipoOrdem = $ordemAtiva === EditaisSubtarefasRepository::ORDEM_PUBLICACAO
+        ? EditaisSubtarefasRepository::TIPO_PUBLICACAO
+        : EditaisSubtarefasRepository::TIPO_DECURSO;
+    $mapa = EditaisUiCopy::mapaTituloTarefaPorTipo();
+    $taskTitleByOrdem[$ordemAtiva] = $mapa[$tipoOrdem] ?? '';
+    $timelineCfg = EditaisUiCopy::timelineModuleConfig();
+    $timelineMinorPendente[$ordemAtiva] = $timelineCfg['subtasks'][$ordemAtiva]['pending_text'] ?? '';
+}
 $ordemParaTipo = [
-    1 => EditaisSubtarefasRepository::TIPO_ORDEM_1,
-    2 => EditaisSubtarefasRepository::TIPO_ORDEM_2,
-    3 => EditaisSubtarefasRepository::TIPO_ORDEM_3,
-    4 => EditaisSubtarefasRepository::TIPO_ORDEM_4,
+    EditaisSubtarefasRepository::ORDEM_PUBLICACAO => EditaisSubtarefasRepository::TIPO_PUBLICACAO,
+    EditaisSubtarefasRepository::ORDEM_DECURSO => EditaisSubtarefasRepository::TIPO_DECURSO,
 ];
 $temSubtarefas = false;
 $temEmAndamentoOuPendente = false;
@@ -79,7 +72,13 @@ if ($edital !== null) {
     $prazoDiasValue = isset($edital['prazo_dias']) ? (int) $edital['prazo_dias'] : 0;
 
     $subtarefasRepo = new EditaisSubtarefasRepository($connection);
-    $subtarefasRepo->ensureQuatroSubtarefas($idEdital);
+    $subtarefasRepo->ensureSubtarefasAtivas($idEdital);
+    $serviceEditalFluxo = new EditaisService($connection);
+    $serviceEditalFluxo->tentarFinalizacaoAutomaticaPorDecurso($idEdital);
+    $edital = $serviceEditalFluxo->find($idEdital) ?? $edital;
+    if ($edital !== null) {
+        $statusAtual = trim((string) ($edital['status'] ?? $statusAtual));
+    }
     $subtarefas = $subtarefasRepo->findByEditalId($idEdital);
     foreach ($subtarefas as $st) {
         $subtarefasPorOrdem[(int) $st['ordem']] = $st;

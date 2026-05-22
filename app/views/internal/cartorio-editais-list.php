@@ -7,6 +7,8 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 require_once __DIR__ . '/../../services/EditaisService.php';
+require_once __DIR__ . '/../../repositories/EditaisSubtarefasRepository.php';
+require_once __DIR__ . '/../../helpers/EditaisUiCopy.php';
 require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
@@ -24,6 +26,9 @@ if ($currentUserId !== '') {
 
 $routePage = trim((string) ($_GET['page'] ?? 'editais'));
 $statusFilter = trim($_GET['status'] ?? '');
+if ($statusFilter === 'em_andamento') {
+    $statusFilter = EditaisUiCopy::STATUS_AGUARDANDO_DECURSO;
+}
 $processoFilter = trim($_GET['processo'] ?? '');
 $tipoEditalFilter = trim($_GET['tipo_edital'] ?? '');
 $allowedPerPage = [10, 25, 50, 100];
@@ -78,29 +83,21 @@ $documentsLabel = $totalDocuments === 1 ? 'documento' : 'documentos';
 $pagesLabel = $totalPages === 1 ? 'página' : 'páginas';
 $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
-$statusOptions = ['pendente', 'em_andamento', 'concluída', 'cancelada'];
+$statusOptions = [
+    'pendente',
+    EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO,
+    EditaisUiCopy::STATUS_AGUARDANDO_DECURSO,
+    'concluída',
+    'cancelada',
+];
 $tipoEditalOptions = ['Citação', 'Intimação', 'Notificação', 'Outro'];
 $statusCounts = array_merge(array_fill_keys($statusOptions, 0), $service->getStatusCounts($filters));
+$legacyEmAndamento = (int) ($statusCounts['em_andamento'] ?? 0);
+$statusCounts[EditaisUiCopy::STATUS_AGUARDANDO_DECURSO] =
+    (int) ($statusCounts[EditaisUiCopy::STATUS_AGUARDANDO_DECURSO] ?? 0) + $legacyEmAndamento;
 
-$subtarefaLabels = [
-    'expedicao_edital' => 'Expedição de Edital',
-    'envio_djen' => 'Envio para publicação no DJEN',
-    'certificacao_publicacao' => 'Data da publicação',
-    'certificacao_decurso_prazo' => 'Aguardando decurso do prazo',
-];
-$ordemLabels = [
-    1 => $subtarefaLabels['expedicao_edital'],
-    2 => $subtarefaLabels['envio_djen'],
-    3 => $subtarefaLabels['certificacao_publicacao'],
-    4 => $subtarefaLabels['certificacao_decurso_prazo'],
-];
-
-$buttonTitleByTipo = [
-    'expedicao_edital' => 'Informar expedição do edital',
-    'envio_djen' => 'Informar envio para publicação no DJEN',
-    'certificacao_publicacao' => 'Informar data da publicação',
-    'certificacao_decurso_prazo' => 'Informar decurso do prazo',
-];
+$ordensSubtarefasAtivas = EditaisSubtarefasRepository::ORDENS_ATIVAS;
+$ordemLabels = EditaisUiCopy::mapaLegendaEtapaPorOrdem();
 
 $baseQueryParams = [];
 if ($routePage !== '') {
@@ -211,7 +208,12 @@ if ($totalPages > 0) {
                 <select class="width-500 height-md" id="filter-status">
                     <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
-                    <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
+                    <option value="<?php echo htmlspecialchars(EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO, ENT_QUOTES); ?>"<?php echo $statusFilter === EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO ? ' selected' : ''; ?>>
+                        Aguardando publicação (<?php echo (int) ($statusCounts[EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO] ?? 0); ?>)
+                    </option>
+                    <option value="<?php echo htmlspecialchars(EditaisUiCopy::STATUS_AGUARDANDO_DECURSO, ENT_QUOTES); ?>"<?php echo $statusFilter === EditaisUiCopy::STATUS_AGUARDANDO_DECURSO || $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>
+                        Aguardando decurso (<?php echo (int) ($statusCounts[EditaisUiCopy::STATUS_AGUARDANDO_DECURSO] ?? 0); ?>)
+                    </option>
                     <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)</option>
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                 </select>
@@ -234,7 +236,9 @@ if ($totalPages > 0) {
         if ($statusFilter !== '') {
             $statusFilterLabels = [
                 'pendente' => 'Pendente',
-                'em_andamento' => 'Em andamento',
+                EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO => 'Aguardando publicação',
+                EditaisUiCopy::STATUS_AGUARDANDO_DECURSO => 'Aguardando decurso',
+                'em_andamento' => 'Aguardando decurso',
                 'concluída' => 'Finalizada',
                 'cancelada' => 'Cancelada',
             ];
@@ -305,41 +309,61 @@ if ($totalPages > 0) {
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
                 $idEdital = $row['IdEdital'];
-                $subtarefas = $row['Subtarefas'] ?? [];
                 $decursoInfo = is_array($row['DecursoInfo'] ?? null) ? $row['DecursoInfo'] : [];
                 $statusTarefa = (string) ($row['Status'] ?? '');
-                $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
+                $statusTarefaNorm = EditaisUiCopy::normalizarStatusPrincipal($statusTarefa);
+                $tarefaConcluida = in_array($statusTarefaNorm, ['concluida', 'finalizada'], true);
                 $allSt = $row['SubtarefasAll'] ?? [];
-                $progressStatuses = ['pendente', 'pendente', 'pendente', 'pendente'];
+                $subtarefasExpansao = [];
+                foreach ($allSt as $stRow) {
+                    if (!is_array($stRow)) {
+                        continue;
+                    }
+                    $tipoSt = (string) ($stRow['tipo'] ?? '');
+                    if (!EditaisSubtarefasRepository::isTipoAtivo($tipoSt)) {
+                        continue;
+                    }
+                    $statusStRow = strtolower(trim((string) ($stRow['status'] ?? '')));
+                    if ($statusStRow === 'concluída') {
+                        $statusStRow = 'concluida';
+                    }
+                    if (in_array($statusStRow, ['pendente', 'em_andamento'], true)) {
+                        $subtarefasExpansao[] = $stRow;
+                    }
+                }
+                usort($subtarefasExpansao, static function (array $a, array $b): int {
+                    return ((int) ($a['ordem'] ?? 0)) <=> ((int) ($b['ordem'] ?? 0));
+                });
+                $podeExpandirSubtarefas = !$tarefaConcluida && $subtarefasExpansao !== [];
+                $progressStatuses = [];
+                foreach ($ordensSubtarefasAtivas as $ordemAtiva) {
+                    $progressStatuses[$ordemAtiva] = 'pendente';
+                }
                 foreach ($allSt as $s) {
                     $o = (int) ($s['ordem'] ?? 0);
-                    if ($o >= 1 && $o <= 4) {
-                        $progressStatuses[$o - 1] = (string) ($s['status'] ?? 'pendente');
+                    $tipoS = (string) ($s['tipo'] ?? '');
+                    if ($o === 3) {
+                        $o = EditaisSubtarefasRepository::ORDEM_PUBLICACAO;
+                    } elseif ($o === 4) {
+                        $o = EditaisSubtarefasRepository::ORDEM_DECURSO;
+                    }
+                    if (EditaisSubtarefasRepository::isOrdemAtiva($o)) {
+                        $statusProg = strtolower(trim((string) ($s['status'] ?? 'pendente')));
+                        if ($statusProg === 'concluída') {
+                            $statusProg = 'concluida';
+                        }
+                        $progressStatuses[$o] = $statusProg;
                     }
                 }
-                $currentSubtarefaTitle = '';
-                foreach ($allSt as $s) {
-                    if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                        $currentSubtarefaTitle = $subtarefaLabels[$s['tipo'] ?? ''] ?? $s['tipo'] ?? '';
-                        break;
-                    }
-                }
-                $st = $row['Status'] ?? '';
-                if ($currentSubtarefaTitle === '' && $st === 'pendente') {
-                    $currentSubtarefaTitle = $ordemLabels[1] ?? 'Expedição de Edital';
-                } elseif ($currentSubtarefaTitle === '' && ($st === 'concluída')) {
-                    $currentSubtarefaTitle = 'Todas as etapas concluídas';
-                } elseif ($currentSubtarefaTitle === '') {
-                    $currentSubtarefaTitle = $row['Status'] ?? 'Em andamento';
-                }
-                $isEmAndamento = ($st === 'em_andamento');
-                $mostrarBarraStatus = ($st !== 'concluída' && $st !== 'cancelada');
+                $currentSubtarefaTitle = EditaisUiCopy::resolverTituloTarefaListagem($statusTarefa, $allSt);
+                $mostrarBarraStatus = !in_array($statusTarefaNorm, ['concluida', 'cancelada'], true);
                 $segmentosBarra = [];
                 if ($mostrarBarraStatus) {
-                    for ($i = 0; $i < 4; $i++) {
-                        $statusSeg = $progressStatuses[$i] ?? 'pendente';
+                    $segmentosBarra[] = ['class' => 'concluida', 'title' => EditaisUiCopy::CADASTRO_ETAPA];
+                    foreach ($ordensSubtarefasAtivas as $ordemAtiva) {
+                        $statusSeg = $progressStatuses[$ordemAtiva] ?? 'pendente';
                         $segClass = $statusSeg === 'concluida' ? 'concluida' : ($statusSeg === 'em_andamento' ? 'em_andamento' : 'pendente');
-                        $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$i + 1] ?? ''];
+                        $segmentosBarra[] = ['class' => $segClass, 'title' => $ordemLabels[$ordemAtiva] ?? ''];
                     }
                 }
             ?>
@@ -349,11 +373,13 @@ if ($totalPages > 0) {
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                         <div class="col">
-                            <?php if (!$tarefaConcluida): ?>
+                            <?php if ($podeExpandirSubtarefas): ?>
                                 <label class="button-table" title="Expandir detalhes">
                                     <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idEdital); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idEdital); ?>" aria-expanded="false" />
                                     <i class="fi fi-rr-angle-small-down"></i>
                                 </label>
+                            <?php else: ?>
+                                <span class="button-table" style="visibility:hidden;" aria-hidden="true"><i class="fi fi-rr-angle-small-down"></i></span>
                             <?php endif; ?>
                         </div>
                         <div class="col width-500 col-process">
@@ -401,21 +427,22 @@ if ($totalPages > 0) {
                             }
                             ?>
                         </div>
-                        <div class="col<?php echo $mostrarBarraStatus && $st !== 'concluída' && $st !== 'cancelada' ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle); ?>">
+                        <div class="col<?php echo $mostrarBarraStatus ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                             <?php
-                            if ($st === 'concluída') {
+                            if ($statusTarefaNorm === 'concluida') {
                                 echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
-                            } elseif ($st === 'cancelada') {
+                            } elseif ($statusTarefaNorm === 'cancelada') {
                                 echo '<div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>';
                             } elseif ($mostrarBarraStatus) {
-                                $labelStatus = $isEmAndamento ? 'Em andamento' : 'Pendente';
-                                $classStatus = $isEmAndamento ? 'status-current' : 'status-pending';
-                                echo '<div class="width-300 status ' . $classStatus . ' status-with-progress">';
-                                echo '<span class="status-task-label width-300">' . htmlspecialchars($labelStatus) . '</span>';
-                                $concluidosBarra = count(array_filter($progressStatuses, fn($x) => $x === 'concluida'));
-                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="4">';
+                                $labelStatus = EditaisUiCopy::rotuloBadgeStatusTarefa($statusTarefa);
+                                $classStatus = EditaisUiCopy::classeCssBadgeStatusTarefa($statusTarefa);
+                                echo '<div class="width-300 status ' . htmlspecialchars($classStatus, ENT_QUOTES) . ' status-with-progress">';
+                                echo '<span class="status-task-label width-300" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
+                                $concluidosBarra = 1 + count(array_filter($progressStatuses, static fn ($x) => $x === 'concluida'));
+                                $maxBarra = 1 + count($ordensSubtarefasAtivas);
+                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="' . $maxBarra . '" aria-label="Progresso das subtarefas">';
                                 foreach ($segmentosBarra as $seg) {
-                                    echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class']) . '" title="' . htmlspecialchars($seg['title']) . '"></div>';
+                                    echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
                                 }
                                 echo '</div></div>';
                             } else {
@@ -427,15 +454,20 @@ if ($totalPages > 0) {
                     </div>
                 </div>
 
-                <?php if (!$tarefaConcluida): ?>
-                    <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idEdital); ?>" aria-hidden="true">
-                        <?php foreach ($subtarefas as $st):
+                <?php if ($podeExpandirSubtarefas): ?>
+                    <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" aria-hidden="true">
+                        <?php foreach ($subtarefasExpansao as $st):
                             $stId = $st['id'] ?? '';
                             $stTipo = $st['tipo'] ?? '';
                             $stTipoNormalizado = strtolower(trim((string) $stTipo));
-                            $isCertificacaoPublicacao = in_array($stTipoNormalizado, ['certificacao_publicacao', 'certificacao_diario', 'publicacao_certificada'], true);
-                            $isCertificacaoDecurso = in_array($stTipoNormalizado, ['certificacao_decurso_prazo', 'decurso_prazo', 'certificar_decurso'], true);
-                            $stLabel = $subtarefaLabels[$stTipo] ?? $stTipo;
+                            $isCertificacaoPublicacao = $stTipoNormalizado === EditaisSubtarefasRepository::TIPO_PUBLICACAO;
+                            $isCertificacaoDecurso = $stTipoNormalizado === EditaisSubtarefasRepository::TIPO_DECURSO;
+                            $stStatus = strtolower(trim((string) ($st['status'] ?? '')));
+                            if ($stStatus === 'concluída') {
+                                $stStatus = 'concluida';
+                            }
+                            $stLabel = EditaisUiCopy::textoSpanStatusSubtarefa($stTipo, $stStatus);
+                            $statusClass = EditaisUiCopy::classeCssSpanStatusSubtarefa($stStatus);
                             $dadosEspecificosSt = [];
                             if (!empty($st['dados_especificos'])) {
                                 $dadosDecode = json_decode((string) $st['dados_especificos'], true);
@@ -454,7 +486,7 @@ if ($totalPages > 0) {
                         <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
                             <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields">
                                 <div class="col task-status">
-                                    <div class="padding-x-lg height-sm status status-pending"><?php echo htmlspecialchars($stLabel); ?></div>
+                                    <div class="padding-x-lg height-sm status <?php echo htmlspecialchars($statusClass, ENT_QUOTES); ?>"><?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?></div>
                                 </div>
                                 <?php if ($isCertificacaoPublicacao): ?>
                                     <div class="col">
@@ -470,10 +502,19 @@ if ($totalPages > 0) {
                                 <?php endif; ?>
                             </div>
                             <div class="display-flex row row-fit justify-end align-center">
-                                <?php if (!$isCertificacaoDecurso || $liberaDecurso): ?>
-                                    <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?>">
-                                        <span class="value-button"><?php echo htmlspecialchars($buttonTitleByTipo[$stTipo] ?? $stLabel, ENT_QUOTES); ?></span>
+                                <?php
+                                $mostrarBotao = true;
+                                if ($isCertificacaoDecurso && !$liberaDecurso) {
+                                    $mostrarBotao = false;
+                                }
+                                if ($mostrarBotao):
+                                    $btnTitle = EditaisUiCopy::tituloBotaoPorTipo($stTipo);
+                                ?>
+                                    <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>">
+                                        <span class="value-button"><?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?></span>
                                     </button>
+                                <?php elseif ($isCertificacaoDecurso): ?>
+                                    <span class="minor-info">Finalização automática após o decurso do prazo</span>
                                 <?php endif; ?>
                             </div>
                         </div>

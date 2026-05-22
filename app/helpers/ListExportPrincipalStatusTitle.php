@@ -118,40 +118,12 @@ final class ListExportPrincipalStatusTitle
      */
     private static function editais(array $row): string
     {
-        $subtarefaLabels = [
-            'expedicao_edital' => 'Expedição de Edital',
-            'envio_djen' => 'Envio para publicação no DJEN',
-            'certificacao_publicacao' => 'Data da publicação',
-            'certificacao_decurso_prazo' => 'Aguardando decurso do prazo',
-        ];
-        $ordemLabels = [
-            1 => $subtarefaLabels['expedicao_edital'],
-            2 => $subtarefaLabels['envio_djen'],
-            3 => $subtarefaLabels['certificacao_publicacao'],
-            4 => $subtarefaLabels['certificacao_decurso_prazo'],
-        ];
+        require_once __DIR__ . '/EditaisUiCopy.php';
 
-        $st = (string) ($row['Status'] ?? '');
-        $allSt = self::subtarefasAll($row);
-        $current = '';
-        foreach ($allSt as $s) {
-            if (!is_array($s)) {
-                continue;
-            }
-            if (trim((string) ($s['status'] ?? '')) === 'em_andamento') {
-                $current = $subtarefaLabels[$s['tipo'] ?? ''] ?? (string) ($s['tipo'] ?? '');
-                break;
-            }
-        }
-        if ($current === '' && $st === 'pendente') {
-            $current = $ordemLabels[1] ?? 'Expedição de Edital';
-        } elseif ($current === '' && in_array($st, ['concluída', 'concluida', 'finalizada'], true)) {
-            $current = 'Todas as etapas concluídas';
-        } elseif ($current === '') {
-            $current = (string) ($row['Status'] ?? 'Em andamento');
-        }
-
-        return $current;
+        return EditaisUiCopy::resolverTituloTarefaListagem(
+            (string) ($row['Status'] ?? ''),
+            self::subtarefasAll($row)
+        );
     }
 
     /**

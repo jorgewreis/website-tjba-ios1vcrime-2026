@@ -8,16 +8,26 @@ final class EditaisSubtarefasRepository
     private PDO $connection;
     private string $table;
 
+    public const TIPO_PUBLICACAO = 'certificacao_publicacao';
+    public const TIPO_DECURSO = 'certificacao_decurso_prazo';
+
+    /** @deprecated Legado — não criar novas subtarefas */
     public const TIPO_ORDEM_1 = 'expedicao_edital';
+    /** @deprecated Legado */
     public const TIPO_ORDEM_2 = 'envio_djen';
-    public const TIPO_ORDEM_3 = 'certificacao_publicacao';
-    public const TIPO_ORDEM_4 = 'certificacao_decurso_prazo';
+    /** Alias legado (ordem antiga 3) */
+    public const TIPO_ORDEM_3 = self::TIPO_PUBLICACAO;
+    /** Alias legado (ordem antiga 4) */
+    public const TIPO_ORDEM_4 = self::TIPO_DECURSO;
+
+    public const ORDEM_PUBLICACAO = 1;
+    public const ORDEM_DECURSO = 2;
+
+    public const ORDENS_ATIVAS = [self::ORDEM_PUBLICACAO, self::ORDEM_DECURSO];
 
     private const ORDEM_POR_TIPO = [
-        self::TIPO_ORDEM_1 => 1,
-        self::TIPO_ORDEM_2 => 2,
-        self::TIPO_ORDEM_3 => 3,
-        self::TIPO_ORDEM_4 => 4,
+        self::TIPO_PUBLICACAO => self::ORDEM_PUBLICACAO,
+        self::TIPO_DECURSO => self::ORDEM_DECURSO,
     ];
 
     private const STATUS_EM_ANDAMENTO = 'em_andamento';
@@ -30,12 +40,24 @@ final class EditaisSubtarefasRepository
         $this->table = $table;
     }
 
+    public static function isOrdemAtiva(int $ordem): bool
+    {
+        return in_array($ordem, self::ORDENS_ATIVAS, true);
+    }
+
+    public static function isTipoAtivo(string $tipo): bool
+    {
+        $tipo = trim($tipo);
+
+        return isset(self::ORDEM_POR_TIPO[$tipo]);
+    }
+
     public function create(string $editalId, string $tipo, int $ordem, string $status = 'pendente', ?string $dadosJson = null): string
     {
         $editalId = trim($editalId);
         $tipo = trim($tipo);
-        if ($editalId === '' || $tipo === '' || $ordem < 1 || $ordem > 4) {
-            throw new InvalidArgumentException('edital_id, tipo e ordem (1-4) são obrigatórios.');
+        if ($editalId === '' || $tipo === '' || !self::isOrdemAtiva($ordem)) {
+            throw new InvalidArgumentException('edital_id, tipo e ordem ativa (1 ou 2) são obrigatórios.');
         }
         if (!isset(self::ORDEM_POR_TIPO[$tipo]) || self::ORDEM_POR_TIPO[$tipo] !== $ordem) {
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
@@ -85,6 +107,7 @@ final class EditaisSubtarefasRepository
         while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
             $rows[] = $row;
         }
+
         return $rows;
     }
 
@@ -118,19 +141,38 @@ final class EditaisSubtarefasRepository
         $statement->execute();
 
         $row = $statement->fetch(PDO::FETCH_ASSOC);
+
         return $row === false ? null : $row;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     public function findPendenteOuEmAndamentoByEditalId(string $editalId): array
     {
         $all = $this->findByEditalId($editalId);
+        $ativas = [];
+
         foreach ($all as $row) {
-            $status = (string) ($row['status'] ?? '');
-            if ($status === self::STATUS_EM_ANDAMENTO || $status === self::STATUS_PENDENTE) {
-                return [$row];
+            $ordem = (int) ($row['ordem'] ?? 0);
+            $tipo = (string) ($row['tipo'] ?? '');
+            if (!self::isOrdemAtiva($ordem) && !self::isTipoAtivo($tipo)) {
+                continue;
+            }
+            $status = strtolower(trim((string) ($row['status'] ?? '')));
+            if ($status === 'concluída') {
+                $status = 'concluida';
+            }
+            if (in_array($status, ['pendente', 'em_andamento'], true)) {
+                $ativas[] = $row;
             }
         }
-        return [];
+
+        usort($ativas, static function (array $a, array $b): int {
+            return ((int) ($a['ordem'] ?? 0)) <=> ((int) ($b['ordem'] ?? 0));
+        });
+
+        return $ativas;
     }
 
     public function atualizarStatus(string $id, string $status): void
@@ -174,21 +216,33 @@ final class EditaisSubtarefasRepository
     }
 
     /**
-     * Garante as 4 subtarefas para um edital que ainda não tem nenhuma.
+     * Garante as 2 subtarefas ativas (publicação + decurso) quando o edital não tem nenhuma.
      */
-    public function ensureQuatroSubtarefas(string $editalId): void
+    public function ensureSubtarefasAtivas(string $editalId): void
     {
         $editalId = trim($editalId);
         if ($editalId === '') {
             return;
         }
         $existentes = $this->findByEditalId($editalId);
-        if (count($existentes) > 0) {
+        $temAtiva = false;
+        foreach ($existentes as $row) {
+            if (self::isOrdemAtiva((int) ($row['ordem'] ?? 0)) || self::isTipoAtivo((string) ($row['tipo'] ?? ''))) {
+                $temAtiva = true;
+                break;
+            }
+        }
+        if ($temAtiva) {
             return;
         }
-        $this->create($editalId, self::TIPO_ORDEM_1, 1, self::STATUS_EM_ANDAMENTO, null);
-        $this->create($editalId, self::TIPO_ORDEM_2, 2, self::STATUS_PENDENTE, null);
-        $this->create($editalId, self::TIPO_ORDEM_3, 3, self::STATUS_PENDENTE, null);
-        $this->create($editalId, self::TIPO_ORDEM_4, 4, self::STATUS_PENDENTE, null);
+
+        $this->create($editalId, self::TIPO_PUBLICACAO, self::ORDEM_PUBLICACAO, self::STATUS_EM_ANDAMENTO, null);
+        $this->create($editalId, self::TIPO_DECURSO, self::ORDEM_DECURSO, self::STATUS_PENDENTE, null);
+    }
+
+    /** @deprecated Use ensureSubtarefasAtivas */
+    public function ensureQuatroSubtarefas(string $editalId): void
+    {
+        $this->ensureSubtarefasAtivas($editalId);
     }
 }

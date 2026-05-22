@@ -47,9 +47,14 @@ final class EditaisService
         foreach ($rows as $i => $row) {
             $idEdital = (string) ($row['IdEdital'] ?? '');
             if ($idEdital !== '') {
-                $this->subtarefasRepository->ensureQuatroSubtarefas($idEdital);
+                $this->subtarefasRepository->ensureSubtarefasAtivas($idEdital);
+                $this->tentarFinalizacaoAutomaticaPorDecurso($idEdital);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByEditalId($idEdital);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByEditalId($idEdital);
+                $editalAtualizado = $this->repository->findById($idEdital);
+                if ($editalAtualizado !== null) {
+                    $rows[$i]['Status'] = (string) ($editalAtualizado['status'] ?? $rows[$i]['Status'] ?? '');
+                }
                 $alocadosRaw = $this->alocadosRepository->findByEditalId($idEdital);
                 $alocados = [];
                 $max = 5;
@@ -202,21 +207,22 @@ final class EditaisService
         }
         $existentes = $this->subtarefasRepository->findByEditalId($editalId);
         if (count($existentes) > 0) {
-            $status = CartorioTarefaStatusPrincipalHelper::principalStatusPadrao(
-                $existentes,
-                ['concluida'],
-                'concluída'
-            );
+            require_once __DIR__ . '/../helpers/EditaisUiCopy.php';
+            $status = EditaisUiCopy::statusPrincipalFromSubtarefas($existentes);
+            if ($status === 'concluída' || $status === 'concluida') {
+                $status = 'concluída';
+            }
             $this->repository->update($editalId, ['status' => $status]);
+            $this->tentarFinalizacaoAutomaticaPorDecurso($editalId);
             return;
         }
 
-        $this->subtarefasRepository->create($editalId, EditaisSubtarefasRepository::TIPO_ORDEM_1, 1, 'em_andamento', null);
-        $this->subtarefasRepository->create($editalId, EditaisSubtarefasRepository::TIPO_ORDEM_2, 2, 'pendente', null);
-        $this->subtarefasRepository->create($editalId, EditaisSubtarefasRepository::TIPO_ORDEM_3, 3, 'pendente', null);
-        $this->subtarefasRepository->create($editalId, EditaisSubtarefasRepository::TIPO_ORDEM_4, 4, 'pendente', null);
+        $repo = $this->subtarefasRepository;
+        $repo->create($editalId, $repo::TIPO_PUBLICACAO, $repo::ORDEM_PUBLICACAO, 'em_andamento', null);
+        $repo->create($editalId, $repo::TIPO_DECURSO, $repo::ORDEM_DECURSO, 'pendente', null);
 
-        $this->repository->update($editalId, ['status' => 'pendente']);
+        require_once __DIR__ . '/../helpers/EditaisUiCopy.php';
+        $this->repository->update($editalId, ['status' => EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO]);
 
         if ($usuarioId !== null && trim($usuarioId) !== ''
             && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao(trim($usuarioId))) {
@@ -235,6 +241,16 @@ final class EditaisService
         }
 
         $ordem = (int) ($subtarefa['ordem'] ?? 0);
+        $tipoSub = trim((string) ($subtarefa['tipo'] ?? ''));
+        if ($tipoSub === EditaisSubtarefasRepository::TIPO_PUBLICACAO) {
+            $ordem = EditaisSubtarefasRepository::ORDEM_PUBLICACAO;
+        } elseif ($tipoSub === EditaisSubtarefasRepository::TIPO_DECURSO) {
+            $ordem = EditaisSubtarefasRepository::ORDEM_DECURSO;
+        } elseif ($ordem === 3) {
+            $ordem = EditaisSubtarefasRepository::ORDEM_PUBLICACAO;
+        } elseif ($ordem === 4) {
+            $ordem = EditaisSubtarefasRepository::ORDEM_DECURSO;
+        }
         $editalId = trim((string) ($subtarefa['edital_id'] ?? ''));
 
         if ($editalId === '') {
@@ -260,7 +276,7 @@ final class EditaisService
             $this->subtarefasRepository->atualizarDadosEspecificos($subtarefaId, $dadosJson);
         }
 
-        if ($ordem === 3) {
+        if ($ordem === EditaisSubtarefasRepository::ORDEM_PUBLICACAO) {
             $dadosArray = [];
             if ($dadosJson !== null && $dadosJson !== '') {
                 $decoded = json_decode($dadosJson, true);
@@ -292,46 +308,121 @@ final class EditaisService
             ]);
         }
 
-        if ($ordem === 4) {
+        if ($ordem === EditaisSubtarefasRepository::ORDEM_DECURSO) {
             $this->validarDecursoParaCertificacao($editalId);
         }
 
         $this->subtarefasRepository->atualizarStatus($subtarefaId, 'concluida');
 
+        require_once __DIR__ . '/../helpers/EditaisUiCopy.php';
         $todas = $this->subtarefasRepository->findByEditalId($editalId);
-        $proximaOrdem = $ordem + 1;
         $proximaEncontrada = null;
-        foreach ($todas as $st) {
-            if ((int) ($st['ordem'] ?? 0) === $proximaOrdem) {
-                $proximaEncontrada = $st;
-                break;
+        if ($ordem === EditaisSubtarefasRepository::ORDEM_PUBLICACAO) {
+            foreach ($todas as $st) {
+                if ((int) ($st['ordem'] ?? 0) === EditaisSubtarefasRepository::ORDEM_DECURSO
+                    || (string) ($st['tipo'] ?? '') === EditaisSubtarefasRepository::TIPO_DECURSO) {
+                    $proximaEncontrada = $st;
+                    break;
+                }
             }
         }
 
         if ($proximaEncontrada !== null) {
             $this->subtarefasRepository->atualizarStatus((string) $proximaEncontrada['id'], 'em_andamento');
-            $this->repository->update($editalId, ['status' => 'em_andamento']);
+            $this->repository->update($editalId, ['status' => EditaisUiCopy::STATUS_AGUARDANDO_DECURSO]);
+            $this->tentarFinalizacaoAutomaticaPorDecurso($editalId);
+
             return ['tarefa_principal_concluida' => false];
-        } else {
-            $this->repository->update($editalId, ['status' => 'concluída']);
-            $edital = $this->repository->findById($editalId);
-            $processo = trim((string) ($edital['numero_processo'] ?? ''));
-            $tipoEdital = trim((string) ($edital['tipo_edital'] ?? ''));
-            $prazoDias = isset($edital['prazo_dias']) ? (int) $edital['prazo_dias'] : 0;
-            $msg = 'Tarefa principal concluída automaticamente: edital do processo '
-                . ($processo !== '' ? $processo : 'não informado')
-                . ' (' . ($tipoEdital !== '' ? $tipoEdital : 'tipo não informado')
-                . ', prazo de ' . ($prazoDias > 0 ? $prazoDias : 0) . ' dias).';
-            return [
-                'tarefa_principal_concluida' => true,
-                'tarefa_principal_mensagem' => $msg,
-            ];
         }
+
+        $this->repository->update($editalId, ['status' => 'concluída']);
+        $edital = $this->repository->findById($editalId);
+        $processo = trim((string) ($edital['numero_processo'] ?? ''));
+        $tipoEdital = trim((string) ($edital['tipo_edital'] ?? ''));
+        $prazoDias = isset($edital['prazo_dias']) ? (int) $edital['prazo_dias'] : 0;
+        $msg = 'Tarefa principal concluída automaticamente: edital do processo '
+            . ($processo !== '' ? $processo : 'não informado')
+            . ' (' . ($tipoEdital !== '' ? $tipoEdital : 'tipo não informado')
+            . ', prazo de ' . ($prazoDias > 0 ? $prazoDias : 0) . ' dias).';
+
+        return [
+            'tarefa_principal_concluida' => true,
+            'tarefa_principal_mensagem' => $msg,
+        ];
+    }
+
+    /**
+     * Conclui automaticamente decurso e tarefa principal quando o prazo já encerrou (dia após data de decurso).
+     */
+    public function tentarFinalizacaoAutomaticaPorDecurso(string $editalId): bool
+    {
+        $editalId = trim($editalId);
+        if ($editalId === '') {
+            return false;
+        }
+
+        $edital = $this->repository->findById($editalId);
+        if ($edital === null) {
+            return false;
+        }
+
+        $status = strtolower(trim((string) ($edital['status'] ?? '')));
+        if ($status === 'concluída') {
+            $status = 'concluida';
+        }
+        if (in_array($status, ['concluida', 'cancelada'], true)) {
+            return false;
+        }
+
+        $decurso = $this->getDecursoInfo($editalId);
+        if (empty($decurso['libera_conclusao'])) {
+            return false;
+        }
+
+        $subtarefas = $this->subtarefasRepository->findByEditalId($editalId);
+        $subPublicacao = null;
+        $subDecurso = null;
+        foreach ($subtarefas as $st) {
+            $tipo = trim((string) ($st['tipo'] ?? ''));
+            $ordemSt = (int) ($st['ordem'] ?? 0);
+            if ($tipo === EditaisSubtarefasRepository::TIPO_PUBLICACAO || $ordemSt === EditaisSubtarefasRepository::ORDEM_PUBLICACAO || $ordemSt === 3) {
+                $subPublicacao = $st;
+            }
+            if ($tipo === EditaisSubtarefasRepository::TIPO_DECURSO || $ordemSt === EditaisSubtarefasRepository::ORDEM_DECURSO || $ordemSt === 4) {
+                $subDecurso = $st;
+            }
+        }
+
+        if ($subPublicacao === null) {
+            return false;
+        }
+
+        $statusPub = strtolower(trim((string) ($subPublicacao['status'] ?? '')));
+        if ($statusPub === 'concluída') {
+            $statusPub = 'concluida';
+        }
+        if ($statusPub !== 'concluida') {
+            return false;
+        }
+
+        if ($subDecurso !== null) {
+            $statusDec = strtolower(trim((string) ($subDecurso['status'] ?? '')));
+            if ($statusDec === 'concluída') {
+                $statusDec = 'concluida';
+            }
+            if ($statusDec !== 'concluida') {
+                $this->subtarefasRepository->atualizarStatus((string) $subDecurso['id'], 'concluida');
+            }
+        }
+
+        $this->repository->update($editalId, ['status' => 'concluída']);
+
+        return true;
     }
 
     /**
      * Valida se o prazo do edital já decorreu (data_publicacao + prazo_dias <= hoje).
-     * Usado ao concluir a subtarefa 4 (certificação de decurso do prazo).
+     * Usado ao concluir a subtarefa de decurso do prazo.
      */
     private function validarDecursoParaCertificacao(string $editalId): void
     {
@@ -345,20 +436,26 @@ final class EditaisService
         }
 
         $subtarefas = $this->subtarefasRepository->findByEditalId($editalId);
-        $subtarefa3 = null;
+        $subPublicacao = null;
         foreach ($subtarefas as $st) {
-            if ((int) ($st['ordem'] ?? 0) === 3) {
-                $subtarefa3 = $st;
+            $tipo = trim((string) ($st['tipo'] ?? ''));
+            $ordemSt = (int) ($st['ordem'] ?? 0);
+            if ($tipo === EditaisSubtarefasRepository::TIPO_PUBLICACAO || $ordemSt === EditaisSubtarefasRepository::ORDEM_PUBLICACAO || $ordemSt === 3) {
+                $subPublicacao = $st;
                 break;
             }
         }
-        if ($subtarefa3 === null || trim((string) ($subtarefa3['status'] ?? '')) !== 'concluida') {
-            throw new InvalidArgumentException('A certificação da publicação (subtarefa 3) deve estar concluída antes de certificar o decurso do prazo.');
+        $statusPub = strtolower(trim((string) ($subPublicacao['status'] ?? '')));
+        if ($statusPub === 'concluída') {
+            $statusPub = 'concluida';
+        }
+        if ($subPublicacao === null || $statusPub !== 'concluida') {
+            throw new InvalidArgumentException('A certificação da publicação deve estar concluída antes de certificar o decurso do prazo.');
         }
 
         $dataPublicacao = trim((string) ($edital['data_publicacao'] ?? ''));
         if ($dataPublicacao === '') {
-            $dadosJson = $subtarefa3['dados_especificos'] ?? null;
+            $dadosJson = $subPublicacao['dados_especificos'] ?? null;
             if ($dadosJson !== null && $dadosJson !== '') {
                 $dados = json_decode($dadosJson, true);
                 if (is_array($dados)) {
@@ -538,7 +635,7 @@ final class EditaisService
     }
 
     /**
-     * Data de publicação na tabela `editais` ou, se vazia, em dados_especificos da subtarefa 3 concluída.
+     * Data de publicação na tabela `editais` ou, se vazia, em dados_especificos da subtarefa de publicação concluída.
      */
     private function resolverDataPublicacaoParaDecurso(array $edital): string
     {
@@ -552,16 +649,26 @@ final class EditaisService
         }
         $subtarefas = $this->subtarefasRepository->findByEditalId($editalId);
         foreach ($subtarefas as $st) {
-            if ((int) ($st['ordem'] ?? 0) === 3 && trim((string) ($st['status'] ?? '')) === 'concluida') {
-                $dadosJson = $st['dados_especificos'] ?? null;
-                if ($dadosJson !== null && $dadosJson !== '') {
-                    $dados = json_decode((string) $dadosJson, true);
-                    if (is_array($dados)) {
-                        return trim((string) ($dados['data_publicacao'] ?? ''));
-                    }
-                }
-                break;
+            $tipo = trim((string) ($st['tipo'] ?? ''));
+            $ordemSt = (int) ($st['ordem'] ?? 0);
+            $statusSt = strtolower(trim((string) ($st['status'] ?? '')));
+            if ($statusSt === 'concluída') {
+                $statusSt = 'concluida';
             }
+            $ehPublicacao = $tipo === EditaisSubtarefasRepository::TIPO_PUBLICACAO
+                || $ordemSt === EditaisSubtarefasRepository::ORDEM_PUBLICACAO
+                || $ordemSt === 3;
+            if (!$ehPublicacao || $statusSt !== 'concluida') {
+                continue;
+            }
+            $dadosJson = $st['dados_especificos'] ?? null;
+            if ($dadosJson !== null && $dadosJson !== '') {
+                $dados = json_decode((string) $dadosJson, true);
+                if (is_array($dados)) {
+                    return trim((string) ($dados['data_publicacao'] ?? ''));
+                }
+            }
+            break;
         }
 
         return '';

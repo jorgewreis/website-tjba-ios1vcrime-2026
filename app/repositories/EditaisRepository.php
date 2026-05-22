@@ -12,6 +12,8 @@ final class EditaisRepository
 
     private const STATUS_ORDER = [
         'pendente',
+        'aguardando publicação',
+        'aguardando decurso',
         'em_andamento',
         'concluída',
         'cancelada',

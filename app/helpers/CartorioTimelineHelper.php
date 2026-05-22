@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CartasExpedidasUiCopy.php';
 require_once __DIR__ . '/CartasRecebidasUiCopy.php';
+require_once __DIR__ . '/EditaisUiCopy.php';
 require_once __DIR__ . '/../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/CartasRecebidasSubtarefasRepository.php';
 
@@ -15,39 +16,7 @@ if (!function_exists('cartorioTimelineGetConfig')) {
             $configs = [
                 'cartas_expedidas' => CartasExpedidasUiCopy::timelineModuleConfig(),
                 'cartas_recebidas' => CartasRecebidasUiCopy::timelineModuleConfig(),
-                'editais' => [
-                    'cadastro_label' => 'Edital cadastrado',
-                    'subtasks' => [
-                        1 => [
-                            'type' => 'expedicao_edital',
-                            'label' => 'Expedicao de Edital',
-                            'task_title' => 'Aguardando expedicao do edital',
-                            'button_title' => 'Informar expedicao do edital',
-                            'pending_text' => 'Aguardando expedicao do edital',
-                        ],
-                        2 => [
-                            'type' => 'envio_djen',
-                            'label' => 'Envio para publicacao no DJEN',
-                            'task_title' => 'Aguardando envio para publicacao',
-                            'button_title' => 'Informar envio para publicacao',
-                            'pending_text' => 'Aguardando envio do edital para publicacao no DJEN',
-                        ],
-                        3 => [
-                            'type' => 'certificacao_publicacao',
-                            'label' => 'Certificacao da publicacao',
-                            'task_title' => 'Aguardando certificacao da publicacao do edital',
-                            'button_title' => 'Informar certificacao da publicacao',
-                            'pending_text' => 'Aguardando certificacao da publicacao do edital',
-                        ],
-                        4 => [
-                            'type' => 'certificacao_decurso_prazo',
-                            'label' => 'Certificacao de decurso do prazo',
-                            'task_title' => 'Aguardando certificacao de decurso do prazo do edital',
-                            'button_title' => 'Informar certificacao de decurso do prazo',
-                            'pending_text' => 'Aguardando certificacao de decurso do prazo do edital',
-                        ],
-                    ],
-                ],
+                'editais' => EditaisUiCopy::timelineModuleConfig(),
                 'guias' => [
                     'cadastro_label' => 'Guia cadastrada',
                     'subtasks' => [
@@ -388,19 +357,16 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         }
 
         if ($module === 'editais') {
-            if ($ordem === 1) {
-                return cartorioTimelineContent('Edital expedido', 'Expedicao realizada por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 2) {
-                return cartorioTimelineContent('Edital enviado para publicacao no DJEN', 'Edital enviado por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 3) {
+            require_once __DIR__ . '/../repositories/EditaisSubtarefasRepository.php';
+            if ($ordem === EditaisSubtarefasRepository::ORDEM_PUBLICACAO || $ordem === 3) {
                 $dataPublicacao = cartorioTimelineFormatSimpleDate((string) ($dados['data_publicacao'] ?? ''));
                 if ($dataPublicacao === '') {
                     $dataPublicacao = '—';
                 }
+
                 return cartorioTimelineContent('Publicacao do edital realizada em ' . $dataPublicacao, 'Certificacao realizada por ' . $user . ' em ' . $movementDate);
             }
+
             return cartorioTimelineContent('Decurso do prazo do edital certificado', 'Certificacao realizada por ' . $user . ' em ' . $movementDate);
         }
 
