@@ -6,6 +6,10 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/config/security.php';
+require_once $basePath . '/app/models/Usuario.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/services/GabineteMonitoramentoEletronicoService.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -30,8 +34,44 @@ function assertCnjFormattedValueMon(array $input, string $key, string $fieldLabe
     }
 }
 
+function respondGmeCreateError(int $statusCode, string $message): void
+{
+    http_response_code($statusCode);
+    echo json_encode(['error' => $message], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 try {
+    if (!Security::isAuthenticated()) {
+        Security::clearAuthenticatedSession();
+        respondGmeCreateError(401, 'Sessão expirada. Faça login novamente.');
+    }
+
+    $sessionToken = trim((string) ($_SESSION['token'] ?? ''));
+    if ($sessionToken === '') {
+        Security::clearAuthenticatedSession();
+        respondGmeCreateError(401, 'Sessão expirada. Faça login novamente.');
+    }
+
+    $usuario = new Usuario();
+    $user = $usuario->validarToken($sessionToken);
+    if ($user === null) {
+        Security::clearAuthenticatedSession();
+        respondGmeCreateError(401, 'Sessão expirada. Faça login novamente.');
+    }
+
+    $usuarioId = trim((string) ($user['id_usuario'] ?? ($_SESSION['id_usuario'] ?? '')));
+    if ($usuarioId === '') {
+        Security::clearAuthenticatedSession();
+        respondGmeCreateError(401, 'Sessão inválida.');
+    }
+
+    if (!AccessEvaluator::canAccessPage('monitoramentogabinetecreate', UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId))) {
+        respondGmeCreateError(403, 'Acesso negado.');
+    }
+
     assertCnjFormattedValueMon($parsed, 'numero_processo', 'Número do processo');
+    $parsed['usuario_cadastro_id'] = $usuarioId;
 
     $service = new GabineteMonitoramentoEletronicoService($connection);
     $newId = $service->create($parsed);
