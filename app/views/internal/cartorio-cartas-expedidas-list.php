@@ -487,9 +487,6 @@ if ($totalPages > 0) {
                                 if (!CartasExpedidasSubtarefasRepository::isTipoAtivo((string) $stTipo)) {
                                     continue;
                                 }
-                                $stTipoNormalizado = strtolower(trim((string) $stTipo));
-                                $isEnvio = in_array($stTipoNormalizado, ['aguardando_envio', 'envio_processo', 'enviar_processo', 'envio'], true);
-                                $isDevolucao = in_array($stTipoNormalizado, ['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao', 'juntar_devolucao', 'Aguardando devolução'], true);
                                 $stStatusRaw = trim((string) ($st['status'] ?? 'pendente'));
                                 $stSpanTexto = CartasExpedidasUiCopy::textoSpanStatusSubtarefa((string) $stTipo, $stStatusRaw);
                                 $stSpanClasse = CartasExpedidasUiCopy::classeCssSpanStatusSubtarefa($stStatusRaw);
@@ -500,28 +497,6 @@ if ($totalPages > 0) {
                                         <div class="col task-status">
                                             <div class="padding-x-lg height-sm status <?php echo htmlspecialchars($stSpanClasse, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($stSpanTexto, ENT_QUOTES); ?>"><?php echo htmlspecialchars($stSpanTexto, ENT_QUOTES); ?></div>
                                         </div>
-                                        <?php if ($isEnvio): ?>
-                                            <div class="col">
-                                                <select class="width-400 height-sm subtask-metodo-envio" title="Método de envio">
-                                                    <option value="" selected disabled>Selecione aqui</option>
-                                                    <option value="Email">E-mail</option>
-                                                    <option value="Malote Digital">Malote Digital</option>
-                                                    <option value="PJe">PJe</option>
-                                                    <option value="eSAJ">eSAJ</option>
-                                                    <option value="ePROC">ePROC</option>
-                                                </select>
-                                            </div>
-                                        <?php elseif ($isDevolucao): ?>
-                                            <div class="col">
-                                                <select class="width-500 height-sm subtask-resultado-devolucao" title="Resultado da devolução">
-                                                    <option value="" selected disabled>Selecione aqui</option>
-                                                    <option value="devolvida_sem_cumprimento">Não cumprida</option>
-                                                    <option value="cumprida_negativamente">Cumprida negativamente</option>
-                                                    <option value="cumprida_parcialmente">Cumprida parcialmente</option>
-                                                    <option value="cumprida_positivamente">Cumprida integralmente</option>
-                                                </select>
-                                            </div>
-                                        <?php endif; ?>
                                     </div>
                                     <div class="display-flex row row-fit justify-end align-center">
                                         <button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>">
@@ -706,33 +681,9 @@ if ($totalPages > 0) {
 
                     document.querySelectorAll('.btn-concluir-subtarefa').forEach(function(btn) {
                         btn.addEventListener('click', function() {
-                            const normalizeTipo = (value) => String(value || '').trim().toLowerCase();
                             const subtarefaId = this.getAttribute('data-subtarefa-id');
                             if (!subtarefaId) return;
-                            const block = this.closest('[data-subtarefa-id][data-subtarefa-tipo]');
-                            const tipo = normalizeTipo(block ? (block.getAttribute('data-subtarefa-tipo') || '') : '');
-                            const resultadoDevolucao = block ? block.querySelector('.subtask-resultado-devolucao') : null;
-                            const metodoEnvio = block ? block.querySelector('.subtask-metodo-envio') : null;
-
-                            if (['aguardando_envio', 'envio_processo', 'enviar_processo'].includes(tipo)) {
-                                if (!metodoEnvio || !metodoEnvio.value || !metodoEnvio.value.trim()) {
-                                    notify('error', 'Atenção', 'Selecione o método de envio.');
-                                    return;
-                                }
-                            } else if (['aguardando_devolucao', 'confirmar_juntada', 'juntada_devolucao'].includes(tipo)) {
-                                if (!resultadoDevolucao || !resultadoDevolucao.value) {
-                                    notify('error', 'Atenção', 'Selecione o resultado da devolução.');
-                                    return;
-                                }
-                            }
-
-                            let dadosEspecificos = null;
-                            if (block) {
-                                const obj = {};
-                                if (resultadoDevolucao && resultadoDevolucao.value) obj.resultado_devolucao = resultadoDevolucao.value;
-                                if (metodoEnvio && metodoEnvio.value && metodoEnvio.value.trim()) obj.metodo_envio = metodoEnvio.value.trim();
-                                if (Object.keys(obj).length > 0) dadosEspecificos = JSON.stringify(obj);
-                            }
+                            const dadosEspecificos = null;
 
                             btn.disabled = true;
                             fetch('/api/cartorio-cartas-expedidas/concluir-subtarefa.php', {

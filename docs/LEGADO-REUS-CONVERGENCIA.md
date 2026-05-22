@@ -4,7 +4,7 @@
 
 O sistema possui dois modelos de vínculo pessoa–processo:
 
-- **Legado:** tabelas `reus` e `processoReus` (número do processo + id_reu), usadas por Guias e Medidas Protetivas.
+- **Legado:** tabelas `reus` e `processoReus` (número do processo + id_reu), usadas por Guias.
 - **Canônico:** tabelas `partes` e `processos_partes` (processo_id, parte_id, tipo_parte, polo), usado pelo módulo Consulta Partes / Consulta Processos.
 
 A longo prazo, o modelo canônico deve ser a única fonte de verdade. Este documento descreve onde está o legado e como convergir.
@@ -15,7 +15,6 @@ A longo prazo, o modelo canônico deve ser a única fonte de verdade. Este docum
 |-------|-----|
 | `app/services/ReuManager.php` | CRUD em `reus` e `processoReus`; listar réus por processo; vincular réu a processo. |
 | `app/services/GuiasService.php` | ReuManager para garantir/cadastrar réu e vincular ao processo. |
-| `app/services/MedidasProtetivasService.php` | ReuManager para réu da medida. |
 | `app/services/Guias.php` | ReuManager; join com `reus` em listagem. |
 | `public/api/cartorio-guias/reus-por-processo.php` | Lista réus do processo (legado); **atualizado para incluir também partes do modelo canônico** quando o processo existir em `processos` e tiver vínculos em `processos_partes`. |
 | `app/views/internal/cartorio-guias-create.php` | Select de denunciado alimentado por reus-por-processo. |

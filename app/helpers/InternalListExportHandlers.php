@@ -5,7 +5,6 @@ require_once __DIR__ . '/../services/FeriadosService.php';
 require_once __DIR__ . '/../services/UsuariosService.php';
 require_once __DIR__ . '/../services/GuiasService.php';
 require_once __DIR__ . '/../services/EditaisService.php';
-require_once __DIR__ . '/../services/MedidasProtetivasService.php';
 require_once __DIR__ . '/../services/OficiosCartorioService.php';
 require_once __DIR__ . '/../services/OficiosGabineteService.php';
 require_once __DIR__ . '/../services/GabineteMonitoramentoEletronicoService.php';
@@ -52,7 +51,6 @@ final class InternalListExportHandlers
             'usuarioslist' => [self::class, 'usuarios'],
             'guias' => [self::class, 'guias'],
             'editais' => [self::class, 'editais'],
-            'medidasprotetivas' => [self::class, 'medidasProtetivas'],
             'oficioscartorio' => [self::class, 'oficiosCartorio'],
             'oficiosgabinete' => [self::class, 'oficiosGabinete'],
             'monitoramentogabinete' => [self::class, 'monitoramentoGabinete'],
@@ -315,34 +313,6 @@ final class InternalListExportHandlers
                 ['key' => 'Processo', 'label' => 'Processo'],
                 ['key' => 'TipoEdital', 'label' => 'Tipo de edital'],
                 ['key' => 'DecursoExport', 'label' => 'Data final do prazo / dias restantes'],
-                ['key' => 'Alocados', 'label' => 'Alocações'],
-                ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
-            ],
-            'rows' => $rows,
-        ];
-    }
-
-    /**
-     * @param array<string, mixed> $get
-     */
-    private static function medidasProtetivas(PDO $pdo, string $userId, array $get): array
-    {
-        $filters = [
-            'status' => trim((string) ($get['status'] ?? '')),
-            'processo' => trim((string) ($get['processo'] ?? '')),
-        ];
-        $service = new MedidasProtetivasService($pdo);
-        $rows = self::withExportPrincipalStatusTitle(
-            $service->listMedidasProtetivas($filters, self::MAX_ROWS, 0)['rows'] ?? [],
-            ListExportPrincipalStatusTitle::MODULE_MEDIDAS
-        );
-
-        return [
-            'title' => 'Lista de medidas protetivas',
-            'slug' => 'medidas-protetivas',
-            'columns' => [
-                ['key' => 'Processo', 'label' => 'Processo'],
-                ['key' => 'ReuNome', 'label' => 'Réu'],
                 ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],

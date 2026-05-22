@@ -49,7 +49,7 @@ Regra transversal:
 
 ## 4. Módulos internos principais
 - **Audiências:** pauta, atas, painel e fluxos de estudantes.
-- **Cartório:** Cartas Expedidas, Cartas Recebidas, Editais, Guias, Medidas Protetivas, Produtividade e Ofícios do Cartório.
+- **Cartório:** Cartas Expedidas, Cartas Recebidas, Editais, Guias, Produtividade e Ofícios do Cartório.
 - **Gabinete:** réus presos e ofícios.
 - **Monitoramento eletrônico:** acesso global (`all_internal`) para usuários internos com perfil composto (cartório, gabinete ou audiências); menu apenas em **Consultas**; qualquer interno autorizado pode operar cadastro, subtarefas, cancelamento e exclusão (esta última na edição, se for o último sequencial do ano). Breadcrumb neutro (sem “Gabinete”); lista padrão em aberto.
 - **Usuários e perfis:** cadastro, edição, perfis e dados pessoais.

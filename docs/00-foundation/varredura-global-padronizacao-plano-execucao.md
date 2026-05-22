@@ -31,7 +31,7 @@
 
 ### 1.3 Familias de duplicacao JS (resumo)
 
-1. **Toast / App.Page:** `notify`, `notifyByKey`, fila pos-reload repetidos em listas Cartorio, GME, Oficios, Ceapa, Cejusc, Editais, Medidas, modules Audiencias/Produtividade.
+1. **Toast / App.Page:** `notify`, `notifyByKey`, fila pos-reload repetidos em listas Cartorio, GME, Oficios, Editais, modules Audiencias/Produtividade.
 2. **Filtros + URLSearchParams + location:** padrao copiado entre `*-list.js` e modules `pauta-list`, `midias-list`, `atas-list`.
 3. **fetch POST JSON:** `App.RecordEditCommon.postJson` disponivel; muitos `fetch` inline em modules.
 4. **Chaves sessionStorage pos-reload:** `salapauta.postReloadToast`, `estudapauta.postReloadToast`, `cartorio.postReloadToast`; **Sala de Midias** usava `cartorio.postReloadToast` por engano — corrigido nesta onda para `salamidias.postReloadToast`.

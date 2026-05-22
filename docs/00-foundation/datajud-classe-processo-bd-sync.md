@@ -149,7 +149,7 @@ Usado quando a **classe vem do PHP** no primeiro render. O helper **não zera** 
 
 | Área | Fluxos |
 |------|--------|
-| **Cartório** | Guias, cartas, ofícios list, medidas, editais. |
+| **Cartório** | Guias, cartas, ofícios list, editais. |
 | **Gabinete** | Ofícios list, monitoramento create, réus presos edit. |
 | **Audiências** | Pauta create. |
 

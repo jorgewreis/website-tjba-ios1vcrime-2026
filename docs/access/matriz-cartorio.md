@@ -6,7 +6,6 @@ Todas as rotas abaixo usam **modo A** (`area_a` + `CARTORIO`), salvo entrada exp
 |------------------|------|--------|
 | editais, editaisedit, editaiscreate, editaisrules | A | `*-CARTORIO` |
 | guias, guiasedit, guiascreate, guiasrules | A | `*-CARTORIO` |
-| medidasprotetivas, medidasprotetivasedit, medidasprotetivascreate, medidasprotetivasrules | A | `*-CARTORIO` |
 | oficioscartorio, oficioscartorioedit | A | `*-CARTORIO` |
 | cartasexpedidas, cartasexpedidasedit, cartasexpedidascreate, cartasexpedidasrules | A | `*-CARTORIO` |
 | cartasrecebidas, cartasrecebidasedit, cartasrecebidascreate, cartasrecebidasrules | A | `*-CARTORIO` |

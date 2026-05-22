@@ -121,7 +121,6 @@ O MD do catálogo (5.1) documenta variáveis por linha; a **fonte operacional do
 |--------|-------------------------|--------------------------------------|
 | `cartorio-guias` | create, update†, delete, cancel, desalocar‡, concluir/cancelar subtarefa, criar-primeira-subtarefa | list, check-duplicate, reus-por-processo |
 | `cartorio-oficios` | create, concluir-subtarefa, cancel, delete | — |
-| `cartorio-medidas-protetivas` | create, update†, delete, cancel, desalocar‡, concluir-subtarefa, criar-primeira-subtarefa | list |
 | `cartorio-editais` | create, update†, delete, cancel, desalocar‡, concluir-subtarefa, criar-primeira-subtarefa | list |
 | `cartorio-cejusc` | create, update†, delete, cancel, desalocar‡, concluir-subtarefa, criar-primeira-subtarefa | list |
 | `cartorio-ceapa` | create, update†, delete, desalocar‡ | list |
@@ -152,7 +151,7 @@ O MD do catálogo (5.1) documenta variáveis por linha; a **fonte operacional do
 
 ### Fase 3 — Integração por submódulo (PRs pequenos)
 
-Ordem sugerida: **Guias** (API + `Guias.php`, remover duplicata) → **Ofícios** → **Medidas, Editais, CEJUSC** → **Cartas R/E** → **CEAPA**.  
+Ordem sugerida: **Guias** (API + `Guias.php`, remover duplicata) → **Ofícios** → **Editais** → **Cartas R/E**.  
 Em cada PR: após commit de negócio, chamar helper; **desalocar** não chama.
 
 ### Fase 4 — UX produtividade

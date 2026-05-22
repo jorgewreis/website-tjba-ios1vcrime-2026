@@ -30,4 +30,4 @@ description: Telas cartorio-*-rules.php — partials compartilhados, breadcrumb/
 - Botões no contrato; Voltar via `location` (partial de scripts).
 - Fluxos: salvar, erro, remover alocação, voltar, usuário sem permissão.
 
-Rotas: `editaisrules`, `guiasrules`, `medidasprotetivasrules`, `oficiosrules`, `cartasrecebidasrules`, `cartasexpedidasrules`.
+Rotas: `editaisrules`, `guiasrules`, `oficiosrules`, `cartasrecebidasrules`, `cartasexpedidasrules`.

@@ -199,14 +199,6 @@ Etapas:
 - enviar (quando permitido)  
 - juntar comprovante  
 
-#### 4.6.7 Submódulo — Medidas Protetivas
-
-- cadastro inicial do processo, classe automática, réu e vítimas  
-- vinculação de partes ao processo com papéis e polos distintos  
-- cadastro de partes no PJe  
-- expedição de mandados de intimação  
-- registro e consulta de prioridades processuais por vítima
-
 ---
 
 ### 4.7 Módulo m5 — Notificações

@@ -79,39 +79,6 @@ if (!function_exists('cartorioTimelineGetConfig')) {
                         ],
                     ],
                 ],
-                'medidas_protetivas' => [
-                    'cadastro_label' => 'Medida protetiva cadastrada',
-                    'subtasks' => [
-                        1 => [
-                            'type' => 'cadastro_partes_pje',
-                            'label' => 'Cadastro de partes no PJe',
-                            'task_title' => 'Complementar cadastro de partes no PJe',
-                            'button_title' => 'Informar cadastro de partes no PJe',
-                            'pending_text' => 'Aguardando cadastro das partes no PJe',
-                        ],
-                        2 => [
-                            'type' => 'expedicao_mandados_intimacao',
-                            'label' => 'Expedicao de mandados de intimacao',
-                            'task_title' => 'Aguardando expedicao de mandados de intimacao',
-                            'button_title' => 'Informar expedicao de mandados',
-                            'pending_text' => 'Aguardando expedicao de mandados de intimacao',
-                        ],
-                        3 => [
-                            'type' => 'cadastro_bnmp',
-                            'label' => 'Cadastro no BNMP',
-                            'task_title' => 'Aguardando cadastro no BNMP',
-                            'button_title' => 'Informar cadastro no BNMP',
-                            'pending_text' => 'Aguardando cadastro no BNMP',
-                        ],
-                        4 => [
-                            'type' => 'certidao_cumprimento',
-                            'label' => 'Certidão de Cumprimento',
-                            'task_title' => 'Aguardando expedição da certidão de cumprimento',
-                            'button_title' => 'Expedir certidão',
-                            'pending_text' => 'Aguardando expedição da certidão de cumprimento',
-                        ],
-                    ],
-                ],
             ];
         }
 
@@ -331,8 +298,6 @@ if (!function_exists('cartorioTimelineGetConfig')) {
             $dateLabel = $createdAt !== '' ? ('Edital cadastrado em ' . $createdAt) : 'Edital cadastrado';
         } elseif ($module === 'guias') {
             $dateLabel = $createdAt !== '' ? ('Guia cadastrada em ' . $createdAt) : 'Guia cadastrada';
-        } elseif ($module === 'medidas_protetivas') {
-            $dateLabel = $createdAt !== '' ? ('Cadastro realizado em ' . $createdAt) : 'Cadastro realizado';
         }
 
         return [
@@ -431,23 +396,6 @@ if (!function_exists('cartorioTimelineGetConfig')) {
                 return cartorioTimelineContent('Guia enviada por ' . ($tipoEnvio !== '' ? $tipoEnvio : '—') . ' para ' . ($destinatario !== '' ? $destinatario : '—'), 'Envio realizado por ' . $user . ' em ' . $movementDate);
             }
             return cartorioTimelineContent('Juntada do termo de envio da Guia realizada', 'Comprovante juntado por ' . $user . ' em ' . $movementDate);
-        }
-
-        if ($module === 'medidas_protetivas') {
-            $qtd = (int) ($dados['qtd'] ?? 0);
-            if ($ordem === 1) {
-                return cartorioTimelineContent($qtd . ' partes cadastradas no PJe', 'Cadastro realizado por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 2) {
-                return cartorioTimelineContent(($qtd > 0 ? $qtd : '—') . ' mandados de intimacao expedidos', 'Expedicao realizada por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 3) {
-                return cartorioTimelineContent('Cadastro no BNMP realizado', 'Informacao registrada por ' . $user . ' em ' . $movementDate);
-            }
-            if ($ordem === 4) {
-                return cartorioTimelineContent('Certidao de cumprimento expedida', 'Expedicao registrada por ' . $user . ' em ' . $movementDate);
-            }
-            return cartorioTimelineContent('Etapa concluida', 'Registrado por ' . $user . ' em ' . $movementDate);
         }
 
         if ($ordem === 1) {

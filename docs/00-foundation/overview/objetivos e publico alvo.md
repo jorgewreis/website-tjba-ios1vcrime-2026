@@ -62,7 +62,7 @@ Sob a perspectiva operacional, o webapp tem como objetivo centralizar e padroniz
 
 A ausência de um sistema único tende a gerar duplicidade de informações, falhas de comunicação e dificuldade de rastreamento das atividades executadas.
 
-O sistema busca organizar de forma lógica e segura atividades como cadastro de audiências, controle de atas, tarefas administrativas, ofícios, cartas, editais, guias e medidas protetivas. Ao estruturar esses fluxos em módulos integrados, o webapp permite maior previsibilidade, controle e eficiência operacional.
+O sistema busca organizar de forma lógica e segura atividades como cadastro de audiências, controle de atas, tarefas administrativas, ofícios, cartas, editais e guias. Ao estruturar esses fluxos em módulos integrados, o webapp permite maior previsibilidade, controle e eficiência operacional.
 
 Como reflexo prático desses objetivos, destacam-se:
 

@@ -16,7 +16,6 @@ final class ListExportPrincipalStatusTitle
 {
     public const MODULE_GUIAS = 'guias';
     public const MODULE_EDITAIS = 'editais';
-    public const MODULE_MEDIDAS = 'medidas';
     public const MODULE_OFICIOS_CARTORIO = 'oficios_cartorio';
     public const MODULE_MONITORAMENTO_GABINETE = 'monitoramento_gabinete';
     public const MODULE_CARTAS_EXPEDIDAS = 'cartas_expedidas';
@@ -30,7 +29,6 @@ final class ListExportPrincipalStatusTitle
         return match ($module) {
             self::MODULE_GUIAS => self::guias($row),
             self::MODULE_EDITAIS => self::editais($row),
-            self::MODULE_MEDIDAS => self::medidas($row),
             self::MODULE_OFICIOS_CARTORIO => self::oficiosCartorio($row),
             self::MODULE_MONITORAMENTO_GABINETE => self::monitoramentoGabinete($row),
             self::MODULE_CARTAS_EXPEDIDAS => self::cartasExpedidas($row),
@@ -124,53 +122,6 @@ final class ListExportPrincipalStatusTitle
             (string) ($row['Status'] ?? ''),
             self::subtarefasAll($row)
         );
-    }
-
-    /**
-     * @param array<string, mixed> $row
-     */
-    private static function medidas(array $row): string
-    {
-        $st = (string) ($row['Status'] ?? '');
-        if ($st === 'cancelada') {
-            return 'Cancelada';
-        }
-        if (in_array($st, ['concluída', 'concluida', 'finalizada'], true)) {
-            return 'Todas as etapas concluídas';
-        }
-
-        $subtarefaLabels = [
-            'cadastro_partes_pje' => 'Cadastro de partes no PJe',
-            'expedicao_mandados_intimacao' => 'Expedição de mandados de intimação',
-            'cadastro_bnmp' => 'Cadastro no BNMP',
-            'certidao_cumprimento' => 'Certidão de Cumprimento',
-        ];
-        $ordemLabels = [
-            1 => $subtarefaLabels['cadastro_partes_pje'],
-            2 => $subtarefaLabels['expedicao_mandados_intimacao'],
-            3 => $subtarefaLabels['cadastro_bnmp'],
-            4 => $subtarefaLabels['certidao_cumprimento'],
-        ];
-
-        $allSt = self::subtarefasAll($row);
-        $current = '';
-        foreach ($allSt as $subtarefa) {
-            if (!is_array($subtarefa)) {
-                continue;
-            }
-            if (trim((string) ($subtarefa['status'] ?? '')) === 'em_andamento') {
-                $current = $subtarefaLabels[$subtarefa['tipo'] ?? ''] ?? '';
-                break;
-            }
-        }
-        if ($current === '' && $st === 'pendente') {
-            return $ordemLabels[1];
-        }
-        if ($current === '') {
-            return (string) ($row['Status'] ?? 'Em andamento');
-        }
-
-        return $current;
     }
 
     /**

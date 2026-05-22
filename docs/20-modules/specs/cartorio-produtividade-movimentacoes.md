@@ -38,10 +38,6 @@ Cada linha é o valor de `tipo` persistido no repositório de subtarefas (ou ope
 | **Ofícios** | *(create)* | `cartorio-oficios.create` |
 | Ofícios | `enviar_oficio` | `cartorio-oficios.subtarefa.enviar_oficio` |
 | Ofícios | `juntar_termo_envio` | `cartorio-oficios.subtarefa.juntar_termo_envio` |
-| **Medidas protetivas** | *(create)* | `cartorio-medidas-protetivas.create` |
-| Medidas protetivas | `cadastro_partes_pje` | `cartorio-medidas-protetivas.subtarefa.cadastro_partes_pje` |
-| Medidas protetivas | `expedicao_mandados_intimacao` | `cartorio-medidas-protetivas.subtarefa.expedicao_mandados_intimacao` |
-| Medidas protetivas | `cadastro_bnmp` | `cartorio-medidas-protetivas.subtarefa.cadastro_bnmp` |
 | **Editais** | *(create)* | `cartorio-editais.create` |
 | Editais | `certificacao_publicacao` | `cartorio-editais.subtarefa.certificacao_publicacao` |
 | Editais | `certificacao_decurso_prazo` | `cartorio-editais.subtarefa.certificacao_decurso_prazo` |

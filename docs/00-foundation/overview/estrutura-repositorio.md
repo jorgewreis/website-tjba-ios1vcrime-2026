@@ -123,8 +123,6 @@ Arquivos de exemplo (orientados às páginas internas do projeto):
   **Por quê:** gestão/consulta/publicação interna de editais.
 - `app/controllers/GuiasController.php`  
   **Por quê:** guias/rotinas vinculadas (página interna).
-- `app/controllers/MedidasProtetivasController.php`  
-  **Por quê:** consultas e controle de registros de medidas protetivas.
 - `app/controllers/OficiosCartorioController.php`  
   **Por quê:** operações de ofícios do cartório.
 - `app/controllers/OficiosGabineteController.php`  
@@ -207,7 +205,6 @@ Arquivos de exemplo (espelhando seus módulos):
 - `app/views/internal/cejusc.php`
 - `app/views/internal/editais.php`
 - `app/views/internal/guias.php`
-- `app/views/internal/medidas_protetivas.php`
 - `app/views/internal/oficios_cartorio.php`
 - `app/views/internal/oficios_gabinete.php`
 - `app/views/internal/produtividade.php`
@@ -342,7 +339,6 @@ Você já tem uma boa estrutura. Exemplos de arquivos por área:
 ### docs/20-modules/specs/
 - `docs/20-modules/specs/modulo-cartas.md`
 - `docs/20-modules/specs/modulo-oficios.md`
-- `docs/20-modules/specs/modulo-medidas-protetivas.md`
 - `docs/20-modules/specs/modulo-produtividade.md`  
   **Por quê:** detalhar regras de cada módulo (campos, filtros, estados, permissões).
 
@@ -423,6 +419,6 @@ Ideal:
 1) `resourses/` deve ser renomeada para `resources/` para evitar dívida técnica.  
 2) Rotas internas devem mapear 1:1 com controllers e views:
    - Ex.: `GET /internal/cartas-expedidas` → `CartasExpedidasController` → `app/views/internal/cartas_expedidas.php`  
-3) Módulos sensíveis (medidas protetivas, produtividade, auditoria) devem gerar eventos em `LogEvento.php` e `storage/logs/security/`.
+3) Módulos sensíveis (produtividade, auditoria) devem gerar eventos em `LogEvento.php` e `storage/logs/security/`.
 
 Fim.

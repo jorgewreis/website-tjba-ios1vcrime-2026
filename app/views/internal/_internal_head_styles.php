@@ -47,8 +47,6 @@ $__cartorioGuiasEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/carto
 $__cartorioGuiasEditV = @filemtime($__cartorioGuiasEditPath) ?: time();
 $__cartorioEditaisListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-editais-list.js';
 $__cartorioEditaisListV = @filemtime($__cartorioEditaisListPath) ?: time();
-$__cartorioMedidasListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-medidas-protetivas-list.js';
-$__cartorioMedidasListV = @filemtime($__cartorioMedidasListPath) ?: time();
 $__cartorioGuiasListPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-guias-list.js';
 $__cartorioGuiasListV = @filemtime($__cartorioGuiasListPath) ?: time();
 $__cartorioCreateHelpersPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-create-helpers.js';
@@ -65,16 +63,12 @@ $__cartorioEditaisCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/c
 $__cartorioEditaisCreateV = @filemtime($__cartorioEditaisCreatePath) ?: time();
 $__cartorioGuiasCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-guias-create.js';
 $__cartorioGuiasCreateV = @filemtime($__cartorioGuiasCreatePath) ?: time();
-$__cartorioMedidasCreatePath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-medidas-protetivas-create.js';
-$__cartorioMedidasCreateV = @filemtime($__cartorioMedidasCreatePath) ?: time();
 $__cartorioCreateBootstrapPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-create-bootstrap.js';
 $__cartorioCreateBootstrapV = @filemtime($__cartorioCreateBootstrapPath) ?: time();
 $__cartorioCityLookupPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-city-lookup.js';
 $__cartorioCityLookupV = @filemtime($__cartorioCityLookupPath) ?: time();
 $__cartorioGuiasCreateUiPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-guias-create-ui.js';
 $__cartorioGuiasCreateUiV = @filemtime($__cartorioGuiasCreateUiPath) ?: time();
-$__cartorioMedidasCreateUiPath = dirname(__DIR__, 3) . '/public/assets/js/shared/cartorio-medidas-protetivas-create-ui.js';
-$__cartorioMedidasCreateUiV = @filemtime($__cartorioMedidasCreateUiPath) ?: time();
 $__recordEditCommonPath = dirname(__DIR__, 3) . '/public/assets/js/shared/record-edit-common.js';
 $__recordEditCommonV = @filemtime($__recordEditCommonPath) ?: time();
 $__instituicoesPublicasEditPath = dirname(__DIR__, 3) . '/public/assets/js/shared/instituicoes-publicas-edit.js';
@@ -158,7 +152,6 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/cartorio-simple-edit.js?v=<?php echo (int) $__cartorioSimpleEditV; ?>"></script>
 <script src="/assets/js/shared/cartorio-guias-edit.js?v=<?php echo (int) $__cartorioGuiasEditV; ?>"></script>
 <script src="/assets/js/shared/cartorio-editais-list.js?v=<?php echo (int) $__cartorioEditaisListV; ?>"></script>
-<script src="/assets/js/shared/cartorio-medidas-protetivas-list.js?v=<?php echo (int) $__cartorioMedidasListV; ?>"></script>
 <script src="/assets/js/shared/cartorio-guias-list.js?v=<?php echo (int) $__cartorioGuiasListV; ?>"></script>
 <script src="/assets/js/shared/cartorio-create-helpers.js?v=<?php echo (int) $__cartorioCreateHelpersV; ?>"></script>
 <script src="/assets/js/shared/cartorio-alocacao-direcionada-create.js?v=<?php echo (int) $__cartorioAlocacaoDirCreateV; ?>"></script>
@@ -169,9 +162,7 @@ window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
 <script src="/assets/js/shared/cartorio-cartas-recebidas-create.js?v=<?php echo (int) $__cartorioCartasRecebidasCreateV; ?>"></script>
 <script src="/assets/js/shared/cartorio-editais-create.js?v=<?php echo (int) $__cartorioEditaisCreateV; ?>"></script>
 <script src="/assets/js/shared/cartorio-guias-create.js?v=<?php echo (int) $__cartorioGuiasCreateV; ?>"></script>
-<script src="/assets/js/shared/cartorio-medidas-protetivas-create.js?v=<?php echo (int) $__cartorioMedidasCreateV; ?>"></script>
 <script src="/assets/js/shared/cartorio-guias-create-ui.js?v=<?php echo (int) $__cartorioGuiasCreateUiV; ?>"></script>
-<script src="/assets/js/shared/cartorio-medidas-protetivas-create-ui.js?v=<?php echo (int) $__cartorioMedidasCreateUiV; ?>"></script>
 <script src="/assets/js/shared/record-edit-common.js?v=<?php echo (int) $__recordEditCommonV; ?>"></script>
 <script src="/assets/js/shared/instituicoes-publicas-edit.js?v=<?php echo (int) $__instituicoesPublicasEditV; ?>"></script>
 <script src="/assets/js/shared/consulta-partes-edit.js?v=<?php echo (int) $__consultaPartesEditV; ?>"></script>

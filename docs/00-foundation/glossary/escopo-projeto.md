@@ -33,7 +33,7 @@ A visão de produto contempla, de forma ampla, os seguintes elementos:
   - Autenticação, perfis, permissões, logs e auditoria.  
   - Módulo de Audiências (m1), com cadastro, gestão, partes, PDFs de preparo, controle de presença e vínculo com inscrições de estudantes.  
   - Módulo de Tarefas e Fluxos Internos (m3), com catálogo de tarefas, sub-tarefas parametrizáveis e regras de pontuação.  
-  - Módulo de Cartório (m4) e seus submódulos (Cartas Recebidas, Cartas Expedidas, Editais, Guias, Ofícios, Medidas Protetivas, CEJUSC).  
+  - Módulo de Cartório (m4) e seus submódulos (Cartas Recebidas, Cartas Expedidas, Editais, Guias, Ofícios).  
   - Módulo de Notificações (m5), Módulo de Produtividade e Painéis (m6), Módulo de Logs, Auditoria e Segurança (m11), Configurações Gerais (m12) e módulo de Gabinete.
 
 Essa visão de produto define **o que o sistema será quando estiver completo**, mas não significa que todos esses módulos serão implementados no ciclo 2026.01. A fase atual tem caráter preparatório, com foco em documentação estruturada e infraestrutura básica.

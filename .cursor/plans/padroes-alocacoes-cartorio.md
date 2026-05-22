@@ -68,7 +68,7 @@
 
 ## Escopo explícito
 
-- **Inclui:** Guias, CEAPA, Cejusc, cartas expedidas/recebidas, medidas protetivas, editais, ofícios.
+- **Inclui:** Guias, cartas expedidas/recebidas, editais, ofícios.
 - **Não inclui:** Sala de Audiências, legenda visual nas telas, template em `public/templates/`.
 
 ## Ordem de execução sugerida

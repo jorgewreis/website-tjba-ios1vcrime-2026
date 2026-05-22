@@ -1,6 +1,6 @@
 # Copilot Instructions: website-tjba-ios1vcrime-2026
 
-Este é um sistema de gestão PHP para a Primeira Vara Criminal de Ilhéus, com foco em controlar rotinas judiciais (cartas precatórias, editais, guias, medidas protetivas, etc.).
+Este é um sistema de gestão PHP para a Primeira Vara Criminal de Ilhéus, com foco em controlar rotinas judiciais (cartas precatórias, editais, guias, ofícios, etc.).
 
 ## Arquitetura Essencial
 

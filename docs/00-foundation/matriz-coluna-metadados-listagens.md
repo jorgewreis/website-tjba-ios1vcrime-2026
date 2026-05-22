@@ -8,13 +8,12 @@ Auditoria da última coluna (`container-data-create` / `_registro_metadata.php`)
 | 2 | cartorio-cartas-expedidas-list | `cartas_expedidas` | idem | idem | idem | idem | Corrigido |
 | 3 | cartorio-guias-list | `guias` | idem | idem | idem | idem | Corrigido |
 | 4 | cartorio-editais-list | `editais` | idem | idem | idem | idem | Corrigido |
-| 5 | cartorio-medidas-protetivas-list | `medidas_protetivas` | idem | idem | idem | idem | Corrigido |
-| 6 | cartorio-oficios-list | OficioRegistroMetadataHelper | SQL | `UltimoEditorNome` ofício | `criado_por` | `atualizado_por` ofício | OK (exceção) |
-| 7 | gabinete-oficios-list | OficioRegistroMetadataHelper | idem | idem | idem | idem | OK (exceção) |
-| 8 | gabinete-monitoramento-eletronico-list | `gabinete_monitoramento` | SQL | `UltimoEditorNome` (subtarefa sem JSON) | `criado_por` | `atualizado_por` tarefa pai | OK (exceção) |
-| 9 | sala-audiencias-pauta-list | `sala_pauta` | SQL | `UltimoEditorNome` | `criado_por` | `atualizado_por` | OK (exceção) |
-| 10 | sala-midias-list | `sala_midias` | SQL | `UltimoEditorNome` | `criado_por` | `atualizado_em` | OK (exceção) |
-| 11 | sala-audiencias-atas-list | `sala_atas` | "Cadastrado pelo sistema" | Upload / subtarefa mídia / pauta | regras SQL | `fromListRowSalaAtas` | OK (exceção) |
-| 12 | Outras `*-list` cartório | — | — | — | — | — | Nenhuma pendente de migração encontrada |
+| 5 | cartorio-oficios-list | OficioRegistroMetadataHelper | SQL | `UltimoEditorNome` ofício | `criado_por` | `atualizado_por` ofício | OK (exceção) |
+| 6 | gabinete-oficios-list | OficioRegistroMetadataHelper | idem | idem | idem | idem | OK (exceção) |
+| 7 | gabinete-monitoramento-eletronico-list | `gabinete_monitoramento` | SQL | `UltimoEditorNome` (subtarefa sem JSON) | `criado_por` | `atualizado_por` tarefa pai | OK (exceção) |
+| 8 | sala-audiencias-pauta-list | `sala_pauta` | SQL | `UltimoEditorNome` | `criado_por` | `atualizado_por` | OK (exceção) |
+| 9 | sala-midias-list | `sala_midias` | SQL | `UltimoEditorNome` | `criado_por` | `atualizado_em` | OK (exceção) |
+| 10 | sala-audiencias-atas-list | `sala_atas` | "Cadastrado pelo sistema" | Upload / subtarefa mídia / pauta | regras SQL | `fromListRowSalaAtas` | OK (exceção) |
+| 11 | Outras `*-list` cartório | — | — | — | — | — | Nenhuma pendente de migração encontrada |
 
-**Legenda:** módulos 1–5 usam `movement_from_subtarefa` em `RegistroMetadataHelper`; salvar formulário sem concluir subtarefa não gera linha "Atualizado por" na coluna.
+**Legenda:** módulos 1–4 usam `movement_from_subtarefa` em `RegistroMetadataHelper`; salvar formulário sem concluir subtarefa não gera linha "Atualizado por" na coluna.

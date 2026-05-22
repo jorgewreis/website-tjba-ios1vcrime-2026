@@ -200,12 +200,6 @@ Etapas:
 - enviar (quando permitido)  
 - juntar comprovante  
 
-#### 4.6.7 Submódulo — Medidas Protetivas
-
-- conferência de partes  
-- mandados para requerido e requerente  
-- ofícios condicionais  
-
 ---
 
 ### 4.7 Módulo m5 — Notificações

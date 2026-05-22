@@ -21,7 +21,6 @@ Padronizacao estrutural, visual e comportamental das paginas `*-edit.php` para a
 
 ### Cartorio
 
-- `app/views/internal/cartorio-medidas-protetivas-edit.php`
   - **Antes:** secoes em `row table`, cancelamento com reload sem feedback explicito.
   - **Depois:** secoes em `display-flex`, barra de acoes padronizada, toast informativo em cancelamento, toasts padronizados.
 

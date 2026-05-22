@@ -18,7 +18,6 @@ Aplica-se aos módulos de cartório:
 - Guias
 - Cartas Expedidas
 - Cartas Recebidas
-- Medidas Protetivas
 - Editais
 - Ofícios (cartório)
 

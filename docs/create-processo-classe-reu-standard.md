@@ -30,7 +30,6 @@ Padronizar o comportamento das telas `app/views/internal/*-create.php` para gara
 - `app/views/internal/sala-audiencias-pauta-create.php`
 - `app/views/internal/cartorio-editais-create.php`
 - `app/views/internal/cartorio-guias-create.php`
-- `app/views/internal/cartorio-medidas-protetivas-create.php`
 - `app/views/internal/cartorio-cartas-recebidas-create.php`
 - `app/views/internal/cartorio-cartas-expedidas-create.php`
 - `app/views/internal/gabinete-monitoramento-eletronico-create.php`

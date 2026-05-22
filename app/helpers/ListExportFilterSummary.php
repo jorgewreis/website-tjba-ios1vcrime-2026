@@ -30,7 +30,6 @@ final class ListExportFilterSummary
                 break;
 
             case 'editais':
-            case 'medidasprotetivas':
                 self::pair($parts, 'Status', (string) ($get['status'] ?? ''));
                 self::pair($parts, 'Processo', (string) ($get['processo'] ?? ''));
                 break;

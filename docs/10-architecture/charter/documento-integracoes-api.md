@@ -81,7 +81,7 @@ A API interna é responsável por disponibilizar, em formato programático, func
 
 A API interna deve ser explicitamente versionada, preferencialmente por meio de prefixo de URL (por exemplo, `/api/v1/...`), de modo que alterações incompatíveis sejam introduzidas em novas versões, sem impactar clientes que utilizam versões anteriores. Cada versão deve possuir documentação própria, descrevendo os endpoints disponíveis, parâmetros obrigatórios e opcionais, formatos de requisição e resposta, além de exemplos de uso.
 
-Os endpoints devem ser organizados de forma coerente com o domínio funcional, agrupando recursos por contexto: audiências, cartas, ofícios, medidas protetivas, notificações, perfis, usuários, produtividade e configurações gerais. Sempre que possível, deve-se seguir princípios RESTful (uso adequado de métodos HTTP, códigos de status padronizados, representações consistentes), sem impedir a criação de endpoints específicos para ações de negócio que não se encaixem perfeitamente em operações CRUD tradicionais.
+Os endpoints devem ser organizados de forma coerente com o domínio funcional, agrupando recursos por contexto: audiências, cartas, ofícios, notificações, perfis, usuários, produtividade e configurações gerais. Sempre que possível, deve-se seguir princípios RESTful (uso adequado de métodos HTTP, códigos de status padronizados, representações consistentes), sem impedir a criação de endpoints específicos para ações de negócio que não se encaixem perfeitamente em operações CRUD tradicionais.
 
 ### 4.2 Autenticação híbrida (sessão e JWT)
 

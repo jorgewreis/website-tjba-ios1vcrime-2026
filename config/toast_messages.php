@@ -98,12 +98,6 @@ return [
             'message' => 'A data da publicação é obrigatória para concluir esta subtarefa.',
             'vars' => [],
         ],
-        'cartorio.medidas.quantity.required' => [
-            'type' => 'error',
-            'title' => 'Campo obrigatório',
-            'message' => 'Informe a quantidade.',
-            'vars' => [],
-        ],
         'cartorio.guias.validation.data_fato.window.error' => [
             'type' => 'error',
             'title' => 'Atenção',

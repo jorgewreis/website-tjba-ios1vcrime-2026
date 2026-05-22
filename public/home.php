@@ -630,7 +630,6 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                     },
                     { icon: 'fi fi-rs-document', label: 'Editais', target: 'editais' },
                     { icon: 'fi fi-rs-blog-text', label: 'Guias', target: 'guias' },
-                    { icon: 'fi fi-rs-user-shield', label: 'Medidas protetivas', target: 'medidasprotetivas' },
                     { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficioscartorio' },
                     { icon: 'fi fi-rs-clock-up-arrow', label: 'Produtividade', target: 'produtividade' }
                 ]

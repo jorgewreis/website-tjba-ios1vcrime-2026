@@ -95,7 +95,7 @@
         }
     }
 
-    /** Permite telas sem campo visível de classe (ex.: medidas protetivas) reagirem ao resultado do DataJud. */
+    /** Permite telas sem campo visível de classe reagirem ao resultado do DataJud. */
     function dispatchDatajudClasseResolved(processoInput, success) {
         if (typeof global.dispatchEvent !== 'function' || !processoInput) {
             return;

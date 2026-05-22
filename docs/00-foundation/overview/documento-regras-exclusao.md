@@ -61,7 +61,6 @@ Exemplos de entidades que devem adotar soft delete:
 - Ofícios
 - Editais
 - Guias
-- Medidas protetivas
 - Notificações
 - Logs de auditoria (nunca devem ser excluídos fisicamente)
 
@@ -188,7 +187,7 @@ Criação de uma tabela de auditoria genérica (`audit_logs` ou `activity_logs`)
 
 #### 4.3.2 Tabelas de histórico específicas
 
-Para entidades críticas (como audiências, tarefas, medidas protetivas), pode ser criada uma tabela de histórico específica (por exemplo, `audiencias_history`) que armazena snapshots completos do registro a cada edição, facilitando consultas e reconstituição de estados anteriores.
+Para entidades críticas (como audiências e tarefas do cartório), pode ser criada uma tabela de histórico específica (por exemplo, `audiencias_history`) que armazena snapshots completos do registro a cada edição, facilitando consultas e reconstituição de estados anteriores.
 
 ### 4.4 Visualização de histórico de edições
 
@@ -218,7 +217,7 @@ Cada módulo do sistema pode possuir regras adicionais de exclusão e edição, 
 
 ### 5.3 Módulo de Cartório (m4) e submódulos
 
-- **Exclusão:** soft delete obrigatório para todos os submódulos (cartas, ofícios, editais, guias, medidas protetivas).
+- **Exclusão:** soft delete obrigatório para todos os submódulos (cartas, ofícios, editais, guias).
 - **Edição:** permitida com restrições conforme o status do fluxo. Após envio ou certificação, edições devem ser justificadas.
 - **Log:** todas as edições em campos críticos (partes, datas, valores, status) devem gerar log detalhado.
 

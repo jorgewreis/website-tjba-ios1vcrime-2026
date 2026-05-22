@@ -6,7 +6,6 @@ $missing = [];
 
 $maps = [
     'cartorio-oficios.subtarefa.' => __DIR__ . '/../app/repositories/OficiosCartorioSubtarefasRepository.php',
-    'cartorio-medidas-protetivas.subtarefa.' => __DIR__ . '/../app/repositories/MedidasProtetivasSubtarefasRepository.php',
     'cartorio-editais.subtarefa.' => __DIR__ . '/../app/repositories/EditaisSubtarefasRepository.php',
     'cartorio-cartas-recebidas.subtarefa.' => __DIR__ . '/../app/repositories/CartasRecebidasSubtarefasRepository.php',
     'cartorio-cartas-expedidas.subtarefa.' => __DIR__ . '/../app/repositories/CartasExpedidasSubtarefasRepository.php',
@@ -37,7 +36,6 @@ foreach ($maps as $prefix => $file) {
 $creates = [
     'cartorio-guias.create',
     'cartorio-oficios.create',
-    'cartorio-medidas-protetivas.create',
     'cartorio-editais.create',
     'cartorio-cartas-recebidas.create',
     'cartorio-cartas-expedidas.create',

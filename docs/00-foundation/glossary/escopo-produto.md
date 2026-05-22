@@ -80,7 +80,6 @@ O escopo de produto contempla, como visão-alvo, os seguintes módulos e submód
   - Submódulo Editais: expedição, publicação, certificação, encerramento.  
   - Submódulo Guias (Execução Penal): cálculo de dias-multa, expedição, PDF, envio, juntadas, certificação.  
   - Submódulo Ofícios do Cartório: expedir, enviar (quando permitido), juntar comprovante.  
-  - Submódulo Medidas Protetivas: conferência de partes, mandados e ofícios condicionais.
 
 - **Módulo m5 — Notificações**
   - Geração automática.

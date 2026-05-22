@@ -6,7 +6,6 @@ require_once __DIR__ . '/../repositories/GuiasRepository.php';
 require_once __DIR__ . '/../repositories/CartasExpedidasRepository.php';
 require_once __DIR__ . '/../repositories/CartasRecebidasRepository.php';
 require_once __DIR__ . '/../repositories/EditaisRepository.php';
-require_once __DIR__ . '/../repositories/MedidasProtetivasRepository.php';
 require_once __DIR__ . '/../repositories/OficiosCartorioRepository.php';
 
 /**
@@ -19,7 +18,6 @@ final class DashboardInternoAlocacaoResumoHelper
         'cartas_expedidas_alocados' => 'ALLOCATE-CARTASEXPEDIDAS',
         'cartas_recebidas_alocados' => 'ALLOCATE-CARTASRECEBIDAS',
         'editais_alocados' => 'ALLOCATE-EDITAIS',
-        'medidas_protetivas_alocados' => 'ALLOCATE-MEDIDASPROTETIVAS',
         'cartorio_oficios_alocados' => 'ALLOCATE-CARTORIOOFICIOS',
     ];
 
@@ -28,7 +26,6 @@ final class DashboardInternoAlocacaoResumoHelper
         'ALLOCATE-CARTASEXPEDIDAS',
         'ALLOCATE-CARTASRECEBIDAS',
         'ALLOCATE-EDITAIS',
-        'ALLOCATE-MEDIDASPROTETIVAS',
         'ALLOCATE-CARTORIOOFICIOS',
     ];
 
@@ -65,13 +62,6 @@ final class DashboardInternoAlocacaoResumoHelper
             'status_col' => 'status',
             'aloc_table' => 'editais_alocados',
             'aloc_fk' => 'edital_id',
-        ],
-        'ALLOCATE-MEDIDASPROTETIVAS' => [
-            'main_table' => 'medidas_protetivas',
-            'main_pk' => 'id',
-            'status_col' => 'status',
-            'aloc_table' => 'medidas_protetivas_alocados',
-            'aloc_fk' => 'medida_id',
         ],
         'ALLOCATE-CARTORIOOFICIOS' => [
             'main_table' => 'oficios_cartorio',
@@ -222,20 +212,6 @@ final class DashboardInternoAlocacaoResumoHelper
                     'status_blocos' => self::blocosEditais($byStatus),
                 ];
 
-            case 'ALLOCATE-MEDIDASPROTETIVAS':
-                $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
-
-                return [
-                    'regra' => $code,
-                    'titulo' => 'Medidas protetivas',
-                    'frame_page' => 'medidasprotetivas',
-                    'total' => $total,
-                    'em_andamento' => $emAnd,
-                    'em_andamento_label' => 'Em andamento',
-                    'em_andamento_title' => 'Medidas protetivas com status «em andamento».',
-                    'status_blocos' => self::blocosMedidas($byStatus),
-                ];
-
             case 'ALLOCATE-CARTORIOOFICIOS':
                 $pend = (int) ($byStatus['pendente'] ?? 0);
 
@@ -369,22 +345,6 @@ final class DashboardInternoAlocacaoResumoHelper
             'em_andamento' => ['Em andamento', 'Editais «em andamento».'],
             'concluída' => ['Concluídos', 'Editais «concluída».'],
             'cancelada' => ['Cancelados', 'Editais «cancelada».'],
-        ];
-
-        return self::buildBlocosFromMap($byStatus, $map);
-    }
-
-    /**
-     * @param array<string, int> $byStatus
-     * @return list<array{label:string,count:int,title:string}>
-     */
-    private static function blocosMedidas(array $byStatus): array
-    {
-        $map = [
-            'pendente' => ['Pendente', 'Medidas protetivas «pendente».'],
-            'em_andamento' => ['Em andamento', 'Medidas protetivas «em andamento».'],
-            'concluída' => ['Concluídas', 'Medidas protetivas «concluída».'],
-            'cancelada' => ['Canceladas', 'Medidas protetivas «cancelada».'],
         ];
 
         return self::buildBlocosFromMap($byStatus, $map);

@@ -78,7 +78,6 @@ Rotinas cartorárias e acompanhamento de expedientes.
 - **Editais**
 - **Ofícios**
 - **Guias**
-- **Medidas Protetivas**
 - **Produtividade**
 
 ---
@@ -293,7 +292,7 @@ Para campos de formulário e colunas em listas, o projeto usa utilitários numé
 - **Chips de status em tarefas principais** (linha da lista ou timeline):
   - Usam apenas `status` + a classe semântica (`status-current`, `status-finished`, etc.) e espaçamento horizontal (`padding-x-lg` quando aplicável).
   - **Não** utilizam `height-sm` por padrão.
-- **Subtarefas nas listas (cartas expedidas/recebidas, guias, medidas, cejusc):**
+- **Subtarefas nas listas (cartas expedidas/recebidas, guias):**
   - Cada subtarefa é renderizada em uma linha `subtask` com um chip de status compacto.
   - Estes chips usam `padding-x-lg height-sm status status-*` para manter altura consistente nos blocos de subtarefa.
 

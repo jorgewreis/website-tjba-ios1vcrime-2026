@@ -40,7 +40,6 @@
   - `public/api/cartorio-cejusc/delete.php`
   - `public/api/cartorio-ceapa/delete.php`
   - `public/api/cartorio-editais/delete.php`
-  - `public/api/cartorio-medidas-protetivas/delete.php`
 
 ### Resultado
 - Regra de perfil de exclusao centralizada.
@@ -96,7 +95,7 @@
   - `public/assets/js/shared/oficios-list.js`, `oficios-edit.js`
   - `public/assets/js/shared/gme-list.js`, `gme-edit.js`, `gme-create.js`
   - `public/assets/js/shared/cartorio-simple-edit.js`, `cartorio-guias-edit.js`, `cartorio-alocacao-direcionada-edit.js`
-  - `public/assets/js/shared/cartorio-editais-list.js`, `cartorio-guias-list.js`, `cartorio-cejusc-list.js`, `cartorio-medidas-protetivas-list.js`
+  - `public/assets/js/shared/cartorio-editais-list.js`, `cartorio-guias-list.js`
 
 ### Validacao
 - `php -l` em `app/helpers/DeleteAuthorization.php` e `public/api/admin/feriados/delete.php`: sem erros.

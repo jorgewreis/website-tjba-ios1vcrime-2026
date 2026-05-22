@@ -149,8 +149,6 @@ Arquivos de exemplo (orientados às páginas internas do projeto):
   **Por quê:** gestão/consulta/publicação interna de editais.
 - `app/controllers/GuiasController.php`  
   **Por quê:** guias/rotinas vinculadas (página interna).
-- `app/controllers/MedidasProtetivasController.php`  
-  **Por quê:** consultas e controle de registros de medidas protetivas.
 - `app/controllers/OficiosCartorioController.php`  
   **Por quê:** operações de ofícios do cartório.
 - `app/controllers/OficiosGabineteController.php`  
@@ -260,10 +258,6 @@ Arquivos de exemplo (espelhando seus módulos):
 - `app/views/internal/cejusc.php`
 - `app/views/internal/editais.php`
 - `app/views/internal/guias.php`
-- `app/views/internal/cartorio-medidas-protetivas-list.php`
-- `app/views/internal/cartorio-medidas-protetivas-create.php`
-- `app/views/internal/cartorio-medidas-protetivas-edit.php`
-- `app/views/internal/cartorio-medidas-protetivas-rules.php`
 - `app/views/internal/cartorio-oficios-list.php`
 - `app/views/internal/cartorio-oficios-edit.php`
 - `app/views/internal/gabinete-oficios-list.php`
@@ -425,7 +419,6 @@ Você já tem uma boa estrutura. Exemplos de arquivos por área:
 ### docs/20-modules/specs/
 - `docs/20-modules/specs/modulo-cartas.md`
 - `docs/20-modules/specs/modulo-oficios.md`
-- `docs/20-modules/specs/modulo-medidas-protetivas.md`
 - `docs/20-modules/specs/modulo-produtividade.md`  
   **Por quê:** detalhar regras de cada módulo (campos, filtros, estados, permissões).
 
@@ -501,6 +494,6 @@ Não existe mais a pasta `old/` no trunk: todo código ativo está nas pastas ca
 1) Renomeie `resourses/` para `resources/` e use esta última para depósitos de fontes externas quando houver PDF original, mantendo a convenção única de nomes.  
 2) Rotas internas devem mapear 1:1 com controllers e views:
    - Ex.: `GET /internal/cartas-expedidas` → `CartasExpedidasController` → `app/views/internal/cartas_expedidas.php`  
-3) Módulos sensíveis (medidas protetivas, produtividade, auditoria) devem gerar eventos em `LogEvento.php` e `storage/logs/security/`.
+3) Módulos sensíveis (produtividade, auditoria) devem gerar eventos em `LogEvento.php` e `storage/logs/security/`.
 
 Fim.

@@ -4,7 +4,6 @@ $msgs = [
     'cartorio-guias' => ['Guia cancelada.', 'Guia excluída.'],
     'cartorio-cartas-expedidas' => ['Carta expedida cancelada.', 'Carta expedida excluída.'],
     'cartorio-oficios' => ['Ofício cancelado.', 'Ofício excluído.'],
-    'cartorio-medidas-protetivas' => ['Medida protetiva cancelada.', 'Medida protetiva excluída.'],
     'cartorio-editais' => ['Edital cancelado.', 'Edital excluído.'],
     'cartorio-cartas-recebidas' => ['Carta recebida cancelada.', 'Carta recebida excluída.'],
 ];

@@ -16,7 +16,7 @@ Formatação centralizada em `RegistroMetadataHelper::formatarLinhaAutor` e `for
 
 Módulos com `movement_from_subtarefa` em `RegistroMetadataHelper::MODULES`:
 
-- cartas_recebidas, cartas_expedidas, guias, editais, medidas_protetivas
+- cartas_recebidas, cartas_expedidas, guias, editais
 
 **Atualização na coluna** = última subtarefa com `status = concluida` em `SubtarefasAll`, usando:
 

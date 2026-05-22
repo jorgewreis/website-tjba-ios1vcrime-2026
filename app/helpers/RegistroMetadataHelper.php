@@ -67,18 +67,6 @@ final class RegistroMetadataHelper
             'cancel_toast_key' => 'cartorio.guias.cancel.success',
             'cancel_label' => 'Cancelar guia',
         ],
-        'medidas_protetivas' => [
-            'id_keys' => ['IdMedida', 'id'],
-            'status_keys' => ['Status', 'status'],
-            'data_keys' => ['Data', 'created_at'],
-            'updated_keys' => ['DataAtualizacao', 'updated_at'],
-            'criador_keys' => ['CriadoPorNome'],
-            'movement_from_subtarefa' => true,
-            'edit_page' => 'medidasprotetivasedit',
-            'cancel_endpoint' => '/api/cartorio-medidas-protetivas/cancel.php',
-            'cancel_toast_key' => 'cartorio.medidas_protetivas.cancel.success',
-            'cancel_label' => 'Cancelar medida protetiva',
-        ],
         'gabinete_monitoramento' => [
             'id_keys' => ['IdMon', 'id'],
             'status_keys' => ['Status', 'status'],

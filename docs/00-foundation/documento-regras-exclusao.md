@@ -173,7 +173,7 @@ Cada módulo do sistema pode possuir regras adicionais de exclusão e edição, 
 
 ### 5.3 Módulo de Cartório (m4) e submódulos
 
-- **Exclusão:** soft delete obrigatório para todos os submódulos (cartas, ofícios, editais, guias, medidas protetivas).
+- **Exclusão:** soft delete obrigatório para todos os submódulos (cartas, ofícios, editais, guias).
 - **Edição:** permitida com restrições conforme o status do fluxo. Após envio ou certificação, edições devem ser justificadas.
 - **Log:** todas as edições em campos críticos (partes, datas, valores, status) devem gerar log detalhado.
 

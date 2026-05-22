@@ -272,45 +272,12 @@ final class ProcessoPrioridadesService
     }
 
     /**
-     * Cadastro em Medidas Protetivas: vincula Violência doméstica e Sigiloso ao processo.
+     * Classe CNJ 1268 (medida protetiva): vincula violência doméstica e sigiloso derivado ao processo.
      */
     public function registrarPrioridadesCadastroMedidaProtetiva(string $processoId): void
     {
         $this->registrarViolenciaDomesticaMedidaProtetiva($processoId);
         $this->registrarSigilosoDerivadoMenorOuViolenciaDomestica($processoId);
-    }
-
-    /**
-     * Insere prioridades a partir das flags da vítima no formulário da MP (idoso, criança, deficiência).
-     *
-     * @param array<string, int|bool> $flags
-     */
-    public function registrarPrioridadesFlagsVitimaMedida(string $processoId, array $flags): void
-    {
-        $processoId = trim($processoId);
-        if ($processoId === '') {
-            return;
-        }
-
-        $map = [
-            'prioridade_mulher' => null,
-            'prioridade_crianca_adolescente' => 'crianca_adolescente',
-            'prioridade_idoso' => 'idoso',
-            'prioridade_pessoa_deficiencia' => 'pessoa_deficiencia',
-        ];
-
-        foreach ($map as $flag => $codigo) {
-            if ($codigo === null) {
-                continue;
-            }
-            if (empty($flags[$flag])) {
-                continue;
-            }
-            if (!PrioridadesProcessuaisCatalog::isValidCodigo($codigo)) {
-                continue;
-            }
-            $this->repository->upsert($processoId, $codigo, ProcessoPrioridadeOrigem::REGRA_FLAGS_VITIMA_MP, ['flag' => $flag]);
-        }
     }
 
     public function reconciliarAutomaticas(string $processoId, string $numeroProcesso, int $partesMenoresNaPauta = 0): void
