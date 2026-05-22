@@ -35,7 +35,7 @@ O partial assume que a linha já foi passada por `ProcessoBlocoListagemHelper::a
 | `bloco_processo_classe_not` | bool | Se verdadeiro: estilo placeholder (`.not`), **sem** tooltip de texto completo. |
 | `bloco_processo_assunto_texto` | string | Texto dos assuntos (`codigo - descricao` concatenados por `; `) ou placeholder controlado pelo helper. |
 | `bloco_processo_assunto_not` | bool | Idem classe: placeholder sem tooltip dinâmico. |
-| `bloco_processo_prioridades` | lista | Cada item: `codigo`, `label`, `icon` (URL do ícone). |
+| `bloco_processo_prioridades` | lista | Cada item: `codigo`, `label`, `icon` (URL do ícone). Violência doméstica, criança/adolescente, idoso (incl. 80+), pessoa com deficiência e pessoa com doença grave são **agrupados** em um único ícone de alerta (giroflex), com `label` concatenado (`; `) no tooltip; **sigiloso** e **réu preso** permanecem ícones separados. |
 | `bloco_processo_abrir_href` | string | URL para `data-nav-href` quando abrir habilitado. |
 | `bloco_processo_abrir_disabled` | bool | Desabilita ação abrir e mostra estado inerte. |
 

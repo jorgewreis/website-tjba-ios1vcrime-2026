@@ -187,15 +187,7 @@ final class ProcessoBlocoListagemHelper
             }
             $codigosLista = array_keys($codigos);
             self::ordenarCodigosPrioridade($codigosLista);
-
-            $prioridadesUi = [];
-            foreach ($codigosLista as $codigo) {
-                $prioridadesUi[] = [
-                    'codigo' => $codigo,
-                    'label' => PrioridadesProcessuaisCatalog::labelForCodigo($codigo),
-                    'icon' => self::iconForCodigoPrioridade($codigo),
-                ];
-            }
+            $prioridadesUi = self::montarPrioridadesUiAgrupadas($codigosLista);
 
             $podeAbrir = $rid !== '';
             $hrefAbrir = $podeAbrir ? ('/frame.php?page=consultaprocessosedit&id=' . rawurlencode($rid)) : '';
@@ -292,6 +284,86 @@ final class ProcessoBlocoListagemHelper
         return false;
     }
 
+    /**
+     * Prioridades exibidas com o ícone de alerta (giroflex): uma única entrada na UI,
+     * com rótulos concatenados no tooltip. Réu preso e sigiloso permanecem separados.
+     *
+     * @return list<string>
+     */
+    private static function codigosGrupoIconeAlertaVulneravel(): array
+    {
+        return [
+            'violencia_domestica',
+            'crianca_adolescente',
+            'idoso',
+            'idoso_80_anos_ou_mais',
+            'pessoa_deficiencia',
+            'pessoa_doenca_grave',
+        ];
+    }
+
+    /**
+     * @param list<string> $codigosLista já ordenados
+     * @return list<array{codigo: string, label: string, icon: string}>
+     */
+    private static function montarPrioridadesUiAgrupadas(array $codigosLista): array
+    {
+        $grupoAlerta = self::codigosGrupoIconeAlertaVulneravel();
+        $alertaCodigos = [];
+        $outrosCodigos = [];
+
+        foreach ($codigosLista as $codigo) {
+            if (in_array($codigo, $grupoAlerta, true)) {
+                $alertaCodigos[] = $codigo;
+                continue;
+            }
+            $outrosCodigos[] = $codigo;
+        }
+
+        $ui = [];
+        foreach ($outrosCodigos as $codigo) {
+            $ui[] = [
+                'codigo' => $codigo,
+                'label' => PrioridadesProcessuaisCatalog::labelForCodigo($codigo),
+                'icon' => self::iconForCodigoPrioridade($codigo),
+            ];
+        }
+
+        if ($alertaCodigos !== []) {
+            $labels = [];
+            foreach ($alertaCodigos as $codigo) {
+                $labels[] = PrioridadesProcessuaisCatalog::labelForCodigo($codigo);
+            }
+            $ui[] = [
+                'codigo' => $alertaCodigos[0],
+                'label' => implode('; ', $labels),
+                'icon' => self::ICON_VD_ALERTA,
+            ];
+        }
+
+        usort($ui, static function (array $a, array $b) use ($grupoAlerta): int {
+            $codA = (string) ($a['codigo'] ?? '');
+            $codB = (string) ($b['codigo'] ?? '');
+            $peso = static function (string $codigo) use ($grupoAlerta): int {
+                if ($codigo === 'sigiloso') {
+                    return 10;
+                }
+                if ($codigo === 'reu_preso') {
+                    return 20;
+                }
+                if (in_array($codigo, $grupoAlerta, true)) {
+                    return 30;
+                }
+
+                return 500;
+            };
+
+            return $peso($codA) <=> $peso($codB);
+        });
+
+        return $ui;
+    }
+
     /** @param list<string> $codigos mutável */
     private static function ordenarCodigosPrioridade(array &$codigos): void
     {
@@ -318,10 +390,13 @@ final class ProcessoBlocoListagemHelper
 
     private static function iconForCodigoPrioridade(string $codigo): string
     {
+        if (in_array($codigo, self::codigosGrupoIconeAlertaVulneravel(), true)) {
+            return self::ICON_VD_ALERTA;
+        }
+
         return match ($codigo) {
             'sigiloso' => self::ICON_SIGILOSO,
             'reu_preso' => self::ICON_REU_PRESO,
-            'violencia_domestica', 'crianca_adolescente' => self::ICON_VD_ALERTA,
             default => self::ICON_DEFAULT,
         };
     }
