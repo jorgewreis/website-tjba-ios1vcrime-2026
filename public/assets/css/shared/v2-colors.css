@@ -1,0 +1,66 @@
+:root {
+
+    /* COLORS SYSTEM */
+
+    /* GRAYSCALE */
+    --color-gray-000: #FFFFFF;
+    --color-gray-100: #F5F5F5;
+    --color-gray-200: #E9ECEF;
+    --color-gray-300: #DEE2E6;
+    --color-gray-400: #CED4DA;
+    --color-gray-500: #A0A0A0;
+    --color-gray-600: #707070;
+    --color-gray-700: #505050;
+    --color-gray-800: #404040;
+    --color-gray-900: #252525;
+
+    /* PRIMARY COLORS */
+    
+    --color-cyan-100: #def0f5;
+    --color-cyan-200: #99c4d2;
+    --color-cyan-300: #77a8bd;
+    --color-cyan-400: #558ca7;
+    --color-cyan-500: #008B9F;
+    --color-cyan-600: #007186;
+    --color-cyan-700: #00576D;
+    --color-cyan-800: #003D53;
+    --color-cyan-900: #0f292e;
+
+}
+
+:root,
+[data-theme="light"]{
+    /* BACKGROUND COLORS */
+    --color-background: var(--color-gray-300);
+    --color-background-elevated: var(--color-gray-100);
+    --color-background-badge: var(--color-gray-400);
+    --color-border: var(--color-gray-400);
+    --color-shadow: var(--color-gray-400);
+    --color-bg-primary: var(--color-cyan-400);
+    --color-bg-primary-hover: var(--color-cyan-600);
+    --color-bg-primary-light: var(--color-cyan-200);
+    --color-bg-results: var(--color-cyan-100);
+
+    /* TEXT COLORS */
+    --color-title-text: var(--color-gray-900);
+    --color-description-text: var(--color-gray-600);
+    --color-text-primary: var(--color-gray-100);
+    --color-text-primary-dark: var(--color-cyan-800);
+}
+
+[data-theme="dark"] {
+    /* BACKGROUND COLORS */
+    --color-background: var(--color-gray-900);
+    --color-background-elevated: var(--color-gray-800);
+    --color-background-badge: var(--color-gray-700);
+    --color-border: var(--color-gray-700);
+    --color-shadow: var(--color-gray-900);
+    --color-bg-primary: var(--color-cyan-400);
+    --color-bg-primary-hover: var(--color-cyan-500);
+    --color-bg-results: var(--color-cyan-100);
+
+    /* TEXT COLORS */
+    --color-title-text: var(--color-gray-400);
+    --color-description-text: var(--color-gray-500);
+    --color-text-primary: var(--color-gray-100);
+}
