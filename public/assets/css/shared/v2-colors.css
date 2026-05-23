@@ -15,7 +15,6 @@
     --color-gray-900: #252525;
 
     /* PRIMARY COLORS */
-    
     --color-cyan-100: #def0f5;
     --color-cyan-200: #99c4d2;
     --color-cyan-300: #77a8bd;
@@ -25,6 +24,28 @@
     --color-cyan-700: #00576D;
     --color-cyan-800: #003D53;
     --color-cyan-900: #0f292e;
+
+    /* YELLOW */
+    --color-yellow-100: #fffef8;
+    --color-yellow-200: #fffadb;
+    --color-yellow-300: #ffeca0;
+    --color-yellow-400: #f7c500;
+    --color-yellow-500: #ffd700;
+    --color-yellow-600: #d9a100;
+    --color-yellow-700: #c2ac00;
+    --color-yellow-800: #706204;
+    --color-yellow-900: #363006;
+
+    /* RED */
+    --color-red-100: #ffe0db;
+    --color-red-200: #ffc2c9;
+    --color-red-300: #ffa4b7;
+    --color-red-400: #e26d5c;
+    --color-red-500: #ff3e1d;
+    --color-red-600: #e23417;
+    --color-red-700: #c92d14;
+    --color-red-800: #b12611;
+    --color-red-900: #250905;
 
 }
 
@@ -39,13 +60,26 @@
     --color-bg-primary: var(--color-cyan-400);
     --color-bg-primary-hover: var(--color-cyan-600);
     --color-bg-primary-light: var(--color-cyan-200);
+    --color-bg-finished: var(--color-gray-200);
     --color-bg-results: var(--color-cyan-100);
+    --color-bg-current: var(--color-yellow-500);
+    --color-bg-current-light: var(--color-yellow-200);
+    --color-bg-current-dark: var(--color-yellow-800);
+    --color-bg-canceled: var(--color-red-100);
+    --color-bg-canceled-dark: var(--color-red-200);
+    --color-bg-canceled-light: var(--color-red-100);
 
     /* TEXT COLORS */
     --color-title-text: var(--color-gray-900);
     --color-description-text: var(--color-gray-600);
     --color-text-primary: var(--color-gray-100);
     --color-text-primary-dark: var(--color-cyan-800);
+    --color-text-current: var(--color-yellow-800);
+    --color-text-current-dark: var(--color-yellow-900);
+    --color-text-finished: var(--color-gray-700);
+    --color-text-finished-dark: var(--color-gray-800);
+    --color-text-canceled: var(--color-red-700);
+    --color-text-canceled-dark: var(--color-red-800);
 }
 
 [data-theme="dark"] {
@@ -63,4 +97,6 @@
     --color-title-text: var(--color-gray-400);
     --color-description-text: var(--color-gray-500);
     --color-text-primary: var(--color-gray-100);
+    --color-text-canceled: var(--color-red-700);
+    --color-text-canceled-dark: var(--color-red-800);
 }

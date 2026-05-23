@@ -397,6 +397,9 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+    .register-block-content.text-canceled {
+        color: var(--color-text-canceled);
+    }
     .register-block-actions {
         /* sizing */
         width: 100%;
@@ -454,6 +457,31 @@
         color: var(--color-text-primary);
         font-weight: 500;
     }
+    .badge-status-primary.status-finished {
+        background-color: var(--color-bg-finished);
+        border-color: var(--color-border);
+    }
+    .badge-status-primary.status-finished .badge-status-text {
+        color: var(--color-text-finished);
+        font-weight: 500;
+    }
+    .badge-status-primary.status-current {
+        background-color: var(--color-bg-current);
+        border-color: var(--color-bg-current-dark);
+    }
+    .badge-status-primary.status-current .badge-status-text {
+        color: var(--color-text-current);
+        font-weight: 500;
+    }
+    .badge-status-primary.status-canceled {
+        background-color: var(--color-bg-canceled);
+        border-color: var(--color-bg-canceled-dark);
+    }
+    .badge-status-primary.status-canceled .badge-status-text {
+        color: var(--color-text-canceled);
+        font-weight: 500;
+    }
+
     .badge-status-text {
         /* font */
         font-family: 'Google Sans Code', monospace;
@@ -494,6 +522,11 @@
         background-color: var(--color-bg-results);
         border-color: var(--color-bg-primary);
         color: var(--color-text-primary-dark);
+    }
+    .register-block-status-text.status-current {
+        background-color: var(--color-bg-current-light);
+        border-color: var(--color-bg-current-dark);
+        color: var(--color-text-current);
     }
     .button-icon-internal {
         /* sizing */
