@@ -249,7 +249,7 @@ final class ProcessosRepository
     {
         $statement = $this->connection->prepare(
             sprintf(
-                'UPDATE `%s` SET `classe_id` = COALESCE(:classe_id, `classe_id`), `data_fato` = COALESCE(:data_fato, `data_fato`), `sigiloso` = GREATEST(COALESCE(`sigiloso`, 0), :sigiloso), `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                'UPDATE `%s` SET `classe_id` = COALESCE(:classe_id, `classe_id`), `data_fato` = COALESCE(:data_fato, `data_fato`), `sigiloso` = CASE WHEN :sigiloso = 1 THEN 1 ELSE COALESCE(`sigiloso`, 0) END, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
                 $this->table
             )
         );
