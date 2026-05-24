@@ -255,6 +255,31 @@ final class CartasRecebidasService
             throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual.');
         }
 
+        $cartaAtual = $this->repository->find($cartaId);
+        if ($cartaAtual === null) {
+            throw new InvalidArgumentException('Carta não encontrada.');
+        }
+        $statusCarta = str_replace('concluída', 'concluida', mb_strtolower(trim((string) ($cartaAtual['status'] ?? '')), 'UTF-8'));
+        if (in_array($statusCarta, ['cancelada', 'concluida', 'finalizada'], true)) {
+            throw new InvalidArgumentException('Não é possível concluir subtarefa de carta cancelada ou concluída.');
+        }
+
+        $statusSubtarefa = str_replace('concluída', 'concluida', mb_strtolower(trim((string) ($subtarefa['status'] ?? '')), 'UTF-8'));
+        if (in_array($statusSubtarefa, ['cancelada', 'concluida'], true)) {
+            throw new InvalidArgumentException('Subtarefa já finalizada.');
+        }
+
+        foreach ($this->subtarefasRepository->findByCartaId($cartaId) as $stFluxo) {
+            $ordemFluxo = (int) ($stFluxo['ordem'] ?? 0);
+            if (!CartasRecebidasSubtarefasRepository::isOrdemAtiva($ordemFluxo) || $ordemFluxo >= $ordem) {
+                continue;
+            }
+            $statusFluxo = str_replace('concluída', 'concluida', mb_strtolower(trim((string) ($stFluxo['status'] ?? '')), 'UTF-8'));
+            if ($statusFluxo !== 'concluida') {
+                throw new InvalidArgumentException('Conclua as subtarefas anteriores antes de avançar.');
+            }
+        }
+
         $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
             $decoded = json_decode($dadosJson, true);

@@ -257,6 +257,45 @@ final class EditaisService
             throw new InvalidArgumentException('Edital da subtarefa não identificado.');
         }
 
+        if (!EditaisSubtarefasRepository::isOrdemAtiva($ordem)) {
+            throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual.');
+        }
+
+        $editalAtual = $this->repository->findById($editalId);
+        if ($editalAtual === null) {
+            throw new InvalidArgumentException('Edital não encontrado.');
+        }
+        $statusEdital = str_replace('concluída', 'concluida', mb_strtolower(trim((string) ($editalAtual['status'] ?? '')), 'UTF-8'));
+        if (in_array($statusEdital, ['cancelada', 'concluida', 'finalizada'], true)) {
+            throw new InvalidArgumentException('Não é possível concluir subtarefa de edital cancelado ou concluído.');
+        }
+
+        $statusSubtarefa = str_replace('concluída', 'concluida', mb_strtolower(trim((string) ($subtarefa['status'] ?? '')), 'UTF-8'));
+        if (in_array($statusSubtarefa, ['cancelada', 'concluida'], true)) {
+            throw new InvalidArgumentException('Subtarefa já finalizada.');
+        }
+
+        foreach ($this->subtarefasRepository->findByEditalId($editalId) as $stFluxo) {
+            $ordemFluxo = (int) ($stFluxo['ordem'] ?? 0);
+            $tipoFluxo = trim((string) ($stFluxo['tipo'] ?? ''));
+            if ($tipoFluxo === EditaisSubtarefasRepository::TIPO_PUBLICACAO) {
+                $ordemFluxo = EditaisSubtarefasRepository::ORDEM_PUBLICACAO;
+            } elseif ($tipoFluxo === EditaisSubtarefasRepository::TIPO_DECURSO) {
+                $ordemFluxo = EditaisSubtarefasRepository::ORDEM_DECURSO;
+            } elseif ($ordemFluxo === 3) {
+                $ordemFluxo = EditaisSubtarefasRepository::ORDEM_PUBLICACAO;
+            } elseif ($ordemFluxo === 4) {
+                $ordemFluxo = EditaisSubtarefasRepository::ORDEM_DECURSO;
+            }
+            if (!EditaisSubtarefasRepository::isOrdemAtiva($ordemFluxo) || $ordemFluxo >= $ordem) {
+                continue;
+            }
+            $statusFluxo = str_replace('concluída', 'concluida', mb_strtolower(trim((string) ($stFluxo['status'] ?? '')), 'UTF-8'));
+            if ($statusFluxo !== 'concluida') {
+                throw new InvalidArgumentException('Conclua as subtarefas anteriores antes de avançar.');
+            }
+        }
+
         $usuarioIdMovimentacao = null;
         if ($dadosJson !== null && $dadosJson !== '') {
             $dadosArray = json_decode($dadosJson, true);

@@ -24,10 +24,12 @@ $processoBlocoIsEstudantes = ($processoBlocoVariant === 'estudantes');
 $processoBlocoHideActions = $processoBlocoIsEstudantes;
 
 $numero = trim((string) ($row['numero_processo'] ?? ''));
+$processoBlocoMascaradoEstudante = false;
 if ($processoBlocoIsEstudantes && $numero !== '') {
     require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
     if (ProcessoBlocoListagemHelper::deveMascararNumeroNaVarianteEstudantes($row)) {
         $numero = ProcessoBlocoListagemHelper::mascararNumeroProcessoSigiloso($numero);
+        $processoBlocoMascaradoEstudante = true;
     }
 }
 $classeTexto = trim((string) ($row['bloco_processo_classe_texto'] ?? ''));
@@ -36,6 +38,9 @@ $assuntoTexto = trim((string) ($row['bloco_processo_assunto_texto'] ?? 'Assunto 
 $assuntoNot = !empty($row['bloco_processo_assunto_not']);
 /** @var list<array{codigo: string, label: string, icon: string}> $prioridades */
 $prioridades = is_array($row['bloco_processo_prioridades'] ?? null) ? $row['bloco_processo_prioridades'] : [];
+if ($processoBlocoMascaradoEstudante) {
+    $prioridades = [];
+}
 $abrirHref = trim((string) ($row['bloco_processo_abrir_href'] ?? ''));
 $abrirDisabled = !empty($row['bloco_processo_abrir_disabled']);
 $iconAbrir = '/assets/icons/Resize-Expand-Corner--Streamline-Ultimate.png';

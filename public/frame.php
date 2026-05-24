@@ -52,6 +52,7 @@ $allowed_pages = [
     'salapainel'            => $PAGES . '/sala-audiencias-pauta-list.php',
     'salapaineldia'         => $PAGES . '/sala-audiencias-painel-dia.php',
     'estudapainel'          => $PAGES . '/sala-audiencias-painel-estudantes.php',
+    'estudaata'             => $PAGES . '/sala-audiencias-atas-estudantes.php',
     'reuspresos'            => $PAGES . '/gabinete-reus-presos-list.php',
     'reuspresoscreate'      => $PAGES . '/gabinete-reus-presos-create.php',
     'reuspresosedit'        => $PAGES . '/gabinete-reus-presos-edit.php',

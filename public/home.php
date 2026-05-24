@@ -609,8 +609,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         const HAS_PERFIL_ESTUDANTE = <?php echo json_encode($hasPerfilEstudante, JSON_UNESCAPED_UNICODE); ?>;
         /** Consultor externo: consulta de partes (alinhado a frame.php — consultas_partes). */
         const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes']);
-        /** Estudante externo: pauta e painel na seção Estudantes. */
-        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['estudapauta', 'estudapainel']);
+        /** Estudante externo: pauta, painel e atas na seção Estudantes. */
+        const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['estudapauta', 'estudapainel', 'estudaata']);
 
         /** Mesma regra de app/access/AccessEvaluator.php (recalculada no cliente após fetch de perfis). */
         const COMPOSITE_PROFILE_RE = /^(ESTAGIARIO|SERVIDOR)-(CARTORIO|GABINETE|AUDIENCIAS)$/;
@@ -652,7 +652,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Estudantes',
                 items: [
                     { icon: 'fi fi-rs-clipboard-list-check', label: 'Pauta de Audiências', target: 'estudapauta' },
-                    { icon: 'fi fi-rs-screen', label: 'Painel em tempo real', target: 'estudapainel' }
+                    { icon: 'fi fi-rs-screen', label: 'Painel em tempo real', target: 'estudapainel' },
+                    { icon: 'fi fi-rs-document', label: 'Atas de Audiências', target: 'estudaata' }
                 ]
             },
             {

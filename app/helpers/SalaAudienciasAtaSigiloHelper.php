@@ -10,6 +10,7 @@ require_once __DIR__ . '/ProcessoBlocoListagemHelper.php';
 final class SalaAudienciasAtaSigiloHelper
 {
     public const MSG_PROCESSO_SIGILOSO = 'Processos sigilosos não permitem cadastro, envio nem consulta de atas de audiência.';
+    public const MSG_PROCESSO_BLOQUEADO_ESTUDANTE = 'Esta audiência não está disponível para estudantes por envolver processo com prioridade bloqueante.';
 
     /**
      * Expressão SQL (0|1): processo sigiloso por flag em `processos` ou prioridade `sigiloso`.
@@ -50,9 +51,59 @@ final class SalaAudienciasAtaSigiloHelper
         );
     }
 
+    /**
+     * Expressão SQL (0|1): processo com prioridade que bloqueia visibilidade/inscrição de estudantes.
+     */
+    public static function sqlPrioridadeBloqueanteEstudante(string $aliasPauta = 'a'): string
+    {
+        return sprintf(
+            'CASE WHEN EXISTS (
+                SELECT 1 FROM `processo_prioridades` pri
+                WHERE pri.`processo_id` = %1$s.`processo`
+                  AND pri.`codigo` IN (%2$s)
+              ) THEN 1 ELSE 0 END',
+            $aliasPauta,
+            self::quoteSqlLiteralList(PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante())
+        );
+    }
+
+    /**
+     * Fragmento SQL: exclui pautas sigilosas ou com prioridade bloqueante para estudantes.
+     */
+    public static function sqlExcluirProcessoBloqueanteEstudante(string $aliasPauta = 'a', string $aliasProcesso = 'p'): string
+    {
+        return sprintf(
+            ' AND COALESCE(%1$s.`sigiloso`, 0) = 0
+              AND NOT EXISTS (
+                SELECT 1 FROM `processo_prioridades` pri
+                WHERE pri.`processo_id` = %2$s.`processo`
+                  AND pri.`codigo` IN (%3$s)
+              )',
+            $aliasProcesso,
+            $aliasPauta,
+            self::quoteSqlLiteralList(PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante())
+        );
+    }
+
     private static function quoteSqlLiteral(string $value): string
     {
         return "'" . str_replace("'", "''", $value) . "'";
+    }
+
+    /**
+     * @param list<string> $values
+     */
+    private static function quoteSqlLiteralList(array $values): string
+    {
+        $quoted = [];
+        foreach ($values as $value) {
+            $value = trim((string) $value);
+            if ($value !== '') {
+                $quoted[] = self::quoteSqlLiteral($value);
+            }
+        }
+
+        return $quoted !== [] ? implode(', ', $quoted) : "''";
     }
 
     /**
@@ -96,6 +147,32 @@ final class SalaAudienciasAtaSigiloHelper
         foreach ($prioridadesRepo->findByProcessoId($processoId) as $prioridade) {
             if (trim((string) ($prioridade['codigo'] ?? '')) === PrioridadesProcessuaisCatalog::codigoSigiloso()) {
                 throw new InvalidArgumentException(self::MSG_PROCESSO_SIGILOSO);
+            }
+        }
+    }
+
+    /**
+     * Bloqueia acesso de estudantes se a pauta tiver sigilo efetivo ou qualquer prioridade
+     * do catálogo que impede inscrição/visibilidade externa.
+     *
+     * @param array<string, mixed> $pauta
+     */
+    public static function assertPautaPermiteAcessoEstudante(PDO $connection, array $pauta): void
+    {
+        self::assertPautaPermiteAtas($connection, $pauta);
+
+        $processoId = trim((string) ($pauta['processo'] ?? $pauta['processo_id'] ?? ''));
+        if ($processoId === '') {
+            return;
+        }
+
+        require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
+        $codigosBloqueantes = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
+        $prioridadesRepo = new ProcessoPrioridadesRepository($connection);
+        foreach ($prioridadesRepo->findByProcessoId($processoId) as $prioridade) {
+            $codigo = trim((string) ($prioridade['codigo'] ?? ''));
+            if ($codigo !== '' && in_array($codigo, $codigosBloqueantes, true)) {
+                throw new InvalidArgumentException(self::MSG_PROCESSO_BLOQUEADO_ESTUDANTE);
             }
         }
     }

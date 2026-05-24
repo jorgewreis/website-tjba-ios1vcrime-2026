@@ -227,12 +227,20 @@ final class ProcessoPrioridadesService
 
         $this->repository->deleteByProcessoIdAndOrigensCadastroUsuario($processoId);
 
+        $deveRegistrarSigiloso = false;
         foreach ($tokens as $t) {
             $codigo = PrioridadesProcessuaisCatalog::normalizeToCodigo((string) $t);
             if ($codigo === null || !PrioridadesProcessuaisCatalog::isValidCodigo($codigo)) {
                 continue;
             }
             $this->repository->insert($processoId, $codigo, ProcessoPrioridadeOrigem::CADASTRO_GUIAS, null);
+            if (in_array($codigo, PrioridadesProcessuaisCatalog::codigosQueDerivamSigiloso(), true)) {
+                $deveRegistrarSigiloso = true;
+            }
+        }
+
+        if ($deveRegistrarSigiloso) {
+            $this->registrarSigilosoDerivadoMenorOuViolenciaDomestica($processoId);
         }
 
         $this->reconciliarAutomaticas($processoId, trim((string) ($proc['numero_processo'] ?? '')), 0);
@@ -359,7 +367,12 @@ final class ProcessoPrioridadesService
             }
         }
 
-        if ($procSigFlag || $temMenorOuPrioridadeDerivada) {
+        if ($temMenorOuPrioridadeDerivada) {
+            $this->registrarSigilosoDerivadoMenorOuViolenciaDomestica($processoId);
+            return;
+        }
+
+        if ($procSigFlag) {
             return;
         }
 

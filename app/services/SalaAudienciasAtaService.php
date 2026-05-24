@@ -326,7 +326,7 @@ final class SalaAudienciasAtaService
         if ($pauta === null) {
             throw new InvalidArgumentException('Audiência não encontrada.');
         }
-        SalaAudienciasAtaSigiloHelper::assertPautaPermiteAtas($this->connection, $pauta);
+        SalaAudienciasAtaSigiloHelper::assertPautaPermiteAcessoEstudante($this->connection, $pauta);
 
         $ata = $this->ataRepository->findByPauta($idPauta);
         if ($ata === null) {

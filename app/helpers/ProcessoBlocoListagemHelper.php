@@ -264,7 +264,7 @@ final class ProcessoBlocoListagemHelper
 
     /**
      * Listagens de estudantes: mascarar número quando o processo for sigiloso na base
-     * ou houver prioridade codificada como `sigiloso`.
+     * ou houver prioridade que bloqueia visibilidade/inscrição externa.
      */
     public static function deveMascararNumeroNaVarianteEstudantes(array $row): bool
     {
@@ -272,11 +272,12 @@ final class ProcessoBlocoListagemHelper
             return true;
         }
         $pps = is_array($row['bloco_processo_prioridades'] ?? null) ? $row['bloco_processo_prioridades'] : [];
+        $bloqueantes = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
         foreach ($pps as $p) {
             if (!is_array($p)) {
                 continue;
             }
-            if (trim((string) ($p['codigo'] ?? '')) === 'sigiloso') {
+            if (in_array(trim((string) ($p['codigo'] ?? '')), $bloqueantes, true)) {
                 return true;
             }
         }
