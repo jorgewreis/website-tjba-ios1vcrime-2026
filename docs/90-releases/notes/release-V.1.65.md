@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 06 de abril de 2026
+**Data de Lançamento:** 24 de maio de 2026
 
 # V. 1.65
 
-> refactor: streamline internal list export by replacing subtasks filtering with principal status title and enhancing export formatting for editais
+> refactor: implement unique allocation resolver for cartas expedidas and enhance UI panel handling
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: streamline internal list export by replacing subtasks filtering with principal status title and enhancing export formatting for editais** `[90b8cdc]`
+- **refactor: implement unique allocation resolver for cartas expedidas and enhance UI panel handling** `[8f7294b9]`
 
 ---
 

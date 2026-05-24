@@ -178,6 +178,39 @@
         });
     }
 
+    function bindNovoCadastroV2(href, delayMs) {
+        var btn = document.getElementById('novo-cadastro-btn');
+        if (!btn || !href) {
+            return;
+        }
+
+        var label = btn.querySelector('.btn-icon-text');
+        var iconWrap = btn.querySelector('.btn-icon');
+        var waitMs = typeof delayMs === 'number' && delayMs >= 0 ? delayMs : 1500;
+        var navigating = false;
+
+        btn.addEventListener('click', function () {
+            if (navigating || btn.disabled) {
+                return;
+            }
+            navigating = true;
+            btn.disabled = true;
+            btn.setAttribute('aria-disabled', 'true');
+
+            if (label) {
+                label.textContent = 'Aguarde...';
+            }
+            if (iconWrap) {
+                iconWrap.classList.remove('hidden');
+                iconWrap.classList.add('rotating');
+            }
+
+            window.setTimeout(function () {
+                window.location.href = href;
+            }, waitMs);
+        });
+    }
+
     function bindExportSelect(panelApi) {
         var sel = document.getElementById('list-export-v2');
         if (!sel) {
@@ -210,6 +243,7 @@
         var panelApi = initializePanelToggles();
         bindCopyProcesso();
         bindExportSelect(panelApi);
+        bindNovoCadastroV2('/frame.php?page=cartasexpedidascreate', 1500);
 
         if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
             var listSearchApi = window.CartasExpedidasSearch.initializeProcessSearch({
@@ -252,8 +286,6 @@
 
         App.CartorioTaskList.initialize({
             storageKey: 'cartorio.postReloadToast',
-            newButtonId: 'novo-cadastro-btn',
-            newHref: '/frame.php?page=cartasexpedidascreate',
             onReady: function (ctx) {
                 bindContinuarSubtarefa(ctx);
                 if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
