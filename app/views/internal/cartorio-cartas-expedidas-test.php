@@ -168,7 +168,6 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
     <link rel="stylesheet" href="/assets/css/shared/reset.css">
     <link rel="stylesheet" href="/assets/css/shared/v2-colors.css">
     <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css">
-    <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>

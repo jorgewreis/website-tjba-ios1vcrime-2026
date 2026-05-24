@@ -25,22 +25,46 @@
         }
     }
 
+    function isPanelOpen(panel) {
+        return panel && panel.style.display !== 'none';
+    }
+
     function initializePanelToggles() {
         var panels = document.querySelectorAll('[data-v2-panel]');
+        var triggers = document.querySelectorAll('[data-v2-panel-trigger]');
 
-        function setPanelVisible(name, visible) {
+        function hideAllPanels() {
+            panels.forEach(function (panel) {
+                panel.style.display = 'none';
+            });
+        }
+
+        function showPanel(name) {
             var panel = document.querySelector('[data-v2-panel="' + name + '"]');
             if (!panel) {
                 return;
             }
-            panel.style.display = visible ? 'flex' : 'none';
+            hideAllPanels();
+            panel.style.display = 'flex';
         }
 
-        function panelNameFromTrigger(el) {
-            return el.getAttribute('data-v2-panel-trigger') || '';
+        function togglePanelFromTrigger(trigger, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            var name = String(trigger.getAttribute('data-v2-panel-trigger') || '').trim();
+            if (name === '') {
+                return;
+            }
+            var panel = document.querySelector('[data-v2-panel="' + name + '"]');
+            if (isPanelOpen(panel)) {
+                hideAllPanels();
+                return;
+            }
+            showPanel(name);
         }
 
-        document.querySelectorAll('[data-v2-panel-trigger]').forEach(function (trigger) {
+        triggers.forEach(function (trigger) {
             function onActivate(event) {
                 if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') {
                     return;
@@ -48,22 +72,31 @@
                 if (event.type === 'keydown') {
                     event.preventDefault();
                 }
-                var name = panelNameFromTrigger(trigger);
-                if (!name) {
-                    return;
-                }
-                var panel = document.querySelector('[data-v2-panel="' + name + '"]');
-                var willShow = panel && panel.style.display === 'none';
-                panels.forEach(function (p) {
-                    p.style.display = 'none';
-                });
-                if (willShow) {
-                    setPanelVisible(name, true);
-                }
+                togglePanelFromTrigger(trigger, event);
             }
             trigger.addEventListener('click', onActivate);
             trigger.addEventListener('keydown', onActivate);
         });
+
+        panels.forEach(function (panel) {
+            panel.addEventListener('click', function (event) {
+                event.stopPropagation();
+            });
+
+            panel.querySelectorAll('select').forEach(function (selectEl) {
+                selectEl.addEventListener('change', function () {
+                    hideAllPanels();
+                });
+            });
+        });
+
+        document.addEventListener('click', function () {
+            hideAllPanels();
+        });
+
+        hideAllPanels();
+
+        return { hideAllPanels: hideAllPanels };
     }
 
     function bindCopyProcesso() {
@@ -119,13 +152,16 @@
         });
     }
 
-    function bindExportSelect() {
+    function bindExportSelect(panelApi) {
         var sel = document.getElementById('list-export-v2');
         if (!sel) {
             return;
         }
         sel.addEventListener('change', function () {
             var v = String(sel.value || '');
+            if (panelApi && typeof panelApi.hideAllPanels === 'function') {
+                panelApi.hideAllPanels();
+            }
             if (v === 'print') {
                 window.print();
                 sel.selectedIndex = 0;
@@ -145,9 +181,9 @@
     }
 
     function initialize(config) {
-        initializePanelToggles();
+        var panelApi = initializePanelToggles();
         bindCopyProcesso();
-        bindExportSelect();
+        bindExportSelect(panelApi);
 
         if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
             window.CartasExpedidasSearch.initializeProcessSearch({
