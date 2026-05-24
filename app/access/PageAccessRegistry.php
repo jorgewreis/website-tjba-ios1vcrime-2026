@@ -57,7 +57,7 @@ final class PageAccessRegistry
             'cartasexpedidasedit' => $areaCartorio,
             'cartasexpedidascreate' => $areaCartorio,
             'cartasexpedidasrules' => $areaCartorio,
-            'cartasexpedidasteste' => ['kind' => 'gestao'],
+            'cartasexpedidasteste' => $areaCartorio,
             'cartasrecebidas' => $areaCartorio,
             'cartasrecebidasedit' => $areaCartorio,
             'cartasrecebidascreate' => $areaCartorio,

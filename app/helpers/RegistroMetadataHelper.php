@@ -681,4 +681,132 @@ final class RegistroMetadataHelper
 
         return $normalizado === 'concluida' || $normalizado === 'concluída';
     }
+
+    /**
+     * Data/hora curta para histórico v2 (ex.: 19.05 - 12:00).
+     */
+    public static function formatarDataHoraCurtaV2(?string $mysqlDt): string
+    {
+        $raw = trim((string) ($mysqlDt ?? ''));
+        if ($raw === '') {
+            return '';
+        }
+        $ts = strtotime($raw);
+        if ($ts === false) {
+            return '';
+        }
+
+        return date('d.m', $ts) . ' - ' . date('H:i', $ts);
+    }
+
+    /**
+     * Linhas de histórico no formato do card v2 (listagem cartas expedidas teste).
+     *
+     * @return list<array{data_hora: string, rotulo: string, autor: string, content_class: string}>
+     */
+    public static function linhasHistoricoV2CartasExpedidas(array $row, ?PDO $connection = null): array
+    {
+        require_once __DIR__ . '/../repositories/CartasExpedidasSubtarefasRepository.php';
+
+        $linhas = [];
+        $createdRaw = trim(self::pick($row, ['Data', 'created_at']));
+        $meta = self::fromListRow($row, 'cartas_expedidas', null, $connection);
+        $criador = self::compactarNome(trim((string) ($meta['criador_nome'] ?? '')));
+        if ($createdRaw !== '') {
+            $linhas[] = [
+                'data_hora' => self::formatarDataHoraCurtaV2($createdRaw),
+                'rotulo' => 'Cadastro',
+                'autor' => $criador,
+                'content_class' => '',
+            ];
+        }
+
+        $status = strtolower(trim(self::pick($row, ['Status', 'status'])));
+        $editor = self::compactarNome(trim(self::pick($row, ['UltimoEditorNome', 'AtualizadoPorNome'])));
+        $updatedRaw = trim(self::pick($row, ['DataAtualizacao', 'updated_at']));
+
+        if ($status === 'cancelada') {
+            $ref = $updatedRaw !== '' ? $updatedRaw : $createdRaw;
+            if ($ref !== '') {
+                $linhas[] = [
+                    'data_hora' => self::formatarDataHoraCurtaV2($ref),
+                    'rotulo' => 'Cancelamento',
+                    'autor' => $editor !== '' ? $editor : $criador,
+                    'content_class' => 'text-canceled',
+                ];
+            }
+
+            return $linhas;
+        }
+
+        /** @var list<array<string, mixed>> $allSt */
+        $allSt = is_array($row['SubtarefasAll'] ?? null) ? $row['SubtarefasAll'] : [];
+
+        $envioConcluida = false;
+        $devolucaoConcluida = null;
+        foreach ($allSt as $subtarefa) {
+            if (!is_array($subtarefa)) {
+                continue;
+            }
+            $tipo = trim((string) ($subtarefa['tipo'] ?? ''));
+            $stStatus = strtolower(trim((string) ($subtarefa['status'] ?? '')));
+            if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ENVIO && self::isSubtarefaStatusConcluida($stStatus)) {
+                $envioConcluida = true;
+            }
+            if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO && self::isSubtarefaStatusConcluida($stStatus)) {
+                $devolucaoConcluida = $subtarefa;
+            }
+        }
+
+        $mostrarAtualizacao = $envioConcluida
+            || in_array($status, ['aguardando cumprimento', 'concluída', 'concluida', 'finalizada'], true);
+
+        if ($mostrarAtualizacao) {
+            $ultima = self::resolveUltimaSubtarefaConcluida($allSt, $connection);
+            $dataAtualizacao = $ultima['data'] ?? '';
+            $autorAtualizacao = trim((string) ($ultima['editor'] ?? ''));
+            if ($dataAtualizacao === '' && $updatedRaw !== '' && self::isUpdatedAfterCreated($createdRaw, $updatedRaw)) {
+                $dataAtualizacao = $updatedRaw;
+                $autorAtualizacao = $editor !== '' ? $editor : $criador;
+            }
+            if ($dataAtualizacao !== '') {
+                if ($autorAtualizacao === '') {
+                    $autorAtualizacao = $editor !== '' ? $editor : $criador;
+                }
+                $linhas[] = [
+                    'data_hora' => self::formatarDataHoraCurtaV2($dataAtualizacao),
+                    'rotulo' => 'Atualização',
+                    'autor' => $autorAtualizacao,
+                    'content_class' => '',
+                ];
+            }
+        }
+
+        if (in_array($status, ['concluída', 'concluida', 'finalizada'], true) && $devolucaoConcluida !== null) {
+            $dataJuntada = trim((string) ($devolucaoConcluida['updated_at'] ?? ''));
+            if ($dataJuntada !== '') {
+                require_once __DIR__ . '/CartorioTimelineHelper.php';
+                $usuarioNomesPorId = $connection instanceof PDO
+                    ? cartorioTimelineCollectUsuarioNomesPorId($connection, $allSt)
+                    : [];
+                $dados = cartorioTimelineDecodeData($devolucaoConcluida);
+                $autorJuntada = cartorioTimelineResolveUser($dados, $usuarioNomesPorId);
+                if ($autorJuntada === '—') {
+                    $autorJuntada = '';
+                }
+                $autorJuntada = self::compactarNome($autorJuntada);
+                if ($autorJuntada === '') {
+                    $autorJuntada = $editor !== '' ? $editor : $criador;
+                }
+                $linhas[] = [
+                    'data_hora' => self::formatarDataHoraCurtaV2($dataJuntada),
+                    'rotulo' => 'Juntada',
+                    'autor' => $autorJuntada,
+                    'content_class' => '',
+                ];
+            }
+        }
+
+        return $linhas;
+    }
 }

@@ -353,7 +353,7 @@
 
     .register-block {
         /* sizing */
-        width: 300px;
+        width: 260px;
         height: 60px;
 
         /* flex custom */
@@ -368,6 +368,9 @@
         font-size: 9px;
         font-weight: 400;
         color: var(--color-title-text);
+    }
+    .register-block.process {
+        width: 300px;
     }
     .register-block-title {
         /* sizing */
