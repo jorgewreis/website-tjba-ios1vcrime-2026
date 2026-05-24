@@ -59,6 +59,7 @@ $allowed_pages = [
     'cartasexpedidasedit'   => $PAGES . '/cartorio-cartas-expedidas-edit.php',
     'cartasexpedidascreate' => $PAGES . '/cartorio-cartas-expedidas-create.php',
     'cartasexpedidasrules'  => $PAGES . '/cartorio-cartas-expedidas-rules.php',
+    'cartasexpedidasteste'  => $PAGES . '/cartorio-cartas-expedidas-test.php',
     'cartasrecebidas'       => $PAGES . '/cartorio-cartas-recebidas-list.php',
     'cartasrecebidasedit'   => $PAGES . '/cartorio-cartas-recebidas-edit.php',
     'cartasrecebidascreate' => $PAGES . '/cartorio-cartas-recebidas-create.php',

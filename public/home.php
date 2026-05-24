@@ -625,7 +625,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                         label: 'Cartas',
                         children: [
                             { label: 'Cartas Expedidas', target: 'cartasexpedidas' },
-                            { label: 'Cartas Recebidas', target: 'cartasrecebidas' }
+                            { label: 'Cartas Recebidas', target: 'cartasrecebidas' },
+                            { label: 'Carta Expedida - Teste', target: 'cartasexpedidasteste', allowedPerfis: ['ADMIN', 'CHEFIA'] }
                         ]
                     },
                     { icon: 'fi fi-rs-document', label: 'Editais', target: 'editais' },
