@@ -223,7 +223,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="card-line full" data-v2-panel="search" style="display: none;">
+        <div class="card-line full" data-v2-panel="search" hidden>
             <div class="card-line left">
                 <div class="line-description">Pesquisar processo</div>
             </div>
@@ -232,7 +232,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="card-line full media-768" data-v2-panel="items" style="display: none;">
+        <div class="card-line full media-768" data-v2-panel="items" hidden>
             <div class="card-line left">
                 <div class="line-description">Quantidade de itens por página</div>
             </div>
@@ -246,7 +246,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="card-line full media-768" data-v2-panel="export" style="display: none;">
+        <div class="card-line full media-768" data-v2-panel="export" hidden>
             <div class="card-line left">
                 <div class="line-description">Exportar lista</div>
             </div>
@@ -260,7 +260,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="card-line full media-1024" data-v2-panel="filters" style="display: none;">
+        <div class="card-line full media-1024" data-v2-panel="filters" hidden>
             <div class="card-line left">
                 <div class="line-description">Filtrar por</div>
             </div>

@@ -992,3 +992,8 @@ input[type="radio"] {
 .height-lg {
     height: 50px !important;
 }
+
+/* Painéis configuráveis da listagem v2 (cartas expedidas teste) — ocultos até toggle */
+.card-line[data-v2-panel][hidden] {
+    display: none !important;
+}

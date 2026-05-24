@@ -205,40 +205,44 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
             <div class="register-block-status">
                 <?php if (!$isTerminal): ?>
                     <?php
-                    $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
-                    foreach ($alocados as $alocado) {
-                        $chip = CartorioAlocacaoChipHelper::buildChipData($alocado, [
+                    $alocadoUnico = CartorioAlocacaoChipHelper::resolverAlocadoUnicoCartasExpedidasListagem(
+                        is_array($row['Alocados'] ?? null) ? $row['Alocados'] : [],
+                        $allSt
+                    );
+                    if ($alocadoUnico !== null) {
+                        $chip = CartorioAlocacaoChipHelper::buildChipData($alocadoUnico, [
                             'entity_id' => $idCarta,
                             'origem' => 'cartas_expedidas.v2_list',
                         ]);
-                        if ($chip === null) {
-                            continue;
+                        if ($chip !== null) {
+                            $tipo = $chip['tipo'];
+                            $nomeExibir = RegistroMetadataHelper::compactarNome(trim((string) ($alocadoUnico['nome_completo'] ?? '')));
+                            if ($nomeExibir === '') {
+                                $nomeExibir = trim((string) ($chip['iniciais'] ?? ''));
+                            }
+                            $usuarioIdStr = $chip['usuario_id'];
+                            $podeRemover = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
+                            ?>
+                            <div class="badge-allocated allocated-direct" title="<?php echo htmlspecialchars($chip['title'], ENT_QUOTES); ?>">
+                                <span class="badge-allocated-text"><?php echo htmlspecialchars($nomeExibir, ENT_QUOTES); ?></span>
+                                <?php if ($podeRemover): ?>
+                                    <button type="button"
+                                        class="badge-allocated-icon js-desalocar"
+                                        data-alocado-id="<?php echo htmlspecialchars($chip['alocado_id'], ENT_QUOTES); ?>"
+                                        data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
+                                        data-endpoint="/api/cartorio-cartas-expedidas/desalocar.php"
+                                        title="Remover alocação"
+                                        aria-label="Remover alocação">
+                                        <i class="fi fi-rr-cross-circle" aria-hidden="true"></i>
+                                    </button>
+                                <?php else: ?>
+                                    <span class="badge-allocated-icon hidden"><i class="fi fi-rr-cross-circle" aria-hidden="true"></i></span>
+                                <?php endif; ?>
+                            </div>
+                            <?php
                         }
-                        $tipo = $chip['tipo'];
-                        $nomeExibir = RegistroMetadataHelper::compactarNome(trim((string) ($alocado['nome_completo'] ?? '')));
-                        if ($nomeExibir === '') {
-                            $nomeExibir = trim((string) ($chip['iniciais'] ?? ''));
-                        }
-                        $usuarioIdStr = $chip['usuario_id'];
-                        $podeRemover = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
-                        ?>
-                        <div class="badge-allocated allocated-direct" title="<?php echo htmlspecialchars($chip['title'], ENT_QUOTES); ?>">
-                            <span class="badge-allocated-text"><?php echo htmlspecialchars($nomeExibir, ENT_QUOTES); ?></span>
-                            <?php if ($podeRemover): ?>
-                                <button type="button"
-                                    class="badge-allocated-icon js-desalocar"
-                                    data-alocado-id="<?php echo htmlspecialchars($chip['alocado_id'], ENT_QUOTES); ?>"
-                                    data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
-                                    data-endpoint="/api/cartorio-cartas-expedidas/desalocar.php"
-                                    title="Remover alocação"
-                                    aria-label="Remover alocação">
-                                    <i class="fi fi-rr-cross-circle" aria-hidden="true"></i>
-                                </button>
-                            <?php else: ?>
-                                <span class="badge-allocated-icon hidden"><i class="fi fi-rr-cross-circle" aria-hidden="true"></i></span>
-                            <?php endif; ?>
-                        </div>
-                    <?php } ?>
+                    }
+                    ?>
                 <?php endif; ?>
                 <div class="badge-status-primary <?php echo htmlspecialchars($badgePrincipalClasse, ENT_QUOTES); ?>">
                     <span class="badge-status-text"><?php echo htmlspecialchars($badgePrincipalTexto, ENT_QUOTES); ?></span>

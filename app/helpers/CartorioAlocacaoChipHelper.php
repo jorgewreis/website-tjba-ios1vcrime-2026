@@ -40,6 +40,70 @@ final class CartorioAlocacaoChipHelper
         return $filtrados;
     }
 
+    /**
+     * Listagem v2 de cartas expedidas: exibe no máximo um responsável na badge.
+     * Enquanto o envio não foi concluído → alocação por regra (etapa de envio da guia).
+     * Após conclusão do envio → usuário que cadastrou (tipo all).
+     *
+     * @param list<array<string, mixed>> $alocados
+     * @param list<array<string, mixed>> $subtarefasAll
+     */
+    public static function resolverAlocadoUnicoCartasExpedidasListagem(array $alocados, array $subtarefasAll = []): ?array
+    {
+        if ($alocados === []) {
+            return null;
+        }
+
+        require_once __DIR__ . '/../repositories/CartasExpedidasSubtarefasRepository.php';
+
+        $envioConcluida = self::subtarefaEnvioConcluidaCartasExpedidas($subtarefasAll);
+        $ordenados = self::ordenarAlocadosPorTipo($alocados);
+
+        if ($envioConcluida) {
+            return self::primeiroAlocadoPorTipo($ordenados, CartorioAlocacaoTipo::ALL)
+                ?? self::primeiroAlocadoPorTipo($ordenados, CartorioAlocacaoTipo::RULE);
+        }
+
+        return self::primeiroAlocadoPorTipo($ordenados, CartorioAlocacaoTipo::RULE)
+            ?? self::primeiroAlocadoPorTipo($ordenados, CartorioAlocacaoTipo::ALL);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $subtarefasAll
+     */
+    private static function subtarefaEnvioConcluidaCartasExpedidas(array $subtarefasAll): bool
+    {
+        foreach ($subtarefasAll as $subtarefa) {
+            if (!is_array($subtarefa)) {
+                continue;
+            }
+            $tipo = trim((string) ($subtarefa['tipo'] ?? ''));
+            if ($tipo !== CartasExpedidasSubtarefasRepository::TIPO_ENVIO) {
+                continue;
+            }
+            $status = strtolower(trim((string) ($subtarefa['status'] ?? '')));
+
+            return $status === 'concluida' || $status === 'concluída';
+        }
+
+        return false;
+    }
+
+    /**
+     * @param list<array<string, mixed>> $alocados
+     */
+    private static function primeiroAlocadoPorTipo(array $alocados, string $tipo): ?array
+    {
+        $tipo = strtolower(trim($tipo));
+        foreach ($alocados as $alocado) {
+            if (strtolower(trim((string) ($alocado['tipo'] ?? ''))) === $tipo) {
+                return $alocado;
+            }
+        }
+
+        return null;
+    }
+
     public static function ordenarAlocadosPorTipo(array $alocados): array
     {
         usort($alocados, static function (array $a, array $b): int {

@@ -729,9 +729,9 @@
         margin-bottom: -4px;
 
         /* color */
-        color: var(--color-text-primary);
+        color: var(--color-text-primary);        
     }
-    .badge-allocated:hover .badge-allocated-icon i {
+    .badge-allocated.allocated-direct:hover .badge-allocated-icon i {
         color: var(--color-text-canceled);
     }
 

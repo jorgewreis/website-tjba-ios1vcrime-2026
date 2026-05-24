@@ -26,7 +26,27 @@
     }
 
     function isPanelOpen(panel) {
-        return panel && panel.style.display !== 'none';
+        if (!panel || panel.hasAttribute('hidden')) {
+            return false;
+        }
+        var computed = window.getComputedStyle(panel).display;
+        return computed !== 'none';
+    }
+
+    function hidePanelElement(panel) {
+        if (!panel) {
+            return;
+        }
+        panel.setAttribute('hidden', '');
+        panel.style.setProperty('display', 'none', 'important');
+    }
+
+    function showPanelElement(panel) {
+        if (!panel) {
+            return;
+        }
+        panel.removeAttribute('hidden');
+        panel.style.setProperty('display', 'flex', 'important');
     }
 
     function initializePanelToggles() {
@@ -34,9 +54,7 @@
         var triggers = document.querySelectorAll('[data-v2-panel-trigger]');
 
         function hideAllPanels() {
-            panels.forEach(function (panel) {
-                panel.style.display = 'none';
-            });
+            panels.forEach(hidePanelElement);
         }
 
         function showPanel(name) {
@@ -45,7 +63,7 @@
                 return;
             }
             hideAllPanels();
-            panel.style.display = 'flex';
+            showPanelElement(panel);
         }
 
         function togglePanelFromTrigger(trigger, event) {
@@ -90,13 +108,21 @@
             });
         });
 
-        document.addEventListener('click', function () {
+        document.addEventListener('click', function (event) {
+            var target = event.target;
+            if (!target || !target.closest) {
+                hideAllPanels();
+                return;
+            }
+            if (target.closest('[data-v2-panel]') || target.closest('[data-v2-panel-trigger]')) {
+                return;
+            }
             hideAllPanels();
         });
 
         hideAllPanels();
 
-        return { hideAllPanels: hideAllPanels };
+        return { hideAllPanels: hideAllPanels, hidePanelElement: hidePanelElement };
     }
 
     function bindCopyProcesso() {
@@ -186,7 +212,7 @@
         bindExportSelect(panelApi);
 
         if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
-            window.CartasExpedidasSearch.initializeProcessSearch({
+            var listSearchApi = window.CartasExpedidasSearch.initializeProcessSearch({
                 inputId: 'search-input',
                 itemsPerPageId: 'items-per-page',
                 filters: [
@@ -197,6 +223,18 @@
                 debounceDelay: 1000,
                 initialProcessFilter: config.initialProcessFilter || ''
             });
+            if (listSearchApi && typeof listSearchApi.applyFilters === 'function') {
+                var hideOnFilterApply = panelApi.hideAllPanels;
+                ['items-per-page', 'filter-status', 'filter-tipo'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (!el) {
+                        return;
+                    }
+                    el.addEventListener('change', function () {
+                        hideOnFilterApply();
+                    }, true);
+                });
+            }
         }
 
         if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
