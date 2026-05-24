@@ -190,11 +190,12 @@
         var navigating = false;
 
         btn.addEventListener('click', function () {
-            if (navigating || btn.disabled) {
+            if (navigating || btn.disabled || btn.classList.contains('disabled')) {
                 return;
             }
             navigating = true;
             btn.disabled = true;
+            btn.classList.add('disabled');
             btn.setAttribute('aria-disabled', 'true');
 
             if (label) {

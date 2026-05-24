@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 06 de abril de 2026
+**Data de Lançamento:** 24 de maio de 2026
 
 # V. 1.66
 
-> refactor: enhance productivity filters and export functionality by consolidating user and sector area logic, improving data presentation in CSV/PDF exports, and updating UI descriptions for clarity
+> refactor: update release date and implement new button functionality
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: enhance productivity filters and export functionality by consolidating user and sector area logic, improving data presentation in CSV/PDF exports, and updating UI descriptions for clarity** `[ca32cc3]`
+- **refactor: update release date and implement new button functionality** `[e1687325]`
 
 ---
 
