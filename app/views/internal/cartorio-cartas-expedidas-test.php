@@ -314,15 +314,15 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
         <?php endforeach; ?>
 
         <?php if ($totalPages > 0): ?>
-            <div class="card-line full">
+            <div class="card-line pagination">
                 <div class="card-line left">
-                    <span class="line-results-text">
+                    <span class="pagination-info">
                         Mostrando <?php echo htmlspecialchars((string) $startItem); ?> a <?php echo htmlspecialchars((string) $endItem); ?> de <?php echo htmlspecialchars((string) $totalDocuments); ?> <?php echo htmlspecialchars($documentsLabel); ?>
                         (<?php echo htmlspecialchars((string) $totalPages); ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo htmlspecialchars((string) $itemsPerPage); ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
                     </span>
                 </div>
                 <div class="card-line right">
-                    <div class="pagination-controls gap-y-sm">
+                    <div class="pagination-controls">
                         <?php
                         $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                         $prevParams = $baseQueryParams;
@@ -333,9 +333,9 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                         $nextParams['page_number'] = $nextPage;
                         $nextHref = '?' . http_build_query($nextParams);
                         ?>
-                        <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>"
+                        <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" aria-label="Página anterior" title="Página anterior"
                             <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
-                            <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                            <i class="fi fi-rr-arrow-left" aria-hidden="true"></i>
                         </button>
                         <?php foreach ($paginationButtons as $page): ?>
                             <?php
@@ -348,7 +348,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                         <?php endforeach; ?>
                         <?php if ($paginationEllipsis && $trailingPages !== []): ?>
                             <span class="pagination-symbol pagination-ellipsis" aria-hidden="true">
-                                <img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas">
+                                <i class="fi fi-rr-menu-dots" aria-hidden="true"></i>
                             </span>
                             <?php foreach ($trailingPages as $page): ?>
                                 <?php
@@ -360,9 +360,9 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                                 </button>
                             <?php endforeach; ?>
                         <?php endif; ?>
-                        <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>"
+                        <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" aria-label="Próxima página" title="Próxima página"
                             <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
-                            <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                            <i class="fi fi-rr-arrow-right" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
