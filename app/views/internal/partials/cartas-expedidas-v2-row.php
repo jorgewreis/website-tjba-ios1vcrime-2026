@@ -140,35 +140,36 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
 
                 <div style="display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; 
                 justify-content: flex-end; gap: 10px;">                
-                <?php if ($prioridades !== []): ?>
+                    <?php if ($prioridades !== []): ?>
+                        <div class="register-block-process-icons">
+                            <?php foreach ($prioridades as $prioridade): ?>
+                                <?php
+                                $plabel = trim((string) ($prioridade['label'] ?? ''));
+                                $picon = trim((string) ($prioridade['icon'] ?? ''));
+                                if ($plabel === '' || $picon === '') {
+                                    continue;
+                                }
+                                ?>
+                                <img class="register-block-process-priority-icon" src="<?php echo htmlspecialchars($picon, ENT_QUOTES); ?>" alt="<?php echo htmlspecialchars($plabel, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($plabel, ENT_QUOTES); ?>">
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
                     <div class="register-block-process-icons">
-                        <?php foreach ($prioridades as $prioridade): ?>
-                            <?php
-                            $plabel = trim((string) ($prioridade['label'] ?? ''));
-                            $picon = trim((string) ($prioridade['icon'] ?? ''));
-                            if ($plabel === '' || $picon === '') {
-                                continue;
-                            }
-                            ?>
-                            <img class="register-block-process-priority-icon" src="<?php echo htmlspecialchars($picon, ENT_QUOTES); ?>" alt="<?php echo htmlspecialchars($plabel, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($plabel, ENT_QUOTES); ?>">
-                        <?php endforeach; ?>
+                        <?php if (!$abrirDisabled && $abrirHref !== ''): ?>
+                            <span role="button" tabindex="0" data-nav-href="<?php echo htmlspecialchars($abrirHref, ENT_QUOTES); ?>" title="Abrir processo" aria-label="Abrir processo">
+                                <img class="icon-mini-process" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES); ?>" alt="">
+                            </span>
+                        <?php else: ?>
+                            <img class="icon-mini-process" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES); ?>" alt="Abrir" title="Processo não cadastrado no sistema">
+                        <?php endif; ?>
+                        <?php if ($numero !== ''): ?>
+                            <button type="button" class="js-v2-copy-processo" data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES); ?>" title="Copiar número do processo" aria-label="Copiar número do processo">
+                                <img class="icon-mini-process" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES); ?>" alt="">
+                            </button>
+                        <?php else: ?>
+                            <img class="icon-mini-process" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES); ?>" alt="Copiar">
+                        <?php endif; ?>
                     </div>
-                <?php endif; ?>
-                <div class="register-block-process-icons">
-                    <?php if (!$abrirDisabled && $abrirHref !== ''): ?>
-                        <span role="button" tabindex="0" data-nav-href="<?php echo htmlspecialchars($abrirHref, ENT_QUOTES); ?>" title="Abrir processo" aria-label="Abrir processo">
-                            <img class="icon-mini-process" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES); ?>" alt="">
-                        </span>
-                    <?php else: ?>
-                        <img class="icon-mini-process" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES); ?>" alt="Abrir" title="Processo não cadastrado no sistema">
-                    <?php endif; ?>
-                    <?php if ($numero !== ''): ?>
-                        <button type="button" class="js-v2-copy-processo" data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES); ?>" title="Copiar número do processo" aria-label="Copiar número do processo">
-                            <img class="icon-mini-process" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES); ?>" alt="">
-                        </button>
-                    <?php else: ?>
-                        <img class="icon-mini-process" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES); ?>" alt="Copiar">
-                    <?php endif; ?>
                 </div>
             </div>
             <div class="register-block-process-classe<?php echo $classeValid ? ' valid' : ''; ?>">

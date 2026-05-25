@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 06 de abril de 2026
+**Data de Lançamento:** 25 de maio de 2026
 
 # V. 1.68
 
-> refactor: add detailed logging to PasswordResetService and envia_mail for improved debugging and traceability
+> refactor: enhance cartas expedidas UI with WhatsApp copy functionality
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: add detailed logging to PasswordResetService and envia_mail for improved debugging and traceability** `[4059b9d]`
+- **refactor: enhance cartas expedidas UI with WhatsApp copy functionality** `[643b180a]`
 
 ---
 
