@@ -212,22 +212,25 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
 
         <div class="card-line">
             <div class="card-line left">
-                <div class="page-card-list-document disabled">
-                    <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
-                    <span class="page-card-list-document-text">Passo a passo - Expedição de Cartas Precatórias</span>
-                </div>
-                <div class="page-card-list-document">
-                    <a href="./../../documents/pdf/Fluxo_de_Expedição_de_Carta_Precatória.png" target="_blank">
+                <a href="./../../documents/pdf/Guia_de_Carta_Precatória_TJBA.pdf" target="_blank">
+                    <div class="page-card-list-document">
                         <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
-                        <span class="page-card-list-document-text">Infográfico - Fluxo de Cumprimento</span>
-                    </a>
-                </div>
-                <div class="page-card-list-document">
-                    <a href="./../../documents/pdf/Guia_Prático_de_Cartas_Judiciárias.png" target="_blank">
+                        <span class="page-card-list-document-text">Infográfico - Expedição de Cartas Precatórias</span>
+                    </div>
+                </a>
+                <a href="./../../documents/pdf/Fluxo_de_Expedição_Carta_Precatória.png" target="_blank">
+                    <div class="page-card-list-document">
+                        
+                            <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
+                            <span class="page-card-list-document-text">Infográfico - Fluxo de Cumprimento</span>
+                    </div>
+                </a>
+                <a href="./../../documents/pdf/Guia_Prático_de_Cartas_Judiciárias.png" target="_blank">
+                    <div class="page-card-list-document">
                         <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
                         <span class="page-card-list-document-text">Infográfico - Guia Prático de Tipos de Cartas</span>
-                    </a>
-                </div>
+                    </div>
+                </a>
             </div>
         </div>
 
