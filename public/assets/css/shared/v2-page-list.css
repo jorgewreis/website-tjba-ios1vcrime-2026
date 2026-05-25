@@ -69,10 +69,68 @@
             min-height: fit-content;
             border: none;
         }
+            .card-line.left.results {
+                min-height: 40px;
+            }
             .card-line.results {
+                padding: 0;
                 background-color: var(--color-background-badge);
                 color: var(--color-title-text);
+                padding: 0 5px;
+                gap: 5px;
             }
+                .card-line.results .line-results {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: flex-start;
+                    width: fit-content;
+                    height: 40px;
+
+                    background-color: var(--color-background);
+                    border-radius: 4px;
+                    margin: 2px 0 1px 0;
+                    gap: 10px;
+                }
+                    .card-line.results .line-results.alert{
+                        background-color: var(--color-bg-current);
+                    }
+                    .line-results .number{
+                        min-width: 40px;
+                        height: 100%;
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 0 10px;
+                        font-family: 'Google Sans Code', monospace;
+                        font-size: 12px;
+                        font-weight: 600;
+                        background-color: #FFFFFF60;
+                    }
+                    .line-results .number.left{
+                        border-radius: 4px 0 0 4px
+                    }
+                    .line-results .number.right{
+                        border-radius: 0 4px 4px 0;
+                    }
+                    .line-results .text{
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 0 5px;
+                        font-family: 'Google Sans Code', monospace;
+                        font-size: 10px;
+                        font-weight: 400;
+                        max-width: 100px;
+                    }
+                    .line-results .text.right{
+                        justify-content: flex-end;
+                        margin-left: 20px;
+                    }
+
+
                 .line-results-text{
                     font-family: 'Google Sans', sans-serif;
                     font-weight: 600;

@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 06 de abril de 2026
+**Data de Lançamento:** 25 de maio de 2026
 
 # V. 1.73
 
-> feat: add SQL fragment for joining judicial classes and update productivity list to display judicial class names
+> refactor: enhance pagination UI for document listings
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: add SQL fragment for joining judicial classes and update productivity list to display judicial class names** `[4e0514a]`
+- **refactor: enhance pagination UI for document listings** `[cfa54201]`
 
 ---
 

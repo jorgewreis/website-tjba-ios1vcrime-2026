@@ -93,6 +93,50 @@ final class CartasExpedidasRepository
         return $summary;
     }
 
+    /**
+     * Conta cartas por status, restritas àquelas em que o usuário informado consta na tabela
+     * de alocados (qualquer tipo: all, rule ou specific). Ignora filtros do usuário (escopo global).
+     *
+     * @return array<string, int>
+     */
+    public function countByStatusForUser(string $usuarioId, string $tabelaAlocados = 'cartas_expedidas_alocados'): array
+    {
+        $usuarioId = trim($usuarioId);
+        if ($usuarioId === '') {
+            $summary = [];
+            foreach (self::STATUS_ORDER as $status) {
+                $summary[$status] = 0;
+            }
+            return $summary;
+        }
+
+        $coll = self::COLLATION;
+        $fromClause = $this->buildFromClause();
+        $sql = sprintf(
+            'SELECT ce.`status` AS `Status`, COUNT(DISTINCT ce.`id`) AS total FROM %s INNER JOIN `%s` cea ON cea.`carta_expedida_id` COLLATE %s = ce.`id` COLLATE %s WHERE cea.`usuario_id` COLLATE %s = :usuario_id COLLATE %s GROUP BY ce.`status`',
+            $fromClause,
+            $tabelaAlocados,
+            $coll,
+            $coll,
+            $coll,
+            $coll
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->bindValue(':usuario_id', $usuarioId);
+        $statement->execute();
+
+        $summary = [];
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $summary[$row['Status']] = (int) $row['total'];
+        }
+
+        foreach (self::STATUS_ORDER as $status) {
+            $summary[$status] = $summary[$status] ?? 0;
+        }
+
+        return $summary;
+    }
+
     public function countByClasse(array $filters): array
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce');

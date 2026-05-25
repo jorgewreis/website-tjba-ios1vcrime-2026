@@ -87,6 +87,29 @@ $statusCounts = [
     'cancelada' => (int) ($rawStatusCounts['cancelada'] ?? 0),
 ];
 
+// Contadores da barra de results: sempre globais (ignoram filtros aplicados).
+$globalStatusCounts = $service->getStatusCounts([]);
+$globalAtivosTotal = (int) ($globalStatusCounts['em_andamento'] ?? 0)
+    + (int) ($globalStatusCounts['aguardando envio'] ?? 0)
+    + (int) ($globalStatusCounts['aguardando cumprimento'] ?? 0);
+$globalAguardandoEnvio = (int) ($globalStatusCounts['em_andamento'] ?? 0)
+    + (int) ($globalStatusCounts['aguardando envio'] ?? 0);
+
+// Contadores "para você" só fazem sentido para perfis não-gestão. Para gestão, ocultamos o bloco.
+$userAtivosTotal = 0;
+$userAguardandoEnvio = 0;
+if (!$isGestao && $currentUserId !== '') {
+    $userStatusCounts = $service->getStatusCountsByUser($currentUserId);
+    $userAtivosTotal = (int) ($userStatusCounts['em_andamento'] ?? 0)
+        + (int) ($userStatusCounts['aguardando envio'] ?? 0)
+        + (int) ($userStatusCounts['aguardando cumprimento'] ?? 0);
+    $userAguardandoEnvio = (int) ($userStatusCounts['em_andamento'] ?? 0)
+        + (int) ($userStatusCounts['aguardando envio'] ?? 0);
+}
+
+$mostraParaVoce = !$isGestao && $currentUserId !== '';
+$alertAguardandoEnvio = $mostraParaVoce ? ($userAguardandoEnvio >= 1) : ($globalAguardandoEnvio >= 1);
+
 $defaultFinalidades = [
     'Intimação para Audiência',
     'Intimação de Decisão Interlocutória',
@@ -142,10 +165,6 @@ if ($totalPages > 0) {
         }
     }
 }
-
-$resultsText = $totalDocuments === 0
-    ? 'Nenhum registro encontrado'
-    : $totalDocuments . ' ' . ($totalDocuments === 1 ? 'documento encontrado' : 'documentos encontrados');
 
 $assetsRoot = dirname(__DIR__, 3) . '/public/assets';
 $v2ListJsV = @filemtime($assetsRoot . '/js/modules/cartorio/cartas-expedidas/v2-list.js') ?: time();
@@ -302,9 +321,22 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
         </div>
 
         <div class="card-line full results">
-            <div class="card-line left">
+            <div class="card-line left results">
                 <div class="line-results">
-                    <span class="line-results-text"><?php echo htmlspecialchars($resultsText, ENT_QUOTES); ?></span>
+                    <div class="number left"><?php echo (int) $globalAtivosTotal; ?></div>
+                    <div class="text">Documentos cadastrados</div>
+                    <?php if ($mostraParaVoce): ?>
+                        <div class="text right">para você</div>
+                        <div class="number right"><?php echo (int) $userAtivosTotal; ?></div>
+                    <?php endif; ?>
+                </div>
+                <div class="line-results<?php echo $alertAguardandoEnvio ? ' alert' : ''; ?>">
+                    <div class="number left"><?php echo (int) $globalAguardandoEnvio; ?></div>
+                    <div class="text">Aguardando envio</div>
+                    <?php if ($mostraParaVoce): ?>
+                        <div class="text right">para você</div>
+                        <div class="number right"><?php echo (int) $userAguardandoEnvio; ?></div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

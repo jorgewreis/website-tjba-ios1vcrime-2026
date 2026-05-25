@@ -100,6 +100,17 @@ final class CartasExpedidasService
         return $this->repository->countByStatus($filters);
     }
 
+    /**
+     * Contagem global por status restrita às cartas em que o usuário informado é alocado
+     * (qualquer tipo: all, rule ou specific). Ignora filtros aplicados pelo usuário.
+     *
+     * @return array<string, int>
+     */
+    public function getStatusCountsByUser(string $usuarioId): array
+    {
+        return $this->repository->countByStatusForUser($usuarioId);
+    }
+
     public function getClasseCounts(array $filters): array
     {
         return $this->repository->countByClasse($filters);
