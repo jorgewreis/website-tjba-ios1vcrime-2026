@@ -134,29 +134,46 @@
             };
         }
 
-        const apply = function (label, disabled) {
+        const labelEl = button.querySelector('.btn-icon-text');
+        const iconEl = button.querySelector('.btn-icon');
+        const hasIconStructure = !!labelEl;
+
+        const apply = function (label, disabled, loading) {
             button.disabled = disabled === true;
-            button.textContent = label;
+            if (hasIconStructure) {
+                labelEl.textContent = label;
+            } else {
+                button.textContent = label;
+            }
+            if (iconEl) {
+                if (loading === true) {
+                    iconEl.classList.remove('hidden');
+                    iconEl.classList.add('rotating');
+                } else {
+                    iconEl.classList.add('hidden');
+                    iconEl.classList.remove('rotating');
+                }
+            }
         };
 
         const api = {
             setInitial: function () {
-                apply(initialLabel, false);
+                apply(initialLabel, false, false);
             },
             setWaiting: function () {
-                apply('Aguarde...', true);
+                apply('Aguarde...', true, true);
             },
             setError: function () {
-                apply('Erro', true);
+                apply('Erro', true, false);
             },
             setReady: function () {
-                apply(readyLabel, false);
+                apply(readyLabel, false, false);
             },
             setSubmitting: function () {
-                apply('Aguarde...', true);
+                apply('Aguarde...', true, true);
             },
             setBlocked: function () {
-                apply('Aguarde...', true);
+                apply('Aguarde...', true, true);
             }
         };
 

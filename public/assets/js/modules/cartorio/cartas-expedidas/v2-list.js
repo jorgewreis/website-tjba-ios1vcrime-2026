@@ -270,7 +270,7 @@
         bindCopyProcesso();
         bindCopyWhatsapp();
         bindExportSelect(panelApi);
-        bindNovoCadastroV2('/frame.php?page=cartasexpedidascreate', 1500);
+        bindNovoCadastroV2('/frame.php?page=cartasexpedidascreate', 1000);
 
         if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
             var listSearchApi = window.CartasExpedidasSearch.initializeProcessSearch({

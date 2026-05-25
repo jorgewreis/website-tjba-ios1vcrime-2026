@@ -207,7 +207,21 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
             padding: 6px 10px;
         }
         .block-cell label { margin-left: 0; }
-        .block-cell label.empty { display: none; }
+        .block-cell label[hidden] { display: none !important; }
+        .processo-bd-info {
+            display: block;
+            font-family: 'Google Sans Code', monospace;
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--color-description-text);
+            line-height: 1.4;
+            margin-top: 2px;
+        }
+        .processo-bd-info .processo-bd-info-label {
+            font-weight: 600;
+            color: var(--color-title-text);
+            margin-right: 4px;
+        }
         .line-results.alert.rule.clickable {
             cursor: pointer;
             transition: background-color 120ms ease-in-out;
@@ -292,8 +306,8 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
                     <span class="label-hint-consulta-datajud" id="processo-ap-info" aria-live="polite"></span>
                 </label>
                 <input type="text" class="width-400 height-md" id="filter-classe" data-datajud-related="true" value="" disabled autocomplete="off">
-                <label id="filter-assuntos" class="empty"></label>
-                <label id="filter-prioridades" class="empty"></label>
+                <label id="filter-assuntos" class="processo-bd-info empty" data-empty-prefix="Assuntos:" hidden></label>
+                <label id="filter-prioridades" class="processo-bd-info empty" data-empty-prefix="Prioridades:" hidden></label>
             </div>
         </div>
 
@@ -314,9 +328,16 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
                 </div>
             </div>
             <div class="card-line right">
-                <div class="buttons">
-                    <button type="button" class="button-btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
-                    <button type="button" class="button-btn btn-primary" id="cadastrar-btn">Cadastrar</button>
+                <div class="buttons" style="display: flex;">
+                    <button type="button" class="button-btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">
+                        <span class="btn-icon-text">Voltar</span>
+                    </button>
+                    <button type="button" class="button-btn btn-primary" id="cadastrar-btn">
+                        <span class="btn-icon-text">Cadastrar</span>
+                        <div class="btn-icon hidden">
+                            <i class="fi fi-rr-spinner" aria-hidden="true"></i>
+                        </div>
+                    </button>
                 </div>
             </div>
         </div>
@@ -370,6 +391,155 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
                 });
             }
 
+            // Bloco classe/assuntos/prioridades: BD primeiro + refresh ap\u00f3s DataJud.
+            (function setupProcessoBdInfo() {
+                var assuntosEl = document.getElementById('filter-assuntos');
+                var prioridadesEl = document.getElementById('filter-prioridades');
+                var processoInput = document.getElementById('filter-processo');
+                if (!assuntosEl || !prioridadesEl || !processoInput) return;
+
+                var lastDigitsLoaded = '';
+
+                function onlyDigits(value) {
+                    return String(value || '').replace(/\D+/g, '');
+                }
+
+                function renderInfoLabel(el, prefix, items) {
+                    if (!el) return;
+                    var list = Array.isArray(items)
+                        ? items.filter(function (it) { return it !== null && it !== undefined && String(it).trim() !== ''; })
+                        : [];
+                    if (list.length === 0) {
+                        el.hidden = true;
+                        el.classList.add('empty');
+                        el.textContent = '';
+                        return;
+                    }
+                    el.hidden = false;
+                    el.classList.remove('empty');
+                    el.innerHTML = '';
+                    var prefixSpan = document.createElement('span');
+                    prefixSpan.className = 'processo-bd-info-label';
+                    prefixSpan.textContent = prefix;
+                    el.appendChild(prefixSpan);
+                    el.appendChild(document.createTextNode(' ' + list.join(' | ')));
+                }
+
+                function formatAssunto(item) {
+                    if (!item || typeof item !== 'object') return '';
+                    var codigo = String(item.codigo || '').trim();
+                    var descricao = String(item.descricao || '').trim();
+                    if (descricao && codigo && descricao !== codigo) {
+                        return codigo + ' - ' + descricao;
+                    }
+                    return descricao || codigo;
+                }
+
+                function formatPrioridade(item) {
+                    if (!item || typeof item !== 'object') return '';
+                    var label = String(item.label || '').trim();
+                    var codigo = String(item.codigo || '').trim();
+                    return label || codigo;
+                }
+
+                function clearInfo() {
+                    renderInfoLabel(assuntosEl, 'Assuntos:', []);
+                    renderInfoLabel(prioridadesEl, 'Prioridades:', []);
+                    lastDigitsLoaded = '';
+                }
+
+                function fetchJson(url) {
+                    return fetch(url, { credentials: 'same-origin' })
+                        .then(function (response) {
+                            return response.json().then(function (body) {
+                                return { ok: response.ok, body: body };
+                            });
+                        });
+                }
+
+                function loadInfo(digits) {
+                    if (!/^\d{20}$/.test(digits)) {
+                        clearInfo();
+                        return;
+                    }
+                    lastDigitsLoaded = digits;
+
+                    var encoded = encodeURIComponent(digits);
+
+                    fetchJson('/api/processos/assunto-read.php?numero=' + encoded)
+                        .then(function (res) {
+                            if (lastDigitsLoaded !== digits) return;
+                            if (!res.ok || !res.body || res.body.error) {
+                                renderInfoLabel(assuntosEl, 'Assuntos:', []);
+                                return;
+                            }
+                            var assuntos = Array.isArray(res.body.assuntos) ? res.body.assuntos : [];
+                            var formatados = assuntos.map(formatAssunto).filter(function (s) { return s !== ''; });
+                            renderInfoLabel(assuntosEl, 'Assuntos:', formatados);
+                        })
+                        .catch(function () {
+                            if (lastDigitsLoaded !== digits) return;
+                            renderInfoLabel(assuntosEl, 'Assuntos:', []);
+                        });
+
+                    fetchJson('/api/processos/prioridades-read.php?numero=' + encoded)
+                        .then(function (res) {
+                            if (lastDigitsLoaded !== digits) return;
+                            if (!res.ok || !res.body || res.body.error) {
+                                renderInfoLabel(prioridadesEl, 'Prioridades:', []);
+                                return;
+                            }
+                            var prioridades = Array.isArray(res.body.prioridades) ? res.body.prioridades : [];
+                            var formatadas = prioridades.map(formatPrioridade).filter(function (s) { return s !== ''; });
+                            renderInfoLabel(prioridadesEl, 'Prioridades:', formatadas);
+                        })
+                        .catch(function () {
+                            if (lastDigitsLoaded !== digits) return;
+                            renderInfoLabel(prioridadesEl, 'Prioridades:', []);
+                        });
+                }
+
+                window.addEventListener('cnjValidated', function (event) {
+                    var detail = (event && event.detail) || {};
+                    if (detail.inputId && detail.inputId !== 'filter-processo') return;
+                    var digits = onlyDigits(detail.digits || detail.numero || '');
+                    if (digits.length === 20) {
+                        loadInfo(digits);
+                    } else {
+                        clearInfo();
+                    }
+                });
+
+                window.addEventListener('cnjInvalid', function (event) {
+                    var detail = (event && event.detail) || {};
+                    if (detail.inputId && detail.inputId !== 'filter-processo') return;
+                    clearInfo();
+                });
+
+                // Ap\u00f3s DataJud finalizar, recarrega BD (postSyncAssuntos pode ter atualizado).
+                window.addEventListener('datajudClasseResolved', function (event) {
+                    var detail = (event && event.detail) || {};
+                    if (detail.processoInputId && detail.processoInputId !== 'filter-processo') return;
+                    var digits = onlyDigits(processoInput.value);
+                    if (digits.length === 20) {
+                        loadInfo(digits);
+                    }
+                });
+
+                processoInput.addEventListener('input', function () {
+                    var digits = onlyDigits(processoInput.value);
+                    if (digits.length !== 20) {
+                        clearInfo();
+                    }
+                });
+
+                // Pr\u00e9-carga: se a p\u00e1gina abriu com processo j\u00e1 v\u00e1lido (POST com erro CNJ, por exemplo).
+                var initialDigits = onlyDigits(processoInput.value);
+                if (initialDigits.length === 20) {
+                    loadInfo(initialDigits);
+                }
+            })();
+
             // Banner clic\u00e1vel: admin/chefia abre a p\u00e1gina de altera\u00e7\u00e3o de regra de aloca\u00e7\u00e3o.
             (function setupRuleBannerClick() {
                 var banner = document.getElementById('banner-alterar-regra');
@@ -400,7 +570,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
             if (!window.App || !App.CartorioCartasExpedidasCreate || typeof App.CartorioCartasExpedidasCreate.initialize !== 'function') {
                 return;
             }
-            App.CartorioCartasExpedidasCreate.initialize({ alocacaoPrefix: 'cartas-exp' });
+            App.CartorioCartasExpedidasCreate.initialize({ alocacaoPrefix: 'cartas-exp', submitDelayMs: 1000 });
         })();
     </script>
 </body>
