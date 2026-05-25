@@ -1,0 +1,676 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml-stylesheet type="text/xsl" href="wsdl-viewer.xsl"?>
+<wsdl:definitions 
+	name="mni" 
+	xmlns="http://www.w3.org/2001/XMLSchema" 
+	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+	xmlns:tic="http://www.cnj.jus.br/mni/v300/"
+	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+	targetNamespace="http://www.cnj.jus.br/mni/v300/">
+
+	<wsdl:types>
+		<schema targetNamespace="http://www.cnj.jus.br/mni/v300/" xmlns:Q1="http://www.cnj.jus.br/mni/v300/intercomunicacao"
+			xmlns:Q2="http://www.cnj.jus.br/mni/v300/tipos-servico-intercomunicacao" xmlns:Q3="http://www.cnj.jus.br/mni/v300/cda">
+
+			<import 
+				schemaLocation="../xsd/tipos-servico-intercomunicacao.xsd" 
+				namespace="http://www.cnj.jus.br/mni/v300/tipos-servico-intercomunicacao"></import>
+			<import 
+				schemaLocation="../xsd/intercomunicacao.xsd" 
+				namespace="http://www.cnj.jus.br/mni/v300/intercomunicacao"></import>
+			<import 
+				schemaLocation="../xsd/cda.xsd" 
+				namespace="http://www.cnj.jus.br/mni/v300/cda"></import>
+			<import 
+				schemaLocation="../xsd/intercomunicacao-stj.xsd" 
+				namespace="http://www.stj.jus.br/mni/v100/intercomunicacao"></import>
+			
+			<element name="requisicaoConsultarAvisosPendentes" type="Q2:requisicaoConsultarAvisosPendentes">
+				<annotation>
+					<documentation>
+Elemento que reune o conjunto de dados pertinentes à realização de uma consulta de avisos de comunicação 
+pendentes. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaConsultarAvisosPendentes" type="Q2:respostaConsultarAvisosPendentes">
+			</element>
+			<element name="requisicaoConsultarTeorComunicacao" type="Q2:requisicaoConsultarTeorComunicacao">
+			</element>
+			<element name="respostaConsultarTeorComunicacao" type="Q2:respostaConsultarTeorComunicacao">
+				<annotation>
+					<documentation>
+Elemento que encapsula os dados relacionados com a consulta de comunicações realizada. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoConsultarProcesso" type="Q2:requisicaoConsultarProcesso">
+				<annotation>
+					<documentation>
+Elemento destinado a encapsular os parâmetros necessários a uma consulta processual. A identificação 
+do consultante e sua senha são desnecessárias caso tenha havido a autenticação e autorização por meio de certificado 
+cliente. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaConsultarProcesso" type="Q2:respostaConsultarProcesso">
+			</element>
+			<element name="requisicaoConsultarDocumentosProcesso" type="Q2:requisicaoConsultarDocumentosProcesso">
+				<annotation>
+					<documentation>
+Elemento destinado a encapsular os parâmetros necessários a uma consulta de documentos processuais. 
+
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaConsultarDocumentosProcesso" type="Q2:respostaConsultarDocumentosProcesso">
+			</element>
+			<element name="requisicaoEntregarPeticaoInicial" type="Q2:requisicaoEntregarPeticaoInicial">
+				<annotation>
+					<documentation>
+Elemento que encapsula os dados do peticionamento inicial que está sendo apresentado. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaEntregarPeticaoInicial" type="Q2:respostaEntregarPeticaoInicial">
+				<annotation>
+					<documentation>
+Elemento que encapsula a resposta decorrente da manifestação. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoEntregarPeticao" type="Q2:requisicaoEntregarPeticao">
+				<annotation>
+					<documentation>
+Elemento que encapsula os dados do peticionamento incidental que está sendo apresentado. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaEntregarPeticao" type="Q2:respostaEntregarPeticao">
+				<annotation>
+					<documentation>
+Elemento que encapsula a resposta decorrente da manifestação. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoResponderComunicacao" type="Q2:requisicaoResponderComunicacao">
+				<annotation>
+					<documentation>
+Elemento que encapsula os dados do resposta a ato de comunicação processual. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaResponderComunicacao" type="Q2:respostaResponderComunicacao">
+				<annotation>
+					<documentation>
+Elemento que encapsula a resposta decorrente da manifestação. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoRemeterProcesso" type="Q2:requisicaoRemeterProcesso">
+				<annotation>
+					<documentation>
+Elemento que encapsula os dados da remessa de processo. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaRemeterProcesso" type="Q2:respostaRemeterProcesso">
+				<annotation>
+					<documentation>
+Elemento que encapsula a resposta decorrente da manifestação. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoConsultarAlteracao" type="Q2:requisicaoConsultarAlteracao">
+				<annotation>
+					<documentation>
+Elemento que encapsula os dados de consulta relativos à existência de modificações em um processo 
+judicial. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaConsultarAlteracao" type="Q2:respostaConsultarAlteracao">
+				<annotation>
+					<documentation>
+Elemento que encapsula os dados de resposta relativos à existência de alterações em um processo 
+judicial. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoConfirmarRecebimento" type="Q2:requisicaoConfirmarRecebimento">
+				<annotation>
+					<documentation>
+Elemento que encapsula dados essenciais para confirmar o recebimento de processo de outro tribunal. 
+
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaConfirmarRecebimento" type="Q2:respostaConfirmarRecebimento">
+				<annotation>
+					<documentation>
+Elemento que encapsula a resposta da confirmacao de recebimento de processo de outro tribunal. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoConsultarLocalidades" type="Q2:requisicaoConsultarLocalidades">
+				<annotation>
+					<documentation>
+Elemento que encapsula a requisição da consulta de localidades. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaConsultarLocalidades" type="Q2:respostaConsultarLocalidades">
+				<annotation>
+					<documentation>
+Elemento que encapsula a resposta da consulta de localidades. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoConsultarCompetencias" type="Q2:requisicaoConsultarCompetencias">
+				<annotation>
+					<documentation>
+Elemento que encapsula parâmetros para a consulta de competências. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaConsultarCompetencias" type="Q2:respostaConsultarCompetencias">
+				<annotation>
+					<documentation>
+Elemento que encapsula a resposta da consulta de competências. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoConsultarClasses" type="Q2:requisicaoConsultarClasses">
+				<annotation>
+					<documentation>
+Elemento que encapsula parâmetros para a consulta de classes. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaConsultarClasses" type="Q2:respostaConsultarClasses">
+				<annotation>
+					<documentation>
+Elemento que encapsula a resposta da consulta de classes. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoConsultarRemessas" type="Q2:requisicaoConsultarRemessas">
+				<annotation>
+					<documentation>
+Elemento que encapsula parâmetros para a consulta do histórico de remessas. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaConsultarRemessas" type="Q2:respostaConsultarRemessas">
+				<annotation>
+					<documentation>
+Elemento que encapsula a resposta da consulta do histórico de remessas. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="requisicaoConsultarAssuntos" type="Q2:requisicaoConsultarAssuntos">
+				<annotation>
+					<documentation>
+Elemento que encapsula parâmetros para a consulta de assuntos. 
+					</documentation>
+				</annotation>
+			</element>
+			<element name="respostaConsultarAssuntos" type="Q2:respostaConsultarAssuntos">
+				<annotation>
+					<documentation>
+Elemento que encapsula a resposta da consulta de assuntos. 
+					</documentation>
+				</annotation>
+			</element>
+		</schema>
+	</wsdl:types>
+	<wsdl:message name="requisicaoConsultarAvisosPendentes">
+		<wsdl:part name="parameters" element="tic:requisicaoConsultarAvisosPendentes">
+			<wsdl:documentation>
+Parâmetro destinado à indicação das informações necessárias para concretização da consulta, 
+especificamente o identificador do órgão representado, o identificador do consultante e a senha do consultante. 
+Todos os parâmetros são opcionais caso a identificação seja feita por meio de autenticação de certificado cliente. 
+
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaConsultarAvisosPendentes">
+		<wsdl:part name="parameters" element="tic:respostaConsultarAvisosPendentes">
+			<wsdl:documentation>
+Resposta contendo o status da operação, mensagem relativa à operação, e os avisos de comunicação 
+do tipo 'tipoAvisoComunicacaoPendente', previsto no esquema intercomunicacao.xsd 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoConsultarTeorComunicacao">
+		<wsdl:part name="parameters" element="tic:requisicaoConsultarTeorComunicacao">
+			<wsdl:documentation>
+Dados básicos destinados a permitir a consulta, encapsulados no tipo 'tipoConsultaTeorComunicacao', 
+especificamente o identificador do consultante, sua senha, e o número do processo judicial no qual se está efetivando 
+a consulta de comunicação. Os parâmetros de identificação e senha são dispensáveis no caso de autenticação de certificado 
+cliente. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaConsultarTeorComunicacao">
+		<wsdl:part name="parameters" element="tic:respostaConsultarTeorComunicacao">
+			<wsdl:documentation>
+Resposta contendo o status da operação, mensagem relativa à operação e as comunicações do tipo 
+'tipoComunicacaoProcessual', previsto no esquema intercomunicacao.xsd 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoConsultarProcesso">
+		<wsdl:part name="parameters" element="tic:requisicaoConsultarProcesso">
+			<wsdl:documentation>
+Elemento destinado a encapsular os parâmetros necessários a uma consulta processual. A identificação 
+do consultante e sua senha são desnecessárias caso tenha havido a autenticação e autorização por meio de certificado 
+cliente. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaConsultarProcesso">
+		<wsdl:part name="parameters" element="tic:respostaConsultarProcesso">
+			<wsdl:documentation>
+Elemento destinado a encapsular os parâmetros de resposta de uma consulta processual. A resposta 
+conterá o status da operação, mensagem relativa à operação e um elemento do tipo 'tipoProcesso', previsto no esquema 
+intercomunicacao.xsd 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoConsultarDocumentosProcesso">
+		<wsdl:part name="parameters" element="tic:requisicaoConsultarDocumentosProcesso">
+			<wsdl:documentation>
+Elemento destinado a encapsular os parâmetros necessários a uma consulta a documentos processuais. 
+cliente. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaConsultarDocumentosProcesso">
+		<wsdl:part name="parameters" element="tic:respostaConsultarDocumentosProcesso">
+			<wsdl:documentation>
+Elemento destinado a encapsular os parâmetros de resposta de uma consulta de documentos processuais. 
+
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoEntregarPeticaoInicial">
+		<wsdl:part name="parameters" element="tic:requisicaoEntregarPeticaoInicial">
+			<wsdl:documentation>
+Elemento que encapsula os dados do peticionamento inicial. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaEntregarPeticaoInicial">
+		<wsdl:part name="parameters" element="tic:respostaEntregarPeticaoInicial">
+			<wsdl:documentation>
+Elemento que encapsula a resposta decorrente da manifestação. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoEntregarPeticao">
+		<wsdl:part name="parameters" element="tic:requisicaoEntregarPeticao">
+			<wsdl:documentation>
+Elemento que encapsula os dados do peticionamento incidental. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaEntregarPeticao">
+		<wsdl:part name="parameters" element="tic:respostaEntregarPeticao">
+			<wsdl:documentation>
+Elemento que encapsula a resposta decorrente da manifestação. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoResponderComunicacao">
+		<wsdl:part name="parameters" element="tic:requisicaoResponderComunicacao">
+			<wsdl:documentation>
+Elemento que encapsula os dados da resposta a ato de comunicação processual. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaResponderComunicacao">
+		<wsdl:part name="parameters" element="tic:respostaResponderComunicacao">
+			<wsdl:documentation>
+Elemento que encapsula a resposta decorrente da manifestação. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoRemeterProcesso">
+		<wsdl:part name="parameters" element="tic:requisicaoRemeterProcesso">
+			<wsdl:documentation>
+Elemento que encapsula os dados da resposta a ato de comunicação processual. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaRemeterProcesso">
+		<wsdl:part name="parameters" element="tic:respostaRemeterProcesso">
+			<wsdl:documentation>
+Elemento que encapsula a resposta decorrente da manifestação. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoConsultarAlteracao">
+		<wsdl:part name="parameters" element="tic:requisicaoConsultarAlteracao">
+			<wsdl:documentation>
+Elemento que encapsula os dados de consulta relativos à existência de modificações em um processo 
+judicial. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaConsultarAlteracao">
+		<wsdl:part name="parameters" element="tic:respostaConsultarAlteracao">
+			<wsdl:documentation>
+Elemento que encapsula os dados de resposta relativos à existência de alterações em um processo 
+judicial. 
+			</wsdl:documentation>
+		</wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoConfirmarRecebimento">
+		<wsdl:part name="parameters" element="tic:requisicaoConfirmarRecebimento"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaConfirmarRecebimento">
+		<wsdl:part name="parameters" element="tic:respostaConfirmarRecebimento"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoConsultarLocalidades">
+		<wsdl:part name="parameters" element="tic:requisicaoConsultarLocalidades" />
+	</wsdl:message>
+	<wsdl:message name="respostaConsultarLocalidades">
+		<wsdl:part name="parameters" element="tic:respostaConsultarLocalidades"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoConsultarCompetencias">
+		<wsdl:part name="parameters" element="tic:requisicaoConsultarCompetencias"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaConsultarCompetencias">
+		<wsdl:part name="parameters" element="tic:respostaConsultarCompetencias"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoConsultarClasses">
+		<wsdl:part name="parameters" element="tic:requisicaoConsultarClasses"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaConsultarClasses">
+		<wsdl:part name="parameters" element="tic:respostaConsultarClasses"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoConsultarRemessas">
+		<wsdl:part name="parameters" element="tic:requisicaoConsultarRemessas"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaConsultarRemessas">
+		<wsdl:part name="parameters" element="tic:respostaConsultarRemessas"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="requisicaoConsultarAssuntos">
+		<wsdl:part name="parameters" element="tic:requisicaoConsultarAssuntos"></wsdl:part>
+	</wsdl:message>
+	<wsdl:message name="respostaConsultarAssuntos">
+		<wsdl:part name="parameters" element="tic:respostaConsultarAssuntos"></wsdl:part>
+	</wsdl:message>
+	<wsdl:portType name="mni">
+		<wsdl:operation name="consultarAvisosPendentes">
+			<wsdl:documentation>
+Operação destinada a permitir que o consultante verifique a existência de avisos de comunicação 
+processual pendentes junto ao tribunal fornecedor do serviço. Essa consulta poderá ser específica em relação a 
+uma parte representada ou, ainda, genérica, relativa aos processos em que o consultante opera como órgão de representação 
+processual (MP, defensoria pública, advocacia pública, escritório de advocacia e advogado). O retorno da consulta 
+é um objeto do tipo 'tipoConsultarAvisosPendentesResposta', que contém o status de sucesso da operação, mensagem 
+relativa à sua concretização e uma lista dos avisos pendentes de conhecimento pelo consultante, sendo os avisos 
+do tipo 'tipoAvisoComunicacaoPendente' definido no esquema intercomunicacao.xsd. Caso não haja aviso pendente, 
+será retornada uma lista de tamanho zero. 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConsultarAvisosPendentes" />
+			<wsdl:output message="tic:respostaConsultarAvisosPendentes" />
+		</wsdl:operation>
+		<wsdl:operation name="consultarTeorComunicacao">
+			<wsdl:documentation>
+Operação destinada a permitir a consulta a teor específico de comunicação processual pendente. 
+O retorno será um objeto do tipo 'tipoConsultaTeorComunicacaoResposta', que conterá o status de sucesso da operação, 
+mensagem relativa à sua concretização e uma lista de zero ou mais objetos do tipo 'tipoComunicacaoProcessual' definido 
+no esquema intercomunicacao.xsd 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConsultarTeorComunicacao"></wsdl:input>
+			<wsdl:output message="tic:respostaConsultarTeorComunicacao"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarProcesso">
+			<wsdl:documentation>
+Operação destinada a permitir a consulta a um processo judicial. Não é necessário que o consultante 
+seja representante de qualquer das partes componentes do processo. A implementação deverá assegurar que o processo 
+somente seja retornado se o nível de sigilo interno permitir a consulta pelo requerente. A identificação do requerente 
+somente será necessária quando inexistente a autenticação e autorização pelo certificado cliente do serviço. A 
+operação retornará objeto do tipo 'tipoConsultarProcessoResposta', que contém, além dos dados básicos, um objeto 
+do tipo 'tipoProcessoJudicial', definido pelo esquema intercomunicacao.xsd, caso o processo exista e possa ser 
+acessado pelo consultante. 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConsultarProcesso"></wsdl:input>
+			<wsdl:output message="tic:respostaConsultarProcesso"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarDocumentosProcesso">
+			<wsdl:documentation>
+Operação destinada a permitir a consulta de documentos processuais. Não é necessário que o 
+consultante seja representante de qualquer das partes componentes do processo. A implementação deverá assegurar 
+que os documentos somente sejam retornados se o nível de sigilo interno permitir a consulta pelo requerente. A 
+operação retornará objeto do tipo 'tipoConsultarDocumentosProcessoResposta'. 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConsultarDocumentosProcesso"></wsdl:input>
+			<wsdl:output message="tic:respostaConsultarDocumentosProcesso"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="entregarPeticaoInicial">
+			<wsdl:documentation>
+Operação destinada a permitir a entrega de peticionamento inicial. 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoEntregarPeticaoInicial"></wsdl:input>
+			<wsdl:output message="tic:respostaEntregarPeticaoInicial"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="entregarPeticao">
+			<wsdl:documentation>
+Operação destinada a permitir a entrega de peticionamento incidental. 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoEntregarPeticao"></wsdl:input>
+			<wsdl:output message="tic:respostaEntregarPeticao"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="responderComunicacao">
+			<wsdl:documentation>
+Operação destinada a permitir a resposta a ato de comunicação processual. 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoResponderComunicacao"></wsdl:input>
+			<wsdl:output message="tic:respostaResponderComunicacao"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="remeterProcesso">
+			<wsdl:documentation>
+Operação destinada a permitir a remessa de processo. 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoRemeterProcesso"></wsdl:input>
+			<wsdl:output message="tic:respostaRemeterProcesso"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarAlteracao">
+			<wsdl:documentation>
+Operação destinada a permitir uma verificação rápida quanto à existência de modificações havidas 
+em um processo judicial. 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConsultarAlteracao"></wsdl:input>
+			<wsdl:output message="tic:respostaConsultarAlteracao"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="confirmarRecebimento">
+			<wsdl:documentation>
+Operação destinada a permitir que um tribunal recebedor de um processo enviado confirme o integral 
+recebimento junto ao tribunal remetente 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConfirmarRecebimento"></wsdl:input>
+			<wsdl:output message="tic:respostaConfirmarRecebimento"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarLocalidades">
+			<wsdl:documentation>
+Operação de suporte destinada a consulta das localidades disponíveis.
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConsultarLocalidades"></wsdl:input>
+			<wsdl:output message="tic:respostaConsultarLocalidades"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarCompetencias">
+			<wsdl:documentation>
+Operação de suporte destinada a consulta das competências disponíveis.
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConsultarCompetencias"></wsdl:input>
+			<wsdl:output message="tic:respostaConsultarCompetencias"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarClasses">
+			<wsdl:documentation>
+Operação de suporte destinada à consulta das classes judiciais disponíveis.
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConsultarClasses"></wsdl:input>
+			<wsdl:output message="tic:respostaConsultarClasses"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarRemessas">
+			<wsdl:documentation>
+Operação de suporte destinada à consulta do histórico de remessas realizadas. 
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConsultarRemessas"></wsdl:input>
+			<wsdl:output message="tic:respostaConsultarRemessas"></wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarAssuntos">
+			<wsdl:documentation>
+Operação de suporte destinada à consulta dos assuntos disponíveis.
+			</wsdl:documentation>
+			<wsdl:input message="tic:requisicaoConsultarAssuntos"></wsdl:input>
+			<wsdl:output message="tic:respostaConsultarAssuntos"></wsdl:output>
+		</wsdl:operation>
+	</wsdl:portType>
+	<wsdl:binding name="mniSOAP" type="tic:mni">
+		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http" />
+		<wsdl:operation name="consultarAvisosPendentes">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/consultarAvisosPendentes" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarTeorComunicacao">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/consultarTeorComunicacao" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarProcesso">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/consultarProcesso" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarDocumentosProcesso">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/consultarDocumentosProcesso" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="entregarPeticaoInicial">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/entregarPeticaoInicial" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="entregarPeticao">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/entregarPeticao" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="responderComunicacao">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/responderComunicacao" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="remeterProcesso">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/remeterProcesso" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarAlteracao">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/consultarAlteracao" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="confirmarRecebimento">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/confirmarRecebimento" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarLocalidades">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/consultarLocalidades" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarCompetencias">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/consultarCompetencias" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarClasses">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/consultarClasses" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarRemessas">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/consultarRemessas" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+		<wsdl:operation name="consultarAssuntos">
+			<soap:operation soapAction="http://www.cnj.jus.br/mni/v300/consultarAssuntos" />
+			<wsdl:input>
+				<soap:body use="literal" />
+			</wsdl:input>
+			<wsdl:output>
+				<soap:body use="literal" />
+			</wsdl:output>
+		</wsdl:operation>
+	</wsdl:binding>
+	<wsdl:service name="mni">
+		<wsdl:port binding="tic:mniSOAP" name="mniSOAP">
+			<soap:address location="http://www.cnj.jus.br/mni/v300" />
+		</wsdl:port>
+	</wsdl:service>
+</wsdl:definitions>

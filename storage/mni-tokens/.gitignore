@@ -1,0 +1,4 @@
+# Cache local de tokens de autenticacao MNI (reciboToken v3).
+# Nao versionar — sao credenciais efemeras vinculadas ao usuario consultante.
+*
+!.gitignore

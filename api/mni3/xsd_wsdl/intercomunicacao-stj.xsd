@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema 
+	elementFormDefault="qualified" 
+	targetNamespace="http://www.stj.jus.br/mni/v100/intercomunicacao"
+	xmlns="http://www.w3.org/2001/XMLSchema" 
+	xmlns:cnj="http://www.cnj.jus.br/mni/v300/intercomunicacao"
+	xmlns:stj="http://www.stj.jus.br/mni/v100/intercomunicacao">
+	
+	<import schemaLocation="./intercomunicacao.xsd" namespace="http://www.cnj.jus.br/mni/v300/intercomunicacao" />
+	<annotation>
+		<documentation>Extensão do STJ. Versão: 1.0.0 Data: 02/2019</documentation>
+	</annotation>
+	<complexType name="tipoCabecalhoProcessoStj">
+		<sequence>
+			<element name="classeProcessual" type="stj:tipoClasseProcessual" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>Classe do processo a ser encaminhado ao STJ.</documentation>
+				</annotation>
+			</element>
+			<element name="detalheNaturezaFisico" type="stj:tipoNaturezaFisico" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>Preenchida somente quando a natureza for FISICO. Elemento destinado ao encaminhamento
+						dos números informativos de páginas e outras informações do processo físico.
+					</documentation>
+				</annotation>
+			</element>
+			<element name="representativoControversia" type="stj:tipoRepresentativoControversia" minOccurs="0"
+				maxOccurs="1">
+				<annotation>
+					<documentation> Corresponde à indicação do Recurso Especial destacado pela Corte de Origem como
+						paradigma, quando vislumbra uma multiplicidade de Recursos Especiais com fundamento em idêntica
+						questão de direito.
+					</documentation>
+				</annotation>
+			</element>
+			<element name="unidadeFederacao" type="cnj:modalidadeUnidadeFederacao" minOccurs="1" maxOccurs="1">
+				<annotation>
+					<documentation>Corresponde à sigla da UF de onde se originou o processo.</documentation>
+				</annotation>
+			</element>
+		</sequence>
+		<attribute name="naturezaEnvio" use="required">
+			<annotation>
+				<documentation>Indica a forma de envio do processo ao STJ: Digitalizado, Eletrônico ou Físico.
+				</documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="string">
+					<enumeration value="ELETRONICO"></enumeration>
+					<enumeration value="DIGITALIZADO"></enumeration>
+					<enumeration value="FISICO"></enumeration>
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="numeroOrigem" type="stj:tipoNumeroOrigem" use="required">
+			<annotation>
+				<documentation>Corresponde ao número do processo no Tribunal de origem, ou seja, naquele Tribunal que o
+					está enviando ao STJ.
+				</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="nomeLocalidade" type="string">
+			<annotation>
+				<documentation>Corresponde à descrição do local de origem do processo, pode ser o nome da capital da UF
+					onde se originou o processo ou nome da cidade, se o processo veio da justiça de 1ª instância.
+				</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="pedidoLiminarSTJ" type="boolean">
+			<annotation>
+				<documentation>Indica se o processo possui pedido de liminar a ser julgado no STJ.</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="segredoJustica" type="boolean">
+			<annotation>
+				<documentation>Indica se o processo corre em segredo de justiça, conforme estabelece o artigo 155 do
+					CPC.
+				</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="criminal" type="boolean">
+			<annotation>
+				<documentation>Indicação de tramitação de processo em matéria criminal.</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="custas" type="boolean">
+			<annotation>
+				<documentation>Indica o status de recolhimento das custas.</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="nomeRelatorStj" type="string">
+			<annotation>
+				<documentation>Nome do ministro relator do processo no STJ.</documentation>
+			</annotation>
+		</attribute>
+		<attribute name="repetitivo" type="boolean">
+			<annotation>
+				<documentation></documentation>
+			</annotation>
+		</attribute>
+		<attribute name="resumoIndicativo" type="string">
+			<annotation>
+				<documentation></documentation>
+			</annotation>
+		</attribute>
+	</complexType>
+	<simpleType name="tipoNumeroOrigem">
+		<restriction base="string">
+			<maxLength value="50"></maxLength>
+		</restriction>
+	</simpleType>
+	<complexType name="tipoClasseProcessual">
+		<annotation>
+			<documentation>Lista classe processual conforme Resolução 46 do CNJ.</documentation>
+		</annotation>
+		<sequence>
+			<element name="codigoClasseTribunalOrigem" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>Código da classe processual do processo no Tribunal de Origem conforme tabela
+						unificada do CNJ.
+					</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="int">
+						<minInclusive value="1"></minInclusive>
+					</restriction>
+				</simpleType>
+			</element>
+			<element name="codigoClassePrimeiraInstancia" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>Código da classe processual do processo na primeira instância, quando houver,
+						conforme tabela unificada do CNJ.
+					</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="int">
+						<minInclusive value="1"></minInclusive>
+					</restriction>
+				</simpleType>
+			</element>
+		</sequence>
+	</complexType>
+	<complexType name="tipoNaturezaFisico">
+		<attribute name="paginaPedidoLiminarStj" use="optional">
+			<annotation>
+				<documentation></documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="int">
+					<minInclusive value="1"></minInclusive>
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="paginaPrioridadeEstatutoIdoso" use="optional">
+			<annotation>
+				<documentation></documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="int">
+					<minInclusive value="1"></minInclusive>
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="paginaCustas" use="optional">
+			<annotation>
+				<documentation></documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="int">
+					<minInclusive value="1"></minInclusive>
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="paginaRepresentativoControversia" use="optional">
+			<annotation>
+				<documentation></documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="int">
+					<minInclusive value="1"></minInclusive>
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="quantidadeVolumes" use="optional" default="1">
+			<annotation>
+				<documentation>Corresponde ao quantitativo da divisão do processo, conforme número de folhas.
+				</documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="int">
+					<minInclusive value="1"></minInclusive>
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="quantidadeApensos" use="optional" default="0">
+			<annotation>
+				<documentation>Corresponde aos documentos adicionais, com numeração própria, distintos dos autos
+					principais a eles anexados.
+				</documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="int">
+					<minInclusive value="0"></minInclusive>
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="ultimaFolha" use="optional" default="1">
+			<annotation>
+				<documentation>Corresponde à última página que compõe os autos.</documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="int">
+					<minInclusive value="1"></minInclusive>
+				</restriction>
+			</simpleType>
+		</attribute>
+	</complexType>
+	<complexType name="tipoRepresentativoControversia">
+		<attribute name="representativoControversia" type="boolean" use="required">
+		</attribute>
+		<attribute name="quantidadeProcessosSobrestados" use="optional">
+			<annotation>
+				<documentation>Indica, para os processos com indicação de RRCo, o quantitativo de processos sobrestados
+					naquele Tribunal por conta do tema informado.
+				</documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="int">
+					<minInclusive value="1"></minInclusive>
+				</restriction>
+			</simpleType>
+		</attribute>
+	</complexType>
+	<complexType name="tipoParteStj">
+		<attribute name="numeroPaginaAssistenciaJudiciaria" use="optional">
+			<annotation>
+				<documentation>Caso processo seja encaminhado de forma física ao STJ, deverá ser informado o número da
+					página contendo a informação se houve deferimento do pedido de justiça gratuita para a parte do
+					recurso interposto, conforme a Lei n. 1.060/50.
+				</documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="int">
+					<minInclusive value="1"></minInclusive>
+				</restriction>
+			</simpleType>
+		</attribute>
+	</complexType>
+	<complexType name="tipoComunicacaoProcessualStj">
+		<annotation>
+			<documentation></documentation>
+		</annotation>
+	</complexType>
+	<complexType name="tipoDocumentoStj">
+		<annotation>
+			<documentation></documentation>
+		</annotation>
+		<attribute name="numeroVolume" use="optional" default="1">
+			<annotation>
+				<documentation>Corresponde ao quantitativo da divisão do processo a que pertence o documento.
+				</documentation>
+			</annotation>
+			<simpleType>
+				<restriction base="int">
+					<minInclusive value="1"></minInclusive>
+				</restriction>
+			</simpleType>
+		</attribute>
+		<attribute name="apenso" type="boolean" use="optional">
+			<annotation>
+				<documentation>Indica se é um documento adicional (conferir campo quantidade de apensos).</documentation>
+			</annotation>
+		</attribute>
+	</complexType>
+</schema>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema 
+	targetNamespace="http://www.cnj.jus.br/mni/v300/eleicao" 
+	elementFormDefault="qualified" 
+	xmlns="http://www.w3.org/2001/XMLSchema" 
+	xmlns:ele="http://www.cnj.jus.br/mni/v300/eleicao"
+	xmlns:mni="http://www.cnj.jus.br/mni/v300/intercomunicacao" 
+	xmlns:xmime="http://www.w3.org/2005/05/xmlmime">
+	
+	<import schemaLocation="intercomunicacao.xsd" namespace="http://www.cnj.jus.br/mni/v300/intercomunicacao" />
+
+	<element name="eleicao">
+		<complexType>
+			<sequence>
+				<element name="ano" type="mni:tipoAno" minOccurs="1" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Ano da eleição.
+						</documentation>
+					</annotation>
+				</element>
+
+				<element name="municipio" type="mni:tipoCidade" minOccurs="1" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Munícipio de realização da eleição. Nos casos de
+							eleição geral, deve-se informar a capital do estado
+							para eleição de deputados, senadores e governadores.
+							Para Presidente da República, informar o município 
+							de 'Brasília'.
+						</documentation>
+					</annotation>
+				</element>
+
+				<element name="tipo" minOccurs="1" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Determina o tipo da eleição. Valores possíveis:
+							- GER: geral;
+							- MUN: municipal;
+							- SUP: suplementar.
+						</documentation>
+					</annotation>
+					<simpleType>
+						<restriction base="string">
+							<enumeration value="GER"></enumeration>
+							<enumeration value="MUN"></enumeration>
+							<enumeration value="SUP"></enumeration>
+						</restriction>
+					</simpleType>
+				</element>
+			</sequence>
+		</complexType>
+	</element>
+</schema>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema 
+	targetNamespace="http://www.cnj.jus.br/mni/v300/agendamento" 
+	elementFormDefault="qualified" 
+	xmlns="http://www.w3.org/2001/XMLSchema" 
+	xmlns:age="http://www.cnj.jus.br/mni/v300/agendamento"
+	xmlns:mni="http://www.cnj.jus.br/mni/v300/intercomunicacao" 
+	xmlns:xmime="http://www.w3.org/2005/05/xmlmime">
+	
+	<import schemaLocation="intercomunicacao.xsd" namespace="http://www.cnj.jus.br/mni/v300/intercomunicacao" />
+
+	<element name="agendamento">
+		<complexType>
+			<sequence>
+				<element name="id" type="string">
+					<annotation>
+						<documentation>
+							Identificador do agendamento.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="data" type="mni:tipoDataHora">
+					<annotation>
+						<documentation>
+							Data e hora do agendamento.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="endereco" type="mni:tipoEndereco">
+					<annotation>
+						<documentation>
+							Local da realização do evento agendado.
+						</documentation>
+					</annotation>
+				</element>	
+
+				<element name="complemento" type="string">
+					<annotation>
+						<documentation>
+							Informações complementares.
+						</documentation>
+					</annotation>
+				</element>	
+
+				<element name="tipo">
+					<annotation>
+						<documentation>
+							Determina o tipo do agendamento. Valores possíveis:
+							- AUD: audiência;
+							- SES: sessão;
+							- PER: perícia;
+							- INS: inspeção
+						</documentation>
+					</annotation>
+					<simpleType>
+						<restriction base="string">
+							<enumeration value="AUD"></enumeration>
+							<enumeration value="SES"></enumeration>
+							<enumeration value="PER"></enumeration>
+							<enumeration value="INS"></enumeration>
+						</restriction>
+					</simpleType>
+				</element>			
+			</sequence>
+		</complexType>
+	</element>
+</schema>

@@ -1,0 +1,636 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema 
+	targetNamespace="http://www.cnj.jus.br/mni/v300/execucao-penal" 
+	elementFormDefault="qualified" 
+	xmlns="http://www.w3.org/2001/XMLSchema" 
+	xmlns:exp="http://www.cnj.jus.br/mni/v300/execucao-penal"
+	xmlns:mni="http://www.cnj.jus.br/mni/v300/intercomunicacao" 
+	xmlns:xmime="http://www.w3.org/2005/05/xmlmime">
+	
+	<import schemaLocation="intercomunicacao.xsd" namespace="http://www.cnj.jus.br/mni/v300/intercomunicacao" />
+
+	<element name="execucaoPenal">
+		<complexType>
+			<sequence>
+				<element name="dataInicioCumprimentoPena" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Data de início do cumprimento da pena pelo sentenciado.
+						</documentation>
+					</annotation>
+				</element>
+				
+				<element name="regimePenal" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Regime atual do sentenciado. Poder ter os seguintes valores:
+							- 1: aberto;
+							- 2: semiaberto;
+							- 3: fechado.
+						</documentation>
+					</annotation>
+					<simpleType>
+						<restriction base="string">
+							<enumeration value="1"></enumeration>
+							<enumeration value="2"></enumeration>
+							<enumeration value="3"></enumeration>
+						</restriction>
+					</simpleType>
+				</element>
+	
+				<element name="penaTotalImposta" type="exp:tipoTempoPenal" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Pena total imposta já descontado as penas indultadas e extintas.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="penaTotalHedionda" type="exp:tipoTempoPenal" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Pena total hedionda já descontado as penas indultadas e extintas.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="totalInterrupcao" type="exp:tipoTempoPenal" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Total de interrupção do cumprimento de pena.
+						</documentation>
+					</annotation>
+				</element>
+
+				<element name="totalDetracao" type="exp:tipoTempoPenal" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Total de tempo cumprido anteriormente ao início de execução da pena.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="totalDiasRemidos" type="int" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Saldo da remição em dias do sentenciado já descontados os dias 
+							remidos perdidos.
+						</documentation>
+					</annotation>
+				</element>
+
+				<element name="totalDiasMulta" type="int" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Total dos dias de multa.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="totalCondenacaoExtintaIndultada" type="exp:tipoTempoPenal" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Total da condenação extinta ou indultada.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="dataProgressaoRegime" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Data provável de progressão de regime.
+						</documentation>
+					</annotation>
+				</element>
+		
+				<element name="justificativaProgressaoRegime" type="string" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Justificativa da progressão de regime.
+						</documentation>
+					</annotation>
+				</element>
+		
+				<element name="dataJustificativaProgressaoRegime" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Ligada ao campo anterior, indica a data da 
+							justificativa da progressão de regime.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="dataBaseProgressaoRegime" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Data base para o cálculo de progressão de regime.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="dataLivramentoCondicional" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Data provável do livramento condicional.
+						</documentation>
+					</annotation>
+				</element>
+		
+				<element name="justificativaLivramentoCondicional" type="string" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Justificativa do livramento condicional.
+						</documentation>
+					</annotation>
+				</element>
+		
+				<element name="dataJustificativaLivramentoCondicional" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Ligada ao campo anterior, indica a data da 
+							justificativa do livramento condicional.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="dataBaseLivramentoCondicional" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Data base para o cálculo do livramento condicional.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="dataTerminoPena" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Data provável do término da pena.
+						</documentation>
+					</annotation>
+				</element>
+		
+				<element name="justificativaTerminoPena" type="string" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Justificativa do término da pena.
+						</documentation>
+					</annotation>
+				</element>
+		
+				<element name="dataJustificativaTerminoPena" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Ligada ao campo anterior, indica a data da 
+							justificativa do término da pena.
+						</documentation>
+					</annotation>
+				</element>
+			
+				<element name="livramentoCondicional" type="boolean" minOccurs="0" maxOccurs="1" default="false">
+					<annotation>
+						<documentation>
+							Indica se o sentenciado está em livramento condicional.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="medidaSeguranca" type="boolean" minOccurs="0" maxOccurs="1" default="false">
+					<annotation>
+						<documentation>
+							Indica se o sentenciado está em medida de segurança.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="penaSubstitutiva" type="boolean" minOccurs="0" maxOccurs="1" default="false">
+					<annotation>
+						<documentation>
+							Indica se o sentenciado está cumprindo pena substitutiva.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="monitoramentoEletronico" type="boolean" minOccurs="0" maxOccurs="1" default="false">
+					<annotation>
+						<documentation>
+							Indica se o sentenciado está utilizando tornozeleira eletrônica.
+						</documentation>
+					</annotation>
+				</element>
+
+				<element name="extinto" type="boolean" minOccurs="0" maxOccurs="1" default="false">
+					<annotation>
+						<documentation>
+							Indica se todas as ações penais do sentenciado estão extintas.
+						</documentation>
+					</annotation>
+				</element>
+	
+				<element name="sursis" type="boolean" minOccurs="0" maxOccurs="1" default="false">
+					<annotation>
+						<documentation>
+							Indica o sentenciado está em Sursis.
+						</documentation>
+					</annotation>
+				</element>
+
+				<element name="reincidente" type="boolean" minOccurs="0" maxOccurs="1" default="false">
+					<annotation>
+						<documentation>
+							Indica se o sentenciado reincidiu na transgressão.
+						</documentation>
+					</annotation>
+				</element>
+
+				<element name="situacaoSentenciado" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Indica a situação atual do sentenciado:
+							- S: solto;
+							- P: preso;
+							- F: foragido.
+						</documentation>
+					</annotation>
+					<simpleType>
+						<restriction base="string">
+							<enumeration value="S"></enumeration>
+							<enumeration value="P"></enumeration>
+							<enumeration value="F"></enumeration>
+						</restriction>
+					</simpleType>
+				</element>
+
+				<element name="situacaoProcesso" minOccurs="0" maxOccurs="1">
+					<annotation>
+						<documentation>
+							Indica a situação atual do processo:
+							- 0: ativo;
+							- 1: arquivado;
+							- 2: suspenso/sobrestado;
+							- 3: em instância superior;
+							- 4: arquivado provisoriamente;
+							- 5: arquivado sem distribuição;
+							- 6: arquivado por declínio de competência;
+							- 7: inválido.
+						</documentation>
+					</annotation>
+					<simpleType>
+						<restriction base="string">
+							<enumeration value="0"></enumeration>
+							<enumeration value="1"></enumeration>
+							<enumeration value="2"></enumeration>
+							<enumeration value="3"></enumeration>
+							<enumeration value="4"></enumeration>
+							<enumeration value="5"></enumeration>
+							<enumeration value="6"></enumeration>
+							<enumeration value="7"></enumeration>
+						</restriction>
+					</simpleType>
+				</element>
+				
+				<choice>
+					<element name="codigoUnidadePrisional" type="string" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>
+								Código de identificação da unidade prisional,
+								conforme o Cadastro Nacional de Inspeções nos
+								Estabelecimentos Penais - CNIEP.
+							</documentation>
+						</annotation>
+					</element>
+					<element name="unidadePrisional" type="exp:tipoUnidadePrisional" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>
+								Dados da unidade prisional que não conste do
+								Cadastro Nacional de Inspeções nos Estabelecimentos
+								Penais - CNIEP
+							</documentation>
+						</annotation>
+					</element>
+				</choice>
+			
+				<element name="processosCriminais" type="exp:tipoProcessoCriminal" minOccurs="0" maxOccurs="unbounded">
+					<annotation>
+						<documentation>
+							Lista dos processos criminais que determinaram as condenações.
+						</documentation>
+					</annotation>
+				</element>
+			</sequence>
+		</complexType>
+	</element>
+	
+	<complexType name="tipoUnidadePrisional">
+		<sequence>
+			<element name="local" type="string" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Nome da unidade prisional onde o sentenciado está preso ou cumprindo pena.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="municipio" type="mni:tipoCidade" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Cidade da unidade prisional.
+					</documentation>
+				</annotation>
+			</element>
+		</sequence>
+	</complexType>
+	
+	<complexType name="tipoArtigoCondenacao">
+		<sequence>
+			<element name="numeroLei" type="string" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Número da lei.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="anoLei" type="mni:tipoAno" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Ano da lei.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="artigoLei" type="string" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Artigo da lei.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="penaTotalArtigo" type="exp:tipoTempoPenal" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Pena total desmembrada do artigo.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="hediondo" type="boolean" minOccurs="0" maxOccurs="1" default="false">
+				<annotation>
+					<documentation>
+						Indica se o artigo da sentença condenatória é hediondo.
+					</documentation>
+				</annotation>
+			</element>
+			<element name="observacao" type="string" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Outros detalhes.
+					</documentation>
+				</annotation>
+			</element>
+		</sequence>
+	</complexType>
+	
+	<complexType name="tipoMedidaAlternativa">
+		<sequence>
+			<element name="dataInicioCumprimento" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Data de ínicio do cumprimento da medida alternativa.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="dataPrevistaEncerramento" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Data prevista de encerramento da medida alternativa.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="dataRealEncerramento" type="mni:tipoData" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Data real de encerramento da medida alternativa.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="tipoAplicacao" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Definidor dos tipos possíveis de aplicação da pena:
+						- 1: Regime aberto;
+						- 2: Livramento condicional;
+						- 3: Tornozeleira eletrônica;
+						- 4: Pena substitutiva.
+					</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="string">
+						<enumeration value="1" />
+						<enumeration value="2" />
+						<enumeration value="3" />
+						<enumeration value="4" />
+					</restriction>
+				</simpleType>
+			</element>
+
+			<element name="tipoMedida" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Definidor dos tipos possíveis de medida alternativa:
+						- 1: Multa;
+						- 2: Prestação pecuniária;
+						- 3: Prestação de serviços comunitários;
+						- 4: Interdição temporária de direitos;
+						- 5: Limitação fim de semana;
+						- 6: Advertência efeitos de droga;
+						- 7: Frequência em curso educativo;
+						- 8: Suspensão condicional;
+						- 9: Reparação de dano;
+						- 10: Proibição de frequentar lugares;
+						- 11: Proibição de se ausentar da comarca;
+						- 12: Comparecimento em juízo;
+						- 13: Doação;
+						- 14: Perda de bens ou valores;
+						- 15: Recolhimento domiciliar;
+						- 16: Suspensão parcial ou total de atividades;
+						- 17: Medida protetiva;
+						- 18: Tratamento de desintoxicação;
+						- 19: Tratamento ambulatorial;
+						- 20: Sequestro;
+						- 21: Arresto;
+						- 22: Hipoteca legal;
+						- 23: Proibição de acesso ou frequência;
+						- 24: Proibição de manter contato com pessoas;
+						- 25: Suspensão de função pública;
+						- 26: Fiança;
+						- 27: Monitoração eletrônica;
+						- 28: Obrigação em comunicar alteração de endereço;
+						- 29: Trabalho honesto;
+						- 30: Dano ambiental;
+						- 31: Prestação pecuniária fundos;
+						- 32: Outras condições.
+					</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="string">
+						<enumeration value="1" />
+						<enumeration value="2" />
+						<enumeration value="3" />
+						<enumeration value="4" />
+						<enumeration value="5" />
+						<enumeration value="6" />
+						<enumeration value="7" />
+						<enumeration value="8" />
+						<enumeration value="9" />
+						<enumeration value="10" />
+						<enumeration value="11" />
+						<enumeration value="12" />
+						<enumeration value="13" />
+						<enumeration value="14" />
+						<enumeration value="15" />
+						<enumeration value="16" />
+						<enumeration value="17" />
+						<enumeration value="18" />
+						<enumeration value="19" />
+						<enumeration value="20" />
+						<enumeration value="21" />
+						<enumeration value="22" />
+						<enumeration value="23" />
+						<enumeration value="24" />
+						<enumeration value="25" />
+						<enumeration value="26" />
+						<enumeration value="27" />
+						<enumeration value="28" />
+						<enumeration value="29" />
+						<enumeration value="30" />
+						<enumeration value="31" />
+						<enumeration value="32" />
+					</restriction>
+				</simpleType>
+			</element>
+
+			<element name="situacao" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Definidor das situação possíveis da medida alternativa:
+						- A: Ativa;
+						- T: Atrasada;
+						- I: Em análise;
+						- R: Reavaliada;
+						- C: Cumprida;
+						- N: Não cumprida;
+						- E: Execução;
+						- D: Desativada.
+					</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="string">
+						<enumeration value="A" />
+						<enumeration value="T" />
+						<enumeration value="I" />
+						<enumeration value="R" />
+						<enumeration value="C" />
+						<enumeration value="N" />
+						<enumeration value="E" />
+						<enumeration value="D" />
+					</restriction>
+				</simpleType>
+			</element>
+			
+			<element name="observacao" type="string" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Complemento sobre a medida alternativa.
+					</documentation>
+				</annotation>
+			</element>		
+		</sequence>
+	</complexType>
+	
+	<complexType name="tipoProcessoCriminal">
+		<sequence>
+			<element name="numero" type="mni:tipoNumeroUnico" minOccurs="1" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Número único do processo de condenação.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="penaTotal" type="exp:tipoTempoPenal" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Pena total da ação criminal indicada.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="diasMulta" type="int" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Quantidade de dias de multa.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="reincidencia" type="boolean" minOccurs="0" maxOccurs="1" default="false">
+				<annotation>
+					<documentation>
+						Define se houve reincidência na transgressão.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="tipoPena" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>
+						Definidor dos tipos possíveis de pena:
+						- R: Reclusão;
+						- D: Detenção;
+						- P: Prisão simples.
+					</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="string">
+						<enumeration value="R" />
+						<enumeration value="D" />
+						<enumeration value="P" />
+					</restriction>
+				</simpleType>
+			</element>
+
+			<element name="artigos" type="exp:tipoArtigoCondenacao" minOccurs="1" maxOccurs="unbounded">
+				<annotation>
+					<documentation>
+						Lista das leis e artigos da condenação.
+					</documentation>
+				</annotation>
+			</element>
+
+			<element name="medidasAlternativas" type="exp:tipoMedidaAlternativa" minOccurs="1" maxOccurs="unbounded">
+				<annotation>
+					<documentation>
+						Lista medidas alternativas.
+					</documentation>
+				</annotation>
+			</element>
+		</sequence>
+	</complexType>
+
+	<simpleType name="tipoTempoPenal">
+		<annotation>
+			<documentation>
+				Tipo destinado a definir o padrão de tempo penal,
+				no formado 99a99m99d.
+			</documentation>
+		</annotation>
+		<restriction base="string">
+			<pattern value="^(\d{1,2}a\d{1,2}m\d{1,2}d)$"></pattern>
+		</restriction>
+	</simpleType>
+	
+</schema>

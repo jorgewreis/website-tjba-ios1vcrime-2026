@@ -1,0 +1,4 @@
+Fixtures dos testes MNI ficam aqui. Os arquivos gerados pelos scripts
+(wsdl-*.xml, raw/cnj-*.xml) sao locais e nao devem ir para o repositorio
+quando contiverem dados sensiveis. Mantenha apenas exemplos sanitizados
+no controle de versao se necessario.
