@@ -332,7 +332,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
                     <button type="button" class="button-btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">
                         <span class="btn-icon-text">Voltar</span>
                     </button>
-                    <button type="button" class="button-btn btn-primary" id="cadastrar-btn">
+                    <button type="button" class="button-btn btn-primary disabled" id="cadastrar-btn" disabled aria-disabled="true">
                         <span class="btn-icon-text">Cadastrar</span>
                         <div class="btn-icon hidden">
                             <i class="fi fi-rr-spinner" aria-hidden="true"></i>
@@ -571,6 +571,63 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
                 return;
             }
             App.CartorioCartasExpedidasCreate.initialize({ alocacaoPrefix: 'cartas-exp', submitDelayMs: 1000 });
+
+            // Botão Cadastrar inicia desabilitado; só habilita quando TODOS os campos
+            // marcados com "*" estiverem preenchidos. Trabalha em conjunto com o gate
+            // (Aguarde.../Erro/Cadastrar) sem sobrepor seus estados de loading/erro.
+            (function setupRequiredFieldsGate() {
+                var cadastrarBtn = document.getElementById('cadastrar-btn');
+                if (!cadastrarBtn) return;
+
+                var hintNodes = document.querySelectorAll('label .label-hint-obrigatorio');
+                var requiredFields = [];
+                hintNodes.forEach(function (hint) {
+                    var label = hint.closest('label');
+                    if (!label) return;
+                    var forId = label.getAttribute('for');
+                    if (!forId) return;
+                    var field = document.getElementById(forId);
+                    if (field && requiredFields.indexOf(field) === -1) {
+                        requiredFields.push(field);
+                    }
+                });
+                if (requiredFields.length === 0) return;
+
+                function isFilled(field) {
+                    return String(field.value || '').trim() !== '';
+                }
+                function allFilled() {
+                    return requiredFields.every(isFilled);
+                }
+                function gateWantsEnabled() {
+                    var labelEl = cadastrarBtn.querySelector('.btn-icon-text');
+                    var currentLabel = labelEl
+                        ? String(labelEl.textContent || '').trim()
+                        : String(cadastrarBtn.textContent || '').trim();
+                    return currentLabel === 'Cadastrar' || currentLabel === 'Novo cadastro';
+                }
+                function applyState() {
+                    if (allFilled() && gateWantsEnabled()) {
+                        cadastrarBtn.disabled = false;
+                        cadastrarBtn.classList.remove('disabled');
+                        cadastrarBtn.removeAttribute('aria-disabled');
+                    } else {
+                        cadastrarBtn.disabled = true;
+                        cadastrarBtn.classList.add('disabled');
+                        cadastrarBtn.setAttribute('aria-disabled', 'true');
+                    }
+                }
+
+                requiredFields.forEach(function (field) {
+                    field.addEventListener('input', applyState);
+                    field.addEventListener('change', applyState);
+                    field.addEventListener('blur', applyState);
+                });
+                window.addEventListener('datajudClasseResolved', applyState);
+                window.addEventListener('cnjInvalid', applyState);
+
+                applyState();
+            })();
         })();
     </script>
 </body>

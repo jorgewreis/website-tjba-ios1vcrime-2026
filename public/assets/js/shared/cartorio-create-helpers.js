@@ -139,7 +139,15 @@
         const hasIconStructure = !!labelEl;
 
         const apply = function (label, disabled, loading) {
-            button.disabled = disabled === true;
+            const isDisabled = disabled === true;
+            button.disabled = isDisabled;
+            if (isDisabled) {
+                button.classList.add('disabled');
+                button.setAttribute('aria-disabled', 'true');
+            } else {
+                button.classList.remove('disabled');
+                button.removeAttribute('aria-disabled');
+            }
             if (hasIconStructure) {
                 labelEl.textContent = label;
             } else {

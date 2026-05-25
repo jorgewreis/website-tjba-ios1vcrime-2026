@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 09 de abril de 2026
+**Data de Lançamento:** 25 de maio de 2026
 
 # V. 1.77
 
-> feat: implement directed user allocation functionality across various services, enhancing task management and user eligibility checks
+> refactor: enhance cartas expedidas create UI with improved loading states and dynamic info display
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: implement directed user allocation functionality across various services, enhancing task management and user eligibility checks** `[7007bd1]`
+- **refactor: enhance cartas expedidas create UI with improved loading states and dynamic info display** `[fa9dc94d]`
 
 ---
 
