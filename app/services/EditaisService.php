@@ -47,8 +47,11 @@ final class EditaisService
         foreach ($rows as $i => $row) {
             $idEdital = (string) ($row['IdEdital'] ?? '');
             if ($idEdital !== '') {
-                $this->subtarefasRepository->ensureSubtarefasAtivas($idEdital);
-                $this->tentarFinalizacaoAutomaticaPorDecurso($idEdital);
+                $statusEdital = (string) ($row['Status'] ?? '');
+                if (!$this->isStatusTerminal($statusEdital)) {
+                    $this->subtarefasRepository->ensureSubtarefasAtivas($idEdital);
+                    $this->tentarFinalizacaoAutomaticaPorDecurso($idEdital);
+                }
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByEditalId($idEdital);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByEditalId($idEdital);
                 $editalAtualizado = $this->repository->findById($idEdital);
@@ -202,8 +205,12 @@ final class EditaisService
         if ($editalId === '') {
             throw new InvalidArgumentException('Identificador do edital é obrigatório.');
         }
-        if ($this->repository->findById($editalId) === null) {
+        $edital = $this->repository->findById($editalId);
+        if ($edital === null) {
             throw new InvalidArgumentException('Edital não encontrado.');
+        }
+        if ($this->isStatusTerminal($edital['status'] ?? '')) {
+            throw new InvalidArgumentException('Não é possível criar subtarefas para edital cancelado ou concluído.');
         }
         $existentes = $this->subtarefasRepository->findByEditalId($editalId);
         if (count($existentes) > 0) {
@@ -255,6 +262,22 @@ final class EditaisService
 
         if ($editalId === '') {
             throw new InvalidArgumentException('Edital da subtarefa não identificado.');
+        }
+
+        $edital = $this->repository->findById($editalId);
+        if ($edital === null) {
+            throw new InvalidArgumentException('Edital não encontrado.');
+        }
+        if ($this->isStatusTerminal($edital['status'] ?? '')) {
+            throw new InvalidArgumentException('Não é possível concluir subtarefas de edital cancelado ou concluído.');
+        }
+        $statusSubtarefa = str_replace(
+            'concluída',
+            'concluida',
+            mb_strtolower(trim((string) ($subtarefa['status'] ?? '')), 'UTF-8')
+        );
+        if ($statusSubtarefa === 'concluida') {
+            throw new InvalidArgumentException('Esta subtarefa já foi concluída. Atualize a página.');
         }
 
         $usuarioIdMovimentacao = null;
@@ -796,6 +819,13 @@ final class EditaisService
             return false;
         }
         return $this->repository->update($id, $data);
+    }
+
+    private function isStatusTerminal($status): bool
+    {
+        $statusNorm = str_replace('concluída', 'concluida', mb_strtolower(trim((string) $status), 'UTF-8'));
+
+        return in_array($statusNorm, ['cancelada', 'concluida', 'finalizada'], true);
     }
 
     public function cancel(string $id): bool

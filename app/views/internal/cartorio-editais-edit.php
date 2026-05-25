@@ -72,9 +72,12 @@ if ($edital !== null) {
     $prazoDiasValue = isset($edital['prazo_dias']) ? (int) $edital['prazo_dias'] : 0;
 
     $subtarefasRepo = new EditaisSubtarefasRepository($connection);
-    $subtarefasRepo->ensureSubtarefasAtivas($idEdital);
     $serviceEditalFluxo = new EditaisService($connection);
-    $serviceEditalFluxo->tentarFinalizacaoAutomaticaPorDecurso($idEdital);
+    $statusAtualNorm = EditaisUiCopy::normalizarStatusPrincipal($statusAtual);
+    if (!in_array($statusAtualNorm, ['concluida', 'finalizada', 'cancelada'], true)) {
+        $subtarefasRepo->ensureSubtarefasAtivas($idEdital);
+        $serviceEditalFluxo->tentarFinalizacaoAutomaticaPorDecurso($idEdital);
+    }
     $edital = $serviceEditalFluxo->find($idEdital) ?? $edital;
     if ($edital !== null) {
         $statusAtual = trim((string) ($edital['status'] ?? $statusAtual));

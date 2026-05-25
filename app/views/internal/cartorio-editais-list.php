@@ -312,7 +312,7 @@ if ($totalPages > 0) {
                 $decursoInfo = is_array($row['DecursoInfo'] ?? null) ? $row['DecursoInfo'] : [];
                 $statusTarefa = (string) ($row['Status'] ?? '');
                 $statusTarefaNorm = EditaisUiCopy::normalizarStatusPrincipal($statusTarefa);
-                $tarefaConcluida = in_array($statusTarefaNorm, ['concluida', 'finalizada'], true);
+                $tarefaConcluida = in_array($statusTarefaNorm, ['concluida', 'finalizada', 'cancelada'], true);
                 $allSt = $row['SubtarefasAll'] ?? [];
                 $subtarefasExpansao = [];
                 foreach ($allSt as $stRow) {

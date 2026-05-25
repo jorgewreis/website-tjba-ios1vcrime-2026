@@ -355,7 +355,7 @@ if ($totalPages > 0) {
                     $idCarta = $row['IdCarta'];
                     $subtarefas = $row['Subtarefas'] ?? [];
                     $statusTarefa = (string) ($row['Status'] ?? '');
-                    $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada'], true);
+                    $tarefaConcluida = in_array($statusTarefa, ['concluída', 'concluida', 'finalizada', 'cancelada'], true);
                 ?>
 
                     <!-- LINHA COMPLETA DO REGISTRO -->

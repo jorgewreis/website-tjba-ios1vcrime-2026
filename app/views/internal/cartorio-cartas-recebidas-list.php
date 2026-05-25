@@ -363,7 +363,7 @@ if ($totalPages > 0) {
                 if ($statusTarefaNorm === 'em_andamento') {
                     $statusTarefaNorm = CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO;
                 }
-                $tarefaConcluida = in_array($statusTarefaNorm, ['concluida', 'finalizada'], true);
+                $tarefaConcluida = in_array($statusTarefaNorm, ['concluida', 'finalizada', 'cancelada'], true);
                 $allStRow = $row['SubtarefasAll'] ?? [];
                 $subtarefasExpansao = [];
                 foreach ($allStRow as $stRow) {

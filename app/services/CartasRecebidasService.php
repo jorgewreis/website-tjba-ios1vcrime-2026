@@ -255,6 +255,22 @@ final class CartasRecebidasService
             throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual.');
         }
 
+        $carta = $this->repository->find($cartaId);
+        if ($carta === null) {
+            throw new InvalidArgumentException('Carta recebida não encontrada.');
+        }
+        if ($this->isStatusTerminal($carta['status'] ?? '')) {
+            throw new InvalidArgumentException('Não é possível concluir subtarefas de carta cancelada ou concluída.');
+        }
+        $statusSubtarefa = str_replace(
+            'concluída',
+            'concluida',
+            mb_strtolower(trim((string) ($subtarefa['status'] ?? '')), 'UTF-8')
+        );
+        if ($statusSubtarefa === 'concluida') {
+            throw new InvalidArgumentException('Esta subtarefa já foi concluída. Atualize a página.');
+        }
+
         $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
             $decoded = json_decode($dadosJson, true);
@@ -326,6 +342,13 @@ final class CartasRecebidasService
             return 'all';
         }
         return 'specific';
+    }
+
+    private function isStatusTerminal($status): bool
+    {
+        $statusNorm = str_replace('concluída', 'concluida', mb_strtolower(trim((string) $status), 'UTF-8'));
+
+        return in_array($statusNorm, ['cancelada', 'concluida', 'finalizada'], true);
     }
 
     public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
