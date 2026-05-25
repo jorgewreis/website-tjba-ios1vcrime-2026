@@ -252,7 +252,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="card-line full" data-v2-panel="search" hidden>
+        <div class="card-line full" data-v2-panel="search" hidden style="display: none;">
             <div class="card-line left">
                 <div class="line-description">Pesquisar processo</div>
             </div>
@@ -261,7 +261,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="card-line full media-768" data-v2-panel="items" hidden>
+        <div class="card-line full media-768" data-v2-panel="items" hidden style="display: none;">
             <div class="card-line left">
                 <div class="line-description">Quantidade de itens por página</div>
             </div>
@@ -275,7 +275,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="card-line full media-768" data-v2-panel="export" hidden>
+        <div class="card-line full media-768" data-v2-panel="export" hidden style="display: none;">
             <div class="card-line left">
                 <div class="line-description">Exportar lista</div>
             </div>
@@ -289,7 +289,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="card-line full media-1024" data-v2-panel="filters" hidden>
+        <div class="card-line full media-1024" data-v2-panel="filters" hidden style="display: none;">
             <div class="card-line left">
                 <div class="line-description">Filtrar por</div>
             </div>
@@ -325,7 +325,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                 <div class="line-results">
                     <div class="number left"><?php echo (int) $globalAtivosTotal; ?></div>
                     <div class="text">Documentos cadastrados</div>
-                    <?php if ($mostraParaVoce): ?>
+                    <?php if ($mostraParaVoce && $userAtivosTotal > 0): ?>
                         <div class="text right">para você</div>
                         <div class="number right"><?php echo (int) $userAtivosTotal; ?></div>
                     <?php endif; ?>
@@ -333,7 +333,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                 <div class="line-results<?php echo $alertAguardandoEnvio ? ' alert' : ''; ?>">
                     <div class="number left"><?php echo (int) $globalAguardandoEnvio; ?></div>
                     <div class="text">Aguardando envio</div>
-                    <?php if ($mostraParaVoce): ?>
+                    <?php if ($mostraParaVoce && $userAguardandoEnvio > 0): ?>
                         <div class="text right">para você</div>
                         <div class="number right"><?php echo (int) $userAguardandoEnvio; ?></div>
                     <?php endif; ?>

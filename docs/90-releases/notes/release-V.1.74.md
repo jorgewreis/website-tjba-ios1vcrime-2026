@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 06 de abril de 2026
+**Data de Lançamento:** 25 de maio de 2026
 
 # V. 1.74
 
-> refactor: update manual launch cancellation rules to include additional management profiles and simplify user role checks
+> refactor: add user-specific status count functionality in cartas expedidas
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: update manual launch cancellation rules to include additional management profiles and simplify user role checks** `[873bcdf]`
+- **refactor: add user-specific status count functionality in cartas expedidas** `[17844674]`
 
 ---
 
