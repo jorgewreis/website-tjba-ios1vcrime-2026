@@ -212,17 +212,16 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
 
         <div class="card-line">
             <div class="card-line left">
-                <a href="./../../documents/pdf/Guia_de_Carta_Precatória_TJBA.pdf" target="_blank">
+                <a href="./../../documents/pdf/Guia_de_Expedição_Carta_Precatória.png" target="_blank">
                     <div class="page-card-list-document">
                         <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
                         <span class="page-card-list-document-text">Infográfico - Expedição de Cartas Precatórias</span>
                     </div>
                 </a>
                 <a href="./../../documents/pdf/Fluxo_de_Expedição_Carta_Precatória.png" target="_blank">
-                    <div class="page-card-list-document">
-                        
-                            <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
-                            <span class="page-card-list-document-text">Infográfico - Fluxo de Cumprimento</span>
+                    <div class="page-card-list-document">                        
+                        <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
+                        <span class="page-card-list-document-text">Infográfico - Fluxo de Cumprimento</span>
                     </div>
                 </a>
                 <a href="./../../documents/pdf/Guia_Prático_de_Cartas_Judiciárias.png" target="_blank">
