@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mockup - Page List Card</title>
+
+    <!-- STYLES -->
+    <link rel="stylesheet" href="../../../../public/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="../../../../public/assets/css/shared/v2-colors.css">
+    <link rel="stylesheet" href="../../../../public/assets/css/shared/v2-page-list.css">
+    <!-- IMPORT - FLATICON -->
+    <link rel='stylesheet'
+        href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+</head>
+
+<body data-theme="light"> <!-- light / dark -->
+
+    <div class="page-card-list">
+        <!-- TITLE -->
+        <div class="page-card-list-title">
+            <div class="page-card-list-title-line">
+                <div class="line-left title">
+                    <span class="page-title-text">Novo Cadastro de Carta Expedida</span>
+                </div>
+            </div>
+            <div class="page-card-list-title-line">
+                <div class="line-left description">
+                    <span class="page-description-text">Documentos expedidos pelo Cartório
+                        para cumprimento por outras Comarcas</span>
+                </div>
+                <div class="line-right">                    
+                    
+                </div>
+            </div>
+        </div>
+
+
+        <!-- LINE 1 -->
+        <div class="card-line">
+            <div class="block-cell">
+                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*</span></label>
+                <input type="text" class="width-300 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000">
+            </div>
+            <div class="block-cell">
+                <label for="filter-finalidade">Finalidade <span class="label-hint-obrigatorio">*</span></label>
+                <select class="width-300 height-md" id="filter-finalidade">
+                    <option value="" selected disabled>Selecione aqui</option>
+                    <option value="Intimação para Audiência">Intimação para Audiência</option>
+                    <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>
+                    <option value="Intimação da Sentença">Intimação da Sentença</option>
+                    <option value="Citação para apresentar Defesa">Citação para apresentar Defesa</option>
+                    <option value="Citação para apresentar Alegações Finais">Citação para apresentar Alegações Finais</option>
+                    <option value="Suspensão Condicional">Suspensão Condicional</option>
+                    <option value="Outra">Outra não listada</option>
+                </select>
+            </div>
+            <div class="block-cell">
+                <label for="filter-prazo">Prazo de cumprimento <span class="label-hint-obrigatorio">*</span></label>
+                <select class="width-200 height-md" id="filter-prazo">
+                    <option value="5">5 dias</option>
+                    <option value="10">10 dias</option>
+                    <option value="15">15 dias</option>
+                    <option value="30" selected>30 dias</option>
+                    <option value="60">60 dias</option>
+                    <option value="90">90 dias</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- LINE 2 -->
+        <div class="card-line">
+            <div class="block-cell">
+                <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*</span></label>
+                <select class="width-200 height-md" id="filter-estado">
+                    <option value="" selected disabled>Selecione aqui</option>
+                    <option value="AC">Acre</option>
+                    <option value="AL">Alagoas</option>
+                    <option value="AP">Amapá</option>
+                    <option value="AM">Amazonas</option>
+                    <option value="BA">Bahia</option>
+                    <option value="CE">Ceará</option>
+                    <option value="DF">Distrito Federal</option>
+                    <option value="ES">Espírito Santo</option>
+                    <option value="GO">Goiás</option>
+                    <option value="MA">Maranhão</option>
+                    <option value="MT">Mato Grosso</option>
+                    <option value="MS">Mato Grosso do Sul</option>
+                    <option value="MG">Minas Gerais</option>
+                    <option value="PA">Pará</option>
+                    <option value="PB">Paraíba</option>
+                    <option value="PR">Paraná</option>
+                    <option value="PE">Pernambuco</option>
+                    <option value="PI">Piauí</option>
+                    <option value="RJ">Rio de Janeiro</option>
+                    <option value="RN">Rio Grande do Norte</option>
+                    <option value="RS">Rio Grande do Sul</option>
+                    <option value="RO">Rondônia</option>
+                    <option value="RR">Roraima</option>
+                    <option value="SC">Santa Catarina</option>
+                    <option value="SP">São Paulo</option>
+                    <option value="SE">Sergipe</option>
+                    <option value="TO">Tocantins</option>
+                </select>
+            </div>
+            <div class="block-cell">
+                <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*</span></label>
+                <input type="text" class="width-400 height-md" id="filter-cidade" placeholder="Digite o nome da cidade">
+            </div>
+            <div class="block-cell">
+                <label for="filter-classe">Sistema de envio <span class="label-hint-obrigatorio">*</span></label>
+                <select class="width-200 height-md" id="filter-classe">
+                    <option value="" selected disabled>Selecione aqui</option>
+                    <option value="pje">PJe</option>
+                    <option value="esaj">e-SAJ</option>
+                    <option value="eproc">e-Proc</option>
+                    <option value="malote-digital">Malote Digital</option>
+                    <option value="outro">Outro</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- MENSAGENS DE STATUS DO CONSULTA DATAJUD -->
+        <div class="card-line full">
+            <div class="block-cell"><!-- Mostrar apenas quando a consulta datajud estiver concluída -->
+                <label class="status-classe">Classe processual <span class="label-hint-consulta-datajud">[consultando datajud...]</span></label>
+                <input type="text" class="width-400 height-md" id="filter-classe-processual" disabled value="Ação Penal - Procedimento Ordinário (283)"></input>
+                <label id="filter-assuntos">Ameaça | Vias de Fato | Grave</label><br>
+                <label id="filter-prioridades">Processo Sigiloso | Réu Preso | Violência Doméstica, Criança ou Adolescente</label>
+            </div>
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="card-line full">
+            <div class="card-line left results">
+                <div class="line-results alert">
+                    <div class="text rule">Envio de Cartas Expedidas será realizado por <span class="text-primary">[usuario regra]</span> conforme regra definida.</div>
+                </div>
+            </div>
+            <div class="card-line right">
+                <div class="buttons">
+                    <!-- novo cadastro -->
+                    <div class="button-btn btn-primary disabled">
+                        <!-- disabled on loading mode-->
+                        <span class="btn-icon-text">Cadastrar</span>
+                        <!-- Cadastrar / Aguarde... -->
+                        <div class="btn-icon hidden"> <!-- rotating / hidden -->
+                            <i class="fi fi-rr-spinner"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+
+</html>

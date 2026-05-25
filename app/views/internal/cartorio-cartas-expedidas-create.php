@@ -1,16 +1,23 @@
 <?php
+
 declare(strict_types=1);
 
+header('Content-Type: text/html; charset=UTF-8');
+if (function_exists('mb_internal_encoding')) {
+    mb_internal_encoding('UTF-8');
+}
+
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 
 $connection = Conection::getInstance()->getConnection();
 
-function onlyDigits(string $value): string
+function cartas_expedidas_only_digits(string $value): string
 {
     return preg_replace('/\D+/', '', $value);
 }
 
-function modulo97(string $value): int
+function cartas_expedidas_modulo97(string $value): int
 {
     $resto = 0;
     $length = strlen($value);
@@ -24,26 +31,26 @@ function modulo97(string $value): int
     return $resto;
 }
 
-function calcularDigitoVerificadorCNJ(string $valor): ?string
+function cartas_expedidas_calcular_dv_cnj(string $valor): ?string
 {
-    $digits = onlyDigits($valor);
+    $digits = cartas_expedidas_only_digits($valor);
     if (strlen($digits) !== 20) {
         return null;
     }
     $base = substr($digits, 0, 7) . substr($digits, 9);
-    $resto = modulo97($base . '00');
+    $resto = cartas_expedidas_modulo97($base . '00');
     $dvCalc = 98 - $resto;
     return str_pad((string) $dvCalc, 2, '0', STR_PAD_LEFT);
 }
 
-function validarCNJ(string $valor): bool
+function cartas_expedidas_validar_cnj(string $valor): bool
 {
-    $digits = onlyDigits($valor);
+    $digits = cartas_expedidas_only_digits($valor);
     if (strlen($digits) !== 20) {
         return false;
     }
     $dv = substr($digits, 7, 2);
-    $dvCalc = calcularDigitoVerificadorCNJ($digits);
+    $dvCalc = cartas_expedidas_calcular_dv_cnj($digits);
     if ($dvCalc === null) {
         return false;
     }
@@ -54,14 +61,14 @@ $cnjError = '';
 $submittedProcesso = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $submittedProcesso = trim((string) ($_POST['processo'] ?? $_POST['filter-processo'] ?? ''));
-    if ($submittedProcesso !== '' && !validarCNJ($submittedProcesso)) {
+    if ($submittedProcesso !== '' && !cartas_expedidas_validar_cnj($submittedProcesso)) {
         $cnjError = 'Número do processo inválido. Verifique se está completo e correto.';
     }
 }
 
 $currentUserName = '';
-$currentUserId = $_SESSION['id_usuario'] ?? null;
-if ($currentUserId !== null && $currentUserId !== '') {
+$currentUserId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+if ($currentUserId !== '') {
     $stmtU = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
     $stmtU->execute([$currentUserId]);
     $u = $stmtU->fetch(PDO::FETCH_ASSOC);
@@ -71,6 +78,10 @@ if ($currentUserId !== null && $currentUserId !== '') {
         $currentUserName = $s !== '' ? $n . ' ' . $s : $n;
     }
 }
+
+$currentUserPerfis = $currentUserId !== ''
+    ? UsuarioPerfisAutorizacao::perfisDoUsuario($currentUserId)
+    : [];
 
 $ruleServidor = '';
 $hasRuleAllocation = false;
@@ -93,166 +104,257 @@ try {
 } catch (\Throwable $exception) {
     // Mantém o valor padrão se houver erro na leitura do banco.
 }
+
+$estados = [
+    'AC' => 'Acre',
+    'AL' => 'Alagoas',
+    'AP' => 'Amapá',
+    'AM' => 'Amazonas',
+    'BA' => 'Bahia',
+    'CE' => 'Ceará',
+    'DF' => 'Distrito Federal',
+    'ES' => 'Espírito Santo',
+    'GO' => 'Goiás',
+    'MA' => 'Maranhão',
+    'MT' => 'Mato Grosso',
+    'MS' => 'Mato Grosso do Sul',
+    'MG' => 'Minas Gerais',
+    'PA' => 'Pará',
+    'PB' => 'Paraíba',
+    'PR' => 'Paraná',
+    'PE' => 'Pernambuco',
+    'PI' => 'Piauí',
+    'RJ' => 'Rio de Janeiro',
+    'RN' => 'Rio Grande do Norte',
+    'RS' => 'Rio Grande do Sul',
+    'RO' => 'Rondônia',
+    'RR' => 'Roraima',
+    'SC' => 'Santa Catarina',
+    'SP' => 'São Paulo',
+    'SE' => 'Sergipe',
+    'TO' => 'Tocantins',
+];
+
+$finalidades = [
+    'Intimação para Audiência'                   => 'Intimação para Audiência',
+    'Intimação de Decisão Interlocutória'        => 'Intimação de Decisão',
+    'Intimação da Sentença'                      => 'Intimação da Sentença',
+    'Citação para apresentar Defesa'             => 'Citação para apresentar Defesa',
+    'Citação para apresentar Alegações Finais'   => 'Citação para apresentar Alegações Finais',
+    'Suspensão Condicional'                      => 'Suspensão Condicional',
+    'Outra'                                      => 'Outra não listada',
+];
+
+$prazos = ['5 dias', '10 dias', '15 dias', '30 dias', '60 dias', '90 dias'];
+$prazoDefault = '60 dias';
+
+$assetsRoot = dirname(__DIR__, 3) . '/public/assets';
+$userContextV         = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time();
+$pageHelpersV         = @filemtime($assetsRoot . '/js/shared/page-helpers.js') ?: time();
+$toastCatalogV        = @filemtime($assetsRoot . '/js/shared/toast-catalog.js') ?: time();
+$navBtnV              = @filemtime($assetsRoot . '/js/shared/navigate-buttons.js') ?: time();
+$properNameV          = @filemtime($assetsRoot . '/js/shared/proper-name-helper.js') ?: time();
+$textFormatterV       = @filemtime($assetsRoot . '/js/shared/text-formatter.js') ?: time();
+$createHelpersV       = @filemtime($assetsRoot . '/js/shared/cartorio-create-helpers.js') ?: time();
+$createBootstrapV     = @filemtime($assetsRoot . '/js/shared/cartorio-create-bootstrap.js') ?: time();
+$cityLookupV          = @filemtime($assetsRoot . '/js/shared/cartorio-city-lookup.js') ?: time();
+$cartasExpCreateV     = @filemtime($assetsRoot . '/js/shared/cartorio-cartas-expedidas-create.js') ?: time();
+
+$normalizedPerfis = [];
+foreach ($currentUserPerfis as $perfilRaw) {
+    $perfilNormalizado = strtoupper(trim((string) $perfilRaw));
+    if ($perfilNormalizado !== '') {
+        $normalizedPerfis[] = $perfilNormalizado;
+    }
+}
+$sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
 ?>
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta lang="pt-BR">
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-                <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+<html lang="pt-BR">
 
-        <?php include __DIR__ . '/_toast_script.php'; ?>
-    </head>
-<body class="page-internal">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
+    <link rel="stylesheet" href="/assets/css/shared/reset.css">
+    <link rel="stylesheet" href="/assets/css/shared/v2-colors.css">
+    <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+    <?php include __DIR__ . '/_toast_script.php'; ?>
+    <style>
+        /* Ajustes locais: variante "secondary" do button-btn v2 e banner clic\u00e1vel. */
+        .button-btn {
+            min-height: 40px;
+            padding: 0 20px;
+            font-family: 'Google Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .button-btn.btn-secondary {
+            background-color: var(--color-background);
+            border: 1px solid var(--color-border);
+            color: var(--color-title-text);
+        }
+        .button-btn.btn-secondary:hover {
+            background-color: var(--color-gray-300);
+        }
+        .block-cell {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+            gap: 4px;
+            padding: 6px 10px;
+        }
+        .block-cell label { margin-left: 0; }
+        .block-cell label.empty { display: none; }
+        .line-results.alert.rule.clickable {
+            cursor: pointer;
+            transition: background-color 120ms ease-in-out;
+        }
+        .line-results.alert.rule.clickable:hover {
+            background-color: var(--color-bg-current-light);
+        }
+        .line-results.alert.rule.clickable:focus-visible {
+            outline: 2px solid var(--color-bg-primary);
+            outline-offset: 2px;
+        }
+        .status-classe {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
 
-    <!-- SPACING -->
-    <div class="spacing-top-page"></div>
+<body data-theme="light">
 
-    <div class="header-page">
-        <!-- Mapa de navegação do site -->
-        <div class="location">
-            <span class="all">Internal - Cartório - Cartas Expedidas -</span>
-            <span class="specific">Cadastro</span>
-        </div>
+    <div class="page-card-list">
 
-        <!-- Título e descrição da página -->
-        <h1 class="title-page">Cartas Expedidas</h1>
-        <p class="description-page">Cadastro de cartas expedidas para envio e acompanhamento.</p>
-    </div>
-
-    <div class="container-full card-page">       
-        <div class="card-title">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Cadastro</h2>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <div class="card-allocate-rule">                    
-                    <?php if ($hasRuleAllocation): ?>
-                        <span>*Conforme regra, o envio de Cartas Expedidas será alocado automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
-                    <?php else: ?>
-                        <span>*Não existe nenhum usuário alocado para esta tarefa por regra.</span>
-                    <?php endif; ?>
+        <div class="page-card-list-title">
+            <div class="page-card-list-title-line">
+                <div class="line-left title">
+                    <span class="page-title-text">Novo Cadastro de Carta Expedida</span>
                 </div>
             </div>
-        </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col">
-                <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
-                    <span>Processo <span class="label-hint-obrigatorio">*obrigatório</span></span>
-                    <span id="processo-ap-info" class="minor-info" aria-live="polite"></span>
-                </label>
-                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
+            <div class="page-card-list-title-line">
+                <div class="line-left description">
+                    <span class="page-description-text">Documentos expedidos pelo Cartório para cumprimento por outras Comarcas</span>
+                </div>
+                <div class="line-right"></div>
             </div>
-            <div class="col">
-                <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-600 height-md" id="filter-tipo" required>
+        </div>
+
+        <div class="card-line">
+            <div class="block-cell">
+                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*</span></label>
+                <input type="text" class="width-300 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off" required value="<?php echo htmlspecialchars($submittedProcesso, ENT_QUOTES); ?>">
+            </div>
+            <div class="block-cell">
+                <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*</span></label>
+                <select class="width-300 height-md" id="filter-tipo" required>
                     <option value="" selected disabled>Selecione aqui</option>
-                    <option value="Intimação para Audiência">Intimação para Audiência</option>
-                    <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>
-                    <option value="Intimação da Sentença">Intimação da Sentença</option>
-                    <option value="Citação para apresentar Defesa">Citação para apresentar Defesa</option>                    
-                    <option value="Citação para apresentar Alegações Finais">Citação para apresentar Alegações Finais</option>
-                    <option value="Suspensão Condicional">Suspensão Condicional</option>
-                    <option value="Outra">Outra não listada</option>
+                    <?php foreach ($finalidades as $valor => $rotulo): ?>
+                        <option value="<?php echo htmlspecialchars($valor, ENT_QUOTES); ?>"><?php echo htmlspecialchars($rotulo, ENT_QUOTES); ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
-        </div>
-        <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
-
-        <?php if ($cnjError): ?>
-            <script>
-                if (typeof showToast === 'function') {
-                    showToast({ type: 'error', variant: 'full', title: 'Erro', message: <?php echo json_encode($cnjError, JSON_UNESCAPED_UNICODE); ?> });
-                }
-            </script>
-        <?php endif; ?>
-
-        <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md">
-            <div class="col">
-                <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
-            </div>
-            <div class="col">
-                <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-400 height-md" id="filter-estado" required>
-                    <option value="AC">Acre</option>
-                    <option value="AL">Alagoas</option>
-                    <option value="AP">Amapá</option>
-                    <option value="AM">Amazonas</option>
-                    <option value="BA" selected>Bahia</option>
-                    <option value="CE">Ceará</option>
-                    <option value="DF">Distrito Federal</option>
-                    <option value="ES">Espírito Santo</option>
-                    <option value="GO">Goiás</option>
-                    <option value="MA">Maranhão</option>
-                    <option value="MT">Mato Grosso</option>
-                    <option value="MS">Mato Grosso do Sul</option>
-                    <option value="MG">Minas Gerais</option>
-                    <option value="PA">Pará</option>
-                    <option value="PB">Paraíba</option>
-                    <option value="PR">Paraná</option>
-                    <option value="PE">Pernambuco</option>
-                    <option value="PI">Piauí</option>
-                    <option value="RJ">Rio de Janeiro</option>
-                    <option value="RN">Rio Grande do Norte</option>
-                    <option value="RS">Rio Grande do Sul</option>
-                    <option value="RO">Rondônia</option>
-                    <option value="RR">Roraima</option>
-                    <option value="SC">Santa Catarina</option>
-                    <option value="SP">São Paulo</option>
-                    <option value="SE">Sergipe</option>
-                    <option value="TO">Tocantins</option>
-                </select>
-            </div>            
-            <div class="col">
-                <label for="filter-prazo">Prazo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-300 height-md" id="filter-prazo" required>
-                    <option value="5 dias">5 dias</option>
-                    <option value="10 dias">10 dias</option>
-                    <option value="15 dias">15 dias</option>
-                    <option value="30 dias">30 dias</option>
-                    <option value="60 dias" selected>60 dias</option>
-                    <option value="90 dias">90 dias</option>
+            <div class="block-cell">
+                <label for="filter-prazo">Prazo de cumprimento <span class="label-hint-obrigatorio">*</span></label>
+                <select class="width-200 height-md" id="filter-prazo" required>
+                    <?php foreach ($prazos as $prazoOpcao): ?>
+                        <option value="<?php echo htmlspecialchars($prazoOpcao, ENT_QUOTES); ?>"<?php echo $prazoOpcao === $prazoDefault ? ' selected' : ''; ?>><?php echo htmlspecialchars($prazoOpcao, ENT_QUOTES); ?></option>
+                    <?php endforeach; ?>
                 </select>
             </div>
         </div>
 
-        <!-- Alocação de servidor -->
-        <?php $cartorioAlocacaoPrefix = 'cartas-exp'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+        <div class="card-line">
+            <div class="block-cell">
+                <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*</span></label>
+                <select class="width-200 height-md" id="filter-estado" required>
+                    <?php foreach ($estados as $uf => $nomeEstado): ?>
+                        <option value="<?php echo htmlspecialchars($uf, ENT_QUOTES); ?>"<?php echo $uf === 'BA' ? ' selected' : ''; ?>><?php echo htmlspecialchars($nomeEstado, ENT_QUOTES); ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="block-cell">
+                <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*</span></label>
+                <input type="text" class="width-400 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" autocomplete="off" required>
+            </div>
+        </div>
+
+        <div class="card-line full">
+            <div class="block-cell full">
+                <label class="status-classe" for="filter-classe">
+                    <span>Classe processual</span>
+                    <span class="label-hint-consulta-datajud" id="processo-ap-info" aria-live="polite"></span>
+                </label>
+                <input type="text" class="width-400 height-md" id="filter-classe" data-datajud-related="true" value="" disabled autocomplete="off">
+                <label id="filter-assuntos" class="empty"></label>
+                <label id="filter-prioridades" class="empty"></label>
+            </div>
+        </div>
 
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
+        <input type="hidden" id="filter-sistema-envio" name="sistema_envio" value="outro">
 
-        <!-- Ações -->
-        <div class="card-buttons">
-            <div class="display-flex row row-fit gap-y-md align-center justify-start">
-                <button class="btn btn-secondary" id="voltar-btn" type="button" data-allow-during-loading="true">Voltar</button>
+        <div class="card-line full">
+            <div class="card-line left results">
+                <div class="line-results alert" id="banner-alterar-regra" data-rule-target="cartasexpedidasrules" role="note">
+                    <div class="text rule">
+                        <?php if ($hasRuleAllocation): ?>
+                            Envio de Cartas Expedidas será realizado por <span class="text-primary"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></span> conforme regra definida.
+                        <?php else: ?>
+                            Nenhum usuário alocado por regra para o envio de Cartas Expedidas.
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
-            <div class="display-flex row row-fit gap-y-md align-center justify-end">
-                <button class="btn btn-primary-outline" id="alterar-regra-btn" type="button" style="display: none;">Alterar regra de alocação</button> <!-- visível apenas para usuários com permissão de administrador -->
-                <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
+            <div class="card-line right">
+                <div class="buttons">
+                    <button type="button" class="button-btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">Voltar</button>
+                    <button type="button" class="button-btn btn-primary" id="cadastrar-btn">Cadastrar</button>
+                </div>
             </div>
-        </div>        
-    </div>
-        
-    <!-- Develop Info -->
-    <div class="footer-page">
-        <div class="location">
-            <span class="all">Aplicativo web desenvolvido integralmente por </span>
-            <span class="specific">Jorge Reis Develop</span>
-            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
         </div>
+
     </div>
 
-    <?php include __DIR__ . '/_datajud_scripts.php'; ?>
-    <script src="/assets/js/modules/cartorio/cartas-expedidas/user.js"></script>
+    <?php if ($cnjError): ?>
+        <script>
+            if (typeof showToast === 'function') {
+                showToast({ type: 'error', variant: 'full', title: 'Erro', message: <?php echo json_encode($cnjError, JSON_UNESCAPED_UNICODE); ?> });
+            }
+        </script>
+    <?php endif; ?>
+
     <script>
+        window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
+            initialPerfis: <?php echo json_encode(array_values($normalizedPerfis), JSON_UNESCAPED_UNICODE); ?>,
+            fallbackPerfis: [],
+            allowedRulePerfis: ['ADMIN', 'DIRETORA', 'MAGISTRADA'],
+            currentUser: {
+                id: <?php echo json_encode($currentUserId, JSON_UNESCAPED_UNICODE); ?>,
+                nome: <?php echo json_encode($sessionUserName, JSON_UNESCAPED_UNICODE); ?>,
+                usuario: <?php echo json_encode($sessionUserName, JSON_UNESCAPED_UNICODE); ?>
+            }
+        });
         window.__currentUserName = <?php echo json_encode($currentUserName, JSON_UNESCAPED_UNICODE); ?>;
     </script>
+    <script src="/assets/js/shared/user-context.js?v=<?php echo (int) $userContextV; ?>"></script>
+    <script src="/assets/js/shared/page-helpers.js?v=<?php echo (int) $pageHelpersV; ?>"></script>
+    <script src="/assets/js/shared/toast-catalog.js?v=<?php echo (int) $toastCatalogV; ?>"></script>
+    <script src="/assets/js/shared/navigate-buttons.js?v=<?php echo (int) $navBtnV; ?>"></script>
+    <script src="/assets/js/shared/text-formatter.js?v=<?php echo (int) $textFormatterV; ?>"></script>
+    <script src="/assets/js/shared/proper-name-helper.js?v=<?php echo (int) $properNameV; ?>"></script>
+    <?php include __DIR__ . '/_datajud_scripts.php'; ?>
+    <script src="/assets/js/shared/cartorio-create-helpers.js?v=<?php echo (int) $createHelpersV; ?>"></script>
+    <script src="/assets/js/shared/cartorio-create-bootstrap.js?v=<?php echo (int) $createBootstrapV; ?>"></script>
+    <script src="/assets/js/shared/cartorio-city-lookup.js?v=<?php echo (int) $cityLookupV; ?>"></script>
+    <script src="/assets/js/shared/cartorio-cartas-expedidas-create.js?v=<?php echo (int) $cartasExpCreateV; ?>"></script>
     <script>
         (function () {
             if (window.App && App.CartorioCreateBootstrap) {
@@ -267,13 +369,40 @@ try {
                     formatMaxLength: 50
                 });
             }
+
+            // Banner clic\u00e1vel: admin/chefia abre a p\u00e1gina de altera\u00e7\u00e3o de regra de aloca\u00e7\u00e3o.
+            (function setupRuleBannerClick() {
+                var banner = document.getElementById('banner-alterar-regra');
+                if (!banner) return;
+                var targetPage = banner.getAttribute('data-rule-target') || '';
+                if (!targetPage) return;
+                if (!window.App || !App.User || typeof App.User.fetchPerfis !== 'function' || typeof App.User.canChangeRule !== 'function') return;
+                App.User.fetchPerfis().then(function (perfis) {
+                    if (!App.User.canChangeRule(perfis)) return;
+                    banner.classList.add('clickable');
+                    banner.setAttribute('role', 'button');
+                    banner.setAttribute('tabindex', '0');
+                    banner.setAttribute('title', 'Alterar regra de alocação');
+                    banner.setAttribute('aria-label', 'Alterar regra de alocação');
+                    var navigate = function () {
+                        window.location.href = '/frame.php?page=' + encodeURIComponent(targetPage);
+                    };
+                    banner.addEventListener('click', navigate);
+                    banner.addEventListener('keydown', function (event) {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            navigate();
+                        }
+                    });
+                }).catch(function () { /* silent */ });
+            })();
+
             if (!window.App || !App.CartorioCartasExpedidasCreate || typeof App.CartorioCartasExpedidasCreate.initialize !== 'function') {
                 return;
             }
-
             App.CartorioCartasExpedidasCreate.initialize({ alocacaoPrefix: 'cartas-exp' });
         })();
     </script>
-
 </body>
+
 </html>

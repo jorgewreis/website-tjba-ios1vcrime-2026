@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 06 de abril de 2026
+**Data de Lançamento:** 24 de maio de 2026
 
 # V. 1.67
 
-> refactor: enhance audience management by integrating user allocation features, improving data presentation for allocated servers, and updating access handling in the service layer
+> refactor: update release date and enhance button functionality
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: enhance audience management by integrating user allocation features, improving data presentation for allocated servers, and updating access handling in the service layer** `[3f54686]`
+- **refactor: update release date and enhance button functionality** `[b78a0151]`
 
 ---
 
