@@ -116,6 +116,10 @@ if ($isConcluida) {
 $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_expedidas', $registroListViewerContext, $connection);
 $editHref = trim((string) ($registroMetadata['edit_href'] ?? ''));
 $showEdit = !empty($registroMetadata['show_edit']) && $editHref !== '';
+$mostrarCopiaWhatsapp = $modeloEnvio && !$isTerminal && $numero !== '' && $destino !== '';
+$whatsappTexto = $mostrarCopiaWhatsapp
+    ? $numero . ' - Carta Precatória expedida *aguardando envio* para ' . $destino
+    : '';
 $historicoLinhas = RegistroMetadataHelper::linhasHistoricoV2CartasExpedidas($row, $connection);
 
 $subtarefaAtivaId = $subtarefaAtivaUi !== null ? trim((string) ($subtarefaAtivaUi['id'] ?? '')) : '';
@@ -127,8 +131,28 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
     <div class="card-line left">
         <div class="register-block">
             <div class="register-block-process">
+                <div style="display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; 
+                justify-content: flex-start;">
                 <?php if ($numero !== ''): ?>
                     <span class="register-block-process-number"><?php echo htmlspecialchars($numero, ENT_QUOTES); ?></span>
+                <?php endif; ?>
+                </div>
+
+                <div style="display: flex; flex-direction: row; flex-wrap: nowrap; align-items: center; 
+                justify-content: flex-end; gap: 10px;">                
+                <?php if ($prioridades !== []): ?>
+                    <div class="register-block-process-icons">
+                        <?php foreach ($prioridades as $prioridade): ?>
+                            <?php
+                            $plabel = trim((string) ($prioridade['label'] ?? ''));
+                            $picon = trim((string) ($prioridade['icon'] ?? ''));
+                            if ($plabel === '' || $picon === '') {
+                                continue;
+                            }
+                            ?>
+                            <img class="register-block-process-priority-icon" src="<?php echo htmlspecialchars($picon, ENT_QUOTES); ?>" alt="<?php echo htmlspecialchars($plabel, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($plabel, ENT_QUOTES); ?>">
+                        <?php endforeach; ?>
+                    </div>
                 <?php endif; ?>
                 <div class="register-block-process-icons">
                     <?php if (!$abrirDisabled && $abrirHref !== ''): ?>
@@ -146,20 +170,6 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                         <img class="icon-mini-process" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES); ?>" alt="Copiar">
                     <?php endif; ?>
                 </div>
-                <?php if ($prioridades !== []): ?>
-                    <div class="register-block-process-icons">
-                        <?php foreach ($prioridades as $prioridade): ?>
-                            <?php
-                            $plabel = trim((string) ($prioridade['label'] ?? ''));
-                            $picon = trim((string) ($prioridade['icon'] ?? ''));
-                            if ($plabel === '' || $picon === '') {
-                                continue;
-                            }
-                            ?>
-                            <img class="register-block-process-priority-icon" src="<?php echo htmlspecialchars($picon, ENT_QUOTES); ?>" alt="<?php echo htmlspecialchars($plabel, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($plabel, ENT_QUOTES); ?>">
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
             </div>
             <div class="register-block-process-classe<?php echo $classeValid ? ' valid' : ''; ?>">
                 <span class="register-block-process-classe-text"><?php echo htmlspecialchars($classeTexto, ENT_QUOTES); ?></span>
@@ -249,15 +259,18 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                 </div>
             </div>
             <div class="register-block-status">
-                <?php if ($showEdit): ?>
-                    <button type="button" class="button-icon-right" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
-                        <img src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="">
+                <?php if ($mostrarCopiaWhatsapp): ?>
+                    <button type="button"
+                        class="button-icon-right js-v2-copy-whatsapp"
+                        data-whatsapp-text="<?php echo htmlspecialchars($whatsappTexto, ENT_QUOTES); ?>"
+                        title="Copiar texto para WhatsApp"
+                        aria-label="Copiar texto para WhatsApp">
+                        <img src="/assets/icons/Task-Checklist--Streamline-Ultimate.png" alt="">
                     </button>
-                <?php else: ?>
-                    <div class="button-icon-right">
-                        <img src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="Editar">
-                    </div>
                 <?php endif; ?>
+                <button type="button" class="button-icon-right" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
+                    <img src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="">
+                </button>
                 <?php if ($mostrarContinuar && $textoEtapa !== ''): ?>
                     <div class="register-block-status-text <?php echo htmlspecialchars($classeEtapa, ENT_QUOTES); ?>">
                         <span class="register-block-status-text-text"><?php echo htmlspecialchars($textoEtapa, ENT_QUOTES); ?></span>

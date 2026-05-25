@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 04 de abril de 2026
+**Data de Lançamento:** 22 de maio de 2026
 
 # V. 1.59
 
-> refactor: enhance user role toggle buttons and improve layout for better accessibility and visual consistency
+> refactor: update access control for skills and skills PDF markdown
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: enhance user role toggle buttons and improve layout for better accessibility and visual consistency** `[c79b149]`
+- **refactor: update access control for skills and skills PDF markdown** `[65b651b6]`
 
 ---
 

@@ -1,21 +1,12 @@
 (function (window) {
     'use strict';
 
-    function copyProcessNumber(numero) {
-        var text = String(numero || '').trim();
-        if (text === '') {
-            return;
-        }
-        var payload = {
-            type: 'success',
-            title: 'Sucesso',
-            message: 'O número ' + text + ' foi copiado com sucesso.'
-        };
+    function copyToClipboard(text, payload) {
         function done() {
             if (typeof window.showToast === 'function') {
                 window.showToast(payload);
             } else if (window.App && App.Page && typeof App.Page.notify === 'function') {
-                App.Page.notify('success', payload.title, payload.message);
+                App.Page.notify(payload.type, payload.title, payload.message);
             }
         }
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -23,6 +14,30 @@
         } else {
             done();
         }
+    }
+
+    function copyProcessNumber(numero) {
+        var text = String(numero || '').trim();
+        if (text === '') {
+            return;
+        }
+        copyToClipboard(text, {
+            type: 'success',
+            title: 'Sucesso',
+            message: 'O número ' + text + ' foi copiado com sucesso.'
+        });
+    }
+
+    function copyWhatsappText(texto) {
+        var text = String(texto || '').trim();
+        if (text === '') {
+            return;
+        }
+        copyToClipboard(text, {
+            type: 'success',
+            title: 'Sucesso',
+            message: 'Texto para WhatsApp copiado com sucesso.'
+        });
     }
 
     function isPanelOpen(panel) {
@@ -135,6 +150,16 @@
         });
     }
 
+    function bindCopyWhatsapp() {
+        document.querySelectorAll('.js-v2-copy-whatsapp').forEach(function (btn) {
+            btn.addEventListener('click', function (event) {
+                event.preventDefault();
+                var texto = btn.getAttribute('data-whatsapp-text') || '';
+                copyWhatsappText(texto);
+            });
+        });
+    }
+
     function bindContinuarSubtarefa(ctx) {
         var notify = ctx.notify;
         var queuePostReloadToast = ctx.queuePostReloadToast;
@@ -243,6 +268,7 @@
     function initialize(config) {
         var panelApi = initializePanelToggles();
         bindCopyProcesso();
+        bindCopyWhatsapp();
         bindExportSelect(panelApi);
         bindNovoCadastroV2('/frame.php?page=cartasexpedidascreate', 1500);
 
