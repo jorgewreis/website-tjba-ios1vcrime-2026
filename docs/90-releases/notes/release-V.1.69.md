@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 06 de abril de 2026
+**Data de Lançamento:** 25 de maio de 2026
 
 # V. 1.69
 
-> refactor: implement schema upgrade for recuperacao_senha to ensure compatibility with legacy installations and improve error handling
+> refactor: streamline cartas expedidas UI by consolidating priority icon rendering
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **refactor: implement schema upgrade for recuperacao_senha to ensure compatibility with legacy installations and improve error handling** `[01bd4d1]`
+- **refactor: streamline cartas expedidas UI by consolidating priority icon rendering** `[e150e7a6]`
 
 ---
 
