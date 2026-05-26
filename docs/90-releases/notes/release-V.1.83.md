@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 10 de abril de 2026
+**Data de Lançamento:** 26 de maio de 2026
 
 # V. 1.83
 
-> feat: enhance media download functionality by adding quantity validation and updating task status in SalaMidiasService and related views
+> refactor: standardize contact information formatting and enhance phone number handling
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: enhance media download functionality by adding quantity validation and updating task status in SalaMidiasService and related views** `[8289303]`
+- **refactor: standardize contact information formatting and enhance phone number handling** `[7b27263c]`
 
 ---
 

@@ -420,6 +420,8 @@ HTML;
 
     /**
      * Aplica máscara brasileira de telefone quando o valor representa um número.
+     * - 13 dígitos iniciados por `55` → `+55 (XX) XXXXX-XXXX` (celular com DDI)
+     * - 12 dígitos iniciados por `55` → `+55 (XX) XXXX-XXXX` (fixo com DDI)
      * - 11 dígitos → `(XX) XXXXX-XXXX` (celular com DDD)
      * - 10 dígitos → `(XX) XXXX-XXXX` (fixo com DDD)
      * -  9 dígitos → `XXXXX-XXXX` (celular sem DDD)
@@ -443,6 +445,13 @@ HTML;
         }
         $digitos = preg_replace('/\D+/', '', $valor) ?? '';
         $len = strlen($digitos);
+        if (($len === 13 || $len === 12) && substr($digitos, 0, 2) === '55') {
+            $body = substr($digitos, 2);
+            if (strlen($body) === 11) {
+                return '+55 (' . substr($body, 0, 2) . ') ' . substr($body, 2, 5) . '-' . substr($body, 7);
+            }
+            return '+55 (' . substr($body, 0, 2) . ') ' . substr($body, 2, 4) . '-' . substr($body, 6);
+        }
         if ($len === 11) {
             return '(' . substr($digitos, 0, 2) . ') ' . substr($digitos, 2, 5) . '-' . substr($digitos, 7);
         }
