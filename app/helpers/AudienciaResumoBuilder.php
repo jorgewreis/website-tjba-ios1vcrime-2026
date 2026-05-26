@@ -9,6 +9,7 @@ require_once __DIR__ . '/../repositories/PartesInstituicoesRepository.php';
 require_once __DIR__ . '/../repositories/PartesDocumentosRepository.php';
 require_once __DIR__ . '/ParteDocumentoHelper.php';
 require_once __DIR__ . '/PrioridadesProcessuaisCatalog.php';
+require_once __DIR__ . '/SalaAudienciasReuPresoDetector.php';
 require_once __DIR__ . '/../services/SalaAudienciasPautaService.php';
 
 /**
@@ -23,12 +24,33 @@ require_once __DIR__ . '/../services/SalaAudienciasPautaService.php';
  */
 final class AudienciaResumoBuilder
 {
-    /** Títulos exibidos por tipo de parte, na ordem desejada. */
-    private const TITULOS_POR_TIPO = [
-        'reu' => 'DENUNCIADO(S)',
-        'vitima' => 'VÍTIMA(S)',
-        'testemunha_denuncia' => 'TESTEMUNHA(S) DA DENÚNCIA',
-        'testemunha_defesa' => 'TESTEMUNHA(S) DA DEFESA',
+    /**
+     * Tokens internos para sinalizar trechos a serem coloridos de vermelho no PDF.
+     * No TXT, os tokens são removidos antes do retorno (texto puro);
+     * no PDF, são convertidos em `<span class="resumo-red">…</span>` ao final
+     * de `whatsappToHtml()`.
+     */
+    private const TOKEN_RED_OPEN = '[[RED]]';
+    private const TOKEN_RED_CLOSE = '[[/RED]]';
+
+    /**
+     * Títulos por tipo de parte, com versões singular e plural.
+     * A escolha é feita em `montarLinhasBase()` conforme a quantidade
+     * de partes ativas naquele tipo.
+     */
+    private const TITULOS_SINGULAR = [
+        'reu' => 'DENUNCIADO',
+        'vitima' => 'VÍTIMA',
+        'testemunha_denuncia' => 'TESTEMUNHA DA DENÚNCIA',
+        'testemunha_defesa' => 'TESTEMUNHA DA DEFESA',
+        'outro' => 'OUTRO',
+    ];
+
+    private const TITULOS_PLURAL = [
+        'reu' => 'DENUNCIADOS',
+        'vitima' => 'VÍTIMAS',
+        'testemunha_denuncia' => 'TESTEMUNHAS DA DENÚNCIA',
+        'testemunha_defesa' => 'TESTEMUNHAS DA DEFESA',
         'outro' => 'OUTROS',
     ];
 
@@ -101,23 +123,36 @@ final class AudienciaResumoBuilder
             $prioridades = [];
         }
 
+        // --- Detecção de "réu preso" (reaproveita o helper compartilhado). -
+        $processoId = trim((string) ($pauta['processo'] ?? ''));
+        $reusPresosMap = [];
+        $reusPresosSigMap = [];
+        try {
+            [$reusPresosMap, $reusPresosSigMap] = SalaAudienciasReuPresoDetector::buildReusPresosMaps(
+                $pdo,
+                $processoId,
+                $numeroProcesso
+            );
+        } catch (Throwable $e) {
+            $reusPresosMap = [];
+            $reusPresosSigMap = [];
+        }
+
         // --- Partes -------------------------------------------------------
         $partes = $service->listPartes($idPauta);
 
         $grupos = [];
-        foreach (self::TITULOS_POR_TIPO as $tipo => $titulo) {
-            $grupos[$titulo] = [];
+        foreach (self::TITULOS_SINGULAR as $tipoSlug => $_) {
+            $grupos[$tipoSlug] = [];
         }
 
         foreach ($partes as $parte) {
             $tipo = strtolower(trim((string) ($parte['tipo_parte'] ?? '')));
-            if (!isset(self::TITULOS_POR_TIPO[$tipo])) {
+            if (!array_key_exists($tipo, $grupos)) {
                 continue;
             }
-            $titulo = self::TITULOS_POR_TIPO[$tipo];
 
             $parteGlobalId = trim((string) ($parte['parte_id_global'] ?? ''));
-            $parteGlobalCadastro = $parteGlobalId !== '' ? $partesRepo->findById($parteGlobalId) : null;
 
             $contatos = self::montarContatosParte($parte, $parteGlobalId, $telefonesRepo);
             $cargoOrgao = '';
@@ -132,9 +167,17 @@ final class AudienciaResumoBuilder
 
             $statusIntimacao = self::montarStatusIntimacao($parte);
 
-            $grupos[$titulo][] = [
+            $nomeBruto = trim((string) ($parte['nome_parte'] ?? ''));
+            $nome = self::toUpper($nomeBruto);
+            if ($tipo === 'reu' && $nomeBruto !== ''
+                && ($reusPresosMap !== [] || $reusPresosSigMap !== [])
+                && SalaAudienciasReuPresoDetector::nomeReuCorrespondeReuPreso($nomeBruto, $reusPresosMap, $reusPresosSigMap)) {
+                $nome .= ' ' . self::TOKEN_RED_OPEN . '(RÉU PRESO)' . self::TOKEN_RED_CLOSE;
+            }
+
+            $grupos[$tipo][] = [
                 'status' => $statusIntimacao,
-                'nome' => self::toUpper(trim((string) ($parte['nome_parte'] ?? ''))),
+                'nome' => $nome,
                 'cargo_orgao' => self::toUpper($cargoOrgao),
                 'defensor' => self::toUpper($defensor),
                 'contatos' => $contatos,
@@ -163,6 +206,8 @@ final class AudienciaResumoBuilder
     {
         $linhas = self::montarLinhasBase($payload);
         $body = implode("\r\n", $linhas);
+        // Tokens RED são exclusivos do PDF; no TXT eles somem e ficam apenas o conteúdo.
+        $body = str_replace([self::TOKEN_RED_OPEN, self::TOKEN_RED_CLOSE], ['', ''], $body);
 
         return "\xEF\xBB\xBF" . $body . "\r\n";
     }
@@ -202,6 +247,8 @@ final class AudienciaResumoBuilder
         .resumo-body li { margin: 2px 0; }
         .resumo-body p { margin: 2px 0; }
         .resumo-body .line { margin: 0; }
+        .resumo-body .resumo-red { color: #C92D14; font-weight: 600; }
+        .resumo-body strong .resumo-red { color: #C92D14; }
     </style>
 </head>
 <body>
@@ -296,6 +343,13 @@ HTML;
         $resultado = implode("\n", $out);
         $resultado = strtr($resultado, $monoInline);
         $resultado = strtr($resultado, $blocos);
+        // Tokens RED → span vermelho. Aplicado por último para garantir que
+        // os marcadores literais já passaram pelo escape de HTML inicial.
+        $resultado = preg_replace(
+            '/\[\[RED\]\](.*?)\[\[\/RED\]\]/su',
+            '<span class="resumo-red">$1</span>',
+            $resultado
+        ) ?? $resultado;
 
         return $resultado;
     }
@@ -321,7 +375,8 @@ HTML;
         if (!empty($payload['prioridades']) && is_array($payload['prioridades'])) {
             $labels = array_filter(array_map('strval', $payload['prioridades']));
             if ($labels !== []) {
-                $linhas[] = '*Prioridades: ' . implode(', ', $labels) . '*';
+                // Tokens RED somem no TXT e viram destaque vermelho no PDF.
+                $linhas[] = '*' . self::TOKEN_RED_OPEN . 'Prioridades: ' . implode(', ', $labels) . self::TOKEN_RED_CLOSE . '*';
             }
         }
 
@@ -331,11 +386,15 @@ HTML;
         }
 
         $grupos = $payload['grupos'] ?? [];
-        foreach (self::TITULOS_POR_TIPO as $tipoSlug => $titulo) {
-            $partes = $grupos[$titulo] ?? [];
+        foreach (self::TITULOS_SINGULAR as $tipoSlug => $tituloSingular) {
+            $partes = $grupos[$tipoSlug] ?? [];
             if (!is_array($partes) || $partes === []) {
                 continue;
             }
+            $titulo = count($partes) === 1
+                ? $tituloSingular
+                : (self::TITULOS_PLURAL[$tipoSlug] ?? $tituloSingular);
+
             $linhas[] = '';
             $linhas[] = '*' . $titulo . '*';
 
