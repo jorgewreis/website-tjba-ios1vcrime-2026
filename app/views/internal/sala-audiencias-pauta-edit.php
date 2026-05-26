@@ -366,10 +366,10 @@ foreach ($tipos as $tpItem) {
                 <?php $podeBaixarResumoEdit = in_array($statusAtualEdit, ['designada', 'redesignada'], true); ?>
                 <?php if ($podeBaixarResumoEdit): ?>
                 <div class="col filter">
-                    <label for="audiencia-edit-resumo">Baixar resumo <span class="label-hint-automatizado">(opcional)</span></label>
+                    <label for="audiencia-edit-resumo">Baixar resumo</span></label>
                     <select class="width-300 height-md" id="audiencia-edit-resumo"
                         data-resumo-base="/api/sala-audiencias-pauta/resumo.php?id_pauta=<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
-                        <option value="" selected disabled>Selecione o formato</option>
+                        <option value="" selected disabled>Selecione aqui</option>
                         <option value="txt">Resumo em TXT</option>
                         <option value="pdf">Resumo em PDF</option>
                     </select>

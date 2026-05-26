@@ -134,9 +134,9 @@ final class AudienciaResumoBuilder
 
             $grupos[$titulo][] = [
                 'status' => $statusIntimacao,
-                'nome' => trim((string) ($parte['nome_parte'] ?? '')),
-                'cargo_orgao' => $cargoOrgao,
-                'defensor' => $defensor,
+                'nome' => self::toUpper(trim((string) ($parte['nome_parte'] ?? ''))),
+                'cargo_orgao' => self::toUpper($cargoOrgao),
+                'defensor' => self::toUpper($defensor),
                 'contatos' => $contatos,
             ];
         }
@@ -385,7 +385,10 @@ HTML;
             if ($valor === '') {
                 return;
             }
-            $chave = function_exists('mb_strtolower') ? mb_strtolower($valor, 'UTF-8') : strtolower($valor);
+            // Aplica máscara de telefone quando possível; e-mails e textos
+            // livres passam intactos.
+            $formatado = self::formatarTelefoneSePossivel($valor);
+            $chave = function_exists('mb_strtolower') ? mb_strtolower($formatado, 'UTF-8') : strtolower($formatado);
             $chave = preg_replace('/\s+/u', ' ', $chave) ?? $chave;
             $chaveDig = preg_replace('/\D+/', '', $chave) ?? '';
             $chaveFinal = $chaveDig !== '' ? 'd:' . $chaveDig : 't:' . $chave;
@@ -393,7 +396,7 @@ HTML;
                 return;
             }
             $vistos[$chaveFinal] = true;
-            $itens[] = $valor;
+            $itens[] = $formatado;
         };
 
         $contatosLocal = trim((string) ($parte['contatos'] ?? ''));
@@ -413,6 +416,54 @@ HTML;
         }
 
         return implode(', ', $itens);
+    }
+
+    /**
+     * Aplica máscara brasileira de telefone quando o valor representa um número.
+     * - 11 dígitos → `(XX) XXXXX-XXXX` (celular com DDD)
+     * - 10 dígitos → `(XX) XXXX-XXXX` (fixo com DDD)
+     * -  9 dígitos → `XXXXX-XXXX` (celular sem DDD)
+     * -  8 dígitos → `XXXX-XXXX` (fixo sem DDD)
+     *
+     * Em qualquer outro caso (email, texto com letras, número fora do padrão)
+     * devolve o valor original com `trim` aplicado.
+     */
+    private static function formatarTelefoneSePossivel(string $valor): string
+    {
+        $valor = trim($valor);
+        if ($valor === '') {
+            return '';
+        }
+        if (strpos($valor, '@') !== false) {
+            return $valor;
+        }
+        // Se houver letras (além de espaços/pontuação/símbolos de telefone), provavelmente é texto livre.
+        if (preg_match('/[A-Za-zÀ-ÿ]/u', $valor)) {
+            return $valor;
+        }
+        $digitos = preg_replace('/\D+/', '', $valor) ?? '';
+        $len = strlen($digitos);
+        if ($len === 11) {
+            return '(' . substr($digitos, 0, 2) . ') ' . substr($digitos, 2, 5) . '-' . substr($digitos, 7);
+        }
+        if ($len === 10) {
+            return '(' . substr($digitos, 0, 2) . ') ' . substr($digitos, 2, 4) . '-' . substr($digitos, 6);
+        }
+        if ($len === 9) {
+            return substr($digitos, 0, 5) . '-' . substr($digitos, 5);
+        }
+        if ($len === 8) {
+            return substr($digitos, 0, 4) . '-' . substr($digitos, 4);
+        }
+        return $valor;
+    }
+
+    private static function toUpper(string $valor): string
+    {
+        if ($valor === '') {
+            return $valor;
+        }
+        return function_exists('mb_strtoupper') ? mb_strtoupper($valor, 'UTF-8') : strtoupper($valor);
     }
 
     /**
