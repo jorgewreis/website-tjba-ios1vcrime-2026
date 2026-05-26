@@ -170,6 +170,9 @@ if ($totalPages > 0) {
 }
 
 $assetsRoot = dirname(__DIR__, 3) . '/public/assets';
+$resetCssV = @filemtime($assetsRoot . '/css/shared/reset.css') ?: time();
+$v2ColorsCssV = @filemtime($assetsRoot . '/css/shared/v2-colors.css') ?: time();
+$v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: time();
 $v2ListJsV = @filemtime($assetsRoot . '/js/modules/cartorio/cartas-expedidas/v2-list.js') ?: time();
 $navBtnV = @filemtime($assetsRoot . '/js/shared/navigate-buttons.js') ?: time();
 $searchListV = @filemtime($assetsRoot . '/js/modules/cartorio/cartas-expedidas/search-list.js') ?: time();
@@ -187,9 +190,9 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
-    <link rel="stylesheet" href="/assets/css/shared/reset.css">
-    <link rel="stylesheet" href="/assets/css/shared/v2-colors.css">
-    <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css">
+    <link rel="stylesheet" href="/assets/css/shared/reset.css?v=<?php echo (int) $resetCssV; ?>">
+    <link rel="stylesheet" href="/assets/css/shared/v2-colors.css?v=<?php echo (int) $v2ColorsCssV; ?>">
+    <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css?v=<?php echo (int) $v2PageListCssV; ?>">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>

@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 09 de abril de 2026
+**Data de Lançamento:** 26 de maio de 2026
 
 # V. 1.80
 
-> feat: refactor allocation type constants in repositories to utilize CartorioAlocacaoTipo for improved consistency and maintainability
+> refactor: update cartas expedidas UI to display remaining deadline days based on envio completion
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: refactor allocation type constants in repositories to utilize CartorioAlocacaoTipo for improved consistency and maintainability** `[425d027]`
+- **refactor: update cartas expedidas UI to display remaining deadline days based on envio completion** `[e99b521d]`
 
 ---
 
