@@ -848,6 +848,20 @@
 
     syncHiddenPautaEditId();
 
+    (function bindResumoDownload() {
+        var sel = document.getElementById('audiencia-edit-resumo');
+        if (!sel) return;
+        sel.addEventListener('change', function () {
+            var v = String(sel.value || '');
+            if (v !== 'txt' && v !== 'pdf') return;
+            var base = sel.getAttribute('data-resumo-base') || '';
+            if (!base) return;
+            var href = base + '&formato=' + encodeURIComponent(v);
+            window.open(href, '_blank', 'noopener,noreferrer');
+            sel.selectedIndex = 0;
+        });
+    })();
+
     initParteNomeSelectFromProcesso();
     updateParteAddButtonState();
     updateAlocarButtonState();

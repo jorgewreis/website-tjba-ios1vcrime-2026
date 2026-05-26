@@ -391,6 +391,7 @@ final class SalaAudienciasPautaService
         $maioridade = trim((string) ($payload['maioridade'] ?? ''));
         $expedicao = trim((string) ($payload['expedicao'] ?? 'Não expedido'));
         $cumprimento = trim((string) ($payload['cumprimento'] ?? 'pendente'));
+        $contatos = self::sanitizeContatosParte($payload['contatos'] ?? null);
         if ($nome === '' || $tipo === '' || $maioridade === '') {
             throw new InvalidArgumentException('Preencha os campos obrigatórios da parte.');
         }
@@ -480,6 +481,7 @@ final class SalaAudienciasPautaService
                 'cumprimento' => $cumprimento,
                 'id_documento_expedido' => trim((string) ($payload['id_documento_expedido'] ?? '')) ?: null,
                 'id_documento_cumprido' => trim((string) ($payload['id_documento_cumprido'] ?? '')) ?: null,
+                'contatos' => $contatos,
                 'criado_por' => $usuarioId,
                 'atualizado_por' => $usuarioId,
             ]);
@@ -511,6 +513,7 @@ final class SalaAudienciasPautaService
         $maioridade = trim((string) ($payload['maioridade'] ?? ''));
         $expedicao = trim((string) ($payload['expedicao'] ?? ''));
         $cumprimento = trim((string) ($payload['cumprimento'] ?? ''));
+        $contatos = self::sanitizeContatosParte($payload['contatos'] ?? null);
         if ($nome === '' || $tipo === '' || $maioridade === '' || $expedicao === '' || $cumprimento === '') {
             throw new InvalidArgumentException('Preencha os campos obrigatórios da parte.');
         }
@@ -579,6 +582,7 @@ final class SalaAudienciasPautaService
                 'cumprimento' => $cumprimento,
                 'id_documento_expedido' => trim((string) ($payload['id_documento_expedido'] ?? '')) ?: null,
                 'id_documento_cumprido' => trim((string) ($payload['id_documento_cumprido'] ?? '')) ?: null,
+                'contatos' => $contatos,
                 'atualizado_por' => $usuarioId,
             ];
 
@@ -615,6 +619,29 @@ final class SalaAudienciasPautaService
     }
 
     /**
+     * Normaliza o campo "contatos" da parte da audiência: trim, colapsa espaços
+     * múltiplos e limita a 200 caracteres (alinhado à coluna VARCHAR(200)).
+     * Retorna `null` quando vazio para preservar `NULL` no banco.
+     */
+    private static function sanitizeContatosParte($valor): ?string
+    {
+        if ($valor === null) {
+            return null;
+        }
+        $str = trim((string) $valor);
+        if ($str === '') {
+            return null;
+        }
+        $str = preg_replace('/\s+/u', ' ', $str) ?? $str;
+        if (function_exists('mb_substr')) {
+            $str = mb_substr($str, 0, 200, 'UTF-8');
+        } else {
+            $str = substr($str, 0, 200);
+        }
+        return $str !== '' ? $str : null;
+    }
+
+    /**
      * @param array<string, mixed> $atual
      * @param array<string, mixed> $novo
      */
@@ -635,6 +662,7 @@ final class SalaAudienciasPautaService
             'cumprimento',
             'id_documento_expedido',
             'id_documento_cumprido',
+            'contatos',
         ];
         foreach ($keys as $k) {
             if (self::normPartePautaValor($atual[$k] ?? null) !== self::normPartePautaValor($novo[$k] ?? null)) {

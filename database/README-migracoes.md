@@ -116,7 +116,20 @@ Script PHP de apoio para migrar dados da tabela legada `processoPrioridades` par
 
 Executar somente quando a base ainda contiver a tabela antiga.
 
-## 8. Ordem sugerida por cenário
+## 8. Módulo Sala de Audiências
+
+### `20260526_sala_audiencias_pauta_parte_contatos.sql`
+
+Adiciona a coluna `contatos` (`VARCHAR(200) NULL`) em
+`sala_audiencias_pauta_parte`. Usada no editor da parte da audiência
+para registrar telefones/e-mails específicos daquela audiência.
+
+Lida pelo helper `AudienciaResumoBuilder` (resumo da audiência em
+TXT/PDF) em conjunto com `partes_telefones` quando há
+`parte_id_global`, e como única fonte de contato quando a parte foi
+criada apenas no contexto da audiência.
+
+## 9. Ordem sugerida por cenário
 
 ### Nova instalação em ambiente já existente da aplicação
 
@@ -141,7 +154,7 @@ Executar somente quando a base ainda contiver a tabela antiga.
 2. Se existir `processoPrioridades`, executar `php database/migrations/run_processo_prioridades_unificacao_data.php`.
 3. Tratar `20260330_processoPrioridades.sql` apenas como referência histórica.
 
-## 9. Arquivos presentes hoje em `database/migrations/`
+## 10. Arquivos presentes hoje em `database/migrations/`
 
 - `20260322_gabinete_reus_presos.sql`
 - `20260322_oficios_criado_por.sql`
@@ -151,6 +164,7 @@ Executar somente quando a base ainda contiver a tabela antiga.
 - `20260330_processoPrioridades.sql`
 - `20260331_processo_prioridades_unificacao.sql`
 - `20260401_login_rate_limits.sql`
+- `20260526_sala_audiencias_pauta_parte_contatos.sql`
 - `guias.sql`
 - `run_processo_prioridades_unificacao_data.php`
 - `salario_minimo_e_valor_multa_guias.sql`

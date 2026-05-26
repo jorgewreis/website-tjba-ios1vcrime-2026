@@ -214,6 +214,19 @@ $defPrivadoEhOutro = ($defensorPrivadoAtual === 'outro');
                     <input type="text" class="width-300 height-md" id="parte-edit-id-cumprido" value="<?php echo htmlspecialchars((string) ($parte['id_documento_cumprido'] ?? ''), ENT_QUOTES); ?>" placeholder="Preencher quando houver cumprimento" autocomplete="off">
                 </div>
             </div>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="parte-edit-contatos">Contatos da audiência <span class="label-hint-automatizado">(opcional)</span></label>
+                    <input
+                        type="text"
+                        class="width-700 height-md"
+                        id="parte-edit-contatos"
+                        value="<?php echo htmlspecialchars((string) ($parte['contatos'] ?? ''), ENT_QUOTES); ?>"
+                        placeholder="Ex.: (71) 99999-0000, email@dominio.com"
+                        maxlength="200"
+                        autocomplete="off">
+                </div>
+            </div>
         </div>
 
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">

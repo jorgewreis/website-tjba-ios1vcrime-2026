@@ -18,7 +18,7 @@ final class SalaAudienciasPautaParteRepository
     {
         $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id_parte', 'SPP', 30);
         $sql = sprintf(
-            'INSERT INTO `%s` (`id_parte`,`pauta`,`parte_id_global`,`processo_parte_id`,`nome_parte`,`tipo_parte`,`tipo_defensor`,`defensor_publico_id`,`defensor_publico_outro`,`defensor_privado_id`,`defensor_privado_outro`,`maioridade`,`expedicao`,`cumprimento`,`id_documento_expedido`,`id_documento_cumprido`,`criado_por`,`atualizado_por`,`ativo`) VALUES (:id,:pauta,:parte_global,:processo_parte,:nome,:tipo,:tipo_defensor,:def_publico,:def_publico_outro,:def_privado,:def_outro,:maioridade,:expedicao,:cumprimento,:idexp,:idcum,:criado,:atualizado,1)',
+            'INSERT INTO `%s` (`id_parte`,`pauta`,`parte_id_global`,`processo_parte_id`,`nome_parte`,`tipo_parte`,`tipo_defensor`,`defensor_publico_id`,`defensor_publico_outro`,`defensor_privado_id`,`defensor_privado_outro`,`maioridade`,`expedicao`,`cumprimento`,`id_documento_expedido`,`id_documento_cumprido`,`contatos`,`criado_por`,`atualizado_por`,`ativo`) VALUES (:id,:pauta,:parte_global,:processo_parte,:nome,:tipo,:tipo_defensor,:def_publico,:def_publico_outro,:def_privado,:def_outro,:maioridade,:expedicao,:cumprimento,:idexp,:idcum,:contatos,:criado,:atualizado,1)',
             $this->table
         );
         $st = $this->connection->prepare($sql);
@@ -38,6 +38,7 @@ final class SalaAudienciasPautaParteRepository
         $st->bindValue(':cumprimento', $row['cumprimento']);
         $st->bindValue(':idexp', $row['id_documento_expedido'] ?? null);
         $st->bindValue(':idcum', $row['id_documento_cumprido'] ?? null);
+        $st->bindValue(':contatos', $row['contatos'] ?? null);
         $st->bindValue(':criado', $row['criado_por'] ?? null);
         $st->bindValue(':atualizado', $row['atualizado_por'] ?? null);
         $st->execute();
@@ -47,7 +48,7 @@ final class SalaAudienciasPautaParteRepository
     public function update(string $idParte, array $row): bool
     {
         $sql = sprintf(
-            'UPDATE `%s` SET `parte_id_global`=:parte_global,`processo_parte_id`=:processo_parte,`nome_parte`=:nome,`tipo_parte`=:tipo,`tipo_defensor`=:tipo_defensor,`defensor_publico_id`=:def_publico,`defensor_publico_outro`=:def_publico_outro,`defensor_privado_id`=:def_privado,`defensor_privado_outro`=:def_outro,`maioridade`=:maioridade,`expedicao`=:expedicao,`cumprimento`=:cumprimento,`id_documento_expedido`=:idexp,`id_documento_cumprido`=:idcum,`atualizado_por`=:atualizado WHERE `id_parte`=:id AND `ativo`=1 LIMIT 1',
+            'UPDATE `%s` SET `parte_id_global`=:parte_global,`processo_parte_id`=:processo_parte,`nome_parte`=:nome,`tipo_parte`=:tipo,`tipo_defensor`=:tipo_defensor,`defensor_publico_id`=:def_publico,`defensor_publico_outro`=:def_publico_outro,`defensor_privado_id`=:def_privado,`defensor_privado_outro`=:def_outro,`maioridade`=:maioridade,`expedicao`=:expedicao,`cumprimento`=:cumprimento,`id_documento_expedido`=:idexp,`id_documento_cumprido`=:idcum,`contatos`=:contatos,`atualizado_por`=:atualizado WHERE `id_parte`=:id AND `ativo`=1 LIMIT 1',
             $this->table
         );
         $st = $this->connection->prepare($sql);
@@ -66,6 +67,7 @@ final class SalaAudienciasPautaParteRepository
         $st->bindValue(':cumprimento', $row['cumprimento']);
         $st->bindValue(':idexp', $row['id_documento_expedido'] ?? null);
         $st->bindValue(':idcum', $row['id_documento_cumprido'] ?? null);
+        $st->bindValue(':contatos', $row['contatos'] ?? null);
         $st->bindValue(':atualizado', $row['atualizado_por'] ?? null);
         $st->execute();
         return $st->rowCount() > 0;

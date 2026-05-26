@@ -363,6 +363,18 @@ foreach ($tipos as $tpItem) {
                     <label for="audiencia-edit-classe" id="processo-ap-info" aria-live="polite">Classe processual<?php echo $classeValorTemInfo ? ' <span class="label-hint-automatizado">*automatizado</span>' : ''; ?></label>
                     <input type="text" class="<?php echo htmlspecialchars($classeInputClassPautaEdit, ENT_QUOTES, 'UTF-8'); ?>" id="audiencia-edit-classe" data-datajud-related="true"<?php echo $classeValorTemInfo ? ' data-datajud-initial="1"' : ''; ?> value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Sem classe vinculada — cadastre em Consultar processo &gt; Editar processo" readonly autocomplete="off">
                 </div>
+                <?php $podeBaixarResumoEdit = in_array($statusAtualEdit, ['designada', 'redesignada'], true); ?>
+                <?php if ($podeBaixarResumoEdit): ?>
+                <div class="col filter">
+                    <label for="audiencia-edit-resumo">Baixar resumo <span class="label-hint-automatizado">(opcional)</span></label>
+                    <select class="width-300 height-md" id="audiencia-edit-resumo"
+                        data-resumo-base="/api/sala-audiencias-pauta/resumo.php?id_pauta=<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
+                        <option value="" selected disabled>Selecione o formato</option>
+                        <option value="txt">Resumo em TXT</option>
+                        <option value="pdf">Resumo em PDF</option>
+                    </select>
+                </div>
+                <?php endif; ?>
             </div>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col filter">
@@ -816,6 +828,12 @@ foreach ($tipos as $tpItem) {
                         <?php endif; ?>
                         <?php if ($mostrarDefensor): ?>
                             <span class="minor-info-defesa"><?php echo htmlspecialchars($defensorTexto, ENT_QUOTES); ?></span>
+                        <?php endif; ?>
+                        <?php
+                            $contatosParteLista = trim((string) ($parte['contatos'] ?? ''));
+                        ?>
+                        <?php if ($contatosParteLista !== ''): ?>
+                            <span class="minor-info-defesa" title="Contatos cadastrados na audiência">Contatos: <?php echo htmlspecialchars($contatosParteLista, ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php endif; ?>
                     </div>
                     <div class="col width-600">

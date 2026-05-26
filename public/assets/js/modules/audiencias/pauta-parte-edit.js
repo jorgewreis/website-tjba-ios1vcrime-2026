@@ -200,7 +200,8 @@
                 expedicao: expedicao,
                 cumprimento: cumprimento,
                 id_documento_expedido: String(document.getElementById('parte-edit-id-expedido')?.value || '').trim(),
-                id_documento_cumprido: String(document.getElementById('parte-edit-id-cumprido')?.value || '').trim()
+                id_documento_cumprido: String(document.getElementById('parte-edit-id-cumprido')?.value || '').trim(),
+                contatos: String(document.getElementById('parte-edit-contatos')?.value || '').trim().slice(0, 200)
             })
         })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })

@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 10 de abril de 2026
+**Data de Lançamento:** 26 de maio de 2026
 
 # V. 1.81
 
-> feat: add sala de mídias functionality with new access rules, text configurations, and service integrations for enhanced media management
+> refactor: update CSS links in cartas expedidas views to include versioning for cache busting
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: add sala de mídias functionality with new access rules, text configurations, and service integrations for enhanced media management** `[c9d5b66]`
+- **refactor: update CSS links in cartas expedidas views to include versioning for cache busting** `[fb750b5b]`
 
 ---
 
