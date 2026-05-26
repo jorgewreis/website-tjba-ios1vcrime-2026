@@ -78,6 +78,51 @@ $destino = $comarca !== '' ? $comarca . ($estado !== '' ? ' - ' . $estado : '') 
 $finalidade = trim((string) ($row['Finalidade'] ?? ''));
 $prazo = trim((string) ($row['Prazo'] ?? ''));
 
+// Calcular dias restantes do prazo a partir da conclusão da subtarefa de ENVIO.
+// Se a subtarefa de envio ainda não foi concluída (carta apenas cadastrada),
+// o sufixo do prazo não é mostrado.
+$prazoRestanteTexto = '';
+$prazoRestanteAlerta = false;
+$prazoDiasInt = is_numeric($prazo) ? (int) $prazo : 0;
+if ($prazoDiasInt > 0) {
+    $envioConcluidoEm = '';
+    foreach ($allSt as $subtarefa) {
+        if (!is_array($subtarefa)) {
+            continue;
+        }
+        $tipoSub = trim((string) ($subtarefa['tipo'] ?? ''));
+        $statusSub = strtolower(trim((string) ($subtarefa['status'] ?? '')));
+        if ($tipoSub === CartasExpedidasSubtarefasRepository::TIPO_ENVIO
+            && in_array($statusSub, ['concluida', 'concluída'], true)) {
+            $envioConcluidoEm = trim((string) ($subtarefa['updated_at'] ?? ''));
+            break;
+        }
+    }
+    if ($envioConcluidoEm !== '') {
+        $tsEnvio = strtotime($envioConcluidoEm);
+        if ($tsEnvio !== false) {
+            try {
+                $dataEnvio = new DateTimeImmutable(date('Y-m-d', $tsEnvio));
+                $dataHoje = new DateTimeImmutable(date('Y-m-d'));
+                $dataLimite = $dataEnvio->modify('+' . $prazoDiasInt . ' days');
+                $intervalo = $dataHoje->diff($dataLimite);
+                $diasRestantes = (int) $intervalo->days * ($intervalo->invert ? -1 : 1);
+                if ($diasRestantes >= 0) {
+                    $prazoRestanteTexto = '(' . $diasRestantes . ')';
+                    $prazoRestanteAlerta = $diasRestantes < 10;
+                } else {
+                    $vencidoHa = abs($diasRestantes);
+                    $unidade = $vencidoHa === 1 ? 'dia' : 'dias';
+                    $prazoRestanteTexto = '(vencido há ' . $vencidoHa . ' ' . $unidade . ')';
+                    $prazoRestanteAlerta = true;
+                }
+            } catch (\Exception $e) {
+                $prazoRestanteTexto = '';
+            }
+        }
+    }
+}
+
 $mostrarCartaParcial = false;
 $cartaParcialLabel = '';
 $cartaParcialValor = '';
@@ -205,7 +250,16 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                     </div>
                     <div class="register-block-content-item">
                         <span class="register-block-content-item-text">Prazo:</span>
-                        <span class="register-block-content-item-value"><?php echo htmlspecialchars($prazo !== '' ? $prazo . ' dias' : '', ENT_QUOTES); ?></span>
+                        <span class="register-block-content-item-value"><?php
+                            if ($prazo !== '') {
+                                echo htmlspecialchars($prazo . ' dias', ENT_QUOTES);
+                                if ($prazoRestanteTexto !== '') {
+                                    echo ' <span class="prazo-restante' . ($prazoRestanteAlerta ? ' alerta' : '') . '">'
+                                        . htmlspecialchars($prazoRestanteTexto, ENT_QUOTES)
+                                        . '</span>';
+                                }
+                            }
+                        ?></span>
                     </div>
                 <?php endif; ?>
             </div>

@@ -742,7 +742,9 @@ final class RegistroMetadataHelper
         /** @var list<array<string, mixed>> $allSt */
         $allSt = is_array($row['SubtarefasAll'] ?? null) ? $row['SubtarefasAll'] : [];
 
-        $envioConcluida = false;
+        // "Envio" usa exclusivamente a subtarefa de ENVIO concluída (primeira após o
+        // cadastro). A subtarefa de DEVOLUÇÃO concluída alimenta a linha "Juntada".
+        $envioConcluida = null;
         $devolucaoConcluida = null;
         foreach ($allSt as $subtarefa) {
             if (!is_array($subtarefa)) {
@@ -751,31 +753,33 @@ final class RegistroMetadataHelper
             $tipo = trim((string) ($subtarefa['tipo'] ?? ''));
             $stStatus = strtolower(trim((string) ($subtarefa['status'] ?? '')));
             if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ENVIO && self::isSubtarefaStatusConcluida($stStatus)) {
-                $envioConcluida = true;
+                $envioConcluida = $subtarefa;
             }
             if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO && self::isSubtarefaStatusConcluida($stStatus)) {
                 $devolucaoConcluida = $subtarefa;
             }
         }
 
-        $mostrarAtualizacao = $envioConcluida
-            || in_array($status, ['aguardando cumprimento', 'concluída', 'concluida', 'finalizada'], true);
-
-        if ($mostrarAtualizacao) {
-            $ultima = self::resolveUltimaSubtarefaConcluida($allSt, $connection);
-            $dataAtualizacao = $ultima['data'] ?? '';
-            $autorAtualizacao = trim((string) ($ultima['editor'] ?? ''));
-            if ($dataAtualizacao === '' && $updatedRaw !== '' && self::isUpdatedAfterCreated($createdRaw, $updatedRaw)) {
-                $dataAtualizacao = $updatedRaw;
-                $autorAtualizacao = $editor !== '' ? $editor : $criador;
-            }
+        if ($envioConcluida !== null) {
+            $dataAtualizacao = trim((string) ($envioConcluida['updated_at'] ?? ''));
+            $autorAtualizacao = '';
             if ($dataAtualizacao !== '') {
+                require_once __DIR__ . '/CartorioTimelineHelper.php';
+                $usuarioNomesPorId = $connection instanceof PDO
+                    ? cartorioTimelineCollectUsuarioNomesPorId($connection, $allSt)
+                    : [];
+                $dados = cartorioTimelineDecodeData($envioConcluida);
+                $autorAtualizacao = cartorioTimelineResolveUser($dados, $usuarioNomesPorId);
+                if ($autorAtualizacao === '—') {
+                    $autorAtualizacao = '';
+                }
+                $autorAtualizacao = self::compactarNome($autorAtualizacao);
                 if ($autorAtualizacao === '') {
                     $autorAtualizacao = $editor !== '' ? $editor : $criador;
                 }
                 $linhas[] = [
                     'data_hora' => self::formatarDataHoraCurtaV2($dataAtualizacao),
-                    'rotulo' => 'Atualização',
+                    'rotulo' => 'Envio',
                     'autor' => $autorAtualizacao,
                     'content_class' => '',
                 ];

@@ -991,6 +991,14 @@
         color: var(--color-text-canceled);
     }
 
+    .prazo-restante {
+        margin-left: 2px;
+    }
+    .prazo-restante.alerta {
+        font-weight: 600;
+        color: var(--color-text-canceled);
+    }
+
     .register-block-actions {
         /* sizing */
         width: 100%;
