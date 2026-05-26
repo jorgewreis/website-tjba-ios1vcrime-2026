@@ -181,65 +181,6 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
     <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
-    <style>
-        /* Ajustes locais: variante "secondary" do button-btn v2 e banner clic\u00e1vel. */
-        .button-btn {
-            min-height: 40px;
-            padding: 0 20px;
-            font-family: 'Google Sans', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        .button-btn.btn-secondary {
-            background-color: var(--color-background);
-            border: 1px solid var(--color-border);
-            color: var(--color-title-text);
-        }
-        .button-btn.btn-secondary:hover {
-            background-color: var(--color-gray-300);
-        }
-        .block-cell {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: flex-start;
-            gap: 4px;
-            padding: 6px 10px;
-        }
-        .block-cell label { margin-left: 0; }
-        .block-cell label[hidden] { display: none !important; }
-        .processo-bd-info {
-            display: block;
-            font-family: 'Google Sans Code', monospace;
-            font-size: 11px;
-            font-weight: 400;
-            color: var(--color-description-text);
-            line-height: 1.4;
-            margin-top: 2px;
-        }
-        .processo-bd-info .processo-bd-info-label {
-            font-weight: 600;
-            color: var(--color-title-text);
-            margin-right: 4px;
-        }
-        .line-results.alert.rule.clickable {
-            cursor: pointer;
-            transition: background-color 120ms ease-in-out;
-        }
-        .line-results.alert.rule.clickable:hover {
-            background-color: var(--color-bg-current-light);
-        }
-        .line-results.alert.rule.clickable:focus-visible {
-            outline: 2px solid var(--color-bg-primary);
-            outline-offset: 2px;
-        }
-        .status-classe {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 8px;
-        }
-    </style>
 </head>
 
 <body data-theme="light">
@@ -604,7 +545,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
                     var currentLabel = labelEl
                         ? String(labelEl.textContent || '').trim()
                         : String(cadastrarBtn.textContent || '').trim();
-                    return currentLabel === 'Cadastrar' || currentLabel === 'Novo cadastro';
+                    return currentLabel === 'Cadastrar';
                 }
                 function applyState() {
                     if (allFilled() && gateWantsEnabled()) {

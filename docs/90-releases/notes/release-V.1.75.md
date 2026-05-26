@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 09 de abril de 2026
+**Data de Lançamento:** 25 de maio de 2026
 
 # V. 1.75
 
-> feat: enhance productivity ranking visibility for users in Cartório and Gabinete, and update related filters and projections
+> refactor: update cartas expedidas UI to ensure consistent element visibility
 
 ## Nível de Impacto
 
@@ -12,7 +12,7 @@
 
 ## Alterações
 
-- **feat: enhance productivity ranking visibility for users in Cartório and Gabinete, and update related filters and projections** `[4d65aae]`
+- **refactor: update cartas expedidas UI to ensure consistent element visibility** `[ec4ac70e]`
 
 ---
 
