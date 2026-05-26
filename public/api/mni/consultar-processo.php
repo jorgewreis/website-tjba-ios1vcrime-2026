@@ -22,14 +22,45 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CnjValidator.php';
+require_once $basePath . '/config/security.php';
+require_once $basePath . '/app/models/Usuario.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/services/MniService.php';
 
 $config = require __DIR__ . '/config.php';
 
-$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-if ($usuarioId === '') {
+if (!Security::isAuthenticated()) {
+    Security::clearAuthenticatedSession();
     http_response_code(401);
     echo json_encode(['error' => 'Sessão expirada. Faça login novamente.', 'kind' => 'auth'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$usuario = new Usuario();
+$token = trim((string) ($_SESSION['token'] ?? ''));
+$user = $token !== '' ? $usuario->validarToken($token) : null;
+if (!$user) {
+    Security::clearAuthenticatedSession();
+    http_response_code(401);
+    echo json_encode(['error' => 'Sessão expirada. Faça login novamente.', 'kind' => 'auth'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+if ($usuarioId === '') {
+    $usuarioId = trim((string) ($user['id_usuario'] ?? ($user['id'] ?? '')));
+}
+if ($usuarioId === '') {
+    http_response_code(401);
+    echo json_encode(['error' => 'Sessão inválida. Faça login novamente.', 'kind' => 'auth'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
+if (!AccessEvaluator::canAccessPage('consultaprocessos', $perfis)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Seu perfil não tem permissão para consultar processos via MNI.', 'kind' => 'auth'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

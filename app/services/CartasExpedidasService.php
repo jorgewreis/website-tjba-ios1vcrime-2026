@@ -32,6 +32,25 @@ final class CartasExpedidasService
     private ?DataJudService $dataJudService;
 
     private const REGRA_ALOCAR_CARTAS = 'ALLOCATE-CARTASEXPEDIDAS';
+    private const METODOS_ENVIO = [
+        'email' => 'E-mail',
+        'e-mail' => 'E-mail',
+        'E-mail' => 'E-mail',
+        'malote digital' => 'Malote Digital',
+        'Malote Digital' => 'Malote Digital',
+        'pje' => 'PJe',
+        'PJe' => 'PJe',
+        'esaj' => 'eSAJ',
+        'eSAJ' => 'eSAJ',
+        'eproc' => 'ePROC',
+        'ePROC' => 'ePROC',
+    ];
+    private const RESULTADOS_DEVOLUCAO = [
+        'devolvida_sem_cumprimento',
+        'cumprida_negativamente',
+        'cumprida_parcialmente',
+        'cumprida_positivamente',
+    ];
 
     public function __construct(PDO $connection, ?DataJudService $dataJudService = null)
     {
@@ -310,6 +329,25 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual. Atualize a página.');
         }
 
+        $statusAtual = strtolower(trim((string) ($subtarefa['status'] ?? '')));
+        if ($statusAtual === 'concluída') {
+            $statusAtual = 'concluida';
+        }
+        if (in_array($statusAtual, ['concluida', 'cancelada'], true)) {
+            throw new InvalidArgumentException('Subtarefa já finalizada. Atualize a página.');
+        }
+
+        if ($ordem > CartasExpedidasSubtarefasRepository::ORDEM_ENVIO) {
+            $anterior = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, $ordem - 1);
+            $statusAnterior = strtolower(trim((string) ($anterior['status'] ?? '')));
+            if ($statusAnterior === 'concluída') {
+                $statusAnterior = 'concluida';
+            }
+            if ($anterior === null || $statusAnterior !== 'concluida') {
+                throw new InvalidArgumentException('Conclua a etapa anterior antes de avançar esta subtarefa.');
+            }
+        }
+
         $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
             $decoded = json_decode($dadosJson, true);
@@ -317,6 +355,13 @@ final class CartasExpedidasService
                 $dadosArray = $decoded;
             }
         }
+
+        $dadosArray = $this->normalizarDadosConclusaoSubtarefa($dadosArray, $ordem, $tipoSubtarefaAtual);
+        $encodedDados = json_encode($dadosArray, JSON_UNESCAPED_UNICODE);
+        if (!is_string($encodedDados)) {
+            throw new InvalidArgumentException('Dados da subtarefa inválidos.');
+        }
+        $dadosJson = $encodedDados;
 
         $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
         if ($usuarioIdMovimentacao !== '') {
@@ -374,12 +419,21 @@ final class CartasExpedidasService
         return 'specific';
     }
 
-    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId, bool $isGestao = false): bool
     {
         $alocadoId     = trim($alocadoId);
         $requestUserId = trim($requestUserId);
         if ($alocadoId === '' || $requestUserId === '') {
             return false;
+        }
+        $alocado = $this->alocadosRepository->findById($alocadoId);
+        if ($alocado === null) {
+            return false;
+        }
+        $tipoReal = $this->normalizeTipoAlocado((string) ($alocado['tipo'] ?? $tipo));
+        $usuarioAlocado = trim((string) ($alocado['usuario_id'] ?? ''));
+        if (!$isGestao && ($tipoReal !== 'specific' || $usuarioAlocado !== $requestUserId)) {
+            throw new InvalidArgumentException('Sem permissão para remover esta alocação.');
         }
         return $this->alocadosRepository->deleteById($alocadoId);
     }
@@ -511,11 +565,43 @@ final class CartasExpedidasService
 
         $usuarioId = trim((string) ($payload['usuario_id'] ?? ''));
         unset($payload['usuario_id']);
+        unset($payload['status']);
         if ($usuarioId !== '') {
             $this->alocadosRepository->addAlocado($id, $usuarioId);
         }
 
         return $this->repository->update($id, $payload);
+    }
+
+    /**
+     * @param array<string, mixed> $dados
+     * @return array<string, mixed>
+     */
+    private function normalizarDadosConclusaoSubtarefa(array $dados, int $ordem, string $tipo): array
+    {
+        if ($ordem === CartasExpedidasSubtarefasRepository::ORDEM_ENVIO
+            || $tipo === CartasExpedidasSubtarefasRepository::TIPO_ENVIO) {
+            $raw = trim((string) ($dados['metodo_envio'] ?? ''));
+            $key = self::METODOS_ENVIO[$raw] ?? self::METODOS_ENVIO[strtolower($raw)] ?? null;
+            if ($key === null) {
+                throw new InvalidArgumentException('Informe o método de envio da carta.');
+            }
+            $dados['metodo_envio'] = $key;
+            return $dados;
+        }
+
+        if ($ordem === CartasExpedidasSubtarefasRepository::ORDEM_DEVOLUCAO
+            || $tipo === CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO) {
+            $resultado = trim((string) ($dados['resultado_devolucao'] ?? ($dados['resultado'] ?? '')));
+            if (!in_array($resultado, self::RESULTADOS_DEVOLUCAO, true)) {
+                throw new InvalidArgumentException('Informe o resultado da devolução da carta.');
+            }
+            $dados['resultado_devolucao'] = $resultado;
+            $dados['resultado'] = $resultado;
+            return $dados;
+        }
+
+        throw new InvalidArgumentException('Subtarefa inválida para conclusão.');
     }
 
     /**

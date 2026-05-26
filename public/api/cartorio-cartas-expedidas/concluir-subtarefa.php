@@ -7,7 +7,41 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CartorioSubtarefaUsuarioSessao.php';
+require_once $basePath . '/config/security.php';
+require_once $basePath . '/app/models/Usuario.php';
+require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
+
+if (!bootstrapRequireTrustedPostRequest()) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+if (!Security::isAuthenticated() || $usuarioId === '') {
+    Security::clearAuthenticatedSession();
+    http_response_code(401);
+    echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$usuario = new Usuario();
+$token = trim((string) ($_SESSION['token'] ?? ''));
+if ($token === '' || !$usuario->validarToken($token)) {
+    Security::clearAuthenticatedSession();
+    http_response_code(401);
+    echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
+if (!AccessEvaluator::canAccessPage('cartasexpedidas', $perfis)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Seu perfil não tem permissão para concluir subtarefas de cartas expedidas.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $connection = Conection::getInstance()->getConnection();
 

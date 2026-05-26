@@ -160,6 +160,88 @@
         });
     }
 
+    function normalizePromptOption(value) {
+        return String(value || '').trim().toLowerCase();
+    }
+
+    function completionDataForEnvio(notify) {
+        var raw = window.prompt(
+            'Informe o método de envio da carta:\n' +
+            '1 - E-mail\n' +
+            '2 - Malote Digital\n' +
+            '3 - PJe\n' +
+            '4 - eSAJ\n' +
+            '5 - ePROC'
+        );
+        if (raw === null) {
+            notify('info', 'Operação cancelada', 'Conclusão da subtarefa cancelada.');
+            return null;
+        }
+        var option = normalizePromptOption(raw);
+        var map = {
+            '1': 'E-mail',
+            'email': 'E-mail',
+            'e-mail': 'E-mail',
+            '2': 'Malote Digital',
+            'malote': 'Malote Digital',
+            'malote digital': 'Malote Digital',
+            '3': 'PJe',
+            'pje': 'PJe',
+            '4': 'eSAJ',
+            'esaj': 'eSAJ',
+            '5': 'ePROC',
+            'eproc': 'ePROC'
+        };
+        if (!map[option]) {
+            notify('error', 'Erro', 'Informe um método de envio válido.');
+            return null;
+        }
+        return { metodo_envio: map[option] };
+    }
+
+    function completionDataForDevolucao(notify) {
+        var raw = window.prompt(
+            'Informe o resultado da devolução da carta:\n' +
+            '1 - Não cumprida\n' +
+            '2 - Cumprida negativamente\n' +
+            '3 - Cumprida parcialmente\n' +
+            '4 - Cumprida integralmente'
+        );
+        if (raw === null) {
+            notify('info', 'Operação cancelada', 'Conclusão da subtarefa cancelada.');
+            return null;
+        }
+        var option = normalizePromptOption(raw);
+        var map = {
+            '1': 'devolvida_sem_cumprimento',
+            'nao cumprida': 'devolvida_sem_cumprimento',
+            'não cumprida': 'devolvida_sem_cumprimento',
+            '2': 'cumprida_negativamente',
+            'cumprida negativamente': 'cumprida_negativamente',
+            '3': 'cumprida_parcialmente',
+            'cumprida parcialmente': 'cumprida_parcialmente',
+            '4': 'cumprida_positivamente',
+            'cumprida integralmente': 'cumprida_positivamente'
+        };
+        if (!map[option]) {
+            notify('error', 'Erro', 'Informe um resultado de devolução válido.');
+            return null;
+        }
+        return { resultado_devolucao: map[option], resultado: map[option] };
+    }
+
+    function collectCompletionData(btn, notify) {
+        var tipo = normalizePromptOption(btn.getAttribute('data-subtarefa-tipo'));
+        if (tipo === 'aguardando_envio') {
+            return completionDataForEnvio(notify);
+        }
+        if (tipo === 'aguardando_devolucao') {
+            return completionDataForDevolucao(notify);
+        }
+        notify('error', 'Erro', 'Tipo de subtarefa inválido. Atualize a página.');
+        return null;
+    }
+
     function bindContinuarSubtarefa(ctx) {
         var notify = ctx.notify;
         var queuePostReloadToast = ctx.queuePostReloadToast;
@@ -170,6 +252,10 @@
                 if (!subtarefaId) {
                     return;
                 }
+                var dadosEspecificos = collectCompletionData(btn, notify);
+                if (!dadosEspecificos) {
+                    return;
+                }
                 btn.disabled = true;
                 fetch('/api/cartorio-cartas-expedidas/concluir-subtarefa.php', {
                     method: 'POST',
@@ -177,7 +263,7 @@
                     credentials: 'same-origin',
                     body: JSON.stringify({
                         subtarefa_id: subtarefaId,
-                        dados_especificos: null
+                        dados_especificos: dadosEspecificos
                     })
                 })
                     .then(function (response) {

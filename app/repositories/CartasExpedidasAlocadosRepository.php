@@ -136,6 +136,23 @@ final class CartasExpedidasAlocadosRepository
         return $stmt->rowCount() > 0;
     }
 
+    public function findById(string $id): ?array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return null;
+        }
+
+        $stmt = $this->connection->prepare(
+            sprintf('SELECT `id`, `carta_expedida_id`, `usuario_id`, `tipo`, `created_at` FROM `%s` WHERE `id` = :id LIMIT 1', $this->table)
+        );
+        $stmt->bindValue(':id', $id);
+        $stmt->execute();
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row === false ? null : $row;
+    }
+
     public function deleteByCartaId(string $cartaId): void
     {
         $cartaId = trim($cartaId);

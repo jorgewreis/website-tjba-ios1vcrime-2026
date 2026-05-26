@@ -6,6 +6,9 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/config/security.php';
+require_once $basePath . '/app/models/Usuario.php';
+require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
 
 if (!bootstrapRequireTrustedPostRequest()) {
@@ -31,9 +34,19 @@ if ($alocadoId === '') {
 }
 
 $userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
-if ($userId === '') {
+if (!Security::isAuthenticated() || $userId === '') {
+    Security::clearAuthenticatedSession();
     http_response_code(401);
     echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$usuario = new Usuario();
+$token = trim((string) ($_SESSION['token'] ?? ''));
+if ($token === '' || !$usuario->validarToken($token)) {
+    Security::clearAuthenticatedSession();
+    http_response_code(401);
+    echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -41,6 +54,12 @@ require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 $perfisGestao = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
 $isGestao  = count(array_intersect($perfis, $perfisGestao)) > 0;
+
+if (!AccessEvaluator::canAccessPage('cartasexpedidas', $perfis)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Seu perfil não tem permissão para remover alocações de cartas expedidas.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 if (in_array($tipo, ['rule', 'all'], true) && !$isGestao) {
     http_response_code(403);
@@ -50,7 +69,7 @@ if (in_array($tipo, ['rule', 'all'], true) && !$isGestao) {
 
 try {
     $service = new CartasExpedidasService($connection);
-    $deleted  = $service->removeAlocado($alocadoId, $tipo, $userId);
+    $deleted  = $service->removeAlocado($alocadoId, $tipo, $userId, $isGestao);
     echo json_encode(['deleted' => $deleted], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
