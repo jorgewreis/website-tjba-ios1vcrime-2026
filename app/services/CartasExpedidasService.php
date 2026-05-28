@@ -315,7 +315,7 @@ final class CartasExpedidasService
         $ordem = (int) ($subtarefa['ordem'] ?? 0);
         $cartaId = trim((string) ($subtarefa['carta_expedida_id'] ?? ''));
         $tipoSubtarefaAtual = trim((string) ($subtarefa['tipo'] ?? ''));
-        $statusSubtarefaAtual = trim((string) ($subtarefa['status'] ?? ''));
+        $statusSubtarefaAtual = strtolower(trim((string) ($subtarefa['status'] ?? '')));
 
         if ($cartaId === '') {
             throw new InvalidArgumentException('Carta da subtarefa não identificada.');
@@ -333,7 +333,7 @@ final class CartasExpedidasService
         if ($carta === null) {
             throw new InvalidArgumentException('Carta expedida não encontrada.');
         }
-        $statusCarta = trim((string) ($carta['status'] ?? ''));
+        $statusCarta = strtolower(trim((string) ($carta['status'] ?? '')));
         if (in_array($statusCarta, ['cancelada', 'concluída', 'concluida', 'finalizada'], true)) {
             throw new InvalidArgumentException('Não é possível concluir subtarefa de carta finalizada ou cancelada.');
         }
