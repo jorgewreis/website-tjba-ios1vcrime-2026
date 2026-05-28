@@ -144,7 +144,7 @@ if ($isConcluida) {
         if (!is_array($dados)) {
             $dados = [];
         }
-        $resultado = trim((string) ($dados['resultado'] ?? ''));
+        $resultado = trim((string) ($dados['resultado_devolucao'] ?? $dados['resultado'] ?? ''));
         if ($resultado === 'cumprida_parcialmente') {
             $mostrarCartaParcial = true;
             $cartaParcialLabel = 'Cumprida parcialmente';
@@ -327,13 +327,42 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                     <img src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="">
                 </button>
                 <?php if ($mostrarContinuar && $textoEtapa !== ''): ?>
+                    <?php
+                    $tipoSubtarefaAtiva = trim((string) ($subtarefaAtivaUi['tipo'] ?? ''));
+                    $tituloBotaoEtapa = CartasExpedidasUiCopy::tituloBotaoPorTipo($tipoSubtarefaAtiva);
+                    ?>
                     <div class="register-block-status-text <?php echo htmlspecialchars($classeEtapa, ENT_QUOTES); ?>">
                         <span class="register-block-status-text-text"><?php echo htmlspecialchars($textoEtapa, ENT_QUOTES); ?></span>
+                        <?php if ($tipoSubtarefaAtiva === CartasExpedidasSubtarefasRepository::TIPO_ENVIO): ?>
+                            <select class="width-200 height-sm js-cartas-expedidas-subtarefa-complemento"
+                                data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
+                                data-complemento-campo="metodo_envio"
+                                aria-label="Método de envio">
+                                <option value="">Método</option>
+                                <option value="email">E-mail</option>
+                                <option value="malote_digital">Malote Digital</option>
+                                <option value="pje">PJe</option>
+                                <option value="esaj">eSAJ</option>
+                                <option value="eproc">ePROC</option>
+                            </select>
+                        <?php elseif ($tipoSubtarefaAtiva === CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO): ?>
+                            <select class="width-300 height-sm js-cartas-expedidas-subtarefa-complemento"
+                                data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
+                                data-complemento-campo="resultado_devolucao"
+                                aria-label="Resultado da devolução">
+                                <option value="">Resultado</option>
+                                <option value="devolvida_sem_cumprimento">Não cumprida</option>
+                                <option value="cumprida_negativamente">Cumprida negativamente</option>
+                                <option value="cumprida_parcialmente">Cumprida parcialmente</option>
+                                <option value="cumprida_positivamente">Cumprida integralmente</option>
+                            </select>
+                        <?php endif; ?>
                         <button type="button"
                             class="button-icon-internal js-continuar-subtarefa"
                             data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
-                            title="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>"
-                            aria-label="Continuar">
+                            data-subtarefa-tipo="<?php echo htmlspecialchars($tipoSubtarefaAtiva, ENT_QUOTES); ?>"
+                            title="<?php echo htmlspecialchars($tituloBotaoEtapa, ENT_QUOTES); ?>"
+                            aria-label="<?php echo htmlspecialchars($tituloBotaoEtapa, ENT_QUOTES); ?>">
                             <img src="/assets/icons/Navigation-Arrows-Right-1--Streamline-Ultimate.png" alt="">
                         </button>
                     </div>

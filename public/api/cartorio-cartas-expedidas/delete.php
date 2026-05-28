@@ -8,18 +8,13 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
 require_once $basePath . '/app/helpers/DeleteAuthorization.php';
+require_once __DIR__ . '/_auth.php';
 
-if (!bootstrapRequireTrustedPostRequest()) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
+$userId = cartorio_cartas_expedidas_require_json_access('cartasexpedidasedit');
 $connection = Conection::getInstance()->getConnection();
 
-$userId = $_SESSION['id_usuario'] ?? null;
 $podeExcluir = DeleteAuthorization::usuarioPodeExcluir(
-    $userId !== null ? trim((string) $userId) : null
+    $userId !== '' ? $userId : null
 );
 
 if (!$podeExcluir) {

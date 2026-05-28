@@ -32,6 +32,21 @@ final class CartasExpedidasService
     private ?DataJudService $dataJudService;
 
     private const REGRA_ALOCAR_CARTAS = 'ALLOCATE-CARTASEXPEDIDAS';
+    private const METODOS_ENVIO = [
+        'email' => 'E-mail',
+        'e-mail' => 'E-mail',
+        'malote_digital' => 'Malote Digital',
+        'malote digital' => 'Malote Digital',
+        'pje' => 'PJe',
+        'esaj' => 'eSAJ',
+        'eproc' => 'ePROC',
+    ];
+    private const RESULTADOS_DEVOLUCAO = [
+        'devolvida_sem_cumprimento',
+        'cumprida_negativamente',
+        'cumprida_parcialmente',
+        'cumprida_positivamente',
+    ];
 
     public function __construct(PDO $connection, ?DataJudService $dataJudService = null)
     {
@@ -300,6 +315,7 @@ final class CartasExpedidasService
         $ordem = (int) ($subtarefa['ordem'] ?? 0);
         $cartaId = trim((string) ($subtarefa['carta_expedida_id'] ?? ''));
         $tipoSubtarefaAtual = trim((string) ($subtarefa['tipo'] ?? ''));
+        $statusSubtarefaAtual = trim((string) ($subtarefa['status'] ?? ''));
 
         if ($cartaId === '') {
             throw new InvalidArgumentException('Carta da subtarefa não identificada.');
@@ -309,6 +325,18 @@ final class CartasExpedidasService
             || !CartasExpedidasSubtarefasRepository::isTipoAtivo($tipoSubtarefaAtual)) {
             throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual. Atualize a página.');
         }
+        if (in_array($statusSubtarefaAtual, ['concluida', 'concluída'], true)) {
+            throw new InvalidArgumentException('Subtarefa já concluída.');
+        }
+
+        $carta = $this->repository->find($cartaId);
+        if ($carta === null) {
+            throw new InvalidArgumentException('Carta expedida não encontrada.');
+        }
+        $statusCarta = trim((string) ($carta['status'] ?? ''));
+        if (in_array($statusCarta, ['cancelada', 'concluída', 'concluida', 'finalizada'], true)) {
+            throw new InvalidArgumentException('Não é possível concluir subtarefa de carta finalizada ou cancelada.');
+        }
 
         $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
@@ -316,6 +344,11 @@ final class CartasExpedidasService
             if (is_array($decoded)) {
                 $dadosArray = $decoded;
             }
+        }
+        $dadosArray = $this->normalizarDadosConclusaoSubtarefa($tipoSubtarefaAtual, $dadosArray);
+        $dadosJson = json_encode($dadosArray, JSON_UNESCAPED_UNICODE);
+        if ($dadosJson === false) {
+            throw new InvalidArgumentException('Dados da subtarefa inválidos.');
         }
 
         $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
@@ -346,7 +379,6 @@ final class CartasExpedidasService
         }
 
         $this->repository->update($cartaId, ['status' => 'concluída']);
-        $carta = $this->repository->find($cartaId);
         $processo = trim((string) ($carta['numero_processo_origem'] ?? ''));
         $finalidade = trim((string) ($carta['finalidade'] ?? ''));
         $cidade = trim((string) ($carta['cidade_destino'] ?? ''));
@@ -360,6 +392,40 @@ final class CartasExpedidasService
             'tarefa_principal_concluida' => true,
             'tarefa_principal_mensagem' => $msg,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $dados
+     * @return array<string, mixed>
+     */
+    private function normalizarDadosConclusaoSubtarefa(string $tipo, array $dados): array
+    {
+        if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_ENVIO) {
+            $rawMetodo = trim((string) ($dados['metodo_envio'] ?? ''));
+            $metodoKey = strtolower($rawMetodo);
+            $metodo = self::METODOS_ENVIO[$metodoKey] ?? '';
+            if ($metodo === '') {
+                throw new InvalidArgumentException('Método de envio é obrigatório para concluir o envio.');
+            }
+            $dados['metodo_envio'] = $metodo;
+            return $dados;
+        }
+
+        if ($tipo === CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO) {
+            $resultado = trim((string) (
+                $dados['resultado_devolucao']
+                ?? $dados['status_devolucao']
+                ?? $dados['resultado']
+                ?? ''
+            ));
+            if (!in_array($resultado, self::RESULTADOS_DEVOLUCAO, true)) {
+                throw new InvalidArgumentException('Resultado da devolução é obrigatório para concluir a juntada.');
+            }
+            $dados['resultado_devolucao'] = $resultado;
+            $dados['resultado'] = $resultado;
+        }
+
+        return $dados;
     }
 
     private function normalizeTipoAlocado(string $tipo): string

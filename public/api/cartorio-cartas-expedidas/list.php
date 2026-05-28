@@ -6,7 +6,9 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
+require_once __DIR__ . '/_auth.php';
 
+cartorio_cartas_expedidas_require_json_access('cartasexpedidas', false);
 $connection = Conection::getInstance()->getConnection();
 
 $classeFilter = trim($_GET['classe'] ?? '');

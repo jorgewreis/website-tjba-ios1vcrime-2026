@@ -170,6 +170,23 @@
                 if (!subtarefaId) {
                     return;
                 }
+                var complementoWrap = btn.closest('.register-block-status-text') || btn.parentElement;
+                var complemento = complementoWrap
+                    ? complementoWrap.querySelector('.js-cartas-expedidas-subtarefa-complemento[data-subtarefa-id="' + subtarefaId + '"]')
+                    : null;
+                var dadosEspecificos = {};
+                if (complemento) {
+                    var campo = complemento.getAttribute('data-complemento-campo') || '';
+                    var valor = (complemento.value || '').trim();
+                    if (!valor) {
+                        notify('error', 'Erro', campo === 'metodo_envio'
+                            ? 'Selecione o método de envio antes de concluir.'
+                            : 'Selecione o resultado da devolução antes de concluir.');
+                        complemento.focus();
+                        return;
+                    }
+                    dadosEspecificos[campo] = valor;
+                }
                 btn.disabled = true;
                 fetch('/api/cartorio-cartas-expedidas/concluir-subtarefa.php', {
                     method: 'POST',
@@ -177,7 +194,7 @@
                     credentials: 'same-origin',
                     body: JSON.stringify({
                         subtarefa_id: subtarefaId,
-                        dados_especificos: null
+                        dados_especificos: dadosEspecificos
                     })
                 })
                     .then(function (response) {

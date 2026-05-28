@@ -7,7 +7,9 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
+require_once __DIR__ . '/_auth.php';
 
+$usuarioId = cartorio_cartas_expedidas_require_json_access('cartasexpedidasedit');
 $connection = Conection::getInstance()->getConnection();
 
 $rawPayload = file_get_contents('php://input') ?: '';
@@ -16,7 +18,6 @@ if (!is_array($parsed)) {
     $parsed = $_POST;
 }
 
-$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 if ($usuarioId !== '') {
     $parsed['usuario_id'] = $usuarioId;
 }

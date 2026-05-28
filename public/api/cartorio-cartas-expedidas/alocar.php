@@ -7,13 +7,9 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
+require_once __DIR__ . '/_auth.php';
 
-if (!bootstrapRequireTrustedPostRequest()) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
+$userId = cartorio_cartas_expedidas_require_json_access('cartasexpedidasedit');
 $connection = Conection::getInstance()->getConnection();
 $rawPayload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($rawPayload, true);
@@ -23,13 +19,6 @@ if (!is_array($parsed)) {
 
 $entityId = trim((string) ($parsed['id'] ?? ''));
 $targetId = trim((string) ($parsed['usuario_id'] ?? ''));
-
-$userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
-if ($userId === '') {
-    http_response_code(401);
-    echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
 
 if ($entityId === '' || $targetId === '') {
     http_response_code(400);
