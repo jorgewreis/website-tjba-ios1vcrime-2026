@@ -318,6 +318,8 @@ final class CartasExpedidasService
             }
         }
 
+        $this->assertDadosObrigatoriosConclusao($ordem, $tipoSubtarefaAtual, $dadosArray);
+
         $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
         if ($usuarioIdMovimentacao !== '') {
             try {
@@ -360,6 +362,32 @@ final class CartasExpedidasService
             'tarefa_principal_concluida' => true,
             'tarefa_principal_mensagem' => $msg,
         ];
+    }
+
+    /**
+     * A conclusao das duas etapas exige complemento de negocio; usuario_id/nome
+     * so identificam o autor da movimentacao e nao podem fechar a subtarefa.
+     *
+     * @param array<string, mixed> $dados
+     */
+    private function assertDadosObrigatoriosConclusao(int $ordem, string $tipo, array $dados): void
+    {
+        if ($ordem === CartasExpedidasSubtarefasRepository::ORDEM_ENVIO
+            || $tipo === CartasExpedidasSubtarefasRepository::TIPO_ENVIO) {
+            $metodoEnvio = trim((string) ($dados['metodo_envio'] ?? ''));
+            if ($metodoEnvio === '') {
+                throw new InvalidArgumentException('Informe o método de envio antes de concluir a subtarefa.');
+            }
+            return;
+        }
+
+        if ($ordem === CartasExpedidasSubtarefasRepository::ORDEM_DEVOLUCAO
+            || $tipo === CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO) {
+            $resultado = trim((string) ($dados['resultado_devolucao'] ?? $dados['resultado'] ?? $dados['status_devolucao'] ?? ''));
+            if ($resultado === '') {
+                throw new InvalidArgumentException('Informe o resultado da devolução antes de concluir a subtarefa.');
+            }
+        }
     }
 
     private function normalizeTipoAlocado(string $tipo): string

@@ -332,6 +332,7 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                         <button type="button"
                             class="button-icon-internal js-continuar-subtarefa"
                             data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
+                            data-subtarefa-tipo="<?php echo htmlspecialchars(trim((string) ($subtarefaAtivaUi['tipo'] ?? '')), ENT_QUOTES); ?>"
                             title="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>"
                             aria-label="Continuar">
                             <img src="/assets/icons/Navigation-Arrows-Right-1--Streamline-Ultimate.png" alt="">

@@ -163,11 +163,87 @@
     function bindContinuarSubtarefa(ctx) {
         var notify = ctx.notify;
         var queuePostReloadToast = ctx.queuePostReloadToast;
+        var envioOptions = [
+            { value: 'email', label: 'E-mail' },
+            { value: 'malote digital', label: 'Malote Digital' },
+            { value: 'pje', label: 'PJe' },
+            { value: 'esaj', label: 'eSAJ' },
+            { value: 'eproc', label: 'ePROC' }
+        ];
+        var devolucaoOptions = [
+            { value: 'devolvida_sem_cumprimento', label: 'Não cumprida' },
+            { value: 'cumprida_negativamente', label: 'Cumprida negativamente' },
+            { value: 'cumprida_parcialmente', label: 'Cumprida parcialmente' },
+            { value: 'cumprida_positivamente', label: 'Cumprida integralmente' }
+        ];
+
+        function chooseOption(title, options) {
+            var linhas = options.map(function (option, index) {
+                return (index + 1) + ' - ' + option.label;
+            });
+            var resposta = window.prompt(title + '\n\n' + linhas.join('\n'));
+            if (resposta === null) {
+                return null;
+            }
+            var normalizada = String(resposta || '').trim().toLowerCase();
+            if (normalizada === '') {
+                return '';
+            }
+            var indice = parseInt(normalizada, 10);
+            if (!isNaN(indice) && indice >= 1 && indice <= options.length) {
+                return options[indice - 1].value;
+            }
+            for (var i = 0; i < options.length; i += 1) {
+                if (normalizada === options[i].value.toLowerCase() || normalizada === options[i].label.toLowerCase()) {
+                    return options[i].value;
+                }
+            }
+            return '';
+        }
+
+        function collectDadosEspecificos(btn) {
+            var tipo = String(btn.getAttribute('data-subtarefa-tipo') || '').trim();
+            if (tipo === 'aguardando_envio') {
+                var metodo = chooseOption('Selecione o método de envio', envioOptions);
+                if (metodo === null) {
+                    return null;
+                }
+                if (metodo === '') {
+                    notify('error', 'Atenção', 'Selecione um método de envio válido.');
+                    return false;
+                }
+                return { metodo_envio: metodo };
+            }
+            if (tipo === 'aguardando_devolucao') {
+                var resultado = chooseOption('Selecione o resultado da devolução', devolucaoOptions);
+                if (resultado === null) {
+                    return null;
+                }
+                if (resultado === '') {
+                    notify('error', 'Atenção', 'Selecione um resultado de devolução válido.');
+                    return false;
+                }
+                return {
+                    resultado_devolucao: resultado,
+                    resultado: resultado
+                };
+            }
+            notify('error', 'Erro', 'Tipo da subtarefa não identificado. Atualize a página.');
+            return false;
+        }
 
         document.querySelectorAll('.js-continuar-subtarefa').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var subtarefaId = btn.getAttribute('data-subtarefa-id');
                 if (!subtarefaId) {
+                    return;
+                }
+                var dadosEspecificos = collectDadosEspecificos(btn);
+                if (dadosEspecificos === null) {
+                    notify('info', 'Informação', 'Conclusão da subtarefa cancelada.');
+                    return;
+                }
+                if (dadosEspecificos === false) {
                     return;
                 }
                 btn.disabled = true;
@@ -177,7 +253,7 @@
                     credentials: 'same-origin',
                     body: JSON.stringify({
                         subtarefa_id: subtarefaId,
-                        dados_especificos: null
+                        dados_especificos: dadosEspecificos
                     })
                 })
                     .then(function (response) {
