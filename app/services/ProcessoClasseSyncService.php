@@ -129,6 +129,8 @@ final class ProcessoClasseSyncService
 
         $existingCodigo = ClassesRepository::normalizeCodigo((string) ($existingClasse['codigo'] ?? ''));
         if ($existingCodigo === $codigo) {
+            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo, $numeroFormatado);
+
             return [
                 'action' => 'noop',
                 'processo_id' => $pid,
