@@ -94,6 +94,8 @@ temp/
 # Database / SQL dumps
 # =========================
 *.sql
+!database/migrations/
+!database/migrations/*.sql
 !docs/schema/
 !docs/schema/*.sql
 *.sqlite
