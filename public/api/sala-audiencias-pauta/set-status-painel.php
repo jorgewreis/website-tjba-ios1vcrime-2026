@@ -31,7 +31,7 @@ if ($id === '' || $acao === '') {
 }
 
 try {
-    $usuarioId = salaAudienciasPautaRequireJsonAccess('salapauta', false);
+    $usuarioId = salaAudienciasPautaRequireJsonAccess('salapauta');
 
     $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
     $service->setStatusPainel($id, $acao, $usuarioId);
