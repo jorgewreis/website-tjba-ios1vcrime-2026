@@ -96,6 +96,7 @@ temp/
 *.sql
 !docs/schema/
 !docs/schema/*.sql
+!database/migrations/*.sql
 *.sqlite
 *.sqlite3
 *.db

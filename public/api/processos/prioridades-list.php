@@ -11,7 +11,9 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/repositories/SalaAudienciasPautaParteRepository.php';
 require_once $basePath . '/app/services/ProcessoPrioridadesService.php';
+require_once $basePath . '/public/api/sala-audiencias-pauta/_auth.php';
 
+$usuarioId = salaAudienciasPautaRequireAccess('salapautaedit');
 $processoId = trim((string) ($_GET['processo_id'] ?? ''));
 if ($processoId === '') {
     http_response_code(400);
@@ -20,13 +22,6 @@ if ($processoId === '') {
 }
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
     $pdo = Conection::getInstance()->getConnection();
     $nPauta = (new SalaAudienciasPautaParteRepository($pdo))->countPartesMenoresAtivasPorProcesso($processoId);
     $state = (new ProcessoPrioridadesService($pdo))->getEstadoEdicaoPorProcessoId($processoId, $nPauta);
