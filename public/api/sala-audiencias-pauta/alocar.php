@@ -7,12 +7,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
-
-if (!bootstrapRequireTrustedPostRequest()) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+require_once __DIR__ . '/_auth.php';
 
 $connection = Conection::getInstance()->getConnection();
 $parsed = json_decode(file_get_contents('php://input') ?: '[]', true);
@@ -29,12 +24,7 @@ if ($id === '') {
     exit;
 }
 
-$actorId = trim((string) ($_SESSION['id_usuario'] ?? ''));
-if ($actorId === '') {
-    http_response_code(401);
-    echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+$actorId = salaAudienciasPautaRequireJsonAccess('salapautaedit', true);
 
 try {
     $service = new SalaAudienciasPautaService($connection);

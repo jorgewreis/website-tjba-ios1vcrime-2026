@@ -7,17 +7,13 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
+require_once __DIR__ . '/_auth.php';
 
 $data = isset($_GET['data']) ? trim((string) $_GET['data']) : '';
 $exceptId = isset($_GET['except_id']) ? trim((string) $_GET['except_id']) : '';
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
+    salaAudienciasPautaRequireJsonAccess('salapauta');
     if ($data === '') {
         http_response_code(400);
         echo json_encode(['error' => 'Informe a data (parâmetro data).'], JSON_UNESCAPED_UNICODE);

@@ -8,12 +8,7 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
-
-if (!bootstrapRequireTrustedPostRequest()) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+require_once __DIR__ . '/_auth.php';
 
 $connection = Conection::getInstance()->getConnection();
 $rawPayload = file_get_contents('php://input') ?: '';
@@ -31,12 +26,7 @@ if ($alocadoId === '') {
     exit;
 }
 
-$userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
-if ($userId === '') {
-    http_response_code(401);
-    echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+$userId = salaAudienciasPautaRequireJsonAccess('salapautaedit', true);
 
 $perfisGestao = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);

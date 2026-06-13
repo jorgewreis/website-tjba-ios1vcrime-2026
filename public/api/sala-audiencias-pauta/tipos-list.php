@@ -6,8 +6,10 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
+require_once __DIR__ . '/_auth.php';
 
 try {
+    salaAudienciasPautaRequireJsonAccess('salapauta');
     $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
     $rows = $service->listTiposAtivos();
     echo json_encode(['data' => $rows], JSON_UNESCAPED_UNICODE);
