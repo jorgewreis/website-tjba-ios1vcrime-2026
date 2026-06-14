@@ -40,6 +40,20 @@ if (!$isTerminal && $subtarefaAtivaUi !== null) {
     $modeloEnvio = true;
 }
 
+$metodoEnvioOptions = [
+    'E-mail' => 'E-mail',
+    'Malote Digital' => 'Malote Digital',
+    'PJe' => 'PJe',
+    'eSAJ' => 'eSAJ',
+    'ePROC' => 'ePROC',
+];
+$resultadoDevolucaoOptions = [
+    'devolvida_sem_cumprimento' => 'Não cumprida',
+    'cumprida_negativamente' => 'Cumprida negativamente',
+    'cumprida_parcialmente' => 'Cumprida parcialmente',
+    'cumprida_positivamente' => 'Cumprida integralmente',
+];
+
 $badgePrincipalTexto = 'Em andamento';
 $badgePrincipalClasse = 'status-current';
 $textoEtapa = CartasExpedidasUiCopy::resolverTituloTarefaListagem((string) ($row['Status'] ?? ''), $allSt, $subtarefaAtivaUi);
@@ -327,11 +341,30 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                     <img src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="">
                 </button>
                 <?php if ($mostrarContinuar && $textoEtapa !== ''): ?>
+                    <?php
+                    $tipoContinuar = trim((string) ($subtarefaAtivaUi['tipo'] ?? ''));
+                    $selectLabel = $tipoContinuar === CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO
+                        ? 'Resultado da devolução'
+                        : 'Método de envio';
+                    $selectOptions = $tipoContinuar === CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO
+                        ? $resultadoDevolucaoOptions
+                        : $metodoEnvioOptions;
+                    ?>
                     <div class="register-block-status-text <?php echo htmlspecialchars($classeEtapa, ENT_QUOTES); ?>">
                         <span class="register-block-status-text-text"><?php echo htmlspecialchars($textoEtapa, ENT_QUOTES); ?></span>
+                        <select
+                            class="width-200 height-sm js-subtarefa-complemento"
+                            data-subtarefa-tipo="<?php echo htmlspecialchars($tipoContinuar, ENT_QUOTES); ?>"
+                            aria-label="<?php echo htmlspecialchars($selectLabel, ENT_QUOTES); ?>">
+                            <option value="" selected><?php echo htmlspecialchars($selectLabel, ENT_QUOTES); ?></option>
+                            <?php foreach ($selectOptions as $optionValue => $optionLabel): ?>
+                                <option value="<?php echo htmlspecialchars($optionValue, ENT_QUOTES); ?>"><?php echo htmlspecialchars($optionLabel, ENT_QUOTES); ?></option>
+                            <?php endforeach; ?>
+                        </select>
                         <button type="button"
                             class="button-icon-internal js-continuar-subtarefa"
                             data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
+                            data-subtarefa-tipo="<?php echo htmlspecialchars($tipoContinuar, ENT_QUOTES); ?>"
                             title="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>"
                             aria-label="Continuar">
                             <img src="/assets/icons/Navigation-Arrows-Right-1--Streamline-Ultimate.png" alt="">

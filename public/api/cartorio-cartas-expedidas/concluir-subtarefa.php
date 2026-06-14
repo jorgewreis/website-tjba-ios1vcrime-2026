@@ -8,7 +8,9 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CartorioSubtarefaUsuarioSessao.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
+require_once __DIR__ . '/_auth.php';
 
+$userId = cartorioCartasExpedidasRequireJsonAccess('cartasexpedidasedit');
 $connection = Conection::getInstance()->getConnection();
 
 $rawPayload = file_get_contents('php://input') ?: '';

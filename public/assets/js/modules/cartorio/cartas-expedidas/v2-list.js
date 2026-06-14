@@ -164,10 +164,40 @@
         var notify = ctx.notify;
         var queuePostReloadToast = ctx.queuePostReloadToast;
 
+        function collectDadosEspecificos(btn) {
+            var tipo = btn.getAttribute('data-subtarefa-tipo') || '';
+            var container = btn.closest('.register-block-status-text');
+            var select = container ? container.querySelector('.js-subtarefa-complemento') : null;
+            var value = select ? (select.value || '').trim() : '';
+
+            if (tipo === 'aguardando_envio') {
+                if (!value) {
+                    notify('error', 'Atenção', 'Selecione o método de envio.');
+                    return null;
+                }
+                return { metodo_envio: value };
+            }
+
+            if (tipo === 'aguardando_devolucao') {
+                if (!value) {
+                    notify('error', 'Atenção', 'Selecione o resultado da devolução.');
+                    return null;
+                }
+                return { resultado_devolucao: value, resultado: value };
+            }
+
+            notify('error', 'Erro', 'Subtarefa inválida para o fluxo atual.');
+            return null;
+        }
+
         document.querySelectorAll('.js-continuar-subtarefa').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var subtarefaId = btn.getAttribute('data-subtarefa-id');
                 if (!subtarefaId) {
+                    return;
+                }
+                var dadosEspecificos = collectDadosEspecificos(btn);
+                if (!dadosEspecificos) {
                     return;
                 }
                 btn.disabled = true;
@@ -177,7 +207,7 @@
                     credentials: 'same-origin',
                     body: JSON.stringify({
                         subtarefa_id: subtarefaId,
-                        dados_especificos: null
+                        dados_especificos: dadosEspecificos
                     })
                 })
                     .then(function (response) {

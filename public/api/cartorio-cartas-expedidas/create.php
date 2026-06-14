@@ -8,7 +8,9 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/DataJudService.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
+require_once __DIR__ . '/_auth.php';
 
+$usuarioCadastroId = cartorioCartasExpedidasRequireJsonAccess('cartasexpedidascreate');
 $connection = Conection::getInstance()->getConnection();
 $dataJudConfig = require $basePath . '/public/api/datajud/config.php';
 $dataJudService = new DataJudService($dataJudConfig);
@@ -19,7 +21,6 @@ if (!is_array($parsed)) {
     $parsed = $_POST;
 }
 
-$usuarioCadastroId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 if ($usuarioCadastroId !== '') {
     $parsed['usuario_cadastro_id'] = $usuarioCadastroId;
 }

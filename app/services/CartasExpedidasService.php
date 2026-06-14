@@ -309,6 +309,31 @@ final class CartasExpedidasService
             || !CartasExpedidasSubtarefasRepository::isTipoAtivo($tipoSubtarefaAtual)) {
             throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual. Atualize a página.');
         }
+        if (CartasExpedidasSubtarefasRepository::tipoPorOrdem($ordem) !== $tipoSubtarefaAtual) {
+            throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual. Atualize a página.');
+        }
+
+        $carta = $this->repository->find($cartaId);
+        if ($carta === null) {
+            throw new InvalidArgumentException('Carta expedida não encontrada.');
+        }
+        $statusCarta = mb_strtolower(trim((string) ($carta['status'] ?? '')), 'UTF-8');
+        if (in_array($statusCarta, ['cancelada', 'concluída', 'concluida', 'finalizada'], true)) {
+            throw new InvalidArgumentException('Não é possível concluir subtarefa de carta finalizada ou cancelada.');
+        }
+
+        $statusSubtarefa = mb_strtolower(trim((string) ($subtarefa['status'] ?? '')), 'UTF-8');
+        if (in_array($statusSubtarefa, ['concluida', 'concluída'], true)) {
+            throw new InvalidArgumentException('Esta subtarefa já foi concluída.');
+        }
+
+        $subtarefaAtiva = CartasExpedidasSubtarefasRepository::resolverSubtarefaAtivaPorLista(
+            $this->subtarefasRepository->findByCartaId($cartaId)
+        );
+        $subtarefaAtivaId = trim((string) ($subtarefaAtiva['id'] ?? ''));
+        if ($subtarefaAtiva === null || $subtarefaAtivaId !== $subtarefaId) {
+            throw new InvalidArgumentException('Conclua a etapa atual antes de avançar no fluxo.');
+        }
 
         $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
@@ -316,6 +341,33 @@ final class CartasExpedidasService
             if (is_array($decoded)) {
                 $dadosArray = $decoded;
             }
+        }
+
+        if ($tipoSubtarefaAtual === CartasExpedidasSubtarefasRepository::TIPO_ENVIO) {
+            $metodoEnvio = trim((string) ($dadosArray['metodo_envio'] ?? $dadosArray['tipo_envio'] ?? ''));
+            if ($metodoEnvio === '') {
+                throw new InvalidArgumentException('Informe o método de envio antes de concluir a etapa.');
+            }
+            $dadosArray['metodo_envio'] = $metodoEnvio;
+        }
+
+        if ($tipoSubtarefaAtual === CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO) {
+            $resultadoDevolucao = trim((string) (
+                $dadosArray['resultado_devolucao']
+                ?? $dadosArray['status_devolucao']
+                ?? $dadosArray['resultado']
+                ?? ''
+            ));
+            if ($resultadoDevolucao === '') {
+                throw new InvalidArgumentException('Informe o resultado da devolução antes de concluir a etapa.');
+            }
+            $dadosArray['resultado_devolucao'] = $resultadoDevolucao;
+            $dadosArray['resultado'] = $resultadoDevolucao;
+        }
+
+        $dadosJson = json_encode($dadosArray, JSON_UNESCAPED_UNICODE);
+        if ($dadosJson === false) {
+            throw new InvalidArgumentException('Dados da subtarefa inválidos.');
         }
 
         $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
@@ -507,6 +559,9 @@ final class CartasExpedidasService
     {
         if (trim($id) === '') {
             throw new InvalidArgumentException('O identificador informado é inválido.');
+        }
+        if (array_key_exists('status', $payload)) {
+            throw new InvalidArgumentException('O status da carta deve ser alterado pelo fluxo de subtarefas.');
         }
 
         $usuarioId = trim((string) ($payload['usuario_id'] ?? ''));
