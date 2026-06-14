@@ -7,7 +7,9 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasRecebidasService.php';
+require_once __DIR__ . '/_auth.php';
 
+$usuarioId = cartorioCartasRecebidasRequireJsonAccess('cartasrecebidasedit');
 $connection = Conection::getInstance()->getConnection();
 
 $rawPayload = file_get_contents('php://input') ?: '';
@@ -17,7 +19,6 @@ if (!is_array($parsed)) {
 }
 
 $cartaId = trim((string) ($parsed['carta_id'] ?? $parsed['cartaId'] ?? $_GET['carta_id'] ?? ''));
-$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 
 if ($cartaId === '') {
     http_response_code(400);

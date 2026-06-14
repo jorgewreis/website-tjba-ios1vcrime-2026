@@ -254,6 +254,32 @@ final class CartasRecebidasService
             || !CartasRecebidasSubtarefasRepository::isTipoAtivo($tipoAtual)) {
             throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual.');
         }
+        if (CartasRecebidasSubtarefasRepository::tipoPorOrdem($ordem) !== $tipoAtual) {
+            throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual.');
+        }
+
+        $carta = $this->repository->find($cartaId);
+        if ($carta === null) {
+            throw new InvalidArgumentException('Carta recebida não encontrada.');
+        }
+        $statusCarta = mb_strtolower(trim((string) ($carta['status'] ?? '')), 'UTF-8');
+        if (in_array($statusCarta, ['cancelada', 'concluída', 'concluida', 'finalizada'], true)) {
+            throw new InvalidArgumentException('Não é possível concluir subtarefa de carta finalizada ou cancelada.');
+        }
+
+        $statusSubtarefa = mb_strtolower(trim((string) ($subtarefa['status'] ?? '')), 'UTF-8');
+        if (in_array($statusSubtarefa, ['concluida', 'concluída'], true)) {
+            throw new InvalidArgumentException('Esta subtarefa já foi concluída.');
+        }
+        if ($statusSubtarefa === CartasRecebidasSubtarefasRepository::STATUS_CANCELADA) {
+            throw new InvalidArgumentException('Esta subtarefa foi cancelada.');
+        }
+
+        $subtarefaAtiva = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($cartaId)[0] ?? null;
+        $subtarefaAtivaId = trim((string) ($subtarefaAtiva['id'] ?? ''));
+        if ($subtarefaAtiva === null || $subtarefaAtivaId !== $subtarefaId) {
+            throw new InvalidArgumentException('Conclua a etapa atual antes de avançar no fluxo.');
+        }
 
         $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
@@ -415,6 +441,9 @@ final class CartasRecebidasService
     {
         if (trim($id) === '') {
             throw new InvalidArgumentException('O identificador informado é inválido.');
+        }
+        if (array_key_exists('status', $payload)) {
+            throw new InvalidArgumentException('O status da carta deve ser alterado pelo fluxo de subtarefas.');
         }
 
         $usuarioId = trim((string) ($payload['usuario_id'] ?? ''));
