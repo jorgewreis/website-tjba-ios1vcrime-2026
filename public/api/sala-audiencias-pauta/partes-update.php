@@ -7,7 +7,9 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
+require_once __DIR__ . '/_auth.php';
 
+$usuarioId = sala_audiencias_pauta_require_access('salapautaedit', true);
 $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
 if (!is_array($payload)) {
     $payload = $_POST;
@@ -20,12 +22,6 @@ if ($idParte === '') {
 }
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
     $connection = Conection::getInstance()->getConnection();
     $service = new SalaAudienciasPautaService($connection);
     $result = $service->updateParte($idParte, $payload, $usuarioId);

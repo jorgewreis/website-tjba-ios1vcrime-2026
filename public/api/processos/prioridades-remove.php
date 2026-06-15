@@ -8,7 +8,9 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/repositories/SalaAudienciasPautaParteRepository.php';
 require_once $basePath . '/app/services/ProcessoPrioridadesService.php';
+require_once dirname(__DIR__) . '/sala-audiencias-pauta/_auth.php';
 
+sala_audiencias_pauta_require_access('salapautaedit', true);
 $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
 if (!is_array($payload)) {
     $payload = $_POST;
@@ -22,13 +24,6 @@ if ($processoId === '' || $codigo === '') {
 }
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
     $pdo = Conection::getInstance()->getConnection();
     $nPauta = (new SalaAudienciasPautaParteRepository($pdo))->countPartesMenoresAtivasPorProcesso($processoId);
     $svc = new ProcessoPrioridadesService($pdo);

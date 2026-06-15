@@ -4,6 +4,7 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/config/security.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
@@ -48,10 +49,18 @@ try {
     );
     // #endregion
 
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
+    if (!Security::isAuthenticated()) {
         // #region agent log
         $debugLog('H0', 'public/api/sala-audiencias-pauta/status-bulk.php:41', 'Saida por sessao expirada', []);
+        // #endregion
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'Sessão expirada.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $usuarioId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+    if ($usuarioId === '') {
+        // #region agent log
+        $debugLog('H0', 'public/api/sala-audiencias-pauta/status-bulk.php:48', 'Saida por usuario vazio', []);
         // #endregion
         http_response_code(401);
         echo json_encode(['success' => false, 'error' => 'Sessão expirada.'], JSON_UNESCAPED_UNICODE);
