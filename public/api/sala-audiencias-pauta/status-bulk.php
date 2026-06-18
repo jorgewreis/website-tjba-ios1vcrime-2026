@@ -99,25 +99,11 @@ try {
 
     $pdo = Conection::getInstance()->getConnection();
     $marks = implode(',', array_fill(0, count($ids), '?'));
-    // #region agent log
-    $hardcodedBloqueios = ['sigiloso', 'crianca_adolescente', 'violencia_domestica'];
-    $catalogoBloqueios = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
-    $faltandoNoHardcoded = array_values(array_diff($catalogoBloqueios, $hardcodedBloqueios));
-    $extraNoHardcoded = array_values(array_diff($hardcodedBloqueios, $catalogoBloqueios));
-    $debugLog(
-        'H1',
-        'public/api/sala-audiencias-pauta/status-bulk.php:66',
-        'Comparacao lista bloqueante hardcoded vs catalogo',
-        [
-            'hardcoded' => $hardcodedBloqueios,
-            'catalogo' => $catalogoBloqueios,
-            'faltando_no_hardcoded' => $faltandoNoHardcoded,
-            'extra_no_hardcoded' => $extraNoHardcoded,
-            'divergiu' => ($faltandoNoHardcoded !== [] || $extraNoHardcoded !== []),
-            'total_pautas_consulta' => count($ids),
-        ]
-    );
-    // #endregion
+    $codigosBloqueio = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
+    if ($codigosBloqueio === []) {
+        $codigosBloqueio = ['__nenhuma_prioridade_bloqueante__'];
+    }
+    $marksBloqueio = implode(',', array_fill(0, count($codigosBloqueio), '?'));
     /*
      * Os códigos bloqueantes devem espelhar
      * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
@@ -130,16 +116,22 @@ try {
                    CASE WHEN EXISTS (
                         SELECT 1 FROM `processo_prioridades` pri
                         WHERE pri.`processo_id` = a.`processo`
-                          AND pri.`codigo` IN ('sigiloso', 'crianca_adolescente', 'violencia_domestica')
+                          AND pri.`codigo` IN ($marksBloqueio)
                    ) THEN 1 ELSE 0 END AS `tem_prioridade_bloqueio`
             FROM `sala_audiencias_pauta` a
             LEFT JOIN `processos` p ON p.`id` = a.`processo`
             LEFT JOIN `sala_audiencias_estudante_inscricao` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = ?
             WHERE a.`ativo` = 1 AND a.`id_pauta` IN ($marks)";
     $st = $pdo->prepare($sql);
-    $st->bindValue(1, $usuarioId);
+    $paramIndex = 1;
+    foreach ($codigosBloqueio as $codigoBloqueio) {
+        $st->bindValue($paramIndex, $codigoBloqueio);
+        $paramIndex++;
+    }
+    $st->bindValue($paramIndex, $usuarioId);
+    $paramIndex++;
     foreach ($ids as $i => $id) {
-        $st->bindValue($i + 2, $id);
+        $st->bindValue($paramIndex + $i, $id);
     }
     $st->execute();
     $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];

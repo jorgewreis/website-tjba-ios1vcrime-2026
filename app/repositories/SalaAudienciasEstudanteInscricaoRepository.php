@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../helpers/SalaAudienciasAtaSigiloHelper.php';
 
 final class SalaAudienciasEstudanteInscricaoRepository
@@ -217,6 +218,15 @@ final class SalaAudienciasEstudanteInscricaoRepository
      */
     public function listHojeDesignadasElegiveis(string $idUsuario): array
     {
+        $codigosBloqueio = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
+        if ($codigosBloqueio === []) {
+            $codigosBloqueio = ['__nenhuma_prioridade_bloqueante__'];
+        }
+        $bloqueioParams = [];
+        foreach ($codigosBloqueio as $idx => $_codigo) {
+            $bloqueioParams[] = ':bloqueio_' . $idx;
+        }
+
         /*
          * Os códigos bloqueantes precisam espelhar
          * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
@@ -233,7 +243,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
                    CASE WHEN EXISTS (
                         SELECT 1 FROM `processo_prioridades` pri
                         WHERE pri.`processo_id` = a.`processo`
-                          AND pri.`codigo` IN (\'sigiloso\', \'crianca_adolescente\', \'violencia_domestica\')
+                          AND pri.`codigo` IN (' . implode(', ', $bloqueioParams) . ')
                    ) THEN 1 ELSE 0 END AS `tem_prioridade_bloqueio`
             FROM `sala_audiencias_pauta` a
             LEFT JOIN `processos` p ON p.`id` = a.`processo`
@@ -244,6 +254,9 @@ final class SalaAudienciasEstudanteInscricaoRepository
         ';
         $st = $this->connection->prepare($sql);
         $st->bindValue(':u', $idUsuario);
+        foreach ($codigosBloqueio as $idx => $codigo) {
+            $st->bindValue(':bloqueio_' . $idx, $codigo);
+        }
         $st->execute();
 
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];

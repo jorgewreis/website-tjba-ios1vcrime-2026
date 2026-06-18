@@ -9,8 +9,11 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once __DIR__ . '/_auth.php';
 require_once $basePath . '/app/repositories/SalaAudienciasPautaParteRepository.php';
 require_once $basePath . '/app/services/ProcessoPrioridadesService.php';
+
+processos_api_require_access('consultaprocessosedit');
 
 $processoId = trim((string) ($_GET['processo_id'] ?? ''));
 if ($processoId === '') {
@@ -20,13 +23,6 @@ if ($processoId === '') {
 }
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
     $pdo = Conection::getInstance()->getConnection();
     $nPauta = (new SalaAudienciasPautaParteRepository($pdo))->countPartesMenoresAtivasPorProcesso($processoId);
     $state = (new ProcessoPrioridadesService($pdo))->getEstadoEdicaoPorProcessoId($processoId, $nPauta);

@@ -6,7 +6,10 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once __DIR__ . '/_auth.php';
 require_once $basePath . '/app/services/ProcessoAssuntoSyncService.php';
+
+processos_api_require_access('consultaprocessosedit', true);
 
 $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
 if (!is_array($payload)) {
@@ -17,13 +20,6 @@ $processoId = trim((string) ($payload['processo_id'] ?? ''));
 $assuntoId = trim((string) ($payload['assunto_id'] ?? ''));
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
     if ($processoId === '' || $assuntoId === '') {
         http_response_code(400);
         echo json_encode(['error' => 'processo_id e assunto_id são obrigatórios.'], JSON_UNESCAPED_UNICODE);
