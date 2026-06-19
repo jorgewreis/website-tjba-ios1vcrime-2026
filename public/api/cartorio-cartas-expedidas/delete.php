@@ -4,10 +4,13 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once __DIR__ . '/_auth.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
 require_once $basePath . '/app/helpers/DeleteAuthorization.php';
+
+$authContext = cartasExpedidasApiRequireAccess('cartasexpedidasedit', true);
 
 if (!bootstrapRequireTrustedPostRequest()) {
     http_response_code(403);
@@ -17,7 +20,7 @@ if (!bootstrapRequireTrustedPostRequest()) {
 
 $connection = Conection::getInstance()->getConnection();
 
-$userId = $_SESSION['id_usuario'] ?? null;
+$userId = $authContext['user_id'];
 $podeExcluir = DeleteAuthorization::usuarioPodeExcluir(
     $userId !== null ? trim((string) $userId) : null
 );

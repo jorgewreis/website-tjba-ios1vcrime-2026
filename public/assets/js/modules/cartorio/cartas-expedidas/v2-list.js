@@ -170,6 +170,17 @@
                 if (!subtarefaId) {
                     return;
                 }
+                var complemento = document.querySelector('.js-carta-expedida-complemento[data-subtarefa-id="' + subtarefaId + '"]');
+                var dadosEspecificos = {};
+                if (complemento) {
+                    var campo = complemento.getAttribute('data-complemento-campo') || '';
+                    var valor = (complemento.value || '').trim();
+                    if (!campo || !valor) {
+                        notify('error', 'Atenção', complemento.getAttribute('title') || 'Informe o complemento da subtarefa.');
+                        return;
+                    }
+                    dadosEspecificos[campo] = valor;
+                }
                 btn.disabled = true;
                 fetch('/api/cartorio-cartas-expedidas/concluir-subtarefa.php', {
                     method: 'POST',
@@ -177,7 +188,7 @@
                     credentials: 'same-origin',
                     body: JSON.stringify({
                         subtarefa_id: subtarefaId,
-                        dados_especificos: null
+                        dados_especificos: dadosEspecificos
                     })
                 })
                     .then(function (response) {

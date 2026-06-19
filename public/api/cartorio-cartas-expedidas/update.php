@@ -4,10 +4,12 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once __DIR__ . '/_auth.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
 
+$authContext = cartasExpedidasApiRequireAccess('cartasexpedidasedit', true);
 $connection = Conection::getInstance()->getConnection();
 
 $rawPayload = file_get_contents('php://input') ?: '';
@@ -16,7 +18,7 @@ if (!is_array($parsed)) {
     $parsed = $_POST;
 }
 
-$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
+$usuarioId = $authContext['user_id'];
 if ($usuarioId !== '') {
     $parsed['usuario_id'] = $usuarioId;
 }

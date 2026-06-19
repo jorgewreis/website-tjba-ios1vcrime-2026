@@ -4,9 +4,12 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once __DIR__ . '/_auth.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
+
+$authContext = cartasExpedidasApiRequireAccess('cartasexpedidasedit', true);
 
 if (!bootstrapRequireTrustedPostRequest()) {
     http_response_code(403);
@@ -24,7 +27,7 @@ if (!is_array($parsed)) {
 $entityId = trim((string) ($parsed['id'] ?? ''));
 $targetId = trim((string) ($parsed['usuario_id'] ?? ''));
 
-$userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+$userId = $authContext['user_id'];
 if ($userId === '') {
     http_response_code(401);
     echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);

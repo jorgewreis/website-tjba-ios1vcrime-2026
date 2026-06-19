@@ -310,12 +310,40 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual. Atualize a página.');
         }
 
+        $carta = $this->repository->find($cartaId);
+        if ($carta === null) {
+            throw new InvalidArgumentException('Carta expedida não encontrada.');
+        }
+
+        $statusCarta = trim((string) ($carta['status'] ?? ''));
+        if (in_array($statusCarta, ['cancelada', 'concluída', 'concluida', 'finalizada'], true)) {
+            throw new InvalidArgumentException('Não é possível concluir subtarefas de uma carta finalizada ou cancelada.');
+        }
+
+        $statusSubtarefaAtual = trim((string) ($subtarefa['status'] ?? ''));
+        if ($statusSubtarefaAtual === 'concluida' || $statusSubtarefaAtual === 'concluída') {
+            throw new InvalidArgumentException('Esta subtarefa já foi concluída.');
+        }
+
+        $subtarefaAtiva = CartasExpedidasSubtarefasRepository::resolverSubtarefaAtivaPorLista(
+            $this->subtarefasRepository->findByCartaId($cartaId)
+        );
+        $subtarefaAtivaId = trim((string) ($subtarefaAtiva['id'] ?? ''));
+        if ($subtarefaAtivaId === '' || $subtarefaAtivaId !== trim($subtarefaId)) {
+            throw new InvalidArgumentException('Apenas a subtarefa ativa pode ser concluída. Atualize a página.');
+        }
+
         $dadosArray = [];
         if ($dadosJson !== null && $dadosJson !== '') {
             $decoded = json_decode($dadosJson, true);
             if (is_array($decoded)) {
                 $dadosArray = $decoded;
             }
+        }
+        $dadosArray = $this->normalizarDadosConclusaoSubtarefa($ordem, $dadosArray);
+        $dadosJson = json_encode($dadosArray, JSON_UNESCAPED_UNICODE);
+        if ($dadosJson === false) {
+            throw new InvalidArgumentException('Dados da subtarefa inválidos.');
         }
 
         $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
@@ -346,7 +374,6 @@ final class CartasExpedidasService
         }
 
         $this->repository->update($cartaId, ['status' => 'concluída']);
-        $carta = $this->repository->find($cartaId);
         $processo = trim((string) ($carta['numero_processo_origem'] ?? ''));
         $finalidade = trim((string) ($carta['finalidade'] ?? ''));
         $cidade = trim((string) ($carta['cidade_destino'] ?? ''));
@@ -360,6 +387,41 @@ final class CartasExpedidasService
             'tarefa_principal_concluida' => true,
             'tarefa_principal_mensagem' => $msg,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $dados
+     * @return array<string, mixed>
+     */
+    private function normalizarDadosConclusaoSubtarefa(int $ordem, array $dados): array
+    {
+        if ($ordem === CartasExpedidasSubtarefasRepository::ORDEM_ENVIO) {
+            $metodo = trim((string) ($dados['metodo_envio'] ?? $dados['tipo_envio'] ?? ''));
+            if ($metodo === '') {
+                throw new InvalidArgumentException('Informe o método de envio antes de concluir a subtarefa.');
+            }
+            $dados['metodo_envio'] = $metodo;
+            unset($dados['tipo_envio']);
+            return $dados;
+        }
+
+        if ($ordem === CartasExpedidasSubtarefasRepository::ORDEM_DEVOLUCAO) {
+            $resultado = trim((string) ($dados['resultado_devolucao'] ?? $dados['status_devolucao'] ?? $dados['resultado'] ?? ''));
+            $permitidos = [
+                'devolvida_sem_cumprimento',
+                'cumprida_negativamente',
+                'cumprida_parcialmente',
+                'cumprida_positivamente',
+            ];
+            if ($resultado === '' || !in_array($resultado, $permitidos, true)) {
+                throw new InvalidArgumentException('Informe o resultado da devolução antes de concluir a subtarefa.');
+            }
+            $dados['resultado_devolucao'] = $resultado;
+            unset($dados['status_devolucao'], $dados['resultado']);
+            return $dados;
+        }
+
+        throw new InvalidArgumentException('Subtarefa inválida para conclusão.');
     }
 
     private function normalizeTipoAlocado(string $tipo): string
@@ -514,6 +576,9 @@ final class CartasExpedidasService
         if ($usuarioId !== '') {
             $this->alocadosRepository->addAlocado($id, $usuarioId);
         }
+
+        // Status da tarefa principal é derivado das subtarefas ou de cancelamento explícito.
+        unset($payload['status']);
 
         return $this->repository->update($id, $payload);
     }

@@ -4,8 +4,11 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once __DIR__ . '/_auth.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/repositories/ComarcasRepository.php';
+
+cartasExpedidasApiRequireAccess('cartasexpedidas');
 
 $connection = Conection::getInstance()->getConnection();
 $repo = new ComarcasRepository($connection);

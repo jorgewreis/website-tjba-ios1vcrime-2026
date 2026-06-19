@@ -144,7 +144,7 @@ if ($isConcluida) {
         if (!is_array($dados)) {
             $dados = [];
         }
-        $resultado = trim((string) ($dados['resultado'] ?? ''));
+        $resultado = trim((string) ($dados['resultado_devolucao'] ?? $dados['status_devolucao'] ?? $dados['resultado'] ?? ''));
         if ($resultado === 'cumprida_parcialmente') {
             $mostrarCartaParcial = true;
             $cartaParcialLabel = 'Cumprida parcialmente';
@@ -168,6 +168,30 @@ $whatsappTexto = $mostrarCopiaWhatsapp
 $historicoLinhas = RegistroMetadataHelper::linhasHistoricoV2CartasExpedidas($row, $connection);
 
 $subtarefaAtivaId = $subtarefaAtivaUi !== null ? trim((string) ($subtarefaAtivaUi['id'] ?? '')) : '';
+$subtarefaAtivaTipo = $subtarefaAtivaUi !== null ? trim((string) ($subtarefaAtivaUi['tipo'] ?? '')) : '';
+$complementoCampo = '';
+$complementoLabel = '';
+$complementoOptions = [];
+if ($subtarefaAtivaTipo === CartasExpedidasSubtarefasRepository::TIPO_ENVIO) {
+    $complementoCampo = 'metodo_envio';
+    $complementoLabel = 'Método de envio';
+    $complementoOptions = [
+        'E-mail' => 'E-mail',
+        'Malote Digital' => 'Malote Digital',
+        'PJe' => 'PJe',
+        'eSAJ' => 'eSAJ',
+        'ePROC' => 'ePROC',
+    ];
+} elseif ($subtarefaAtivaTipo === CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO) {
+    $complementoCampo = 'resultado_devolucao';
+    $complementoLabel = 'Resultado da devolução';
+    $complementoOptions = [
+        'devolvida_sem_cumprimento' => 'Não cumprida',
+        'cumprida_negativamente' => 'Cumprida negativamente',
+        'cumprida_parcialmente' => 'Cumprida parcialmente',
+        'cumprida_positivamente' => 'Cumprida integralmente',
+    ];
+}
 
 $iconAbrir = '/assets/icons/Resize-Expand-Corner--Streamline-Ultimate.png';
 $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
@@ -329,6 +353,18 @@ $iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
                 <?php if ($mostrarContinuar && $textoEtapa !== ''): ?>
                     <div class="register-block-status-text <?php echo htmlspecialchars($classeEtapa, ENT_QUOTES); ?>">
                         <span class="register-block-status-text-text"><?php echo htmlspecialchars($textoEtapa, ENT_QUOTES); ?></span>
+                        <?php if ($complementoOptions !== []): ?>
+                            <select class="width-200 height-sm js-carta-expedida-complemento"
+                                data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
+                                data-complemento-campo="<?php echo htmlspecialchars($complementoCampo, ENT_QUOTES); ?>"
+                                aria-label="<?php echo htmlspecialchars($complementoLabel, ENT_QUOTES); ?>"
+                                title="<?php echo htmlspecialchars($complementoLabel, ENT_QUOTES); ?>">
+                                <option value=""><?php echo htmlspecialchars($complementoLabel, ENT_QUOTES); ?></option>
+                                <?php foreach ($complementoOptions as $value => $label): ?>
+                                    <option value="<?php echo htmlspecialchars($value, ENT_QUOTES); ?>"><?php echo htmlspecialchars($label, ENT_QUOTES); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
                         <button type="button"
                             class="button-icon-internal js-continuar-subtarefa"
                             data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
