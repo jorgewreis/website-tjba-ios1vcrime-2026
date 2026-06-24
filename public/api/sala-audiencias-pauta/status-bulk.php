@@ -14,12 +14,10 @@ require_once $basePath . '/app/helpers/UserAccessHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasAtaService.php';
 require_once $basePath . '/app/helpers/PrioridadesProcessuaisCatalog.php';
 require_once $basePath . '/app/helpers/SalaAudienciasAtaSigiloHelper.php';
+require_once __DIR__ . '/_auth.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+salaPautaApiRequireTrustedPost();
+$usuarioId = salaPautaApiRequireAccess('estudapainel');
 
 try {
     // #region agent log
@@ -48,25 +46,6 @@ try {
     );
     // #endregion
 
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        // #region agent log
-        $debugLog('H0', 'public/api/sala-audiencias-pauta/status-bulk.php:41', 'Saida por sessao expirada', []);
-        // #endregion
-        http_response_code(401);
-        echo json_encode(['success' => false, 'error' => 'Sessão expirada.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
-    $perfilsEfetivos = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
-    if (!AccessEvaluator::canAccessPage('estudapainel', $perfilsEfetivos)) {
-        // #region agent log
-        $debugLog('H0', 'public/api/sala-audiencias-pauta/status-bulk.php:54', 'Saida por acesso negado na pagina estudapainel', []);
-        // #endregion
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
     $usuario = new Usuario();
     $perfilsCadastro = $usuario->listarPerfisUsuario($usuarioId);
     if (!is_array($perfilsCadastro)) {

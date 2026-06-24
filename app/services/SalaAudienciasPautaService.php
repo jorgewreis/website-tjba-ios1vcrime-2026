@@ -532,8 +532,6 @@ final class SalaAudienciasPautaService
             }
             if ($parteGlobalId === '') {
                 $parteGlobalId = $this->partesRepository->ensureParteByNomeOuCpf($nome, null);
-            } else {
-                $this->partesRepository->update($parteGlobalId, ['nome_completo' => $nome]);
             }
 
             [$tipoProcesso, $poloProcesso] = $this->mapPautaTipoToProcessoTipoEPolo($tipo);

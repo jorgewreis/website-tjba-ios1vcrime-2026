@@ -8,6 +8,9 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CnjValidator.php';
 require_once $basePath . '/app/services/ProcessoClasseSyncService.php';
+require_once __DIR__ . '/_auth.php';
+
+processosApiRequireAccess();
 
 $rawNumero = $_GET['numero'] ?? '';
 if ($rawNumero === '' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
@@ -18,13 +21,6 @@ if ($rawNumero === '' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 }
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
     try {
         $digits = CnjValidator::digits20OrThrow((string) $rawNumero);
     } catch (InvalidArgumentException $e) {

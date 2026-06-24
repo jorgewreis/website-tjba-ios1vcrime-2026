@@ -6,6 +6,9 @@ header('Content-Type: application/json; charset=UTF-8');
 @set_time_limit(30);
 
 require_once dirname(__DIR__, 3) . '/config/config.php';
+require_once dirname(__DIR__) . '/processos/_auth.php';
+
+processosApiRequireAnyAccess(['consultapjepublicoteste', 'consultaprocessos']);
 
 $enabled = strtolower((string) envValue('PJE_PUBLIC_TEST_PAGE_ENABLED', '0'));
 if (!in_array($enabled, ['1', 'true', 'yes', 'on'], true)) {

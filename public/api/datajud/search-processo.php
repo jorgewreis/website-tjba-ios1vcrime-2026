@@ -2,7 +2,10 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=UTF-8');
-header('Access-Control-Allow-Origin: *');
+require_once dirname(__DIR__) . '/processos/_auth.php';
+
+processosApiRequireTrustedPost();
+processosApiRequireAccess('consultaprocessos');
 
 $config = require __DIR__ . '/config.php';
 

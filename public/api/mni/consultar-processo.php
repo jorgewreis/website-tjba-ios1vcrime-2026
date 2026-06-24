@@ -23,15 +23,10 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CnjValidator.php';
 require_once $basePath . '/app/services/MniService.php';
+require_once dirname(__DIR__) . '/processos/_auth.php';
 
 $config = require __DIR__ . '/config.php';
-
-$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-if ($usuarioId === '') {
-    http_response_code(401);
-    echo json_encode(['error' => 'Sessão expirada. Faça login novamente.', 'kind' => 'auth'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+processosApiRequireAccess('consultaprocessos');
 
 $rawNumero = '';
 $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
