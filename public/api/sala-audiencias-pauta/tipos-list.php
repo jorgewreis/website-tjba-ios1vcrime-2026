@@ -5,7 +5,11 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
+require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once __DIR__ . '/_auth.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
+
+salaPautaRequireAccess(['salapauta', 'salapautacreate', 'salapautaedit']);
 
 try {
     $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());

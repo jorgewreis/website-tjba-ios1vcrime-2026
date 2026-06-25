@@ -7,14 +7,10 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
+require_once __DIR__ . '/_auth.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
 
-if (!bootstrapRequireTrustedPostRequest()) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
+$userId = salaPautaRequireAccess('salapautaedit', true);
 $connection = Conection::getInstance()->getConnection();
 $rawPayload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($rawPayload, true);
@@ -28,13 +24,6 @@ $tipo = trim((string) ($parsed['tipo'] ?? ''));
 if ($alocadoId === '') {
     http_response_code(400);
     echo json_encode(['error' => 'alocado_id obrigatório.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-$userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
-if ($userId === '') {
-    http_response_code(401);
-    echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

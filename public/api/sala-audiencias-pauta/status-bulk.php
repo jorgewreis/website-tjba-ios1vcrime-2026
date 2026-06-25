@@ -14,12 +14,15 @@ require_once $basePath . '/app/helpers/UserAccessHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasAtaService.php';
 require_once $basePath . '/app/helpers/PrioridadesProcessuaisCatalog.php';
 require_once $basePath . '/app/helpers/SalaAudienciasAtaSigiloHelper.php';
+require_once __DIR__ . '/_auth.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
+$usuarioId = salaPautaRequireAccess('estudapainel', true, ['success' => false]);
 
 try {
     // #region agent log
@@ -48,25 +51,6 @@ try {
     );
     // #endregion
 
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        // #region agent log
-        $debugLog('H0', 'public/api/sala-audiencias-pauta/status-bulk.php:41', 'Saida por sessao expirada', []);
-        // #endregion
-        http_response_code(401);
-        echo json_encode(['success' => false, 'error' => 'Sessão expirada.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
-    $perfilsEfetivos = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
-    if (!AccessEvaluator::canAccessPage('estudapainel', $perfilsEfetivos)) {
-        // #region agent log
-        $debugLog('H0', 'public/api/sala-audiencias-pauta/status-bulk.php:54', 'Saida por acesso negado na pagina estudapainel', []);
-        // #endregion
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
     $usuario = new Usuario();
     $perfilsCadastro = $usuario->listarPerfisUsuario($usuarioId);
     if (!is_array($perfilsCadastro)) {
@@ -99,29 +83,19 @@ try {
 
     $pdo = Conection::getInstance()->getConnection();
     $marks = implode(',', array_fill(0, count($ids), '?'));
-    // #region agent log
-    $hardcodedBloqueios = ['sigiloso', 'crianca_adolescente', 'violencia_domestica'];
     $catalogoBloqueios = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
-    $faltandoNoHardcoded = array_values(array_diff($catalogoBloqueios, $hardcodedBloqueios));
-    $extraNoHardcoded = array_values(array_diff($hardcodedBloqueios, $catalogoBloqueios));
+    $prioridadeMarks = implode(',', array_fill(0, count($catalogoBloqueios), '?'));
+    // #region agent log
     $debugLog(
         'H1',
         'public/api/sala-audiencias-pauta/status-bulk.php:66',
-        'Comparacao lista bloqueante hardcoded vs catalogo',
+        'Lista bloqueante de prioridades carregada do catalogo',
         [
-            'hardcoded' => $hardcodedBloqueios,
             'catalogo' => $catalogoBloqueios,
-            'faltando_no_hardcoded' => $faltandoNoHardcoded,
-            'extra_no_hardcoded' => $extraNoHardcoded,
-            'divergiu' => ($faltandoNoHardcoded !== [] || $extraNoHardcoded !== []),
             'total_pautas_consulta' => count($ids),
         ]
     );
     // #endregion
-    /*
-     * Os códigos bloqueantes devem espelhar
-     * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
-     */
     $sql = "SELECT a.`id_pauta`, a.`status`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                    " . SalaAudienciasAtaSigiloHelper::sqlProcessoSigilosoEfetivo('p', 'a') . " AS `processo_sigiloso`,
                    CASE WHEN i.`id` IS NOT NULL THEN 1 ELSE 0 END AS `ja_inscrito`,
@@ -130,16 +104,22 @@ try {
                    CASE WHEN EXISTS (
                         SELECT 1 FROM `processo_prioridades` pri
                         WHERE pri.`processo_id` = a.`processo`
-                          AND pri.`codigo` IN ('sigiloso', 'crianca_adolescente', 'violencia_domestica')
+                          AND pri.`codigo` IN ($prioridadeMarks)
                    ) THEN 1 ELSE 0 END AS `tem_prioridade_bloqueio`
             FROM `sala_audiencias_pauta` a
             LEFT JOIN `processos` p ON p.`id` = a.`processo`
             LEFT JOIN `sala_audiencias_estudante_inscricao` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = ?
             WHERE a.`ativo` = 1 AND a.`id_pauta` IN ($marks)";
     $st = $pdo->prepare($sql);
-    $st->bindValue(1, $usuarioId);
+    $paramIndex = 1;
+    foreach ($catalogoBloqueios as $codigo) {
+        $st->bindValue($paramIndex, $codigo);
+        $paramIndex++;
+    }
+    $st->bindValue($paramIndex, $usuarioId);
+    $paramIndex++;
     foreach ($ids as $i => $id) {
-        $st->bindValue($i + 2, $id);
+        $st->bindValue($paramIndex + $i, $id);
     }
     $st->execute();
     $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];

@@ -8,6 +8,7 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/access/AccessEvaluator.php';
+require_once __DIR__ . '/_auth.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -15,6 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
+$usuarioId = salaPautaRequireAccess('salapauta', true, ['success' => false]);
 
 $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
 if (!is_array($payload)) {
@@ -30,19 +33,6 @@ if ($id === '' || $acao === '') {
 }
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['success' => false, 'error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    $perfils = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
-    if (!AccessEvaluator::canAccessPage('salapauta', $perfils)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-
     $service = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
     $service->setStatusPainel($id, $acao, $usuarioId);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
