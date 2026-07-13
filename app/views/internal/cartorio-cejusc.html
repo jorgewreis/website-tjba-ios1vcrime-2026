@@ -7,9 +7,97 @@
 
         <!-- IMPORT CLARUS CSS -->
         <link rel="stylesheet" href="./../../../node_modules/clarus-css/dist/css/clarus.css">
+        <link rel="stylesheet" href="./../../../node_modules/clarus-css/dist/css/fonts.css">
+
         <script src="./../../../node_modules/clarus-css/dist/js/clarus.js"></script>
     </head>
-    <body>
+    <>
+
+        <div class="container-fluid u-p-3">
+            <nav aria-label="breadcrumb">
+                <ol class="cl-breadcrumb">
+                    <li class="cl-breadcrumb-item">Início</li>
+                    <li class="cl-breadcrumb-item">Cartório</li>
+                    <li class="cl-breadcrumb-item is-active">Cejusc</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="container-md u-p-3">
+            <h3 class="cl-empty-state-title">Cejusc</h3>
+            <p class="cl-empty-state-text">Acompanhamento de cumprimento da medida protetiva junto ao Cejusc</p>
+        </div>
+
+        <div class="container-md u-px-3">
+            <div class="cl-card">
+                <div class="cl-card-header">
+                    <span class="cl-card-title">Novo cadastro</span>
+                </div>
+                <div class="cl-card-body">
+                    <div class="cl-form-row u-gap-x-3">
+                        <div class="cl-form-col u-pb-2">
+                            <label for="input-processo" class="cl-form-label cl-form-size-md">Processo</label>
+                            <input type="text" class="cl-form-control cl-form-size-lg" id="input-processo" placeholder="Número do processo">
+                            <span class="cl-invalid-feedback cl-form-size-lg">Informe o número do processo.</span>
+                        </div>
+                        <div class="cl-form-col u-pb-2">
+                            <label for="input-reu" class="cl-form-label cl-form-size-md">Requerido</label>
+                            <input type="text" class="cl-form-control cl-form-size-xxl is-invalid" id="input-reu" value="Nome do requerido">
+                            <span class="cl-invalid-feedback cl-form-size-xxl">Informe o nome do requerido.</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="cl-card-footer">
+                    <button type="button" class="cl-btn cl-btn-primary u-mr-2">Cadastrar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-md u-px-3 u-mt-3">
+            <div class="cl-card">
+                <div class="cl-card-header">
+                    <span class="cl-card-title">Lista de Réus em acompanhamento</span>
+                </div>
+                <div class="cl-card-body">
+                    <div class="cl-table-responsive">
+                        <table class="cl-table cl-table-striped cl-table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="cl-col-3">Processo</th>
+                                    <th class="cl-col-4">Requerido</th>
+                                    <th class="cl-col-2">Referência</th>
+                                    <th class="cl-col-2">Status</th>
+                                    <th class="cl-col-2">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>0804565-55.2025.8.05.0103</td>
+                                    <td>Gabriel Silva de Jesus</td>
+                                    <td> Janeiro/2026</td>
+                                    <td>Ag. Curso</td>
+                                    <td>
+                                        <button class="cl-btn cl-btn-primary cl-btn-sm">Visualizar</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="cl-card-footer">
+                    <ul class="cl-pagination">
+                        <li class="cl-page-item is-disabled"><a href="#" class="cl-page-link" aria-label="Anterior"><svg class="cl-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a></li>
+                        <li class="cl-page-item"><a href="#" class="cl-page-link">1</a></li>
+                        <li class="cl-page-item is-active"><a href="#" class="cl-page-link">2</a></li>
+                        <li class="cl-page-item"><a href="#" class="cl-page-link">3</a></li>
+                        <li class="cl-page-item is-disabled" aria-hidden="true"><span class="cl-page-link"><svg class="cl-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></span></li>
+                        <li class="cl-page-item"><a href="#" class="cl-page-link">10</a></li>
+                        <li class="cl-page-item"><a href="#" class="cl-page-link" aria-label="Próxima"><svg class="cl-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+          
         
     </body>
 </html>
