@@ -267,14 +267,27 @@
         select.classList.add('status-finished');
         select.disabled = false;
         select.style.display = '';
-        select.value = '__OUTRA_PESSOA__';
 
-        var firstOption = select.options[0];
-        input.value = normalizeSelectedName(firstOption?.dataset.nomeParte || nomeDigitado);
-        input.style.display = 'none';
-        if (hiddenId) {
-            hiddenId.value = '';
+        // A busca já ordena as pessoas pela maior semelhança com o nome digitado.
+        // Portanto, a primeira pessoa cadastrada deve ser a seleção atual.
+        var firstPersonOption = select.querySelector('option[data-parte-id-global][value]:not([value="__OUTRA_PESSOA__"])');
+        if (firstPersonOption && String(firstPersonOption.value || '').trim() !== '') {
+            select.value = firstPersonOption.value;
+            input.value = normalizeSelectedName(firstPersonOption.dataset.nomeParte || nomeDigitado);
+            if (hiddenId) {
+                hiddenId.value = String(firstPersonOption.dataset.parteIdGlobal || '').trim();
+            }
+            select.disabled = true;
+            input.readOnly = true;
+            setParteNomeStatus('Parte vinculada', 'var(--color-success-active)');
+        } else {
+            select.value = '__OUTRA_PESSOA__';
+            input.value = normalizeSelectedName(nomeDigitado);
+            if (hiddenId) {
+                hiddenId.value = '';
+            }
         }
+        input.style.display = 'none';
     }
 
     function currentAudienciaSnapshot() {
@@ -485,7 +498,17 @@
         btn.addEventListener('click', function () {
             var idGlobal = String(btn.getAttribute('data-parte-global-id') || '').trim();
             if (!idGlobal) return;
-            window.location.href = '/frame.php?page=consultapartesedit&id=' + encodeURIComponent(idGlobal);
+            var pautaId = '';
+            try {
+                pautaId = String(new URLSearchParams(window.location.search).get('id') || '').trim();
+            } catch (e) {
+                pautaId = '';
+            }
+            var href = '/frame.php?page=consultapartesedit&id=' + encodeURIComponent(idGlobal);
+            if (pautaId) {
+                href += '&back_page=salapautaedit&back_id=' + encodeURIComponent(pautaId);
+            }
+            window.location.href = href;
         });
     });
 
@@ -663,6 +686,8 @@
                     hiddenId.value = parteIdGlobal;
                 }
                 if (parteIdGlobal !== '') {
+                    select.disabled = true;
+                    input.readOnly = true;
                     setParteNomeStatus('Parte vinculada', 'var(--color-success-active)');
                 }
             }

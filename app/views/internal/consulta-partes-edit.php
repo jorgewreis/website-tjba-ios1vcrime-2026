@@ -29,6 +29,12 @@ if ($pessoa === null) {
 $partesRepoProf = new PartesRepository($connection);
 $profissoesLista = $partesRepoProf->listProfissoesDistintas();
 $profissaoAtual = trim((string) ($pessoa['profissao'] ?? ''));
+$backHref = '/frame.php?page=consultapartes';
+$backPage = trim((string) ($_GET['back_page'] ?? ''));
+$backId = trim((string) ($_GET['back_id'] ?? ''));
+if ($backPage === 'salapautaedit' && $backId !== '') {
+    $backHref = '/frame.php?page=salapautaedit&id=' . rawurlencode($backId);
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -184,7 +190,9 @@ $profissaoAtual = trim((string) ($pessoa['profissao'] ?? ''));
                 return;
             }
 
-            App.ConsultaPartesEdit.initialize();
+            App.ConsultaPartesEdit.initialize({
+                backHref: <?php echo json_encode($backHref, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
+            });
         })();
     </script>
 </body>

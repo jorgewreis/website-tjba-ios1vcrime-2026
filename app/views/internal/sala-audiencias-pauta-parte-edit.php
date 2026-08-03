@@ -19,6 +19,11 @@ $defensorPrivadoOutroAtual = (string) ($parte['defensor_privado_outro'] ?? '');
 $defensorPublicoOutroAtual = (string) ($parte['defensor_publico_outro'] ?? '');
 $processoIdParte = $parte !== null ? trim((string) ($parte['processo'] ?? '')) : '';
 $partesRepoNome = new PartesRepository(Conection::getInstance()->getConnection());
+$parteGlobalId = trim((string) ($parte['parte_id_global'] ?? ''));
+$parteGlobal = $parteGlobalId !== '' ? $partesRepoNome->findById($parteGlobalId) : null;
+$nomeParteExibicao = $parteGlobal !== null
+    ? trim((string) ($parteGlobal['nome_completo'] ?? ''))
+    : trim((string) ($parte['nome_parte'] ?? ''));
 $defensoresPublicosProcesso = $partesRepoNome->listByProfissoes([
     PartesRepository::PROFISSAO_DEFENSOR_PUBLICO,
     PartesRepository::PROFISSAO_DEFENSORA_PUBLICA,
@@ -82,7 +87,10 @@ $defPrivadoEhOutro = ($defensorPrivadoAtual === 'outro');
                     <input type="hidden" id="parte-edit-processo-id" value="<?php echo htmlspecialchars($processoIdParte, ENT_QUOTES); ?>">
                     <input type="hidden" id="parte-edit-parte-global-id" value="<?php echo htmlspecialchars((string) ($parte['parte_id_global'] ?? ''), ENT_QUOTES); ?>">
                     <input type="hidden" id="parte-edit-processo-parte-id" value="<?php echo htmlspecialchars((string) ($parte['processo_parte_id'] ?? ''), ENT_QUOTES); ?>">
-                    <input type="text" class="width-700 height-md" id="parte-edit-nome" value="<?php echo htmlspecialchars((string) ($parte['nome_parte'] ?? ''), ENT_QUOTES); ?>" autocomplete="off">
+                    <input type="text" class="width-700 height-md<?php echo $parteGlobal !== null ? ' readonly' : ''; ?>" id="parte-edit-nome" value="<?php echo htmlspecialchars($nomeParteExibicao, ENT_QUOTES); ?>" autocomplete="off"<?php echo $parteGlobal !== null ? ' readonly aria-describedby="parte-edit-nome-help"' : ''; ?>>
+                    <?php if ($parteGlobal !== null): ?>
+                    <span class="minor-info" id="parte-edit-nome-help">Nome definido pelo cadastro da pessoa.</span>
+                    <?php endif; ?>
                 </div>
                 <div class="col">
                     <label for="parte-edit-tipo">Tipo de parte <span class="label-hint-obrigatorio">*obrigatório</span></label>

@@ -437,6 +437,17 @@ final class SalaAudienciasPautaService
             }
 
             if ($parteGlobalId !== '') {
+                $parteGlobal = $this->partesRepository->findById($parteGlobalId);
+                if ($parteGlobal === null) {
+                    throw new InvalidArgumentException('Pessoa cadastrada não encontrada. Selecione outra pessoa.');
+                }
+                $nome = trim((string) ($parteGlobal['nome_completo'] ?? ''));
+                if ($nome === '') {
+                    throw new InvalidArgumentException('A pessoa cadastrada não possui nome válido.');
+                }
+            }
+
+            if ($parteGlobalId !== '') {
                 if ($processoParteId === '') {
                     $processoParte = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteGlobalId);
                     if ($processoParte === null) {
@@ -533,7 +544,14 @@ final class SalaAudienciasPautaService
             if ($parteGlobalId === '') {
                 $parteGlobalId = $this->partesRepository->ensureParteByNomeOuCpf($nome, null);
             } else {
-                $this->partesRepository->update($parteGlobalId, ['nome_completo' => $nome]);
+                $parteGlobal = $this->partesRepository->findById($parteGlobalId);
+                if ($parteGlobal === null) {
+                    throw new InvalidArgumentException('Pessoa cadastrada não encontrada.');
+                }
+                $nome = trim((string) ($parteGlobal['nome_completo'] ?? ''));
+                if ($nome === '') {
+                    throw new InvalidArgumentException('A pessoa cadastrada não possui nome válido.');
+                }
             }
 
             [$tipoProcesso, $poloProcesso] = $this->mapPautaTipoToProcessoTipoEPolo($tipo);
