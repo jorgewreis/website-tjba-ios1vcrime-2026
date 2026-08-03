@@ -608,7 +608,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         /** Perfil ESTUDANTE no cadastro (externo: recursos em Estudantes; ver public/frame.php). */
         const HAS_PERFIL_ESTUDANTE = <?php echo json_encode($hasPerfilEstudante, JSON_UNESCAPED_UNICODE); ?>;
         /** Consultor externo: consulta de partes (alinhado a frame.php — consultas_partes). */
-        const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes']);
+        const MENU_TARGETS_CONSULTAS_EXTERNO_CONSULTOR = new Set(['consultapartes', 'instituicoespublicas']);
         /** Estudante externo: pauta e painel na seção Estudantes. */
         const MENU_TARGETS_CONSULTAS_EXTERNO_ESTUDANTE = new Set(['estudapauta', 'estudapainel']);
 
@@ -659,6 +659,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Consultas',
                 items: [
                     { icon: 'fi fi-rs-users-alt', label: 'Consulta Partes', target: 'consultapartes' },
+                    { icon: 'fi fi-rs-building', label: 'Instituições Públicas', target: 'instituicoespublicas' },
                     { icon: 'fi fi-rs-folder-open', label: 'Consulta Processos', target: 'consultaprocessos' },
                     { icon: 'fi fi-rs-sensor-on', label: 'Monitoramento Eletrônico', target: 'monitoramentogabinete' }
                 ]
