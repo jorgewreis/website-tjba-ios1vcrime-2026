@@ -63,11 +63,6 @@ $backHref = $pessoaPrefill !== null
                     <option value="<?php echo htmlspecialchars($p['id'] ?? ''); ?>"<?php echo ($parteIdPrefill !== '' && ($p['id'] ?? '') === $parteIdPrefill) ? ' selected' : ''; ?>><?php echo $label; ?></option>
                     <?php endforeach; ?>
                 </select>
-                <?php if ($pessoaPrefill !== null): ?>
-                <span class="minor-info" id="parte-prefill-help">Pessoa definida a partir da página anterior.</span>
-                <?php else: ?>
-                <button type="button" class="btn btn-secondary-outline" style="margin-top:4px;" id="btn-buscar-pessoa">Abrir lista de pessoas</button>
-                <?php endif; ?>
             </div>
             <div class="col">
                 <label for="instituicao_id">Instituição <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -82,7 +77,6 @@ $backHref = $pessoaPrefill !== null
                     <option value="<?php echo htmlspecialchars($i['id'] ?? ''); ?>"><?php echo $nomeInst; ?></option>
                     <?php endforeach; ?>
                 </select>
-                <button type="button" class="btn btn-secondary-outline" style="margin-top:4px;" id="btn-buscar-instituicao">Abrir lista de instituições</button>
             </div>
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
