@@ -106,6 +106,29 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <style>
+            .result-nome {
+                max-width: 420px;
+            }
+                .result-nome .major-info {
+                    display: inline-block;
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+            
+            .result-tel {
+                max-width: 220px;
+            }
+                .result-telefone .major-info {
+                    display: inline-block;
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+        </style>
         <script src="/assets/js/shared/cpf.js"></script>
     </head>
 <body class="page-internal">
@@ -176,9 +199,17 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm">
-                        <div class="col width-500 parte-info">
+                        <div class="col parte-info result-nome">
                             <span class="minor-info">Nome</span>
                             <span class="major-info"><?php
+                                $cargosExib = [];
+                                foreach ($row['instituicoes'] ?? [] as $instituicaoRow) {
+                                    $cargo = trim((string) ($instituicaoRow['cargo_funcao'] ?? ''));
+                                    if ($cargo !== '' && !in_array($cargo, $cargosExib, true)) {
+                                        $cargosExib[] = $cargo;
+                                    }
+                                }
+                                $cargoStr = implode(' · ', $cargosExib);
                                 $docsExib = [];
                                 foreach ($row['documentos'] ?? [] as $docRow) {
                                     $tDoc = ParteDocumentoHelper::normalizarTipo((string) ($docRow['tipo'] ?? ''));
@@ -193,17 +224,24 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                                         $docsExib[] = 'CPF: ' . (strlen($cpfCell) === 11 ? Security::formatCPF($cpfCell) : $cpfCell);
                                     }
                                 }
-                                $docsStr = $docsExib !== [] ? implode(' · ', $docsExib) : '—';
-                                echo htmlspecialchars(($row['nome_completo'] ?? '') . ' (' . $docsStr . ')');
+                                $docsStr = implode(' · ', $docsExib);
+                                $nomeExib = (string) ($row['nome_completo'] ?? '');
+                                if ($cargoStr !== '') {
+                                    $nomeExib = $cargoStr . ' – ' . $nomeExib;
+                                }
+                                if ($docsStr !== '') {
+                                    $nomeExib .= ' (' . $docsStr . ')';
+                                }
+                                echo htmlspecialchars($nomeExib);
                             ?></span>
                         </div>
-                        <div class="col parte-tel">
+                        <div class="col parte-tel result-tel">
                             <span class="minor-info">Telefones</span>
                             <span class="major-info">
                                 <?php
                                 $telefones = $row['telefones'] ?? [];
                                 if (empty($telefones)) {
-                                    echo '—';
+                                    echo '-';
                                 } else {
                                     $partesTel = array_map(function ($t) {
                                         $tipo = trim($t['tipo'] ?? '');
@@ -221,14 +259,12 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                                 <?php
                                 $instituicoes = $row['instituicoes'] ?? [];
                                 if (empty($instituicoes)) {
-                                    echo '—';
+                                    echo '-';
                                 } else {
                                     $partesInst = array_map(function ($i) {
                                         $n = htmlspecialchars(trim($i['nome'] ?? ''));
                                         $s = trim($i['sigla'] ?? '');
                                         if ($s !== '') { $n .= ' (' . htmlspecialchars($s) . ')'; }
-                                        $c = trim($i['cargo_funcao'] ?? '');
-                                        if ($c !== '') { $n .= ' – ' . htmlspecialchars($c); }
                                         return $n;
                                     }, $instituicoes);
                                     echo implode(' · ', $partesInst);
