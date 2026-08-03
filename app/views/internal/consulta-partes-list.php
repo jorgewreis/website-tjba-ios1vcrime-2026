@@ -199,7 +199,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm">
-                        <div class="col parte-info result-nome">
+                        <div class="col result-nome">
                             <span class="minor-info">Nome</span>
                             <span class="major-info"><?php
                                 $cargosExib = [];
