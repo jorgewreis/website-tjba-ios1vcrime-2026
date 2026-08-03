@@ -227,7 +227,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                                 $docsStr = implode(' · ', $docsExib);
                                 $nomeExib = (string) ($row['nome_completo'] ?? '');
                                 if ($cargoStr !== '') {
-                                    $nomeExib = $cargoStr . ' – ' . $nomeExib;
+                                    $nomeExib = $cargoStr . $nomeExib;
                                 }
                                 if ($docsStr !== '') {
                                     $nomeExib .= ' (' . $docsStr . ')';
@@ -235,7 +235,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                                 echo htmlspecialchars($nomeExib);
                             ?></span>
                         </div>
-                        <div class="col parte-tel result-tel">
+                        <div class="col result-tel">
                             <span class="minor-info">Telefones</span>
                             <span class="major-info">
                                 <?php
@@ -262,10 +262,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                                     echo '-';
                                 } else {
                                     $partesInst = array_map(function ($i) {
-                                        $n = htmlspecialchars(trim($i['nome'] ?? ''));
-                                        $s = trim($i['sigla'] ?? '');
-                                        if ($s !== '') { $n .= ' (' . htmlspecialchars($s) . ')'; }
-                                        return $n;
+                                        $n = htmlspecialchars(trim($i['nome'] ?? ''));                                        return $n;
                                     }, $instituicoes);
                                     echo implode(' · ', $partesInst);
                                 }
