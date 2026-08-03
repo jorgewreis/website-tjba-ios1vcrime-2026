@@ -108,7 +108,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <style>
             .result-nome {
-                max-width: 420px;
+                width: 420px;
             }
                 .result-nome .major-info {
                     display: inline-block;
@@ -119,9 +119,20 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 }
             
             .result-tel {
-                max-width: 220px;
+                width: 220px;
             }
                 .result-telefone .major-info {
+                    display: inline-block;
+                    max-width: 100%;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+            .result-instituicoes {
+                max-width: 420px;
+            }
+                .result-instituicoes .major-info {
                     display: inline-block;
                     max-width: 100%;
                     overflow: hidden;
@@ -236,7 +247,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                             ?></span>
                         </div>
                         <div class="col result-tel">
-                            <span class="minor-info">Telefones</span>
+                            <span class="minor-info">Contatos</span>
                             <span class="major-info">
                                 <?php
                                 $telefones = $row['telefones'] ?? [];
@@ -253,7 +264,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                                 ?>
                             </span>
                         </div>
-                        <div class="col parte-instituitoces">
+                        <div class="col result-instituicoes">
                             <span class="minor-info">Instituições vinculadas</span>
                             <span class="major-info">
                                 <?php
