@@ -238,7 +238,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                                 $docsStr = implode(' · ', $docsExib);
                                 $nomeExib = (string) ($row['nome_completo'] ?? '');
                                 if ($cargoStr !== '') {
-                                    $nomeExib = $cargoStr . $nomeExib;
+                                    $nomeExib = $cargoStr . ' ' . $nomeExib;
                                 }
                                 if ($docsStr !== '') {
                                     $nomeExib .= ' (' . $docsStr . ')';
