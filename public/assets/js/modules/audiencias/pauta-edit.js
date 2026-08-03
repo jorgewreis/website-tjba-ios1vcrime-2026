@@ -277,8 +277,6 @@
             if (hiddenId) {
                 hiddenId.value = String(firstPersonOption.dataset.parteIdGlobal || '').trim();
             }
-            select.disabled = true;
-            input.readOnly = true;
             setParteNomeStatus('Parte vinculada', 'var(--color-success-active)');
         } else {
             select.value = '__OUTRA_PESSOA__';
@@ -686,8 +684,6 @@
                     hiddenId.value = parteIdGlobal;
                 }
                 if (parteIdGlobal !== '') {
-                    select.disabled = true;
-                    input.readOnly = true;
                     setParteNomeStatus('Parte vinculada', 'var(--color-success-active)');
                 }
             }
