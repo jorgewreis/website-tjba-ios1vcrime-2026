@@ -15,10 +15,16 @@ $connection = Conection::getInstance()->getConnection();
 $pessoasService = new PessoasService($connection);
 $instituicoesService = new InstituicoesPublicasService($connection);
 $listLimit = 500;
-$pessoasList = $pessoasService->list([], $listLimit, 0);
+$pessoaPrefill = $parteIdPrefill !== '' ? $pessoasService->find($parteIdPrefill) : null;
+$pessoasList = $pessoaPrefill !== null
+    ? ['rows' => [$pessoaPrefill]]
+    : $pessoasService->list([], $listLimit, 0);
 $instituicoesList = $instituicoesService->list([], $listLimit, 0);
 $pessoas = $pessoasList['rows'] ?? [];
 $instituicoes = $instituicoesList['rows'] ?? [];
+$backHref = $pessoaPrefill !== null
+    ? '/frame.php?page=consultapartesedit&id=' . rawurlencode($parteIdPrefill)
+    : '/frame.php?page=partesinstituicoeslist';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -45,7 +51,7 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
                 <label for="parte_id">Pessoa <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-600 height-md white" id="parte_id" required>
+                <select class="width-600 height-md white" id="parte_id" required<?php echo $pessoaPrefill !== null ? ' disabled aria-describedby="parte-prefill-help"' : ''; ?>>
                     <option value="">— Selecione a pessoa —</option>
                     <?php foreach ($pessoas as $p): ?>
                     <?php
@@ -57,7 +63,11 @@ $instituicoes = $instituicoesList['rows'] ?? [];
                     <option value="<?php echo htmlspecialchars($p['id'] ?? ''); ?>"<?php echo ($parteIdPrefill !== '' && ($p['id'] ?? '') === $parteIdPrefill) ? ' selected' : ''; ?>><?php echo $label; ?></option>
                     <?php endforeach; ?>
                 </select>
+                <?php if ($pessoaPrefill !== null): ?>
+                <span class="minor-info" id="parte-prefill-help">Pessoa definida a partir da página anterior.</span>
+                <?php else: ?>
                 <button type="button" class="btn btn-secondary-outline" style="margin-top:4px;" id="btn-buscar-pessoa">Abrir lista de pessoas</button>
+                <?php endif; ?>
             </div>
             <div class="col">
                 <label for="instituicao_id">Instituição <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -77,24 +87,14 @@ $instituicoes = $instituicoesList['rows'] ?? [];
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col">
-                <label for="setor_id">Setor (opcional)</label>
+                <label for="setor_id">Setor</label>
                 <select class="width-500 height-md white" id="setor_id">
                     <option value="">— Selecione a instituição primeiro —</option>
                 </select>
             </div>
             <div class="col">
-                <label for="profissao">Profissão</label>
-                <input type="text" class="width-400 height-md white" id="profissao" maxlength="120" placeholder="Ex: Policial">
-            </div>
-            <div class="col">
-                <label for="cargo_funcao">Cargo / Função <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <label for="cargo_funcao">Cargo / Patente <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="width-400 height-md white" id="cargo_funcao" placeholder="Ex: Investigador">
-            </div>
-        </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col">
-                <label for="observacoes">Observações</label>
-                <textarea class="width-600 height-md white" id="observacoes" rows="2"></textarea>
             </div>
         </div>
         <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
@@ -108,7 +108,9 @@ $instituicoes = $instituicoesList['rows'] ?? [];
                 return;
             }
 
-            App.PartesInstituicoesCreate.initialize();
+            App.PartesInstituicoesCreate.initialize({
+                backHref: <?php echo json_encode($backHref, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); ?>
+            });
         })();
     </script>
 </body>

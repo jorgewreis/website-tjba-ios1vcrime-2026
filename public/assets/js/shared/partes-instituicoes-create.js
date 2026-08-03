@@ -4,20 +4,6 @@
     const App = global.App || (global.App = {});
     const common = App.RecordEditCommon || null;
 
-    function formatProfissao(input) {
-        if (!input) {
-            return null;
-        }
-        let value = String(input.value || '').trim();
-        if (value !== '' && App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
-            value = App.ProperNameHelper.formatProper(value, 120);
-        } else if (value !== '' && typeof global.TextFormatter !== 'undefined' && global.TextFormatter.formatProperName) {
-            value = global.TextFormatter.formatProperName(value, 120);
-        }
-        input.value = value;
-        return value || null;
-    }
-
     function normalizeCargoFuncao(value) {
         let s = String(value || '').trim();
         if (s === '') {
@@ -37,13 +23,8 @@
         }
 
         const settings = config || {};
-        const profissaoEl = global.document.getElementById('profissao');
         const cargoFuncaoEl = global.document.getElementById('cargo_funcao');
         const setorEl = global.document.getElementById('setor_id');
-
-        profissaoEl?.addEventListener('blur', function () {
-            formatProfissao(profissaoEl);
-        });
 
         cargoFuncaoEl?.addEventListener('blur', function () {
             cargoFuncaoEl.value = normalizeCargoFuncao(cargoFuncaoEl.value || '');
@@ -117,9 +98,7 @@
                 parte_id: parteId,
                 instituicao_id: instituicaoId,
                 setor_id: String(setorEl?.value || '').trim() || null,
-                profissao: formatProfissao(profissaoEl),
-                cargo_funcao: cargoFuncao || null,
-                observacoes: String(global.document.getElementById('observacoes')?.value || '').trim() || null
+                cargo_funcao: cargoFuncao || null
             }).then(function (result) {
                 if (result.ok && result.data && result.data.id) {
                     if (typeof common.notifyByKey === 'function') {
