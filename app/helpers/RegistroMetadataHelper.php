@@ -67,6 +67,16 @@ final class RegistroMetadataHelper
             'cancel_toast_key' => 'cartorio.guias.cancel.success',
             'cancel_label' => 'Cancelar guia',
         ],
+        'cejusc' => [
+            'id_keys' => ['id'],
+            'status_keys' => ['status'],
+            'data_keys' => ['created_at'],
+            'updated_keys' => ['updated_at'],
+            'criador_keys' => ['CriadoPorNome'],
+            'edit_page' => 'cejuscedit',
+            'show_cancel' => false,
+            'cancel_endpoint' => '',
+        ],
         'gabinete_monitoramento' => [
             'id_keys' => ['IdMon', 'id'],
             'status_keys' => ['Status', 'status'],

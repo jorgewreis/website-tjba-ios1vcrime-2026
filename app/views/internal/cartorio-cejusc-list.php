@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../services/CejuscRegistrosService.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
+require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 $q = trim((string) ($_GET['q'] ?? ''));
@@ -15,20 +16,8 @@ try {
 } catch (Throwable $e) {
     $result = ['rows' => [], 'total' => 0];
 }
-$rows = $result['rows'] ?? [];
-$rows = array_map(static function (array $row): array {
-    $classe = trim((string) ($row['classe_descricao'] ?? ''));
-    if ($classe === '') {
-        $classe = trim((string) ($row['classe_codigo'] ?? ''));
-    }
-    $row['bloco_processo_classe_texto'] = $classe;
-    $row['bloco_processo_classe_not'] = $classe === '';
-    $row['bloco_processo_assunto_texto'] = 'Assunto não cadastrado';
-    $row['bloco_processo_assunto_not'] = true;
-    $row['bloco_processo_prioridades'] = [];
-    $row['bloco_processo_abrir_disabled'] = true;
-    return $row;
-}, is_array($rows) ? $rows : []);
+$rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, is_array($result['rows'] ?? null) ? $result['rows'] : []);
+$registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $total = (int) ($result['total'] ?? 0);
 $totalPages = $total > 0 ? (int) ceil($total / $itemsPerPage) : 0;
 if ($totalPages > 0 && $currentPage > $totalPages) $currentPage = $totalPages;
@@ -51,6 +40,7 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
     <body class="page-internal">
         <div class="spacing-top-page"></div>
@@ -120,6 +110,7 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
                     <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm"><span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;"><?php echo $total === 0 ? 'Nenhum registro encontrado' : htmlspecialchars((string) $total . ($total === 1 ? ' registro encontrado' : ' registros encontrados'), ENT_QUOTES); ?></span></div>
                 </div>
                 <?php foreach ($rows as $row): ?>
+                    <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cejusc', $registroListViewerContext, $connection); ?>
                     <div class="display-flex col col-full register register-with-metadata border-bottom" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>">
                         <div class="register-line" style="border-bottom: 0;">
                             <div class="register-line-left">
@@ -132,9 +123,7 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
                                 </div>
                             </div>
                             <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                                <div class="col">
-                                    <a class="btn btn-secondary height-sm" href="<?php echo htmlspecialchars(cejusc_url(['page' => 'cejuscedit', 'id' => $row['id']]), ENT_QUOTES); ?>">Editar</a>
-                                </div>
+                                <?php include __DIR__ . '/_registro_metadata.php'; ?>
                             </div>
                         </div>
                     </div>
