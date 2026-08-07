@@ -21,10 +21,12 @@ declare(strict_types=1);
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col filter">
-                <label for="filter-denunciado">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-800 height-md" id="filter-denunciado-select" aria-label="Réus vinculados ao processo" style="display: none;"></select>
-                <input class="width-800 height-md" id="filter-denunciado" name="nome_parte" required maxlength="180" autocomplete="name">
+            <div class="col filter" id="denunciado-col">
+                <label for="filter-denunciado">Réu <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-800 height-md" id="filter-denunciado-select" style="display: none;" aria-label="Réus vinculados ao processo">
+                    <!-- preenchido via JS quando houver réus -->
+                </select>
+                <input type="text" class="width-800 height-md" id="filter-denunciado" name="nome_parte" placeholder="Digite o nome completo" maxlength="255" aria-label="Nome do réu quando não há réus ou opção Novo cadastro de réu">
             </div>
             <div class="col filter">
                 <label for="data-envio">Data de envio ao CEJUSC <span class="label-hint-obrigatorio">*obrigatório</span></label>
