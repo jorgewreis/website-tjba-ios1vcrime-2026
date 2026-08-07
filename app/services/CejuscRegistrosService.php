@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/CejuscRegistrosRepository.php';
+require_once __DIR__ . '/../helpers/CnjValidator.php';
 
 final class CejuscRegistrosService
 {
@@ -58,15 +59,14 @@ final class CejuscRegistrosService
         $data = trim((string) ($payload['data_envio_cejusc'] ?? $payload['data_envio'] ?? ''));
         if ($processo === '') throw new InvalidArgumentException('O número do processo é obrigatório.');
         if ($parte === '') throw new InvalidArgumentException('O nome da parte é obrigatório.');
+        if (mb_strlen($parte) > 180) throw new InvalidArgumentException('O nome da parte deve ter no máximo 180 caracteres.');
         if ($data === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $data)) {
             throw new InvalidArgumentException('A data de envio é obrigatória e deve ser válida.');
         }
         [$year, $month, $day] = array_map('intval', explode('-', $data));
         if (!checkdate($month, $day, $year)) throw new InvalidArgumentException('A data de envio é inválida.');
-        $digits = preg_replace('/\D+/', '', $processo) ?? '';
-        if (strlen($digits) === 20) {
-            $processo = sprintf('%s-%s.%s.%s.%s.%s', substr($digits, 0, 7), substr($digits, 7, 2), substr($digits, 9, 4), substr($digits, 13, 1), substr($digits, 14, 2), substr($digits, 16, 4));
-        }
+        $digits = CnjValidator::digits20OrThrow($processo);
+        $processo = sprintf('%s-%s.%s.%s.%s.%s', substr($digits, 0, 7), substr($digits, 7, 2), substr($digits, 9, 4), substr($digits, 13, 1), substr($digits, 14, 2), substr($digits, 16, 4));
         return ['numero_processo' => $processo, 'nome_parte' => $parte, 'data_envio_cejusc' => $data, 'usuario_id' => trim((string) ($payload['usuario_id'] ?? $_SESSION['id_usuario'] ?? ''))];
     }
 
