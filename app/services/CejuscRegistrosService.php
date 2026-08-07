@@ -2,6 +2,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/CejuscRegistrosRepository.php';
+require_once __DIR__ . '/../repositories/PartesRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../helpers/CnjValidator.php';
 
 final class CejuscRegistrosService
@@ -33,7 +36,19 @@ final class CejuscRegistrosService
 
     public function create(array $payload): string
     {
-        return $this->repository->insert($this->validate($payload));
+        $data = $this->validate($payload);
+        $this->connection->beginTransaction();
+        try {
+            $data['nome_parte'] = $this->ensureParteVinculada($data);
+            $id = $this->repository->insert($data);
+            $this->connection->commit();
+            return $id;
+        } catch (Throwable $error) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            throw $error;
+        }
     }
 
     public function update(string $id, array $payload): bool
@@ -41,7 +56,19 @@ final class CejuscRegistrosService
         if (trim($id) === '') {
             throw new InvalidArgumentException('Identificador do registro é obrigatório.');
         }
-        return $this->repository->update($id, $this->validate($payload));
+        $data = $this->validate($payload);
+        $this->connection->beginTransaction();
+        try {
+            $data['nome_parte'] = $this->ensureParteVinculada($data);
+            $updated = $this->repository->update($id, $data);
+            $this->connection->commit();
+            return $updated;
+        } catch (Throwable $error) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            throw $error;
+        }
     }
 
     public function delete(string $id): bool
@@ -58,6 +85,7 @@ final class CejuscRegistrosService
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
         $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
         $parte = trim((string) ($payload['nome_parte'] ?? $payload['parte'] ?? ''));
+        $parteId = trim((string) ($payload['parte_id'] ?? ''));
         $data = trim((string) ($payload['data_envio_cejusc'] ?? $payload['data_envio'] ?? ''));
         if ($processo === '') throw new InvalidArgumentException('O número do processo é obrigatório.');
         if ($parte === '') throw new InvalidArgumentException('O nome da parte é obrigatório.');
@@ -71,7 +99,37 @@ final class CejuscRegistrosService
         $processo = sprintf('%s-%s.%s.%s.%s.%s', substr($digits, 0, 7), substr($digits, 7, 2), substr($digits, 9, 4), substr($digits, 13, 1), substr($digits, 14, 2), substr($digits, 16, 4));
         if (mb_strlen($classeCodigo) > 30) throw new InvalidArgumentException('O código da classe processual é inválido.');
         if (mb_strlen($classeDescricao) > 255) throw new InvalidArgumentException('A descrição da classe processual é inválida.');
-        return ['numero_processo' => $processo, 'classe_codigo' => $classeCodigo !== '' ? $classeCodigo : null, 'classe_descricao' => $classeDescricao !== '' ? $classeDescricao : null, 'nome_parte' => $parte, 'data_envio_cejusc' => $data, 'usuario_id' => trim((string) ($payload['usuario_id'] ?? $_SESSION['id_usuario'] ?? ''))];
+        return ['numero_processo' => $processo, 'classe_codigo' => $classeCodigo !== '' ? $classeCodigo : null, 'classe_descricao' => $classeDescricao !== '' ? $classeDescricao : null, 'nome_parte' => $parte, 'parte_id' => $parteId, 'data_envio_cejusc' => $data, 'usuario_id' => trim((string) ($payload['usuario_id'] ?? $_SESSION['id_usuario'] ?? ''))];
+    }
+
+    private function ensureParteVinculada(array $data): string
+    {
+        $processos = new ProcessosRepository($this->connection);
+        $processoId = $processos->ensureProcess($data['numero_processo']);
+        $partes = new PartesRepository($this->connection);
+        $parteId = trim((string) ($data['parte_id'] ?? ''));
+        if ($parteId !== '') {
+            $parte = $partes->findById($parteId);
+            if ($parte === null) {
+                throw new InvalidArgumentException('A parte selecionada não foi encontrada. Selecione novamente o réu.');
+            }
+        } else {
+            $parteId = $partes->ensureParteByNomeOuCpf($data['nome_parte']);
+            $parte = $partes->findById($parteId);
+        }
+        if ($parte === null) {
+            throw new InvalidArgumentException('Não foi possível confirmar o cadastro da parte.');
+        }
+
+        $vinculos = new ProcessosPartesRepository($this->connection);
+        $vinculoExistente = $vinculos->findByProcessoAndParte($processoId, $parteId);
+        if (($data['parte_id'] ?? '') !== '' && $vinculoExistente === null) {
+            throw new InvalidArgumentException('A parte selecionada não está vinculada ao processo informado. Consulte o processo novamente.');
+        }
+        if ($vinculoExistente === null) {
+            $vinculos->addParte($processoId, $parteId, ProcessosPartesRepository::TIPO_REU, ProcessosPartesRepository::POLO_PASSIVO);
+        }
+        return trim((string) ($parte['nome_completo'] ?? $data['nome_parte']));
     }
 
     private function normalizeFilters(array $filters): array

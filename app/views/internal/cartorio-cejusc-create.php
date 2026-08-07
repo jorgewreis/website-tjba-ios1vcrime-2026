@@ -22,8 +22,9 @@ declare(strict_types=1);
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
-                <label for="parte">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input class="width-600 height-md" id="parte" name="nome_parte" required maxlength="180" autocomplete="name">
+                <label for="filter-denunciado">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-800 height-md" id="filter-denunciado-select" aria-label="Réus vinculados ao processo" style="display: none;"></select>
+                <input class="width-800 height-md" id="filter-denunciado" name="nome_parte" required maxlength="180" autocomplete="name">
             </div>
             <div class="col filter">
                 <label for="data-envio">Data de envio ao CEJUSC <span class="label-hint-obrigatorio">*obrigatório</span></label>

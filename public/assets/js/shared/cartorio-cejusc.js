@@ -37,9 +37,17 @@
     function validate(form) {
         const processInput = form.querySelector('[name="numero_processo"]');
         const partInput = form.querySelector('[name="nome_parte"]');
+        const partSelect = form.querySelector('#filter-denunciado-select');
         const dateInput = form.querySelector('[name="data_envio_cejusc"]');
         const numeroProcesso = normalizeProcess(processInput.value);
-        const nomeParte = partInput.value.trim();
+        const selectIsActive = partSelect && partSelect.style.display !== 'none';
+        const selectedOption = selectIsActive && partSelect.selectedIndex >= 0 ? partSelect.options[partSelect.selectedIndex] : null;
+        const selectedExistingPart = selectIsActive && selectedOption && partSelect.value !== '' && partSelect.value !== 'outro' && partSelect.value !== '__novo__';
+        let nomeParte = selectedExistingPart ? selectedOption.textContent.trim() : partInput.value.trim();
+        if (!selectedExistingPart && App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
+            nomeParte = App.ProperNameHelper.formatProper(nomeParte, 255);
+            partInput.value = nomeParte;
+        }
         const dataEnvio = dateInput.value.trim();
         if (!nomeParte) throw new Error('O nome da parte é obrigatório.');
         if (nomeParte.length > 180) throw new Error('O nome da parte deve ter no máximo 180 caracteres.');
@@ -49,6 +57,7 @@
             classe_codigo: (form.querySelector('[name="classe_codigo"]') || {}).value || '',
             classe_descricao: (form.querySelector('[name="classe_descricao"]') || {}).value || '',
             nome_parte: nomeParte,
+            parte_id: selectedExistingPart ? partSelect.value : '',
             data_envio_cejusc: dataEnvio
         };
     }
@@ -77,6 +86,12 @@
     }
 
     function bindCreate(form) {
+        if (App.CartorioGuiasCreateUI && typeof App.CartorioGuiasCreateUI.initialize === 'function') {
+            App.CartorioGuiasCreateUI.initialize({
+                reusEndpoint: '/api/cartorio-guias/reus-por-processo.php',
+                newOptionLabel: 'Novo cadastro de réu'
+            });
+        }
         const button = form.querySelector('[type="submit"]');
         form.addEventListener('submit', async function (event) {
             event.preventDefault();

@@ -54,7 +54,7 @@
             });
             const outro = global.document.createElement('option');
             outro.value = 'outro';
-            outro.textContent = 'Outro';
+            outro.textContent = settings.newOptionLabel || 'Outro';
             denunciadoSelect.appendChild(outro);
             denunciadoSelect.style.display = '';
             denunciadoInput.style.display = 'none';
