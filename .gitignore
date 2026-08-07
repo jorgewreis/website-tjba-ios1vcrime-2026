@@ -96,6 +96,8 @@ temp/
 *.sql
 !docs/schema/
 !docs/schema/*.sql
+!database/migrations/20260807_create_cejusc_registros.sql
+!database/migrations/20260807_add_cejusc_classe_processual.sql
 *.sqlite
 *.sqlite3
 *.db

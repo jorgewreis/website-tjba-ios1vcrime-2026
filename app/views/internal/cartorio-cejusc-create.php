@@ -10,9 +10,17 @@ declare(strict_types=1);
         </div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
-                <label for="processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input class="width-500 height-md" id="processo" name="numero_processo" required inputmode="numeric" maxlength="25" placeholder="0000000-00.0000.0.00.0000">
+                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="text" class="width-400 height-md" id="filter-processo" name="numero_processo" required inputmode="numeric" maxlength="25" placeholder="0000000-00.0000.0.00.0000">
             </div>
+            <div class="col filter">
+                <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+            </div>
+        </div>
+        <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
+        <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="parte">Nome da parte <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input class="width-600 height-md" id="parte" name="nome_parte" required maxlength="180" autocomplete="name">
@@ -29,4 +37,5 @@ declare(strict_types=1);
     </form>
 </div>
 <div class="footer-page"><div class="location"><span class="all">Aplicativo web desenvolvido integralmente por </span><span class="specific">Jorge Reis Develop</span><span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span></div></div>
+<?php include __DIR__ . '/_datajud_scripts.php'; ?>
 <script>if (window.App && App.CartorioCejusc) App.CartorioCejusc.bindCreate(document.getElementById('cejusc-form'));</script></body></html>

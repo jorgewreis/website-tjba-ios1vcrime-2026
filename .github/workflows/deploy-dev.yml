@@ -89,7 +89,7 @@ jobs:
 
             if [ -f package.json ]; then
               npm ci
-              npm run build
+              npm run build --if-present
             fi
 
             if [ -f composer.json ]; then

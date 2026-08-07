@@ -55,6 +55,8 @@ final class CejuscRegistrosService
     private function validate(array $payload): array
     {
         $processo = trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? ''));
+        $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+        $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
         $parte = trim((string) ($payload['nome_parte'] ?? $payload['parte'] ?? ''));
         $data = trim((string) ($payload['data_envio_cejusc'] ?? $payload['data_envio'] ?? ''));
         if ($processo === '') throw new InvalidArgumentException('O número do processo é obrigatório.');
@@ -67,7 +69,9 @@ final class CejuscRegistrosService
         if (!checkdate($month, $day, $year)) throw new InvalidArgumentException('A data de envio é inválida.');
         $digits = CnjValidator::digits20OrThrow($processo);
         $processo = sprintf('%s-%s.%s.%s.%s.%s', substr($digits, 0, 7), substr($digits, 7, 2), substr($digits, 9, 4), substr($digits, 13, 1), substr($digits, 14, 2), substr($digits, 16, 4));
-        return ['numero_processo' => $processo, 'nome_parte' => $parte, 'data_envio_cejusc' => $data, 'usuario_id' => trim((string) ($payload['usuario_id'] ?? $_SESSION['id_usuario'] ?? ''))];
+        if (mb_strlen($classeCodigo) > 30) throw new InvalidArgumentException('O código da classe processual é inválido.');
+        if (mb_strlen($classeDescricao) > 255) throw new InvalidArgumentException('A descrição da classe processual é inválida.');
+        return ['numero_processo' => $processo, 'classe_codigo' => $classeCodigo !== '' ? $classeCodigo : null, 'classe_descricao' => $classeDescricao !== '' ? $classeDescricao : null, 'nome_parte' => $parte, 'data_envio_cejusc' => $data, 'usuario_id' => trim((string) ($payload['usuario_id'] ?? $_SESSION['id_usuario'] ?? ''))];
     }
 
     private function normalizeFilters(array $filters): array

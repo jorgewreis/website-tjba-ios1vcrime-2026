@@ -12,7 +12,7 @@ final class CejuscRegistrosRepository
     public function list(array $filters, int $limit, int $offset): array
     {
         [$where, $params] = $this->where($filters);
-        $sql = "SELECT `id`, `numero_processo`, `nome_parte`, `data_envio_cejusc`, `created_at`, `updated_at`
+        $sql = "SELECT `id`, `numero_processo`, `classe_codigo`, `classe_descricao`, `nome_parte`, `data_envio_cejusc`, `created_at`, `updated_at`
                 FROM `{$this->table}`" . ($where !== '' ? " WHERE {$where}" : '') .
             ' ORDER BY `data_envio_cejusc` DESC, `created_at` DESC LIMIT :limit OFFSET :offset';
         $stmt = $this->connection->prepare($sql);
@@ -48,11 +48,13 @@ final class CejuscRegistrosRepository
     {
         $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'CJR');
         $stmt = $this->connection->prepare("INSERT INTO `{$this->table}`
-            (`id`, `numero_processo`, `nome_parte`, `data_envio_cejusc`, `criado_por`, `atualizado_por`)
-            VALUES (:id, :processo, :parte, :data, :criado_por, :atualizado_por)");
+            (`id`, `numero_processo`, `classe_codigo`, `classe_descricao`, `nome_parte`, `data_envio_cejusc`, `criado_por`, `atualizado_por`)
+            VALUES (:id, :processo, :classe_codigo, :classe_descricao, :parte, :data, :criado_por, :atualizado_por)");
         $stmt->execute([
             ':id' => $id,
             ':processo' => $data['numero_processo'],
+            ':classe_codigo' => $data['classe_codigo'] ?? null,
+            ':classe_descricao' => $data['classe_descricao'] ?? null,
             ':parte' => $data['nome_parte'],
             ':data' => $data['data_envio_cejusc'],
             ':criado_por' => $data['usuario_id'] ?? null,
@@ -64,11 +66,14 @@ final class CejuscRegistrosRepository
     public function update(string $id, array $data): bool
     {
         $stmt = $this->connection->prepare("UPDATE `{$this->table}` SET
-            `numero_processo` = :processo, `nome_parte` = :parte, `data_envio_cejusc` = :data,
+            `numero_processo` = :processo, `classe_codigo` = :classe_codigo, `classe_descricao` = :classe_descricao,
+            `nome_parte` = :parte, `data_envio_cejusc` = :data,
             `atualizado_por` = :usuario, `updated_at` = NOW() WHERE `id` = :id LIMIT 1");
         $stmt->execute([
             ':id' => $id,
             ':processo' => $data['numero_processo'],
+            ':classe_codigo' => $data['classe_codigo'] ?? null,
+            ':classe_descricao' => $data['classe_descricao'] ?? null,
             ':parte' => $data['nome_parte'],
             ':data' => $data['data_envio_cejusc'],
             ':usuario' => $data['usuario_id'] ?? null,

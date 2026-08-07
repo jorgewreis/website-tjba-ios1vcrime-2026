@@ -14,6 +14,12 @@
     }
 
     function normalizeProcess(value) {
+        if (typeof global.normalizeAndValidateCNJValue === 'function') {
+            const result = global.normalizeAndValidateCNJValue(value, { toastOnInvalid: false });
+            if (result.empty) throw new Error('O número do processo é obrigatório.');
+            if (!result.ok) throw new Error('Número do processo inválido. Verifique o formato e o dígito verificador.');
+            return result.formatted;
+        }
         const digits = String(value || '').replace(/\D/g, '');
         if (digits.length !== 20) {
             throw new Error('O número do processo deve ter 20 dígitos no formato CNJ.');
@@ -38,7 +44,13 @@
         if (!nomeParte) throw new Error('O nome da parte é obrigatório.');
         if (nomeParte.length > 180) throw new Error('O nome da parte deve ter no máximo 180 caracteres.');
         if (!/^\d{4}-\d{2}-\d{2}$/.test(dataEnvio) || Number.isNaN(Date.parse(dataEnvio))) throw new Error('Informe uma data de envio válida.');
-        return { numero_processo: numeroProcesso, nome_parte: nomeParte, data_envio_cejusc: dataEnvio };
+        return {
+            numero_processo: numeroProcesso,
+            classe_codigo: (form.querySelector('[name="classe_codigo"]') || {}).value || '',
+            classe_descricao: (form.querySelector('[name="classe_descricao"]') || {}).value || '',
+            nome_parte: nomeParte,
+            data_envio_cejusc: dataEnvio
+        };
     }
 
     async function send(endpoint, payload) {
