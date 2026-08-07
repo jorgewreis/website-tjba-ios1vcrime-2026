@@ -166,6 +166,9 @@
                 if (denunciadoSelect && denunciadoSelect.style.display !== 'none' && denunciadoSelect.value && denunciadoSelect.value !== 'outro' && denunciadoSelect.value !== '__novo__') {
                     return;
                 }
+                if (settings.enablePeopleSuggestions === false) {
+                    return;
+                }
                 fetch((settings.peopleSearchEndpoint || '/api/pessoas/search-by-name.php?nome=') + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin' })
                     .then(function (response) { return response.json(); })
                     .then(function (data) {

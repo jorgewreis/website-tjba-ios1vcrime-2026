@@ -89,7 +89,8 @@
         if (App.CartorioGuiasCreateUI && typeof App.CartorioGuiasCreateUI.initialize === 'function') {
             App.CartorioGuiasCreateUI.initialize({
                 reusEndpoint: '/api/cartorio-guias/reus-por-processo.php',
-                newOptionLabel: 'Novo cadastro de réu'
+                newOptionLabel: 'Novo cadastro de réu',
+                enablePeopleSuggestions: false
             });
         }
         const button = form.querySelector('[type="submit"]');
