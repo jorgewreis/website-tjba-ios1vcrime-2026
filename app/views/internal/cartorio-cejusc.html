@@ -1,17 +1,104 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Internal Page - Cejusc</title>
-        <link rel="stylesheet" href="./../../../node_modules/clarus-css/dist/css/clarus.css">
-        <link rel="stylesheet" href="./../../../node_modules/clarus-css/dist/css/fonts.css">
-        <script src="./../../../node_modules/clarus-css/dist/js/clarus.js"></script>
+        <title>CEJUSC - Lista</title>
+        <link rel="stylesheet" href="../../../public/assets/css/shared/reset.css">
+        <link rel="stylesheet" href="../../../public/assets/css/shared/color.css">
+        <link rel="stylesheet" href="../../../public/assets/css/shared/layout.css">
+        <link rel="stylesheet" href="../../../public/assets/css/shared/page.css">
+        <link rel="stylesheet" href="../../../public/assets/css/shared/form.css">
+        <link rel="stylesheet" href="../../../public/assets/css/shared/table.css">
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     </head>
-    <body>
-        <div class="container-fluid u-p-3"><nav aria-label="breadcrumb"><ol class="cl-breadcrumb"><li class="cl-breadcrumb-item">Início</li><li class="cl-breadcrumb-item">Cartório</li><li class="cl-breadcrumb-item is-active">Cejusc</li></ol></nav></div>
-        <div class="container-md u-p-3"><h3 class="cl-empty-state-title">Cejusc</h3><p class="cl-empty-state-text">Acompanhamento de cumprimento da medida protetiva junto ao Cejusc</p></div>
-        <div class="container-md u-px-3"><div class="cl-card"><div class="cl-card-header"><span class="cl-card-title">Novo cadastro</span></div><div class="cl-card-body"><div class="cl-form-row u-gap-x-3"><div class="cl-form-col u-pb-2"><label for="input-processo" class="cl-form-label cl-form-size-md">Processo</label><input type="text" class="cl-form-control cl-form-size-lg" id="input-processo" placeholder="Número do processo"></div><div class="cl-form-col u-pb-2"><label for="input-reu" class="cl-form-label cl-form-size-md">Requerido</label><input type="text" class="cl-form-control cl-form-size-xxl" id="input-reu" value="Nome do requerido"></div></div></div><div class="cl-card-footer"><button type="button" class="cl-btn cl-btn-primary u-mr-2">Cadastrar</button></div></div></div>
-        <div class="container-md u-px-3 u-mt-3"><div class="cl-card"><div class="cl-card-header"><span class="cl-card-title">Lista de Réus em acompanhamento</span></div><div class="cl-card-body"><div class="cl-table-responsive"><table class="cl-table cl-table-striped cl-table-hover"><thead><tr><th>Processo</th><th>Requerido</th><th>Referência</th><th>Status</th><th>Ações</th></tr></thead><tbody><tr><td>0804565-55.2025.8.05.0103</td><td>Gabriel Silva de Jesus</td><td>Janeiro/2026</td><td>Ag. Curso</td><td><button class="cl-btn cl-btn-primary cl-btn-sm">Visualizar</button></td></tr></tbody></table></div></div></div></div>
+    <body class="page-internal">
+        <div class="spacing-top-page"></div>
+
+        <header class="header-page">
+            <div class="location">
+                <span class="all">Interno - Cartório -</span>
+                <span class="specific">CEJUSC</span>
+            </div>
+            <h1 class="title-page">CEJUSC</h1>
+            <p class="description-page">Controle dos encaminhamentos enviados ao Centro Judiciário de Solução de Conflitos.</p>
+        </header>
+
+        <main class="container-full card-page">
+            <div class="card-title">
+                <div class="display-flex col col-fit justify-start">
+                    <h2>Registros CEJUSC</h2>
+                    <p class="description-page">Processo, parte e data de envio ao CEJUSC.</p>
+                </div>
+                <button class="btn btn-primary width-300" type="button">Novo cadastro</button>
+            </div>
+
+            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="display-flex row row-fit justify-start gap-y-md">
+                    <div class="col">
+                        <label for="filter-processo">Pesquisar processo ou parte</label>
+                        <input class="width-400 height-md" type="search" id="filter-processo" placeholder="Pesquisar">
+                    </div>
+                    <div class="col">
+                        <label for="filter-month">Mês da data de envio</label>
+                        <input class="width-250 height-md" type="month" id="filter-month">
+                    </div>
+                </div>
+                <div class="display-flex row row-fit justify-end gap-y-md">
+                    <div class="col">
+                        <label for="items-per-page">Itens por página</label>
+                        <select class="width-150 height-md" id="items-per-page">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="col">
+                        <label for="export-type">Exportar lista</label>
+                        <select class="width-200 height-md" id="export-type">
+                            <option value="" selected>Exportar</option>
+                            <option value="pdf">Gerar PDF</option>
+                            <option value="csv">Gerar CSV</option>
+                            <option value="print">Imprimir</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
+                <span class="text">1 registro encontrado.</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Processo</th>
+                            <th>Nome da parte</th>
+                            <th>Data de envio ao CEJUSC</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0804565-55.2025.8.05.0103</td>
+                            <td>Gabriel Silva de Jesus</td>
+                            <td>15/01/2026</td>
+                            <td><button class="btn btn-secondary btn-sm" type="button">Editar</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+                <span class="pagination-info">Mostrando 1-1 de 1 registro</span>
+                <div class="pagination-controls">
+                    <div class="pagination-symbol disabled" aria-label="Página anterior"><i class="fi fi-rr-angle-small-left"></i></div>
+                    <div class="pagination-number active">1</div>
+                    <div class="pagination-symbol disabled" aria-label="Próxima página"><i class="fi fi-rr-angle-small-right"></i></div>
+                </div>
+            </div>
+        </main>
     </body>
 </html>
