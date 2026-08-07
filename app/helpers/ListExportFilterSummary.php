@@ -34,6 +34,11 @@ final class ListExportFilterSummary
                 self::pair($parts, 'Processo', (string) ($get['processo'] ?? ''));
                 break;
 
+            case 'cejusc':
+                self::pair($parts, 'Mês de envio', (string) ($get['mes_envio'] ?? ''));
+                self::pair($parts, 'Busca', (string) ($get['q'] ?? ''));
+                break;
+
             case 'oficioscartorio':
             case 'oficiosgabinete':
                 self::pair($parts, 'Status', (string) ($get['status'] ?? ''));

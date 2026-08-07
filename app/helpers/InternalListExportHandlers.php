@@ -11,6 +11,7 @@ require_once __DIR__ . '/../services/GabineteMonitoramentoEletronicoService.php'
 require_once __DIR__ . '/../services/GabineteReusPresosService.php';
 require_once __DIR__ . '/../services/CartasExpedidasService.php';
 require_once __DIR__ . '/../services/CartasRecebidasService.php';
+require_once __DIR__ . '/../services/CejuscRegistrosService.php';
 require_once __DIR__ . '/../services/SalaAudienciasPautaService.php';
 require_once __DIR__ . '/../services/SalaAudienciasAtaService.php';
 require_once __DIR__ . '/../services/PessoasService.php';
@@ -56,6 +57,7 @@ final class InternalListExportHandlers
             'reuspresos' => [self::class, 'reusPresos'],
             'cartasexpedidas' => [self::class, 'cartasExpedidas'],
             'cartasrecebidas' => [self::class, 'cartasRecebidas'],
+            'cejusc' => [self::class, 'cejusc'],
             'salapauta' => [self::class, 'salaPauta'],
             'salapainel' => [self::class, 'salaPauta'],
             'estudapauta' => [self::class, 'salaPautaEstudantes'],
@@ -315,6 +317,38 @@ final class InternalListExportHandlers
                 ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],
             'rows' => $rows,
+        ];
+    }
+
+    /** @param array<string, mixed> $get */
+    private static function cejusc(PDO $pdo, string $userId, array $get): array
+    {
+        $month = trim((string) ($get['mes_envio'] ?? ''));
+        if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month)) {
+            throw new InvalidArgumentException('Selecione um mês para exportar os registros CEJUSC.');
+        }
+        $service = new CejuscRegistrosService($pdo);
+        $rows = $service->listAll([
+            'q' => trim((string) ($get['q'] ?? '')),
+            'mes_envio' => $month,
+        ]);
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = [
+                'numero_processo' => $row['numero_processo'] ?? '',
+                'nome_parte' => $row['nome_parte'] ?? '',
+                'data_envio_cejusc' => (($t = strtotime((string) ($row['data_envio_cejusc'] ?? ''))) !== false) ? date('d/m/Y', $t) : '',
+            ];
+        }
+        return [
+            'title' => 'Lista de encaminhamentos ao CEJUSC',
+            'slug' => 'cejusc',
+            'columns' => [
+                ['key' => 'numero_processo', 'label' => 'Processo'],
+                ['key' => 'nome_parte', 'label' => 'Nome da parte'],
+                ['key' => 'data_envio_cejusc', 'label' => 'Data de envio ao CEJUSC'],
+            ],
+            'rows' => $out,
         ];
     }
 
