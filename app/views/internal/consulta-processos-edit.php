@@ -32,6 +32,7 @@ $partesInstituicoesRepoFicha = new PartesInstituicoesRepository($connection);
 $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
 $instituicoesPorParteFicha = [];
 $documentosPorParteFicha = [];
+$classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -52,13 +53,44 @@ $documentosPorParteFicha = [];
                 <h1 class="title-page"><?php echo htmlspecialchars($processo['numero_processo'] ?? 'Processo'); ?></h1>
                 <p class="description-page" style="margin-top: 0;">Classe: <?php echo htmlspecialchars($processo['classe_nome'] ?? '—'); ?></p>
             </div>
-            <div class="display-flex row row-fit align-center justify-end gap-y-md">
-                <button type="button" class="btn btn-primary-outline" data-nav-href="/frame.php?page=processosedit&id=<?php echo urlencode($processo['id'] ?? ''); ?>">Editar processo</button>
-            </div>
         </div>
     </div>
     <div class="container-full card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">
+        <input type="hidden" id="proc-id" value="<?php echo htmlspecialchars((string) ($processo['id'] ?? ''), ENT_QUOTES); ?>">
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Classe processual</h2>
+        </div>
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="proc-classe-atual">Classe atual</label>
+                    <input type="text" class="width-700 height-md" id="proc-classe-atual" value="<?php echo htmlspecialchars($classeNomeAtual !== '' ? $classeNomeAtual : 'Classe não cadastrada', ENT_QUOTES); ?>" readonly>
+                </div>
+            </div>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="proc-classe-codigo"><?php echo $classeNomeAtual !== '' ? 'Alterar classe processual' : 'Incluir classe processual'; ?></label>
+                    <input type="text" class="width-300 height-md" id="proc-classe-codigo" placeholder="Ex.: 283" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
+                </div>
+            </div>
+            <div class="display-flex col col-full gap-y-md" id="proc-classe-resultado" style="display: none;">
+                <div class="display-flex row row-full flex-wrap align-end gap-y-md" id="proc-classe-bloco-existente" style="display: none; gap: 12px;">
+                    <div class="col">
+                        <label for="proc-classe-nome-existente">Classe encontrada no banco</label>
+                        <input type="text" class="width-700 height-md" id="proc-classe-nome-existente" readonly>
+                    </div>
+                    <button type="button" class="btn btn-primary height-md" id="btn-proc-classe-vincular"><?php echo $classeNomeAtual !== '' ? 'Alterar classe' : 'Incluir classe'; ?></button>
+                </div>
+                <div class="display-flex row row-full flex-wrap align-end gap-y-md" id="proc-classe-bloco-novo" style="display: none; gap: 12px;">
+                    <div class="col">
+                        <label for="proc-classe-nome-novo">Nome da classe (não cadastrada)</label>
+                        <input type="text" class="width-700 height-md" id="proc-classe-nome-novo" maxlength="200" placeholder="Informe o nome para cadastrar a classe">
+                    </div>
+                    <button type="button" class="btn btn-primary height-md" id="btn-proc-classe-cadastrar">Cadastrar e vincular</button>
+                </div>
+            </div>
+        </div>
         <?php if ($prioridadesFichaEstado !== null): ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Prioridades</h2>
@@ -306,6 +338,7 @@ $documentosPorParteFicha = [];
     </script>
     <script src="/assets/js/modules/audiencias/pauta-edit-prioridades.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit-prioridades.js') ?: time(); ?>"></script>
     <?php endif; ?>
+    <script src="/assets/js/shared/processos-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/processos-edit.js') ?: time(); ?>"></script>
     <script>
         window.PROCESSO_ASSUNTOS_PROCESSO_ID = <?php echo json_encode($processoIdFicha, JSON_UNESCAPED_UNICODE); ?>;
         window.PROCESSO_ASSUNTOS_INITIAL = <?php echo json_encode($assuntosFicha, JSON_UNESCAPED_UNICODE); ?>;
@@ -315,6 +348,9 @@ $documentosPorParteFicha = [];
     </script>
     <script>
         (function () {
+            if (window.App && App.ProcessosEdit && typeof App.ProcessosEdit.initialize === 'function') {
+                App.ProcessosEdit.initialize();
+            }
             if (!window.App || !App.ConsultaProcessosEdit || typeof App.ConsultaProcessosEdit.initialize !== 'function') {
                 return;
             }

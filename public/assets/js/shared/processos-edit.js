@@ -2,7 +2,7 @@
     'use strict';
 
     const App = global.App || (global.App = {});
-    const POST_RELOAD_TOAST_KEY = 'processosedit.postReloadToast';
+    const POST_RELOAD_TOAST_KEY = 'consultaprocessosedit.postReloadToast';
 
     function notify(type, title, message) {
         if (App.Page && typeof App.Page.notify === 'function') {

@@ -266,7 +266,7 @@ $stateOptions = [
                     $classeValue = $classeReadonly ? $classeNome : '';
                     $classeClass = 'width-600 height-md readonly';
                     ?>
-                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>" placeholder="Sem classe vinculada — cadastre em Consultar processo &gt; Editar processo" readonly>
+                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>" placeholder="Sem classe vinculada — cadastre na página do processo" readonly>
                 </div>
                 <div class="col filter">
                     <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
