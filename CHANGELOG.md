@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0003
+
+**Data:** 2026-08-26 19:09:43 | **Commit:** `e16555d7` | **Tipo:** `patch`
+
+- feat(listagens): replicar bloco de historico
+
 ## V. 1.87.0002
 
 **Data:** 2026-08-26 19:03:43 | **Commit:** `aa9a2ca6` | **Tipo:** `patch`
@@ -5439,6 +5445,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

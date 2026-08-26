@@ -13,16 +13,7 @@ if ($meta === null) {
     return;
 }
 
-$userPrefix = trim((string) ($meta['user_prefix'] ?? 'Cadastrado por'));
-$criadorNome = trim((string) ($meta['criador_nome'] ?? ''));
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
-$linhaAutorFixa = trim((string) ($meta['linha_autor'] ?? ''));
-$linhaAutor = $linhaAutorFixa !== ''
-    ? $linhaAutorFixa
-    : RegistroMetadataHelper::formatarLinhaAutor($userPrefix, $criadorNome);
-$dataCadastro = trim((string) ($meta['data_cadastro_texto'] ?? ''));
-$dataEventoClasse = trim((string) ($meta['data_evento_classe'] ?? ''));
-$dataEventoTexto = trim((string) ($meta['data_evento_texto'] ?? ''));
 $idRegistro = trim((string) ($meta['id'] ?? ''));
 $showEdit = !empty($meta['show_edit']);
 $showCancel = !empty($meta['show_cancel']);
@@ -35,27 +26,48 @@ $cancelLabel = trim((string) ($meta['cancel_label'] ?? 'Cancelar registro'));
 $deleteLabel = trim((string) ($meta['delete_label'] ?? 'Remover registro'));
 $idTitle = $idRegistro !== '' ? 'ID ' . $idRegistro : '';
 
-$mostrarEvento = ($dataEventoClasse === 'updated' || $dataEventoClasse === 'canceled') && $dataEventoTexto !== '';
-$classesEvento = $mostrarEvento ? 'data-update-date ' . $dataEventoClasse : '';
-
 $mostrarEdit = $showEdit && $editHref !== '';
 $mostrarId = $idRegistro !== '';
 $mostrarCancel = $showCancel && $cancelEndpoint !== '' && $idRegistro !== '';
 $mostrarDelete = $showDelete && $deleteEndpoint !== '' && $idRegistro !== '';
 $mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel || $mostrarDelete;
+$historicoLinhas = is_array($meta['historico_linhas'] ?? null) ? $meta['historico_linhas'] : [];
 ?>
-<div class="container-data-create">
-    <div class="data-create-user"><?php echo htmlspecialchars($linhaAutor, ENT_QUOTES, 'UTF-8'); ?></div>
-    <?php if ($dataCadastro !== ''): ?>
-    <div class="data-create-date"><?php echo htmlspecialchars($dataCadastro, ENT_QUOTES, 'UTF-8'); ?></div>
-    <?php endif; ?>
-    <div class="data-create-buttons">
-        <div class="left">
-            <?php if ($mostrarEvento): ?>
-            <div class="<?php echo htmlspecialchars($classesEvento, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($dataEventoTexto, ENT_QUOTES, 'UTF-8'); ?></div>
+<div class="container-historical container-sm">
+    <div class="container-line">
+        <div class="line-content double-line">
+            <span class="content-classe">Histórico de movimentações</span>
+            <?php if ($historicoLinhas === []): ?>
+                <span class="content-assuntos over">Nenhuma movimentação registrada</span>
+            <?php else: ?>
+                <?php foreach ($historicoLinhas as $hist):
+                    if (!is_array($hist)) {
+                        continue;
+                    }
+                    $dh = trim((string) ($hist['data_hora'] ?? ''));
+                    $rotulo = trim((string) ($hist['rotulo'] ?? ''));
+                    $autor = trim((string) ($hist['autor'] ?? ''));
+                    $contentClass = trim((string) ($hist['content_class'] ?? ''));
+                    $historicoTexto = '';
+                    if ($dh !== '' && $rotulo !== '') {
+                        $historicoTexto = '- ' . $dh . ' | ' . $rotulo;
+                        if ($autor !== '') {
+                            $historicoTexto .= ' por ' . $autor;
+                        }
+                    }
+                    if ($historicoTexto === '') {
+                        continue;
+                    }
+                ?>
+                    <span class="content-assuntos<?php echo $contentClass !== '' ? ' ' . htmlspecialchars($contentClass, ENT_QUOTES, 'UTF-8') : ''; ?>"><?php echo htmlspecialchars($historicoTexto, ENT_QUOTES, 'UTF-8'); ?></span>
+                <?php endforeach; ?>
             <?php endif; ?>
         </div>
-        <?php if ($mostrarAcoes): ?>
+    </div>
+
+    <?php if ($mostrarAcoes): ?>
+    <div class="data-create-buttons historical-actions">
+        <div class="left"></div>
         <div class="right">
             <?php if ($mostrarEdit): ?>
             <button type="button"
@@ -102,6 +114,6 @@ $mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel || $mostrarDelete;
             </button>
             <?php endif; ?>
         </div>
-        <?php endif; ?>
     </div>
+    <?php endif; ?>
 </div>

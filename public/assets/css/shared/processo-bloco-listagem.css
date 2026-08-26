@@ -163,12 +163,14 @@
     font-weight: 400;
 }
 
-.container-data-create .processo-bloco-tooltip {
+.container-data-create .processo-bloco-tooltip,
+.container-historical .processo-bloco-tooltip {
     position: relative;
     cursor: default;
 }
 
-.container-data-create .processo-bloco-tooltip::after {
+.container-data-create .processo-bloco-tooltip::after,
+.container-historical .processo-bloco-tooltip::after {
     content: attr(data-title);
     position: absolute;
     bottom: calc(100% + 8px);
@@ -188,7 +190,8 @@
 }
 
 /* Metadados (canto direito da lista): ancora à direita do ícone, texto expande à esquerda */
-.container-data-create .processo-bloco-tooltip::after {
+.container-data-create .processo-bloco-tooltip::after,
+.container-historical .processo-bloco-tooltip::after {
     display: inline-block;
     left: auto;
     right: 0;
@@ -201,12 +204,14 @@
     word-break: normal;
 }
 
-.container-data-create .btn-mini-id.processo-bloco-tooltip::after {
+.container-data-create .btn-mini-id.processo-bloco-tooltip::after,
+.container-historical .btn-mini-id.processo-bloco-tooltip::after {
     white-space: normal;
     word-break: break-word;
 }
 
-.container-data-create .processo-bloco-tooltip:hover::after {
+.container-data-create .processo-bloco-tooltip:hover::after,
+.container-historical .processo-bloco-tooltip:hover::after {
     opacity: 1;
     visibility: visible;
     transform: translateY(-2px);
@@ -337,6 +342,101 @@
                 transition: filter 0.3s ease, opacity 0.3s ease;
             }
 
+/* HISTORICO DE MOVIMENTACOES */
+.container-historical {
+    position: relative;
+    min-width: 20px;
+    min-height: 20px;
+    width: 307px;
+    padding: 2px;
+    gap: 2px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: flex-start;
+    font-family: "JetBrains Mono", monospace;
+}
+
+.container-historical.container-sm {
+    width: 307px;
+}
+
+.container-historical .container-line {
+    width: 100%;
+    min-height: 20px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.container-historical .line-content {
+    width: 100%;
+    min-height: 25px;
+    padding: 0 5px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.container-historical .line-content.double-line {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 5px;
+}
+
+.container-historical .content-classe {
+    width: 100%;
+    font-family: "Syne Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: #505050;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.container-historical .content-assuntos {
+    width: 100%;
+    font-family: "Syne Mono", monospace;
+    font-size: 9px;
+    font-weight: 400;
+    color: #505050;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.container-historical .content-assuntos.over {
+    color: #707070;
+    font-size: 9px;
+    font-weight: 400;
+}
+
+.container-historical .content-assuntos.text-canceled {
+    color: var(--color-text-canceled);
+}
+
+.container-historical .historical-actions {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: fit-content;
+    margin-top: 0;
+    z-index: 2;
+}
+
+.container-historical .historical-actions .left {
+    display: none;
+}
+
 /* Listagem de ofícios: bloco de metadados como última coluna */
 .register.register-oficio-list .register-oficio-list-row {
     flex-wrap: nowrap;
@@ -352,7 +452,8 @@
     flex: 0 0 auto;
 }
 
-.register.register-oficio-list .container-data-create {
+.register.register-oficio-list .container-data-create,
+.register.register-oficio-list .container-historical {
     flex: 0 0 300px;
     width: 300px;
     height: auto;
@@ -363,7 +464,8 @@
 }
 
 /* Ofícios — cancelar (e editar no cartório): visível no hover da linha, como abrir/copiar no bloco processo */
-.register.register-oficio-list .container-data-create .data-create-buttons .right {
+.register.register-oficio-list .container-data-create .data-create-buttons .right,
+.register.register-oficio-list .container-historical .data-create-buttons .right {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -371,7 +473,8 @@
 }
 
 @media (hover: none) and (pointer: coarse) {
-    .register.register-oficio-list .container-data-create .data-create-buttons .right {
+    .register.register-oficio-list .container-data-create .data-create-buttons .right,
+    .register.register-oficio-list .container-historical .data-create-buttons .right {
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
@@ -379,9 +482,13 @@
 }
 
 .register.register-oficio-list:hover .container-data-create .data-create-buttons .right,
+.register.register-oficio-list:hover .container-historical .data-create-buttons .right,
 .register.register-oficio-list:focus-within .container-data-create .data-create-buttons .right,
+.register.register-oficio-list:focus-within .container-historical .data-create-buttons .right,
 .register[data-oficio-id]:hover .container-data-create .data-create-buttons .right,
-.register[data-oficio-id]:focus-within .container-data-create .data-create-buttons .right {
+.register[data-oficio-id]:hover .container-historical .data-create-buttons .right,
+.register[data-oficio-id]:focus-within .container-data-create .data-create-buttons .right,
+.register[data-oficio-id]:focus-within .container-historical .data-create-buttons .right {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
@@ -401,7 +508,8 @@
     align-items: center;
 }
 
-.register.register-with-metadata .container-data-create {
+.register.register-with-metadata .container-data-create,
+.register.register-with-metadata .container-historical {
     flex: 0 0 300px;
     width: 300px;
     height: auto;
@@ -428,7 +536,8 @@
     align-items: center;
 }
 
-.register.register-with-metadata .container-data-create .data-create-buttons .right {
+.register.register-with-metadata .container-data-create .data-create-buttons .right,
+.register.register-with-metadata .container-historical .data-create-buttons .right {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -436,7 +545,8 @@
 }
 
 @media (hover: none) and (pointer: coarse) {
-    .register.register-with-metadata .container-data-create .data-create-buttons .right {
+    .register.register-with-metadata .container-data-create .data-create-buttons .right,
+    .register.register-with-metadata .container-historical .data-create-buttons .right {
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
@@ -444,11 +554,17 @@
 }
 
 .register.register-with-metadata:hover .container-data-create .data-create-buttons .right,
+.register.register-with-metadata:hover .container-historical .data-create-buttons .right,
 .register.register-with-metadata:focus-within .container-data-create .data-create-buttons .right,
+.register.register-with-metadata:focus-within .container-historical .data-create-buttons .right,
 .register.register-with-metadata[data-registro-id]:hover .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-registro-id]:hover .container-historical .data-create-buttons .right,
 .register.register-with-metadata[data-registro-id]:focus-within .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-registro-id]:focus-within .container-historical .data-create-buttons .right,
 .register.register-with-metadata[data-carta-id]:hover .container-data-create .data-create-buttons .right,
-.register.register-with-metadata[data-carta-id]:focus-within .container-data-create .data-create-buttons .right {
+.register.register-with-metadata[data-carta-id]:hover .container-historical .data-create-buttons .right,
+.register.register-with-metadata[data-carta-id]:focus-within .container-data-create .data-create-buttons .right,
+.register.register-with-metadata[data-carta-id]:focus-within .container-historical .data-create-buttons .right {
     opacity: 1;
     visibility: visible;
     pointer-events: auto;

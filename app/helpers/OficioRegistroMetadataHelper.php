@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Monta dados do bloco `container-data-create` nas listagens de ofícios.
+ * Monta dados do bloco `container-historical` nas listagens de ofícios.
  */
 final class OficioRegistroMetadataHelper
 {
@@ -101,13 +101,24 @@ final class OficioRegistroMetadataHelper
 
         $dataEventoClasse = '';
         $dataEventoTexto = '';
+        $historicoEventoRotulo = '';
+        $historicoEventoData = '';
+        $historicoEventoAutor = '';
+        $historicoEventoClasse = '';
         if ($status === 'cancelada') {
             $dataEventoClasse = 'canceled';
             $ref = $updatedRaw !== '' ? $updatedRaw : $createdRaw;
             $dataEventoTexto = RegistroMetadataHelper::formatarEventoComAutor('Cancelado em', $ref, $editorCompacto);
+            $historicoEventoRotulo = 'Cancelado';
+            $historicoEventoData = $ref;
+            $historicoEventoAutor = $editorCompacto !== '' ? $editorCompacto : $criadorCompacto;
+            $historicoEventoClasse = 'text-canceled';
         } elseif ($updatedRaw !== '' && $createdRaw !== '' && self::isUpdatedAfterCreated($createdRaw, $updatedRaw)) {
             $dataEventoClasse = 'updated';
             $dataEventoTexto = RegistroMetadataHelper::formatarEventoComAutor('Atualizado em', $updatedRaw, $editorCompacto);
+            $historicoEventoRotulo = 'Atualizado';
+            $historicoEventoData = $updatedRaw;
+            $historicoEventoAutor = $editorCompacto !== '' ? $editorCompacto : $criadorCompacto;
         }
 
         $editHref = '';
@@ -137,6 +148,14 @@ final class OficioRegistroMetadataHelper
             'edit_href' => $editHref,
             'show_cancel' => $showCancel,
             'cancel_endpoint' => $cancelEndpoint,
+            'historico_linhas' => RegistroMetadataHelper::montarLinhasHistoricoRegistro(
+                $createdRaw,
+                $criadorCompacto !== '' ? $criadorCompacto : $criador,
+                $historicoEventoData,
+                $historicoEventoRotulo,
+                $historicoEventoAutor,
+                $historicoEventoClasse
+            ),
         ];
     }
 

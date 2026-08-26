@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * Monta dados do bloco `container-data-create` nas listagens internas.
+ * Monta dados do bloco `container-historical` nas listagens internas.
  */
 final class RegistroMetadataHelper
 {
@@ -173,11 +173,19 @@ final class RegistroMetadataHelper
 
         $dataEventoClasse = '';
         $dataEventoTexto = '';
+        $historicoEventoRotulo = '';
+        $historicoEventoData = '';
+        $historicoEventoAutor = '';
+        $historicoEventoClasse = '';
         $movementFromSubtarefa = !empty($config['movement_from_subtarefa']);
         if (in_array($status, $cancelStatuses, true)) {
             $dataEventoClasse = 'canceled';
             $ref = $updatedRaw !== '' ? $updatedRaw : $createdRaw;
             $dataEventoTexto = self::formatarEventoComAutor('Cancelado em', $ref, $editor);
+            $historicoEventoRotulo = 'Cancelado';
+            $historicoEventoData = $ref;
+            $historicoEventoAutor = self::compactarNome($editor) !== '' ? self::compactarNome($editor) : self::compactarNome($criador);
+            $historicoEventoClasse = 'text-canceled';
         } elseif ($movementFromSubtarefa) {
             $subtarefasAll = $row['SubtarefasAll'] ?? [];
             if (!is_array($subtarefasAll)) {
@@ -198,10 +206,16 @@ final class RegistroMetadataHelper
                     $ultimaSubtarefa['data'],
                     $editorMovimentacao
                 );
+                $historicoEventoRotulo = 'Atualizado';
+                $historicoEventoData = $ultimaSubtarefa['data'];
+                $historicoEventoAutor = $editorMovimentacao;
             }
         } elseif ($updatedRaw !== '' && $createdRaw !== '' && self::isUpdatedAfterCreated($createdRaw, $updatedRaw)) {
             $dataEventoClasse = 'updated';
             $dataEventoTexto = self::formatarEventoComAutor('Atualizado em', $updatedRaw, $editor);
+            $historicoEventoRotulo = 'Atualizado';
+            $historicoEventoData = $updatedRaw;
+            $historicoEventoAutor = self::compactarNome($editor) !== '' ? self::compactarNome($editor) : self::compactarNome($criador);
         }
 
         $showEdit = !array_key_exists('show_edit', $config)
@@ -232,6 +246,14 @@ final class RegistroMetadataHelper
             'cancel_toast_key' => trim((string) ($config['cancel_toast_key'] ?? '')),
             'cancel_label' => trim((string) ($config['cancel_label'] ?? 'Cancelar registro')),
             'edit_label' => trim((string) ($config['edit_label'] ?? 'Editar registro')),
+            'historico_linhas' => self::montarLinhasHistoricoRegistro(
+                $createdRaw,
+                $criador,
+                $historicoEventoData,
+                $historicoEventoRotulo,
+                $historicoEventoAutor,
+                $historicoEventoClasse
+            ),
         ];
     }
 
@@ -285,11 +307,19 @@ final class RegistroMetadataHelper
             'cancel_toast_key' => '',
             'cancel_label' => 'Cancelar registro',
             'edit_label' => 'Editar registro',
+            'historico_linhas' => self::montarLinhasHistoricoRegistro(
+                $cadastroRaw,
+                'sistema',
+                $ultimaAtualizacao['data'] ?? '',
+                $ultimaAtualizacao !== null ? 'Atualizado' : '',
+                $ultimaAtualizacao['editor'] ?? '',
+                ''
+            ),
         ];
     }
 
     /**
-     * Última subtarefa concluída (data + autor) para a coluna de metadados na listagem.
+     * Última subtarefa concluída (data + autor) para o histórico da listagem.
      *
      * @param list<array<string, mixed>> $subtarefasAll
      * @return array{data: string, editor: string}|null
@@ -709,6 +739,42 @@ final class RegistroMetadataHelper
         }
 
         return date('d/m/Y', $ts) . ' - ' . date('H:i', $ts);
+    }
+
+    /**
+     * @return list<array{data_hora: string, rotulo: string, autor: string, content_class: string}>
+     */
+    public static function montarLinhasHistoricoRegistro(
+        string $cadastroRaw,
+        string $criadorNome,
+        string $eventoRaw = '',
+        string $eventoRotulo = '',
+        string $eventoAutor = '',
+        string $eventoClasse = ''
+    ): array {
+        $linhas = [];
+        $cadastroTexto = self::formatarDataHoraHistoricoV2($cadastroRaw);
+        if ($cadastroTexto !== '') {
+            $linhas[] = [
+                'data_hora' => $cadastroTexto,
+                'rotulo' => 'Cadastrado',
+                'autor' => self::compactarNome($criadorNome),
+                'content_class' => '',
+            ];
+        }
+
+        $eventoTexto = self::formatarDataHoraHistoricoV2($eventoRaw);
+        $rotulo = trim($eventoRotulo);
+        if ($eventoTexto !== '' && $rotulo !== '') {
+            $linhas[] = [
+                'data_hora' => $eventoTexto,
+                'rotulo' => $rotulo,
+                'autor' => self::compactarNome($eventoAutor),
+                'content_class' => trim($eventoClasse),
+            ];
+        }
+
+        return $linhas;
     }
 
     /**
