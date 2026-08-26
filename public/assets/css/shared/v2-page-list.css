@@ -935,7 +935,7 @@
     .register-block {
         /* sizing */
         width: 260px;
-        height: 60px;
+        height: fit-content;
 
         /* flex custom */
         display: flex;
@@ -1042,8 +1042,6 @@
         flex-wrap: nowrap;
         justify-content: center;
         align-items: flex-start;
-        border: 1px solid #efefef;
-        border-radius: 3px;
         font-family: "JetBrains Mono", monospace;
     }
 
@@ -1162,10 +1160,9 @@
         font-weight: 400;
         color: #505050;
         line-height: 1.35;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
         overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .container-process .content-classe.over,

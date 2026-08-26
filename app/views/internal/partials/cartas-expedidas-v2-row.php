@@ -191,7 +191,35 @@ if ($sigiloso && $classeSemDados) {
 $assuntoExibicao = $assuntoSemDados
     ? 'Nenhum assunto cadastrado. Clique em sincronizar para buscar os dados com a API DataJud'
     : $assuntoTexto;
-$iconSigilo = '/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png';
+$limparCodigoClasseCompacta = static function (string $texto): string {
+    $textoLimpo = preg_replace('/^\s*\d+\s*-\s*/u', '', trim($texto));
+    return is_string($textoLimpo) && $textoLimpo !== '' ? $textoLimpo : trim($texto);
+};
+$limparCodigosAssuntosCompacto = static function (string $texto): string {
+    $partes = preg_split('/\s*;\s*/u', trim($texto)) ?: [];
+    $itens = [];
+    foreach ($partes as $parte) {
+        $parte = trim((string) $parte);
+        if ($parte === '') {
+            continue;
+        }
+        $parteLimpa = preg_replace('/^\s*\d+\s*-\s*/u', '', $parte);
+        $itens[] = is_string($parteLimpa) && $parteLimpa !== '' ? $parteLimpa : $parte;
+    }
+    return $itens !== [] ? implode(' | ', $itens) : trim($texto);
+};
+if (!$classeSemDados) {
+    $classeLinhaExibicao = $limparCodigoClasseCompacta($classeLinhaExibicao);
+    if ($sigiloso && str_starts_with($classeLinhaExibicao, 'SIGILOSO - ')) {
+        $classeLinhaExibicao = 'SIGILOSO - ' . $limparCodigoClasseCompacta(substr($classeLinhaExibicao, 11));
+    }
+}
+if (!$assuntoSemDados) {
+    $assuntoExibicao = $limparCodigosAssuntosCompacto($assuntoExibicao);
+}
+$iconSigilo = $mostrarSincronizar
+    ? '/assets/icons/Sign-Badge-Rectangular-Round-2--Streamline-Ultimate.png'
+    : '/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png';
 $iconPrioridade = '/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png';
 $iconAbrir = '/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png';
 $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
@@ -202,12 +230,10 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
             <div class="container-process container-sm">
                 <div class="container-line">
                     <div class="left">
-                        <?php if ($sigiloso): ?>
-                            <!-- mostrar essa div se o processo tiver sigilo -->
-                            <div class="line-cube box-private" title="Sigiloso" aria-label="Sigiloso">
-                                <img class="cube-icon" src="<?php echo htmlspecialchars($iconSigilo, ENT_QUOTES); ?>" alt="">
-                            </div>
-                        <?php endif; ?>
+                        <!-- mostrar essa div se o processo tiver sigilo -->
+                        <div class="line-cube box-private<?php echo $sigiloso ? '' : ' open'; ?>" title="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>" aria-label="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>">
+                            <img class="cube-icon" src="<?php echo htmlspecialchars($iconSigilo, ENT_QUOTES); ?>" alt="">
+                        </div>
 
                         <div
                             class="line-content box-number<?php echo $numero !== '' ? ' js-v2-copy-processo' : ''; ?>"
