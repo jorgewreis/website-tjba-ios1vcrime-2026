@@ -783,6 +783,7 @@ final class GabineteReusPresosService
         }
 
         $dataMov = trim((string) ($aud['data_audiencia'] ?? ''));
+        $dataAudienciaBr = $this->formatDataMovimentoBr($dataMov);
         $createdAt = trim((string) ($aud['updated_at'] ?? ''));
         $dataAlteracaoBr = $createdAt !== '' && ($tAlt = strtotime($createdAt)) !== false ? date('d/m/Y', $tAlt) : '';
 
@@ -804,9 +805,15 @@ final class GabineteReusPresosService
                 $createdAt = $fimEfetivo;
             }
         } elseif ($statusRaw === 'redesignada') {
-            $descricao = $tipoTexto . ' redesignada' . ($dataAlteracaoBr !== '' ? ' em ' . $dataAlteracaoBr : '');
+            $descricao = $tipoTexto . ' redesignada' . ($dataAudienciaBr !== '—' ? ' em ' . $dataAudienciaBr : '');
+            if ($dataAlteracaoBr !== '') {
+                $dataMov = date('Y-m-d', strtotime($createdAt));
+            }
         } elseif ($statusRaw === 'cancelada') {
-            $descricao = $tipoTexto . ' cancelada' . ($dataAlteracaoBr !== '' ? ' em ' . $dataAlteracaoBr : '');
+            $descricao = $tipoTexto . ' cancelada' . ($dataAudienciaBr !== '—' ? ' em ' . $dataAudienciaBr : '');
+            if ($dataAlteracaoBr !== '') {
+                $dataMov = date('Y-m-d', strtotime($createdAt));
+            }
         } else {
             $descricao = $tipoTexto;
         }
