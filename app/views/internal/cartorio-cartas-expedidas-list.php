@@ -190,6 +190,9 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&family=Syne+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/shared/reset.css?v=<?php echo (int) $resetCssV; ?>">
     <link rel="stylesheet" href="/assets/css/shared/v2-colors.css?v=<?php echo (int) $v2ColorsCssV; ?>">
     <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css?v=<?php echo (int) $v2PageListCssV; ?>">

@@ -142,10 +142,18 @@
 
     function bindCopyProcesso() {
         document.querySelectorAll('.js-v2-copy-processo').forEach(function (btn) {
-            btn.addEventListener('click', function (event) {
+            function handleCopy(event) {
                 event.preventDefault();
                 var numero = btn.getAttribute('data-processo-numero') || '';
                 copyProcessNumber(numero);
+            }
+
+            btn.addEventListener('click', handleCopy);
+            btn.addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+                handleCopy(event);
             });
         });
     }

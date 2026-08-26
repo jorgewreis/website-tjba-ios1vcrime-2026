@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <!-- STYLES -->
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/4.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syne+Mono&display=swap');
+    </style>
+
+    <!-- STYLES -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "JetBrains Mono", monospace;
+            padding: 10px;            
+        }
+
+        .organizer {
+            /* size */
+            width: 100vw;
+            height: fit-content;
+
+            /* flex custom */
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 5px;
+        }
+
+        .container-process {
+            /* position */
+            position: relative;
+
+            /* size */
+            min-width: 20px;
+            min-height: 20px;
+
+            /* space */
+            padding: 2px;
+            gap: 2px;
+            box-sizing: border-box;
+
+            /* flex custom */
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: flex-start;
+
+            /* theme */
+            border: 1px solid #efefef;
+            border-radius: 3px;
+        }
+
+            .container-sm {
+                width: 307px;
+            }
+
+            .container-lg {
+                width: 450px;
+            }
+        
+        .container-line {
+            /* size */
+            width: 100%;
+            min-height: 20px;
+
+            /* space */
+
+            /* flex custom */
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            align-items: center;
+        }
+            .container-line .left{
+                /* size */
+                width: calc(100% - 54px);
+
+                /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                align-items: center;
+
+                gap: 2px;
+            }
+            .container-line .right{
+                 /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: flex-end;
+                align-items: center;
+
+                gap: 2px;
+            }
+            .line-cube {
+                /* position */
+                position: relative;
+
+                /* size */
+                width: 25px;
+                height: 25px;
+
+                /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: center;
+                align-items: center;
+                
+                /* theme */
+                background-color: #efefef;
+            }
+                .cube-icon {
+                    /* size */
+                    width: 18px;
+                    height: 18px;
+                    filter: grayscale(1) brightness(0.5);
+                }
+                .line-cube.open .cube-icon {
+                    filter: grayscale(0);
+                }
+            .line-content {
+                /* size */
+                width: 100%;
+                min-height: 25px;
+
+                /* space */
+                padding: 0 5px;
+
+                /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                align-items: center;
+                
+                /* theme */
+                background-color: #efefef;
+            }
+                .line-content.double-line {
+                    flex-direction: column;
+                    justify-content: flex-start;
+                    align-items: flex-start;
+                    padding: 5px;
+                }
+                .content-number {
+                    /* size */
+                    width: 100%;
+
+                    /* text */
+                    font-family: "Syne Mono", monospace;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #505050;
+                }
+                .content-classe {
+                    /* size */
+                    width: 100%;
+
+                    /* text */
+                    font-family: "Syne Mono", monospace;
+                    font-size: 10px;
+                    font-weight: 600;
+                    color: #505050;
+                }
+                .content-assuntos {
+                    /* size */
+                    width: 100%;
+
+                    /* text */
+                    font-family: "Syne Mono", monospace;
+                    font-size: 9px;
+                    font-weight: 400;
+                    color: #505050;
+                }
+                .content-classe.over,
+                .content-assuntos.over {
+                    color: #707070;
+                    font-size: 9px;
+                    font-weight: 400;
+                }
+    </style>
+</head>
+<body>
+
+    <div class="organizer">
+
+        <!-- CONTAINER PROCESSO - COMPACTO - COMPLETO -->
+        <div class="container-process container-sm">
+            <div class="container-line">
+                <div class="left">
+                    <!-- mostrar essa div se o processo tiver sigilo -->
+                    <div class="line-cube box-private">                    
+                        <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png">
+                    </div>
+
+                    <div class="line-content box-number">
+                        <span class="content-number">8011335-36.2026.8.05.0103</span>
+                    </div>
+                </div>
+
+                <div class="right">
+                    <div class="line-cube box-open open">
+                        <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png">
+                    </div>
+                    <div class="line-cube box-open open">
+                        <img class="cube-icon" src="./../../../public/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png">
+                    </div>
+                </div>
+            </div>
+            <div class="container-line">
+                <div class="line-content double-line">
+                    <span class="content-classe">SIGILOSO - Ação Penal - Procedimento Ordinário</span>
+                    <span class="content-assuntos">Leve | Ameaça | <strong>Réu Preso</strong></span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- CONTAINER PROCESSO - COMPACTO - MINIMAL -->
+        <div class="container-process container-sm">
+            <div class="container-line">
+                <div class="left">
+                    <!-- mostrar essa div se o processo tiver sigilo -->
+                    <div class="line-cube box-private open">
+                        <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png">
+                    </div>
+
+                    <div class="line-content box-number">
+                        <span class="content-number">8010730-90.2026.8.05.0103</span>
+                    </div>
+                </div>
+
+                <div class="right">
+                    <div class="line-cube box-open open">                        
+                    </div>
+                    <div class="line-cube box-open open">
+                        <img class="cube-icon" src="./../../../public/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png">
+                    </div>
+                </div>
+            </div>
+            <div class="container-line">
+                <div class="line-content double-line">
+                    <span class="content-classe">Ação Penal - Procedimento Ordinário</span>
+                    <span class="content-assuntos">Porte Ilegal de Arma de Fogo</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- CONTAINER PROCESSO - FULL - COMPLETO -->
+        <div class="container-process container-lg">
+            <div class="container-line">
+                <div class="left">
+                    <!-- mostrar essa div se o processo tiver sigilo -->
+                    <div class="line-cube box-private">                    
+                        <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png">
+                    </div>
+
+                    <div class="line-content box-number">
+                        <span class="content-number">8010846-96.2026.8.05.0103</span>
+                    </div>
+                </div>
+
+                <div class="right">
+                    <div class="line-cube box-open open">
+                        <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png">
+                    </div>
+                    <div class="line-cube box-open open">
+                        <img class="cube-icon" src="./../../../public/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png">
+                    </div>
+                </div>
+            </div>
+            <div class="container-line">
+                <div class="line-content double-line">
+                    <span class="content-classe">SIGILOSO - Ação Penal - Procedimento Ordinário (283)</span>
+                    <span class="content-assuntos">Leve (3386) | Ameaça (3402) | <strong>Réu Preso</strong></span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- CONTAINER PROCESSO - FULL - MINIMAL -->
+        <div class="container-process container-lg">
+            <div class="container-line">
+                <div class="left">
+                    <!-- mostrar essa div se o processo tiver sigilo -->
+                    <div class="line-cube box-private open">
+                        <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round-2--Streamline-Ultimate.png">
+                    </div>
+
+                    <div class="line-content box-number">
+                        <span class="content-number">8006360-68.2026.8.05.0103</span>
+                    </div>
+                </div>
+
+                <div class="right">
+                    <div class="line-cube box-open open">                        
+                    </div>
+
+                    <!-- mostrar essa div desse jeito se o processo não tiver nenhuma classe ou assunto cadastrado -->
+                    <div class="line-cube box-open open">
+                        <img class="cube-icon" src="./../../../public/assets/icons/Server-Sync-1--Streamline-Ultimate.png">
+                    </div>
+                </div>
+            </div>
+            <div class="container-line">
+                <div class="line-content double-line">
+                    <span class="content-classe over">Nenhuma classe cadastrada</span>
+                    <span class="content-assuntos over">Nenhum assunto cadastrado. Clique em sincronizar para buscar os dados com a api DataJud</span>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</body>
+</html>
