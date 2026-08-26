@@ -26,10 +26,13 @@ $dataEventoTexto = trim((string) ($meta['data_evento_texto'] ?? ''));
 $idRegistro = trim((string) ($meta['id'] ?? ''));
 $showEdit = !empty($meta['show_edit']);
 $showCancel = !empty($meta['show_cancel']);
+$showDelete = !empty($meta['show_delete']);
 $editHref = trim((string) ($meta['edit_href'] ?? ''));
 $cancelEndpoint = trim((string) ($meta['cancel_endpoint'] ?? ''));
+$deleteEndpoint = trim((string) ($meta['delete_endpoint'] ?? ''));
 $editLabel = trim((string) ($meta['edit_label'] ?? 'Editar registro'));
 $cancelLabel = trim((string) ($meta['cancel_label'] ?? 'Cancelar registro'));
+$deleteLabel = trim((string) ($meta['delete_label'] ?? 'Remover registro'));
 $idTitle = $idRegistro !== '' ? 'ID ' . $idRegistro : '';
 
 $mostrarEvento = ($dataEventoClasse === 'updated' || $dataEventoClasse === 'canceled') && $dataEventoTexto !== '';
@@ -38,7 +41,8 @@ $classesEvento = $mostrarEvento ? 'data-update-date ' . $dataEventoClasse : '';
 $mostrarEdit = $showEdit && $editHref !== '';
 $mostrarId = $idRegistro !== '';
 $mostrarCancel = $showCancel && $cancelEndpoint !== '' && $idRegistro !== '';
-$mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel;
+$mostrarDelete = $showDelete && $deleteEndpoint !== '' && $idRegistro !== '';
+$mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel || $mostrarDelete;
 ?>
 <div class="container-data-create">
     <div class="data-create-user"><?php echo htmlspecialchars($linhaAutor, ENT_QUOTES, 'UTF-8'); ?></div>
@@ -61,6 +65,18 @@ $mostrarAcoes = $mostrarEdit || $mostrarId || $mostrarCancel;
                 data-title="<?php echo htmlspecialchars($editLabel, ENT_QUOTES, 'UTF-8'); ?>"
                 aria-label="<?php echo htmlspecialchars($editLabel, ENT_QUOTES, 'UTF-8'); ?>">
                 <img class="btn-mini-icon" src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="">
+            </button>
+            <?php endif; ?>
+
+            <?php if ($mostrarDelete): ?>
+            <button type="button"
+                class="btn-mini processo-bloco-tooltip processo-bloco-tooltip--btn"
+                data-action="excluir-registro"
+                data-registro-id="<?php echo htmlspecialchars($idRegistro, ENT_QUOTES, 'UTF-8'); ?>"
+                data-delete-endpoint="<?php echo htmlspecialchars($deleteEndpoint, ENT_QUOTES, 'UTF-8'); ?>"
+                data-title="<?php echo htmlspecialchars($deleteLabel, ENT_QUOTES, 'UTF-8'); ?>"
+                aria-label="<?php echo htmlspecialchars($deleteLabel, ENT_QUOTES, 'UTF-8'); ?>">
+                <img class="btn-mini-icon" src="/assets/icons/Notes-Remove--Streamline-Ultimate.png" alt="">
             </button>
             <?php endif; ?>
            

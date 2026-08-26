@@ -279,7 +279,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             ];
             $textoStatusAud = $labelsStatusAud[$statusRow] ?? ucfirst(str_replace('_', ' ', $statusRow));
             $classeStatusAud = 'status-pending';
-            if ($statusRow === 'cancelada') {
+            if ($statusRow === 'cancelada' || $statusRow === 'redesignada') {
                 $classeStatusAud = 'status-cancelled';
             } elseif ($statusRow === 'em_andamento') {
                 $classeStatusAud = 'status-current';
@@ -437,7 +437,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             ];
             $textoStatusEst = $labelsStatusEst[$stRow] ?? ucfirst(str_replace('_', ' ', $stRow));
             $classeStatusEst = 'status-pending';
-            if ($stRow === 'cancelada') {
+            if ($stRow === 'cancelada' || $stRow === 'redesignada') {
                 $classeStatusEst = 'status-cancelled';
             } elseif ($stRow === 'em_andamento') {
                 $classeStatusEst = 'status-current';
@@ -616,7 +616,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             lines.innerHTML = html;
         }
         function statusClass(status) {
-            if (status === 'cancelada') return 'status-cancelled';
+            if (status === 'cancelada' || status === 'redesignada') return 'status-cancelled';
             if (status === 'em_andamento') return 'status-current';
             if (status === 'realizada' || status === 'finalizada') return 'status-finished';
             return 'status-pending';
@@ -745,7 +745,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var st = normalizeStatus(statusRaw);
             if (st === 'em_andamento') return 'is-warning';
             if (st === 'finalizada' || st === 'realizada') return 'is-success';
-            if (st === 'cancelada') return 'is-danger';
+            if (st === 'cancelada' || st === 'redesignada') return 'is-danger';
             return 'is-warning';
         }
         function isFinishedStatus(statusRaw) {

@@ -359,7 +359,7 @@ final class SalaAudienciasPautaRepository
 
     /**
      * Indica se já existe audiência ativa para o processo que impede um novo cadastro.
-     * Liberam novo cadastro: cancelada, finalizada e realizada.
+     * Liberam novo cadastro: cancelada, redesignada, finalizada e realizada.
      */
     public function existsBlockingPautaForProcesso(string $processoId): bool
     {
@@ -371,7 +371,7 @@ final class SalaAudienciasPautaRepository
             'SELECT 1 FROM `%s`
              WHERE `ativo` = 1
                AND `processo` = :processo
-               AND `status` NOT IN (\'cancelada\', \'finalizada\', \'realizada\')
+               AND `status` NOT IN (\'cancelada\', \'redesignada\', \'adiada\', \'finalizada\', \'realizada\')
              LIMIT 1',
             $this->table
         );
@@ -470,8 +470,8 @@ final class SalaAudienciasPautaRepository
         } elseif ($includeStatus && $status === '' && empty($filters['incluir_todos_status'])) {
             // "Mostrar todos": não listar finalizadas; para vê-las, usar o filtro Status = Finalizada.
             $conds[] = 'a.`status` <> \'finalizada\'';
-            // Não listar canceladas cuja data da audiência já passou; para vê-las, filtrar Status = Cancelada.
-            $conds[] = '(a.`status` <> \'cancelada\' OR a.`data_audiencia` >= CURDATE())';
+            // Cancelada/redesignada significam que a audiência não ocorreu; para vê-las, filtre pelo status.
+            $conds[] = 'a.`status` NOT IN (\'cancelada\', \'redesignada\', \'adiada\')';
         }
         $tipo = trim((string) ($filters['tipo'] ?? ''));
         if ($tipo !== '') {

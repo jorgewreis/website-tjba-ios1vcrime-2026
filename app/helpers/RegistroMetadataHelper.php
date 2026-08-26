@@ -12,6 +12,8 @@ final class RegistroMetadataHelper
     private const TERMINAL_STATUSES = [
         'cancelada',
         'cancelado',
+        'redesignada',
+        'adiada',
         'concluída',
         'concluida',
         'finalizada',

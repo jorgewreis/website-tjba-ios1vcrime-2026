@@ -50,6 +50,7 @@
                 const option = global.document.createElement('option');
                 option.value = reu.id;
                 option.textContent = reu.nome;
+                option.dataset.nomeParte = reu.nome;
                 denunciadoSelect.appendChild(option);
             });
             const outro = global.document.createElement('option');
@@ -84,6 +85,7 @@
                     label += ' - ' + formatCpfDisplay(pessoa.cpf);
                 }
                 option.textContent = label || pessoa.id;
+                option.dataset.nomeParte = String(pessoa.nome_completo || '').trim();
                 denunciadoSelect.appendChild(option);
             });
 

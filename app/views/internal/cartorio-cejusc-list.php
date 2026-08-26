@@ -3,6 +3,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../services/CejuscRegistrosService.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
+require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 
 $connection = Conection::getInstance()->getConnection();
 $q = trim((string) ($_GET['q'] ?? ''));
@@ -18,6 +20,14 @@ try {
 }
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, is_array($result['rows'] ?? null) ? $result['rows'] : []);
 $registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
+$perfisCejuscUsuario = ProfileNormalizer::normalize(UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) ($_SESSION['id_usuario'] ?? ''))));
+$podeRemoverRegistroCejusc = in_array('CHEFIA', $perfisCejuscUsuario, true) || in_array('SERVIDOR', $perfisCejuscUsuario, true);
+foreach ($perfisCejuscUsuario as $perfilCejuscUsuario) {
+    if (strpos($perfilCejuscUsuario, 'SERVIDOR-') === 0) {
+        $podeRemoverRegistroCejusc = true;
+        break;
+    }
+}
 $total = (int) ($result['total'] ?? 0);
 $totalPages = $total > 0 ? (int) ceil($total / $itemsPerPage) : 0;
 if ($totalPages > 0 && $currentPage > $totalPages) $currentPage = $totalPages;
@@ -110,7 +120,12 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
                     <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm"><span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;"><?php echo $total === 0 ? 'Nenhum registro encontrado' : htmlspecialchars((string) $total . ($total === 1 ? ' registro encontrado' : ' registros encontrados'), ENT_QUOTES); ?></span></div>
                 </div>
                 <?php foreach ($rows as $row): ?>
-                    <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cejusc', $registroListViewerContext, $connection); ?>
+                    <?php
+                    $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cejusc', $registroListViewerContext, $connection);
+                    $registroMetadata['show_delete'] = $podeRemoverRegistroCejusc;
+                    $registroMetadata['delete_endpoint'] = '/api/cartorio-cejusc/delete.php';
+                    $registroMetadata['delete_label'] = 'Remover registro';
+                    ?>
                     <div class="display-flex col col-full register register-with-metadata border-bottom" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>">
                         <div class="register-line" style="border-bottom: 0;">
                             <div class="register-line-left">
@@ -164,6 +179,16 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
                         if (section) section.style.display = 'none';
                     });
                 });
+                if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
+                    App.RegistroMetadataList.bind({
+                        deleteEndpoint: '/api/cartorio-cejusc/delete.php',
+                        deleteFallback: {
+                            type: 'success',
+                            title: 'Sucesso',
+                            message: 'Registro CEJUSC removido.'
+                        }
+                    });
+                }
             })();
         </script>
     </body>

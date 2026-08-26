@@ -44,6 +44,31 @@ final class CejuscRegistrosRepository
         return $row === false ? null : $row;
     }
 
+    public function findDuplicateByProcessoAndParte(string $numeroProcesso, string $nomeParte): ?array
+    {
+        $numeroProcesso = trim($numeroProcesso);
+        $nomeParte = preg_replace('/\s+/', ' ', trim($nomeParte));
+        if ($numeroProcesso === '' || $nomeParte === '') {
+            return null;
+        }
+
+        $stmt = $this->connection->prepare(
+            "SELECT `id`, `numero_processo`, `nome_parte`, `data_envio_cejusc`, `created_at`
+             FROM `{$this->table}`
+             WHERE `numero_processo` = :processo
+               AND LOWER(TRIM(`nome_parte`)) = LOWER(TRIM(:parte))
+             ORDER BY `created_at` DESC
+             LIMIT 1"
+        );
+        $stmt->execute([
+            ':processo' => $numeroProcesso,
+            ':parte' => $nomeParte,
+        ]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
     public function insert(array $data): string
     {
         $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'CJR');

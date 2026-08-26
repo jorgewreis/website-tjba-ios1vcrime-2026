@@ -43,7 +43,7 @@
         const selectIsActive = partSelect && partSelect.style.display !== 'none';
         const selectedOption = selectIsActive && partSelect.selectedIndex >= 0 ? partSelect.options[partSelect.selectedIndex] : null;
         const selectedExistingPart = selectIsActive && selectedOption && partSelect.value !== '' && partSelect.value !== 'outro' && partSelect.value !== '__novo__';
-        let nomeParte = selectedExistingPart ? selectedOption.textContent.trim() : partInput.value.trim();
+        let nomeParte = selectedExistingPart ? String(selectedOption.dataset.nomeParte || selectedOption.textContent || '').trim() : partInput.value.trim();
         if (!selectedExistingPart && App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
             nomeParte = App.ProperNameHelper.formatProper(nomeParte, 255);
             partInput.value = nomeParte;
@@ -70,7 +70,12 @@
         });
         let data = {};
         try { data = await response.json(); } catch (error) { /* resposta inválida tratada abaixo */ }
-        if (!response.ok) throw new Error(data.error || 'Não foi possível concluir a operação.');
+        if (!response.ok) {
+            const error = new Error(data.error || 'Não foi possível concluir a operação.');
+            error.status = response.status;
+            error.data = data;
+            throw error;
+        }
         return data;
     }
 
@@ -94,11 +99,13 @@
             });
         }
         const button = form.querySelector('[type="submit"]');
-        form.addEventListener('submit', async function (event) {
-            event.preventDefault();
+        async function submitCreate(forceDuplicate) {
             if (button && button.disabled) return;
             try {
                 const payload = validate(form);
+                if (forceDuplicate) {
+                    payload.force_duplicate = true;
+                }
                 setBusy(button, true, 'Cadastrando...');
                 const data = await send('/api/cartorio-cejusc/create.php', payload);
                 if (!data.id) throw new Error('O cadastro não foi confirmado pelo servidor.');
@@ -106,8 +113,24 @@
                 global.location.href = '/frame.php?page=cejusc';
             } catch (error) {
                 setBusy(button, false);
+                if (error && error.status === 409 && error.data && error.data.requires_confirmation) {
+                    const duplicate = error.data.duplicate || {};
+                    const msg = 'Já existe um cadastro CEJUSC para este processo e este réu.'
+                        + '\n\nProcesso: ' + (duplicate.numero_processo || '')
+                        + '\nRéu: ' + (duplicate.nome_parte || '')
+                        + '\n\nDeseja cadastrar mesmo assim?';
+                    if (global.confirm(msg)) {
+                        await submitCreate(true);
+                    }
+                    return;
+                }
                 notify('error', 'Validação', error.message || 'Não foi possível cadastrar o registro.');
             }
+        }
+
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            await submitCreate(false);
         });
     }
 

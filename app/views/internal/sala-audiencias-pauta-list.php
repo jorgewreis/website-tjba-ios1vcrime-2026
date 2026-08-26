@@ -414,7 +414,7 @@ $statusFilterLabelsPauta = [
                             ];
                             $textoStatus = $labelsStatus[$stRow] ?? ucfirst(str_replace('_', ' ', $stRow));
                             $classeStatus = 'status-pending';
-                            if ($stRow === 'cancelada') {
+                            if ($stRow === 'cancelada' || $stRow === 'redesignada') {
                                 $classeStatus = 'status-cancelled';
                             } elseif ($stRow === 'em_andamento') {
                                 $classeStatus = 'status-current';

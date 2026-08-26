@@ -5,7 +5,21 @@ require_once __DIR__ . '/../repositories/CejuscRegistrosRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../helpers/CnjValidator.php';
+
+final class CejuscRegistroDuplicadoException extends RuntimeException
+{
+    public function __construct(private array $duplicate)
+    {
+        parent::__construct('Já existe cadastro CEJUSC para este processo e este réu.');
+    }
+
+    public function duplicate(): array
+    {
+        return $this->duplicate;
+    }
+}
 
 final class CejuscRegistrosService
 {
@@ -37,9 +51,15 @@ final class CejuscRegistrosService
     public function create(array $payload): string
     {
         $data = $this->validate($payload);
+        if (empty($data['force_duplicate'])) {
+            $duplicado = $this->repository->findDuplicateByProcessoAndParte($data['numero_processo'], $data['nome_parte']);
+            if ($duplicado !== null) {
+                throw new CejuscRegistroDuplicadoException($duplicado);
+            }
+        }
         $this->connection->beginTransaction();
         try {
-            $data['nome_parte'] = $this->ensureParteVinculada($data);
+            $data['nome_parte'] = $this->ensureParteVinculada($data, true);
             $id = $this->repository->insert($data);
             $this->connection->commit();
             return $id;
@@ -59,7 +79,7 @@ final class CejuscRegistrosService
         $data = $this->validate($payload);
         $this->connection->beginTransaction();
         try {
-            $data['nome_parte'] = $this->ensureParteVinculada($data);
+            $data['nome_parte'] = $this->ensureParteVinculada($data, false);
             $updated = $this->repository->update($id, $data);
             $this->connection->commit();
             return $updated;
@@ -87,6 +107,7 @@ final class CejuscRegistrosService
         $parte = trim((string) ($payload['nome_parte'] ?? $payload['parte'] ?? ''));
         $parteId = trim((string) ($payload['parte_id'] ?? ''));
         $data = trim((string) ($payload['data_envio_cejusc'] ?? $payload['data_envio'] ?? ''));
+        $forceDuplicate = !empty($payload['force_duplicate']);
         if ($processo === '') throw new InvalidArgumentException('O número do processo é obrigatório.');
         if ($parte === '') throw new InvalidArgumentException('O nome da parte é obrigatório.');
         if (mb_strlen($parte) > 180) throw new InvalidArgumentException('O nome da parte deve ter no máximo 180 caracteres.');
@@ -99,13 +120,16 @@ final class CejuscRegistrosService
         $processo = sprintf('%s-%s.%s.%s.%s.%s', substr($digits, 0, 7), substr($digits, 7, 2), substr($digits, 9, 4), substr($digits, 13, 1), substr($digits, 14, 2), substr($digits, 16, 4));
         if (mb_strlen($classeCodigo) > 30) throw new InvalidArgumentException('O código da classe processual é inválido.');
         if (mb_strlen($classeDescricao) > 255) throw new InvalidArgumentException('A descrição da classe processual é inválida.');
-        return ['numero_processo' => $processo, 'classe_codigo' => $classeCodigo !== '' ? $classeCodigo : null, 'classe_descricao' => $classeDescricao !== '' ? $classeDescricao : null, 'nome_parte' => $parte, 'parte_id' => $parteId, 'data_envio_cejusc' => $data, 'usuario_id' => trim((string) ($payload['usuario_id'] ?? $_SESSION['id_usuario'] ?? ''))];
+        return ['numero_processo' => $processo, 'classe_codigo' => $classeCodigo !== '' ? $classeCodigo : null, 'classe_descricao' => $classeDescricao !== '' ? $classeDescricao : null, 'nome_parte' => $parte, 'parte_id' => $parteId, 'data_envio_cejusc' => $data, 'usuario_id' => trim((string) ($payload['usuario_id'] ?? $_SESSION['id_usuario'] ?? '')), 'force_duplicate' => $forceDuplicate];
     }
 
-    private function ensureParteVinculada(array $data): string
+    private function ensureParteVinculada(array $data, bool $garantirPrioridadeCejusc): string
     {
         $processos = new ProcessosRepository($this->connection);
         $processoId = $processos->ensureProcess($data['numero_processo']);
+        if ($garantirPrioridadeCejusc) {
+            (new ProcessoPrioridadesService($this->connection))->registrarViolenciaDomesticaCejusc($processoId);
+        }
         $partes = new PartesRepository($this->connection);
         $parteId = trim((string) ($data['parte_id'] ?? ''));
         if ($parteId !== '') {

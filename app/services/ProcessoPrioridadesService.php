@@ -256,6 +256,25 @@ final class ProcessoPrioridadesService
         );
     }
 
+    /** Encaminhamento ao CEJUSC implica violência doméstica no processo. */
+    public function registrarViolenciaDomesticaCejusc(string $processoId): void
+    {
+        $processoId = trim($processoId);
+        if ($processoId === '') {
+            return;
+        }
+        $codigo = PrioridadesProcessuaisCatalog::codigoViolenciaDomestica();
+        if ($this->repository->findOneByProcessoAndCodigo($processoId, $codigo) === null) {
+            $this->repository->insert(
+                $processoId,
+                $codigo,
+                ProcessoPrioridadeOrigem::REGRA_VIOLENCIA_DOMESTICA_CEJUSC,
+                ['fonte' => 'cejusc']
+            );
+        }
+        $this->registrarSigilosoDerivadoMenorOuViolenciaDomestica($processoId);
+    }
+
     /** Sigiloso obrigatório quando há violência doméstica, medida protetiva ou parte menor. */
     public function registrarSigilosoDerivadoMenorOuViolenciaDomestica(string $processoId): void
     {

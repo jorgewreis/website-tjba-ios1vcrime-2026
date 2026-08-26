@@ -203,7 +203,7 @@ final class SalaAudienciasPautaService
         $processoId = $this->processosRepository->ensureProcess($numeroProcesso, $classeId, null, false);
         if ($this->pautaRepository->existsBlockingPautaForProcesso($processoId)) {
             throw new InvalidArgumentException(
-                'Já existe audiência ativa para este número de processo. Só é permitido cadastrar outra quando a anterior estiver cancelada, finalizada ou realizada.'
+                'Já existe audiência ativa para este número de processo. Só é permitido cadastrar outra quando a anterior estiver cancelada, redesignada, finalizada ou realizada.'
             );
         }
         $ano = (int) date('Y');
