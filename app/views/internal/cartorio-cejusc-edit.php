@@ -1,19 +1,11 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../services/CejuscRegistrosService.php';
-require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
-require_once __DIR__ . '/../../access/ProfileNormalizer.php';
+require_once __DIR__ . '/../../helpers/DeleteAuthorization.php';
 $id = trim((string) ($_GET['id'] ?? ''));
 $registro = $id !== '' ? (new CejuscRegistrosService(Conection::getInstance()->getConnection()))->find($id) : null;
 if (!$registro) { http_response_code(404); echo 'Registro CEJUSC não encontrado.'; exit; }
-$perfisCejuscEdit = ProfileNormalizer::normalize(UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) ($_SESSION['id_usuario'] ?? ''))));
-$podeRemoverRegistroCejusc = in_array('CHEFIA', $perfisCejuscEdit, true) || in_array('SERVIDOR', $perfisCejuscEdit, true);
-foreach ($perfisCejuscEdit as $perfilCejuscEdit) {
-    if (strpos($perfilCejuscEdit, 'SERVIDOR-') === 0) {
-        $podeRemoverRegistroCejusc = true;
-        break;
-    }
-}
+$podeRemoverRegistroCejusc = DeleteAuthorization::usuarioPodeExcluirComoServidorOuChefia(trim((string) ($_SESSION['id_usuario'] ?? '')));
 ?>
 <!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Edição CEJUSC</title><?php include __DIR__ . '/_internal_head_styles.php'; ?><?php include __DIR__ . '/_toast_script.php'; ?><script src="/assets/js/shared/cartorio-cejusc.js"></script></head>
 <body class="page-internal"><div class="spacing-top-page"></div><div class="header-page"><div class="location"><span class="all">Interno - Cartório - Cejusc -</span><span class="specific">Edição</span></div><h1 class="title-page">Editar cadastro CEJUSC</h1><p class="description-page">Atualize os dados do encaminhamento.</p></div>

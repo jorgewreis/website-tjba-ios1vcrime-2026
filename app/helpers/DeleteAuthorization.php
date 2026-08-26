@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/UsuarioPerfisAutorizacao.php';
+require_once __DIR__ . '/../access/ProfileNormalizer.php';
 
 final class DeleteAuthorization
 {
@@ -36,5 +37,39 @@ final class DeleteAuthorization
 
         $perfisUsuario = UsuarioPerfisAutorizacao::perfisDoUsuario($uid);
         return count(array_intersect($perfisUsuario, $permitidos)) > 0;
+    }
+
+    public static function usuarioPodeExcluirComoServidorOuChefia(?string $userId): bool
+    {
+        $uid = trim((string) ($userId ?? ''));
+        if ($uid === '') {
+            return false;
+        }
+
+        return self::perfisIncluemServidorOuChefia(UsuarioPerfisAutorizacao::perfisDoUsuario($uid));
+    }
+
+    /**
+     * Servidor operacional ou chefia. Não libera estagiário.
+     *
+     * @param array<int, mixed> $perfis
+     */
+    public static function perfisIncluemServidorOuChefia(array $perfis): bool
+    {
+        $normalizados = ProfileNormalizer::normalize($perfis);
+        foreach ($normalizados as $perfil) {
+            $p = strtoupper(trim((string) $perfil));
+            if ($p === 'CHEFIA') {
+                return true;
+            }
+            if ($p === 'ESTAGIARIO' || strpos($p, 'ESTAGIARIO') !== false) {
+                continue;
+            }
+            if ($p === 'SERVIDOR' || strpos($p, 'SERVIDOR') !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

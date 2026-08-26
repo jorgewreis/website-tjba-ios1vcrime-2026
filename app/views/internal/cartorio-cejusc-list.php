@@ -3,8 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../services/CejuscRegistrosService.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
-require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
-require_once __DIR__ . '/../../access/ProfileNormalizer.php';
+require_once __DIR__ . '/../../helpers/DeleteAuthorization.php';
 
 $connection = Conection::getInstance()->getConnection();
 $q = trim((string) ($_GET['q'] ?? ''));
@@ -20,14 +19,7 @@ try {
 }
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, is_array($result['rows'] ?? null) ? $result['rows'] : []);
 $registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
-$perfisCejuscUsuario = ProfileNormalizer::normalize(UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) ($_SESSION['id_usuario'] ?? ''))));
-$podeRemoverRegistroCejusc = in_array('CHEFIA', $perfisCejuscUsuario, true) || in_array('SERVIDOR', $perfisCejuscUsuario, true);
-foreach ($perfisCejuscUsuario as $perfilCejuscUsuario) {
-    if (strpos($perfilCejuscUsuario, 'SERVIDOR-') === 0) {
-        $podeRemoverRegistroCejusc = true;
-        break;
-    }
-}
+$podeRemoverRegistroCejusc = DeleteAuthorization::usuarioPodeExcluirComoServidorOuChefia(trim((string) ($_SESSION['id_usuario'] ?? '')));
 $total = (int) ($result['total'] ?? 0);
 $totalPages = $total > 0 ? (int) ceil($total / $itemsPerPage) : 0;
 if ($totalPages > 0 && $currentPage > $totalPages) $currentPage = $totalPages;
