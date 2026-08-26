@@ -206,6 +206,7 @@
     .register[data-edital-id] .container-processo .footer-processo .right .buttons,
     .register[data-medida-id] .container-processo .footer-processo .right .buttons,
     .register[data-guia-id] .container-processo .footer-processo .right .buttons,
+    .register[data-registro-id] .container-processo .footer-processo .right .buttons,
     .register[data-processo-id] .container-processo .footer-processo .right .buttons,
     .register[data-monitoramento-id] .container-processo .footer-processo .right .buttons,
     .register[data-reu-preso-id] .container-processo .footer-processo .right .buttons,
@@ -234,6 +235,8 @@
 .register[data-medida-id]:focus-within .container-processo .footer-processo .right .buttons,
 .register[data-guia-id]:hover .container-processo .footer-processo .right .buttons,
 .register[data-guia-id]:focus-within .container-processo .footer-processo .right .buttons,
+.register[data-registro-id]:hover .container-processo .footer-processo .right .buttons,
+.register[data-registro-id]:focus-within .container-processo .footer-processo .right .buttons,
 .register[data-processo-id]:hover .container-processo .footer-processo .right .buttons,
 .register[data-processo-id]:focus-within .container-processo .footer-processo .right .buttons,
 .register[data-monitoramento-id]:hover .container-processo .footer-processo .right .buttons,
@@ -612,4 +615,10 @@
 
 .register.register-with-metadata .btn-editar.list-edit-legacy-hidden {
     display: none;
+}
+
+.register[data-registro-id] .cejusc-data-envio {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
 }

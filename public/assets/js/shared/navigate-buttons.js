@@ -35,9 +35,13 @@
         }
         var v = String(sel.value || '');
         var href = '';
-        if (v === 'csv') {
+        var selectedOption = sel.options && sel.selectedIndex >= 0 ? sel.options[sel.selectedIndex] : null;
+        if (selectedOption) {
+            href = String(selectedOption.getAttribute('data-export-href') || '').trim();
+        }
+        if (href === '' && v === 'csv') {
             href = String(sel.getAttribute('data-csv-href') || '').trim();
-        } else if (v === 'pdf') {
+        } else if (href === '' && v === 'pdf') {
             href = String(sel.getAttribute('data-pdf-href') || '').trim();
         }
         if (href !== '' && href !== '#') {

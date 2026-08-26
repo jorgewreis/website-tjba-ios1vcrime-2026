@@ -6,12 +6,10 @@ require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 require_once __DIR__ . '/../../helpers/DeleteAuthorization.php';
 
 $connection = Conection::getInstance()->getConnection();
-$q = trim((string) ($_GET['q'] ?? ''));
-$mesEnvio = trim((string) ($_GET['mes_envio'] ?? ''));
 $itemsPerPage = (int) ($_GET['items_per_page'] ?? 10);
 if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) $itemsPerPage = 10;
 $currentPage = max(1, (int) ($_GET['page_number'] ?? 1));
-$filters = ['q' => $q, 'mes_envio' => $mesEnvio];
+$filters = [];
 try {
     $result = (new CejuscRegistrosService($connection))->list($filters, $itemsPerPage, ($currentPage - 1) * $itemsPerPage);
 } catch (Throwable $e) {
@@ -26,9 +24,18 @@ if ($totalPages > 0 && $currentPage > $totalPages) $currentPage = $totalPages;
 $offset = ($currentPage - 1) * $itemsPerPage;
 $startItem = $total > 0 ? $offset + 1 : 0;
 $endItem = $total > 0 ? min($offset + count($rows), $total) : 0;
-$exportQuery = ['page' => 'cejusc', 'q' => $q, 'mes_envio' => $mesEnvio, 'items_per_page' => $itemsPerPage];
-$listExportPage = 'cejusc';
-$listExportQuery = $exportQuery;
+$exportMonths = [];
+$monthCursor = new DateTimeImmutable('first day of this month');
+$monthNames = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'];
+for ($i = 0; $i < 3; $i++) {
+    $monthDate = $monthCursor->modify('-' . $i . ' months');
+    $monthValue = $monthDate->format('Y-m');
+    $exportMonths[] = [
+        'value' => $monthValue,
+        'label' => ($monthNames[(int) $monthDate->format('n')] ?? $monthDate->format('m')) . '/' . $monthDate->format('Y'),
+        'href' => '/api/internal-list-export/pdf.php?' . http_build_query(['page' => 'cejusc', 'mes_envio' => $monthValue]),
+    ];
+}
 function cejusc_url(array $extra = []): string { return '/frame.php?' . http_build_query(array_merge(['page' => 'cejusc'], $extra)); }
 function cejusc_date(string $value): string { $t = strtotime($value); return $t === false ? $value : date('d/m/Y', $t); }
 ?>
@@ -61,38 +68,14 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
                     <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Controle dos encaminhamentos enviados ao Centro Judiciário de Solução de Conflitos.</p>
                 </div>
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
-                    <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search"><i class="fi fi-rr-search"></i></div>
-                    <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters"><i class="fi fi-rr-filter"></i></div>
+                    <select id="cejusc-export-pdf" class="list-export-select width-300 height-md white" aria-label="Gerar relatório CEJUSC em PDF">
+                        <option value="" selected disabled>Gerar relatório PDF</option>
+                        <?php foreach ($exportMonths as $exportMonth): ?>
+                            <option value="<?php echo htmlspecialchars('pdf-' . $exportMonth['value'], ENT_QUOTES); ?>" data-export-href="<?php echo htmlspecialchars($exportMonth['href'], ENT_QUOTES); ?>">PDF - <?php echo htmlspecialchars($exportMonth['label'], ENT_QUOTES); ?></option>
+                        <?php endforeach; ?>
+                    </select>
                     <div class="title-icon" title="Itens por página" role="button" tabindex="0" aria-label="Itens por página" data-list-section-trigger="items"><i class="fi fi-rr-list"></i></div>
                     <button class="btn btn-primary width-300" type="button" onclick="location.href='/frame.php?page=cejusccreate'">Novo cadastro</button>
-                </div>
-            </div>
-
-            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
-                <div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisar processo ou parte</span></div>
-                <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                    <form method="get" class="display-flex row row-fit gap-y-md align-center" data-auto-submit-filters>
-                        <input type="hidden" name="page" value="cejusc">
-                        <input type="hidden" name="mes_envio" value="<?php echo htmlspecialchars($mesEnvio, ENT_QUOTES); ?>">
-                        <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
-                        <input type="search" class="height-md" style="width: 295px;" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES); ?>" placeholder="Pesquisar" aria-label="Pesquisar processo ou parte">
-                        <?php $listExportPage = 'cejusc'; $listExportQuery = $exportQuery; include __DIR__ . '/_list_export_buttons.php'; ?>
-                    </form>
-                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar pesquisa" data-list-section-hide="search"><i class="fi fi-rr-angle-small-up"></i></div>
-                </div>
-            </div>
-
-            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
-                <div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span></div>
-                <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                    <form method="get" class="display-flex row row-fit gap-y-md align-center" data-auto-submit-filters>
-                        <input type="hidden" name="page" value="cejusc">
-                        <input type="hidden" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES); ?>">
-                        <input type="hidden" name="items_per_page" value="<?php echo (int) $itemsPerPage; ?>">
-                        <label class="sr-only" for="cejusc-month">Mês da data de envio</label>
-                        <input class="width-250 height-md" type="month" id="cejusc-month" name="mes_envio" value="<?php echo htmlspecialchars($mesEnvio, ENT_QUOTES); ?>">
-                    </form>
-                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar filtros" data-list-section-hide="filters"><i class="fi fi-rr-angle-small-up"></i></div>
                 </div>
             </div>
 
@@ -100,7 +83,7 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
                 <div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span></div>
                 <div class="display-flex row row-fit justify-end gap-y-md align-center">
                     <form method="get" class="display-flex row row-fit gap-y-md align-center" data-auto-submit-filters>
-                        <input type="hidden" name="page" value="cejusc"><input type="hidden" name="q" value="<?php echo htmlspecialchars($q, ENT_QUOTES); ?>"><input type="hidden" name="mes_envio" value="<?php echo htmlspecialchars($mesEnvio, ENT_QUOTES); ?>">
+                        <input type="hidden" name="page" value="cejusc">
                         <select class="width-300 height-md" name="items_per_page" aria-label="Itens por página"><option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option><option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option><option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option><option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option></select>
                     </form>
                     <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar itens por página" data-list-section-hide="items"><i class="fi fi-rr-angle-small-up"></i></div>
@@ -117,8 +100,9 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
                     $registroMetadata['show_delete'] = $podeRemoverRegistroCejusc;
                     $registroMetadata['delete_endpoint'] = '/api/cartorio-cejusc/delete.php';
                     $registroMetadata['delete_label'] = 'Remover registro';
+                    $processoIdBlocoCejusc = trim((string) ($row['bloco_processo_id_resolvido'] ?? ''));
                     ?>
-                    <div class="display-flex col col-full register register-with-metadata border-bottom" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>">
+                    <div class="display-flex col col-full register register-with-metadata border-bottom" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>"<?php echo $processoIdBlocoCejusc !== '' ? ' data-processo-id="' . htmlspecialchars($processoIdBlocoCejusc, ENT_QUOTES) . '"' : ''; ?>>
                         <div class="register-line" style="border-bottom: 0;">
                             <div class="register-line-left">
                                 <div class="col width-500 col-process">
@@ -126,7 +110,7 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
                                 </div>
                                 <div class="col width-700" title="Parte encaminhada ao CEJUSC">
                                     <span class="minor-info text-ellipsis" style="font-weight: 600; color: var(--color-gray-900);">Parte: <?php echo htmlspecialchars((string) $row['nome_parte'], ENT_QUOTES); ?></span>
-                                    <span class="major-info text-ellipsis">Data de envio ao CEJUSC — <?php echo htmlspecialchars(cejusc_date((string) $row['data_envio_cejusc']), ENT_QUOTES); ?></span>
+                                    <span class="major-info text-ellipsis cejusc-data-envio">Data de envio ao CEJUSC — <?php echo htmlspecialchars(cejusc_date((string) $row['data_envio_cejusc']), ENT_QUOTES); ?></span>
                                 </div>
                             </div>
                             <div class="display-flex row row-fit justify-end gap-y-sm align-center">
@@ -139,7 +123,7 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
 
             <div class="card-buttons">
                 <span class="pagination-info">Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $total; ?> registros (<?php echo (int) $totalPages; ?> <?php echo $totalPages === 1 ? 'página' : 'páginas'; ?>, <?php echo (int) $itemsPerPage; ?> itens por página)</span>
-                <?php if ($totalPages > 0): ?><div class="pagination-controls"><a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" href="<?php echo htmlspecialchars(cejusc_url(array_merge($exportQuery, ['page_number' => max(1, $currentPage - 1)])), ENT_QUOTES); ?>" aria-label="Página anterior"><i class="fi fi-rr-angle-small-left"></i></a><span class="pagination-number active"><?php echo (int) $currentPage; ?></span><a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" href="<?php echo htmlspecialchars(cejusc_url(array_merge($exportQuery, ['page_number' => min($totalPages, $currentPage + 1)])), ENT_QUOTES); ?>" aria-label="Próxima página"><i class="fi fi-rr-angle-small-right"></i></a></div><?php endif; ?>
+                <?php if ($totalPages > 0): ?><div class="pagination-controls"><a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" href="<?php echo htmlspecialchars(cejusc_url(['items_per_page' => $itemsPerPage, 'page_number' => max(1, $currentPage - 1)]), ENT_QUOTES); ?>" aria-label="Página anterior"><i class="fi fi-rr-angle-small-left"></i></a><span class="pagination-number active"><?php echo (int) $currentPage; ?></span><a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" href="<?php echo htmlspecialchars(cejusc_url(['items_per_page' => $itemsPerPage, 'page_number' => min($totalPages, $currentPage + 1)]), ENT_QUOTES); ?>" aria-label="Próxima página"><i class="fi fi-rr-angle-small-right"></i></a></div><?php endif; ?>
             </div>
         </main>
         <div class="footer-page"><div class="location"><span class="all">Aplicativo web desenvolvido integralmente por </span><span class="specific">Jorge Reis Develop</span><span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span></div></div>
