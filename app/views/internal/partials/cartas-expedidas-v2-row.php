@@ -410,21 +410,34 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
             <div class="block-separator-line"></div>
         <?php endif; ?>
 
-        <div class="register-block media-1024">
-            <div class="register-block-title">Histórico</div>
-            <?php foreach ($historicoLinhas as $hist): ?>
-                <div class="register-block-content<?php echo ($hist['content_class'] ?? '') !== '' ? ' ' . htmlspecialchars((string) $hist['content_class'], ENT_QUOTES) : ''; ?>">
-                    <?php
-                    $dh = trim((string) ($hist['data_hora'] ?? ''));
-                    $rotulo = trim((string) ($hist['rotulo'] ?? ''));
-                    $autor = trim((string) ($hist['autor'] ?? ''));
-                    if ($dh !== '' && $rotulo !== ''):
-                        echo htmlspecialchars($dh, ENT_QUOTES) . ' | ' . htmlspecialchars($rotulo, ENT_QUOTES) . ': ';
-                    ?>
-                        <span class="register-block-content-text"><?php echo htmlspecialchars($autor, ENT_QUOTES); ?></span>
+        <div class="container-historical container-sm media-1024">
+            <div class="container-line">
+                <div class="line-content double-line">
+                    <span class="content-classe">Histórico de movimentações</span>
+                    <?php if ($historicoLinhas === []): ?>
+                        <span class="content-assuntos over">Nenhuma movimentação registrada</span>
+                    <?php else: ?>
+                        <?php foreach ($historicoLinhas as $hist):
+                            $dh = trim((string) ($hist['data_hora'] ?? ''));
+                            $rotulo = trim((string) ($hist['rotulo'] ?? ''));
+                            $autor = trim((string) ($hist['autor'] ?? ''));
+                            $contentClass = trim((string) ($hist['content_class'] ?? ''));
+                            $historicoTexto = '';
+                            if ($dh !== '' && $rotulo !== '') {
+                                $historicoTexto = '- ' . $dh . ' | ' . $rotulo;
+                                if ($autor !== '') {
+                                    $historicoTexto .= ' por ' . $autor;
+                                }
+                            }
+                            if ($historicoTexto === '') {
+                                continue;
+                            }
+                        ?>
+                            <span class="content-assuntos<?php echo $contentClass !== '' ? ' ' . htmlspecialchars($contentClass, ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($historicoTexto, ENT_QUOTES); ?></span>
+                        <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
-            <?php endforeach; ?>
+            </div>
         </div>
     </div>
 </div>

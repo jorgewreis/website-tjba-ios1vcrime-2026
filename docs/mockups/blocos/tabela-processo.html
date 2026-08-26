@@ -40,13 +40,14 @@
             gap: 5px;
         }
 
-        .container-process {
+        .container-processo {
             /* position */
             position: relative;
 
             /* size */
             min-width: 20px;
             min-height: 20px;
+            width: 307px;
 
             /* space */
             padding: 2px;
@@ -59,17 +60,20 @@
             flex-wrap: nowrap;
             justify-content: center;
             align-items: flex-start;
+
+            /* text */
+            font-family: "JetBrains Mono", monospace;
         }
 
-            .container-sm {
+            .container-processo.container-sm {
                 width: 307px;
             }
 
-            .container-lg {
+            .container-processo.container-lg {
                 width: 450px;
             }
         
-        .container-line {
+        .container-processo .container-line {
             /* size */
             width: 100%;
             min-height: 20px;
@@ -83,7 +87,10 @@
             justify-content: space-between;
             align-items: center;
         }
-            .container-line .left{
+            .container-processo .container-line:first-child {
+                border-bottom: 1px solid #efefef;
+            }
+            .container-processo .container-line .left{
                 /* size */
                 width: calc(100% - 54px);
 
@@ -96,7 +103,7 @@
 
                 gap: 2px;
             }
-            .container-line .right{
+            .container-processo .container-line .right{
                  /* flex custom */
                 display: flex;
                 flex-direction: row;
@@ -106,7 +113,7 @@
 
                 gap: 2px;
             }
-            .line-cube {
+            .container-processo .line-cube {
                 /* position */
                 position: relative;
 
@@ -120,20 +127,25 @@
                 flex-wrap: nowrap;
                 justify-content: center;
                 align-items: center;
-                
-                /* theme */
-                background-color: #efefef;
             }
-                .cube-icon {
+                .container-processo .line-cube[role="button"],
+                .container-processo .line-content.box-number.process-info {
+                    cursor: pointer;
+                }
+                .container-processo .line-cube.disabled {
+                    opacity: 0.45;
+                    cursor: not-allowed;
+                }
+                .container-processo .cube-icon {
                     /* size */
                     width: 18px;
                     height: 18px;
                     filter: grayscale(1) brightness(0.5);
                 }
-                .line-cube.open .cube-icon {
+                .container-processo .line-cube.open .cube-icon {
                     filter: grayscale(0);
                 }
-            .line-content {
+            .container-processo .line-content {
                 /* size */
                 width: 100%;
                 min-height: 25px;
@@ -147,17 +159,14 @@
                 flex-wrap: nowrap;
                 justify-content: flex-start;
                 align-items: center;
-                
-                /* theme */
-                background-color: #efefef;
             }
-                .line-content.double-line {
+                .container-processo .line-content.double-line {
                     flex-direction: column;
                     justify-content: flex-start;
                     align-items: flex-start;
                     padding: 5px;
                 }
-                .content-number {
+                .container-processo .content-number {
                     /* size */
                     width: 100%;
 
@@ -166,8 +175,11 @@
                     font-size: 12px;
                     font-weight: 600;
                     color: #505050;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
-                .content-classe {
+                .container-processo .content-classe {
                     /* size */
                     width: 100%;
 
@@ -176,8 +188,11 @@
                     font-size: 10px;
                     font-weight: 600;
                     color: #505050;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
-                .content-assuntos {
+                .container-processo .content-assuntos {
                     /* size */
                     width: 100%;
 
@@ -186,9 +201,13 @@
                     font-size: 9px;
                     font-weight: 400;
                     color: #505050;
+                    line-height: 1.35;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                 }
-                .content-classe.over,
-                .content-assuntos.over {
+                .container-processo .content-classe.over,
+                .container-processo .content-assuntos.over {
                     color: #707070;
                     font-size: 9px;
                     font-weight: 400;
@@ -200,24 +219,24 @@
     <div class="organizer">
 
         <!-- CONTAINER PROCESSO - COMPACTO - COMPLETO -->
-        <div class="container-process container-sm">
+        <div class="container-processo container-process container-sm" data-processo-bloco="1">
             <div class="container-line">
                 <div class="left">
                     <!-- mostrar essa div se o processo tiver sigilo -->
-                    <div class="line-cube box-private">                    
+                    <div class="line-cube box-private" title="Sigiloso" aria-label="Sigiloso">                    
                         <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png">
                     </div>
 
-                    <div class="line-content box-number">
-                        <span class="content-number">8011335-36.2026.8.05.0103</span>
+                    <div class="line-content box-number process-info" role="button" tabindex="0" title="Copiar número do processo" aria-label="Copiar número do processo">
+                        <span class="content-number major-info">8011335-36.2026.8.05.0103</span>
                     </div>
                 </div>
 
                 <div class="right">
-                    <div class="line-cube box-open open">
+                    <div class="line-cube box-open open" title="Réu Preso" aria-label="Réu Preso">
                         <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png">
                     </div>
-                    <div class="line-cube box-open open">
+                    <div class="line-cube box-open open" title="Abrir processo" aria-label="Abrir processo" role="button" tabindex="0" data-nav-href="#">
                         <img class="cube-icon" src="./../../../public/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png">
                     </div>
                 </div>
@@ -232,23 +251,23 @@
 
 
         <!-- CONTAINER PROCESSO - COMPACTO - MINIMAL -->
-        <div class="container-process container-sm">
+        <div class="container-processo container-process container-sm" data-processo-bloco="1">
             <div class="container-line">
                 <div class="left">
                     <!-- mostrar essa div se o processo tiver sigilo -->
-                    <div class="line-cube box-private open">
+                    <div class="line-cube box-private open" title="Processo sem sigilo" aria-label="Processo sem sigilo">
                         <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png">
                     </div>
 
-                    <div class="line-content box-number">
-                        <span class="content-number">8010730-90.2026.8.05.0103</span>
+                    <div class="line-content box-number process-info" role="button" tabindex="0" title="Copiar número do processo" aria-label="Copiar número do processo">
+                        <span class="content-number major-info">8010730-90.2026.8.05.0103</span>
                     </div>
                 </div>
 
                 <div class="right">
-                    <div class="line-cube box-open open">                        
+                    <div class="line-cube box-open">                        
                     </div>
-                    <div class="line-cube box-open open">
+                    <div class="line-cube box-open open" title="Abrir processo" aria-label="Abrir processo" role="button" tabindex="0" data-nav-href="#">
                         <img class="cube-icon" src="./../../../public/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png">
                     </div>
                 </div>
@@ -263,24 +282,24 @@
 
 
         <!-- CONTAINER PROCESSO - FULL - COMPLETO -->
-        <div class="container-process container-lg">
+        <div class="container-processo container-process container-lg" data-processo-bloco="1">
             <div class="container-line">
                 <div class="left">
                     <!-- mostrar essa div se o processo tiver sigilo -->
-                    <div class="line-cube box-private">                    
+                    <div class="line-cube box-private" title="Sigiloso" aria-label="Sigiloso">                    
                         <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png">
                     </div>
 
-                    <div class="line-content box-number">
-                        <span class="content-number">8010846-96.2026.8.05.0103</span>
+                    <div class="line-content box-number process-info" role="button" tabindex="0" title="Copiar número do processo" aria-label="Copiar número do processo">
+                        <span class="content-number major-info">8010846-96.2026.8.05.0103</span>
                     </div>
                 </div>
 
                 <div class="right">
-                    <div class="line-cube box-open open">
+                    <div class="line-cube box-open open" title="Réu Preso" aria-label="Réu Preso">
                         <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png">
                     </div>
-                    <div class="line-cube box-open open">
+                    <div class="line-cube box-open open" title="Abrir processo" aria-label="Abrir processo" role="button" tabindex="0" data-nav-href="#">
                         <img class="cube-icon" src="./../../../public/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png">
                     </div>
                 </div>
@@ -295,25 +314,25 @@
 
 
         <!-- CONTAINER PROCESSO - FULL - MINIMAL -->
-        <div class="container-process container-lg">
+        <div class="container-processo container-process container-lg" data-processo-bloco="1">
             <div class="container-line">
                 <div class="left">
                     <!-- mostrar essa div se o processo tiver sigilo -->
-                    <div class="line-cube box-private open">
+                    <div class="line-cube box-private open" title="Processo sem sigilo" aria-label="Processo sem sigilo">
                         <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round-2--Streamline-Ultimate.png">
                     </div>
 
-                    <div class="line-content box-number">
-                        <span class="content-number">8006360-68.2026.8.05.0103</span>
+                    <div class="line-content box-number process-info" role="button" tabindex="0" title="Copiar número do processo" aria-label="Copiar número do processo">
+                        <span class="content-number major-info">8006360-68.2026.8.05.0103</span>
                     </div>
                 </div>
 
                 <div class="right">
-                    <div class="line-cube box-open open">                        
+                    <div class="line-cube box-open">                        
                     </div>
 
                     <!-- mostrar essa div desse jeito se o processo não tiver nenhuma classe ou assunto cadastrado -->
-                    <div class="line-cube box-open open">
+                    <div class="line-cube box-open open js-processo-datajud-sync" title="Sincronizar dados do processo" aria-label="Sincronizar dados do processo" role="button" tabindex="0" data-processo-numero="8006360-68.2026.8.05.0103">
                         <img class="cube-icon" src="./../../../public/assets/icons/Server-Sync-1--Streamline-Ultimate.png">
                     </div>
                 </div>

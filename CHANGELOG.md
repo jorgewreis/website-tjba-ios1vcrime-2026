@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0002
+
+**Data:** 2026-08-26 19:03:43 | **Commit:** `aa9a2ca6` | **Tipo:** `patch`
+
+- feat(cartorio): adicionar bloco de historico v2
+
 ## V. 1.85.0001
 
 **Data:** 2026-08-26 17:30:48 | **Commit:** `3894959f` | **Tipo:** `patch`
@@ -5433,6 +5439,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

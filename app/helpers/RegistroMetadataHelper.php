@@ -695,9 +695,9 @@ final class RegistroMetadataHelper
     }
 
     /**
-     * Data/hora curta para histórico v2 (ex.: 19.05 - 12:00).
+     * Data/hora completa para histórico v2 (ex.: 19/05/2026 - 12:00).
      */
-    public static function formatarDataHoraCurtaV2(?string $mysqlDt): string
+    public static function formatarDataHoraHistoricoV2(?string $mysqlDt): string
     {
         $raw = trim((string) ($mysqlDt ?? ''));
         if ($raw === '') {
@@ -708,11 +708,11 @@ final class RegistroMetadataHelper
             return '';
         }
 
-        return date('d.m', $ts) . ' - ' . date('H:i', $ts);
+        return date('d/m/Y', $ts) . ' - ' . date('H:i', $ts);
     }
 
     /**
-     * Linhas de histórico no formato do card v2 (listagem cartas expedidas teste).
+     * Linhas de histórico no formato do bloco de histórico v2.
      *
      * @return list<array{data_hora: string, rotulo: string, autor: string, content_class: string}>
      */
@@ -726,8 +726,8 @@ final class RegistroMetadataHelper
         $criador = self::compactarNome(trim((string) ($meta['criador_nome'] ?? '')));
         if ($createdRaw !== '') {
             $linhas[] = [
-                'data_hora' => self::formatarDataHoraCurtaV2($createdRaw),
-                'rotulo' => 'Cadastro',
+                'data_hora' => self::formatarDataHoraHistoricoV2($createdRaw),
+                'rotulo' => 'Cadastrado',
                 'autor' => $criador,
                 'content_class' => '',
             ];
@@ -741,8 +741,8 @@ final class RegistroMetadataHelper
             $ref = $updatedRaw !== '' ? $updatedRaw : $createdRaw;
             if ($ref !== '') {
                 $linhas[] = [
-                    'data_hora' => self::formatarDataHoraCurtaV2($ref),
-                    'rotulo' => 'Cancelamento',
+                    'data_hora' => self::formatarDataHoraHistoricoV2($ref),
+                    'rotulo' => 'Cancelado',
                     'autor' => $editor !== '' ? $editor : $criador,
                     'content_class' => 'text-canceled',
                 ];
@@ -790,8 +790,8 @@ final class RegistroMetadataHelper
                     $autorAtualizacao = $editor !== '' ? $editor : $criador;
                 }
                 $linhas[] = [
-                    'data_hora' => self::formatarDataHoraCurtaV2($dataAtualizacao),
-                    'rotulo' => 'Envio',
+                    'data_hora' => self::formatarDataHoraHistoricoV2($dataAtualizacao),
+                    'rotulo' => 'Enviado',
                     'autor' => $autorAtualizacao,
                     'content_class' => '',
                 ];
@@ -815,7 +815,7 @@ final class RegistroMetadataHelper
                     $autorJuntada = $editor !== '' ? $editor : $criador;
                 }
                 $linhas[] = [
-                    'data_hora' => self::formatarDataHoraCurtaV2($dataJuntada),
+                    'data_hora' => self::formatarDataHoraHistoricoV2($dataJuntada),
                     'rotulo' => 'Juntada',
                     'autor' => $autorJuntada,
                     'content_class' => '',

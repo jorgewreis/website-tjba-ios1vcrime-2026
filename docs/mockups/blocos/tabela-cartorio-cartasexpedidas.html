@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <!-- STYLES -->
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/4.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Syne+Mono&display=swap');
+    </style>
+
+    <!-- STYLES -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "JetBrains Mono", monospace;
+            padding: 10px;            
+        }
+
+
+
+        .register-line {
+            /* size */
+            width: 100%;
+            height: fit-content;
+
+            /* flex custom */
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            
+            padding: 5px 10px;
+            gap: 5px;
+            border-bottom: 1px solid #dfdfdf;
+        }
+            .register-line .left{
+                /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 2px;
+            }
+            .register-line .right{
+                /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: flex-end;
+                align-items: center;
+                gap: 2px;
+            }
+
+
+
+
+        .container-processo {
+            /* position */
+            position: relative;
+
+            /* size */
+            min-width: 20px;
+            min-height: 20px;
+            width: 307px;
+
+            /* space */
+            padding: 2px;
+            gap: 2px;
+            box-sizing: border-box;
+
+            /* flex custom */
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: flex-start;
+
+            /* text */
+            font-family: "JetBrains Mono", monospace;
+        }
+
+            .container-processo.container-sm {
+                width: 307px;
+            }
+
+            .container-processo.container-lg {
+                width: 450px;
+            }
+        
+        .container-processo .container-line {
+            /* size */
+            width: 100%;
+            min-height: 20px;
+
+            /* space */
+
+            /* flex custom */
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            align-items: center;
+        }
+            .container-processo .container-line:first-child {
+                border-bottom: 1px solid #efefef;
+            }
+            .container-processo .container-line .left{
+                /* size */
+                width: calc(100% - 54px);
+
+                /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                align-items: center;
+
+                gap: 2px;
+            }
+            .container-processo .container-line .right{
+                 /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: flex-end;
+                align-items: center;
+
+                gap: 2px;
+            }
+            .container-processo .line-cube {
+                /* position */
+                position: relative;
+
+                /* size */
+                width: 25px;
+                height: 25px;
+
+                /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: center;
+                align-items: center;
+            }
+                .container-processo .line-cube[role="button"],
+                .container-processo .line-content.box-number.process-info {
+                    cursor: pointer;
+                }
+                .container-processo .line-cube.disabled {
+                    opacity: 0.45;
+                    cursor: not-allowed;
+                }
+                .container-processo .cube-icon {
+                    /* size */
+                    width: 18px;
+                    height: 18px;
+                    filter: grayscale(1) brightness(0.5);
+                }
+                .container-processo .line-cube.open .cube-icon {
+                    filter: grayscale(0);
+                }
+            .container-processo .line-content {
+                /* size */
+                width: 100%;
+                min-height: 25px;
+
+                /* space */
+                padding: 0 5px;
+
+                /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                align-items: center;
+            }
+                .container-processo .line-content.double-line {
+                    flex-direction: column;
+                    justify-content: flex-start;
+                    align-items: flex-start;
+                    padding: 5px;
+                }
+                .container-processo .content-number {
+                    /* size */
+                    width: 100%;
+
+                    /* text */
+                    font-family: "Syne Mono", monospace;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #505050;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .container-processo .content-classe {
+                    /* size */
+                    width: 100%;
+
+                    /* text */
+                    font-family: "Syne Mono", monospace;
+                    font-size: 10px;
+                    font-weight: 600;
+                    color: #505050;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .container-processo .content-assuntos {
+                    /* size */
+                    width: 100%;
+
+                    /* text */
+                    font-family: "Syne Mono", monospace;
+                    font-size: 9px;
+                    font-weight: 400;
+                    color: #505050;
+                    line-height: 1.35;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .container-processo .content-classe.over,
+                .container-processo .content-assuntos.over {
+                    color: #707070;
+                    font-size: 9px;
+                    font-weight: 400;
+                }
+
+
+        .container-historical {
+            /* position */
+            position: relative;
+
+            /* size */
+            min-width: 20px;
+            min-height: 20px;
+            width: 307px;
+
+            /* space */
+            padding: 2px;
+            gap: 2px;
+            box-sizing: border-box;
+
+            /* flex custom */
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            justify-content: center;
+            align-items: flex-start;
+        }
+            .container-historical .line-content {
+                /* size */
+                width: 100%;
+                min-height: 25px;
+
+                /* space */
+                padding: 0 5px;
+
+                /* flex custom */
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: flex-start;
+                align-items: center;
+            }
+                .container-historical .line-content.double-line {
+                    flex-direction: column;
+                    justify-content: flex-start;
+                    align-items: flex-start;
+                    padding: 5px;
+                }
+            .container-historical .content-classe {
+                /* size */
+                width: 100%;
+
+                /* text */
+                font-family: "Syne Mono", monospace;
+                font-size: 10px;
+                font-weight: 600;
+                color: #505050;
+                line-height: 20px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+                .container-historical .content-assuntos {
+                    /* size */
+                    width: 100%;
+                    height: fit-content;
+
+                    /* text */
+                    font-family: "Syne Mono", monospace;
+                    font-size: 9px;
+                    font-weight: 400;
+                    line-height: 15px;
+                    color: #505050;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+    </style>
+</head>
+<body>
+
+    <div class="register-line">
+
+        <!-- LEFT -->
+        <div class="left">
+
+            <!-- CONTAINER PROCESSO - COMPACTO - COMPLETO -->
+            <div class="container-processo container-process container-sm" data-processo-bloco="1">
+                <div class="container-line">
+                    <div class="left">
+                        <!-- mostrar essa div se o processo tiver sigilo -->
+                        <div class="line-cube box-private" title="Sigiloso" aria-label="Sigiloso">                    
+                            <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png">
+                        </div>
+
+                        <div class="line-content box-number process-info" role="button" tabindex="0" title="Copiar número do processo" aria-label="Copiar número do processo">
+                            <span class="content-number major-info">8011335-36.2026.8.05.0103</span>
+                        </div>
+                    </div>
+
+                    <div class="right">
+                        <div class="line-cube box-open open" title="Réu Preso" aria-label="Réu Preso">
+                            <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png">
+                        </div>
+                        <div class="line-cube box-open open" title="Abrir processo" aria-label="Abrir processo" role="button" tabindex="0" data-nav-href="#">
+                            <img class="cube-icon" src="./../../../public/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png">
+                        </div>
+                    </div>
+                </div>
+                <div class="container-line">
+                    <div class="line-content double-line">
+                        <span class="content-classe">SIGILOSO - Ação Penal - Procedimento Ordinário</span>
+                        <span class="content-assuntos">Leve | Ameaça | <strong>Réu Preso</strong></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right">
+
+            <!-- CONTAINER HISTORICO - COMPACTO - COMPLETO -->
+            <div class="container-historical container-sm">
+                <div class="container-line">
+                    <div class="line-content double-line">
+                        <span class="content-classe">Histórico de movimentações</span>
+                        <span class="content-assuntos">- 06/04/2026 - 09:44 | Cadastrado por Jorge Wanderley</span>
+                        <span class="content-assuntos">- 08/07/2026 - 14:28 | Enviado por Sheila França</span>
+                    </div>                    
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</body>
+</html>
