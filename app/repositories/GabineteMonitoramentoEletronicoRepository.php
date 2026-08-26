@@ -94,28 +94,30 @@ final class GabineteMonitoramentoEletronicoRepository
         $st->execute();
     }
 
-    public function updateStatus(string $id, string $status): bool
+    public function updateStatus(string $id, string $status, string $atualizadoPor = ''): bool
     {
         $st = $this->connection->prepare(
-            sprintf('UPDATE `%s` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
+            sprintf('UPDATE `%s` SET `status` = :status, `atualizado_por` = COALESCE(NULLIF(:atualizado_por, \'\'), `atualizado_por`), `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
         );
         $st->bindValue(':status', $status);
+        $st->bindValue(':atualizado_por', trim($atualizadoPor));
         $st->bindValue(':id', $id);
         $st->execute();
 
         return $st->rowCount() > 0;
     }
 
-    public function updateDatas(string $id, ?string $dataInicio, ?string $dataEncerramento): bool
+    public function updateDatas(string $id, ?string $dataInicio, ?string $dataEncerramento, string $atualizadoPor = ''): bool
     {
         $st = $this->connection->prepare(
             sprintf(
-                'UPDATE `%s` SET `data_inicio` = :di, `data_encerramento` = :df, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                'UPDATE `%s` SET `data_inicio` = :di, `data_encerramento` = :df, `atualizado_por` = COALESCE(NULLIF(:atualizado_por, \'\'), `atualizado_por`), `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
                 $this->table
             )
         );
         $st->bindValue(':di', $dataInicio);
         $st->bindValue(':df', $dataEncerramento);
+        $st->bindValue(':atualizado_por', trim($atualizadoPor));
         $st->bindValue(':id', $id);
         $st->execute();
 

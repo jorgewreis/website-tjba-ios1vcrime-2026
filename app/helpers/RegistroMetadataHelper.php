@@ -162,6 +162,12 @@ final class RegistroMetadataHelper
             $criador = self::resolverNomeCriadorFallback($row);
         }
         $editor = trim(self::pick($row, $config['editor_keys'] ?? ['UltimoEditorNome', 'AtualizadoPorNome']));
+        if ($editor === '' && $connection instanceof PDO) {
+            $atualizadoPorId = trim(self::pick($row, ['AtualizadoPor', 'atualizado_por']));
+            if ($atualizadoPorId !== '') {
+                $editor = self::buscarNomeUsuarioPorId($connection, $atualizadoPorId);
+            }
+        }
         $createdRaw = trim(self::pick($row, $config['data_keys'] ?? ['Data', 'created_at']));
         $updatedRaw = trim(self::pick($row, $config['updated_keys'] ?? ['DataAtualizacao', 'updated_at']));
 
@@ -561,7 +567,7 @@ final class RegistroMetadataHelper
         $a = preg_replace('/[^a-zA-Z0-9_]/', '', $alias) ?: 't';
 
         return sprintf(
-            ', %1$s.`updated_at` AS `DataAtualizacao`, %1$s.`%3$s` AS `CriadoPor`,'
+            ', %1$s.`updated_at` AS `DataAtualizacao`, %1$s.`%3$s` AS `CriadoPor`, %1$s.`atualizado_por` AS `AtualizadoPor`,'
             . ' TRIM(CONCAT(COALESCE(ucr_%2$s.`nome`, \'\'), \' \', COALESCE(ucr_%2$s.`sobrenome`, \'\'))) AS `CriadoPorNome`,'
             . ' TRIM(CONCAT(COALESCE(ued_%2$s.`nome`, \'\'), \' \', COALESCE(ued_%2$s.`sobrenome`, \'\'))) AS `UltimoEditorNome`',
             $a,

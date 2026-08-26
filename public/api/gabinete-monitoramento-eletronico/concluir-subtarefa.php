@@ -18,6 +18,7 @@ if (!is_array($parsed)) {
 
 $subtarefaId = trim((string) ($parsed['subtarefa_id'] ?? $parsed['subtarefaId'] ?? ''));
 $dataInicio = isset($parsed['data_inicio']) ? trim((string) $parsed['data_inicio']) : null;
+$usuarioMovimentacaoId = trim((string) ($_SESSION['id_usuario'] ?? ''));
 
 if ($subtarefaId === '') {
     http_response_code(400);
@@ -27,7 +28,7 @@ if ($subtarefaId === '') {
 
 try {
     $service = new GabineteMonitoramentoEletronicoService($connection);
-    $resultado = $service->concluirSubtarefa($subtarefaId, $dataInicio);
+    $resultado = $service->concluirSubtarefa($subtarefaId, $dataInicio, $usuarioMovimentacaoId);
     echo json_encode(array_merge(['success' => true], is_array($resultado) ? $resultado : []), JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);

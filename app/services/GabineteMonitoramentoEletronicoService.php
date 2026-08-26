@@ -286,7 +286,7 @@ final class GabineteMonitoramentoEletronicoService
         }
     }
 
-    public function concluirSubtarefa(string $subtarefaId, ?string $dataInicio): array
+    public function concluirSubtarefa(string $subtarefaId, ?string $dataInicio, string $usuarioMovimentacaoId = ''): array
     {
         $st = $this->subtarefasRepository->findById($subtarefaId);
         if ($st === null) {
@@ -328,8 +328,8 @@ final class GabineteMonitoramentoEletronicoService
             if ($s2 !== null) {
                 $this->subtarefasRepository->atualizarStatus((string) $s2['id'], 'em_andamento');
             }
-            $this->repository->updateDatas($monId, $dataInicio, null);
-            $this->repository->updateStatus($monId, 'em_andamento');
+            $this->repository->updateDatas($monId, $dataInicio, null, $usuarioMovimentacaoId);
+            $this->repository->updateStatus($monId, 'em_andamento', $usuarioMovimentacaoId);
 
             return ['tarefa_principal_concluida' => false];
         }
@@ -341,8 +341,8 @@ final class GabineteMonitoramentoEletronicoService
                 throw new InvalidArgumentException('O monitoramento ainda não foi iniciado.');
             }
             $this->subtarefasRepository->marcarConcluida($subtarefaId);
-            $this->repository->updateDatas($monId, $di, $hoje);
-            $this->repository->updateStatus($monId, 'finalizada');
+            $this->repository->updateDatas($monId, $di, $hoje, $usuarioMovimentacaoId);
+            $this->repository->updateStatus($monId, 'finalizada', $usuarioMovimentacaoId);
 
             return ['tarefa_principal_concluida' => true];
         }

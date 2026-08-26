@@ -115,8 +115,8 @@ final class OficioRegistroMetadataHelper
             $historicoEventoClasse = 'text-canceled';
         } elseif ($updatedRaw !== '' && $createdRaw !== '' && self::isUpdatedAfterCreated($createdRaw, $updatedRaw)) {
             $dataEventoClasse = 'updated';
-            $dataEventoTexto = RegistroMetadataHelper::formatarEventoComAutor('Atualizado em', $updatedRaw, $editorCompacto);
-            $historicoEventoRotulo = 'Atualizado';
+            $dataEventoTexto = RegistroMetadataHelper::formatarEventoComAutor('Enviado em', $updatedRaw, $editorCompacto);
+            $historicoEventoRotulo = 'Enviado';
             $historicoEventoData = $updatedRaw;
             $historicoEventoAutor = $editorCompacto !== '' ? $editorCompacto : $criadorCompacto;
         }
