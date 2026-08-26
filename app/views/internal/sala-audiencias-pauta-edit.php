@@ -255,16 +255,28 @@ usort($partesOrdenadas, static function (array $a, array $b) use ($ordemTiposPar
     return $ia <=> $ib;
 });
 
-$tipos = $service->listTiposAtivos();
-$tipoNppExtra = 'Proposta de Acordo de NPP';
-$temTipoNppExtra = false;
-foreach ($tipos as $tpItem) {
-    $nomeTp = trim((string) ($tpItem['nome'] ?? ''));
-    if ($nomeTp === $tipoNppExtra) {
-        $temTipoNppExtra = true;
-        break;
-    }
-}
+$tiposAudienciaPermitidos = [
+    'Acordo de não persecução penal (ANPP)',
+    'Admonitória',
+    'Apresentação',
+    'Audiência Concentrada',
+    'Audiência Preliminar',
+    'Círculo de Construção de Paz',
+    'Coleta de DNA',
+    'Conciliação ou mediação',
+    'Custódia',
+    'Depoimento Especial',
+    'Entrevista',
+    'Instrução e julgamento',
+    'Inspeção Judicial',
+    'Justificação',
+    'Plenário virtual',
+    'Pública',
+    'Saneamento',
+    'Sessão do Tribunal de Júri',
+    'Sessões colegiadas',
+    'Suspensão Condicional do Processo',
+];
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -381,11 +393,11 @@ foreach ($tipos as $tpItem) {
                     <label for="audiencia-edit-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-500 height-md" id="audiencia-edit-tipo">
                         <?php $tipoAtual = (string) ($row['tipo_audiencia'] ?? ''); ?>
-                        <?php foreach ($tipos as $tp): $tpNome = (string) ($tp['nome'] ?? ''); ?>
-                            <option value="<?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?>"<?php echo $tipoAtual === $tpNome ? ' selected' : ''; ?>><?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?></option>
+                        <?php foreach ($tiposAudienciaPermitidos as $tipoAudienciaPermitido): ?>
+                            <option value="<?php echo htmlspecialchars($tipoAudienciaPermitido, ENT_QUOTES); ?>"<?php echo $tipoAtual === $tipoAudienciaPermitido ? ' selected' : ''; ?>><?php echo htmlspecialchars($tipoAudienciaPermitido, ENT_QUOTES); ?></option>
                         <?php endforeach; ?>
-                        <?php if (!$temTipoNppExtra || $tipoAtual === $tipoNppExtra): ?>
-                            <option value="<?php echo htmlspecialchars($tipoNppExtra, ENT_QUOTES); ?>"<?php echo $tipoAtual === $tipoNppExtra ? ' selected' : ''; ?>><?php echo htmlspecialchars($tipoNppExtra, ENT_QUOTES); ?></option>
+                        <?php if ($tipoAtual !== '' && !in_array($tipoAtual, $tiposAudienciaPermitidos, true)): ?>
+                            <option value="<?php echo htmlspecialchars($tipoAtual, ENT_QUOTES); ?>" selected><?php echo htmlspecialchars($tipoAtual, ENT_QUOTES); ?> (registro atual)</option>
                         <?php endif; ?>
                     </select>
                 </div>
@@ -409,10 +421,10 @@ foreach ($tipos as $tpItem) {
                     <label for="audiencia-edit-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <?php $locAtual = (string) ($row['localizacao'] ?? ''); ?>
                     <select class="width-400 height-md" id="audiencia-edit-sala">
-                        <option value="" disabled<?php echo $locAtual === '' ? ' selected' : ''; ?>>Selecione a localização</option>
-                        <option value="presencial"<?php echo $locAtual === 'presencial' ? ' selected' : ''; ?>>Presencial - Fórum</option>
-                        <option value="lifesize"<?php echo $locAtual === 'lifesize' ? ' selected' : ''; ?>>Virtual - Lifesize</option>
-                        <option value="audin"<?php echo $locAtual === 'audin' ? ' selected' : ''; ?>>Virtual - Audin</option>
+                        <option value="" disabled>Selecione a localização</option>
+                        <option value="presencial">Presencial - Fórum</option>
+                        <option value="lifesize">Virtual - Lifesize</option>
+                        <option value="audin" selected>Virtual - Audin</option>
                     </select>
                 </div>
                 <div class="col filter">

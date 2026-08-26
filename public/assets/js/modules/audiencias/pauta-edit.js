@@ -595,7 +595,35 @@
         }
     }
 
+    function setupLocalizacaoAudienciaEdit() {
+        var dataEl = document.getElementById('audiencia-edit-data');
+        var salaEl = document.getElementById('audiencia-edit-sala');
+        if (!salaEl) return;
+        var lifesizeOption = salaEl.querySelector('option[value="lifesize"]');
+        var audinOption = salaEl.querySelector('option[value="audin"]');
+        var limiteLifesize = '2026-09-01';
+
+        function syncLocalizacao() {
+            var data = String(dataEl && dataEl.value || '').trim();
+            var bloquearLifesize = data !== '' && data > limiteLifesize;
+            if (lifesizeOption) {
+                lifesizeOption.disabled = bloquearLifesize;
+            }
+            if (audinOption && (!salaEl.value || (bloquearLifesize && salaEl.value === 'lifesize'))) {
+                salaEl.value = 'audin';
+            }
+        }
+
+        if (!salaEl.value && audinOption) {
+            salaEl.value = 'audin';
+        }
+        dataEl?.addEventListener('change', syncLocalizacao);
+        dataEl?.addEventListener('blur', syncLocalizacao);
+        syncLocalizacao();
+    }
+
     document.getElementById('audiencia-edit-status')?.addEventListener('change', syncDateMinForStatusPauta);
+    setupLocalizacaoAudienciaEdit();
 
     document.getElementById('btn-audiencia-edit-salvar')?.addEventListener('click', function () {
         normalizePartNameInput();

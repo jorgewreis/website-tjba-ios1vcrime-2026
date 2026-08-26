@@ -8,17 +8,28 @@ if (function_exists('mb_internal_encoding')) {
 ?>
 <?php
 require_once __DIR__ . '/../../services/SalaAudienciasPautaService.php';
-$servicePautaTipos = new SalaAudienciasPautaService(Conection::getInstance()->getConnection());
-$tipos = $servicePautaTipos->listTiposAtivos();
-$tipoNppExtra = 'Proposta de Acordo de NPP';
-$temTipoNppExtra = false;
-foreach ($tipos as $tpItem) {
-    $nomeTp = trim((string) ($tpItem['nome'] ?? ''));
-    if ($nomeTp === $tipoNppExtra) {
-        $temTipoNppExtra = true;
-        break;
-    }
-}
+$tiposAudienciaPermitidos = [
+    'Acordo de não persecução penal (ANPP)',
+    'Admonitória',
+    'Apresentação',
+    'Audiência Concentrada',
+    'Audiência Preliminar',
+    'Círculo de Construção de Paz',
+    'Coleta de DNA',
+    'Conciliação ou mediação',
+    'Custódia',
+    'Depoimento Especial',
+    'Entrevista',
+    'Instrução e julgamento',
+    'Inspeção Judicial',
+    'Justificação',
+    'Plenário virtual',
+    'Pública',
+    'Saneamento',
+    'Sessão do Tribunal de Júri',
+    'Sessões colegiadas',
+    'Suspensão Condicional do Processo',
+];
 $dataMinimaCadastro = date('Y-m-d');
 $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
 ?>
@@ -69,12 +80,9 @@ $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
                     <label for="audiencia-tipo">Tipo de audiência <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-500 height-md" id="audiencia-tipo">
                         <option value="" selected disabled>Selecione o tipo</option>
-                        <?php foreach ($tipos as $tp): ?>
-                            <option value="<?php echo htmlspecialchars((string) ($tp['codigo'] ?? ''), ENT_QUOTES); ?>"><?php echo htmlspecialchars((string) ($tp['nome'] ?? ''), ENT_QUOTES); ?></option>
+                        <?php foreach ($tiposAudienciaPermitidos as $tipoAudienciaPermitido): ?>
+                            <option value="<?php echo htmlspecialchars($tipoAudienciaPermitido, ENT_QUOTES); ?>"><?php echo htmlspecialchars($tipoAudienciaPermitido, ENT_QUOTES); ?></option>
                         <?php endforeach; ?>
-                        <?php if (!$temTipoNppExtra): ?>
-                            <option value="proposta_acordo_npp"><?php echo htmlspecialchars($tipoNppExtra, ENT_QUOTES); ?></option>
-                        <?php endif; ?>
                     </select>
                 </div>
                 <div class="col filter">
@@ -93,18 +101,13 @@ $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
                 <div class="col filter">
                     <label for="audiencia-sala">Localização <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-400 height-md" id="audiencia-sala">
-                        <option value="" selected disabled>Selecione a localização</option>
+                        <option value="" disabled>Selecione a localização</option>
                         <option value="presencial">Presencial - Fórum</option>
-                        <option value="lifesize" selected>Virtual - Lifesize</option>
-                        <option value="audin">Virtual - Audin</option>
+                        <option value="lifesize">Virtual - Lifesize</option>
+                        <option value="audin" selected>Virtual - Audin</option>
                     </select>
                 </div>
-                <div class="col filter">
-                    <label for="audiencia-status">Status inicial</label>
-                    <select class="width-400 height-md" id="audiencia-status">
-                        <option value="designada" selected>Designada</option>
-                    </select>
-                </div>
+                <input type="hidden" id="audiencia-status" value="designada">
             </div>
 
             <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
