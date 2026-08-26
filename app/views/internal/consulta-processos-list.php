@@ -79,6 +79,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 <?php include __DIR__ . '/_internal_head_styles.php'; ?>
 
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
         <?php /* Apenas formatação CNJ no filtro; não inclui consulta de classe ao DataJud (lista local). */ ?>
@@ -154,15 +155,17 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <?php if (!$filtrou): ?>
                 <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
                 <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                    <span class="padding-y-md major-info">Informe o número do processo ou o nome da parte; a lista atualiza ao digitar (com pausa) ou ao alterar itens por página.</span>
+                    <span class="padding-y-md major-info">Informe o número do processo ou o nome da parte para pesquisar</span>
                 </div>
             </div>
         <?php elseif (!empty($rows)): ?>
             <?php foreach ($rows as $row): ?>
-            <div class="display-flex col col-full register border-bottom">
+            <div class="display-flex col col-full register border-bottom" data-processo-id="<?php echo htmlspecialchars((string) ($row['id'] ?? ''), ENT_QUOTES); ?>">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                    <div class="display-flex col col-full">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                        <div class="col width-500 col-process">
                         <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                        </div>
                     </div>
                 </div>
             </div>
