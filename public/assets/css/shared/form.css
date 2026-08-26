@@ -551,15 +551,16 @@ button.btn:disabled {
 }
 
 .badge-prioridade-remover {
-    width: 16px;
-    height: 16px;
-    margin-left: 6px;
-    padding: 0;
+    align-self: stretch;
+    min-width: 18px;
+    height: auto;
+    margin: 0 -0.75em 0 8px;
+    padding: 0 5px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid currentColor;
-    border-radius: 50%;
+    border: 0;
+    border-radius: 0 4px 4px 0;
     background: transparent;
     color: inherit;
     cursor: pointer;

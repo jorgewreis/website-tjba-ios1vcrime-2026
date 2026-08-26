@@ -107,6 +107,49 @@
         }).join('');
     }
 
+    function formatCpfDisplay(cpf) {
+        const digits = String(cpf || '').replace(/\D/g, '');
+        if (digits.length !== 11) {
+            return String(cpf || '').trim();
+        }
+        return digits.slice(0, 3) + '.' + digits.slice(3, 6) + '.' + digits.slice(6, 9) + '-' + digits.slice(9, 11);
+    }
+
+    function formatNomeParte(value) {
+        let nome = String(value || '').trim();
+        if (App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
+            nome = App.ProperNameHelper.formatProper(nome, 255);
+        } else if (global.TextFormatter && typeof global.TextFormatter.formatProperName === 'function') {
+            nome = global.TextFormatter.formatProperName(nome, 255);
+        }
+        return nome;
+    }
+
+    function resolvePessoaOptionLabel(pessoa) {
+        if (pessoa && String(pessoa.label || '').trim() !== '') {
+            return String(pessoa.label).trim();
+        }
+        const nome = String((pessoa && pessoa.nome_completo) || '').trim();
+        const cpf = String((pessoa && (pessoa.cpf_formatado || pessoa.cpf)) || '').trim();
+        const profissao = String((pessoa && pessoa.profissao_exibicao) || '').trim();
+        const lotacao = String((pessoa && pessoa.lotacao_exibicao) || '').trim();
+        let label = nome;
+        if (cpf !== '') {
+            label = formatCpfDisplay(cpf) + ' - ' + label;
+        }
+        const suffix = [];
+        if (profissao !== '') {
+            suffix.push(profissao);
+        }
+        if (lotacao !== '') {
+            suffix.push(lotacao);
+        }
+        if (suffix.length > 0) {
+            label += ' (' + suffix.join(' - ') + ')';
+        }
+        return label;
+    }
+
     function initialize(config) {
         const settings = config || {};
         const storageKey = settings.storageKey || 'cartorio.postReloadToast';
@@ -119,6 +162,13 @@
         const descricaoInput = global.document.getElementById('processo-assunto-descricao');
         const btnVincularAssunto = global.document.getElementById('btn-processo-assunto-vincular');
         const assuntosList = global.document.getElementById('processo-assuntos-list');
+        const parteNomeSelect = global.document.getElementById('processo-parte-nome-selecao');
+        const parteNomeInput = global.document.getElementById('processo-parte-nome');
+        const parteIdInput = global.document.getElementById('processo-parte-id');
+        const parteTipoSelect = global.document.getElementById('processo-parte-tipo');
+        const partePoloSelect = global.document.getElementById('processo-parte-polo');
+        const parteAdicionarBtn = global.document.getElementById('btn-processo-parte-adicionar');
+        const parteNomeStatus = global.document.getElementById('processo-parte-nome-status');
         let assuntosState = normalizeAssuntos(global.PROCESSO_ASSUNTOS_INITIAL || []);
 
         const BUSCA_ASSUNTO_DEBOUNCE_MS = 1000;
@@ -127,6 +177,7 @@
         /** Código para o qual a consulta ao catálogo terminou com sucesso (HTTP ok). */
         let codigoVerificadoNoBd = '';
         let assuntoEncontradoNoCatalogo = false;
+        let buscaPessoaTimer = null;
 
         function clearBuscaAssuntoTimer() {
             if (buscaAssuntoTimer !== null) {
@@ -182,6 +233,187 @@
             descricaoInput.value = '';
             descricaoInput.readOnly = false;
             descricaoInput.placeholder = 'Código não cadastrado — informe a descrição para vincular';
+        }
+
+        function setParteNomeStatus(text, color) {
+            if (!parteNomeStatus) {
+                return;
+            }
+            parteNomeStatus.textContent = text || '';
+            parteNomeStatus.style.color = color || '';
+        }
+
+        function parteNomeAtual() {
+            return parteNomeInput ? formatNomeParte(parteNomeInput.value || '') : '';
+        }
+
+        function atualizarBtnAdicionarParte() {
+            if (!parteAdicionarBtn) {
+                return;
+            }
+            const nome = parteNomeAtual();
+            const parteId = parteIdInput ? String(parteIdInput.value || '').trim() : '';
+            const tipo = parteTipoSelect ? String(parteTipoSelect.value || '').trim() : '';
+            const polo = partePoloSelect ? String(partePoloSelect.value || '').trim() : '';
+            parteAdicionarBtn.disabled = (parteId === '' && nome === '') || tipo === '' || polo === '';
+        }
+
+        function aplicarPoloPadraoPorTipo() {
+            if (!parteTipoSelect || !partePoloSelect || String(partePoloSelect.value || '').trim() !== '') {
+                return;
+            }
+            const tipo = String(parteTipoSelect.value || '').trim();
+            if (['reu', 'indiciado', 'sentenciado', 'requerido'].indexOf(tipo) >= 0) {
+                partePoloSelect.value = 'passivo';
+            } else if (['vitima', 'requerente'].indexOf(tipo) >= 0) {
+                partePoloSelect.value = 'ativo';
+            } else if (['testemunha_denuncia', 'testemunha_defesa', 'advogado', 'defensor_publico'].indexOf(tipo) >= 0) {
+                partePoloSelect.value = 'terceiros';
+            }
+        }
+
+        function mostrarInputNomeParte(preserveValue) {
+            if (!parteNomeInput || !parteNomeSelect) {
+                return;
+            }
+            parteNomeSelect.style.display = 'none';
+            parteNomeSelect.disabled = true;
+            parteNomeInput.style.display = '';
+            parteNomeInput.readOnly = false;
+            if (typeof preserveValue === 'string') {
+                parteNomeInput.value = preserveValue;
+            }
+            if (parteIdInput) {
+                parteIdInput.value = '';
+            }
+            setParteNomeStatus('', '');
+            atualizarBtnAdicionarParte();
+        }
+
+        function mostrarSugestoesPessoas(pessoas, nomeDigitado) {
+            if (!parteNomeSelect || !parteNomeInput) {
+                return;
+            }
+            const sugestoes = Array.isArray(pessoas) ? pessoas.slice(0, 3) : [];
+            if (sugestoes.length === 0) {
+                mostrarInputNomeParte(nomeDigitado);
+                return;
+            }
+
+            parteNomeSelect.innerHTML = '';
+            const usarNome = global.document.createElement('option');
+            usarNome.value = '__nova__';
+            usarNome.textContent = 'Nova pessoa (usar: ' + nomeDigitado + ')';
+            usarNome.dataset.nomeParte = nomeDigitado;
+            usarNome.dataset.parteId = '';
+            parteNomeSelect.appendChild(usarNome);
+
+            sugestoes.forEach(function (pessoa) {
+                const option = global.document.createElement('option');
+                option.value = String((pessoa && pessoa.id) || '').trim();
+                option.textContent = resolvePessoaOptionLabel(pessoa);
+                option.dataset.nomeParte = String((pessoa && pessoa.nome_completo) || '').trim();
+                option.dataset.parteId = String((pessoa && pessoa.id) || '').trim();
+                parteNomeSelect.appendChild(option);
+            });
+
+            const outro = global.document.createElement('option');
+            outro.value = '__outro__';
+            outro.textContent = 'Outro nome (digite abaixo)';
+            parteNomeSelect.appendChild(outro);
+
+            const firstSuggestion = parteNomeSelect.querySelector('option[data-parte-id][value]:not([value="__nova__"])');
+            parteNomeSelect.disabled = false;
+            parteNomeSelect.style.display = '';
+            parteNomeInput.style.display = 'none';
+            if (firstSuggestion) {
+                parteNomeSelect.value = firstSuggestion.value;
+                parteNomeInput.value = formatNomeParte(firstSuggestion.dataset.nomeParte || nomeDigitado);
+                if (parteIdInput) {
+                    parteIdInput.value = String(firstSuggestion.dataset.parteId || '').trim();
+                }
+                setParteNomeStatus('Parte vinculada', 'var(--color-success-active)');
+            } else {
+                parteNomeSelect.value = '__nova__';
+                parteNomeInput.value = formatNomeParte(nomeDigitado);
+                if (parteIdInput) {
+                    parteIdInput.value = '';
+                }
+                setParteNomeStatus('Nova pessoa', '');
+            }
+            atualizarBtnAdicionarParte();
+        }
+
+        function buscarPessoasPorNome(nome) {
+            return fetch('/api/pessoas/search-by-name.php?nome=' + encodeURIComponent(nome) + '&limit=5', {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json' }
+            }).then(function (response) {
+                return response.json().then(function (body) {
+                    return { ok: response.ok, body: body };
+                });
+            }).then(function (result) {
+                if (!result.ok || (result.body && result.body.error)) {
+                    mostrarInputNomeParte(nome);
+                    return;
+                }
+                mostrarSugestoesPessoas(result.body ? result.body.pessoas : [], nome);
+            }).catch(function () {
+                mostrarInputNomeParte(nome);
+            });
+        }
+
+        function scheduleBuscarPessoas() {
+            if (buscaPessoaTimer !== null) {
+                global.clearTimeout(buscaPessoaTimer);
+                buscaPessoaTimer = null;
+            }
+            const nome = parteNomeAtual();
+            if (parteIdInput) {
+                parteIdInput.value = '';
+            }
+            if (nome.length < 3) {
+                setParteNomeStatus('', '');
+                atualizarBtnAdicionarParte();
+                return;
+            }
+            buscaPessoaTimer = global.setTimeout(function () {
+                buscaPessoaTimer = null;
+                buscarPessoasPorNome(nome);
+            }, 700);
+            atualizarBtnAdicionarParte();
+        }
+
+        function limparFormularioParte() {
+            if (parteNomeInput) {
+                parteNomeInput.value = '';
+            }
+            if (parteTipoSelect) {
+                parteTipoSelect.selectedIndex = 0;
+            }
+            if (partePoloSelect) {
+                partePoloSelect.selectedIndex = 0;
+            }
+            mostrarInputNomeParte('');
+        }
+
+        function criarPessoaSeNecessario() {
+            const parteId = parteIdInput ? String(parteIdInput.value || '').trim() : '';
+            if (parteId !== '') {
+                return Promise.resolve(parteId);
+            }
+            const nome = parteNomeAtual();
+            if (nome === '') {
+                return Promise.reject(new Error('Nome obrigatório.'));
+            }
+            return postJson('/api/pessoas/create.php', {
+                nome_completo: nome
+            }).then(function (result) {
+                if (result.data && result.data.id) {
+                    return String(result.data.id);
+                }
+                throw new Error((result.data && result.data.error) ? result.data.error : 'Erro ao cadastrar pessoa.');
+            });
         }
 
         function buscarAssuntoPorCodigo(options) {
@@ -265,6 +497,7 @@
         flushPostReloadToast(storageKey);
         renderAssuntos(assuntosList, assuntosState);
         atualizarBtnVincularAssunto();
+        atualizarBtnAdicionarParte();
 
         global.document.querySelectorAll('.btn-desvincular').forEach(function (button) {
             button.addEventListener('click', function () {
@@ -358,6 +591,77 @@
                     notify('error', 'Erro', 'Erro de conexão ao vincular assunto.');
                 }).finally(function () {
                     atualizarBtnVincularAssunto();
+                });
+            });
+        }
+
+        if (parteNomeInput) {
+            parteNomeInput.addEventListener('input', scheduleBuscarPessoas);
+            parteNomeInput.addEventListener('blur', function () {
+                parteNomeInput.value = parteNomeAtual();
+                atualizarBtnAdicionarParte();
+            });
+        }
+
+        if (parteNomeSelect && parteNomeInput) {
+            parteNomeSelect.addEventListener('change', function () {
+                const selected = parteNomeSelect.options[parteNomeSelect.selectedIndex] || null;
+                const value = String(parteNomeSelect.value || '').trim();
+                if (value === '__outro__') {
+                    mostrarInputNomeParte('');
+                    parteNomeInput.focus();
+                    return;
+                }
+                const nome = selected ? String(selected.dataset.nomeParte || '').trim() : '';
+                parteNomeInput.value = formatNomeParte(nome);
+                if (parteIdInput) {
+                    parteIdInput.value = selected ? String(selected.dataset.parteId || '').trim() : '';
+                }
+                setParteNomeStatus(value === '__nova__' ? 'Nova pessoa' : 'Parte vinculada', value === '__nova__' ? '' : 'var(--color-success-active)');
+                atualizarBtnAdicionarParte();
+            });
+        }
+
+        if (parteTipoSelect) {
+            parteTipoSelect.addEventListener('change', function () {
+                aplicarPoloPadraoPorTipo();
+                atualizarBtnAdicionarParte();
+            });
+        }
+
+        if (partePoloSelect) {
+            partePoloSelect.addEventListener('change', atualizarBtnAdicionarParte);
+        }
+
+        if (parteAdicionarBtn && processoId) {
+            parteAdicionarBtn.addEventListener('click', function () {
+                const tipo = parteTipoSelect ? String(parteTipoSelect.value || '').trim() : '';
+                const polo = partePoloSelect ? String(partePoloSelect.value || '').trim() : '';
+                const nome = parteNomeAtual();
+                if (nome === '' || tipo === '' || polo === '') {
+                    notify('error', 'Campos obrigatórios', 'Informe nome, tipo e polo da parte.');
+                    return;
+                }
+                parteAdicionarBtn.disabled = true;
+                criarPessoaSeNecessario().then(function (parteId) {
+                    return postJson('/api/processos-partes/create.php', {
+                        processo_id: processoId,
+                        parte_id: parteId,
+                        tipo_parte: tipo,
+                        polo: polo
+                    });
+                }).then(function (result) {
+                    if (result.data && result.data.id) {
+                        limparFormularioParte();
+                        queuePostReloadToast('success', 'Sucesso', 'Parte adicionada ao processo.', storageKey);
+                        global.location.reload();
+                        return;
+                    }
+                    notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Erro ao adicionar parte.');
+                    atualizarBtnAdicionarParte();
+                }).catch(function (error) {
+                    notify('error', 'Erro', error && error.message ? error.message : 'Erro de conexão ao adicionar parte.');
+                    atualizarBtnAdicionarParte();
                 });
             });
         }
