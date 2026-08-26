@@ -33,6 +33,7 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
     <title>Processo <?php echo htmlspecialchars($processo['numero_processo'] ?? ''); ?></title>
             <?php include __DIR__ . '/_internal_head_styles.php'; ?>
 
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>
 <body class="page-internal">
@@ -53,9 +54,10 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">
         <?php if ($prioridadesFichaEstado !== null): ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <h2>Prioridades processuais</h2>
+            <h2>Prioridades</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="prioridades-processuais-wrap">
+            <div id="prioridades-processuais-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="prioridade-catalog-select">Incluir prioridade</label>
@@ -65,46 +67,87 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
                 </div>
                 <button type="button" class="btn btn-primary height-md" id="btn-prioridade-adicionar">Adicionar</button>
             </div>
-            <div id="prioridades-processuais-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
         </div>
         <?php endif; ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <h2>Assuntos processuais</h2>
+            <h2>Assuntos</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="processo-assuntos-wrap">
+            <div id="processo-assuntos-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="processo-assunto-codigo">Código do assunto</label>
                     <input type="text" id="processo-assunto-codigo" class="height-md" placeholder="Ex.: 10247" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
                 </div>
-                <div class="col width-500">
+                <div class="col width-700">
                     <label for="processo-assunto-descricao">Descrição do assunto</label>
-                    <input type="text" id="processo-assunto-descricao" class="height-md" placeholder="Preenchida automaticamente se o código existir no catálogo" readonly>
+                    <input type="text" id="processo-assunto-descricao" class="width-700 height-md" placeholder="Preenchida automaticamente se o código existir no catálogo" readonly>
                 </div>
-                <button type="button" class="btn btn-primary height-md" id="btn-processo-assunto-vincular" disabled>Vincular assunto</button>
+                <button type="button" class="btn btn-primary height-md" id="btn-processo-assunto-vincular" disabled>Incluir</button>
             </div>
-            <div id="processo-assuntos-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
         </div>
-        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Partes vinculadas</h2></div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Partes cadastradas</h2></div>
         <?php if (!empty($partes)): ?>
-            <table class="table-list">
-                <thead><tr><th>Nome</th><th>CPF</th><th>Tipo</th><th>Polo</th><th>Ações</th></tr></thead>
-                <tbody>
-                    <?php foreach ($partes as $p): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($p['nome_completo'] ?? '—'); ?></td>
-                        <td><?php echo htmlspecialchars($p['cpf'] ?? '—'); ?></td>
-                        <td><?php echo htmlspecialchars($p['tipo_parte'] ?? '—'); ?></td>
-                        <td><?php echo htmlspecialchars($p['polo'] ?? '—'); ?></td>
-                        <td>
-                            <button type="button" class="btn btn-secondary-outline" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>">Ver pessoa</button>
-                            <button type="button" class="btn btn-secondary-outline" data-nav-href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>">Editar vínculo</button>
-                            <button type="button" class="btn btn-secondary-outline btn-desvincular" data-id="<?php echo htmlspecialchars($p['id'] ?? ''); ?>" data-processo-id="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">Desvincular</button>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+            <?php foreach ($partes as $p): ?>
+            <?php
+                $tipoParteRaw = trim((string) ($p['tipo_parte'] ?? ''));
+                $poloRaw = trim((string) ($p['polo'] ?? ''));
+                $tipoParteLabels = [
+                    'reu' => 'Réu',
+                    'indiciado' => 'Indiciado',
+                    'sentenciado' => 'Sentenciado',
+                    'requerido' => 'Requerido',
+                    'vitima' => 'Vítima',
+                    'requerente' => 'Requerente',
+                    'testemunha_defesa' => 'Testemunha da Defesa',
+                    'testemunha_denuncia' => 'Testemunha da Denúncia',
+                    'advogado' => 'Advogado',
+                    'defensor_publico' => 'Defensor Público',
+                ];
+                $poloLabels = [
+                    'ativo' => 'Ativo',
+                    'passivo' => 'Passivo',
+                    'terceiros' => 'Terceiros',
+                ];
+                $tipoParteLabel = $tipoParteLabels[$tipoParteRaw] ?? ($tipoParteRaw !== '' ? ucfirst(str_replace('_', ' ', $tipoParteRaw)) : 'Parte');
+                $poloLabel = $poloLabels[$poloRaw] ?? ($poloRaw !== '' ? ucfirst(str_replace('_', ' ', $poloRaw)) : 'Polo não informado');
+                $cpfParte = trim((string) ($p['cpf'] ?? ''));
+                $nomeParte = trim((string) ($p['nome_completo'] ?? ''));
+                $nomeParte = $nomeParte !== '' ? $nomeParte : 'Nome não informado';
+                $sexoParte = trim((string) ($p['sexo'] ?? ''));
+                $dataNascimentoParte = trim((string) ($p['data_nascimento'] ?? ''));
+                $detalhesParte = [];
+                if ($cpfParte !== '') {
+                    $detalhesParte[] = 'CPF: ' . $cpfParte;
+                }
+                if ($sexoParte !== '') {
+                    $detalhesParte[] = 'Sexo: ' . ucfirst($sexoParte);
+                }
+                if ($dataNascimentoParte !== '' && $dataNascimentoParte !== '0000-00-00') {
+                    $timestampNascimento = strtotime($dataNascimentoParte);
+                    $detalhesParte[] = 'Nascimento: ' . ($timestampNascimento !== false ? date('d/m/Y', $timestampNascimento) : $dataNascimentoParte);
+                }
+                $detalhesParteTexto = implode(' | ', $detalhesParte);
+            ?>
+            <div class="display-flex col col-full register border-bottom" data-parte-id="<?php echo htmlspecialchars((string) ($p['id'] ?? ''), ENT_QUOTES); ?>">
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                        <div class="col width-700">
+                            <div class="minor-info"><?php echo htmlspecialchars($tipoParteLabel . ' - ' . $poloLabel, ENT_QUOTES); ?></div>
+                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars($nomeParte, ENT_QUOTES); ?></span>
+                            <?php if ($detalhesParteTexto !== ''): ?>
+                                <span class="minor-info-defesa"><?php echo htmlspecialchars($detalhesParteTexto, ENT_QUOTES); ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="display-flex row row-fit justify-end gap-y-sm align-center">
+                        <button type="button" class="btn btn-editar" data-nav-href="/frame.php?page=processospartesedit&id=<?php echo urlencode((string) ($p['id'] ?? '')); ?>" title="Editar vínculo"><i class="fi fi-rr-pen-square"></i></button>
+                        <button type="button" class="btn btn-editar" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode((string) ($p['parte_id'] ?? '')); ?>" title="Ir para o cadastro da parte"><i class="fi fi-rr-user-link"></i></button>
+                        <button type="button" class="btn-editar stop btn-desvincular" data-id="<?php echo htmlspecialchars((string) ($p['id'] ?? ''), ENT_QUOTES); ?>" data-processo-id="<?php echo htmlspecialchars((string) ($processo['id'] ?? ''), ENT_QUOTES); ?>" title="Remover parte"><i class="fi fi-rr-cross-circle"></i></button>
+                    </div>
+                </div>
+            </div>
+            <?php endforeach; ?>
         <?php else: ?>
             <div class="col subtask subtask-collapsed padding-lr-md full-line">
                 <div class="display-flex row row-full justify-between padding-y-md border-top">

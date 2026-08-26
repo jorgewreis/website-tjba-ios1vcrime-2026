@@ -550,6 +550,31 @@ button.btn:disabled {
     color: var(--color-text-on-primary);
 }
 
+.badge-prioridade-remover {
+    width: 16px;
+    height: 16px;
+    margin-left: 6px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    line-height: 1;
+    opacity: 0.72;
+}
+
+.badge-prioridade-remover:hover,
+.badge-prioridade-remover:focus-visible {
+    opacity: 1;
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+}
+
 
 .badge.file {
     height: 30px;

@@ -185,28 +185,25 @@
         sorted.forEach(function (p) {
             var codigo = String(p.codigo || '');
             var label = String(p.label || codigo);
-            var slot = document.createElement('span');
-            slot.className = 'display-inline-flex align-items-center';
-            slot.style.gap = '4px';
-
             var badge = document.createElement('span');
             badge.className = badgeClassForPrioridade(p);
-            badge.textContent = label;
             badge.title = label;
-            slot.appendChild(badge);
+            var badgeLabel = document.createElement('span');
+            badgeLabel.textContent = label;
+            badge.appendChild(badgeLabel);
 
             if (!isLockedCodigo(codigo)) {
                 var btn = document.createElement('button');
                 btn.type = 'button';
-                btn.className = 'btn btn-danger-outline height-sm';
+                btn.className = 'badge-prioridade-remover';
                 btn.setAttribute('data-prioridade-codigo-rem', codigo);
                 btn.setAttribute('title', 'Remover prioridade');
                 btn.setAttribute('aria-label', 'Remover prioridade');
                 btn.textContent = '×';
-                slot.appendChild(btn);
+                badge.appendChild(btn);
             }
 
-            wrap.appendChild(slot);
+            wrap.appendChild(badge);
         });
 
         listEl.appendChild(wrap);

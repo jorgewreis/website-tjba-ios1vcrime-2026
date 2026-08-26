@@ -96,14 +96,12 @@
             const texto = item.codigo
                 ? (item.descricao && item.descricao !== item.codigo ? (item.codigo + ' - ' + item.descricao) : item.codigo)
                 : item.descricao;
-            const origem = item.origem === 'datajud' ? 'DataJud' : 'Manual';
             return [
                 '<div class="display-flex row row-full justify-between align-center border-bottom padding-y-sm" data-assunto-id="' + item.id + '">',
                 '  <div class="display-flex col" style="width:auto; flex:1 1 auto;">',
                 '    <span class="major-info">' + escapeHtml(texto) + '</span>',
-                '    <span class="minor-info">Origem: ' + escapeHtml(origem) + '</span>',
                 '  </div>',
-                '  <button type="button" class="btn btn-secondary-outline height-sm btn-assunto-desvincular" data-assunto-id="' + item.id + '">Desvincular</button>',
+                '  <button type="button" class="btn btn-secondary-outline height-sm btn-assunto-desvincular" data-assunto-id="' + item.id + '">Remover</button>',
                 '</div>'
             ].join('');
         }).join('');
