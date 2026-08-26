@@ -6,4 +6,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 - **feat(processos): padronizar bloco nas listagens** `[eab869d1]`
 - **feat(cartorio): adicionar bloco de historico v2** `[aa9a2ca6]`
+- **feat(listagens): replicar bloco de historico** `[e16555d7]`
 
