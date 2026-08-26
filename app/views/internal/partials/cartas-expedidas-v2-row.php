@@ -256,7 +256,17 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                         </div>
                         <?php if ($mostrarSincronizar): ?>
                             <!-- mostrar essa div desse jeito se o processo não tiver nenhuma classe ou assunto cadastrado -->
-                            <div class="line-cube box-open open" title="Sincronizar dados do processo" aria-label="Sincronizar dados do processo">
+                            <div
+                                class="line-cube box-open open js-v2-sync-processo<?php echo $numero !== '' ? '' : ' disabled'; ?>"
+                                title="Sincronizar dados do processo"
+                                aria-label="Sincronizar dados do processo"
+                                <?php if ($numero !== ''): ?>
+                                    role="button"
+                                    tabindex="0"
+                                    data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES); ?>"
+                                <?php else: ?>
+                                    aria-disabled="true"
+                                <?php endif; ?>>
                                 <img class="cube-icon" src="<?php echo htmlspecialchars($iconSincronizar, ENT_QUOTES); ?>" alt="">
                             </div>
                         <?php else: ?>

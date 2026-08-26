@@ -168,6 +168,79 @@
         });
     }
 
+    function bindSyncProcessoDataJud(ctx) {
+        var notify = ctx.notify;
+        var queuePostReloadToast = ctx.queuePostReloadToast;
+
+        document.querySelectorAll('.js-v2-sync-processo').forEach(function (btn) {
+            function setBusy(isBusy) {
+                if (isBusy) {
+                    btn.dataset.syncBusy = '1';
+                    btn.setAttribute('aria-disabled', 'true');
+                    btn.style.pointerEvents = 'none';
+                    btn.style.opacity = '0.6';
+                    return;
+                }
+                delete btn.dataset.syncBusy;
+                btn.removeAttribute('aria-disabled');
+                btn.style.pointerEvents = '';
+                btn.style.opacity = '';
+            }
+
+            function handleSync(event) {
+                event.preventDefault();
+                if (btn.dataset.syncBusy === '1') {
+                    return;
+                }
+
+                var numero = String(btn.getAttribute('data-processo-numero') || '').trim();
+                if (numero === '') {
+                    notify('error', 'Erro', 'Número do processo não informado para sincronização.');
+                    return;
+                }
+
+                setBusy(true);
+                fetch('/api/cartorio-cartas-expedidas/sync-processo-datajud.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ numero: numero })
+                })
+                    .then(function (response) {
+                        return response.json().then(function (body) {
+                            return { ok: response.ok, body: body };
+                        });
+                    })
+                    .then(function (result) {
+                        if (!result.ok || !result.body || result.body.error) {
+                            notify('error', 'Erro', (result.body && result.body.error) ? result.body.error : 'Erro ao sincronizar dados do processo.');
+                            setBusy(false);
+                            return;
+                        }
+
+                        queuePostReloadToast(
+                            'success',
+                            'Sucesso',
+                            String(result.body.message || 'Dados do processo sincronizados com sucesso.')
+                        );
+                        window.location.reload();
+                    })
+                    .catch(function () {
+                        notify('error', 'Erro', 'Erro de conexão ao sincronizar dados do processo.');
+                        setBusy(false);
+                    });
+            }
+
+            btn.addEventListener('click', handleSync);
+            btn.addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+                handleSync(event);
+            });
+        });
+    }
+
     function bindContinuarSubtarefa(ctx) {
         var notify = ctx.notify;
         var queuePostReloadToast = ctx.queuePostReloadToast;
@@ -322,6 +395,7 @@
         App.CartorioTaskList.initialize({
             storageKey: 'cartorio.postReloadToast',
             onReady: function (ctx) {
+                bindSyncProcessoDataJud(ctx);
                 bindContinuarSubtarefa(ctx);
                 if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
                     App.Page.flushPostReloadToast('cartorio.postReloadToast');

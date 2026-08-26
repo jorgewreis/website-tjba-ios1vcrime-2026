@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 10 de abril de 2026
+**Data de Lançamento:** 26 de agosto de 2026
 
 # V. 1.86
 
-> feat: add methods for duplicate media registration checks in SalaMidiasTarefasRepository and enhance validation in SalaMidiasService
+> feat: adicionar funções para limpar códigos de classe e assunto, melhorar exibição de sigilo
 
 ## Nível de Impacto
 
@@ -12,7 +12,9 @@
 
 ## Alterações
 
-- **feat: add methods for duplicate media registration checks in SalaMidiasTarefasRepository and enhance validation in SalaMidiasService** `[68553e3]`
+- **chore: update .env.example with MNI configuration details** `[9f568e6c]`
+- **Chore: process container styles and enhance accessibility features** `[3894959f]`
+- **feat: adicionar funções para limpar códigos de classe e assunto, melhorar exibição de sigilo** `[a88995ff]`
 
 ---
 

@@ -1059,6 +1059,10 @@
         align-items: center;
     }
 
+    .container-process .container-line:first-child {
+        border-bottom: 1px solid #efefef;
+    }
+
     .container-process .container-line .left {
         width: calc(100% - 54px);
         display: flex;
@@ -1087,7 +1091,6 @@
         flex-wrap: nowrap;
         justify-content: center;
         align-items: center;
-        background-color: #efefef;
     }
 
     .container-process .line-cube[role="button"] {
@@ -1113,7 +1116,6 @@
         flex-wrap: nowrap;
         justify-content: flex-start;
         align-items: center;
-        background-color: #efefef;
     }
 
     .container-process .line-content.box-number {
