@@ -5,6 +5,7 @@ require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessoAssuntosRepository.php';
+require_once __DIR__ . '/../helpers/ProcessoBlocoListagemHelper.php';
 
 final class ConsultaProcessosService
 {
@@ -26,23 +27,18 @@ final class ConsultaProcessosService
     public function list(array $filters, int $limit, int $offset): array
     {
         $rows = $this->processosRepository->fetchList($filters, $limit, $offset);
-        $processoIds = [];
-        foreach ($rows as $row) {
-            $pid = trim((string) ($row['id'] ?? ''));
-            if ($pid !== '') {
-                $processoIds[] = $pid;
-            }
-        }
-        $totalPartesByProcesso = $this->processosPartesRepository->countByProcessoIds($processoIds);
         foreach ($rows as $i => $row) {
             $processoId = (string) ($row['id'] ?? '');
-            $rows[$i]['total_partes'] = $processoId !== '' ? (int) ($totalPartesByProcesso[$processoId] ?? 0) : 0;
+            $rows[$i]['processo_id'] = $processoId;
             $rows[$i]['classe_nome'] = '';
             if (!empty($row['classe_id'])) {
                 $classe = $this->classesRepository->findById((string) $row['classe_id']);
                 $rows[$i]['classe_nome'] = $classe['nome'] ?? '';
             }
         }
+
+        $rows = ProcessoBlocoListagemHelper::appendBlocoData($this->connection, $rows);
+
         return [
             'rows' => $rows,
             'total' => $this->processosRepository->count($filters),

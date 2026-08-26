@@ -8,7 +8,6 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/ConsultaProcessosService.php';
-require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -160,30 +159,10 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             </div>
         <?php elseif (!empty($rows)): ?>
             <?php foreach ($rows as $row): ?>
-            <?php
-                $rowId = (string) ($row['id'] ?? '');
-                $classeRawConsulta = (string) ($row['classe_nome'] ?? '');
-                $rowClasseNome = ClasseProcessualListagemHelper::textoListagem($classeRawConsulta);
-                $rowClasseNomeClass = ClasseProcessualListagemHelper::classesSpanMinor($classeRawConsulta);
-                $rowNumero = (string) ($row['numero_processo'] ?? '—');
-                $rowTotalPartes = isset($row['total_partes']) ? (string) $row['total_partes'] : '—';
-            ?>
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                    <div class="display-flex row row-fit justify-start gap-y-sm">
-                        <div class="col width-500 col-process process-info" title="Clique para copiar">
-                            <span class="<?php echo $rowClasseNomeClass; ?>" title="<?php echo htmlspecialchars($rowClasseNome, ENT_QUOTES); ?>"><?php echo htmlspecialchars($rowClasseNome, ENT_QUOTES); ?></span>
-                            <span class="major-info"><?php echo htmlspecialchars($rowNumero, ENT_QUOTES); ?></span>
-                        </div>
-                        <div class="col width-200">
-                            <span class="minor-info">Partes</span>
-                            <span class="major-info"><?php echo htmlspecialchars($rowTotalPartes, ENT_QUOTES); ?></span>
-                        </div>
-                    </div>
-                    <div class="display-flex row row-fit justify-end">
-                        <div class="col process-edit">
-                            <button type="button" class="btn btn-editar" title="Abrir processo" data-edit-id="<?php echo htmlspecialchars($rowId, ENT_QUOTES); ?>"><i class="fi fi-rr-pen-square"></i></button>
-                        </div>
+                    <div class="display-flex col col-full">
+                        <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     </div>
                 </div>
             </div>
@@ -226,16 +205,5 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
         </div>
     </div>
-
-    <script>
-    (function() {
-        document.querySelectorAll('button[data-edit-id]').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var id = this.getAttribute('data-edit-id');
-                if (id) window.location.href = '/frame.php?page=consultaprocessosedit&id=' + encodeURIComponent(id);
-            });
-        });
-    })();
-    </script>
 </body>
 </html>
