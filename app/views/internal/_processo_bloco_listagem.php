@@ -7,6 +7,7 @@ declare(strict_types=1);
  * Espera linha enriquecida por ProcessoBlocoListagemHelper::appendBlocoData().
  *
  * Variantes opcionais (definidas no escopo do include):
+ * - $processo_bloco_model = 'full': usa a largura maior e mantém códigos de classe/assuntos.
  * - $processo_bloco_variant = 'estudantes': listagens de estudantes.
  *     - Oculta o rodapé direito (botões abrir/copiar);
  *     - Mascara o número do processo quando $row['processo_sigiloso'] for verdadeiro.
@@ -22,6 +23,8 @@ declare(strict_types=1);
 $processoBlocoVariant = isset($processo_bloco_variant) ? (string) $processo_bloco_variant : '';
 $processoBlocoIsEstudantes = ($processoBlocoVariant === 'estudantes');
 $processoBlocoHideActions = $processoBlocoIsEstudantes;
+$processoBlocoModel = isset($processo_bloco_model) ? (string) $processo_bloco_model : 'compacto';
+$processoBlocoIsFull = ($processoBlocoModel === 'full');
 
 $numero = trim((string) ($row['numero_processo'] ?? ''));
 if ($processoBlocoIsEstudantes && $numero !== '') {
@@ -36,85 +39,118 @@ $assuntoTexto = trim((string) ($row['bloco_processo_assunto_texto'] ?? 'Assunto 
 $assuntoNot = !empty($row['bloco_processo_assunto_not']);
 /** @var list<array{codigo: string, label: string, icon: string}> $prioridades */
 $prioridades = is_array($row['bloco_processo_prioridades'] ?? null) ? $row['bloco_processo_prioridades'] : [];
+$sigiloso = !empty($row['processo_sigiloso']);
 $abrirHref = trim((string) ($row['bloco_processo_abrir_href'] ?? ''));
 $abrirDisabled = !empty($row['bloco_processo_abrir_disabled']);
-$iconAbrir = '/assets/icons/Resize-Expand-Corner--Streamline-Ultimate.png';
-$iconCopiar = '/assets/icons/Task-Checklist--Streamline-Ultimate.png';
+
+$prioridadesTexto = [];
+foreach ($prioridades as $prioridade) {
+    $codigoPrioridade = trim((string) ($prioridade['codigo'] ?? ''));
+    $labelPrioridade = trim((string) ($prioridade['label'] ?? ''));
+    if ($codigoPrioridade === '' || $labelPrioridade === '' || $codigoPrioridade === 'sigiloso') {
+        continue;
+    }
+    $prioridadesTexto[] = $labelPrioridade;
+}
+
+$temPrioridadeVisual = $prioridadesTexto !== [];
+$classeSemDados = $classeNot;
+$assuntoSemDados = $assuntoNot;
+$mostrarSincronizar = !$processoBlocoHideActions && $classeSemDados && $assuntoSemDados;
+
+$limparCodigoClasseCompacta = static function (string $texto): string {
+    $textoLimpo = preg_replace('/^\s*\d+\s*-\s*/u', '', trim($texto));
+    return is_string($textoLimpo) && $textoLimpo !== '' ? $textoLimpo : trim($texto);
+};
+$limparCodigosAssuntosCompacto = static function (string $texto): string {
+    $partes = preg_split('/\s*;\s*/u', trim($texto)) ?: [];
+    $itens = [];
+    foreach ($partes as $parte) {
+        $parte = trim((string) $parte);
+        if ($parte === '') {
+            continue;
+        }
+        $parteLimpa = preg_replace('/^\s*\d+\s*-\s*/u', '', $parte);
+        $itens[] = is_string($parteLimpa) && $parteLimpa !== '' ? $parteLimpa : $parte;
+    }
+    return $itens !== [] ? implode(' | ', $itens) : trim($texto);
+};
+
+$classeLinhaExibicao = $classeSemDados
+    ? 'Nenhuma classe cadastrada'
+    : ($processoBlocoIsFull ? $classeTexto : $limparCodigoClasseCompacta($classeTexto));
+if ($sigiloso) {
+    $classeLinhaExibicao = 'SIGILOSO - ' . $classeLinhaExibicao;
+}
+$assuntoExibicao = $assuntoSemDados
+    ? 'Nenhum assunto cadastrado. Clique em sincronizar para buscar os dados com a API DataJud'
+    : ($processoBlocoIsFull ? str_replace('; ', ' | ', $assuntoTexto) : $limparCodigosAssuntosCompacto($assuntoTexto));
+
+$iconSigilo = $mostrarSincronizar
+    ? '/assets/icons/Sign-Badge-Rectangular-Round-2--Streamline-Ultimate.png'
+    : '/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png';
+$iconPrioridade = '/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png';
+$iconAbrir = '/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png';
+$iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
 ?>
-<div class="container-processo" data-processo-bloco="1">
-    <div class="main-processo">
+<div class="container-processo container-process <?php echo $processoBlocoIsFull ? 'container-lg' : 'container-sm'; ?>" data-processo-bloco="1">
+    <div class="container-line">
         <div class="left">
-            <div class="numero"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></div>
-        </div>
-        <div class="right">
-            <div class="prioridades">
-                <?php foreach ($prioridades as $p): ?>
-                    <?php
-                    $plabel = trim((string) ($p['label'] ?? ''));
-                    $picon = trim((string) ($p['icon'] ?? ''));
-                    if ($plabel === '' || $picon === '') {
-                        continue;
-                    }
-                    ?>
-                    <div class="btn-micro tooltip processo-bloco-tooltip" data-title="<?php echo htmlspecialchars($plabel, ENT_QUOTES, 'UTF-8'); ?>" role="img" aria-label="<?php echo htmlspecialchars($plabel, ENT_QUOTES, 'UTF-8'); ?>">
-                        <img class="btn-micro-icon" src="<?php echo htmlspecialchars($picon, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="14" height="14">
-                    </div>
-                <?php endforeach; ?>
+            <!-- mostrar essa div se o processo tiver sigilo -->
+            <div class="line-cube box-private<?php echo $sigiloso ? '' : ' open'; ?>" title="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>" aria-label="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>">
+                <img class="cube-icon" src="<?php echo htmlspecialchars($iconSigilo, ENT_QUOTES, 'UTF-8'); ?>" alt="">
             </div>
+
+            <div
+                class="line-content box-number<?php echo $numero !== '' ? ' process-info' : ''; ?>"
+                <?php if ($numero !== ''): ?>
+                    role="button"
+                    tabindex="0"
+                    title="Copiar número do processo"
+                    aria-label="Copiar número do processo"
+                <?php endif; ?>>
+                <span class="content-number major-info"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+        </div>
+
+        <div class="right">
+            <div class="line-cube box-open<?php echo $temPrioridadeVisual ? ' open' : ''; ?>"<?php if ($temPrioridadeVisual): ?> title="<?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>>
+                <?php if ($temPrioridadeVisual): ?>
+                    <img class="cube-icon" src="<?php echo htmlspecialchars($iconPrioridade, ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                <?php endif; ?>
+            </div>
+            <?php if ($mostrarSincronizar): ?>
+                <!-- mostrar essa div desse jeito se o processo não tiver nenhuma classe ou assunto cadastrado -->
+                <div
+                    class="line-cube box-open open js-processo-datajud-sync<?php echo $numero !== '' ? '' : ' disabled'; ?>"
+                    title="Sincronizar dados do processo"
+                    aria-label="Sincronizar dados do processo"
+                    <?php if ($numero !== ''): ?>
+                        role="button"
+                        tabindex="0"
+                        data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?>"
+                    <?php else: ?>
+                        aria-disabled="true"
+                    <?php endif; ?>>
+                    <img class="cube-icon" src="<?php echo htmlspecialchars($iconSincronizar, ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                </div>
+            <?php elseif (!$processoBlocoHideActions): ?>
+                <div class="line-cube box-open open" title="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>" aria-label="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>"<?php if (!$abrirDisabled && $abrirHref !== ''): ?> role="button" tabindex="0" data-nav-href="<?php echo htmlspecialchars($abrirHref, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>>
+                    <img class="cube-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                </div>
+            <?php endif; ?>
         </div>
     </div>
-    <div class="footer-processo">
-        <div class="left">
-            <div class="processo-classe<?php echo $classeNot ? ' not' : ' processo-bloco-tooltip'; ?>"<?php if (!$classeNot && $classeTexto !== ''): ?> title="<?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>><span class="processo-bloco-text-ellipsis"><?php echo htmlspecialchars($classeTexto, ENT_QUOTES, 'UTF-8'); ?></span></div>
-            <div class="processo-assunto<?php echo $assuntoNot ? ' not' : ' processo-bloco-tooltip'; ?>"<?php if (!$assuntoNot && $assuntoTexto !== ''): ?> title="<?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>><span class="processo-bloco-text-ellipsis"><?php echo htmlspecialchars($assuntoTexto, ENT_QUOTES, 'UTF-8'); ?></span></div>
-        </div>
-        <?php if (!$processoBlocoHideActions): ?>
-        <div class="right">
-            <div class="buttons">
-                <?php if (!$abrirDisabled && $abrirHref !== ''): ?>
-                    <div
-                        class="btn-mini tooltip processo-bloco-tooltip processo-bloco-tooltip--btn"
-                        role="button"
-                        tabindex="0"
-                        data-nav-href="<?php echo htmlspecialchars($abrirHref, ENT_QUOTES, 'UTF-8'); ?>"
-                        data-title="Abrir processo"
-                        aria-label="Abrir processo">
-                        <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
-                    </div>
-                <?php else: ?>
-                    <div
-                        class="btn-mini tooltip processo-bloco-tooltip processo-bloco-mini-disabled"
-                        role="button"
-                        tabindex="-1"
-                        aria-disabled="true"
-                        data-title="Processo não cadastrado no sistema"
-                        aria-label="Processo não cadastrado no sistema">
-                        <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
-                    </div>
+
+    <div class="container-line">
+        <div class="line-content double-line">
+            <span class="content-classe<?php echo $classeSemDados ? ' over' : ''; ?>"><?php echo htmlspecialchars($classeLinhaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
+            <span class="content-assuntos<?php echo $assuntoSemDados ? ' over' : ''; ?>">
+                <?php if ($temPrioridadeVisual): ?>
+                    <strong><?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES, 'UTF-8'); ?></strong><?php echo $assuntoExibicao !== '' ? ' | ' : ''; ?>
                 <?php endif; ?>
-                <?php if ($numero !== ''): ?>
-                    <div
-                        class="btn-mini tooltip processo-bloco-tooltip processo-bloco-tooltip--btn process-info"
-                        role="button"
-                        tabindex="0"
-                        data-title="Copiar número do processo"
-                        aria-label="Copiar número do processo">
-                        <span class="major-info processo-bloco-copy-value"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></span>
-                        <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
-                    </div>
-                <?php else: ?>
-                    <div
-                        class="btn-mini tooltip processo-bloco-tooltip processo-bloco-mini-disabled"
-                        role="button"
-                        tabindex="-1"
-                        aria-disabled="true"
-                        data-title="Copiar número do processo"
-                        aria-label="Copiar número do processo">
-                        <img class="btn-mini-icon" src="<?php echo htmlspecialchars($iconCopiar, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="20" height="20">
-                    </div>
-                <?php endif; ?>
-            </div>
+                <?php echo htmlspecialchars($assuntoExibicao, ENT_QUOTES, 'UTF-8'); ?>
+            </span>
         </div>
-        <?php endif; ?>
     </div>
 </div>

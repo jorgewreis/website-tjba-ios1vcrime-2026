@@ -159,7 +159,7 @@ if ($ultimaMov !== null) {
                     <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-start flex-wrap gap-y-md">
                         <div class="display-flex row row-fit flex-wrap gap-y-md align-end grp-proc-fields" style="flex:1 1 auto;min-width:0;">
                             <div class="col width-500 col-process grp-proc-bloco-wrap">
-                                <?php $row = $p; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                                <?php $row = $p; $processo_bloco_model = 'full'; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                             </div>
                             <div class="col" style="min-width:140px;">
                                 <label for="grp-vinc-<?php echo $vid; ?>" class="minor-info">Vinculação</label>

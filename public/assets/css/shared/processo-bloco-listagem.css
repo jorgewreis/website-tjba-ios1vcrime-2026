@@ -1,22 +1,31 @@
 /**
  * Bloco processo (listagens) — escopado em .container-processo.
- * Base visual: docs/mockups/reus-presos/block-processo.html
+ * Base visual: docs/mockups/blocos/tabela-processo.html
  */
 
  /* DATA - PROCESSO */
 .container-processo {
-    width: 300px;
-    height: fit-content;
-    margin: 0;
-    padding: 0;
+    position: relative;
+    min-width: 20px;
+    min-height: 20px;
+    width: 307px;
+    padding: 2px;
+    gap: 2px;
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
+    justify-content: center;
     align-items: flex-start;
-    justify-content: flex-start;
-    border-radius: 6px;
-    box-sizing: border-box;
     font-family: "JetBrains Mono", monospace;
+}
+
+.container-processo.container-sm {
+    width: 307px;
+}
+
+.container-processo.container-lg {
+    width: 450px;
 }
 
 /* Coluna padrão do bloco: `.col.width-500.col-process` (form.css). Evita encolher em linhas com flex-wrap (painéis em tempo real). */
@@ -31,290 +40,134 @@
     overflow: visible;
 }
 
-.container-processo .main-processo {
-    position: relative;
+.container-processo .container-line {
     width: 100%;
+    min-height: 20px;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
 }
 
-.container-processo .main-processo .left {
-    width: 100%;
+.container-processo .container-line:first-child {
+    border-bottom: 1px solid #efefef;
+}
+
+.container-processo .container-line .left {
+    width: calc(100% - 54px);
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     flex-wrap: nowrap;
-    align-items: center;
     justify-content: flex-start;
-    padding: 3px 10px;
-    box-sizing: border-box;
+    align-items: center;
+    gap: 2px;
 }
 
-.container-processo .main-processo .left .numero {
-    width: 100%;
+.container-processo .container-line .right {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    align-items: center;
-    justify-content: flex-start;
-    font-size: 13px;
-    font-weight: 600;
-    color: #202020;
-}
-
-.container-processo .main-processo .right {
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 1;
-    width: fit-content;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
     justify-content: flex-end;
+    align-items: center;
+    gap: 2px;
 }
 
-.container-processo .main-processo .right .prioridades {
+.container-processo .line-cube {
+    position: relative;
+    width: 25px;
+    height: 25px;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    align-items: center;
-    justify-content: flex-end;
-    margin-right: 5px;
-}
-
-.container-processo .main-processo .right .prioridades .btn-micro {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+}
+
+.container-processo .line-cube[role="button"],
+.container-processo .line-content.box-number.process-info {
     cursor: pointer;
 }
 
-.container-processo .main-processo .right .prioridades .btn-micro .btn-micro-icon {
-    width: 14px;
-    height: 14px;
+.container-processo .line-cube.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
 }
 
-.container-processo .footer-processo {
-    position: relative;
+.container-processo .cube-icon {
+    width: 18px;
+    height: 18px;
+    filter: grayscale(1) brightness(0.5);
+}
+
+.container-processo .line-cube.open .cube-icon {
+    filter: grayscale(0);
+}
+
+.container-processo .line-content {
     width: 100%;
+    min-height: 25px;
+    padding: 0 5px;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
+    justify-content: flex-start;
     align-items: center;
-    justify-content: space-between;
-    border-top: 1px solid #eee;
 }
 
-.container-processo .footer-processo .left {
-    width: 100%;
-    height: 100%;
-    display: flex;
+.container-processo .line-content.double-line {
     flex-direction: column;
-    flex-wrap: nowrap;
+    justify-content: flex-start;
     align-items: flex-start;
-    justify-content: flex-start;
-    padding: 2px 0 0 10px;
-    box-sizing: border-box;
+    padding: 5px;
 }
 
-.container-processo .footer-processo .left .processo-classe {
+.container-processo .content-number {
     width: 100%;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: flex-start;
-    font-size: 10px;
-    font-weight: 500;
-    color: #696cff;
-}
-
-.container-processo .footer-processo .left .processo-classe.not {
-    color: #909090;
-}
-
-.container-processo .footer-processo .left .processo-assunto {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: flex-start;
-    font-size: 9px;
-    font-weight: 400;
-    color: #34368d;
-}
-
-.container-processo .footer-processo .left .processo-assunto.not {
-    color: #909090;
-}
-
-.container-processo .footer-processo .left .processo-bloco-text-ellipsis {
-    max-width: 100%;
+    font-family: "Syne Mono", monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: #505050;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-.container-processo .footer-processo .right {
-    position: absolute;
-    right: 0px;
-
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: flex-end;
-}
-
-.container-processo .footer-processo .right .buttons {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: center;
-    padding: 3px 5px 0 5px;
-    gap: 2px;
-    position: relative;
-    z-index: 2;
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-    background-color: #ffffff;
-    transition: opacity 0.18s ease, visibility 0.18s ease;
-}
-
-/*
- * Botões do rodapé (abrir / copiar): visíveis no hover da linha, como em Pauta e Mídias.
- * Inclui wrappers `.register[data-*]` do Cartório e Gabinete e `.register-line[data-carta-id]`
- * (cartas expedidas), que não usam data-midia-id / data-audiencia-id / data-pauta.
- */
-@media (hover: none) and (pointer: coarse) {
-    .register[data-midia-id] .container-processo .footer-processo .right .buttons,
-    .register[data-audiencia-id] .container-processo .footer-processo .right .buttons,
-    .register[data-pauta] .container-processo .footer-processo .right .buttons,
-    .register[data-oficio-id] .container-processo .footer-processo .right .buttons,
-    .register[data-carta-id] .container-processo .footer-processo .right .buttons,
-    .register[data-edital-id] .container-processo .footer-processo .right .buttons,
-    .register[data-medida-id] .container-processo .footer-processo .right .buttons,
-    .register[data-guia-id] .container-processo .footer-processo .right .buttons,
-    .register[data-registro-id] .container-processo .footer-processo .right .buttons,
-    .register[data-processo-id] .container-processo .footer-processo .right .buttons,
-    .register[data-monitoramento-id] .container-processo .footer-processo .right .buttons,
-    .register[data-reu-preso-id] .container-processo .footer-processo .right .buttons,
-    .grp-proc-link .container-processo .footer-processo .right .buttons,
-    .register-line[data-carta-id] .container-processo .footer-processo .right .buttons {
-        opacity: 1;
-        visibility: visible;
-        pointer-events: auto;
-        background-color: #ffffffcc;
-    }
-}
-
-.register[data-midia-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-midia-id]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-audiencia-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-audiencia-id]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-pauta]:hover .container-processo .footer-processo .right .buttons,
-.register[data-pauta]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-oficio-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-oficio-id]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-carta-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-carta-id]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-edital-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-edital-id]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-medida-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-medida-id]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-guia-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-guia-id]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-registro-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-registro-id]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-processo-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-processo-id]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-monitoramento-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-monitoramento-id]:focus-within .container-processo .footer-processo .right .buttons,
-.register[data-reu-preso-id]:hover .container-processo .footer-processo .right .buttons,
-.register[data-reu-preso-id]:focus-within .container-processo .footer-processo .right .buttons,
-.grp-proc-link:hover .container-processo .footer-processo .right .buttons,
-.grp-proc-link:focus-within .container-processo .footer-processo .right .buttons,
-.register-line[data-carta-id]:hover .container-processo .footer-processo .right .buttons,
-.register-line[data-carta-id]:focus-within .container-processo .footer-processo .right .buttons {
-    opacity: 1;
-    visibility: visible;
-    pointer-events: auto;
-}
-
-.container-processo .footer-processo .right .buttons .btn-mini {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-}
-
-.container-processo .footer-processo .right .buttons .btn-mini.processo-bloco-mini-disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-.container-processo .footer-processo .right .buttons .btn-mini .btn-mini-icon {
-    width: 15px;
-    height: 15px;
-    filter: grayscale(100%);
-    opacity: 0.3;
-    transition: filter 0.3s ease, opacity 0.3s ease;
-}
-
-.container-processo .footer-processo .right .buttons .btn-mini.processo-bloco-tooltip--btn:hover .btn-mini-icon {
-    filter: grayscale(0%);
-    opacity: 1;
-}
-
-.container-processo .footer-processo .right .buttons .btn-mini .processo-bloco-copy-value {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
+.container-processo .content-classe {
+    width: 100%;
+    font-family: "Syne Mono", monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: #505050;
     overflow: hidden;
-    clip: rect(0, 0, 0, 0);
+    text-overflow: ellipsis;
     white-space: nowrap;
-    border: 0;
 }
 
-.container-processo .footer-processo .left .processo-classe.processo-bloco-tooltip,
-.container-processo .footer-processo .left .processo-assunto.processo-bloco-tooltip {
-    cursor: help;
+.container-processo .content-assuntos {
+    width: 100%;
+    font-family: "Syne Mono", monospace;
+    font-size: 9px;
+    font-weight: 400;
+    color: #505050;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.container-processo .processo-bloco-tooltip,
+.container-processo .content-classe.over,
+.container-processo .content-assuntos.over {
+    color: #707070;
+    font-size: 9px;
+    font-weight: 400;
+}
+
 .container-data-create .processo-bloco-tooltip {
     position: relative;
     cursor: default;
 }
 
-.container-processo .processo-bloco-tooltip.processo-bloco-tooltip--btn,
-.container-data-create .processo-bloco-tooltip.processo-bloco-tooltip--btn {
-    cursor: pointer;
-}
-
-.container-processo .main-processo .right .prioridades .btn-micro.processo-bloco-tooltip {
-    cursor: pointer;
-}
-
-.container-processo .processo-bloco-tooltip::after,
 .container-data-create .processo-bloco-tooltip::after {
     content: attr(data-title);
     position: absolute;
@@ -332,18 +185,6 @@
     pointer-events: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
     z-index: 999;
-}
-
-/* Bloco processo: centralizado no gatilho */
-.container-processo .processo-bloco-tooltip::after {
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.container-processo .processo-bloco-tooltip:hover::after {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(-2px);
 }
 
 /* Metadados (canto direito da lista): ancora à direita do ícone, texto expande à esquerda */

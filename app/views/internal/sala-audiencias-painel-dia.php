@@ -193,7 +193,7 @@ function painelResumoInscrito(array $inscrito): string
                         <span class="major-info"><?php echo htmlspecialchars(painelHoraPorStatus($row), ENT_QUOTES); ?></span>
                     </div>
                     <div class="col width-500 col-process">
-                        <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                        <?php $processo_bloco_model = 'full'; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     </div>
                     <div class="col width-400">
                         <span class="minor-info">Tipo de audiência</span>

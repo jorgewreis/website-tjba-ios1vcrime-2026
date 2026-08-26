@@ -44,7 +44,8 @@
             if (legacy) {
                 return String(legacy.textContent || '').trim();
             }
-            const numeroEl = row.querySelector('.container-processo .main-processo .numero');
+            const numeroEl = row.querySelector('.container-processo .content-number')
+                || row.querySelector('.container-processo .main-processo .numero');
             if (numeroEl) {
                 return String(numeroEl.textContent || '').trim();
             }

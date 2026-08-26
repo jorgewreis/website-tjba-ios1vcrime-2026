@@ -322,7 +322,7 @@ if ($totalPages > 0) {
                     <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary">
                         <div class="display-flex row row-fit justify-start gap-y-md flex-wrap grp-sub-left align-start">
                             <div class="col width-500 col-process">
-                                <?php $row = $sl; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                                <?php $row = $sl; $processo_bloco_model = 'full'; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                             </div>
                         </div>
                         <div class="display-flex row row-fit justify-end gap-y-md grp-sub-right">

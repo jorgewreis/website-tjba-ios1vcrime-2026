@@ -164,7 +164,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                         <div class="col width-500 col-process">
-                        <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                        <?php $processo_bloco_model = 'full'; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                         </div>
                     </div>
                 </div>
