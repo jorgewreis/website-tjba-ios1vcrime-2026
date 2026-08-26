@@ -178,6 +178,7 @@ final class SalaAudienciasPautaService
         $data = trim((string) ($payload['data_audiencia'] ?? ''));
         $hora = trim((string) ($payload['hora_audiencia'] ?? ''));
         $local = trim((string) ($payload['localizacao'] ?? ''));
+        $linkAudiencia = $this->normalizeLinkAudiencia($payload['link_audiencia'] ?? null);
         if ($tipo === '' || $data === '' || $hora === '' || $local === '') {
             throw new InvalidArgumentException('Preencha os campos obrigatórios da audiência.');
         }
@@ -222,6 +223,7 @@ final class SalaAudienciasPautaService
                 'localizacao' => $local,
                 'status' => $status,
                 'observacoes' => trim((string) ($payload['observacoes'] ?? '')) ?: null,
+                'link_audiencia' => $linkAudiencia,
                 'criado_por' => $usuarioId,
                 'atualizado_por' => $usuarioId,
             ]);
@@ -245,6 +247,7 @@ final class SalaAudienciasPautaService
         $data = trim((string) ($payload['data_audiencia'] ?? ''));
         $hora = trim((string) ($payload['hora_audiencia'] ?? ''));
         $local = trim((string) ($payload['localizacao'] ?? ''));
+        $linkAudiencia = $this->normalizeLinkAudiencia($payload['link_audiencia'] ?? null);
         $statusIn = trim((string) ($payload['status'] ?? ''));
         if ($tipo === '' || $data === '' || $hora === '' || $local === '') {
             throw new InvalidArgumentException('Preencha os campos obrigatórios da audiência.');
@@ -283,6 +286,7 @@ final class SalaAudienciasPautaService
             'localizacao' => $local,
             'status' => $status,
             'observacoes' => trim((string) ($payload['observacoes'] ?? '')) ?: null,
+            'link_audiencia' => $linkAudiencia,
             'atualizado_por' => $usuarioId,
         ]);
         if ($ok) {
@@ -924,6 +928,22 @@ final class SalaAudienciasPautaService
             return sprintf('%02d:%02d:%02d', (int) $m[1], (int) $m[2], (int) $m[3]);
         }
         throw new InvalidArgumentException('Hora da audiência inválida.');
+    }
+
+    private function normalizeLinkAudiencia(mixed $value): ?string
+    {
+        $link = trim((string) ($value ?? ''));
+        if ($link === '') {
+            return null;
+        }
+        if (mb_strlen($link) > 1000) {
+            throw new InvalidArgumentException('O link da audiência deve ter no máximo 1000 caracteres.');
+        }
+        if (!filter_var($link, FILTER_VALIDATE_URL)) {
+            throw new InvalidArgumentException('Informe um link válido para a audiência.');
+        }
+
+        return $link;
     }
 
     private function horaAudienciaAlterada(string $horaNova, string $horaAtualRaw): bool

@@ -129,6 +129,12 @@ TXT/PDF) em conjunto com `partes_telefones` quando há
 `parte_id_global`, e como única fonte de contato quando a parte foi
 criada apenas no contexto da audiência.
 
+### `20260826_add_link_audiencia_sala_pauta.sql`
+
+Adiciona a coluna `link_audiencia` (`VARCHAR(1000) NULL`) em
+`sala_audiencias_pauta`. Usada para registrar o link da audiência
+quando a localização for `Virtual - Audin`.
+
 ## 9. Ordem sugerida por cenário
 
 ### Nova instalação em ambiente já existente da aplicação
@@ -165,6 +171,7 @@ criada apenas no contexto da audiência.
 - `20260331_processo_prioridades_unificacao.sql`
 - `20260401_login_rate_limits.sql`
 - `20260526_sala_audiencias_pauta_parte_contatos.sql`
+- `20260826_add_link_audiencia_sala_pauta.sql`
 - `guias.sql`
 - `run_processo_prioridades_unificacao_data.php`
 - `salario_minimo_e_valor_multa_guias.sql`

@@ -353,6 +353,22 @@ $statusFilterLabelsPauta = [
                                     return $ia <=> $ib;
                                 });
 
+                                $linkAudinRow = trim((string) ($row['link_audiencia'] ?? ''));
+                                $localizacaoRow = trim((string) ($row['localizacao'] ?? ''));
+                                if ($localizacaoRow === 'audin' && $linkAudinRow !== ''):
+                            ?>
+                                <span
+                                    class="mini-status status-audin"
+                                    role="button"
+                                    tabindex="0"
+                                    data-nav-href="<?php echo htmlspecialchars($linkAudinRow, ENT_QUOTES); ?>"
+                                    data-nav-target="_blank"
+                                    title="Audiência cadastrada no Audin"
+                                    aria-label="Abrir link da audiência no Audin"
+                                ></span>
+                            <?php
+                                endif;
+
                                 foreach ($partesStatus as $parteStatus):
                                     $cumprimentoFallback = '';
                                     if (is_scalar($parteStatus) || $parteStatus === null) {

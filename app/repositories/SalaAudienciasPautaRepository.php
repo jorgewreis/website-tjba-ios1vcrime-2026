@@ -7,6 +7,7 @@ final class SalaAudienciasPautaRepository
 {
     private PDO $connection;
     private string $table;
+    private ?bool $hasLinkAudienciaColumnCache = null;
 
     public function __construct(PDO $connection, string $table = 'sala_audiencias_pauta')
     {
@@ -33,10 +34,16 @@ final class SalaAudienciasPautaRepository
     public function insert(array $row): string
     {
         $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id_pauta', 'SAP', 30);
-        $sql = sprintf(
-            'INSERT INTO `%s` (`id_pauta`,`numero_sequencial`,`ano`,`processo`,`tipo_audiencia`,`data_audiencia`,`hora_audiencia`,`localizacao`,`status`,`observacoes`,`criado_por`,`atualizado_por`,`ativo`) VALUES (:id,:seq,:ano,:processo,:tipo,:data,:hora,:localizacao,:status,:obs,:criado_por,:atualizado_por,1)',
-            $this->table
-        );
+        $hasLink = $this->hasLinkAudienciaColumn();
+        $sql = $hasLink
+            ? sprintf(
+                'INSERT INTO `%s` (`id_pauta`,`numero_sequencial`,`ano`,`processo`,`tipo_audiencia`,`data_audiencia`,`hora_audiencia`,`localizacao`,`status`,`observacoes`,`link_audiencia`,`criado_por`,`atualizado_por`,`ativo`) VALUES (:id,:seq,:ano,:processo,:tipo,:data,:hora,:localizacao,:status,:obs,:link_audiencia,:criado_por,:atualizado_por,1)',
+                $this->table
+            )
+            : sprintf(
+                'INSERT INTO `%s` (`id_pauta`,`numero_sequencial`,`ano`,`processo`,`tipo_audiencia`,`data_audiencia`,`hora_audiencia`,`localizacao`,`status`,`observacoes`,`criado_por`,`atualizado_por`,`ativo`) VALUES (:id,:seq,:ano,:processo,:tipo,:data,:hora,:localizacao,:status,:obs,:criado_por,:atualizado_por,1)',
+                $this->table
+            );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':id', $id);
         $st->bindValue(':seq', (int) $row['numero_sequencial'], PDO::PARAM_INT);
@@ -48,6 +55,9 @@ final class SalaAudienciasPautaRepository
         $st->bindValue(':localizacao', $row['localizacao']);
         $st->bindValue(':status', $row['status']);
         $st->bindValue(':obs', $row['observacoes'] ?? null);
+        if ($hasLink) {
+            $st->bindValue(':link_audiencia', $row['link_audiencia'] ?? null);
+        }
         $st->bindValue(':criado_por', $row['criado_por'] ?? null);
         $st->bindValue(':atualizado_por', $row['atualizado_por'] ?? null);
         $st->execute();
@@ -73,9 +83,11 @@ final class SalaAudienciasPautaRepository
 
     public function update(string $id, array $row): bool
     {
+        $setLink = $this->hasLinkAudienciaColumn() ? ',`link_audiencia`=:link_audiencia' : '';
         $sql = sprintf(
-            'UPDATE `%s` SET `tipo_audiencia`=:tipo,`data_audiencia`=:data,`hora_audiencia`=:hora,`localizacao`=:localizacao,`status`=:status,`observacoes`=:obs,`atualizado_por`=:atualizado_por WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1',
-            $this->table
+            'UPDATE `%s` SET `tipo_audiencia`=:tipo,`data_audiencia`=:data,`hora_audiencia`=:hora,`localizacao`=:localizacao,`status`=:status,`observacoes`=:obs%s,`atualizado_por`=:atualizado_por,`updated_at`=NOW() WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1',
+            $this->table,
+            $setLink
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':id', $id);
@@ -85,6 +97,9 @@ final class SalaAudienciasPautaRepository
         $st->bindValue(':localizacao', $row['localizacao']);
         $st->bindValue(':status', $row['status']);
         $st->bindValue(':obs', $row['observacoes'] ?? null);
+        if ($setLink !== '') {
+            $st->bindValue(':link_audiencia', $row['link_audiencia'] ?? null);
+        }
         $st->bindValue(':atualizado_por', $row['atualizado_por'] ?? null);
         $st->execute();
         if ($st->rowCount() > 0) {
@@ -104,7 +119,7 @@ final class SalaAudienciasPautaRepository
 
     public function setStatus(string $id, string $status, ?string $atualizadoPor): bool
     {
-        $sql = sprintf('UPDATE `%s` SET `status`=:status,`atualizado_por`=:atualizado_por WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1', $this->table);
+        $sql = sprintf('UPDATE `%s` SET `status`=:status,`atualizado_por`=:atualizado_por,`updated_at`=NOW() WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1', $this->table);
         $st = $this->connection->prepare($sql);
         $st->bindValue(':id', $id);
         $st->bindValue(':status', $status);
@@ -335,13 +350,14 @@ final class SalaAudienciasPautaRepository
         $auditJoin = RegistroMetadataHelper::sqlUsuarioAuditoria('a');
         $auditSelect = RegistroMetadataHelper::sqlSelectAuditoriaExtra('a');
         $sql = sprintf(
-            'SELECT a.`id_pauta`, a.`id_pauta` AS `IdPauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_designacao`, a.`hora_inicio`, a.`hora_fim`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`, a.`localizacao`, a.`status`, COALESCE(a.`created_at`, a.`data_hora_designacao`) AS `Data`, p.`numero_processo`, COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`%s
+            'SELECT a.`id_pauta`, a.`id_pauta` AS `IdPauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_designacao`, a.`hora_inicio`, a.`hora_fim`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`, a.`localizacao`, a.`status`, %s AS `link_audiencia`, COALESCE(a.`created_at`, a.`data_hora_designacao`) AS `Data`, p.`numero_processo`, COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`%s
              FROM `%s` a
              LEFT JOIN `processos` p ON p.`id` = a.`processo`
              LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`%s
              %s
              ORDER BY a.`data_audiencia` ASC, a.`hora_audiencia` ASC
              LIMIT :limit OFFSET :offset',
+            $this->hasLinkAudienciaColumn() ? 'a.`link_audiencia`' : 'NULL',
             $auditSelect,
             $this->table,
             $auditJoin,
@@ -393,7 +409,7 @@ final class SalaAudienciasPautaRepository
         }
 
         $sql = sprintf(
-            'SELECT `id_pauta`, `tipo_audiencia`, `data_audiencia`, `hora_audiencia`, `status`, `data_hora_inicio_efetivo`, `data_hora_fim_efetivo`
+            'SELECT `id_pauta`, `tipo_audiencia`, `data_audiencia`, `hora_audiencia`, `status`, `updated_at`, `data_hora_inicio_efetivo`, `data_hora_fim_efetivo`
              FROM `%s`
              WHERE `ativo` = 1
                AND `processo` = :processo
@@ -516,6 +532,26 @@ final class SalaAudienciasPautaRepository
         $st->execute();
 
         return true;
+    }
+
+    private function hasLinkAudienciaColumn(): bool
+    {
+        if ($this->hasLinkAudienciaColumnCache !== null) {
+            return $this->hasLinkAudienciaColumnCache;
+        }
+        try {
+            $st = $this->connection->prepare(
+                'SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column'
+            );
+            $st->bindValue(':table', $this->table);
+            $st->bindValue(':column', 'link_audiencia');
+            $st->execute();
+            $this->hasLinkAudienciaColumnCache = ((int) $st->fetchColumn()) > 0;
+        } catch (Throwable $e) {
+            $this->hasLinkAudienciaColumnCache = false;
+        }
+
+        return $this->hasLinkAudienciaColumnCache;
     }
 }
 

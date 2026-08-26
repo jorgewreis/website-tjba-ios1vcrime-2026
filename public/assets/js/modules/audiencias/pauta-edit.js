@@ -295,7 +295,8 @@
             hora: String(document.getElementById('audiencia-edit-hora')?.value || '').trim(),
             localizacao: String(document.getElementById('audiencia-edit-sala')?.value || '').trim(),
             classe: String(document.getElementById('audiencia-edit-classe')?.value || '').trim(),
-            status: String(document.getElementById('audiencia-edit-status')?.value || '').trim()
+            status: String(document.getElementById('audiencia-edit-status')?.value || '').trim(),
+            link_audiencia: String(document.getElementById('audiencia-edit-link-audin')?.value || '').trim()
         });
     }
 
@@ -360,7 +361,8 @@
                 hora_audiencia: String(document.getElementById('audiencia-edit-hora')?.value || '').trim(),
                 localizacao: String(document.getElementById('audiencia-edit-sala')?.value || '').trim(),
                 classe: String(document.getElementById('audiencia-edit-classe')?.value || '').trim(),
-                status: String(document.getElementById('audiencia-edit-status')?.value || '').trim()
+                status: String(document.getElementById('audiencia-edit-status')?.value || '').trim(),
+                link_audiencia: String(document.getElementById('audiencia-edit-link-audin')?.value || '').trim()
             })
         })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
@@ -606,17 +608,22 @@
         function syncLocalizacao() {
             var data = String(dataEl && dataEl.value || '').trim();
             var bloquearLifesize = data !== '' && data > limiteLifesize;
+            var linkAudinWrap = document.getElementById('audiencia-edit-link-audin-wrap');
             if (lifesizeOption) {
                 lifesizeOption.disabled = bloquearLifesize;
             }
             if (audinOption && (!salaEl.value || (bloquearLifesize && salaEl.value === 'lifesize'))) {
                 salaEl.value = 'audin';
             }
+            if (linkAudinWrap) {
+                linkAudinWrap.style.display = salaEl.value === 'audin' ? 'flex' : 'none';
+            }
         }
 
         if (!salaEl.value && audinOption) {
             salaEl.value = 'audin';
         }
+        salaEl.addEventListener('change', syncLocalizacao);
         dataEl?.addEventListener('change', syncLocalizacao);
         dataEl?.addEventListener('blur', syncLocalizacao);
         syncLocalizacao();
@@ -647,8 +654,8 @@
     }
 
     /**
-     * Preenche o select de nome da parte com réus/indiciados/sentenciados já vinculados ao processo no sistema.
-     * Dados vêm de `window.PAUTA_REUS_NOMES_INITIAL` (servidor), sem chamada ao DataJud.
+     * Preenche o select de nome da parte com partes já vinculadas ao processo no sistema.
+     * Dados vêm de `window.PAUTA_PARTES_NOMES_INITIAL` (servidor), sem chamada ao DataJud.
      */
     function initParteNomeSelectFromProcesso() {
         var select = document.getElementById('parte-nome-selecao');
@@ -723,7 +730,9 @@
             fetchPeopleSuggestions(String(input.value || '').trim());
         });
 
-        var raw = Array.isArray(window.PAUTA_REUS_NOMES_INITIAL) ? window.PAUTA_REUS_NOMES_INITIAL : [];
+        var raw = Array.isArray(window.PAUTA_PARTES_NOMES_INITIAL)
+            ? window.PAUTA_PARTES_NOMES_INITIAL
+            : (Array.isArray(window.PAUTA_REUS_NOMES_INITIAL) ? window.PAUTA_REUS_NOMES_INITIAL : []);
         var nomes = dedupeStrings(raw).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); });
 
         var existingSigs = Array.isArray(window.PAUTA_EXISTING_PART_NAMES_SIGS) ? window.PAUTA_EXISTING_PART_NAMES_SIGS : [];

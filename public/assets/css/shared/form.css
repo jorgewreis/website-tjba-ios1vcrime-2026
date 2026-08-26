@@ -650,7 +650,9 @@ input[type="text"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
-input[type="date"], 
+input[type="date"],
+input[type="search"],
+input[type="url"],
 input[type="time"] {
     height: 40px;
     padding: 0 1em;
@@ -808,6 +810,11 @@ input[type="radio"] {
 
 .mini-status.status-cancelled {
     background-color: var(--color-danger);
+}
+
+.mini-status.status-audin {
+    background-color: var(--color-primary-active);
+    cursor: pointer;
 }
 
 .mini-status.mini-status-dual {

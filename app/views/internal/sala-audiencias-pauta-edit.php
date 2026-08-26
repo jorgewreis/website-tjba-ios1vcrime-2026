@@ -6,7 +6,6 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
-require_once __DIR__ . '/../../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 require_once __DIR__ . '/../../helpers/ClasseProcessualListagemHelper.php';
@@ -37,18 +36,10 @@ if ($row !== null) {
     $stmtU = $pdoU->query('SELECT `id_usuario`, `nome`, `sobrenome` FROM `usuarios` WHERE `cadastro_ativo` = 1 ORDER BY `nome` ASC, `sobrenome` ASC');
     $usuariosAlocacaoLista = $stmtU ? $stmtU->fetchAll(PDO::FETCH_ASSOC) : [];
 }
-$prioridadesEdicaoInicial = null;
-if ($row !== null) {
-    try {
-        $prioridadesEdicaoInicial = $service->listPrioridadesEdicaoAudiencia((string) $row['id_pauta']);
-    } catch (Throwable $e) {
-        $prioridadesEdicaoInicial = null;
-    }
-}
 $reusPresosMap = [];
 $reusPresosSigMap = [];
-/** @var list<string> Nomes de réus/indiciados/sentenciados já vinculados ao processo (cadastro local). */
-$reusNomesProcesso = [];
+/** @var list<string> Nomes de partes já vinculadas ao processo (cadastro local). */
+$partesNomesProcesso = [];
 
 // Normalização usada para comparar o nome do "reu" na audiência
 // com os nomes cadastrados em "réus presos" (reduz variações por espaços, acentos e pontuação).
@@ -122,9 +113,14 @@ if ($row !== null) {
     if ($processoId !== '') {
         try {
             $repoProcessoPartes = new ProcessosPartesRepository(Conection::getInstance()->getConnection());
-            $reusNomesProcesso = $repoProcessoPartes->listNomesReusPorProcessoId($processoId);
+            foreach ($repoProcessoPartes->findByProcessoId($processoId) as $parteProc) {
+                $nomeParteProc = trim((string) ($parteProc['nome_completo'] ?? ''));
+                if ($nomeParteProc !== '') {
+                    $partesNomesProcesso[] = $nomeParteProc;
+                }
+            }
         } catch (Throwable $e) {
-            $reusNomesProcesso = [];
+            $partesNomesProcesso = [];
         }
     }
 
@@ -436,6 +432,19 @@ $tiposAudienciaPermitidos = [
                     </select>
                 </div>
             </div>
+            <?php
+                $linkAudienciaAtual = trim((string) ($row['link_audiencia'] ?? ''));
+                $isAudinAtual = trim((string) ($row['localizacao'] ?? '')) === 'audin';
+            ?>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" id="audiencia-edit-link-audin-wrap" style="gap:12px;<?php echo $isAudinAtual ? '' : 'display:none;'; ?>">
+                <div class="col filter">
+                    <label for="audiencia-edit-link-audin">Link da audiência Audin</label>
+                    <input type="url" class="width-700 height-md" id="audiencia-edit-link-audin" value="<?php echo htmlspecialchars($linkAudienciaAtual, ENT_QUOTES); ?>" placeholder="https://..." autocomplete="off">
+                </div>
+                <?php if ($linkAudienciaAtual !== ''): ?>
+                    <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="<?php echo htmlspecialchars($linkAudienciaAtual, ENT_QUOTES); ?>" data-nav-target="_blank">Abrir link</button>
+                <?php endif; ?>
+            </div>
             <div class="display-flex row row-full flex-wrap gap-y-md" style="margin-top:8px;padding-top:12px;border-top:1px solid rgba(0,0,0,.08);">
                 <div class="col filter">
                     <label>Duração estimada</label>
@@ -501,26 +510,6 @@ $tiposAudienciaPermitidos = [
                     <?php
                 }
                 ?>
-            </div>
-        </div>
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <h2>Prioridades processuais</h2>
-        </div>
-        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="prioridades-processuais-wrap">
-            <p class="description-page" style="margin:0;">Prioridades do processo (valem para todas as audiências). Inclusões e exclusões são salvas ao confirmar cada ação.</p>
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                <div class="col">
-                    <label for="prioridade-catalog-select">Incluir prioridade</label>
-                    <select class="width-500 height-md" id="prioridade-catalog-select">
-                        <option value="" selected disabled>Selecione...</option>
-                    </select>
-                </div>
-                <button type="button" class="btn btn-primary height-md" id="btn-prioridade-adicionar">Adicionar</button>
-            </div>
-            <div class="display-flex col col-full grp-subtask-panel">
-                <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top align-start flex-wrap grp-sub-line grp-sub-line-primary" style="font-family: monospace; font-size: 11px;">
-                    <div id="prioridades-processuais-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
-                </div>
             </div>
         </div>
         <?php endif; ?>
@@ -604,7 +593,7 @@ $tiposAudienciaPermitidos = [
         ?>
         <?php foreach ($partesOrdenadas as $parte): ?>
         <?php
-            $defensorTexto = 'Nenhum defensor vinculado';
+            $defensorTexto = '';
             $tipoParteAtual = (string) ($parte['tipo_parte'] ?? '');
             $mostrarDefensor = in_array($tipoParteAtual, ['reu', 'vitima'], true);
             $minorInfoParte = (string) ucfirst(str_replace('_', ' ', $tipoParteAtual));
@@ -838,7 +827,7 @@ $tiposAudienciaPermitidos = [
                         <?php if ($linhaCompanhiaTelefoneTestemunha !== ''): ?>
                             <span class="minor-info-defesa" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block;"><?php echo htmlspecialchars($linhaCompanhiaTelefoneTestemunha, ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php endif; ?>
-                        <?php if ($mostrarDefensor): ?>
+                        <?php if ($mostrarDefensor && $defensorTexto !== ''): ?>
                             <span class="minor-info-defesa"><?php echo htmlspecialchars($defensorTexto, ENT_QUOTES); ?></span>
                         <?php endif; ?>
                         <?php
@@ -927,24 +916,15 @@ $tiposAudienciaPermitidos = [
     <script>
         window.PAUTA_HORARIOS_GRADE = <?php echo json_encode($pautaHorariosGrade, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_HORA_FORA_GRADE = <?php echo json_encode($pautaHoraForaGrade, JSON_UNESCAPED_UNICODE); ?>;
-        window.PAUTA_REUS_NOMES_INITIAL = <?php echo json_encode($reusNomesProcesso, JSON_UNESCAPED_UNICODE); ?>;
+        window.PAUTA_PARTES_NOMES_INITIAL = <?php echo json_encode($partesNomesProcesso, JSON_UNESCAPED_UNICODE); ?>;
+        window.PAUTA_REUS_NOMES_INITIAL = window.PAUTA_PARTES_NOMES_INITIAL;
         window.PAUTA_EXISTING_PART_NAMES_SIGS = <?php echo json_encode($existingPartSignatures, JSON_UNESCAPED_UNICODE); ?>;
-        window.PAUTA_PRIORIDADES_INITIAL = <?php echo json_encode($prioridadesEdicaoInicial, JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_EDIT_ID = <?php echo json_encode($row !== null ? (string) ($row['id_pauta'] ?? '') : '', JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_PROCESSO_ID = <?php echo json_encode($row !== null ? (string) ($row['processo'] ?? '') : '', JSON_UNESCAPED_UNICODE); ?>;
         window.PAUTA_PROCESSO_SIGILOSO = <?php echo json_encode($row !== null && !empty($row['processo_sigiloso'])); ?>;
-        window.PRIORIDADES_BADGE_DANGER_CODES = <?php echo json_encode([
-            PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso(),
-            PrioridadesProcessuaisCatalog::codigoViolenciaDomestica(),
-            PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor(),
-        ], JSON_UNESCAPED_UNICODE); ?>;
-        window.PRIORIDADES_BADGE_BLACK_CODES = <?php echo json_encode([
-            PrioridadesProcessuaisCatalog::codigoSigiloso(),
-        ], JSON_UNESCAPED_UNICODE); ?>;
     </script>
 
     <script src="/assets/js/modules/audiencias/pauta-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit.js') ?: time(); ?>"></script>
-    <script src="/assets/js/modules/audiencias/pauta-edit-prioridades.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit-prioridades.js') ?: time(); ?>"></script>
     <script>
         (function () {
             if (!window.App || !App.CartorioTaskList || typeof App.CartorioTaskList.initialize !== 'function') {

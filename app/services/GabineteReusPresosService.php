@@ -180,6 +180,16 @@ final class GabineteReusPresosService
                 ? (string) $r['processo_principal_numero']
                 : '—';
             $rows[$i]['SubtarefaProcessos'] = $subPorReu[$rid] ?? [];
+            foreach ($rows[$i]['SubtarefaProcessos'] as $subLinha) {
+                if (!empty($subLinha['principal'])) {
+                    $dataUlt = trim((string) ($subLinha['ultima_movimentacao_data'] ?? ''));
+                    $tipoUlt = trim((string) ($subLinha['ultima_movimentacao'] ?? ''));
+                    if ($dataUlt !== '' && $dataUlt !== '—' && $tipoUlt !== '' && $tipoUlt !== '—') {
+                        $rows[$i]['UltimaMovimentacaoLabel'] = $tipoUlt . ' — ' . $dataUlt;
+                    }
+                    break;
+                }
+            }
             $rows[$i]['RevisaoDestaque'] = $this->nivelDestaqueProximaRevisao($r['proxima_revisao'] ?? null);
             $rows[$i]['RevisaoDiasHint'] = $this->labelDiasAteRevisao($r['proxima_revisao'] ?? null);
         }
@@ -279,63 +289,8 @@ final class GabineteReusPresosService
         }
 
         if ($principalProcessoId !== '') {
-            $audiencias = $this->pautaRepo->listByProcessoId($principalProcessoId);
-            foreach ($audiencias as $aud) {
-                $statusRaw = strtolower(trim((string) ($aud['status'] ?? '')));
-                if ($statusRaw === 'agendada') {
-                    $statusRaw = 'designada';
-                } elseif ($statusRaw === 'adiada') {
-                    $statusRaw = 'redesignada';
-                }
-
-                $tipoAud = trim((string) ($aud['tipo_audiencia'] ?? ''));
-                $horaAudRaw = trim((string) ($aud['hora_audiencia'] ?? ''));
-                $horaAud = '—';
-                if (preg_match('/^(\d{1,2}):(\d{2})/', $horaAudRaw, $hm)) {
-                    $horaAud = sprintf('%02d:%02d', (int) $hm[1], (int) $hm[2]);
-                }
-
-                $descricao = 'Audiência';
-                if ($statusRaw === 'designada') {
-                    $descricao = 'Audiência'
-                        . ($tipoAud !== '' ? ' de ' . $tipoAud : '')
-                        . ' designada para as ' . $horaAud;
-                } elseif ($statusRaw === 'em_andamento') {
-                    $descricao = 'Audiência em andamento';
-                } elseif ($statusRaw === 'finalizada' || $statusRaw === 'realizada') {
-                    $descricao = 'Audiência realizada';
-                } elseif ($statusRaw === 'redesignada') {
-                    $descricao = 'Audiência redesignada';
-                } elseif ($statusRaw === 'cancelada') {
-                    $descricao = 'Audiência cancelada';
-                }
-
-                $dataMov = trim((string) ($aud['data_audiencia'] ?? ''));
-                $createdAt = null;
-                if ($statusRaw === 'em_andamento') {
-                    $inicioEfetivo = trim((string) ($aud['data_hora_inicio_efetivo'] ?? ''));
-                    if ($inicioEfetivo !== '') {
-                        $dataMov = substr($inicioEfetivo, 0, 10);
-                        $createdAt = $inicioEfetivo;
-                    }
-                } elseif ($statusRaw === 'finalizada' || $statusRaw === 'realizada') {
-                    $fimEfetivo = trim((string) ($aud['data_hora_fim_efetivo'] ?? ''));
-                    if ($fimEfetivo !== '') {
-                        $dataMov = substr($fimEfetivo, 0, 10);
-                        $createdAt = $fimEfetivo;
-                    }
-                }
-
-                $movs[] = [
-                    'id' => 'AUD-' . trim((string) ($aud['id_pauta'] ?? '')),
-                    'reu_preso_id' => $id,
-                    'tipo_codigo' => 'audiencia_' . ($statusRaw !== '' ? $statusRaw : 'status'),
-                    'tipo_label' => $descricao,
-                    'data_movimentacao' => $dataMov,
-                    'observacoes' => null,
-                    'created_at' => $createdAt,
-                    'is_virtual' => true,
-                ];
+            foreach ($this->movimentacoesVirtuaisAudiencias($id, $principalProcessoId) as $movAud) {
+                $movs[] = $movAud;
             }
         }
 
@@ -778,6 +733,119 @@ final class GabineteReusPresosService
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    private function movimentacoesVirtuaisAudiencias(string $reuPresoId, string $processoId): array
+    {
+        $out = [];
+        $audiencias = $this->pautaRepo->listByProcessoId($processoId);
+        foreach ($audiencias as $aud) {
+            $mov = $this->montarMovimentacaoVirtualAudiencia($reuPresoId, $aud);
+            if ($mov !== null) {
+                $out[] = $mov;
+            }
+        }
+
+        return $out;
+    }
+
+    private function ultimaMovimentacaoVirtualAudiencia(string $reuPresoId, string $processoId): ?array
+    {
+        $movs = $this->movimentacoesVirtuaisAudiencias($reuPresoId, $processoId);
+        if ($movs === []) {
+            return null;
+        }
+        usort($movs, fn (array $a, array $b): int => $this->compararMovimentacoes($a, $b));
+
+        return $movs[0];
+    }
+
+    private function montarMovimentacaoVirtualAudiencia(string $reuPresoId, array $aud): ?array
+    {
+        $statusRaw = strtolower(trim((string) ($aud['status'] ?? '')));
+        if ($statusRaw === 'agendada') {
+            $statusRaw = 'designada';
+        } elseif ($statusRaw === 'adiada') {
+            $statusRaw = 'redesignada';
+        } elseif ($statusRaw === 'realizada') {
+            $statusRaw = 'finalizada';
+        }
+        if ($statusRaw === '') {
+            return null;
+        }
+
+        $tipoAud = trim((string) ($aud['tipo_audiencia'] ?? ''));
+        $tipoTexto = 'Audiência' . ($tipoAud !== '' ? ' de ' . $tipoAud : '');
+        $horaAudRaw = trim((string) ($aud['hora_audiencia'] ?? ''));
+        $horaAud = '—';
+        if (preg_match('/^(\d{1,2}):(\d{2})/', $horaAudRaw, $hm)) {
+            $horaAud = sprintf('%02d:%02d', (int) $hm[1], (int) $hm[2]);
+        }
+
+        $dataMov = trim((string) ($aud['data_audiencia'] ?? ''));
+        $createdAt = trim((string) ($aud['updated_at'] ?? ''));
+        $dataAlteracaoBr = $createdAt !== '' && ($tAlt = strtotime($createdAt)) !== false ? date('d/m/Y', $tAlt) : '';
+
+        if ($statusRaw === 'designada') {
+            $descricao = $tipoTexto . ' designada para as ' . $horaAud;
+            $createdAt = $dataMov !== '' ? $dataMov . ' ' . ($horaAud !== '—' ? $horaAud . ':00' : '00:00:00') : $createdAt;
+        } elseif ($statusRaw === 'em_andamento') {
+            $descricao = $tipoTexto . ' em andamento';
+            $inicioEfetivo = trim((string) ($aud['data_hora_inicio_efetivo'] ?? ''));
+            if ($inicioEfetivo !== '') {
+                $dataMov = substr($inicioEfetivo, 0, 10);
+                $createdAt = $inicioEfetivo;
+            }
+        } elseif ($statusRaw === 'finalizada') {
+            $descricao = $tipoTexto . ' realizada';
+            $fimEfetivo = trim((string) ($aud['data_hora_fim_efetivo'] ?? ''));
+            if ($fimEfetivo !== '') {
+                $dataMov = substr($fimEfetivo, 0, 10);
+                $createdAt = $fimEfetivo;
+            }
+        } elseif ($statusRaw === 'redesignada') {
+            $descricao = $tipoTexto . ' redesignada' . ($dataAlteracaoBr !== '' ? ' em ' . $dataAlteracaoBr : '');
+        } elseif ($statusRaw === 'cancelada') {
+            $descricao = $tipoTexto . ' cancelada' . ($dataAlteracaoBr !== '' ? ' em ' . $dataAlteracaoBr : '');
+        } else {
+            $descricao = $tipoTexto;
+        }
+
+        return [
+            'id' => 'AUD-' . trim((string) ($aud['id_pauta'] ?? '')),
+            'reu_preso_id' => $reuPresoId,
+            'tipo_codigo' => 'audiencia_' . $statusRaw,
+            'tipo_label' => $descricao,
+            'data_movimentacao' => $dataMov,
+            'observacoes' => null,
+            'created_at' => $createdAt !== '' ? $createdAt : null,
+            'is_virtual' => true,
+        ];
+    }
+
+    private function compararMovimentacoes(?array $a, ?array $b): int
+    {
+        if ($a === null && $b === null) {
+            return 0;
+        }
+        if ($a === null) {
+            return 1;
+        }
+        if ($b === null) {
+            return -1;
+        }
+        $ta = strtotime((string) ($a['data_movimentacao'] ?? '')) ?: 0;
+        $tb = strtotime((string) ($b['data_movimentacao'] ?? '')) ?: 0;
+        if ($ta !== $tb) {
+            return $tb <=> $ta;
+        }
+        $ca = strtotime((string) ($a['created_at'] ?? '')) ?: 0;
+        $cb = strtotime((string) ($b['created_at'] ?? '')) ?: 0;
+
+        return $cb <=> $ca;
+    }
+
+    /**
      * Linhas da subtarefa (expandir): um processo por linha; principal com colunas esq./dir.; demais compactos.
      *
      * @param list<string> $reuIds
@@ -821,7 +889,14 @@ final class GabineteReusPresosService
             $classeLabel = $classe !== '' ? $classe : 'Classe não informada';
             $movKey = $rid !== '' && $pid !== '' ? $rid . '|' . $pid : '';
             $mov = $movKey !== '' ? ($ultMap[$movKey] ?? null) : null;
+            $movAudiencia = $this->ultimaMovimentacaoVirtualAudiencia($rid, $pid);
+            if ($movAudiencia !== null && $this->compararMovimentacoes($movAudiencia, $mov) < 0) {
+                $mov = $movAudiencia;
+            }
             $tipoLabel = $mov !== null ? $this->labelTipoMovimentacao((string) ($mov['tipo_codigo'] ?? '')) : '—';
+            if ($mov !== null && !empty($mov['tipo_label'])) {
+                $tipoLabel = (string) $mov['tipo_label'];
+            }
             $dataBr = $mov !== null ? $this->formatDataMovimentoBr((string) ($mov['data_movimentacao'] ?? '')) : '—';
             $obsMov = $mov !== null ? trim((string) ($mov['observacoes'] ?? '')) : '';
             $compacto = $numero !== '' && $classe !== ''
