@@ -638,6 +638,13 @@
     justify-content: flex-end;
 }
 
+@media (max-width: 680px) {
+    .register.register-cejusc-list > .register-line > .left,
+    .register.register-cejusc-list > .register-line > .right {
+        justify-content: center;
+    }
+}
+
 .register.register-cejusc-list .container-processo {
     justify-content: flex-start;
 }
