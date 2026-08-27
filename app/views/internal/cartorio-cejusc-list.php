@@ -33,6 +33,13 @@ if ($totalPages > 0 && $currentPage > $totalPages) $currentPage = $totalPages;
 $offset = ($currentPage - 1) * $itemsPerPage;
 $startItem = $total > 0 ? $offset + 1 : 0;
 $endItem = $total > 0 ? min($offset + count($rows), $total) : 0;
+$paginationButtons = [];
+if ($totalPages > 0) {
+    $paginationButtons = $totalPages <= 5 ? range(1, $totalPages) : array_slice(range(1, $totalPages), max(0, $currentPage - 3), 5);
+    if ($totalPages > 5 && $currentPage <= 3) {
+        $paginationButtons = array_merge(range(1, 4), [$totalPages]);
+    }
+}
 $exportMonths = [];
 $monthCursor = new DateTimeImmutable('first day of this month');
 $monthNames = [1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril', 5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto', 9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'];
@@ -214,7 +221,19 @@ function cejusc_resumo_nomes(array $nomes): string
 
             <div class="card-buttons">
                 <span class="pagination-info">Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $total; ?> registros (<?php echo (int) $totalPages; ?> <?php echo $totalPages === 1 ? 'página' : 'páginas'; ?>, <?php echo (int) $itemsPerPage; ?> itens por página)</span>
-                <?php if ($totalPages > 0): ?><div class="pagination-controls"><a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" href="<?php echo htmlspecialchars(cejusc_url(['items_per_page' => $itemsPerPage, 'page_number' => max(1, $currentPage - 1)]), ENT_QUOTES); ?>" aria-label="Página anterior"><i class="fi fi-rr-angle-small-left"></i></a><span class="pagination-number active"><?php echo (int) $currentPage; ?></span><a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" href="<?php echo htmlspecialchars(cejusc_url(['items_per_page' => $itemsPerPage, 'page_number' => min($totalPages, $currentPage + 1)]), ENT_QUOTES); ?>" aria-label="Próxima página"><i class="fi fi-rr-angle-small-right"></i></a></div><?php endif; ?>
+                <?php if ($totalPages > 0): ?>
+                    <div class="pagination-controls">
+                        <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" href="<?php echo htmlspecialchars(cejusc_url(['items_per_page' => $itemsPerPage, 'page_number' => max(1, $currentPage - 1)]), ENT_QUOTES); ?>" aria-label="Página anterior"><i class="fi fi-rr-angle-small-left"></i></a>
+                        <?php foreach ($paginationButtons as $pageButton): ?>
+                            <?php if ($pageButton === $currentPage): ?>
+                                <span class="pagination-number active"><?php echo (int) $pageButton; ?></span>
+                            <?php else: ?>
+                                <a class="pagination-number" href="<?php echo htmlspecialchars(cejusc_url(['items_per_page' => $itemsPerPage, 'page_number' => $pageButton]), ENT_QUOTES); ?>"><?php echo (int) $pageButton; ?></a>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" href="<?php echo htmlspecialchars(cejusc_url(['items_per_page' => $itemsPerPage, 'page_number' => min($totalPages, $currentPage + 1)]), ENT_QUOTES); ?>" aria-label="Próxima página"><i class="fi fi-rr-angle-small-right"></i></a>
+                    </div>
+                <?php endif; ?>
             </div>
         </main>
         <div class="footer-page"><div class="location"><span class="all">Aplicativo web desenvolvido integralmente por </span><span class="specific">Jorge Reis Develop</span><span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span></div></div>
