@@ -602,3 +602,103 @@
     font-weight: 500;
     color: var(--color-text-secondary);
 }
+
+/* CEJUSC: linha de registro alinhada ao mockup docs/mockups/blocos/tabela-cejusc.html */
+.register.register-cejusc-list {
+    position: relative;
+}
+
+.register.register-cejusc-list > .register-line {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 5px 10px;
+    gap: 5px;
+    border-bottom: 1px solid #dfdfdf;
+}
+
+.register.register-cejusc-list > .register-line > .left,
+.register.register-cejusc-list > .register-line > .right {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+}
+
+.register.register-cejusc-list > .register-line > .left {
+    justify-content: flex-start;
+}
+
+.register.register-cejusc-list > .register-line > .right {
+    justify-content: flex-end;
+}
+
+.register.register-cejusc-list .container-processo {
+    justify-content: flex-start;
+}
+
+.register.register-cejusc-list .container-processo.container-sm,
+.register.register-cejusc-list .container-historical.container-sm {
+    width: 307px;
+    height: 70px;
+}
+
+.register.register-cejusc-list .container-processo .container-line {
+    align-items: flex-start;
+}
+
+.register.register-cejusc-list .container-processo .container-line .left,
+.register.register-cejusc-list .container-processo .container-line .right {
+    align-items: flex-start;
+}
+
+.register.register-cejusc-list .container-processo .container-line .left {
+    width: calc(100% - 54px);
+}
+
+.register.register-cejusc-list .container-processo .container-line .right {
+    width: auto;
+}
+
+.register.register-cejusc-list .cejusc-actions .container-line[role="button"],
+.register.register-cejusc-list .cejusc-actions .line-cube[role="button"] {
+    cursor: pointer;
+}
+
+.register.register-cejusc-list .cejusc-actions .cejusc-action-disabled {
+    cursor: default;
+}
+
+.register.register-cejusc-list .cejusc-actions .cejusc-action-disabled .cube-icon {
+    filter: grayscale(1);
+    opacity: 0.3;
+}
+
+.register.register-cejusc-list .cejusc-actions .cejusc-action-disabled .content-classe {
+    color: #505050;
+    filter: grayscale(1);
+    opacity: 0.3;
+}
+
+.register.register-cejusc-list .container-historical {
+    justify-content: flex-start;
+    margin-left: 0;
+    align-self: flex-start;
+}
+
+.register.register-cejusc-list .container-historical .container-line {
+    align-items: flex-start;
+}
+
+.register.register-cejusc-list .container-historical .content-classe {
+    line-height: 20px;
+}
+
+.register.register-cejusc-list .container-historical .content-assuntos {
+    line-height: 15px;
+}

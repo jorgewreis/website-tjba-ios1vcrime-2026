@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../services/CejuscRegistrosService.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 require_once __DIR__ . '/../../helpers/DeleteAuthorization.php';
+require_once __DIR__ . '/../../repositories/ProcessosPartesRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
 $itemsPerPage = (int) ($_GET['items_per_page'] ?? 10);
@@ -16,6 +17,14 @@ try {
     $result = ['rows' => [], 'total' => 0];
 }
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, is_array($result['rows'] ?? null) ? $result['rows'] : []);
+$processoIdsCejusc = [];
+foreach ($rows as $rowCejusc) {
+    $processoIdCejusc = trim((string) ($rowCejusc['bloco_processo_id_resolvido'] ?? ''));
+    if ($processoIdCejusc !== '') {
+        $processoIdsCejusc[] = $processoIdCejusc;
+    }
+}
+$cejuscVitimasPorProcesso = (new ProcessosPartesRepository($connection))->listNomesVitimasByProcessoIds($processoIdsCejusc);
 $registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $podeRemoverRegistroCejusc = DeleteAuthorization::usuarioPodeExcluirComoServidorOuChefia(trim((string) ($_SESSION['id_usuario'] ?? '')));
 $total = (int) ($result['total'] ?? 0);
@@ -38,6 +47,19 @@ for ($i = 0; $i < 3; $i++) {
 }
 function cejusc_url(array $extra = []): string { return '/frame.php?' . http_build_query(array_merge(['page' => 'cejusc'], $extra)); }
 function cejusc_date(string $value): string { $t = strtotime($value); return $t === false ? $value : date('d/m/Y', $t); }
+function cejusc_resumo_nomes(array $nomes): string
+{
+    $nomes = array_values(array_filter(array_map(static function ($nome): string {
+        return trim((string) $nome);
+    }, $nomes), static function (string $nome): bool {
+        return $nome !== '';
+    }));
+    $total = count($nomes);
+    if ($total === 0) return '';
+    if ($total === 1) return $nomes[0];
+    if ($total === 2) return $nomes[0] . ' e outro';
+    return $nomes[0] . ' e outros (' . ($total - 1) . ')';
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -99,22 +121,91 @@ function cejusc_date(string $value): string { $t = strtotime($value); return $t 
                     $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cejusc', $registroListViewerContext, $connection);
                     $registroMetadata['show_delete'] = $podeRemoverRegistroCejusc;
                     $registroMetadata['delete_endpoint'] = '/api/cartorio-cejusc/delete.php';
-                    $registroMetadata['delete_label'] = 'Remover registro';
+                    $registroMetadata['delete_label'] = 'Arquivar';
                     $processoIdBlocoCejusc = trim((string) ($row['bloco_processo_id_resolvido'] ?? ''));
                     ?>
-                    <div class="display-flex col col-full register register-with-metadata border-bottom" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>"<?php echo $processoIdBlocoCejusc !== '' ? ' data-processo-id="' . htmlspecialchars($processoIdBlocoCejusc, ENT_QUOTES) . '"' : ''; ?>>
-                        <div class="register-line" style="border-bottom: 0;">
-                            <div class="register-line-left">
-                                <div class="col width-500 col-process">
-                                    <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
-                                </div>
-                                <div class="col width-700" title="Parte encaminhada ao CEJUSC">
-                                    <span class="minor-info text-ellipsis" style="font-weight: 600; color: var(--color-gray-900);">Parte: <?php echo htmlspecialchars((string) $row['nome_parte'], ENT_QUOTES); ?></span>
-                                    <span class="major-info text-ellipsis cejusc-data-envio">Data de envio ao CEJUSC — <?php echo htmlspecialchars(cejusc_date((string) $row['data_envio_cejusc']), ENT_QUOTES); ?></span>
+                    <?php
+                    $historicoLinhasCejusc = is_array($registroMetadata['historico_linhas'] ?? null) ? $registroMetadata['historico_linhas'] : [];
+                    $vitimaResumoCejusc = cejusc_resumo_nomes($cejuscVitimasPorProcesso[$processoIdBlocoCejusc] ?? []);
+                    ?>
+                    <div class="display-flex col col-full register register-cejusc-list" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>"<?php echo $processoIdBlocoCejusc !== '' ? ' data-processo-id="' . htmlspecialchars($processoIdBlocoCejusc, ENT_QUOTES) . '"' : ''; ?> id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>">
+                        <div class="register-line">
+                            <div class="left">
+                                <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+
+                                <div class="container-processo container-sm">
+                                    <div class="container-line">
+                                        <div class="left">
+                                            <div class="line-content box-number process-info">
+                                                <span class="content-number major-info" style="text-transform: uppercase;"><?php echo htmlspecialchars((string) $row['nome_parte'], ENT_QUOTES); ?></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container-line">
+                                        <div class="line-content double-line">
+                                            <?php if ($vitimaResumoCejusc !== ''): ?>
+                                                <span class="content-assuntos">Vítima: <strong><?php echo htmlspecialchars($vitimaResumoCejusc, ENT_QUOTES); ?></strong></span>
+                                            <?php endif; ?>
+                                            <span class="content-classe">- <?php echo htmlspecialchars(cejusc_date((string) $row['data_envio_cejusc']), ENT_QUOTES); ?> | Enviado ao CEJUSC</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                                <?php include __DIR__ . '/_registro_metadata.php'; ?>
+
+                            <div class="right">
+                                <div class="container-processo container-sm cejusc-actions">
+                                    <div class="container-line">
+                                        <div class="left">
+                                            <div class="line-cube box-open open cejusc-action-disabled" title="Editar" aria-label="Editar">
+                                                <img class="cube-icon" src="/assets/icons/Pencil-1--Streamline-Ultimate.png" alt="">
+                                            </div>
+                                            <div class="line-content cejusc-action-disabled">
+                                                <span class="content-classe">Editar</span>
+                                            </div>
+                                        </div>
+                                        <div class="right">
+                                            <div class="container-line cejusc-action-archive">
+                                                <div class="line-content cejusc-action-disabled">
+                                                    <span class="content-classe">Arquivar</span>
+                                                </div>
+                                                <div class="line-cube box-open open cejusc-action-disabled" title="Arquivar" aria-label="Arquivar">
+                                                    <img class="cube-icon" src="/assets/icons/Archive--Streamline-Ultimate.png" alt="">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container-line"></div>
+                                </div>
+
+                                <div class="container-historical container-sm">
+                                    <div class="container-line">
+                                        <div class="line-content double-line">
+                                            <span class="content-classe">Histórico de movimentações</span>
+                                            <?php if ($historicoLinhasCejusc === []): ?>
+                                                <span class="content-assuntos over">Nenhuma movimentação registrada</span>
+                                            <?php else: ?>
+                                                <?php foreach ($historicoLinhasCejusc as $histCejusc):
+                                                    if (!is_array($histCejusc)) {
+                                                        continue;
+                                                    }
+                                                    $historicoDataCejusc = trim((string) ($histCejusc['data_hora'] ?? ''));
+                                                    $historicoRotuloCejusc = trim((string) ($histCejusc['rotulo'] ?? ''));
+                                                    $historicoAutorCejusc = trim((string) ($histCejusc['autor'] ?? ''));
+                                                    $historicoClasseCejusc = trim((string) ($histCejusc['content_class'] ?? ''));
+                                                    if ($historicoDataCejusc === '' || $historicoRotuloCejusc === '') {
+                                                        continue;
+                                                    }
+                                                    $historicoTextoCejusc = '- ' . $historicoDataCejusc . ' | ' . $historicoRotuloCejusc;
+                                                    if ($historicoAutorCejusc !== '') {
+                                                        $historicoTextoCejusc .= ' por ' . $historicoAutorCejusc;
+                                                    }
+                                                ?>
+                                                    <span class="content-assuntos<?php echo $historicoClasseCejusc !== '' ? ' ' . htmlspecialchars($historicoClasseCejusc, ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($historicoTextoCejusc, ENT_QUOTES); ?></span>
+                                                <?php endforeach; ?>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
