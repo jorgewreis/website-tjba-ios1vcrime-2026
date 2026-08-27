@@ -11,6 +11,8 @@ declare(strict_types=1);
  * - $processo_bloco_variant = 'estudantes': listagens de estudantes.
  *     - Oculta o rodapé direito (botões abrir/copiar);
  *     - Mascara o número do processo quando $row['processo_sigiloso'] for verdadeiro.
+ * - $processo_bloco_variant = 'consulta-processos': na consulta de processos,
+ *   mantém o botão de abrir mesmo quando classe e assunto ainda não existem.
  *   Após definida, a variável é "sticky" (persiste para os próximos includes do
  *   mesmo escopo); cada view de estudantes a define uma única vez antes do
  *   foreach que usa este partial. Demais views nunca devem defini-la.
@@ -23,6 +25,7 @@ declare(strict_types=1);
 $processoBlocoVariant = isset($processo_bloco_variant) ? (string) $processo_bloco_variant : '';
 $processoBlocoIsEstudantes = ($processoBlocoVariant === 'estudantes');
 $processoBlocoHideActions = $processoBlocoIsEstudantes;
+$processoBlocoForceOpenWhenMissingData = ($processoBlocoVariant === 'consulta-processos');
 $processoBlocoModel = isset($processo_bloco_model) ? (string) $processo_bloco_model : 'compacto';
 $processoBlocoIsFull = ($processoBlocoModel === 'full');
 
@@ -56,7 +59,10 @@ foreach ($prioridades as $prioridade) {
 $temPrioridadeVisual = $prioridadesTexto !== [];
 $classeSemDados = $classeNot;
 $assuntoSemDados = $assuntoNot;
-$mostrarSincronizar = !$processoBlocoHideActions && $classeSemDados && $assuntoSemDados;
+$mostrarSincronizar = !$processoBlocoHideActions
+    && !$processoBlocoForceOpenWhenMissingData
+    && $classeSemDados
+    && $assuntoSemDados;
 
 $limparCodigoClasseCompacta = static function (string $texto): string {
     $textoLimpo = preg_replace('/^\s*\d+\s*-\s*/u', '', trim($texto));
