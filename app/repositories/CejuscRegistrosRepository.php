@@ -12,7 +12,7 @@ final class CejuscRegistrosRepository
     public function list(array $filters, int $limit, int $offset): array
     {
         [$where, $params] = $this->where($filters);
-        $sql = "SELECT `id`, `numero_processo`, `classe_codigo`, `classe_descricao`, `nome_parte`, `data_envio_cejusc`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`
+        $sql = "SELECT `id`, `numero_processo`, `classe_codigo`, `classe_descricao`, `nome_parte`, `data_envio_cejusc`, `data_envio_cejusc` AS `DataEnvioCejusc`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`
                 FROM `{$this->table}`" . ($where !== '' ? " WHERE {$where}" : '') .
             ' ORDER BY `data_envio_cejusc` DESC, `created_at` DESC LIMIT :limit OFFSET :offset';
         $stmt = $this->connection->prepare($sql);

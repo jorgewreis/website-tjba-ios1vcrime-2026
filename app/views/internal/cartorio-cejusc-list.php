@@ -54,7 +54,7 @@ for ($i = 0; $i < 3; $i++) {
 }
 function cejusc_url(array $extra = []): string { return '/frame.php?' . http_build_query(array_merge(['page' => 'cejusc'], $extra)); }
 function cejusc_date(string $value): string { $t = strtotime($value); return $t === false ? $value : date('d/m/Y', $t); }
-function cejusc_resumo_nomes(array $nomes): string
+function cejusc_resumo_nomes(array $nomes, string $singularOutro = 'outro', string $pluralOutros = 'outros'): string
 {
     $nomes = array_values(array_filter(array_map(static function ($nome): string {
         return trim((string) $nome);
@@ -64,8 +64,8 @@ function cejusc_resumo_nomes(array $nomes): string
     $total = count($nomes);
     if ($total === 0) return '';
     if ($total === 1) return $nomes[0];
-    if ($total === 2) return $nomes[0] . ' e outro';
-    return $nomes[0] . ' e outros (' . ($total - 1) . ')';
+    if ($total === 2) return $nomes[0] . ' e ' . $singularOutro;
+    return $nomes[0] . ' e ' . $pluralOutros . ' (' . ($total - 1) . ')';
 }
 ?>
 <!DOCTYPE html>
@@ -133,14 +133,16 @@ function cejusc_resumo_nomes(array $nomes): string
                     ?>
                     <?php
                     $historicoLinhasCejusc = is_array($registroMetadata['historico_linhas'] ?? null) ? $registroMetadata['historico_linhas'] : [];
-                    $vitimaResumoCejusc = cejusc_resumo_nomes($cejuscVitimasPorProcesso[$processoIdBlocoCejusc] ?? []);
+                    $vitimaResumoCejusc = cejusc_resumo_nomes($cejuscVitimasPorProcesso[$processoIdBlocoCejusc] ?? [], 'outra', 'outras');
+                    $dataEnvioCejuscRaw = trim((string) ($row['DataEnvioCejusc'] ?? $row['data_envio_cejusc'] ?? ''));
+                    $dataEnvioCejuscTexto = $dataEnvioCejuscRaw !== '' ? cejusc_date($dataEnvioCejuscRaw) : 'Data de envio não informada';
                     ?>
                     <div class="display-flex col col-full register register-cejusc-list" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>"<?php echo $processoIdBlocoCejusc !== '' ? ' data-processo-id="' . htmlspecialchars($processoIdBlocoCejusc, ENT_QUOTES) . '"' : ''; ?> id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>">
                         <div class="register-line">
                             <div class="left">
                                 <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
 
-                                <div class="container-processo container-sm">
+                                <div class="container-processo container-sm cejusc-document-info">
                                     <div class="container-line">
                                         <div class="left">
                                             <div class="line-content box-number process-info">
@@ -153,7 +155,7 @@ function cejusc_resumo_nomes(array $nomes): string
                                             <?php if ($vitimaResumoCejusc !== ''): ?>
                                                 <span class="content-assuntos">Vítima: <strong><?php echo htmlspecialchars($vitimaResumoCejusc, ENT_QUOTES); ?></strong></span>
                                             <?php endif; ?>
-                                            <span class="content-classe">- <?php echo htmlspecialchars(cejusc_date((string) $row['data_envio_cejusc']), ENT_QUOTES); ?> | Enviado ao CEJUSC</span>
+                                            <span class="content-classe">- <?php echo htmlspecialchars($dataEnvioCejuscTexto, ENT_QUOTES); ?> | Enviado ao CEJUSC</span>
                                         </div>
                                     </div>
                                 </div>

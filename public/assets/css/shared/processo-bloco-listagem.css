@@ -665,6 +665,22 @@
     width: auto;
 }
 
+.register.register-cejusc-list .cejusc-document-info .container-line .left {
+    width: 100%;
+}
+
+.register.register-cejusc-list .cejusc-document-info .line-content.box-number {
+    padding-left: 0;
+}
+
+.register.register-cejusc-list .cejusc-document-info .content-number.major-info {
+    margin: 0;
+}
+
+.register.register-cejusc-list .cejusc-document-info .line-content.double-line {
+    padding-left: 0;
+}
+
 .register.register-cejusc-list .cejusc-actions .container-line[role="button"],
 .register.register-cejusc-list .cejusc-actions .line-cube[role="button"] {
     cursor: pointer;
