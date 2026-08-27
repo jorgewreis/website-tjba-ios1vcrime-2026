@@ -156,6 +156,27 @@
     white-space: nowrap;
 }
 
+.container-processo .content-polo,
+.container-processo .content-partes {
+    width: 100%;
+    font-family: "Syne Mono", monospace;
+    font-size: 9px;
+    color: #505050;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.container-processo .content-polo {
+    margin-top: 3px;
+    font-weight: 600;
+}
+
+.container-processo .content-partes {
+    font-weight: 400;
+}
+
 .container-processo .content-classe.over,
 .container-processo .content-assuntos.over {
     color: #707070;

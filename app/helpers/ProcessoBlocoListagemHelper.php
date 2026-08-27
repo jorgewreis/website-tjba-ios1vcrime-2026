@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessoAssuntosRepository.php';
+require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 
 /**
  * Dados agregados para o partial `_processo_bloco_listagem.php` em listagens (ex.: sala de mídias).
@@ -62,6 +63,7 @@ final class ProcessoBlocoListagemHelper
         $classesRepo = new ClassesRepository($connection);
         $prioridadesRepo = new ProcessoPrioridadesRepository($connection);
         $assuntosRepo = new ProcessoAssuntosRepository($connection);
+        $partesRepo = new ProcessosPartesRepository($connection);
 
         $idsFromColumn = [];
         $digitosPorLinha = [];
@@ -135,6 +137,7 @@ final class ProcessoBlocoListagemHelper
         })));
         $prioridadesPorProcesso = $prioridadesRepo->findByProcessoIds($idsParaPrioridade);
         $assuntosPorProcesso = $assuntosRepo->findByProcessoIds($idsParaPrioridade);
+        $polosPassivosPorProcesso = $partesRepo->listNomesPoloPassivoByProcessoIds($idsParaPrioridade);
 
         $out = [];
         foreach ($rows as $idx => $row) {
@@ -212,6 +215,7 @@ final class ProcessoBlocoListagemHelper
             if ($assuntoNot) {
                 $assuntoTexto = 'Assunto não cadastrado';
             }
+            $poloPassivoTexto = self::resumirNomesPoloPassivo($polosPassivosPorProcesso[$rid] ?? []);
 
             $out[$idx] = [
                 'bloco_processo_id_resolvido' => $rid,
@@ -219,6 +223,7 @@ final class ProcessoBlocoListagemHelper
                 'bloco_processo_classe_not' => $classeNot,
                 'bloco_processo_assunto_texto' => $assuntoTexto,
                 'bloco_processo_assunto_not' => $assuntoNot,
+                'bloco_processo_polo_passivo_texto' => $poloPassivoTexto,
                 'bloco_processo_prioridades' => $prioridadesUi,
                 'bloco_processo_abrir_href' => $hrefAbrir,
                 'bloco_processo_abrir_disabled' => !$podeAbrir,
@@ -232,6 +237,28 @@ final class ProcessoBlocoListagemHelper
         }
 
         return $merged;
+    }
+
+    /** @param list<string> $nomes */
+    private static function resumirNomesPoloPassivo(array $nomes): string
+    {
+        $nomes = array_values(array_filter(array_map(static function ($nome): string {
+            return trim((string) $nome);
+        }, $nomes), static function (string $nome): bool {
+            return $nome !== '';
+        }));
+        $total = count($nomes);
+        if ($total === 0) {
+            return '';
+        }
+        if ($total === 1) {
+            return $nomes[0];
+        }
+        if ($total === 2) {
+            return $nomes[0] . ' e outro';
+        }
+
+        return $nomes[0] . ' e outros (' . ($total - 1) . ')';
     }
 
     /**
@@ -282,6 +309,47 @@ final class ProcessoBlocoListagemHelper
         }
 
         return false;
+    }
+
+    public static function mascararNomeParteSigilosa(string $nome): string
+    {
+        $partesIgnoradas = ['da', 'das', 'de', 'do', 'dos', 'e'];
+        $palavras = preg_split('/\s+/u', trim($nome)) ?: [];
+        $iniciais = [];
+        foreach ($palavras as $palavra) {
+            $palavra = trim($palavra);
+            if ($palavra === '') {
+                continue;
+            }
+            if (in_array(function_exists('mb_strtolower') ? mb_strtolower($palavra, 'UTF-8') : strtolower($palavra), $partesIgnoradas, true)) {
+                continue;
+            }
+            $inicial = function_exists('mb_substr') ? mb_substr($palavra, 0, 1, 'UTF-8') : substr($palavra, 0, 1);
+            $iniciais[] = (function_exists('mb_strtoupper') ? mb_strtoupper($inicial, 'UTF-8') : strtoupper($inicial)) . '.';
+        }
+
+        return $iniciais !== [] ? implode(' ', $iniciais) : '';
+    }
+
+    public static function mascararResumoPoloPassivoSigiloso(string $texto): string
+    {
+        $texto = trim($texto);
+        if ($texto === '') {
+            return '';
+        }
+
+        if (preg_match('/^(.*?)\s+e\s+outros\s+\((\d+)\)$/u', $texto, $matches) === 1) {
+            $nomeMascarado = self::mascararNomeParteSigilosa((string) $matches[1]);
+
+            return $nomeMascarado !== '' ? ($nomeMascarado . ' e outros (' . $matches[2] . ')') : '';
+        }
+        if (preg_match('/^(.*?)\s+e\s+outro$/u', $texto, $matches) === 1) {
+            $nomeMascarado = self::mascararNomeParteSigilosa((string) $matches[1]);
+
+            return $nomeMascarado !== '' ? ($nomeMascarado . ' e outro') : '';
+        }
+
+        return self::mascararNomeParteSigilosa($texto);
     }
 
     /**

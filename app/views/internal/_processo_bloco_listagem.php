@@ -26,13 +26,16 @@ $processoBlocoVariant = isset($processo_bloco_variant) ? (string) $processo_bloc
 $processoBlocoIsEstudantes = ($processoBlocoVariant === 'estudantes');
 $processoBlocoHideActions = $processoBlocoIsEstudantes;
 $processoBlocoForceOpenWhenMissingData = ($processoBlocoVariant === 'consulta-processos');
+$processoBlocoShowPoloPassivo = !isset($processo_bloco_show_polo_passivo) || (bool) $processo_bloco_show_polo_passivo;
 $processoBlocoModel = isset($processo_bloco_model) ? (string) $processo_bloco_model : 'compacto';
 $processoBlocoIsFull = ($processoBlocoModel === 'full');
 
 $numero = trim((string) ($row['numero_processo'] ?? ''));
-if ($processoBlocoIsEstudantes && $numero !== '') {
+$mascararDadosEstudantesSigilosos = false;
+if ($processoBlocoIsEstudantes) {
     require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
-    if (ProcessoBlocoListagemHelper::deveMascararNumeroNaVarianteEstudantes($row)) {
+    $mascararDadosEstudantesSigilosos = ProcessoBlocoListagemHelper::deveMascararNumeroNaVarianteEstudantes($row);
+    if ($mascararDadosEstudantesSigilosos && $numero !== '') {
         $numero = ProcessoBlocoListagemHelper::mascararNumeroProcessoSigiloso($numero);
     }
 }
@@ -45,6 +48,10 @@ $prioridades = is_array($row['bloco_processo_prioridades'] ?? null) ? $row['bloc
 $sigiloso = !empty($row['processo_sigiloso']);
 $abrirHref = trim((string) ($row['bloco_processo_abrir_href'] ?? ''));
 $abrirDisabled = !empty($row['bloco_processo_abrir_disabled']);
+$poloPassivoTexto = trim((string) ($row['bloco_processo_polo_passivo_texto'] ?? ''));
+if ($mascararDadosEstudantesSigilosos && $poloPassivoTexto !== '') {
+    $poloPassivoTexto = ProcessoBlocoListagemHelper::mascararResumoPoloPassivoSigiloso($poloPassivoTexto);
+}
 
 $prioridadesTexto = [];
 foreach ($prioridades as $prioridade) {
@@ -59,10 +66,8 @@ foreach ($prioridades as $prioridade) {
 $temPrioridadeVisual = $prioridadesTexto !== [];
 $classeSemDados = $classeNot;
 $assuntoSemDados = $assuntoNot;
-$mostrarSincronizar = !$processoBlocoHideActions
-    && !$processoBlocoForceOpenWhenMissingData
-    && $classeSemDados
-    && $assuntoSemDados;
+$processoSemClasseAssunto = !$processoBlocoHideActions && $classeSemDados && $assuntoSemDados;
+$mostrarSincronizar = $processoSemClasseAssunto && !$processoBlocoForceOpenWhenMissingData;
 
 $limparCodigoClasseCompacta = static function (string $texto): string {
     $textoLimpo = preg_replace('/^\s*\d+\s*-\s*/u', '', trim($texto));
@@ -92,7 +97,7 @@ $assuntoExibicao = $assuntoSemDados
     ? 'Nenhum assunto cadastrado. Clique em sincronizar para buscar os dados com a API DataJud'
     : ($processoBlocoIsFull ? str_replace('; ', ' | ', $assuntoTexto) : $limparCodigosAssuntosCompacto($assuntoTexto));
 
-$iconSigilo = $mostrarSincronizar
+$iconSigilo = $processoSemClasseAssunto
     ? '/assets/icons/Sign-Badge-Rectangular-Round-2--Streamline-Ultimate.png'
     : '/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png';
 $iconPrioridade = '/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png';
@@ -157,6 +162,10 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                 <?php endif; ?>
                 <?php echo htmlspecialchars($assuntoExibicao, ENT_QUOTES, 'UTF-8'); ?>
             </span>
+            <?php if ($processoBlocoIsFull && $processoBlocoShowPoloPassivo && $poloPassivoTexto !== ''): ?>
+                <span class="content-polo">Polo passivo:</span>
+                <span class="content-partes"><?php echo htmlspecialchars($poloPassivoTexto, ENT_QUOTES, 'UTF-8'); ?></span>
+            <?php endif; ?>
         </div>
     </div>
 </div>

@@ -212,6 +212,37 @@
                     font-size: 9px;
                     font-weight: 400;
                 }
+
+                .container-processo .content-polo {
+                    /* size */
+                    width: 100%;
+
+                    /* space */
+                    margin-top: 5px;
+
+                    /* text */
+                    font-family: "Syne Mono", monospace;
+                    font-size: 9px;
+                    font-weight: 400;
+                    color: deepskyblue;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .container-processo .content-partes {
+                    /* size */
+                    width: 100%;
+
+                    /* text */
+                    font-family: "Syne Mono", monospace;
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: rgb(11, 123, 160);
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
     </style>
 </head>
 <body>
@@ -265,7 +296,7 @@
                 </div>
 
                 <div class="right">
-                    <div class="line-cube box-open">                        
+                    <div class="line-cube box-open">
                     </div>
                     <div class="line-cube box-open open" title="Abrir processo" aria-label="Abrir processo" role="button" tabindex="0" data-nav-href="#">
                         <img class="cube-icon" src="./../../../public/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png">
@@ -308,6 +339,8 @@
                 <div class="line-content double-line">
                     <span class="content-classe">SIGILOSO - Ação Penal - Procedimento Ordinário (283)</span>
                     <span class="content-assuntos">Leve (3386) | Ameaça (3402) | <strong>Réu Preso</strong></span>
+                    <span class="content-polo">Polo passivo:</span>
+                    <span class="content-partes">RONALDO FELIPE MIRANDA NAZARETH</span>
                 </div>
             </div>
         </div>
@@ -334,6 +367,37 @@
                     <!-- mostrar essa div desse jeito se o processo não tiver nenhuma classe ou assunto cadastrado -->
                     <div class="line-cube box-open open js-processo-datajud-sync" title="Sincronizar dados do processo" aria-label="Sincronizar dados do processo" role="button" tabindex="0" data-processo-numero="8006360-68.2026.8.05.0103">
                         <img class="cube-icon" src="./../../../public/assets/icons/Server-Sync-1--Streamline-Ultimate.png">
+                    </div>
+                </div>
+            </div>
+            <div class="container-line">
+                <div class="line-content double-line">
+                    <span class="content-classe over">Nenhuma classe cadastrada</span>
+                    <span class="content-assuntos over">Nenhum assunto cadastrado. Clique em sincronizar para buscar os dados com a api DataJud</span>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- CONTAINER PROCESSO - FULL - SEM CLASSE NEM ASSUNTO -->
+        <div class="container-processo container-process container-lg" data-processo-bloco="1">
+            <div class="container-line">
+                <div class="left">
+                    <!-- mostrar essa div se o processo tiver sigilo -->
+                    <div class="line-cube box-private open" title="Processo sem sigilo" aria-label="Processo sem sigilo">
+                        <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round-2--Streamline-Ultimate.png">
+                    </div>
+
+                    <div class="line-content box-number process-info" role="button" tabindex="0" title="Copiar número do processo" aria-label="Copiar número do processo">
+                        <span class="content-number major-info">8006360-68.2026.8.05.0103</span>
+                    </div>
+                </div>
+
+                <div class="right">
+                    <div class="line-cube box-open">
+                    </div>
+                    <div class="line-cube box-open open" title="Abrir processo" aria-label="Abrir processo" role="button" tabindex="0" data-nav-href="#">
+                        <img class="cube-icon" src="./../../../public/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png">
                     </div>
                 </div>
             </div>

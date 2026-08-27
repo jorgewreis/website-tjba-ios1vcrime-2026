@@ -35,6 +35,7 @@ O partial assume que a linha já foi passada por `ProcessoBlocoListagemHelper::a
 | `bloco_processo_classe_not` | bool | Se verdadeiro: estilo placeholder (`.not`), **sem** tooltip de texto completo. |
 | `bloco_processo_assunto_texto` | string | Texto dos assuntos (`codigo - descricao` concatenados por `; `) ou placeholder controlado pelo helper. |
 | `bloco_processo_assunto_not` | bool | Idem classe: placeholder sem tooltip dinâmico. |
+| `bloco_processo_polo_passivo_texto` | string | Resumo do polo passivo no modelo `full`: primeiro nome; se houver dois, `NOME e outro`; se houver mais de dois, `NOME e outros (N)` com a quantidade restante. |
 | `bloco_processo_prioridades` | lista | Cada item: `codigo`, `label`, `icon` (URL do ícone). Violência doméstica, criança/adolescente, idoso (incl. 80+), pessoa com deficiência e pessoa com doença grave são **agrupados** em um único ícone de alerta (giroflex), com `label` concatenado (`; `) no tooltip; **sigiloso** e **réu preso** permanecem ícones separados. |
 | `bloco_processo_abrir_href` | string | URL para `data-nav-href` quando abrir habilitado. |
 | `bloco_processo_abrir_disabled` | bool | Desabilita ação abrir e mostra estado inerte. |
@@ -110,7 +111,7 @@ O partial `_processo_bloco_listagem.php` aceita uma variável **opcional** no es
 
 | Variável | Valor | Efeito |
 |----------|-------|--------|
-| `$processo_bloco_variant` | `'estudantes'` | (1) Oculta o rodapé direito do bloco — sem botão "Abrir processo" e sem botão "Copiar número". (2) Quando `$row['processo_sigiloso']` for verdadeiro, mascara o número do processo via `ProcessoBlocoListagemHelper::mascararNumeroProcessoSigiloso()`, preservando ano/segmento/tribunal/unidade (`*******-**.AAAA.J.TR.OOOO`). |
+| `$processo_bloco_variant` | `'estudantes'` | (1) Oculta o rodapé direito do bloco — sem botão "Abrir processo" e sem botão "Copiar número". (2) Quando `$row['processo_sigiloso']` for verdadeiro, mascara o número do processo via `ProcessoBlocoListagemHelper::mascararNumeroProcessoSigiloso()`, preservando ano/segmento/tribunal/unidade (`*******-**.AAAA.J.TR.OOOO`). (3) No modelo `full`, mascara o nome do polo passivo com iniciais, ignorando partículas como `de`, `da`, `do`, `dos`, `das` e `e`. |
 
 **Regras:**
 

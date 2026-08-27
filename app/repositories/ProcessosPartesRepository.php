@@ -264,6 +264,65 @@ final class ProcessosPartesRepository
     }
 
     /**
+     * @param list<string> $processoIds
+     * @return array<string, list<string>> processo_id => nomes do polo passivo
+     */
+    public function listNomesPoloPassivoByProcessoIds(array $processoIds): array
+    {
+        $processoIds = array_values(array_filter(array_unique(array_map(static function ($id) {
+            return trim((string) $id);
+        }, $processoIds)), static function ($id) {
+            return $id !== '';
+        }));
+        if ($processoIds === []) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+        foreach ($processoIds as $i => $id) {
+            $k = ':p' . $i;
+            $placeholders[] = $k;
+            $params[$k] = $id;
+        }
+        $sql = sprintf(
+            'SELECT pp.`processo_id`, p.`nome_completo`
+             FROM `%s` pp
+             INNER JOIN `partes` p ON p.`id` = pp.`parte_id`
+             WHERE pp.`processo_id` IN (%s)
+               AND pp.`polo` = :polo
+               AND TRIM(COALESCE(p.`nome_completo`, \'\')) <> \'\'
+             GROUP BY pp.`processo_id`, p.`nome_completo`
+             ORDER BY pp.`processo_id` ASC, p.`nome_completo` ASC',
+            $this->table,
+            implode(', ', $placeholders)
+        );
+        $statement = $this->connection->prepare($sql);
+        foreach ($params as $k => $v) {
+            $statement->bindValue($k, $v);
+        }
+        $statement->bindValue(':polo', self::POLO_PASSIVO);
+        $statement->execute();
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows === false) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($rows as $row) {
+            $pid = trim((string) ($row['processo_id'] ?? ''));
+            $nome = trim((string) ($row['nome_completo'] ?? ''));
+            if ($pid === '' || $nome === '') {
+                continue;
+            }
+            $out[$pid] ??= [];
+            $out[$pid][] = $nome;
+        }
+
+        return $out;
+    }
+
+    /**
      * Réus / acusados vinculados ao processo (polo passivo: réu, indiciado, sentenciado).
      *
      * @return list<array<string, mixed>>
