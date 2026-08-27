@@ -145,7 +145,7 @@ function cejusc_resumo_nomes(array $nomes, string $singularOutro = 'outro', stri
                                 <div class="container-processo container-sm cejusc-document-info">
                                     <div class="container-line">
                                         <div class="left">
-                                            <div class="line-content box-number process-info">
+                                            <div class="line-content box-number">
                                                 <span class="content-number major-info" style="text-transform: uppercase;"><?php echo htmlspecialchars((string) $row['nome_parte'], ENT_QUOTES); ?></span>
                                             </div>
                                         </div>
