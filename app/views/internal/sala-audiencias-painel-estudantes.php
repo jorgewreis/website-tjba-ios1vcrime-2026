@@ -400,7 +400,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             $linkVisivelHoje = $linkAudienciaHoje !== '' && !$statusFinalHoje && !$sigiloso;
             ?>
         <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo $idPauta; ?>">
-            <div class="register-line">
+            <div class="register-line<?php echo $statusFinalHoje ? ' is-inactive' : ''; ?>">
                 <div class="left">
                     <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     <div class="container-processo container-sm painel-estudante-document-info">
@@ -573,7 +573,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             $linkVisivelMinhas = $linkAudienciaMinhas !== '' && !$statusFinalMinhas;
             ?>
         <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
-            <div class="register-line">
+            <div class="register-line<?php echo $statusFinalMinhas ? ' is-inactive' : ''; ?>">
                 <div class="left">
                     <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     <div class="container-processo container-sm painel-estudante-document-info">
@@ -936,6 +936,14 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             });
             return Object.keys(ids);
         }
+        function updateRegisterLineState(pauta, statusRaw) {
+            var terminal = isTerminalStatus(statusRaw);
+            document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (register) {
+                if (String(register.getAttribute('data-pauta') || '').trim() !== pauta) return;
+                var line = register.querySelector('.register-line');
+                if (line) line.classList.toggle('is-inactive', terminal);
+            });
+        }
         function applyUpdates(items) {
             renderVisibleTimeBlocks(latestItemsById);
             document.querySelectorAll('[data-status-label-pauta]').forEach(function (labelEl) {
@@ -963,6 +971,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             });
             Object.keys(items).forEach(function (id) {
                 if (!items[id]) return;
+                updateRegisterLineState(id, items[id].status);
                 renderVagas(items[id]);
             });
             renderTimeline(items);

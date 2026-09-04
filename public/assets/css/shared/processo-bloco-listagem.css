@@ -744,6 +744,12 @@
     border-bottom: 1px solid #dfdfdf;
 }
 
+.register.register-painel-estudante > .register-line.is-inactive {
+    filter: grayscale(1);
+    opacity: 0.3;
+    pointer-events: none;
+}
+
 .register.register-painel-estudante > .register-line > .left,
 .register.register-painel-estudante > .register-line > .right {
     display: flex;
