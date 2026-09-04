@@ -308,7 +308,7 @@ $statusFilterLabelsPauta = [
         <?php if (!empty($rows)): ?>
         <?php foreach ($rows as $row): ?>
         <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'sala_pauta', $registroListViewerContext, $pdo); ?>
-        <div class="display-flex col col-full register register-with-metadata border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
+        <div class="display-flex col col-full register register-with-metadata register-pauta border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
             <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                     <div class="col width-300">
@@ -412,14 +412,17 @@ $statusFilterLabelsPauta = [
                             $idPautaRow = (string) ($row['id_pauta'] ?? '');
                             $dataAudRow = substr((string) ($row['data_audiencia'] ?? ''), 0, 10);
                             $stRaw = strtolower(preg_replace('/[\s-]+/', '_', trim((string) ($row['status'] ?? ''))));
-                            $mostrarPainelAcao = ($dataAudRow === $hoje) && ($stRaw !== 'finalizada');
-                            $bloqueioOutroEmAndamento = ($idEmAndamentoHoje !== null && $idEmAndamentoHoje !== $idPautaRow);
                             $stRow = $stRaw;
                             if ($stRow === 'agendada') {
                                 $stRow = 'designada';
                             } elseif ($stRow === 'adiada') {
                                 $stRow = 'redesignada';
+                            } elseif ($stRow === 'encerrada') {
+                                $stRow = 'finalizada';
                             }
+                            $mostrarPainelAcao = ($dataAudRow === $hoje)
+                                && !in_array($stRow, ['cancelada', 'redesignada', 'finalizada', 'realizada'], true);
+                            $bloqueioOutroEmAndamento = ($idEmAndamentoHoje !== null && $idEmAndamentoHoje !== $idPautaRow);
                             $labelsStatus = [
                                 'designada' => 'Designada',
                                 'em_andamento' => 'Em andamento',
@@ -437,48 +440,33 @@ $statusFilterLabelsPauta = [
                             } elseif (in_array($stRow, ['realizada', 'finalizada'], true)) {
                                 $classeStatus = 'status-finished';
                             }
-                            $titBloqueio = 'Já existe uma audiência em andamento hoje. Conclua ou reinicie-a antes de movimentar outras.';
-                            $titSoEmAndamento = 'Só disponível quando a audiência estiver em andamento.';
-                            $disIniciar = true;
-                            $disReiniciar = true;
-                            $disEncerrar = true;
-                            if ($mostrarPainelAcao) {
-                                if ($bloqueioOutroEmAndamento) {
-                                    $disIniciar = $disReiniciar = $disEncerrar = true;
-                                } else {
-                                    // Iniciar: só audiência designada (ainda não começou).
-                                    if ($stRow === 'designada') {
-                                        $disIniciar = false;
-                                    }
-                                    // Reiniciar e encerrar: só quando já estiver em andamento.
-                                    if ($stRow === 'em_andamento') {
-                                        $disReiniciar = false;
-                                        $disEncerrar = false;
-                                    }
-                                }
-                            }
+                            $disReiniciar = $stRow === 'designada' || $bloqueioOutroEmAndamento;
+                            $disIniciar = $stRow !== 'designada' || $bloqueioOutroEmAndamento;
+                            $disEncerrar = $stRow !== 'em_andamento' || $bloqueioOutroEmAndamento;
+                            $disRedesignar = in_array($stRow, ['finalizada', 'realizada', 'redesignada'], true) || $bloqueioOutroEmAndamento;
                         ?>
                         <?php if ($mostrarPainelAcao): ?>
                         <?php
-                            $titleReiniciar = $bloqueioOutroEmAndamento
-                                ? $titBloqueio
-                                : ($stRow === 'em_andamento' ? 'Reiniciar (volta para Designada)' : $titSoEmAndamento);
-                            $titleIniciar = $bloqueioOutroEmAndamento
-                                ? $titBloqueio
-                                : ($stRow === 'designada' ? 'Iniciar (Em andamento)' : 'Só disponível quando a audiência estiver designada.');
-                            $titleEncerrar = $bloqueioOutroEmAndamento
-                                ? $titBloqueio
-                                : ($stRow === 'em_andamento' ? 'Encerrar (Finalizada)' : $titSoEmAndamento);
+                            $titBloqueio = 'Já existe uma audiência em andamento hoje. Conclua ou reinicie-a antes de movimentar outras.';
+                            $titleReiniciar = $disReiniciar
+                                ? ($bloqueioOutroEmAndamento ? $titBloqueio : 'Reiniciar indisponível para audiências Designadas.')
+                                : 'Reiniciar (volta para Designada)';
+                            $titleIniciar = $disIniciar
+                                ? ($bloqueioOutroEmAndamento ? $titBloqueio : 'Só disponível quando a audiência estiver Designada.')
+                                : 'Iniciar (Em andamento)';
+                            $titleEncerrar = $disEncerrar
+                                ? ($bloqueioOutroEmAndamento ? $titBloqueio : 'Só disponível quando a audiência estiver Em andamento.')
+                                : 'Encerrar (Finalizada)';
+                            $titleRedesignar = $disRedesignar
+                                ? ($bloqueioOutroEmAndamento ? $titBloqueio : 'Não disponível para audiências Finalizadas ou Redesignadas.')
+                                : 'Redesignar audiência';
                         ?>
-                        <button type="button" class="btn-editar reload" data-audiencia-reiniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleReiniciar, ENT_QUOTES); ?>"<?php echo $disReiniciar ? ' disabled' : ''; ?>>
-                            <i class="fi fi-rr-rotate-square"></i>
-                        </button>
-                        <button type="button" class="btn-editar start" data-audiencia-iniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleIniciar, ENT_QUOTES); ?>"<?php echo $disIniciar ? ' disabled' : ''; ?>>
-                            <i class="fi fi-rr-arrow-square-right"></i>
-                        </button>
-                        <button type="button" class="btn-editar stop" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleEncerrar, ENT_QUOTES); ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>>
-                            <i class="fi fi-rr-stop-square"></i>
-                        </button>
+                        <div class="painel-dia-actions">
+                            <button type="button" class="btn-editar reload" data-audiencia-reiniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleReiniciar, ENT_QUOTES); ?>"<?php echo $disReiniciar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-reiniciar" src="/assets/icons/Line-Arrow-Rotate-Right-Circle--Streamline-Core.png" alt="Reiniciar audiência"></button>
+                            <button type="button" class="btn-editar start" data-audiencia-iniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleIniciar, ENT_QUOTES); ?>"<?php echo $disIniciar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-iniciar" src="/assets/icons/Tailless-Triangle-Arrow-Right-Circle--Streamline-Core.png" alt="Iniciar audiência"></button>
+                            <button type="button" class="btn-editar stop" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleEncerrar, ENT_QUOTES); ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-encerrar" src="/assets/icons/Check-Circle--Streamline-Core.png" alt="Encerrar audiência"></button>
+                            <button type="button" class="btn-editar redesignar" data-audiencia-redesignar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleRedesignar, ENT_QUOTES); ?>"<?php echo $disRedesignar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-redesignar" src="/assets/icons/Line-Arrow-Right-Circle-2--Streamline-Core.png" alt="Redesignar audiência"></button>
+                        </div>
                         <?php endif; ?>
                         <div class="display-flex row row-fit justify-end gap-y-sm align-center">
                         <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
