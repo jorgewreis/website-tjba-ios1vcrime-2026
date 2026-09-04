@@ -18,13 +18,22 @@
         var st = normalizeStatus(statusRaw);
         if (studentPanel) {
             if (st === 'em_andamento') return 'is-current';
-            if (st === 'cancelada' || st === 'redesignada' || st === 'finalizada' || st === 'realizada') return 'is-closed';
+            if (st === 'cancelada' || st === 'redesignada') return 'is-closed';
+            if (st === 'finalizada' || st === 'realizada') return 'is-finished';
             return 'is-pending';
         }
         if (st === 'em_andamento') return 'is-warning';
         if (st === 'finalizada' || st === 'realizada') return 'is-success';
         if (st === 'cancelada') return 'is-danger';
         return 'is-warning';
+    }
+
+    function isClosedTimelineStatus(statusRaw) {
+        var st = normalizeStatus(statusRaw);
+        return st === 'cancelada'
+            || st === 'redesignada'
+            || st === 'finalizada'
+            || st === 'realizada';
     }
 
     function parseDateTime(v) {
@@ -137,22 +146,30 @@
             var effectiveRealEnd = realStartDisplay !== null
                 ? (slot.realEnd !== null ? Math.max(slot.realEnd, realStartDisplay) : runningEnd)
                 : null;
-            var blockEnd = effectiveRealEnd !== null ? Math.max(plannedEnd, effectiveRealEnd) : plannedEnd;
+            var closedWithoutStart = isClosedTimelineStatus(slot.status) && realStartDisplay === null;
+            var blockEnd = closedWithoutStart
+                ? displayStart
+                : (effectiveRealEnd !== null ? Math.max(plannedEnd, effectiveRealEnd) : plannedEnd);
 
             prevBars.push({
                 l: pct(displayStart),
                 w: Math.max(0.4, pct(blockEnd) - pct(displayStart)),
-                title: 'Previsto: ' + fmtHM(displayStart) + ' - ' + fmtHM(plannedEnd)
+                status: slot.status,
+                title: closedWithoutStart
+                    ? 'Encerrada sem início: ' + fmtHM(displayStart)
+                    : 'Previsto: ' + fmtHM(displayStart) + ' - ' + fmtHM(plannedEnd)
             });
 
-            var delayStart = displayStart;
-            var delayEnd = realStartDisplay !== null ? realStartDisplay : (nowMin > displayStart ? nowMin : null);
-            if (delayEnd !== null && delayEnd > delayStart) {
-                delayBars.push({
-                    l: pct(delayStart),
-                    w: Math.max(0.4, pct(delayEnd) - pct(delayStart)),
-                    title: 'Aguardando início real: ' + fmtHM(delayStart) + ' - ' + fmtHM(delayEnd)
-                });
+            if (!isClosedTimelineStatus(slot.status)) {
+                var delayStart = displayStart;
+                var delayEnd = realStartDisplay !== null ? realStartDisplay : (nowMin > displayStart ? nowMin : null);
+                if (delayEnd !== null && delayEnd > delayStart) {
+                    delayBars.push({
+                        l: pct(delayStart),
+                        w: Math.max(0.4, pct(delayEnd) - pct(delayStart)),
+                        title: 'Aguardando início real: ' + fmtHM(delayStart) + ' - ' + fmtHM(delayEnd)
+                    });
+                }
             }
 
             if (realStartDisplay !== null) {
@@ -177,8 +194,8 @@
         }
 
         var prevHtml = prevBars.map(function (b) {
-            var pendingClass = studentPanel ? ' is-pending' : '';
-            return '<span class="timeline-day-ruler-bar-prev' + pendingClass + '" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>';
+            var statusClass = studentPanel ? ' ' + classByStatus(b.status, true) : '';
+            return '<span class="timeline-day-ruler-bar-prev' + statusClass + '" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>';
         }).join('');
         var delayHtml = delayBars.map(function (b) {
             var pendingClass = studentPanel ? ' is-pending' : '';
@@ -205,7 +222,8 @@
         var legendHtml = studentPanel
             ? '<span><i class="timeline-day-ruler-legend-dot is-pending"></i> Previsto / aguardando início / atrasada</span>' +
               '<span><i class="timeline-day-ruler-legend-dot is-current"></i> Em andamento</span>' +
-              '<span><i class="timeline-day-ruler-legend-dot is-closed"></i> Cancelada / finalizada / redesignada</span>'
+              '<span><i class="timeline-day-ruler-legend-dot is-closed"></i> Cancelada / redesignada</span>' +
+              '<span><i class="timeline-day-ruler-legend-dot is-finished"></i> Finalizada</span>'
             : '<span><i class="timeline-day-ruler-legend-dot" style="background: #20202050"></i> Previsto</span>' +
               '<span><i class="timeline-day-ruler-legend-dot" style="background: var(--color-primary)"></i> Real</span>';
 

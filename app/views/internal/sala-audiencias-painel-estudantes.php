@@ -373,14 +373,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 'cancelada' => 'Cancelada',
             ];
             $textoStatusAud = $labelsStatusAud[$statusRow] ?? ucfirst(str_replace('_', ' ', $statusRow));
-            $classeStatusAud = 'status-pending';
-            if ($statusRow === 'cancelada' || $statusRow === 'redesignada') {
-                $classeStatusAud = 'status-cancelled';
-            } elseif ($statusRow === 'em_andamento') {
-                $classeStatusAud = 'status-current';
-            } elseif (in_array($statusRow, ['realizada', 'finalizada'], true)) {
-                $classeStatusAud = 'status-finished';
-            }
             $exibirStatusAoInvesDeInscricao = !in_array($statusRow, ['designada', 'atrasada'], true);
             $ocultarInfoInscritos = $exibirStatusAoInvesDeInscricao || $sigiloso || $menor || $prioridadeBloqueio;
             $linkAudienciaHoje = trim((string) ($row['link_audiencia'] ?? ''));
@@ -448,12 +440,8 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                         <div class="container-line">
                             <div class="line-content double-line">
                                 <span class="content-classe">Inscrições</span>
-                                <div class="painel-estudante-inscricao-ui" data-inscricao-ui="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>">
-                    <?php if ($exibirStatusAoInvesDeInscricao): ?>
-                    <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusAud, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>">
-                        <?php echo htmlspecialchars($textoStatusAud, ENT_QUOTES); ?>
-                    </div>
-                    <?php elseif ($sigiloso): ?>
+                                <div class="painel-estudante-inscricao-ui" data-inscricao-ui="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>"<?php echo $exibirStatusAoInvesDeInscricao ? ' style="display:none;"' : ''; ?>>
+                    <?php if ($sigiloso): ?>
                     <span class="content-assuntos danger">Não é permitida inscrição</span>
                     <span class="content-assuntos danger">para processos sigilosos</span>
                     <?php elseif ($lotado): ?>
@@ -892,9 +880,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var pauta = String(item.id_pauta || wrapper.getAttribute('data-inscricao-ui') || '').trim();
             var status = statusForItem(item);
             if (status && status !== 'designada' && status !== 'atrasada') {
-                wrapper.innerHTML = '<div class="width-300 padding-x-lg status ' + statusClass(status) + '" data-status-pauta="' + escapeHtml(pauta) + '">' + escapeHtml(statusLabel(status)) + '</div>';
+                wrapper.style.display = 'none';
                 return;
             }
+            wrapper.style.display = '';
             if (sigiloso) {
                 wrapper.innerHTML = '<span class="content-assuntos danger">Não é permitida inscrição</span><span class="content-assuntos danger">para processos sigilosos</span>';
             } else if (lotado) {

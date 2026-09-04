@@ -23,6 +23,21 @@
     opacity: .35;
     z-index: 1;
 }
+.timeline-day-ruler-student .timeline-day-ruler-bar-prev.is-current {
+    background: var(--color-warning);
+    opacity: .45;
+    z-index: 1;
+}
+.timeline-day-ruler-student .timeline-day-ruler-bar-prev.is-closed {
+    background: var(--color-danger);
+    opacity: .7;
+    z-index: 1;
+}
+.timeline-day-ruler-student .timeline-day-ruler-bar-prev.is-finished {
+    background: var(--color-success);
+    opacity: .7;
+    z-index: 1;
+}
 .timeline-day-ruler-student .timeline-day-ruler-bar-real.is-pending {
     background: var(--color-primary);
     opacity: .7;
@@ -33,6 +48,9 @@
 .timeline-day-ruler-student .timeline-day-ruler-bar-real.is-closed {
     background: var(--color-danger);
 }
+.timeline-day-ruler-student .timeline-day-ruler-bar-real.is-finished {
+    background: var(--color-success);
+}
 .timeline-day-ruler-student .timeline-day-ruler-legend-dot.is-pending {
     background: var(--color-primary);
 }
@@ -41,4 +59,7 @@
 }
 .timeline-day-ruler-student .timeline-day-ruler-legend-dot.is-closed {
     background: var(--color-danger);
+}
+.timeline-day-ruler-student .timeline-day-ruler-legend-dot.is-finished {
+    background: var(--color-success);
 }

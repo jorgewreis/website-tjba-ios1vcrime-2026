@@ -796,7 +796,7 @@
 
 .register.register-painel-estudante .painel-estudante-document-info .line-content.double-line,
 .register.register-painel-estudante .painel-estudante-inscricoes .line-content.double-line {
-    padding-left: 5px;
+    padding-left: 2px;
 }
 
 .register.register-painel-estudante .painel-estudante-document-info .content-number {
@@ -815,15 +815,15 @@
 .register.register-painel-estudante .painel-estudante-document-info .js-time-block {
     display: block;
     white-space: nowrap;
-    margin-left: -3px;
-    font-size: 8px;
+    margin-left: 0;
+    font-size: 8.5px;
 }
 
 .register.register-painel-estudante .painel-estudante-document-info .js-time-block .js-time-label,
 .register.register-painel-estudante .painel-estudante-document-info .js-time-block .js-time-lines,
 .register.register-painel-estudante .painel-estudante-document-info .js-time-block .js-time-lines > strong,
 .register.register-painel-estudante .painel-estudante-document-info .js-time-block .js-time-lines > .major-info {
-    font-size: 8px;
+    font-size: 8.5px;
 }
 
 .register.register-painel-estudante .painel-estudante-document-info .js-time-lines,
