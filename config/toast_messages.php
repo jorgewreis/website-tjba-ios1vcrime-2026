@@ -339,6 +339,12 @@ return [
             'message' => 'Status atualizado para Finalizada.',
             'vars' => [],
         ],
+        'audiencias.pauta.status.redesignar.success' => [
+            'type' => 'success',
+            'title' => 'Sucesso',
+            'message' => 'Status atualizado para Redesignada.',
+            'vars' => [],
+        ],
         'audiencias.ata.upload.success' => [
             'type' => 'success',
             'title' => 'Sucesso',

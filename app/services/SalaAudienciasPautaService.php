@@ -297,17 +297,18 @@ final class SalaAudienciasPautaService
     }
 
     /**
-     * Ações rápidas na lista da pauta: reiniciar → designada, iniciar → em_andamento, encerrar → finalizada.
+     * Ações rápidas na lista da pauta: reiniciar → designada, iniciar → em_andamento,
+     * encerrar → finalizada e redesignar → redesignada.
      * Atualiza `data_hora_inicio_efetivo` / `data_hora_fim_efetivo` conforme a ação.
      * Só permitido no dia da audiência; com outra em andamento no mesmo dia, demais ficam bloqueadas na UI.
      *
-     * @param 'reiniciar'|'iniciar'|'encerrar' $acao
+     * @param 'reiniciar'|'iniciar'|'encerrar'|'redesignar' $acao
      */
     public function setStatusPainel(string $idPauta, string $acao, ?string $usuarioId): void
     {
         $idPauta = trim($idPauta);
         $acao = strtolower(trim($acao));
-        if (!in_array($acao, ['reiniciar', 'iniciar', 'encerrar'], true)) {
+        if (!in_array($acao, ['reiniciar', 'iniciar', 'encerrar', 'redesignar'], true)) {
             throw new InvalidArgumentException('Ação inválida.');
         }
         $hoje = date('Y-m-d');
@@ -349,6 +350,10 @@ final class SalaAudienciasPautaService
         } elseif ($acao === 'encerrar') {
             if ($stAtual !== 'em_andamento') {
                 throw new InvalidArgumentException('Só é possível encerrar uma audiência em andamento.');
+            }
+        } elseif ($acao === 'redesignar') {
+            if ($stAtual !== 'designada') {
+                throw new InvalidArgumentException('Só é possível redesignar audiências com status Designada.');
             }
         }
 

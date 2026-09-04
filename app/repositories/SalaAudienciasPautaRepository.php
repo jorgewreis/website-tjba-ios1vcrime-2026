@@ -152,7 +152,7 @@ final class SalaAudienciasPautaRepository
     /**
      * Ações do painel: atualiza status e timestamps efetivos num único UPDATE.
      *
-     * @param 'iniciar'|'reiniciar'|'encerrar' $acao
+     * @param 'iniciar'|'reiniciar'|'encerrar'|'redesignar' $acao
      */
     public function applyPainelAcao(string $id, string $acao, ?string $atualizadoPor): bool
     {
@@ -192,6 +192,18 @@ final class SalaAudienciasPautaRepository
             $st->bindValue(':id', $id);
             $st->bindValue(':u', $atualizadoPor);
             $st->bindValue(':now', $now);
+            $st->execute();
+
+            return true;
+        }
+        if ($acao === 'redesignar') {
+            $sql = sprintf(
+                'UPDATE `%s` SET `status`=\'redesignada\',`atualizado_por`=:u,`data_hora_inicio_efetivo`=NULL,`data_hora_fim_efetivo`=NULL WHERE `id_pauta`=:id AND `ativo`=1 LIMIT 1',
+                $this->table
+            );
+            $st = $this->connection->prepare($sql);
+            $st->bindValue(':id', $id);
+            $st->bindValue(':u', $atualizadoPor);
             $st->execute();
 
             return true;

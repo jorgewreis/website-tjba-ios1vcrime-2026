@@ -111,6 +111,7 @@
                     var successKey = 'audiencias.pauta.status.reiniciar.success';
                     if (acao === 'iniciar') successKey = 'audiencias.pauta.status.iniciar.success';
                     if (acao === 'encerrar') successKey = 'audiencias.pauta.status.encerrar.success';
+                    if (acao === 'redesignar') successKey = 'audiencias.pauta.status.redesignar.success';
                     queuePostReloadToastByKey(successKey, {}, 'success', 'Sucesso', successMessage, 'salapauta.postReloadToast');
                     window.location.reload();
                     return;
@@ -167,6 +168,16 @@
                 if (!idE) return;
                 ev.preventDefault();
                 postStatusPainel(idE, 'encerrar', 'Status atualizado para Finalizada.');
+                return;
+            }
+
+            var red = target.closest('[data-audiencia-redesignar]');
+            if (red) {
+                if (red.disabled) return;
+                var idRed = String(red.getAttribute('data-audiencia-redesignar') || '').trim();
+                if (!idRed) return;
+                ev.preventDefault();
+                postStatusPainel(idRed, 'redesignar', 'Status atualizado para Redesignada.');
             }
         });
     }
