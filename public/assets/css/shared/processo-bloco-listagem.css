@@ -136,7 +136,7 @@
 .container-processo .content-classe {
     width: 100%;
     font-family: "Syne Mono", monospace;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 600;
     color: #505050;
     overflow: hidden;
@@ -171,7 +171,7 @@
 .container-processo .content-partes {
     width: 100%;
     font-family: "Syne Mono", monospace;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     color: rgb(11, 123, 160);
     overflow: hidden;
@@ -179,7 +179,12 @@
     white-space: nowrap;
 }
 
-.container-processo .content-classe.over,
+.container-processo .content-classe.over {
+    color: #707070;
+    font-size: 12px;
+    font-weight: 400;
+}
+
 .container-processo .content-assuntos.over {
     color: #707070;
     font-size: 9px;
@@ -1025,6 +1030,17 @@
 
 .register.register-painel-estudante .painel-estudante-document-info .content-number {
     text-transform: uppercase;
+}
+
+.register.register-painel-dia .container-processo .content-assuntos.audiencia-status,
+.register.register-painel-dia .container-processo .content-assuntos.audiencia-previsao,
+.register.register-painel-estudante .container-processo .content-assuntos.audiencia-status,
+.register.register-painel-estudante .container-processo .content-assuntos.audiencia-previsao,
+.register.register-painel-estudante .container-processo .content-assuntos.audiencia-status > strong,
+.register.register-painel-estudante .container-processo .content-assuntos.audiencia-previsao .js-time-label,
+.register.register-painel-estudante .container-processo .content-assuntos.audiencia-previsao .js-time-lines,
+.register.register-painel-estudante .container-processo .content-assuntos.audiencia-previsao .js-time-lines > strong {
+    font-size: 12px;
 }
 
 /* Mantém a régua dos títulos igual entre o número do processo e o tipo da audiência. */

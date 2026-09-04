@@ -231,8 +231,8 @@ function painelResumoInscrito(array $inscrito): string
                         </div>
                         <div class="container-line">
                             <div class="line-content double-line">
-                                <span class="content-assuntos">Status: <strong><?php echo htmlspecialchars($textoStatus, ENT_QUOTES, 'UTF-8'); ?></strong></span>
-                                <span class="content-assuntos painel-dia-time"><span><?php echo htmlspecialchars($rotuloHorarioPainelDia, ENT_QUOTES, 'UTF-8'); ?></span> <strong><?php echo htmlspecialchars(painelHoraPorStatus($row), ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                <span class="content-assuntos audiencia-status">Status: <strong><?php echo htmlspecialchars($textoStatus, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                <span class="content-assuntos painel-dia-time audiencia-previsao"><span><?php echo htmlspecialchars($rotuloHorarioPainelDia, ENT_QUOTES, 'UTF-8'); ?></span> <strong><?php echo htmlspecialchars(painelHoraPorStatus($row), ENT_QUOTES, 'UTF-8'); ?></strong></span>
                                 <?php if (!$ocultarInfosCompactas): ?>
                                 <span class="content-polo painel-dia-intimacoes-label">Intimações:</span>
                                 <span class="content-partes painel-dia-intimacoes-list">

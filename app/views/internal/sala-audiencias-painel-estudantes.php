@@ -414,9 +414,9 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                         </div>
                         <div class="container-line">
                             <div class="line-content double-line">
-                                <span class="content-assuntos">Status: <strong data-status-label-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($textoStatusAud, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                <span class="content-assuntos audiencia-status">Status: <strong data-status-label-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($textoStatusAud, ENT_QUOTES, 'UTF-8'); ?></strong></span>
                                 <span
-                                    class="content-assuntos js-time-block"
+                                    class="content-assuntos js-time-block audiencia-previsao"
                                     data-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>"
                                     data-status="<?php echo htmlspecialchars($statusRow, ENT_QUOTES, 'UTF-8'); ?>"
                                     data-data-audiencia="<?php echo htmlspecialchars((string) ($row['data_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
@@ -588,9 +588,9 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                         </div>
                         <div class="container-line">
                             <div class="line-content double-line">
-                                <span class="content-assuntos">Status: <strong data-status-label-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                <span class="content-assuntos audiencia-status">Status: <strong data-status-label-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES, 'UTF-8'); ?></strong></span>
                                 <span
-                                    class="content-assuntos js-time-block"
+                                    class="content-assuntos js-time-block audiencia-previsao"
                                     data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"
                                     data-status="<?php echo htmlspecialchars($stRow, ENT_QUOTES, 'UTF-8'); ?>"
                                     data-include-date="1"
