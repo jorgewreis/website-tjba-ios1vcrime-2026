@@ -5,6 +5,7 @@
         var s = String(statusRaw || '').trim().toLowerCase();
         if (s === 'agendada') return 'designada';
         if (s === 'adiada') return 'redesignada';
+        if (s === 'encerrada') return 'finalizada';
         return s;
     }
 
@@ -13,8 +14,13 @@
         return st === 'finalizada' || st === 'realizada';
     }
 
-    function classByStatus(statusRaw) {
+    function classByStatus(statusRaw, studentPanel) {
         var st = normalizeStatus(statusRaw);
+        if (studentPanel) {
+            if (st === 'em_andamento') return 'is-current';
+            if (st === 'cancelada' || st === 'redesignada' || st === 'finalizada' || st === 'realizada') return 'is-closed';
+            return 'is-pending';
+        }
         if (st === 'em_andamento') return 'is-warning';
         if (st === 'finalizada' || st === 'realizada') return 'is-success';
         if (st === 'cancelada') return 'is-danger';
@@ -60,6 +66,8 @@
 
     function render(root, items, options) {
         if (!root) return;
+        var studentPanel = !!(options && options.studentPanel);
+        root.classList.toggle('timeline-day-ruler-student', studentPanel);
         var dayStart = (options && options.dayStart) || (8 * 60);
         var dayEnd = (options && options.dayEnd) || (18 * 60);
         var range = dayEnd - dayStart;
@@ -94,6 +102,20 @@
 
         var now = new Date();
         var nowMin = now.getHours() * 60 + now.getMinutes() + (now.getSeconds() / 60);
+        if (studentPanel) {
+            sourceItems.forEach(function (ongoing) {
+                if (ongoing.status !== 'em_andamento') return;
+                var nextPending = null;
+                sourceItems.forEach(function (candidate) {
+                    if (candidate.status !== 'designada' || candidate.plannedStart <= ongoing.plannedStart || candidate.plannedStart >= nowMin) return;
+                    if (!nextPending || candidate.plannedStart < nextPending.plannedStart) nextPending = candidate;
+                });
+                if (nextPending) {
+                    nextPending.plannedStart = nowMin + 5;
+                    nextPending.forecasted = true;
+                }
+            });
+        }
         var prevBars = [];
         var delayBars = [];
         var realBars = [];
@@ -147,13 +169,15 @@
         }
 
         var prevHtml = prevBars.map(function (b) {
-            return '<span class="timeline-day-ruler-bar-prev" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>';
+            var pendingClass = studentPanel ? ' is-pending' : '';
+            return '<span class="timeline-day-ruler-bar-prev' + pendingClass + '" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>';
         }).join('');
         var delayHtml = delayBars.map(function (b) {
-            return '<span class="timeline-day-ruler-bar-real timeline-day-ruler-bar-delay" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>';
+            var pendingClass = studentPanel ? ' is-pending' : '';
+            return '<span class="timeline-day-ruler-bar-real timeline-day-ruler-bar-delay' + pendingClass + '" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>';
         }).join('');
         var realHtml = realBars.map(function (b) {
-            return '<span class="timeline-day-ruler-bar-real ' + classByStatus(b.status) + '" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>';
+            return '<span class="timeline-day-ruler-bar-real ' + classByStatus(b.status, studentPanel) + '" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>';
         }).join('');
         var tickHtml = Array.from({ length: 11 }, function (_, i) {
             var left = (i / 10) * 100;
@@ -170,16 +194,20 @@
             ? '<span class="timeline-day-ruler-now" title="Agora: ' + fmtHM(nowMin) + '" style="left:' + pct(nowMin) + '%"></span>'
             : '';
 
+        var legendHtml = studentPanel
+            ? '<span><i class="timeline-day-ruler-legend-dot is-pending"></i> Previsto / aguardando início / atrasada</span>' +
+              '<span><i class="timeline-day-ruler-legend-dot is-current"></i> Em andamento</span>' +
+              '<span><i class="timeline-day-ruler-legend-dot is-closed"></i> Cancelada / finalizada / redesignada</span>'
+            : '<span><i class="timeline-day-ruler-legend-dot" style="background: #20202050"></i> Previsto</span>' +
+              '<span><i class="timeline-day-ruler-legend-dot" style="background: var(--color-primary)"></i> Real</span>';
+
         root.innerHTML =
             '<div class="timeline-day-ruler-track">' +
             '<span class="timeline-day-ruler-shade" style="left:0%;width:9%"></span>' +
             '<span class="timeline-day-ruler-shade" style="left:91%;width:9%"></span>' +
             tickHtml + prevHtml + delayHtml + realHtml + nowHtml + '</div>' +
             '<div class="timeline-day-ruler-labels">' + labelsHtml + '</div>' +
-            '<div class="timeline-day-ruler-legend">' +
-            '<span><i class="timeline-day-ruler-legend-dot" style="background: #20202050"></i> Previsto</span>' +
-            '<span><i class="timeline-day-ruler-legend-dot" style="background: var(--color-primary)"></i> Real</span>' +
-            '</div>';
+            '<div class="timeline-day-ruler-legend">' + legendHtml + '</div>';
     }
 
     window.TimelineDayRuler = {

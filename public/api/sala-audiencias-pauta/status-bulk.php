@@ -166,6 +166,8 @@ try {
             $status = 'designada';
         } elseif ($status === 'adiada') {
             $status = 'redesignada';
+        } elseif ($status === 'encerrada') {
+            $status = 'finalizada';
         }
         $totalIns = (int) ($r['total_inscritos_pauta'] ?? 0);
         $jaInscrito = (int) ($r['ja_inscrito'] ?? 0) === 1;

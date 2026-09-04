@@ -791,7 +791,7 @@
 }
 
 .register.register-painel-estudante .painel-estudante-document-info .line-content.box-number {
-    padding-left: 0;
+    padding: 0;
 }
 
 .register.register-painel-estudante .painel-estudante-document-info .line-content.double-line,
@@ -814,10 +814,15 @@
 
 .register.register-painel-estudante .painel-estudante-document-info .js-time-block {
     display: block;
+    white-space: nowrap;
 }
 
-.register.register-painel-estudante .painel-estudante-document-info .js-time-lines {
+.register.register-painel-estudante .painel-estudante-document-info .js-time-lines,
+.register.register-painel-estudante .painel-estudante-document-info .js-time-lines > strong,
+.register.register-painel-estudante .painel-estudante-document-info .js-time-lines > .major-info {
     display: inline;
+    width: auto;
+    white-space: nowrap;
 }
 
 .register.register-painel-estudante .painel-estudante-inscricao-ui {
@@ -835,6 +840,10 @@
     height: 30px;
     padding: 0 10px;
     font-size: 12px;
+}
+
+.register.register-painel-estudante .painel-estudante-inscricao-ui .btn-inscrever-ata {
+    margin: 10px 0 5px 0;
 }
 
 .register.register-painel-estudante .painel-estudante-inscricao-ui .status {

@@ -16,3 +16,29 @@
 .timeline-day-ruler-legend { margin-top: 6px; display: flex; gap: 12px; align-items: center; font-size: 11px; color: #667085; }
 .timeline-day-ruler-legend-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 .timeline-day-ruler-empty { font-size: 12px; color: #667085; }
+
+/* Painel de estudantes: uma leitura única para previsto, andamento e encerramento. */
+.timeline-day-ruler-student .timeline-day-ruler-bar-prev.is-pending {
+    background: var(--color-primary);
+    opacity: .35;
+    z-index: 1;
+}
+.timeline-day-ruler-student .timeline-day-ruler-bar-real.is-pending {
+    background: var(--color-primary);
+    opacity: .7;
+}
+.timeline-day-ruler-student .timeline-day-ruler-bar-real.is-current {
+    background: var(--color-warning);
+}
+.timeline-day-ruler-student .timeline-day-ruler-bar-real.is-closed {
+    background: var(--color-danger);
+}
+.timeline-day-ruler-student .timeline-day-ruler-legend-dot.is-pending {
+    background: var(--color-primary);
+}
+.timeline-day-ruler-student .timeline-day-ruler-legend-dot.is-current {
+    background: var(--color-warning);
+}
+.timeline-day-ruler-student .timeline-day-ruler-legend-dot.is-closed {
+    background: var(--color-danger);
+}
