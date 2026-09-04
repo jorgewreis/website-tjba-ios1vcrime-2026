@@ -205,6 +205,22 @@
             cursorEnd = Math.max(cursorEnd, visualBlockEnd);
         });
 
+        // As barras reais precisam manter separação física mesmo quando os horários
+        // efetivos terminam exatamente no início da audiência seguinte.
+        if (trackWidth > 0) {
+            var previousRealEndPx = null;
+            realBars.forEach(function (bar) {
+                var startPx = (bar.l / 100) * trackWidth;
+                var widthPx = Math.max((bar.w / 100) * trackWidth, 14);
+                if (previousRealEndPx !== null) {
+                    startPx = Math.max(startPx, previousRealEndPx + 5);
+                }
+                bar.renderLeft = (startPx / trackWidth) * 100;
+                bar.renderWidth = (widthPx / trackWidth) * 100;
+                previousRealEndPx = startPx + widthPx;
+            });
+        }
+
         if (!prevBars.length && !realBars.length && !delayBars.length) {
             root.innerHTML = '<span class="timeline-day-ruler-empty">Régua do tempo (08:00–18:00) indisponível no momento.</span>';
             return;
@@ -219,7 +235,11 @@
             return '<span class="timeline-day-ruler-bar-real timeline-day-ruler-bar-delay' + pendingClass + '" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>';
         }).join('');
         var realHtml = realBars.map(function (b) {
-            return '<span class="timeline-day-ruler-bar-real ' + classByStatus(b.status, studentPanel) + '" title="' + escapeHtml(b.title) + '" style="left:' + b.l + '%;width:' + b.w + '%"></span>';
+            var left = b.renderLeft !== undefined ? b.renderLeft : b.l;
+            var width = b.renderWidth !== undefined
+                ? b.renderWidth + '%'
+                : 'max(14px, calc(' + b.w + '% - 5px))';
+            return '<span class="timeline-day-ruler-bar-real ' + classByStatus(b.status, studentPanel) + '" title="' + escapeHtml(b.title) + '" style="left:' + left + '%;width:' + width + '"></span>';
         }).join('');
         var tickHtml = Array.from({ length: 11 }, function (_, i) {
             var left = (i / 10) * 100;
