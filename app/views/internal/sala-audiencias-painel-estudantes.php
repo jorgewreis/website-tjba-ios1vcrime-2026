@@ -311,7 +311,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                         <div class="container-line">
                             <div class="left">
                                 <div class="line-content box-number">
-                                    <span class="content-number major-info"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="content-number major-info">AUDIENCIA DE <?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
                                 </div>
                             </div>
                         </div>
@@ -481,7 +481,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                         <div class="container-line">
                             <div class="left">
                                 <div class="line-content box-number">
-                                    <span class="content-number major-info"><?php echo htmlspecialchars((string) $m['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <span class="content-number major-info">AUDIENCIA DE <?php echo htmlspecialchars((string) $m['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
                                 </div>
                             </div>
                         </div>
