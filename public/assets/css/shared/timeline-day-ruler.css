@@ -10,8 +10,8 @@
     height: 20px;
     min-width: 14px;
     background: #dbdbdb;
-    background-clip: padding-box;
-    border-right: 5px solid transparent;
+    background-clip: content-box;
+    padding-right: 5px;
     border-radius: 4px;
     box-sizing: border-box;
 }
@@ -20,9 +20,9 @@
     top: 4px;
     height: 14px;
     min-width: 14px;
-    border-right: 5px solid transparent;
+    padding-right: 5px;
     border-radius: 4px;
-    background-clip: padding-box;
+    background-clip: content-box;
     box-sizing: border-box;
     opacity: .7;
     z-index: 3;

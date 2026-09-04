@@ -82,6 +82,14 @@
         var range = dayEnd - dayStart;
         var clamp = function (m) { return Math.max(dayStart, Math.min(dayEnd, m)); };
         var pct = function (m) { return ((clamp(m) - dayStart) / range) * 100; };
+        var trackWidth = 0;
+        if (typeof root.getBoundingClientRect === 'function') {
+            trackWidth = root.getBoundingClientRect().width || 0;
+        } else if (Number.isFinite(root.clientWidth)) {
+            trackWidth = root.clientWidth || 0;
+        }
+        var minBarMinutes = trackWidth > 0 ? (14 / trackWidth) * range : 0;
+        var gapMinutes = trackWidth > 0 ? (5 / trackWidth) * range : 0;
 
         var sourceItems = [];
         (Array.isArray(items) ? items : []).forEach(function (item) {
@@ -150,10 +158,11 @@
             var blockEnd = closedWithoutStart
                 ? displayStart
                 : (effectiveRealEnd !== null ? Math.max(plannedEnd, effectiveRealEnd) : plannedEnd);
+            var visualBlockEnd = Math.max(blockEnd, displayStart + minBarMinutes);
 
             prevBars.push({
                 l: pct(displayStart),
-                w: Math.max(0.4, pct(blockEnd) - pct(displayStart)),
+                w: Math.max(0.4, pct(visualBlockEnd) - pct(displayStart)),
                 status: slot.status,
                 title: closedWithoutStart
                     ? 'Encerrada sem início: ' + fmtHM(displayStart)
@@ -176,16 +185,25 @@
                 var realStart = realStartDisplay;
                 var realEnd = slot.realEnd !== null ? Math.max(slot.realEnd, realStart) : Math.max(realStart, nowMin);
                 if (realEnd >= realStart) {
+                    var visualRealEnd = Math.max(realEnd, realStart + minBarMinutes);
                     realBars.push({
                         l: pct(realStart),
-                        w: Math.max(0.4, pct(realEnd) - pct(realStart)),
+                        w: Math.max(0.4, pct(visualRealEnd) - pct(realStart)),
                         status: slot.status,
                         title: 'Real: ' + fmtHM(realStart) + ' - ' + fmtHM(realEnd) + ' | Previsto: ' + fmtHM(displayStart) + ' - ' + fmtHM(plannedEnd)
                     });
+                    visualBlockEnd = Math.max(visualBlockEnd, visualRealEnd);
                 }
+            } else if (closedWithoutStart) {
+                realBars.push({
+                    l: pct(displayStart),
+                    w: Math.max(0.4, pct(displayStart + minBarMinutes) - pct(displayStart)),
+                    status: slot.status,
+                    title: (slot.status === 'redesignada' ? 'Redesignada: ' : 'Cancelada: ') + fmtHM(displayStart)
+                });
             }
 
-            cursorEnd = Math.max(cursorEnd, blockEnd);
+            cursorEnd = Math.max(cursorEnd, visualBlockEnd + gapMinutes);
         });
 
         if (!prevBars.length && !realBars.length && !delayBars.length) {
