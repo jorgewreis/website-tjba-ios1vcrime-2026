@@ -191,6 +191,7 @@ function painelResumoInscrito(array $inscrito): string
             }
             $ocultarInfosCompactas = in_array($statusCompactoRaw, ['finalizada', 'realizada', 'redesignada', 'cancelada'], true);
             $linhaInativa = $ocultarInfosCompactas;
+            $linhaEmAndamento = $statusCompactoRaw === 'em_andamento';
             $rotuloHorarioPainelDia = $statusCompactoRaw === 'finalizada'
                 ? 'Finalizada em:'
                 : ($statusCompactoRaw === 'em_andamento' ? 'Iniciada às:' : 'Previsão:');
@@ -228,7 +229,7 @@ function painelResumoInscrito(array $inscrito): string
             }
         ?>
         <div class="display-flex col col-full register register-painel-dia border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
-            <div class="register-line<?php echo $linhaInativa ? ' is-inactive' : ''; ?>">
+            <div class="register-line<?php echo $linhaInativa ? ' is-inactive' : ''; ?><?php echo $linhaEmAndamento ? ' is-current' : ''; ?>">
                 <div class="left">
                     <?php $processo_bloco_model = 'full'; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     <div class="container-processo container-sm painel-dia-audiencia-info">
@@ -348,6 +349,17 @@ function painelResumoInscrito(array $inscrito): string
             const root = document.getElementById('timeline-hoje-painel-dia');
             if (!root || itemsBase.length === 0 || !window.TimelineDayRuler) return;
             const isTimelineTerminal = (status) => ['cancelada', 'redesignada', 'finalizada', 'realizada'].includes(window.TimelineDayRuler.normalizeStatus(status));
+            const updateRegisterLineState = (id, status) => {
+                const pautaId = String(id || '').trim();
+                const normalizedStatus = window.TimelineDayRuler.normalizeStatus(status);
+                document.querySelectorAll('.register.register-painel-dia[data-audiencia-id]').forEach((register) => {
+                    if (String(register.getAttribute('data-audiencia-id') || '').trim() !== pautaId) return;
+                    const line = register.querySelector('.register-line');
+                    if (!line) return;
+                    line.classList.toggle('is-current', normalizedStatus === 'em_andamento');
+                    line.classList.toggle('is-inactive', isTimelineTerminal(normalizedStatus));
+                });
+            };
             const allFinished = () => {
                 const ids = Object.keys(itemsById);
                 if (!ids.length) return false;
@@ -374,6 +386,7 @@ function painelResumoInscrito(array $inscrito): string
                             if (itemsById[id]) {
                                 itemsById[id] = Object.assign({}, itemsById[id], res.body.items[id]);
                             }
+                            updateRegisterLineState(id, itemsById[id]?.status);
                         });
                         renderTimeline();
                     })

@@ -380,6 +380,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 $linkAudienciaHoje = '';
             }
             $statusFinalHoje = painelEstudanteStatusFinal($statusRow);
+            $linhaEmAndamentoHoje = $statusRow === 'em_andamento';
             $rotuloHoraHoje = $statusFinalHoje
                 ? 'Finalizada em:'
                 : ($statusRow === 'em_andamento' ? 'Iniciada às:' : 'Previsão:');
@@ -400,7 +401,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             $linkVisivelHoje = $linkAudienciaHoje !== '' && !$statusFinalHoje && !$sigiloso;
             ?>
         <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo $idPauta; ?>">
-            <div class="register-line<?php echo $statusFinalHoje ? ' is-inactive' : ''; ?>">
+            <div class="register-line<?php echo $statusFinalHoje ? ' is-inactive' : ''; ?><?php echo $linhaEmAndamentoHoje ? ' is-current' : ''; ?>">
                 <div class="left">
                     <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     <div class="container-processo container-sm painel-estudante-document-info">
@@ -539,6 +540,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 $fimEfetivoRaw
             );
             $statusFinalMinhas = painelEstudanteStatusFinal($stRow);
+            $linhaEmAndamentoMinhas = $stRow === 'em_andamento';
             $rotuloHoraMinhas = $statusFinalMinhas
                 ? 'Finalizada em:'
                 : ($stRow === 'em_andamento' ? 'Iniciada às:' : 'Data e hora:');
@@ -573,7 +575,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             $linkVisivelMinhas = $linkAudienciaMinhas !== '' && !$statusFinalMinhas;
             ?>
         <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
-            <div class="register-line<?php echo $statusFinalMinhas ? ' is-inactive' : ''; ?>">
+            <div class="register-line<?php echo $statusFinalMinhas ? ' is-inactive' : ''; ?><?php echo $linhaEmAndamentoMinhas ? ' is-current' : ''; ?>">
                 <div class="left">
                     <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
                     <div class="container-processo container-sm painel-estudante-document-info">
@@ -941,7 +943,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (register) {
                 if (String(register.getAttribute('data-pauta') || '').trim() !== pauta) return;
                 var line = register.querySelector('.register-line');
-                if (line) line.classList.toggle('is-inactive', terminal);
+                if (line) {
+                    line.classList.toggle('is-inactive', terminal);
+                    line.classList.toggle('is-current', normalizeStatus(statusRaw) === 'em_andamento');
+                }
             });
         }
         function applyUpdates(items) {

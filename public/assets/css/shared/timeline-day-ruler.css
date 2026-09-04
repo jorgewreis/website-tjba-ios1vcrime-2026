@@ -24,7 +24,7 @@
     z-index: 1;
 }
 .timeline-day-ruler-student .timeline-day-ruler-bar-prev.is-current {
-    background: var(--color-warning);
+    background: gold;
     opacity: .45;
     z-index: 1;
 }
@@ -43,7 +43,7 @@
     opacity: .7;
 }
 .timeline-day-ruler-student .timeline-day-ruler-bar-real.is-current {
-    background: var(--color-warning);
+    background: gold;
 }
 .timeline-day-ruler-student .timeline-day-ruler-bar-real.is-closed {
     background: var(--color-danger);
@@ -55,7 +55,7 @@
     background: var(--color-primary);
 }
 .timeline-day-ruler-student .timeline-day-ruler-legend-dot.is-current {
-    background: var(--color-warning);
+    background: gold;
 }
 .timeline-day-ruler-student .timeline-day-ruler-legend-dot.is-closed {
     background: var(--color-danger);
