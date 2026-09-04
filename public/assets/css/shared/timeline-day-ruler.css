@@ -10,7 +10,7 @@
     height: 20px;
     min-width: 14px;
     background: #dbdbdb;
-    border-radius: 4px;
+    border-radius: 0;
     box-sizing: border-box;
 }
 .timeline-day-ruler-bar-real {
