@@ -289,7 +289,6 @@ function painelResumoInscrito(array $inscrito): string
                                     <button type="button" class="btn-editar stop" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleEncerrar, ENT_QUOTES); ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-encerrar" src="/assets/icons/Check-Circle--Streamline-Core.png" alt="Encerrar audiência"></button>
                                     <button type="button" class="btn-editar redesignar" data-audiencia-redesignar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleRedesignar, ENT_QUOTES); ?>"<?php echo $disRedesignar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-redesignar" src="/assets/icons/Line-Arrow-Right-Circle-2--Streamline-Core.png" alt="Redesignar audiência"></button>
                                 </div>
-                                <span class="content-assuntos">Status: <strong><?php echo htmlspecialchars($textoStatus, ENT_QUOTES, 'UTF-8'); ?></strong></span>
                             </div>
                         </div>
                     </div>
