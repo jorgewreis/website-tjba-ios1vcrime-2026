@@ -89,7 +89,6 @@
             trackWidth = root.clientWidth || 0;
         }
         var minBarMinutes = trackWidth > 0 ? (14 / trackWidth) * range : 0;
-        var gapMinutes = trackWidth > 0 ? (5 / trackWidth) * range : 0;
 
         var sourceItems = [];
         (Array.isArray(items) ? items : []).forEach(function (item) {
@@ -203,7 +202,7 @@
                 });
             }
 
-            cursorEnd = Math.max(cursorEnd, visualBlockEnd + gapMinutes);
+            cursorEnd = Math.max(cursorEnd, visualBlockEnd);
         });
 
         if (!prevBars.length && !realBars.length && !delayBars.length) {

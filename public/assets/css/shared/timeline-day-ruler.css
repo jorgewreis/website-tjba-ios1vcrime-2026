@@ -10,8 +10,6 @@
     height: 20px;
     min-width: 14px;
     background: #dbdbdb;
-    background-clip: content-box;
-    padding-right: 5px;
     border-radius: 4px;
     box-sizing: border-box;
 }
