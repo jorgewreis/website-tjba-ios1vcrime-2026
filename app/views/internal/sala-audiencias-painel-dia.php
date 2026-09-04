@@ -192,6 +192,11 @@ function painelResumoInscrito(array $inscrito): string
             $ocultarInfosCompactas = in_array($statusCompactoRaw, ['finalizada', 'realizada', 'redesignada', 'cancelada'], true);
             $linhaInativa = $ocultarInfosCompactas;
             $linhaEmAndamento = $statusCompactoRaw === 'em_andamento';
+            $linkAudienciaPainelDia = trim((string) ($row['link_audiencia'] ?? ''));
+            if (filter_var($linkAudienciaPainelDia, FILTER_VALIDATE_URL) === false) {
+                $linkAudienciaPainelDia = '';
+            }
+            $linkVisivelPainelDia = $linkAudienciaPainelDia !== '' && !$ocultarInfosCompactas;
             $rotuloHorarioPainelDia = $statusCompactoRaw === 'finalizada'
                 ? 'Finalizada em:'
                 : ($statusCompactoRaw === 'em_andamento' ? 'Iniciada às:' : 'Previsão:');
@@ -274,6 +279,10 @@ function painelResumoInscrito(array $inscrito): string
                                     <span class="mini-status mini-status-dual" style="--left-color: <?php echo htmlspecialchars($leftColor, ENT_QUOTES); ?>; --right-color: <?php echo htmlspecialchars($rightColor, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleIntimacao, ENT_QUOTES); ?>"></span>
                                     <?php endforeach; ?>
                                 </span>
+                                <?php endif; ?>
+                                <?php if ($linkVisivelPainelDia): ?>
+                                <span class="content-polo js-audience-link-info" data-audience-link-pauta="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES, 'UTF-8'); ?>">Link para acesso:</span>
+                                <span class="content-partes js-audience-link-info" data-audience-link-pauta="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES, 'UTF-8'); ?>"><a href="<?php echo htmlspecialchars($linkAudienciaPainelDia, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">CLIQUE AQUI PARA ENTRAR NA SALA</a></span>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -358,6 +367,9 @@ function painelResumoInscrito(array $inscrito): string
                     if (!line) return;
                     line.classList.toggle('is-current', normalizedStatus === 'em_andamento');
                     line.classList.toggle('is-inactive', isTimelineTerminal(normalizedStatus));
+                    line.querySelectorAll('[data-audience-link-info]').forEach((linkInfo) => {
+                        linkInfo.style.display = isTimelineTerminal(normalizedStatus) ? 'none' : '';
+                    });
                 });
             };
             const allFinished = () => {
