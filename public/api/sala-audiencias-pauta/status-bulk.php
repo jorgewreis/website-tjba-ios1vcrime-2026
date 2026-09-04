@@ -156,6 +156,7 @@ try {
     // #endregion
 
     $items = [];
+    $agoraStatusTs = time();
     foreach ($rows as $r) {
         $id = trim((string) ($r['id_pauta'] ?? ''));
         if ($id === '') {
@@ -168,6 +169,10 @@ try {
             $status = 'redesignada';
         } elseif ($status === 'encerrada') {
             $status = 'finalizada';
+        }
+        $horarioDesignadoTs = strtotime(trim((string) ($r['data_audiencia'] ?? '') . ' ' . (string) ($r['hora_audiencia'] ?? '')));
+        if ($status === 'designada' && $horarioDesignadoTs !== false && $horarioDesignadoTs < $agoraStatusTs) {
+            $status = 'atrasada';
         }
         $totalIns = (int) ($r['total_inscritos_pauta'] ?? 0);
         $jaInscrito = (int) ($r['ja_inscrito'] ?? 0) === 1;

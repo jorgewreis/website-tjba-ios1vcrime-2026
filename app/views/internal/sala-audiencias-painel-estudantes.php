@@ -135,6 +135,22 @@ function painelEstudanteStatusNormalizado(string $statusRaw): string
     return $status;
 }
 
+function painelEstudanteStatusExibicao(array $row, ?int $agoraTs = null): string
+{
+    $status = painelEstudanteStatusNormalizado((string) ($row['status'] ?? ''));
+    if ($status !== 'designada') {
+        return $status;
+    }
+
+    $horarioDesignadoTs = painelEstudanteHorarioDesignadoTs($row);
+    $agoraTs = $agoraTs ?? time();
+    if ($horarioDesignadoTs !== false && $horarioDesignadoTs < $agoraTs) {
+        return 'atrasada';
+    }
+
+    return $status;
+}
+
 function painelEstudanteStatusFinal(string $statusRaw): bool
 {
     return in_array(painelEstudanteStatusNormalizado($statusRaw), ['cancelada', 'redesignada', 'finalizada', 'realizada'], true);
@@ -257,7 +273,7 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
         return date('H:i', $inicioTs);
     }
 
-    if ($status === 'designada' && $previsaoTs !== null) {
+    if (in_array($status, ['designada', 'atrasada'], true) && $previsaoTs !== null) {
         return date('H:i', $previsaoTs);
     }
 
@@ -369,9 +385,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             $prioridadeBloqueio = !empty($row['tem_prioridade_bloqueio']);
             $totalIns = (int) ($row['total_inscritos_pauta'] ?? 0);
             $statusRow = trim((string) ($row['status'] ?? ''));
-            $statusRow = painelEstudanteStatusNormalizado($statusRow);
+            $statusRow = painelEstudanteStatusExibicao($row);
             $labelsStatusAud = [
                 'designada' => 'Aguardando início',
+                'atrasada' => 'Atrasada',
                 'em_andamento' => 'Em andamento',
                 'finalizada' => 'Finalizada',
                 'realizada' => 'Realizada',
@@ -546,7 +563,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         <?php foreach ($minhasPageRows as $m):
             $idPautaMinhasRaw = trim((string) ($m['pauta'] ?? ''));
             $stRow = (string) ($m['status'] ?? '');
-            $stRow = painelEstudanteStatusNormalizado($stRow);
+            $stRow = painelEstudanteStatusExibicao($m);
             $inicioEfetivoRaw = trim((string) ($m['data_hora_inicio_efetivo'] ?? ''));
             $fimEfetivoRaw = trim((string) ($m['data_hora_fim_efetivo'] ?? ''));
             $dataHoraMinhas = painelEstudanteDataHoraPorStatus(
@@ -566,6 +583,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             $duracaoExibicaoMinhas = painelEstudanteDuracaoReal($inicioEfetivoRaw, $fimEfetivoRaw);
             $labelsStatusEst = [
                 'designada' => 'Aguardando início',
+                'atrasada' => 'Atrasada',
                 'em_andamento' => 'Em andamento',
                 'finalizada' => 'Finalizada',
                 'realizada' => 'Realizada',
@@ -749,27 +767,36 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var horaAud = String(item && item.hora_audiencia || '').trim();
             return parseDateTime((dataAud + ' ' + horaAud).trim());
         }
+        function statusForItem(item) {
+            var status = normalizeStatus(item && item.status);
+            if (status === 'designada') {
+                var scheduledTs = scheduledTimestamp(item);
+                if (!isNaN(scheduledTs) && scheduledTs < Date.now()) return 'atrasada';
+            }
+            return status;
+        }
         function ongoingTimestamp(item) {
             var scheduledTs = scheduledTimestamp(item);
             if (!isNaN(scheduledTs)) return scheduledTs;
             return parseDateTime(String(item && item.data_hora_inicio_efetivo || '').trim());
         }
         function isDelayedNextForecast(item, allItems, nowTs) {
-            var status = normalizeStatus(item && item.status);
+            var status = statusForItem(item);
             var targetTs = scheduledTimestamp(item);
-            if (status !== 'designada' || isNaN(targetTs) || targetTs >= nowTs) return false;
+            if ((status !== 'designada' && status !== 'atrasada') || isNaN(targetTs) || targetTs >= nowTs) return false;
 
             var ids = Object.keys(allItems || {});
             return ids.some(function (id) {
                 var ongoing = allItems[id] || {};
-                if (normalizeStatus(ongoing.status) !== 'em_andamento') return false;
+                if (statusForItem(ongoing) !== 'em_andamento') return false;
                 var ongoingTs = ongoingTimestamp(ongoing);
                 if (isNaN(ongoingTs) || ongoingTs >= targetTs) return false;
 
                 var nextTs = NaN;
                 ids.forEach(function (candidateId) {
                     var candidate = allItems[candidateId] || {};
-                    if (normalizeStatus(candidate.status) !== 'designada') return;
+                    var candidateStatus = statusForItem(candidate);
+                    if (candidateStatus !== 'designada' && candidateStatus !== 'atrasada') return;
                     var candidateTs = scheduledTimestamp(candidate);
                     if (isNaN(candidateTs) || candidateTs <= ongoingTs || candidateTs >= nowTs) return;
                     if (isNaN(nextTs) || candidateTs < nextTs) nextTs = candidateTs;
@@ -803,7 +830,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var lines = block.querySelector('.js-time-lines');
             if (!lines) return;
             var includeDate = String(block.getAttribute('data-include-date') || '') === '1';
-            var status = normalizeStatus(item.status);
+            var status = statusForItem(item);
             var inicioRaw = String(item.data_hora_inicio_efetivo || '').trim();
             var fimRaw = String(item.data_hora_fim_efetivo || '').trim();
             var inicioTs = parseDateTime(inicioRaw);
@@ -858,6 +885,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         function statusLabel(status) {
             var map = {
                 designada: 'Aguardando início',
+                atrasada: 'Atrasada',
                 em_andamento: 'Em andamento',
                 finalizada: 'Finalizada',
                 realizada: 'Realizada',
@@ -882,7 +910,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var prioridadeBloqueio = !!item.tem_prioridade_bloqueio;
             var pode = !!item.pode_inscrever;
             var pauta = String(item.id_pauta || wrapper.getAttribute('data-inscricao-ui') || '').trim();
-            var status = normalizeStatus(item.status);
+            var status = statusForItem(item);
             if (status && status !== 'designada') {
                 wrapper.innerHTML = '<div class="width-300 padding-x-lg status ' + statusClass(status) + '" data-status-pauta="' + escapeHtml(pauta) + '">' + escapeHtml(statusLabel(status)) + '</div>';
                 return;
@@ -914,7 +942,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 }
             });
             if (!wrap) return;
-            var status = normalizeStatus(item.status);
+            var status = statusForItem(item);
             var indisponivel = (status && status !== 'designada')
                 || !!item.processo_sigiloso
                 || !!item.envolve_menor
@@ -944,12 +972,12 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             document.querySelectorAll('[data-status-label-pauta]').forEach(function (labelEl) {
                 var id = String(labelEl.getAttribute('data-status-label-pauta') || '').trim();
                 if (!id || !items[id]) return;
-                labelEl.textContent = statusLabel(normalizeStatus(items[id].status));
+                labelEl.textContent = statusLabel(statusForItem(items[id]));
             });
             document.querySelectorAll('[data-status-pauta]').forEach(function (statusEl) {
                 var id = String(statusEl.getAttribute('data-status-pauta') || '').trim();
                 if (!id || !items[id]) return;
-                var status = normalizeStatus(items[id].status);
+                var status = statusForItem(items[id]);
                 statusEl.className = 'width-300 padding-x-lg status ' + statusClass(status);
                 statusEl.textContent = statusLabel(status);
                 var ataEl = document.querySelector('[data-ata-info="' + id.replace(/"/g, '\\"') + '"]');

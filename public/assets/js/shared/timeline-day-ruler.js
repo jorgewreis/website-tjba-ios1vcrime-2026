@@ -79,6 +79,8 @@
             var schedTs = parseDateTime((String(item.data_audiencia || '').trim() + ' ' + String(item.hora_audiencia || '').trim()).trim());
             if (isNaN(schedTs)) return;
             var sMin = toMinuteValue(schedTs);
+            var status = normalizeStatus(item.status || '');
+            if (status === 'designada' && schedTs < Date.now()) status = 'atrasada';
             var prevDur = parseInt(item.duracao_estimada_minutos || 0, 10);
             if (!Number.isFinite(prevDur) || prevDur < 5) prevDur = 5;
             var rsTs = parseDateTime(item.data_hora_inicio_efetivo || '');
@@ -90,7 +92,7 @@
                 plannedDur: prevDur,
                 realStart: rs,
                 realEnd: re,
-                status: normalizeStatus(item.status || ''),
+                status: status,
                 sortStart: rs !== null ? rs : sMin
             });
         });
@@ -107,7 +109,8 @@
                 if (ongoing.status !== 'em_andamento') return;
                 var nextPending = null;
                 sourceItems.forEach(function (candidate) {
-                    if (candidate.status !== 'designada' || candidate.plannedStart <= ongoing.plannedStart || candidate.plannedStart >= nowMin) return;
+                    if (candidate.status !== 'designada' && candidate.status !== 'atrasada') return;
+                    if (candidate.plannedStart <= ongoing.plannedStart || candidate.plannedStart >= nowMin) return;
                     if (!nextPending || candidate.plannedStart < nextPending.plannedStart) nextPending = candidate;
                 });
                 if (nextPending) {
