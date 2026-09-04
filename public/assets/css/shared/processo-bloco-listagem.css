@@ -756,6 +756,136 @@
     pointer-events: none;
 }
 
+/* Painel do dia interno — usa a mesma composição de blocos do painel em tempo real,
+ * mantendo as informações completas do processo e as ações operacionais. */
+.register.register-painel-dia {
+    border-bottom: 0;
+}
+
+.register.register-painel-dia > .register-line {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 5px 10px;
+    gap: 5px;
+    border-bottom: 1px solid #dfdfdf;
+}
+
+.register.register-painel-dia > .register-line > .left,
+.register.register-painel-dia > .register-line > .right {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.register.register-painel-dia > .register-line > .left {
+    justify-content: flex-start;
+}
+
+.register.register-painel-dia > .register-line > .right {
+    justify-content: flex-end;
+}
+
+.register.register-painel-dia > .register-line > .left > .container-processo.container-lg,
+.register.register-painel-dia > .register-line > .left > .painel-dia-audiencia-info,
+.register.register-painel-dia .painel-dia-acoes {
+    flex: 0 0 307px;
+    width: 307px;
+    min-height: 70px;
+    height: 70px;
+}
+
+.register.register-painel-dia > .register-line > .left > .container-processo.container-lg {
+    flex-basis: 450px;
+    width: 450px;
+}
+
+.register.register-painel-dia .painel-dia-audiencia-info,
+.register.register-painel-dia .painel-dia-acoes {
+    justify-content: flex-start;
+}
+
+.register.register-painel-dia .painel-dia-audiencia-info .container-line,
+.register.register-painel-dia .painel-dia-acoes .container-line {
+    align-items: flex-start;
+}
+
+.register.register-painel-dia .painel-dia-audiencia-info .container-line .left {
+    width: 100%;
+    align-items: flex-start;
+}
+
+.register.register-painel-dia .painel-dia-audiencia-info .line-content.box-number {
+    padding: 0;
+}
+
+.register.register-painel-dia .painel-dia-audiencia-info .line-content.double-line,
+.register.register-painel-dia .painel-dia-acoes .line-content.double-line {
+    padding-left: 2px;
+}
+
+.register.register-painel-dia .painel-dia-audiencia-info .container-line:first-child,
+.register.register-painel-dia .painel-dia-audiencia-info .container-line:first-child > .left,
+.register.register-painel-dia .painel-dia-audiencia-info .container-line:first-child > .right,
+.register.register-painel-dia .painel-dia-audiencia-info .container-line:first-child .line-content.box-number,
+.register.register-painel-dia .painel-dia-acoes .container-line:first-child,
+.register.register-painel-dia .painel-dia-acoes .container-line:first-child > .left,
+.register.register-painel-dia .painel-dia-acoes .container-line:first-child > .right,
+.register.register-painel-dia .painel-dia-acoes .container-line:first-child .line-content.box-number {
+    height: 35px;
+    min-height: 35px;
+}
+
+.register.register-painel-dia .painel-dia-audiencia-info .content-number {
+    text-transform: uppercase;
+}
+
+.register.register-painel-dia .painel-dia-time {
+    white-space: nowrap;
+}
+
+.register.register-painel-dia .painel-dia-intimacoes-label {
+    margin-top: 5px;
+}
+
+.register.register-painel-dia .painel-dia-intimacoes-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    width: 100%;
+}
+
+.register.register-painel-dia .painel-dia-actions {
+    width: 100%;
+    min-height: 30px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 5px;
+    margin: 5px 0;
+}
+
+.register.register-painel-dia .painel-dia-acoes .content-assuntos,
+.register.register-painel-dia .painel-dia-acoes .content-classe {
+    width: 100%;
+}
+
+@media (max-width: 680px) {
+    .register.register-painel-dia > .register-line > .left,
+    .register.register-painel-dia > .register-line > .right {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
 .register.register-painel-estudante > .register-line > .left,
 .register.register-painel-estudante > .register-line > .right {
     display: flex;

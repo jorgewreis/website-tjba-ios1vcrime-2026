@@ -191,166 +191,112 @@ function painelResumoInscrito(array $inscrito): string
             }
             $ocultarInfosCompactas = in_array($statusCompactoRaw, ['finalizada', 'realizada', 'redesignada', 'cancelada'], true);
             $linhaInativa = $ocultarInfosCompactas;
+            $rotuloHorarioPainelDia = $statusCompactoRaw === 'finalizada'
+                ? 'Finalizada em:'
+                : ($statusCompactoRaw === 'em_andamento' ? 'Iniciada às:' : 'Previsão:');
+            $idPautaRow = (string) ($row['id_pauta'] ?? '');
+            $dataAudRow = substr((string) ($row['data_audiencia'] ?? ''), 0, 10);
+            $stRow = $statusCompactoRaw;
+            $mostrarPainelAcao = ($dataAudRow === $hoje) && ($stRow !== 'finalizada');
+            $bloqueioOutroEmAndamento = ($idEmAndamentoHoje !== null && $idEmAndamentoHoje !== $idPautaRow);
+            $labelsStatus = [
+                'designada' => 'Designada',
+                'em_andamento' => 'Em andamento',
+                'finalizada' => 'Finalizada',
+                'realizada' => 'Realizada',
+                'redesignada' => 'Redesignada',
+                'cancelada' => 'Cancelada',
+            ];
+            $textoStatus = $labelsStatus[$stRow] ?? ucfirst(str_replace('_', ' ', $stRow));
+            $titBloqueio = 'Já existe uma audiência em andamento hoje. Conclua ou reinicie-a antes de movimentar outras.';
+            $titSoEmAndamento = 'Só disponível quando a audiência estiver em andamento.';
+            $disIniciar = true;
+            $disReiniciar = true;
+            $disEncerrar = true;
+            if ($mostrarPainelAcao) {
+                if ($bloqueioOutroEmAndamento) {
+                    $disIniciar = $disReiniciar = $disEncerrar = true;
+                } else {
+                    if ($stRow === 'designada') {
+                        $disIniciar = false;
+                    }
+                    if ($stRow === 'em_andamento') {
+                        $disReiniciar = false;
+                        $disEncerrar = false;
+                    }
+                }
+            }
         ?>
         <div class="display-flex col col-full register register-painel-dia border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
-            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center register-line<?php echo $linhaInativa ? ' is-inactive' : ''; ?>">
-                <div class="display-flex row row-fit justify-start gap-y-sm align-center">
-                    <div class="col width-300">
-                        <span class="minor-info">Horário</span>
-                        <span class="major-info"><?php echo htmlspecialchars(painelHoraPorStatus($row), ENT_QUOTES); ?></span>
+            <div class="register-line<?php echo $linhaInativa ? ' is-inactive' : ''; ?>">
+                <div class="left">
+                    <?php $processo_bloco_model = 'full'; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                    <div class="container-processo container-sm painel-dia-audiencia-info">
+                        <div class="container-line">
+                            <div class="left">
+                                <div class="line-content box-number">
+                                    <span class="content-number major-info">AUDIENCIA DE <?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="container-line">
+                            <div class="line-content double-line">
+                                <span class="content-assuntos">Status: <strong><?php echo htmlspecialchars($textoStatus, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                <span class="content-assuntos painel-dia-time"><span><?php echo htmlspecialchars($rotuloHorarioPainelDia, ENT_QUOTES, 'UTF-8'); ?></span> <strong><?php echo htmlspecialchars(painelHoraPorStatus($row), ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                <?php if (!$ocultarInfosCompactas): ?>
+                                <span class="content-polo painel-dia-intimacoes-label">Intimações:</span>
+                                <span class="content-partes painel-dia-intimacoes-list">
+                                    <?php
+                                        $partesStatus = is_array($row['partes_cumprimento'] ?? null) ? $row['partes_cumprimento'] : [];
+                                        $ordemTipos = [
+                                            'reu' => 0,
+                                            'vitima' => 1,
+                                            'testemunha_denuncia' => 2,
+                                            'testemunha_defesa' => 3,
+                                        ];
+                                        usort($partesStatus, static function ($a, $b) use ($ordemTipos): int {
+                                            $tipoKey = static function ($x): string {
+                                                if (!is_array($x)) return '';
+                                                return (string) (($x['tipo_parte'] ?? '') === '' ? ($x['tipo'] ?? '') : ($x['tipo_parte'] ?? ''));
+                                            };
+                                            return ($ordemTipos[$tipoKey($a)] ?? 4) <=> ($ordemTipos[$tipoKey($b)] ?? 4);
+                                        });
+                                        foreach ($partesStatus as $parteStatus):
+                                            $cp = is_array($parteStatus) ? $parteStatus : ['nome_parte' => '', 'expedicao' => 'Não expedido', 'cumprimento' => (string) ($parteStatus ?? '')];
+                                            $nomeParte = trim((string) ($cp['nome_parte'] ?? ''));
+                                            $expVal = trim((string) ($cp['expedicao'] ?? 'Não expedido'));
+                                            $cumVal = trim((string) ($cp['cumprimento'] ?? ''));
+                                            $leftColor = ($expVal === '' || $expVal === 'Não expedido') ? 'var(--color-secondary-bg-light)' : 'var(--color-success)';
+                                            $rightColor = $cumVal === 'cumprido' ? 'var(--color-success)' : ($cumVal === 'nao_cumprido' ? 'var(--color-danger)' : 'var(--color-secondary-bg-light)');
+                                            $titleIntimacao = ($nomeParte !== '' ? $nomeParte : 'Parte') . ' — Expedição: ' . ($expVal !== '' ? $expVal : 'Não expedido') . ' | Cumprimento: ' . ucfirst(str_replace('_', ' ', $cumVal !== '' ? $cumVal : 'pendente'));
+                                    ?>
+                                    <span class="mini-status mini-status-dual" style="--left-color: <?php echo htmlspecialchars($leftColor, ENT_QUOTES); ?>; --right-color: <?php echo htmlspecialchars($rightColor, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleIntimacao, ENT_QUOTES); ?>"></span>
+                                    <?php endforeach; ?>
+                                </span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col width-500 col-process">
-                        <?php $processo_bloco_model = 'full'; include __DIR__ . '/_processo_bloco_listagem.php'; ?>
-                    </div>
-                    <div class="col width-400">
-                        <span class="minor-info">Tipo de audiência</span>
-                        <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES); ?></span>
-                    </div>
-                    <?php if (!$ocultarInfosCompactas): ?>
-                    <div class="col width-300">
-                        <span class="minor-info">Intimações</span>
-                        <span class="major-info">
-                            <?php
-                                $partesStatus = is_array($row['partes_cumprimento'] ?? null) ? $row['partes_cumprimento'] : [];
-                                $ordemTipos = [
-                                    'reu' => 0,
-                                    'vitima' => 1,
-                                    'testemunha_denuncia' => 2,
-                                    'testemunha_defesa' => 3,
-                                ];
-                                usort($partesStatus, static function ($a, $b) use ($ordemTipos): int {
-                                    $tipoKey = static function ($x): string {
-                                        if (!is_array($x)) {
-                                            return '';
-                                        }
-                                        $tp = (string) (($x['tipo_parte'] ?? '') === '' ? ($x['tipo'] ?? '') : ($x['tipo_parte'] ?? ''));
-
-                                        return $tp;
-                                    };
-                                    $ta = $tipoKey($a);
-                                    $tb = $tipoKey($b);
-                                    $ia = $ordemTipos[$ta] ?? 4;
-                                    $ib = $ordemTipos[$tb] ?? 4;
-                                    if ($ia === $ib) {
-                                        return 0;
-                                    }
-
-                                    return $ia <=> $ib;
-                                });
-
-                                foreach ($partesStatus as $parteStatus):
-                                    $cumprimentoFallback = '';
-                                    if (is_scalar($parteStatus) || $parteStatus === null) {
-                                        $cumprimentoFallback = (string) ($parteStatus ?? '');
-                                    }
-                                    $cp = is_array($parteStatus)
-                                        ? $parteStatus
-                                        : ['nome_parte' => '', 'tipo_parte' => '', 'expedicao' => 'Não expedido', 'cumprimento' => $cumprimentoFallback];
-
-                                    $nomeParte = trim((string) ($cp['nome_parte'] ?? ''));
-                                    $expVal = trim((string) ($cp['expedicao'] ?? 'Não expedido'));
-                                    $cumVal = trim((string) ($cp['cumprimento'] ?? ''));
-
-                                    $leftColor = ($expVal === '' || $expVal === 'Não expedido')
-                                        ? 'var(--color-secondary-bg-light)'
-                                        : 'var(--color-success)';
-
-                                    $rightColor = $cumVal === 'cumprido'
-                                        ? 'var(--color-success)'
-                                        : ($cumVal === 'nao_cumprido' ? 'var(--color-danger)' : 'var(--color-secondary-bg-light)');
-
-                                    $labelCumprimento = ucfirst(str_replace('_', ' ', $cumVal !== '' ? $cumVal : 'pendente'));
-                                    $labelExpedicao = $expVal !== '' ? $expVal : 'Não expedido';
-                                    $titleIntimacao = ($nomeParte !== '' ? $nomeParte : 'Parte')
-                                        . ' — Expedição: ' . $labelExpedicao
-                                        . ' | Cumprimento: ' . $labelCumprimento;
-                            ?>
-                                <div
-                                    class="mini-status mini-status-dual"
-                                    style="--left-color: <?php echo htmlspecialchars($leftColor, ENT_QUOTES); ?>; --right-color: <?php echo htmlspecialchars($rightColor, ENT_QUOTES); ?>"
-                                    title="<?php echo htmlspecialchars($titleIntimacao, ENT_QUOTES); ?>"
-                                ></div>
-                            <?php endforeach; ?>
-                        </span>
-                    </div>
-                    <?php endif; ?>
                 </div>
-                <div class="display-flex row row-fit justify-end gap-y-sm align-center padding-y-sm">
-                        <?php
-                            $idPautaRow = (string) ($row['id_pauta'] ?? '');
-                            $dataAudRow = substr((string) ($row['data_audiencia'] ?? ''), 0, 10);
-                            $stRaw = strtolower(preg_replace('/[\s-]+/', '_', trim((string) ($row['status'] ?? ''))));
-                            $stRow = $stRaw;
-                            if ($stRow === 'agendada') {
-                                $stRow = 'designada';
-                            } elseif ($stRow === 'adiada') {
-                                $stRow = 'redesignada';
-                            } elseif ($stRow === 'encerrada') {
-                                $stRow = 'finalizada';
-                            }
-                            $mostrarPainelAcao = ($dataAudRow === $hoje) && ($stRow !== 'finalizada');
-                            $bloqueioOutroEmAndamento = ($idEmAndamentoHoje !== null && $idEmAndamentoHoje !== $idPautaRow);
-                            $labelsStatus = [
-                                'designada' => 'Designada',
-                                'em_andamento' => 'Em andamento',
-                                'finalizada' => 'Finalizada',
-                                'realizada' => 'Realizada',
-                                'redesignada' => 'Redesignada',
-                                'cancelada' => 'Cancelada',
-                            ];
-                            $textoStatus = $labelsStatus[$stRow] ?? ucfirst(str_replace('_', ' ', $stRow));
-                            $classeStatus = 'status-pending';
-                            if ($stRow === 'cancelada' || $stRow === 'redesignada') {
-                                $classeStatus = 'status-cancelled';
-                            } elseif ($stRow === 'em_andamento') {
-                                $classeStatus = 'status-current';
-                            } elseif (in_array($stRow, ['realizada', 'finalizada'], true)) {
-                                $classeStatus = 'status-finished';
-                            }
-                            $titBloqueio = 'Já existe uma audiência em andamento hoje. Conclua ou reinicie-a antes de movimentar outras.';
-                            $titSoEmAndamento = 'Só disponível quando a audiência estiver em andamento.';
-                            $disIniciar = true;
-                            $disReiniciar = true;
-                            $disEncerrar = true;
-                            if ($mostrarPainelAcao) {
-                                if ($bloqueioOutroEmAndamento) {
-                                    $disIniciar = $disReiniciar = $disEncerrar = true;
-                                } else {
-                                    if ($stRow === 'designada') {
-                                        $disIniciar = false;
-                                    }
-                                    if ($stRow === 'em_andamento') {
-                                        $disReiniciar = false;
-                                        $disEncerrar = false;
-                                    }
-                                }
-                            }
-                        ?>
-                        <?php if ($mostrarPainelAcao): ?>
-                        <?php
-                            $titleReiniciar = $bloqueioOutroEmAndamento
-                                ? $titBloqueio
-                                : ($stRow === 'em_andamento' ? 'Reiniciar (volta para Designada)' : $titSoEmAndamento);
-                            $titleIniciar = $bloqueioOutroEmAndamento
-                                ? $titBloqueio
-                                : ($stRow === 'designada' ? 'Iniciar (Em andamento)' : 'Só disponível quando a audiência estiver designada.');
-                            $titleEncerrar = $bloqueioOutroEmAndamento
-                                ? $titBloqueio
-                                : ($stRow === 'em_andamento' ? 'Encerrar (Finalizada)' : $titSoEmAndamento);
-                        ?>
-                        <button type="button" class="btn-editar reload" data-audiencia-reiniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleReiniciar, ENT_QUOTES); ?>"<?php echo $disReiniciar ? ' disabled' : ''; ?>>
-                            <i class="fi fi-rr-rotate-square"></i>
-                        </button>
-                        <button type="button" class="btn-editar start" data-audiencia-iniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleIniciar, ENT_QUOTES); ?>"<?php echo $disIniciar ? ' disabled' : ''; ?>>
-                            <i class="fi fi-rr-arrow-square-right"></i>
-                        </button>
-                        <button type="button" class="btn-editar stop" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleEncerrar, ENT_QUOTES); ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>>
-                            <i class="fi fi-rr-stop-square"></i>
-                        </button>
-                        <?php endif; ?>
-                    <div class="col">
-                        <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatus, ENT_QUOTES); ?>">
-                            <?php echo htmlspecialchars($textoStatus, ENT_QUOTES); ?>
+                <div class="right">
+                    <div class="container-historical container-sm painel-dia-acoes">
+                        <div class="container-line">
+                            <div class="line-content double-line">
+                                <span class="content-classe">Ações</span>
+                                <?php if ($mostrarPainelAcao): ?>
+                                <?php
+                                    $titleReiniciar = $bloqueioOutroEmAndamento ? $titBloqueio : ($stRow === 'em_andamento' ? 'Reiniciar (volta para Designada)' : $titSoEmAndamento);
+                                    $titleIniciar = $bloqueioOutroEmAndamento ? $titBloqueio : ($stRow === 'designada' ? 'Iniciar (Em andamento)' : 'Só disponível quando a audiência estiver designada.');
+                                    $titleEncerrar = $bloqueioOutroEmAndamento ? $titBloqueio : ($stRow === 'em_andamento' ? 'Encerrar (Finalizada)' : $titSoEmAndamento);
+                                ?>
+                                <div class="painel-dia-actions">
+                                    <button type="button" class="btn-editar reload" data-audiencia-reiniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleReiniciar, ENT_QUOTES); ?>"<?php echo $disReiniciar ? ' disabled' : ''; ?>><i class="fi fi-rr-rotate-square"></i></button>
+                                    <button type="button" class="btn-editar start" data-audiencia-iniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleIniciar, ENT_QUOTES); ?>"<?php echo $disIniciar ? ' disabled' : ''; ?>><i class="fi fi-rr-arrow-square-right"></i></button>
+                                    <button type="button" class="btn-editar stop" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleEncerrar, ENT_QUOTES); ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>><i class="fi fi-rr-stop-square"></i></button>
+                                </div>
+                                <?php endif; ?>
+                                <span class="content-assuntos">Status: <strong><?php echo htmlspecialchars($textoStatus, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                            </div>
                         </div>
                     </div>
                 </div>
