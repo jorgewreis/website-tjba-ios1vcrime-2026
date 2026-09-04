@@ -347,14 +347,15 @@ function painelResumoInscrito(array $inscrito): string
             });
             const root = document.getElementById('timeline-hoje-painel-dia');
             if (!root || itemsBase.length === 0 || !window.TimelineDayRuler) return;
+            const isTimelineTerminal = (status) => ['cancelada', 'redesignada', 'finalizada', 'realizada'].includes(window.TimelineDayRuler.normalizeStatus(status));
             const allFinished = () => {
                 const ids = Object.keys(itemsById);
                 if (!ids.length) return false;
-                return ids.every((id) => window.TimelineDayRuler.isFinishedStatus(itemsById[id]?.status));
+                return ids.every((id) => isTimelineTerminal(itemsById[id]?.status));
             };
             const asTimelineItems = () => Object.keys(itemsById).map((id) => Object.assign({ id: id }, itemsById[id]));
             function renderTimeline() {
-                window.TimelineDayRuler.render(root, asTimelineItems());
+                window.TimelineDayRuler.render(root, asTimelineItems(), { studentPanel: true });
             }
             function refreshTimelineData() {
                 const pautas = Object.keys(itemsById);
