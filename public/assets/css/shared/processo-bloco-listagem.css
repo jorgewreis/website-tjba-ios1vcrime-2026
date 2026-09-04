@@ -803,6 +803,15 @@
     text-transform: uppercase;
 }
 
+/* Mantém a régua dos títulos igual entre o número do processo e o tipo da audiência. */
+.register.register-painel-estudante .container-processo > .container-line:first-child,
+.register.register-painel-estudante .container-processo > .container-line:first-child > .left,
+.register.register-painel-estudante .container-processo > .container-line:first-child > .right,
+.register.register-painel-estudante .container-processo > .container-line:first-child .line-content.box-number {
+    height: 35px;
+    min-height: 35px;
+}
+
 .register.register-painel-estudante .painel-estudante-document-info .js-time-block {
     display: block;
 }
