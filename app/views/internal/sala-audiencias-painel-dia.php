@@ -201,10 +201,8 @@ function painelResumoInscrito(array $inscrito): string
                 ? 'Finalizada em:'
                 : ($statusCompactoRaw === 'em_andamento' ? 'Iniciada às:' : 'Previsão:');
             $idPautaRow = (string) ($row['id_pauta'] ?? '');
-            $dataAudRow = substr((string) ($row['data_audiencia'] ?? ''), 0, 10);
             $stRow = $statusCompactoRaw;
-            $mostrarPainelAcao = ($dataAudRow === $hoje) && ($stRow !== 'finalizada');
-            $bloqueioOutroEmAndamento = ($idEmAndamentoHoje !== null && $idEmAndamentoHoje !== $idPautaRow);
+            $bloqueioOutroEmAndamento = $idEmAndamentoHoje !== null && $idEmAndamentoHoje !== $idPautaRow;
             $labelsStatus = [
                 'designada' => 'Designada',
                 'em_andamento' => 'Em andamento',
@@ -214,28 +212,10 @@ function painelResumoInscrito(array $inscrito): string
                 'cancelada' => 'Cancelada',
             ];
             $textoStatus = $labelsStatus[$stRow] ?? ucfirst(str_replace('_', ' ', $stRow));
-            $titBloqueio = 'Já existe uma audiência em andamento hoje. Conclua ou reinicie-a antes de movimentar outras.';
-            $titSoEmAndamento = 'Só disponível quando a audiência estiver em andamento.';
-            $disIniciar = true;
-            $disReiniciar = true;
-            $disEncerrar = true;
-            $disRedesignar = true;
-            if ($mostrarPainelAcao) {
-                if ($bloqueioOutroEmAndamento) {
-                    $disIniciar = $disReiniciar = $disEncerrar = true;
-                } else {
-                    if ($stRow === 'designada') {
-                        $disIniciar = false;
-                    }
-                    if ($stRow === 'em_andamento') {
-                        $disReiniciar = false;
-                        $disEncerrar = false;
-                    }
-                }
-                if (in_array($stRow, ['designada', 'atrasada'], true) && !$bloqueioOutroEmAndamento) {
-                    $disRedesignar = false;
-                }
-            }
+            $disReiniciar = $stRow === 'designada' || $bloqueioOutroEmAndamento;
+            $disIniciar = $stRow !== 'designada' || $bloqueioOutroEmAndamento;
+            $disEncerrar = $stRow !== 'em_andamento' || $bloqueioOutroEmAndamento;
+            $disRedesignar = in_array($stRow, ['finalizada', 'realizada', 'redesignada'], true) || $bloqueioOutroEmAndamento;
         ?>
         <div class="display-flex col col-full register register-painel-dia border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
             <div class="register-line<?php echo $linhaInativa ? ' is-inactive' : ''; ?><?php echo $linhaEmAndamento ? ' is-current' : ''; ?>">
@@ -297,12 +277,11 @@ function painelResumoInscrito(array $inscrito): string
                         <div class="container-line">
                             <div class="line-content double-line">
                                 <span class="content-classe">Ações</span>
-                                <?php if ($mostrarPainelAcao): ?>
                                 <?php
-                                    $titleReiniciar = $bloqueioOutroEmAndamento ? $titBloqueio : ($stRow === 'em_andamento' ? 'Reiniciar (volta para Designada)' : $titSoEmAndamento);
-                                    $titleIniciar = $bloqueioOutroEmAndamento ? $titBloqueio : ($stRow === 'designada' ? 'Iniciar (Em andamento)' : 'Só disponível quando a audiência estiver designada.');
-                                    $titleEncerrar = $bloqueioOutroEmAndamento ? $titBloqueio : ($stRow === 'em_andamento' ? 'Encerrar (Finalizada)' : $titSoEmAndamento);
-                                    $titleRedesignar = in_array($stRow, ['designada', 'atrasada'], true) ? 'Redesignar audiência' : 'Só disponível para audiências designadas.';
+                                    $titleReiniciar = $disReiniciar ? 'Reiniciar indisponível para audiências Designadas.' : 'Reiniciar (volta para Designada)';
+                                    $titleIniciar = $disIniciar ? 'Só disponível quando a audiência estiver Designada.' : 'Iniciar (Em andamento)';
+                                    $titleEncerrar = $disEncerrar ? 'Só disponível quando a audiência estiver Em andamento.' : 'Encerrar (Finalizada)';
+                                    $titleRedesignar = $disRedesignar ? 'Não disponível para audiências Finalizadas ou Redesignadas.' : 'Redesignar audiência';
                                 ?>
                                 <div class="painel-dia-actions">
                                     <button type="button" class="btn-editar reload" data-audiencia-reiniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleReiniciar, ENT_QUOTES); ?>"<?php echo $disReiniciar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-reiniciar" src="/assets/icons/Line-Arrow-Rotate-Right-Circle--Streamline-Core.png" alt="Reiniciar audiência"></button>
@@ -310,7 +289,6 @@ function painelResumoInscrito(array $inscrito): string
                                     <button type="button" class="btn-editar stop" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleEncerrar, ENT_QUOTES); ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-encerrar" src="/assets/icons/Check-Circle--Streamline-Core.png" alt="Encerrar audiência"></button>
                                     <button type="button" class="btn-editar redesignar" data-audiencia-redesignar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleRedesignar, ENT_QUOTES); ?>"<?php echo $disRedesignar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-redesignar" src="/assets/icons/Line-Arrow-Right-Circle-2--Streamline-Core.png" alt="Redesignar audiência"></button>
                                 </div>
-                                <?php endif; ?>
                                 <span class="content-assuntos">Status: <strong><?php echo htmlspecialchars($textoStatus, ENT_QUOTES, 'UTF-8'); ?></strong></span>
                             </div>
                         </div>
@@ -373,6 +351,19 @@ function painelResumoInscrito(array $inscrito): string
                     if (!line) return;
                     line.classList.toggle('is-current', normalizedStatus === 'em_andamento');
                     line.classList.toggle('is-inactive', isTimelineTerminal(normalizedStatus));
+                    const hasOtherOngoing = Object.keys(itemsById).some((otherId) => {
+                        return otherId !== pautaId && window.TimelineDayRuler.normalizeStatus(itemsById[otherId]?.status) === 'em_andamento';
+                    });
+                    const actionRules = [
+                        ['[data-audiencia-reiniciar]', normalizedStatus === 'designada' || hasOtherOngoing],
+                        ['[data-audiencia-iniciar]', normalizedStatus !== 'designada' || hasOtherOngoing],
+                        ['[data-audiencia-encerrar]', normalizedStatus !== 'em_andamento' || hasOtherOngoing],
+                        ['[data-audiencia-redesignar]', ['finalizada', 'realizada', 'redesignada'].includes(normalizedStatus) || hasOtherOngoing]
+                    ];
+                    actionRules.forEach(([selector, disabled]) => {
+                        const action = line.querySelector(selector);
+                        if (action) action.disabled = disabled;
+                    });
                     line.querySelectorAll('[data-audience-link-info]').forEach((linkInfo) => {
                         linkInfo.style.display = isTimelineTerminal(normalizedStatus) ? 'none' : '';
                     });

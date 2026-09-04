@@ -327,6 +327,9 @@ final class SalaAudienciasPautaService
         if ($stAtual === 'adiada') {
             $stAtual = 'redesignada';
         }
+        if ($stAtual === 'realizada') {
+            $stAtual = 'finalizada';
+        }
 
         $outroEmAndamento = $this->pautaRepository->findIdEmAndamentoNaData($hoje);
         if ($outroEmAndamento !== null && $outroEmAndamento !== $idPauta) {
@@ -338,8 +341,8 @@ final class SalaAudienciasPautaService
                 throw new InvalidArgumentException('Só é possível iniciar audiências com status Designada.');
             }
         } elseif ($acao === 'reiniciar') {
-            if ($stAtual !== 'em_andamento') {
-                throw new InvalidArgumentException('Só é possível reiniciar uma audiência que estiver em andamento.');
+            if ($stAtual === 'designada') {
+                throw new InvalidArgumentException('Não é possível reiniciar uma audiência com status Designada.');
             }
             $horaBruta = trim((string) ($pauta['hora_audiencia'] ?? ''));
             $this->assertDataAudienciaNaoPassada($dataAud);
@@ -352,8 +355,8 @@ final class SalaAudienciasPautaService
                 throw new InvalidArgumentException('Só é possível encerrar uma audiência em andamento.');
             }
         } elseif ($acao === 'redesignar') {
-            if ($stAtual !== 'designada') {
-                throw new InvalidArgumentException('Só é possível redesignar audiências com status Designada.');
+            if (in_array($stAtual, ['finalizada', 'redesignada'], true)) {
+                throw new InvalidArgumentException('Não é possível redesignar uma audiência Finalizada ou Redesignada.');
             }
         }
 
