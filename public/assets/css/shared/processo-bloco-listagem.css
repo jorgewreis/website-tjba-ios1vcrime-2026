@@ -883,6 +883,61 @@
     margin: 5px 0;
 }
 
+.register.register-painel-dia .painel-dia-actions .btn-editar {
+    background-color: transparent;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.register.register-painel-dia .painel-dia-actions .btn-editar:hover,
+.register.register-painel-dia .painel-dia-actions .btn-editar:active,
+.register.register-painel-dia .painel-dia-actions .btn-editar:focus-visible {
+    background-color: transparent;
+}
+
+.register.register-painel-dia .painel-dia-actions .painel-dia-action-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    opacity: 0.7;
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.register.register-painel-dia .painel-dia-actions .painel-dia-action-icon-reiniciar {
+    filter: invert(48%) sepia(93%) saturate(1575%) hue-rotate(190deg) brightness(93%) contrast(91%);
+}
+
+.register.register-painel-dia .painel-dia-actions .painel-dia-action-icon-iniciar {
+    filter: invert(89%) sepia(17%) saturate(1954%) hue-rotate(347deg) brightness(105%) contrast(98%);
+}
+
+.register.register-painel-dia .painel-dia-actions .painel-dia-action-icon-encerrar {
+    filter: invert(67%) sepia(71%) saturate(511%) hue-rotate(77deg) brightness(97%) contrast(84%);
+}
+
+.register.register-painel-dia .painel-dia-actions .painel-dia-action-icon-redesignar {
+    filter: invert(62%) sepia(50%) saturate(2862%) hue-rotate(323deg) brightness(101%) contrast(96%);
+}
+
+.register.register-painel-dia .painel-dia-actions .btn-editar:not(:disabled):hover .painel-dia-action-icon {
+    opacity: 1;
+}
+
+.register.register-painel-dia .painel-dia-actions .btn-editar:disabled {
+    background-color: transparent;
+    opacity: 1;
+    filter: none;
+    pointer-events: none;
+}
+
+.register.register-painel-dia .painel-dia-actions .btn-editar:disabled .painel-dia-action-icon {
+    filter: grayscale(1);
+    opacity: 0.2;
+    pointer-events: none;
+}
+
 .register.register-painel-dia .painel-dia-acoes .content-assuntos,
 .register.register-painel-dia .painel-dia-acoes .content-classe {
     width: 100%;

@@ -219,6 +219,7 @@ function painelResumoInscrito(array $inscrito): string
             $disIniciar = true;
             $disReiniciar = true;
             $disEncerrar = true;
+            $disRedesignar = true;
             if ($mostrarPainelAcao) {
                 if ($bloqueioOutroEmAndamento) {
                     $disIniciar = $disReiniciar = $disEncerrar = true;
@@ -230,6 +231,9 @@ function painelResumoInscrito(array $inscrito): string
                         $disReiniciar = false;
                         $disEncerrar = false;
                     }
+                }
+                if (in_array($stRow, ['designada', 'atrasada'], true)) {
+                    $disRedesignar = false;
                 }
             }
         ?>
@@ -298,11 +302,13 @@ function painelResumoInscrito(array $inscrito): string
                                     $titleReiniciar = $bloqueioOutroEmAndamento ? $titBloqueio : ($stRow === 'em_andamento' ? 'Reiniciar (volta para Designada)' : $titSoEmAndamento);
                                     $titleIniciar = $bloqueioOutroEmAndamento ? $titBloqueio : ($stRow === 'designada' ? 'Iniciar (Em andamento)' : 'Só disponível quando a audiência estiver designada.');
                                     $titleEncerrar = $bloqueioOutroEmAndamento ? $titBloqueio : ($stRow === 'em_andamento' ? 'Encerrar (Finalizada)' : $titSoEmAndamento);
+                                    $titleRedesignar = in_array($stRow, ['designada', 'atrasada'], true) ? 'Redesignar audiência' : 'Só disponível para audiências designadas.';
                                 ?>
                                 <div class="painel-dia-actions">
-                                    <button type="button" class="btn-editar reload" data-audiencia-reiniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleReiniciar, ENT_QUOTES); ?>"<?php echo $disReiniciar ? ' disabled' : ''; ?>><i class="fi fi-rr-rotate-square"></i></button>
-                                    <button type="button" class="btn-editar start" data-audiencia-iniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleIniciar, ENT_QUOTES); ?>"<?php echo $disIniciar ? ' disabled' : ''; ?>><i class="fi fi-rr-arrow-square-right"></i></button>
-                                    <button type="button" class="btn-editar stop" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleEncerrar, ENT_QUOTES); ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>><i class="fi fi-rr-stop-square"></i></button>
+                                    <button type="button" class="btn-editar reload" data-audiencia-reiniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleReiniciar, ENT_QUOTES); ?>"<?php echo $disReiniciar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-reiniciar" src="/assets/icons/Line-Arrow-Rotate-Right-Circle--Streamline-Core.png" alt="Reiniciar audiência"></button>
+                                    <button type="button" class="btn-editar start" data-audiencia-iniciar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleIniciar, ENT_QUOTES); ?>"<?php echo $disIniciar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-iniciar" src="/assets/icons/Tailless-Triangle-Arrow-Right-Circle--Streamline-Core.png" alt="Iniciar audiência"></button>
+                                    <button type="button" class="btn-editar stop" data-audiencia-encerrar="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleEncerrar, ENT_QUOTES); ?>"<?php echo $disEncerrar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-encerrar" src="/assets/icons/Check-Circle--Streamline-Core.png" alt="Encerrar audiência"></button>
+                                    <button type="button" class="btn-editar redesignar" data-audiencia-edit="<?php echo htmlspecialchars($idPautaRow, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($titleRedesignar, ENT_QUOTES); ?>"<?php echo $disRedesignar ? ' disabled' : ''; ?>><img class="painel-dia-action-icon painel-dia-action-icon-redesignar" src="/assets/icons/Line-Arrow-Right-Circle-2--Streamline-Core.png" alt="Redesignar audiência"></button>
                                 </div>
                                 <?php endif; ?>
                                 <span class="content-assuntos">Status: <strong><?php echo htmlspecialchars($textoStatus, ENT_QUOTES, 'UTF-8'); ?></strong></span>
