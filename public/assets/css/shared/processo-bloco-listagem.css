@@ -725,3 +725,125 @@
 .register.register-cejusc-list .container-historical .content-assuntos {
     line-height: 15px;
 }
+
+/* Painel em tempo real de estudantes — composição alinhada ao mockup tabela-painel-estudante.html. */
+.register.register-painel-estudante {
+    border-bottom: 0;
+}
+
+.register.register-painel-estudante > .register-line {
+    width: 100%;
+    height: fit-content;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 5px 10px;
+    gap: 5px;
+    border-bottom: 1px solid #dfdfdf;
+}
+
+.register.register-painel-estudante > .register-line > .left,
+.register.register-painel-estudante > .register-line > .right {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.register.register-painel-estudante > .register-line > .left {
+    justify-content: flex-start;
+}
+
+.register.register-painel-estudante > .register-line > .right {
+    justify-content: flex-end;
+}
+
+.register.register-painel-estudante > .register-line > .left > .container-processo.container-lg,
+.register.register-painel-estudante > .register-line > .left > .painel-estudante-document-info,
+.register.register-painel-estudante .painel-estudante-inscricoes {
+    flex: 0 0 307px;
+    width: 307px;
+    height: 70px;
+}
+
+.register.register-painel-estudante > .register-line > .left > .container-processo.container-lg {
+    flex-basis: 450px;
+    width: 450px;
+    height: auto;
+}
+
+.register.register-painel-estudante .painel-estudante-document-info,
+.register.register-painel-estudante .painel-estudante-inscricoes {
+    justify-content: flex-start;
+}
+
+.register.register-painel-estudante .painel-estudante-document-info .container-line,
+.register.register-painel-estudante .painel-estudante-inscricoes .container-line {
+    align-items: flex-start;
+}
+
+.register.register-painel-estudante .painel-estudante-document-info .container-line .left {
+    width: 100%;
+    align-items: flex-start;
+}
+
+.register.register-painel-estudante .painel-estudante-document-info .line-content.box-number {
+    padding-left: 0;
+}
+
+.register.register-painel-estudante .painel-estudante-document-info .line-content.double-line,
+.register.register-painel-estudante .painel-estudante-inscricoes .line-content.double-line {
+    padding-left: 5px;
+}
+
+.register.register-painel-estudante .painel-estudante-document-info .content-number {
+    text-transform: uppercase;
+}
+
+.register.register-painel-estudante .painel-estudante-document-info .js-time-block {
+    display: block;
+}
+
+.register.register-painel-estudante .painel-estudante-document-info .js-time-lines {
+    display: inline;
+}
+
+.register.register-painel-estudante .painel-estudante-inscricao-ui {
+    width: 100%;
+    min-height: 30px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 5px;
+}
+
+.register.register-painel-estudante .painel-estudante-inscricao-ui .btn {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
+.register.register-painel-estudante .painel-estudante-inscricao-ui .status {
+    width: 100%;
+}
+
+.register.register-painel-estudante .painel-estudante-inscricoes .content-assuntos.danger {
+    color: var(--color-danger);
+}
+
+.register.register-painel-estudante .painel-estudante-vagas {
+    margin-top: 0;
+}
+
+@media (max-width: 680px) {
+    .register.register-painel-estudante > .register-line > .left,
+    .register.register-painel-estudante > .register-line > .right {
+        width: 100%;
+        justify-content: center;
+    }
+}

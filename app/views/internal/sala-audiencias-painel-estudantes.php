@@ -289,6 +289,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             }
             $exibirStatusAoInvesDeInscricao = ($statusRow !== 'designada');
             $ocultarInfoInscritos = $exibirStatusAoInvesDeInscricao || $sigiloso || $menor || $prioridadeBloqueio;
+            $linkAudienciaHoje = trim((string) ($row['link_audiencia'] ?? ''));
+            if (filter_var($linkAudienciaHoje, FILTER_VALIDATE_URL) === false) {
+                $linkAudienciaHoje = '';
+            }
             $inicioEfetivoRaw = trim((string) ($row['data_hora_inicio_efetivo'] ?? ''));
             $fimEfetivoRaw = trim((string) ($row['data_hora_fim_efetivo'] ?? ''));
             $horaExibicao = painelEstudanteHoraPorStatus(
@@ -299,47 +303,58 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 $fimEfetivoRaw
             );
             ?>
-        <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo $idPauta; ?>">
-            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center flex-wrap gap-y-sm">
-                <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                    <div
-                        class="col width-500 js-time-block"
-                        data-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>"
-                        data-status="<?php echo htmlspecialchars($statusRow, ENT_QUOTES, 'UTF-8'); ?>"
-                        data-data-audiencia="<?php echo htmlspecialchars((string) ($row['data_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                        data-hora-audiencia="<?php echo htmlspecialchars((string) ($row['hora_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                        data-inicio="<?php echo htmlspecialchars((string) ($row['data_hora_inicio_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                        data-fim="<?php echo htmlspecialchars((string) ($row['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                        data-duracao-estimada="<?php echo (int) ($row['duracao_estimada_minutos'] ?? 0); ?>"
-                    >
-                        <span class="minor-info">Horario</span>
-                        <div class="js-time-lines">
-                        <span class="major-info"><?php echo htmlspecialchars($horaExibicao, ENT_QUOTES, 'UTF-8'); ?></span>
+        <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo $idPauta; ?>">
+            <div class="register-line">
+                <div class="left">
+                    <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                    <div class="container-processo container-sm painel-estudante-document-info">
+                        <div class="container-line">
+                            <div class="left">
+                                <div class="line-content box-number">
+                                    <span class="content-number major-info"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="container-line">
+                            <div class="line-content double-line">
+                                <span class="content-assuntos">Status: <strong><?php echo htmlspecialchars($textoStatusAud, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                <span
+                                    class="content-assuntos js-time-block"
+                                    data-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-status="<?php echo htmlspecialchars($statusRow, ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-data-audiencia="<?php echo htmlspecialchars((string) ($row['data_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-hora-audiencia="<?php echo htmlspecialchars((string) ($row['hora_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-inicio="<?php echo htmlspecialchars((string) ($row['data_hora_inicio_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-fim="<?php echo htmlspecialchars((string) ($row['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-duracao-estimada="<?php echo (int) ($row['duracao_estimada_minutos'] ?? 0); ?>"
+                                >
+                                    Previsão: <span class="js-time-lines"><strong><?php echo htmlspecialchars($horaExibicao, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                </span>
+                                <?php if ($ja && $linkAudienciaHoje !== ''): ?>
+                                <span class="content-polo">Link para acesso:</span>
+                                <span class="content-partes"><a href="<?php echo htmlspecialchars($linkAudienciaHoje, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">CLIQUE AQUI PARA ENTRAR NA SALA</a></span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
-                    <div class="col width-500 col-process">
-                        <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
-                    </div>
-                    <div class="col width-400">
-                        <span class="minor-info">Tipo</span>
-                        <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) $row['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
-                    </div>
-                    <div class="col width-300" data-vagas-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>" data-max-vagas="<?php echo (int) $maxVagas; ?>"<?php echo $ocultarInfoInscritos ? ' style="display:none;"' : ''; ?>>
-                        <span class="minor-info">Inscritos</span>
-                        <span class="major-info js-vagas-text"><?php echo $totalIns; ?><?php echo $lotado ? ' (lotado)' : ''; ?></span>
-                    </div>
                 </div>
-                <div class="display-flex row row-fit justify-end gap-y-sm align-center" data-inscricao-ui="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>">
+                <div class="right">
+                    <div class="container-historical container-sm painel-estudante-inscricoes">
+                        <div class="container-line">
+                            <div class="line-content double-line">
+                                <span class="content-classe">Inscrições</span>
+                                <div class="painel-estudante-inscricao-ui" data-inscricao-ui="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>">
                     <?php if ($exibirStatusAoInvesDeInscricao): ?>
                     <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusAud, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>">
                         <?php echo htmlspecialchars($textoStatusAud, ENT_QUOTES); ?>
                     </div>
+                    <?php elseif ($sigiloso): ?>
+                    <span class="content-assuntos danger">Não é permitida inscrição</span>
+                    <span class="content-assuntos danger">para processos sigilosos</span>
+                    <?php elseif ($lotado): ?>
+                    <span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>
                     <?php elseif ($ja): ?>
                     <span class="minor-info text-success">Voce esta inscrito.</span>
-                    <?php elseif ($lotado): ?>
-                    <span class="minor-info text-error">Vagas esgotadas.</span>
-                    <?php elseif ($sigiloso): ?>
-                    <span class="minor-info text-error">Processo sigiloso — inscrição indisponível.</span>
                     <?php elseif ($menor): ?>
                     <span class="minor-info text-error">Inscricao indisponivel.</span>
                     <?php elseif ($prioridadeBloqueio): ?>
@@ -351,6 +366,11 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     <?php else: ?>
                     <span class="minor-info">Inscricao indisponivel.</span>
                     <?php endif; ?>
+                                </div>
+                                <span class="content-assuntos painel-estudante-vagas" data-vagas-pauta="<?php echo htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8'); ?>" data-max-vagas="<?php echo (int) $maxVagas; ?>"<?php echo $ocultarInfoInscritos ? ' style="display:none;"' : ''; ?>><span class="js-vagas-text"><?php echo $totalIns . ($totalIns === 1 ? ' pessoa inscrita' : ' pessoas inscritas') . ($lotado ? ' (lotado)' : ''); ?></span></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -448,36 +468,62 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             }
 
             $row = $m;
+            $linkAudienciaMinhas = trim((string) ($m['link_audiencia'] ?? ''));
+            if (filter_var($linkAudienciaMinhas, FILTER_VALIDATE_URL) === false) {
+                $linkAudienciaMinhas = '';
+            }
             ?>
-        <div class="display-flex col col-full register border-bottom" data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm border-bottom align-center flex-wrap gap-y-sm">
-            <div class="display-flex row row-fit justify-start gap-y-sm align-center flex-wrap">
-                <div
-                    class="col width-500 js-time-block"
-                    data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"
-                    data-status="<?php echo htmlspecialchars($stRow, ENT_QUOTES, 'UTF-8'); ?>"
-                    data-include-date="1"
-                    data-data-audiencia="<?php echo htmlspecialchars((string) ($m['data_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                    data-hora-audiencia="<?php echo htmlspecialchars((string) ($m['hora_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                    data-inicio="<?php echo htmlspecialchars((string) ($m['data_hora_inicio_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                    data-fim="<?php echo htmlspecialchars((string) ($m['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
-                    data-duracao-estimada="<?php echo (int) ($m['duracao_estimada_minutos'] ?? 0); ?>"
-                >
-                    <span class="minor-info">Data e hora</span>
-                    <div class="js-time-lines">
-                    <span class="major-info"><?php echo htmlspecialchars($dataHoraMinhas, ENT_QUOTES, 'UTF-8'); ?></span>
+        <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
+            <div class="register-line">
+                <div class="left">
+                    <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                    <div class="container-processo container-sm painel-estudante-document-info">
+                        <div class="container-line">
+                            <div class="left">
+                                <div class="line-content box-number">
+                                    <span class="content-number major-info"><?php echo htmlspecialchars((string) $m['tipo_audiencia'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="container-line">
+                            <div class="line-content double-line">
+                                <span class="content-assuntos">Status: <strong><?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                <span
+                                    class="content-assuntos js-time-block"
+                                    data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-status="<?php echo htmlspecialchars($stRow, ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-include-date="1"
+                                    data-data-audiencia="<?php echo htmlspecialchars((string) ($m['data_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-hora-audiencia="<?php echo htmlspecialchars((string) ($m['hora_audiencia'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-inicio="<?php echo htmlspecialchars((string) ($m['data_hora_inicio_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-fim="<?php echo htmlspecialchars((string) ($m['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-duracao-estimada="<?php echo (int) ($m['duracao_estimada_minutos'] ?? 0); ?>"
+                                >
+                                    Data e hora: <span class="js-time-lines"><strong><?php echo htmlspecialchars($dataHoraMinhas, ENT_QUOTES, 'UTF-8'); ?></strong></span>
+                                </span>
+                                <?php if ($linkAudienciaMinhas !== ''): ?>
+                                <span class="content-polo">Link para acesso:</span>
+                                <span class="content-partes"><a href="<?php echo htmlspecialchars($linkAudienciaMinhas, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" rel="noopener noreferrer">CLIQUE AQUI PARA ENTRAR NA SALA</a></span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="col width-500 col-process">
-                    <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                <div class="right">
+                    <div class="container-historical container-sm painel-estudante-inscricoes">
+                        <div class="container-line">
+                            <div class="line-content double-line">
+                                <span class="content-classe">Inscrições</span>
+                                <div class="painel-estudante-inscricao-ui">
+                                    <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
+                                        <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-sm align-center padding-x-md">
-                <div class="width-300 padding-x-lg status <?php echo htmlspecialchars($classeStatusEst, ENT_QUOTES); ?>" data-status-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
-                    <?php echo htmlspecialchars($textoStatusEst, ENT_QUOTES); ?>
-                </div>
-            </div>
-        </div>
         </div>
         <?php endforeach; ?>
         <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
@@ -655,12 +701,12 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 wrapper.innerHTML = '<div class="width-300 padding-x-lg status ' + statusClass(status) + '" data-status-pauta="' + escapeHtml(pauta) + '">' + escapeHtml(statusLabel(status)) + '</div>';
                 return;
             }
-            if (ja) {
-                wrapper.innerHTML = '<span class="minor-info text-success">Voce esta inscrito.</span>';
+            if (sigiloso) {
+                wrapper.innerHTML = '<span class="content-assuntos danger">Não é permitida inscrição</span><span class="content-assuntos danger">para processos sigilosos</span>';
             } else if (lotado) {
-                wrapper.innerHTML = '<span class="minor-info text-error">Vagas esgotadas.</span>';
-            } else if (sigiloso) {
-                wrapper.innerHTML = '<span class="minor-info text-error">Processo sigiloso — inscrição indisponível.</span>';
+                wrapper.innerHTML = '<span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>';
+            } else if (ja) {
+                wrapper.innerHTML = '<span class="minor-info text-success">Voce esta inscrito.</span>';
             } else if (menor) {
                 wrapper.innerHTML = '<span class="minor-info text-error">Proibida inscrição de estudantes.</span>';
             } else if (prioridadeBloqueio) {
@@ -697,7 +743,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var total = parseInt(item.total_inscritos_pauta || 0, 10);
             if (!Number.isFinite(total) || total < 0) total = 0;
             var suffix = item.vagas_esgotadas ? ' (lotado)' : '';
-            text.textContent = total + suffix;
+            text.textContent = total + (total === 1 ? ' pessoa inscrita' : ' pessoas inscritas') + suffix;
         }
         function collectPautas() {
             var ids = {};

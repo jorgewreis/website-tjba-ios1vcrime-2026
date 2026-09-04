@@ -6,6 +6,8 @@ require_once __DIR__ . '/../helpers/SalaAudienciasAtaSigiloHelper.php';
 
 final class SalaAudienciasEstudanteInscricaoRepository
 {
+    private ?bool $hasLinkAudienciaColumnCache = null;
+
     private PDO $connection;
     private string $table;
 
@@ -180,10 +182,11 @@ final class SalaAudienciasEstudanteInscricaoRepository
      */
     public function listInscricoesVisiveisParaUsuario(string $idUsuario): array
     {
+        $linkAudienciaSelect = $this->hasLinkAudienciaColumn() ? 'a.`link_audiencia`' : 'NULL';
         $sql = sprintf(
             'SELECT i.`pauta`, i.`created_at` AS inscrito_em,
                     a.`processo` AS `processo_id`,
-                    a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`status`,
+                    a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`status`, %s AS `link_audiencia`,
                     a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                     p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
                     COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`,
@@ -200,6 +203,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
                     OR TRIM(COALESCE(ata.`arquivo_relativo`, \'\')) = \'\'
                )%s
              ORDER BY a.`data_audiencia` DESC, a.`hora_audiencia` DESC',
+            $linkAudienciaSelect,
             $this->table,
             SalaAudienciasAtaSigiloHelper::sqlExcluirProcessoSigiloso()
         );
@@ -221,8 +225,9 @@ final class SalaAudienciasEstudanteInscricaoRepository
          * Os códigos bloqueantes precisam espelhar
          * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
          */
-        $sql = '
-            SELECT a.`id_pauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`localizacao`, a.`status`,
+        $linkAudienciaSelect = $this->hasLinkAudienciaColumn() ? 'a.`link_audiencia`' : 'NULL';
+        $sql = sprintf('
+            SELECT a.`id_pauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`localizacao`, a.`status`, %s AS `link_audiencia`,
                    a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                    p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
                    ' . SalaAudienciasAtaSigiloHelper::sqlProcessoSigilosoEfetivo('p', 'a') . ' AS `processo_sigiloso`,
@@ -241,11 +246,32 @@ final class SalaAudienciasEstudanteInscricaoRepository
             LEFT JOIN `' . $this->table . '` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = :u
             WHERE a.`ativo` = 1
               AND a.`data_audiencia` = CURDATE()
-        ';
+        ', $linkAudienciaSelect);
         $st = $this->connection->prepare($sql);
         $st->bindValue(':u', $idUsuario);
         $st->execute();
 
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    private function hasLinkAudienciaColumn(): bool
+    {
+        if ($this->hasLinkAudienciaColumnCache !== null) {
+            return $this->hasLinkAudienciaColumnCache;
+        }
+
+        try {
+            $st = $this->connection->prepare(
+                'SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column'
+            );
+            $st->bindValue(':table', 'sala_audiencias_pauta');
+            $st->bindValue(':column', 'link_audiencia');
+            $st->execute();
+            $this->hasLinkAudienciaColumnCache = ((int) $st->fetchColumn()) > 0;
+        } catch (Throwable $e) {
+            $this->hasLinkAudienciaColumnCache = false;
+        }
+
+        return $this->hasLinkAudienciaColumnCache;
     }
 }
