@@ -4,8 +4,29 @@
 .timeline-day-ruler-hour-tick { position: absolute; bottom: 0; width: 1px; height: 3px; background: rgba(20,20,20,.3); }
 .timeline-day-ruler-hour-tick.hidden { opacity: 0; }
 .timeline-day-ruler-now { position: absolute; top: 0; width: 3px; height: 100%; background: rgba(20,20,20,.30); z-index: 4; }
-.timeline-day-ruler-bar-prev { position: absolute; top: 1px; height: 20px; background: var(--color-primary-bg-light); }
-.timeline-day-ruler-bar-real { position: absolute; top: 1px; height: 20px; border-right: 1px solid #ffffff50; opacity: .7; z-index: 3; }
+.timeline-day-ruler-bar-prev {
+    position: absolute;
+    top: 1px;
+    height: 20px;
+    min-width: 14px;
+    background: #dbdbdb;
+    background-clip: padding-box;
+    border-right: 5px solid transparent;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.timeline-day-ruler-bar-real {
+    position: absolute;
+    top: 4px;
+    height: 14px;
+    min-width: 14px;
+    border-right: 5px solid transparent;
+    border-radius: 4px;
+    background-clip: padding-box;
+    box-sizing: border-box;
+    opacity: .7;
+    z-index: 3;
+}
 .timeline-day-ruler-bar-delay { background: #ffffff; z-index: 2; }
 .timeline-day-ruler-bar-real.is-warning { background: var(--color-warning); }
 .timeline-day-ruler-bar-real.is-success { background: var(--color-primary); }
@@ -19,23 +40,23 @@
 
 /* Painel de estudantes: uma leitura única para previsto, andamento e encerramento. */
 .timeline-day-ruler-student .timeline-day-ruler-bar-prev.is-pending {
-    background: var(--color-primary);
-    opacity: .35;
+    background: #dbdbdb;
+    opacity: 1;
     z-index: 1;
 }
 .timeline-day-ruler-student .timeline-day-ruler-bar-prev.is-current {
-    background: gold;
-    opacity: .45;
+    background: #dbdbdb;
+    opacity: 1;
     z-index: 1;
 }
 .timeline-day-ruler-student .timeline-day-ruler-bar-prev.is-closed {
-    background: var(--color-danger);
-    opacity: .7;
+    background: #dbdbdb;
+    opacity: 1;
     z-index: 1;
 }
 .timeline-day-ruler-student .timeline-day-ruler-bar-prev.is-finished {
-    background: var(--color-success);
-    opacity: .7;
+    background: #dbdbdb;
+    opacity: 1;
     z-index: 1;
 }
 .timeline-day-ruler-student .timeline-day-ruler-bar-real.is-pending {
@@ -52,7 +73,7 @@
     background: var(--color-success);
 }
 .timeline-day-ruler-student .timeline-day-ruler-legend-dot.is-pending {
-    background: var(--color-primary);
+    background: #dbdbdb;
 }
 .timeline-day-ruler-student .timeline-day-ruler-legend-dot.is-current {
     background: gold;
