@@ -39,6 +39,8 @@ foreach ($rows as $rowTimeline) {
         $statusTimeline = 'designada';
     } elseif ($statusTimeline === 'adiada') {
         $statusTimeline = 'redesignada';
+    } elseif ($statusTimeline === 'encerrada') {
+        $statusTimeline = 'finalizada';
     }
     $timelineItemsHoje[] = [
         'id' => (string) ($rowTimeline['id_pauta'] ?? ''),
@@ -61,6 +63,8 @@ function painelHoraPorStatus(array $row): string
         $status = 'designada';
     } elseif ($status === 'adiada') {
         $status = 'redesignada';
+    } elseif ($status === 'encerrada') {
+        $status = 'finalizada';
     }
 
     $dataAud = trim((string) ($row['data_audiencia'] ?? ''));
@@ -182,11 +186,14 @@ function painelResumoInscrito(array $inscrito): string
                 $statusCompactoRaw = 'designada';
             } elseif ($statusCompactoRaw === 'adiada') {
                 $statusCompactoRaw = 'redesignada';
+            } elseif ($statusCompactoRaw === 'encerrada') {
+                $statusCompactoRaw = 'finalizada';
             }
-            $ocultarInfosCompactas = in_array($statusCompactoRaw, ['finalizada', 'cancelada'], true);
+            $ocultarInfosCompactas = in_array($statusCompactoRaw, ['finalizada', 'realizada', 'redesignada', 'cancelada'], true);
+            $linhaInativa = $ocultarInfosCompactas;
         ?>
-        <div class="display-flex col col-full register border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
-            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+        <div class="display-flex col col-full register register-painel-dia border-bottom" data-audiencia-id="<?php echo htmlspecialchars((string) $row['id_pauta'], ENT_QUOTES); ?>">
+            <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center register-line<?php echo $linhaInativa ? ' is-inactive' : ''; ?>">
                 <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                     <div class="col width-300">
                         <span class="minor-info">Horário</span>
@@ -273,14 +280,16 @@ function painelResumoInscrito(array $inscrito): string
                             $idPautaRow = (string) ($row['id_pauta'] ?? '');
                             $dataAudRow = substr((string) ($row['data_audiencia'] ?? ''), 0, 10);
                             $stRaw = strtolower(preg_replace('/[\s-]+/', '_', trim((string) ($row['status'] ?? ''))));
-                            $mostrarPainelAcao = ($dataAudRow === $hoje) && ($stRaw !== 'finalizada');
-                            $bloqueioOutroEmAndamento = ($idEmAndamentoHoje !== null && $idEmAndamentoHoje !== $idPautaRow);
                             $stRow = $stRaw;
                             if ($stRow === 'agendada') {
                                 $stRow = 'designada';
                             } elseif ($stRow === 'adiada') {
                                 $stRow = 'redesignada';
+                            } elseif ($stRow === 'encerrada') {
+                                $stRow = 'finalizada';
                             }
+                            $mostrarPainelAcao = ($dataAudRow === $hoje) && ($stRow !== 'finalizada');
+                            $bloqueioOutroEmAndamento = ($idEmAndamentoHoje !== null && $idEmAndamentoHoje !== $idPautaRow);
                             $labelsStatus = [
                                 'designada' => 'Designada',
                                 'em_andamento' => 'Em andamento',
