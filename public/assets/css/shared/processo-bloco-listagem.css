@@ -815,6 +815,15 @@
 .register.register-painel-estudante .painel-estudante-document-info .js-time-block {
     display: block;
     white-space: nowrap;
+    margin-left: -3px;
+    font-size: 8px;
+}
+
+.register.register-painel-estudante .painel-estudante-document-info .js-time-block .js-time-label,
+.register.register-painel-estudante .painel-estudante-document-info .js-time-block .js-time-lines,
+.register.register-painel-estudante .painel-estudante-document-info .js-time-block .js-time-lines > strong,
+.register.register-painel-estudante .painel-estudante-document-info .js-time-block .js-time-lines > .major-info {
+    font-size: 8px;
 }
 
 .register.register-painel-estudante .painel-estudante-document-info .js-time-lines,

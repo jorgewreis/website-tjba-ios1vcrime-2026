@@ -105,6 +105,11 @@
         var now = new Date();
         var nowMin = now.getHours() * 60 + now.getMinutes() + (now.getSeconds() / 60);
         if (studentPanel) {
+            sourceItems.forEach(function (delayed) {
+                if (delayed.status !== 'atrasada') return;
+                delayed.plannedStart = nowMin + 5;
+                delayed.forecasted = true;
+            });
             sourceItems.forEach(function (ongoing) {
                 if (ongoing.status !== 'em_andamento') return;
                 var nextPending = null;

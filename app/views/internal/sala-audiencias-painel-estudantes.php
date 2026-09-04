@@ -200,40 +200,9 @@ function painelEstudantePrevisaoAtrasada(array $row, array $rows, ?int $agoraTs 
         return false;
     }
 
-    foreach ($rows as $andamento) {
-        if (painelEstudanteStatusNormalizado((string) ($andamento['status'] ?? '')) !== 'em_andamento') {
-            continue;
-        }
-
-        $horarioAndamentoTs = painelEstudanteHorarioDesignadoTs($andamento);
-        if ($horarioAndamentoTs === false) {
-            $inicioEfetivo = trim((string) ($andamento['data_hora_inicio_efetivo'] ?? ''));
-            $horarioAndamentoTs = $inicioEfetivo !== '' ? strtotime($inicioEfetivo) : false;
-        }
-        if ($horarioAndamentoTs === false || $horarioAndamentoTs >= $horarioAlvoTs) {
-            continue;
-        }
-
-        $horarioProximaTs = false;
-        foreach ($rows as $candidata) {
-            if (painelEstudanteStatusNormalizado((string) ($candidata['status'] ?? '')) !== 'designada') {
-                continue;
-            }
-            $candidataTs = painelEstudanteHorarioDesignadoTs($candidata);
-            if ($candidataTs === false || $candidataTs <= $horarioAndamentoTs || $candidataTs >= $agoraTs) {
-                continue;
-            }
-            if ($horarioProximaTs === false || $candidataTs < $horarioProximaTs) {
-                $horarioProximaTs = $candidataTs;
-            }
-        }
-
-        if ($horarioProximaTs !== false && $horarioProximaTs === $horarioAlvoTs) {
-            return true;
-        }
-    }
-
-    return false;
+    // A previsão de toda audiência que passou do horário deve ser movida
+    // visualmente para cinco minutos após o momento atual.
+    return true;
 }
 
 $agoraPainelTs = time();
@@ -271,6 +240,10 @@ function painelEstudanteHoraPorStatus(string $statusRaw, string $dataAud, string
 
     if ($status === 'em_andamento' && $inicioTs !== false) {
         return date('H:i', $inicioTs);
+    }
+
+    if ($status === 'atrasada') {
+        return date('H:i', $previsaoTs ?? (time() + (5 * 60)));
     }
 
     if (in_array($status, ['designada', 'atrasada'], true) && $previsaoTs !== null) {
@@ -313,6 +286,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
 
     if ($status === 'em_andamento' && $inicioTs !== false) {
         return date('d/m/Y H:i', $inicioTs);
+    }
+
+    if ($status === 'atrasada') {
+        return date('d/m/Y H:i', time() + (5 * 60));
     }
 
     if ($designadaTs !== false) {
@@ -404,7 +381,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             } elseif (in_array($statusRow, ['realizada', 'finalizada'], true)) {
                 $classeStatusAud = 'status-finished';
             }
-            $exibirStatusAoInvesDeInscricao = ($statusRow !== 'designada');
+            $exibirStatusAoInvesDeInscricao = !in_array($statusRow, ['designada', 'atrasada'], true);
             $ocultarInfoInscritos = $exibirStatusAoInvesDeInscricao || $sigiloso || $menor || $prioridadeBloqueio;
             $linkAudienciaHoje = trim((string) ($row['link_audiencia'] ?? ''));
             if (filter_var($linkAudienciaHoje, FILTER_VALIDATE_URL) === false) {
@@ -428,7 +405,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 $horaExibicao = painelEstudanteHoraEncerramento($fimEfetivoRaw);
             }
             $duracaoExibicaoHoje = painelEstudanteDuracaoReal($inicioEfetivoRaw, $fimEfetivoRaw);
-            $linkVisivelHoje = $ja && $linkAudienciaHoje !== '' && !$statusFinalHoje;
+            $linkVisivelHoje = $linkAudienciaHoje !== '' && !$statusFinalHoje && !$sigiloso;
             ?>
         <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo $idPauta; ?>">
             <div class="register-line">
@@ -808,6 +785,9 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var scheduledTs = scheduledTimestamp(item);
             if (isNaN(scheduledTs)) return scheduledTs;
             var nowTs = Date.now();
+            if (statusForItem(item) === 'atrasada') {
+                return nowTs + (5 * 60 * 1000);
+            }
             if (!includeDate && isDelayedNextForecast(item, allItems, nowTs)) {
                 return nowTs + (5 * 60 * 1000);
             }
@@ -911,7 +891,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var pode = !!item.pode_inscrever;
             var pauta = String(item.id_pauta || wrapper.getAttribute('data-inscricao-ui') || '').trim();
             var status = statusForItem(item);
-            if (status && status !== 'designada') {
+            if (status && status !== 'designada' && status !== 'atrasada') {
                 wrapper.innerHTML = '<div class="width-300 padding-x-lg status ' + statusClass(status) + '" data-status-pauta="' + escapeHtml(pauta) + '">' + escapeHtml(statusLabel(status)) + '</div>';
                 return;
             }
@@ -943,7 +923,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             });
             if (!wrap) return;
             var status = statusForItem(item);
-            var indisponivel = (status && status !== 'designada')
+            var indisponivel = (status && status !== 'designada' && status !== 'atrasada')
                 || !!item.processo_sigiloso
                 || !!item.envolve_menor
                 || !!item.tem_prioridade_bloqueio;
