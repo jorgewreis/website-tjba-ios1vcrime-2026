@@ -798,7 +798,7 @@
     flex: 0 0 307px;
     width: 307px;
     min-height: 70px;
-    height: 70px;
+    height: fit-content;
 }
 
 .register.register-painel-dia > .register-line > .left > .container-processo.container-lg {
