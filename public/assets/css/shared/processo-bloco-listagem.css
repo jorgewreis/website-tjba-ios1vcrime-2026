@@ -830,10 +830,15 @@
     padding-left: 2px;
 }
 
-.register.register-painel-dia .painel-dia-audiencia-info .container-line:first-child,
-.register.register-painel-dia .painel-dia-audiencia-info .container-line:first-child > .left,
-.register.register-painel-dia .painel-dia-audiencia-info .container-line:first-child > .right,
-.register.register-painel-dia .painel-dia-audiencia-info .container-line:first-child .line-content.box-number,
+/* Mantém alinhadas as linhas de título do processo e da audiência. */
+.register.register-painel-dia .container-processo > .container-line:first-child,
+.register.register-painel-dia .container-processo > .container-line:first-child > .left,
+.register.register-painel-dia .container-processo > .container-line:first-child > .right,
+.register.register-painel-dia .container-processo > .container-line:first-child .line-content.box-number {
+    height: 35px;
+    min-height: 35px;
+}
+
 .register.register-painel-dia .painel-dia-acoes .container-line:first-child,
 .register.register-painel-dia .painel-dia-acoes .container-line:first-child > .left,
 .register.register-painel-dia .painel-dia-acoes .container-line:first-child > .right,
