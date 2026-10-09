@@ -234,12 +234,12 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 120px;
+            width: 65px;
             height: 64px;
             margin-left: -24px;
             border-radius: 6px 0 0 6px;
             overflow: hidden;
-            background: var(--color-border-subtle);
+            background: transparent;
         }
         .nav-new-avatar .nav-new-avatar-initials {
             display: flex;
