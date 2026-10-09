@@ -42,7 +42,7 @@ if ($perfilFilter !== '') {
 
 $rows = [];
 $totalDocuments = 0;
-$totalPages = 0;
+$totalPages = 1;
 $startItem = 0;
 $endItem = 0;
 
@@ -57,7 +57,7 @@ try {
     die('Erro ao carregar os dados: ' . $e->getMessage());
 }
 
-$totalPages = $totalDocuments > 0 ? (int) ceil($totalDocuments / $itemsPerPage) : 0;
+$totalPages = max(1, (int) ceil($totalDocuments / $itemsPerPage));
 if ($currentPage > $totalPages && $totalPages > 0) {
     $currentPage = $totalPages;
 }
@@ -164,11 +164,7 @@ $formatUltimoAcesso = static function (?string $raw): string {
         $flashMessage = $flashSuccess !== '' ? $flashSuccess : $flashEdit;
         ?>
         <?php if ($flashMessage !== ''): ?>
-        <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
-            <div class="col col-full">
-                <p class="status status-current padding-x-lg"><?php echo htmlspecialchars($flashMessage, ENT_QUOTES, 'UTF-8'); ?></p>
-            </div>
-        </div>
+        
         <?php endif; ?>
 
         <div class="card-title">
@@ -177,14 +173,15 @@ $formatUltimoAcesso = static function (?string $raw): string {
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Listagem de servidores internos (estagiários, servidores, diretora, admin, magistrada) e externos (estudantes). Os filtros são aplicados automaticamente.</p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
-                    <i class="fi fi-rr-search"></i>
-                </div>
-                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
-                    <i class="fi fi-rr-filter"></i>
-                </div>
 
                 <?php if ($showRowAction): ?>
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <?php
+                    $listExportPage = $routePage;
+                    $listExportQuery = $baseQueryParams;
+                    include __DIR__ . '/_list_export_buttons.php';
+                    ?>
+                </div>
                 <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
                 <?php endif; ?>
             </div>
@@ -193,23 +190,17 @@ $formatUltimoAcesso = static function (?string $raw): string {
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
 
-            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
-                <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                    <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Exportação</span>
-                </div>
+            <div class="display-          </div>
                 <div class="display-flex row row-fit justify-end gap-y-md align-center">
                     <?php
                     $listExportPage = $routePage;
                     $listExportQuery = $baseQueryParams;
                     include __DIR__ . '/_list_export_buttons.php';
                     ?>
-                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                        <i class="fi fi-rr-angle-small-up"></i>
-                    </div>
                 </div>
             </div>
 
-            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
                 <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                     <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
                 </div>
@@ -244,9 +235,6 @@ $formatUltimoAcesso = static function (?string $raw): string {
                             Estudante (<?php echo (int) ($perfilCounts['estudante'] ?? 0); ?>)
                         </option>
                     </select>
-                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
-                        <i class="fi fi-rr-angle-small-up"></i>
-                    </div>
                 </div>
             </div>
 
@@ -335,13 +323,13 @@ $formatUltimoAcesso = static function (?string $raw): string {
             </div>
         <?php endif; ?>
 
-        <div class="card-buttons">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel); ?>
                 <?php if ($totalPages > 0): ?>(<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)<?php endif; ?>
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls gap-y-sm">
+                <div class="pagination-controls">
                     <?php
                     $prevParams = $baseQueryParams;
                     $prevParams['page_number'] = max(1, $currentPage - 1);
@@ -395,6 +383,5 @@ $formatUltimoAcesso = static function (?string $raw): string {
         });
     })();
     </script>
-    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

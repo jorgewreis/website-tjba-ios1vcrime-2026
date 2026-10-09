@@ -76,7 +76,7 @@ $salaPainelPagWindow = static function (int $currentPage, int $totalPages): arra
 
 $hojeTotal = count($hojeRows);
 if ($hojeTotal === 0) {
-    $hojeTotalPages = 0;
+    $hojeTotalPages = 1;
     $hojePage = 1;
     $hojeOffset = 0;
     $hojePageRows = [];
@@ -93,7 +93,7 @@ $hojeEndItem = count($hojePageRows) > 0 ? $hojeOffset + count($hojePageRows) : 0
 
 $minhasTotal = count($minhasRows);
 if ($minhasTotal === 0) {
-    $minhasTotalPages = 0;
+    $minhasTotalPages = 1;
     $minhasPage = 1;
     $minhasOffset = 0;
     $minhasPageRows = [];
@@ -457,7 +457,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             </div>
         </div>
         <?php endforeach; ?>
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo $hojeStartItem; ?>-<?php echo $hojeEndItem; ?> de <?php echo $hojeTotal; ?> <?php echo $hojeDocumentsLabel; ?>
                 (<?php echo $hojeTotalPages; ?> <?php echo $hojePagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $hojeItemsLabel; ?> por página)
@@ -604,7 +604,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             </div>
         </div>
         <?php endforeach; ?>
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo $minhasStartItem; ?>-<?php echo $minhasEndItem; ?> de <?php echo $minhasTotal; ?> <?php echo $minhasDocumentsLabel; ?>
                 (<?php echo $minhasTotalPages; ?> <?php echo $minhasPagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $minhasItemsLabel; ?> por página)

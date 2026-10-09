@@ -32,7 +32,7 @@ if (!in_array($itemsPerPage, [15], true)) {
 }
 $pageNumber = max(1, (int) ($_GET['page_number'] ?? 1));
 $total = count($minhasRows);
-$totalPages = $total > 0 ? (int) ceil($total / $itemsPerPage) : 0;
+$totalPages = max(1, (int) ceil($total / $itemsPerPage));
 if ($totalPages > 0 && $pageNumber > $totalPages) {
     $pageNumber = $totalPages;
 }
@@ -105,37 +105,25 @@ if ($totalPages > 0) {
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista das audiências em que você se inscreveu, com situação de disponibilidade da ata para download.</p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
-                    <i class="fi fi-rr-search"></i>
-                </div>
-                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
-                    <i class="fi fi-rr-filter"></i>
-                </div>
 
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-600); font-size: 13px;">Não há busca nesta lista.</span>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-600); font-size: 13px;">Não há filtros adicionais.</span>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
@@ -204,7 +192,7 @@ if ($totalPages > 0) {
         </div>
         <?php endforeach; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $total; ?> <?php echo htmlspecialchars($documentsLabel); ?>
                 (<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
@@ -270,7 +258,6 @@ if ($totalPages > 0) {
     })();
     </script>
     <?php include __DIR__ . '/_copy_process_script.php'; ?>
-    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 
 </body>
 </html>

@@ -16,15 +16,25 @@ $inscricaoRepository = new SalaAudienciasEstudanteInscricaoRepository($pdo);
 $hoje = date('Y-m-d');
 $idEmAndamentoHoje = $service->findIdEmAndamentoNaData($hoje);
 
-$result = $service->list([
+$filtersHoje = [
     'status' => '',
     'periodo' => 'hoje',
     'tipo' => '',
     'search' => '',
     'incluir_todos_status' => true,
-], 500, 0);
+];
+$itemsPerPage = 15;
+$currentPage = max(1, (int) ($_GET['page_number'] ?? 1));
+$result = $service->list($filtersHoje, $itemsPerPage, ($currentPage - 1) * $itemsPerPage);
+$totalHoje = (int) ($result['total'] ?? 0);
+$totalPages = max(1, (int) ceil($totalHoje / $itemsPerPage));
+if ($currentPage > $totalPages) {
+    $currentPage = $totalPages;
+    $result = $service->list($filtersHoje, $itemsPerPage, ($currentPage - 1) * $itemsPerPage);
+}
 $rows = $result['rows'] ?? [];
-$totalHoje = count($rows);
+$startItem = $totalHoje > 0 ? (($currentPage - 1) * $itemsPerPage) + 1 : 0;
+$endItem = min($currentPage * $itemsPerPage, $totalHoje);
 $pautaIdsHoje = array_values(array_filter(array_map(static function (array $row): string {
     return trim((string) ($row['id_pauta'] ?? ''));
 }, $rows), static function (string $id): bool {
@@ -319,6 +329,28 @@ function painelResumoInscrito(array $inscrito): string
             <?php endif; ?>
         </div>
         <?php endforeach; ?>
+
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
+            <span class="pagination-info">
+                Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalHoje; ?> <?php echo $totalHoje === 1 ? 'registro' : 'registros'; ?>
+                (<?php echo $totalPages; ?> <?php echo $totalPages === 1 ? 'página' : 'páginas'; ?>, <?php echo $itemsPerPage; ?> itens por página)
+            </span>
+            <div class="pagination-controls">
+                <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" href="/frame.php?page=salapaineldia&amp;page_number=<?php echo max(1, $currentPage - 1); ?>" aria-label="Página anterior"<?php echo $currentPage <= 1 ? ' aria-disabled="true"' : ''; ?>>‹</a>
+                <?php
+                $paginationStart = max(1, min($currentPage - 2, $totalPages - 4));
+                $paginationEnd = min($totalPages, $paginationStart + 4);
+                for ($pageButton = $paginationStart; $pageButton <= $paginationEnd; $pageButton++):
+                ?>
+                    <?php if ($pageButton === $currentPage): ?>
+                        <span class="pagination-number active" aria-current="page"><?php echo $pageButton; ?></span>
+                    <?php else: ?>
+                        <a class="pagination-number" href="/frame.php?page=salapaineldia&amp;page_number=<?php echo $pageButton; ?>"><?php echo $pageButton; ?></a>
+                    <?php endif; ?>
+                <?php endfor; ?>
+                <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" href="/frame.php?page=salapaineldia&amp;page_number=<?php echo min($totalPages, $currentPage + 1); ?>" aria-label="Próxima página"<?php echo $currentPage >= $totalPages ? ' aria-disabled="true"' : ''; ?>>›</a>
+            </div>
+        </div>
     </div>
 
     <div class="footer-page">

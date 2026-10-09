@@ -20,6 +20,13 @@ if ($processoId !== '') {
         $partes = $processo['partes'] ?? [];
     }
 }
+$itemsPerPage = 15;
+$totalPartes = count($partes);
+$totalPages = max(1, (int) ceil($totalPartes / $itemsPerPage));
+$currentPage = min($totalPages, max(1, (int) ($_GET['page_number'] ?? 1)));
+$partesPage = array_slice($partes, ($currentPage - 1) * $itemsPerPage, $itemsPerPage);
+$startItem = $totalPartes > 0 ? (($currentPage - 1) * $itemsPerPage) + 1 : 0;
+$endItem = min($currentPage * $itemsPerPage, $totalPartes);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -44,13 +51,7 @@ if ($processoId !== '') {
             <div class="display-flex row row-fit justify-start">
                 <h2>Partes do processo</h2>
             </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <?php
-                $listExportPage = 'processosparteslist';
-                $listExportQuery = ['processo_id' => $processoId];
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
-            </div>
+            
         </div>
 
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
@@ -71,7 +72,7 @@ if ($processoId !== '') {
                     <span class="major-info">Processo não encontrado.</span>
                 </div>
             </div>
-        <?php elseif (!empty($partes)): ?>
+        <?php elseif (!empty($partesPage)): ?>
             <?php
             $classeRawPp = (string) ($processo['classe_nome'] ?? '');
             $classePpTxt = ClasseProcessualListagemHelper::textoListagem($classeRawPp);
@@ -84,29 +85,9 @@ if ($processoId !== '') {
                     <span class="major-info"><?php echo htmlspecialchars($numeroPp, ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
             </div>
-            <?php foreach ($partes as $p): ?>
+            <?php foreach ($partesPage as $p): ?>
             <div class="display-flex col col-full register border-bottom">
-                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                    <div class="display-flex row row-fit justify-start gap-y-md">
-                        <div class="col width-400">
-                            <span class="minor-info">Nome</span>
-                            <span class="major-info"><?php echo htmlspecialchars($p['nome_completo'] ?? '—'); ?></span>
-                        </div>
-                        <div class="col width-200">
-                            <span class="minor-info">CPF</span>
-                            <span class="major-info"><?php echo htmlspecialchars($p['cpf'] ?? '—'); ?></span>
-                        </div>
-                        <div class="col width-200">
-                            <span class="minor-info">Tipo</span>
-                            <span class="major-info"><?php echo htmlspecialchars($p['tipo_parte'] ?? '—'); ?></span>
-                        </div>
-                        <div class="col width-200">
-                            <span class="minor-info">Polo</span>
-                            <span class="major-info"><?php echo htmlspecialchars($p['polo'] ?? '—'); ?></span>
-                        </div>
-                    </div>
-                    <div class="display-flex row row-fit justify-end gap-y-sm">
-                        <button type="button" class="btn btn-secondary-outline height-sm" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>">Ver pessoa</button>
+                frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>">Ver pessoa</button>
                         <button type="button" class="btn btn-secondary-outline height-sm" data-nav-href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>">Editar vínculo</button>
                     </div>
                 </div>
@@ -129,6 +110,30 @@ if ($processoId !== '') {
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full padding-x-sm padding-y-sm">
                     <span class="major-info">Informe o ID do processo e clique em Consultar.</span>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($processoId !== '' && $processo !== null): ?>
+            <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
+                <span class="pagination-info">
+                    Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalPartes; ?> <?php echo $totalPartes === 1 ? 'registro' : 'registros'; ?>
+                    (<?php echo $totalPages; ?> <?php echo $totalPages === 1 ? 'página' : 'páginas'; ?>, <?php echo $itemsPerPage; ?> itens por página)
+                </span>
+                <div class="pagination-controls">
+                    <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" href="/frame.php?page=processosparteslist&amp;processo_id=<?php echo urlencode($processoId); ?>&amp;page_number=<?php echo max(1, $currentPage - 1); ?>" aria-label="Página anterior"<?php echo $currentPage <= 1 ? ' aria-disabled="true"' : ''; ?>>‹</a>
+                    <?php
+                    $paginationStart = max(1, min($currentPage - 2, $totalPages - 4));
+                    $paginationEnd = min($totalPages, $paginationStart + 4);
+                    for ($pageButton = $paginationStart; $pageButton <= $paginationEnd; $pageButton++):
+                    ?>
+                        <?php if ($pageButton === $currentPage): ?>
+                            <span class="pagination-number active" aria-current="page"><?php echo $pageButton; ?></span>
+                        <?php else: ?>
+                            <a class="pagination-number" href="/frame.php?page=processosparteslist&amp;processo_id=<?php echo urlencode($processoId); ?>&amp;page_number=<?php echo $pageButton; ?>"><?php echo $pageButton; ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+                    <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" href="/frame.php?page=processosparteslist&amp;processo_id=<?php echo urlencode($processoId); ?>&amp;page_number=<?php echo min($totalPages, $currentPage + 1); ?>" aria-label="Próxima página"<?php echo $currentPage >= $totalPages ? ' aria-disabled="true"' : ''; ?>>›</a>
                 </div>
             </div>
         <?php endif; ?>

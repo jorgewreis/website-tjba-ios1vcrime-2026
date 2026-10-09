@@ -64,7 +64,7 @@ $registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
-    $totalPages = 0;
+    $totalPages = 1;
     $currentPage = 1;
 } else {
     $totalPages = (int) ceil($totalDocuments / $itemsPerPage);
@@ -214,18 +214,13 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                     <span class="page-description-text">Documentos expedidos pelo Cartório para cumprimento por outras Comarcas</span>
                 </div>
                 <div class="line-right">
-                    <div class="button-icon-left" role="button" tabindex="0" aria-label="Pesquisar" title="Pesquisar" data-v2-panel-trigger="search">
-                        <i class="fi fi-rr-search" aria-hidden="true"></i>
-                    </div>
-                    <div class="button-icon-left media-1024" role="button" tabindex="0" aria-label="Filtrar" title="Filtrar" data-v2-panel-trigger="filters">
-                        <i class="fi fi-rr-filter" aria-hidden="true"></i>
-                    </div>
-                    <div class="button-icon-left" role="button" tabindex="0" aria-label="Exportar" title="Exportar" data-v2-panel-trigger="export">
-                        <i class="fi fi-rr-file-export" aria-hidden="true"></i>
-                    </div>
 
                     <div class="buttons">
-                        <button type="button" class="button-btn btn-primary" id="novo-cadastro-btn">
+                        <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                            <input type="text" id="search-input" class="width-300 height-md" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off">
+                            <select class="width-200 height-md list-export-select" id="list-export-v2" data-csv-href="<?php echo htmlspecialchars($exportCsvUrl, ENT_QUOTES); ?>" data-pdf-href="<?php echo htmlspecialchars($exportPdfUrl, ENT_QUOTES); ?>" aria-label="Exportar lista"><option value="" selected disabled>Exportar</option><option value="pdf">PDF</option><option value="csv">CSV</option><option value="print">Imprimir</option></select>
+                        </div>
+                    <button type="button" class="button-btn btn-primary" id="novo-cadastro-btn">
                             <span class="btn-icon-text">Novo cadastro</span>
                             <div class="btn-icon hidden">
                                 <i class="fi fi-rr-spinner" aria-hidden="true"></i>
@@ -236,55 +231,13 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="card-line">
-            <div class="card-line left">
-                <a href="./../../documents/pdf/Guia_de_Expedição_Carta_Precatória.png" target="_blank">
-                    <div class="page-card-list-document">
-                        <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
-                        <span class="page-card-list-document-text">Infográfico - Expedição de Cartas Precatórias</span>
-                    </div>
-                </a>
-                <a href="./../../documents/pdf/Fluxo_de_Expedição_Carta_Precatória.png" target="_blank">
-                    <div class="page-card-list-document">
-                        <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
-                        <span class="page-card-list-document-text">Infográfico - Fluxo de Cumprimento</span>
-                    </div>
-                </a>
-                <a href="./../../documents/pdf/Guia_Prático_de_Cartas_Judiciárias.png" target="_blank">
-                    <div class="page-card-list-document">
-                        <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
-                        <span class="page-card-list-document-text">Infográfico - Guia Prático de Tipos de Cartas</span>
-                    </div>
-                </a>
-            </div>
-        </div>
-
-        <div class="card-line full" data-v2-panel="search" hidden>
-            <div class="card-line left">
-                <div class="line-description">Pesquisar processo</div>
-            </div>
-            <div class="card-line right">
-                <input type="text" id="search-input" class="width-300 height-md" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off">
-            </div>
-        </div>
+        
 
 
 
-        <div class="card-line full media-768" data-v2-panel="export" hidden>
-            <div class="card-line left">
-                <div class="line-description">Exportar lista</div>
-            </div>
-            <div class="card-line right">
-                <select class="width-200 height-md list-export-select" id="list-export-v2" data-csv-href="<?php echo htmlspecialchars($exportCsvUrl, ENT_QUOTES); ?>" data-pdf-href="<?php echo htmlspecialchars($exportPdfUrl, ENT_QUOTES); ?>" aria-label="Exportar lista">
-                    <option value="" selected disabled>Exportar</option>
-                    <option value="pdf">PDF</option>
-                    <option value="csv">CSV</option>
-                    <option value="print">Imprimir</option>
-                </select>
-            </div>
-        </div>
+        
 
-        <div class="card-line full media-1024" data-v2-panel="filters" hidden>
+        <div class="card-line full media-1024">
             <div class="card-line left">
                 <div class="line-description">Filtrar por</div>
             </div>
@@ -341,7 +294,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
         <?php endforeach; ?>
 
         <?php if ($totalPages > 0): ?>
-            <div class="card-line pagination">
+            <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
                 <div class="card-line left">
                     <span class="pagination-info">
                         Mostrando <?php echo htmlspecialchars((string) $startItem); ?> a <?php echo htmlspecialchars((string) $endItem); ?> de <?php echo htmlspecialchars((string) $totalDocuments); ?> <?php echo htmlspecialchars($documentsLabel); ?>

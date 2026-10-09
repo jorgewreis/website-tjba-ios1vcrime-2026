@@ -28,7 +28,7 @@ $cejuscVitimasPorProcesso = (new ProcessosPartesRepository($connection))->listNo
 $registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $podeRemoverRegistroCejusc = DeleteAuthorization::usuarioPodeExcluirComoServidorOuChefia(trim((string) ($_SESSION['id_usuario'] ?? '')));
 $total = (int) ($result['total'] ?? 0);
-$totalPages = $total > 0 ? (int) ceil($total / $itemsPerPage) : 0;
+$totalPages = max(1, (int) ceil($total / $itemsPerPage));
 if ($totalPages > 0 && $currentPage > $totalPages) $currentPage = $totalPages;
 $offset = ($currentPage - 1) * $itemsPerPage;
 $startItem = $total > 0 ? $offset + 1 : 0;
@@ -212,7 +212,7 @@ function cejusc_resumo_nomes(array $nomes, string $singularOutro = 'outro', stri
                 <?php endforeach; ?>
             </div>
 
-            <div class="card-buttons">
+            <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
                 <span class="pagination-info">Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $total; ?> registros (<?php echo (int) $totalPages; ?> <?php echo $totalPages === 1 ? 'página' : 'páginas'; ?>, <?php echo (int) $itemsPerPage; ?> itens por página)</span>
                 <?php if ($totalPages > 0): ?>
                     <div class="pagination-controls">
@@ -232,32 +232,6 @@ function cejusc_resumo_nomes(array $nomes, string $singularOutro = 'outro', stri
         <div class="footer-page"><div class="location"><span class="all">Aplicativo web desenvolvido integralmente por </span><span class="specific">Jorge Reis Develop</span><span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span></div></div>
         <script>
             (function () {
-                function toggleSection(name) {
-                    var section = document.querySelector('[data-list-section="' + name + '"]');
-                    if (!section) return;
-                    var isVisible = section.style.display !== 'none';
-                    document.querySelectorAll('[data-list-section]').forEach(function (item) {
-                        item.style.display = 'none';
-                    });
-                    if (!isVisible) section.style.display = 'flex';
-                }
-                document.querySelectorAll('[data-list-section-trigger]').forEach(function (trigger) {
-                    trigger.addEventListener('click', function () {
-                        toggleSection(trigger.getAttribute('data-list-section-trigger'));
-                    });
-                    trigger.addEventListener('keydown', function (event) {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            toggleSection(trigger.getAttribute('data-list-section-trigger'));
-                        }
-                    });
-                });
-                document.querySelectorAll('[data-list-section-hide]').forEach(function (trigger) {
-                    trigger.addEventListener('click', function () {
-                        var section = trigger.closest('[data-list-section]');
-                        if (section) section.style.display = 'none';
-                    });
-                });
                 if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
                     App.RegistroMetadataList.bind({
                         deleteEndpoint: '/api/cartorio-cejusc/delete.php',

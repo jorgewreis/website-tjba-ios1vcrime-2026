@@ -50,7 +50,7 @@ $rows = $listResult['rows'] ?? [];
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
-    $totalPages = 0;
+    $totalPages = 1;
     $currentPage = 1;
     $offset = 0;
 } else {
@@ -204,20 +204,18 @@ if ($totalPages > 0) {
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;"><?php echo $isSubstituto ? 'Acompanhamento de réus presos em processos sob responsabilidade de outro juiz.' : 'Acompanhamento de réus presos, processo principal e prazo de reavaliação.'; ?></p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
-                    <i class="fi fi-rr-search"></i>
-                </div>
 
                 <?php if ($podeVerEmailResumoReusPresos && !$isSubstituto): ?>
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <input type="text" class="height-md" id="filter-q" placeholder="Nome ou número do processo" style="width: 290px;" value="<?php echo htmlspecialchars($qFilter, ENT_QUOTES); ?>">
+                    <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQueryParams;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                </div>
                 <button type="button" class="btn btn-secondary width-300" id="email-resumo-btn">Email resumo</button>
-                <?php endif; ?>
-                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
-            </div>
-        </div>
-
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e exportação</span>
+                <?php endif; ?>>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
                 <input type="text" class="height-md" id="filter-q" placeholder="Nome ou número do processo" style="width: 290px;" value="<?php echo htmlspecialchars($qFilter, ENT_QUOTES); ?>">
@@ -226,9 +224,6 @@ if ($totalPages > 0) {
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
@@ -336,13 +331,13 @@ if ($totalPages > 0) {
 
         </div>
 
-        <div class="card-buttons">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel); ?>
                 (<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls gap-y-sm">
+                <div class="pagination-controls">
                     <?php
                     $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                     $prevParams = $baseQueryParams;
@@ -455,6 +450,5 @@ if ($totalPages > 0) {
         });
     })();
     </script>
-    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

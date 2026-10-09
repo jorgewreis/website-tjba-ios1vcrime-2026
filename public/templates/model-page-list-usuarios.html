@@ -193,17 +193,20 @@
         </div>
 
         <!-- Paginação (padrão: X-Y de Z, N páginas, M itens por página) -->
-        <div class="row table between padding-tb-lg padding-lr-md">
-            <span class="left pagination-info">
-                Mostrando 1-4 de 100 usuários (4 páginas, 25 itens por página)
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
+            <span class="pagination-info">
+                Mostrando 1-4 de 100 usuários (7 páginas, 15 itens por página)
             </span>
-            <div class="right pagination-controls">
+            <div class="pagination-controls">
                 <a class="pagination-symbol disabled" aria-disabled="true">‹</a>
-                <a class="pagination-number active" href="?page=usuarioslist&items_per_page=25&page_number=1">1</a>
-                <a class="pagination-number" href="?page=usuarioslist&items_per_page=25&page_number=2">2</a>
-                <a class="pagination-number" href="?page=usuarioslist&items_per_page=25&page_number=3">3</a>
-                <a class="pagination-number" href="?page=usuarioslist&items_per_page=25&page_number=4">4</a>
-                <a class="pagination-symbol" href="?page=usuarioslist&items_per_page=25&page_number=2">›</a>
+                <a class="pagination-number active" href="?page=usuarioslist&page_number=1" aria-current="page">1</a>
+                <a class="pagination-number" href="?page=usuarioslist&page_number=2">2</a>
+                <a class="pagination-number" href="?page=usuarioslist&page_number=3">3</a>
+                <a class="pagination-number" href="?page=usuarioslist&page_number=4">4</a>
+                <a class="pagination-number" href="?page=usuarioslist&page_number=5">5</a>
+                <a class="pagination-number" href="?page=usuarioslist&page_number=6">6</a>
+                <a class="pagination-number" href="?page=usuarioslist&page_number=7">7</a>
+                <a class="pagination-symbol" href="?page=usuarioslist&page_number=2">›</a>
             </div>
         </div>
     </div>
@@ -222,15 +225,9 @@
         var form = document.getElementById('form-filters');
         if (!form) return;
 
-        var itemsPerPage = document.getElementById('items-per-page');
         var filterTipo = document.getElementById('filter-tipo');
         var filterPerfil = document.getElementById('filter-perfil');
 
-        if (itemsPerPage) {
-            itemsPerPage.addEventListener('change', function () {
-                form.submit();
-            });
-        }
         if (filterTipo) {
             filterTipo.addEventListener('change', function () {
                 form.submit();

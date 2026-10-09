@@ -66,7 +66,7 @@ $oficioListViewerContext = OficioRegistroMetadataHelper::viewerContextFromSessio
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
-    $totalPages = 0;
+    $totalPages = 1;
     $currentPage = 1;
 } else {
     $totalPages = (int) ceil($totalDocuments / $itemsPerPage);
@@ -162,70 +162,31 @@ if ($totalPages > 0) {
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Registro de ofícios do gabinete por processo e tipo.</p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
-                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
-                    <i class="fi fi-rr-search"></i>
-                </div>
-                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
-                    <i class="fi fi-rr-filter"></i>
-                </div>
 
             </div>
         </div>
 
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md">
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                <div class="col">
-                    <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
-                        <span>Número do processo <span id="gab-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></span>
-                        <span id="processo-ap-info" class="minor-info" aria-live="polite" style="display: none;"></span>
-                    </label>
-                    <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
-                </div>
-                <div class="col">
-                    <label for="filter-classe">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
-                </div>
-                <div class="col">
-                    <label for="gab-oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-600 height-md" id="gab-oficio-tipo">
-                        <option value="">Selecione…</option>
-                        <optgroup label="Encaminhamento">
-                            <option value="Encaminhando Informações">Encaminhando informações</option>
-                            <option value="Encaminhando Mandado de Busca e Apreensao">Encaminhando Mandado de Busca e Apreensão </option>
-                            <option value="Encaminhando Mandado de Prisao">Encaminhando Mandado de Prisão</option>
-                            <option value="Encaminhando Pecas Processuais">Encaminhando Peças Processuais</option>
-                        </optgroup>
-                        <optgroup label="Solicitação">
-                            <option value="Solicitando Informacoes">Solicitando informações</option>
-                            <option value="Solicitando Pecas Processuais">Solicitando peças processuais</option>
-                            <option value="Solicitando Providencias">Solicitando providências</option>
-                        </optgroup>
-                        <optgroup label="Administrativos">
-                            <option value="Solicitando Afastamento" data-oficio-grupo="administrativo">Solicitando afastamento</option>
-                            <option value="Solicitando Licença Prêmio" data-oficio-grupo="administrativo">Solicitando licença prêmio</option>
-                            <option value="Solicitando Férias" data-oficio-grupo="administrativo">Solicitando férias</option>
-                            <option value="Solicitando Reembolso" data-oficio-grupo="administrativo">Solicitando reembolso</option>
-                            <option value="Outros" data-oficio-grupo="administrativo">Outros</option>
-                        </optgroup>
-                    </select>
-                </div>
-            </div>
+            
         </div>
 
         <div class="card-buttons padding-x-lg padding-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-md">
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <input type="text" class="height-md" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" style="width: 320px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
+                    <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQueryParams;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                </div>
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
+                </div>
                 <button type="button" class="btn btn-secondary-outline" id="btn-gab-oficio-limpar">Limpar</button>
             </div>
             <div class="display-flex row row-fit justify-start gap-y-md">
-                <button type="button" class="btn btn-primary" id="btn-gab-oficio-registrar">Registrar</button>
-            </div>
-        </div>
-        <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
-        <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
-
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa na lista</span>
+                <button type=ista</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <input type="text" class="height-md" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" style="width: 320px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
@@ -234,13 +195,10 @@ if ($totalPages > 0) {
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
@@ -266,9 +224,6 @@ if ($totalPages > 0) {
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </select>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
@@ -358,7 +313,7 @@ if ($totalPages > 0) {
 
         </div>
 
-        <div class="card-buttons">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo htmlspecialchars((string) $startItem); ?>-<?php echo htmlspecialchars((string) $endItem); ?> de <?php echo htmlspecialchars((string) $totalDocuments); ?> <?php echo htmlspecialchars($documentsLabel); ?>
                 (<?php echo htmlspecialchars((string) $totalPages); ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo htmlspecialchars((string) $itemsPerPage); ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
@@ -410,57 +365,7 @@ if ($totalPages > 0) {
     <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script>
         (function() {
-            function initializeListSectionToggles() {
-                const sections = document.querySelectorAll('[data-list-section]');
-
-                function setSectionVisibility(sectionName, isVisible) {
-                    const section = document.querySelector('[data-list-section="' + sectionName + '"]');
-                    if (!section) {
-                        return;
-                    }
-                    section.style.display = isVisible ? 'flex' : 'none';
-                }
-
-                function handleToggleClick(event, isVisible) {
-                    const sectionName = event.currentTarget.getAttribute(isVisible ? 'data-list-section-trigger' : 'data-list-section-hide');
-                    if (!sectionName) {
-                        return;
-                    }
-                    setSectionVisibility(sectionName, isVisible);
-                }
-
-                function handleToggleKeydown(event, isVisible) {
-                    if (event.key !== 'Enter' && event.key !== ' ') {
-                        return;
-                    }
-                    event.preventDefault();
-                    handleToggleClick(event, isVisible);
-                }
-
-                sections.forEach(function(section) {
-                    section.style.display = 'none';
-                });
-
-                document.querySelectorAll('[data-list-section-trigger]').forEach(function(trigger) {
-                    trigger.addEventListener('click', function(event) {
-                        handleToggleClick(event, true);
-                    });
-                    trigger.addEventListener('keydown', function(event) {
-                        handleToggleKeydown(event, true);
-                    });
-                });
-
-                document.querySelectorAll('[data-list-section-hide]').forEach(function(trigger) {
-                    trigger.addEventListener('click', function(event) {
-                        handleToggleClick(event, false);
-                    });
-                    trigger.addEventListener('keydown', function(event) {
-                        handleToggleKeydown(event, false);
-                    });
-                });
-            }
-
-            initializeListSectionToggles();
+            
 
             if (window.App && App.ListSearch && typeof App.ListSearch.initializeProcessSearch === 'function') {
                 App.ListSearch.initializeProcessSearch({

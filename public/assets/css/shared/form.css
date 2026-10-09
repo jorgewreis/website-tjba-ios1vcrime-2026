@@ -132,6 +132,7 @@ hr {
     margin: 0;
     
     border-radius: 4px;
+    border: 1px solid var(--color-border);
     box-sizing: border-box;
     
     background-color: var(--color-background-elevated);
@@ -162,7 +163,7 @@ button.pagination-number {
     color: inherit;
     appearance: none;
     -webkit-appearance: none;
-    border: none;
+    border: 1px solid var(--color-border);
     margin: 0;
     text-decoration: none;
     background-color: var(--color-background-elevated);
@@ -237,6 +238,7 @@ button.link-inline {
     height: 30px;
     padding: 0 10px;
     border-radius: 4px;
+    border: 1px solid var(--color-border);
     font-size: 11px;
     font-family: 'Poppins', sans-serif;
 }

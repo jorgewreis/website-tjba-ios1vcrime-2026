@@ -30,7 +30,7 @@ $filtrou = ($nomeFilter !== '' || $cpfFilter !== '' || $instituicaoIdFilter !== 
 
 $rows = [];
 $totalDocuments = 0;
-$totalPages = 0;
+$totalPages = 1;
 $startItem = 0;
 $endItem = 0;
 
@@ -67,7 +67,7 @@ if ($filtrou) {
         die('Erro ao carregar os dados: ' . $e->getMessage());
     }
 
-    $totalPages = $totalDocuments > 0 ? (int) ceil($totalDocuments / $itemsPerPage) : 0;
+    $totalPages = max(1, (int) ceil($totalDocuments / $itemsPerPage));
     if ($currentPage > $totalPages && $totalPages > 0) {
         $currentPage = $totalPages;
     }
@@ -157,11 +157,11 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
     <div class="container-full card-page">
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Lista de partes</h2>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
+          $listExportPage = $routePage;
+                    $listExportQuery = $baseQueryParams;
+                    include __DIR__ . '/_list_export_buttons.php';
+                    ?>
+                </div>
                 <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
@@ -174,11 +174,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                         <label for="filter-nome">Nome</label>
                         <input type="text" class="width-600 height-md" id="filter-nome" name="nome" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($nomeFilter); ?>">
                     </div>
-                    <div class="col">
-                        <label for="filter-cpf">CPF (documento)</label>
-                        <input type="text" class="width-400 height-md" id="filter-cpf" name="cpf" placeholder="000.000.000-00" value="<?php echo htmlspecialchars($cpfFilter); ?>">
-                    </div>
-                </div>
+              </div>
                 <div class="display-flex row row-fit justify-end gap-y-md align-end">
                     <?php
                     $listExportPage = $routePage;
@@ -290,7 +286,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <?php endif; ?>
 
         <?php if ($filtrou): ?>
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 <?php if ($totalPages > 0): ?>(<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)<?php endif; ?>

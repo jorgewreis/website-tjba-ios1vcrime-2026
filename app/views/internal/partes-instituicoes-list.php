@@ -29,6 +29,13 @@ if ($parteId !== '') {
     $instituicaoNome = $inst['nome'] ?? $instituicaoId;
     $rows = $repo->findByInstituicaoId($instituicaoId);
 }
+$itemsPerPage = 15;
+$totalRows = count($rows);
+$totalPages = max(1, (int) ceil($totalRows / $itemsPerPage));
+$currentPage = min($totalPages, max(1, (int) ($_GET['page_number'] ?? 1)));
+$rowsPage = array_slice($rows, ($currentPage - 1) * $itemsPerPage, $itemsPerPage);
+$startItem = $totalRows > 0 ? (($currentPage - 1) * $itemsPerPage) + 1 : 0;
+$endItem = min($currentPage * $itemsPerPage, $totalRows);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -48,16 +55,7 @@ if ($parteId !== '') {
     </div>
     <div class="container-full card-page">
 
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Vínculos</h2>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <?php
-                $listExportPage = 'partesinstituicoeslist';
-                $listExportQuery = array_filter(['parte_id' => $parteId, 'instituicao_id' => $instituicaoId], static fn ($v) => $v !== '');
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
+        
                 <button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=partesinstituicoescreate">Novo vínculo</button>
             </div>
         </div>
@@ -84,11 +82,11 @@ if ($parteId !== '') {
                     <span class="major-info">Informe o ID da pessoa ou da instituição; a lista atualiza ao alterar os campos.</span>
                 </div>
             </div>
-        <?php elseif (!empty($rows)): ?>
+        <?php elseif (!empty($rowsPage)): ?>
             <div class="display-flex row row-full padding-x-sm padding-y-sm border-bottom">
                 <span class="minor-info"><?php echo $parteId !== '' ? 'Instituições vinculadas a ' . htmlspecialchars($parteNome) : 'Pessoas vinculadas a ' . htmlspecialchars($instituicaoNome); ?></span>
             </div>
-            <?php foreach ($rows as $r): ?>
+            <?php foreach ($rowsPage as $r): ?>
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-md">
@@ -134,6 +132,35 @@ if ($parteId !== '') {
             <div class="display-flex col col-full register border-bottom">
                 <div class="display-flex row row-full padding-x-sm padding-y-sm">
                     <span class="major-info">Nenhum vínculo encontrado.</span>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($parteId !== '' || $instituicaoId !== ''): ?>
+            <?php
+            $paginationQuery = ['page' => 'partesinstituicoeslist'];
+            if ($parteId !== '') $paginationQuery['parte_id'] = $parteId;
+            if ($instituicaoId !== '') $paginationQuery['instituicao_id'] = $instituicaoId;
+            ?>
+            <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
+                <span class="pagination-info">
+                    Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalRows; ?> <?php echo $totalRows === 1 ? 'registro' : 'registros'; ?>
+                    (<?php echo $totalPages; ?> <?php echo $totalPages === 1 ? 'página' : 'páginas'; ?>, <?php echo $itemsPerPage; ?> itens por página)
+                </span>
+                <div class="pagination-controls">
+                    <a class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" href="/frame.php?<?php echo htmlspecialchars(http_build_query($paginationQuery + ['page_number' => max(1, $currentPage - 1)]), ENT_QUOTES, 'UTF-8'); ?>" aria-label="Página anterior"<?php echo $currentPage <= 1 ? ' aria-disabled="true"' : ''; ?>>‹</a>
+                    <?php
+                    $paginationStart = max(1, min($currentPage - 2, $totalPages - 4));
+                    $paginationEnd = min($totalPages, $paginationStart + 4);
+                    for ($pageButton = $paginationStart; $pageButton <= $paginationEnd; $pageButton++):
+                    ?>
+                        <?php if ($pageButton === $currentPage): ?>
+                            <span class="pagination-number active" aria-current="page"><?php echo $pageButton; ?></span>
+                        <?php else: ?>
+                            <a class="pagination-number" href="/frame.php?<?php echo htmlspecialchars(http_build_query($paginationQuery + ['page_number' => $pageButton]), ENT_QUOTES, 'UTF-8'); ?>"><?php echo $pageButton; ?></a>
+                        <?php endif; ?>
+                    <?php endfor; ?>
+                    <a class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" href="/frame.php?<?php echo htmlspecialchars(http_build_query($paginationQuery + ['page_number' => min($totalPages, $currentPage + 1)]), ENT_QUOTES, 'UTF-8'); ?>" aria-label="Próxima página"<?php echo $currentPage >= $totalPages ? ' aria-disabled="true"' : ''; ?>>›</a>
                 </div>
             </div>
         <?php endif; ?>

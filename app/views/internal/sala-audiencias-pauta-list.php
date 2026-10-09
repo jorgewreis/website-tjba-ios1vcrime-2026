@@ -60,7 +60,7 @@ $total = (int) ($result['total'] ?? 0);
 $statusCounts = $result['statusCounts'] ?? ['designada' => 0, 'realizada' => 0, 'redesignada' => 0, 'cancelada' => 0, 'em_andamento' => 0, 'finalizada' => 0];
 
 if ($total === 0) {
-    $totalPages = 0;
+    $totalPages = 1;
     $pageNumber = 1;
     $offset = 0;
 } else {
@@ -168,22 +168,10 @@ $statusFilterLabelsPauta = [
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de audiências cadastradas, com visão por data, tipo, sala e situação processual.</p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
-                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
-                    <i class="fi fi-rr-search"></i>
-                </div>
-                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
-                    <i class="fi fi-rr-filter"></i>
-                </div>
 
-                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
-            </div>
-        </div>
-
-        <!-- SUBTITLE SECTION CARD -->
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa e cadastro</span>
-            </div>
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <input type="text" class="height-md" id="search-input" placeholder="Pesquisar>
+            
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <input type="text" class="height-md" id="search-input" placeholder="Pesquisar por processo, parte ou sala..." autocomplete="off" style="width: 290px;" value="<?php echo htmlspecialchars($search, ENT_QUOTES); ?>">
                 <?php
@@ -196,14 +184,11 @@ $statusFilterLabelsPauta = [
                 ], static fn ($v) => $v !== null && $v !== '');
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
         <!-- SUBTITLE SECTION CARD - FILTERS -->
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
@@ -229,9 +214,6 @@ $statusFilterLabelsPauta = [
                         <option value="<?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?>"<?php echo $tipoFilter === $tpNome ? ' selected' : ''; ?>><?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
@@ -504,7 +486,7 @@ $statusFilterLabelsPauta = [
         </div>
 
         <!-- PAGINAÇÃO -->
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $total; ?> <?php echo $documentsLabel; ?>
                 (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)
@@ -553,60 +535,7 @@ $statusFilterLabelsPauta = [
 
     <script>
         (function () {
-            function initializeListSectionToggles() {
-                const sections = document.querySelectorAll('[data-list-section]');
-
-                function setSectionVisibility(sectionName, isVisible) {
-                    const section = document.querySelector('[data-list-section="' + sectionName + '"]');
-                    if (!section) {
-                        return;
-                    }
-
-                    section.style.display = isVisible ? 'flex' : 'none';
-                }
-
-                function handleToggleClick(event, isVisible) {
-                    const sectionName = event.currentTarget.getAttribute(isVisible ? 'data-list-section-trigger' : 'data-list-section-hide');
-                    if (!sectionName) {
-                        return;
-                    }
-
-                    setSectionVisibility(sectionName, isVisible);
-                }
-
-                function handleToggleKeydown(event, isVisible) {
-                    if (event.key !== 'Enter' && event.key !== ' ') {
-                        return;
-                    }
-
-                    event.preventDefault();
-                    handleToggleClick(event, isVisible);
-                }
-
-                sections.forEach(function (section) {
-                    section.style.display = 'none';
-                });
-
-                document.querySelectorAll('[data-list-section-trigger]').forEach(function (trigger) {
-                    trigger.addEventListener('click', function (event) {
-                        handleToggleClick(event, true);
-                    });
-                    trigger.addEventListener('keydown', function (event) {
-                        handleToggleKeydown(event, true);
-                    });
-                });
-
-                document.querySelectorAll('[data-list-section-hide]').forEach(function (trigger) {
-                    trigger.addEventListener('click', function (event) {
-                        handleToggleClick(event, false);
-                    });
-                    trigger.addEventListener('keydown', function (event) {
-                        handleToggleKeydown(event, false);
-                    });
-                });
-            }
-
-            initializeListSectionToggles();
+            
         })();
     </script>
     <script src="/assets/js/modules/audiencias/pauta-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list.js') ?: time(); ?>"></script>

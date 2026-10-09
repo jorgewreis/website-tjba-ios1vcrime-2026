@@ -101,7 +101,7 @@ $oficioListViewerContext = OficioRegistroMetadataHelper::viewerContextFromSessio
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
-    $totalPages = 0;
+    $totalPages = 1;
     $currentPage = 1;
 } else {
     $totalPages = (int) ceil($totalDocuments / $itemsPerPage);
@@ -227,12 +227,6 @@ function cartorio_oficios_label_cumprimento(array $row): string
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Registro de ofícios expedidos pelo cartório, com cumprimento via CCM ou envio pelo próprio cartório.</p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
-                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
-                    <i class="fi fi-rr-search"></i>
-                </div>
-                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
-                    <i class="fi fi-rr-filter"></i>
-                </div>
 
             </div>
         </div>
@@ -247,86 +241,27 @@ function cartorio_oficios_label_cumprimento(array $row): string
             </div>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md">
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                <div class="col">
-                    <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
-                        <span>Número do processo <span id="cartorio-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></span>
-                        <span id="processo-ap-info" class="minor-info" aria-live="polite" style="display: none;"></span>
-                    </label>
-                    <input type="text" class="width-400 height-md" id="filter-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
-                </div>
-                <div class="col">
-                    <label for="oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-600 height-md" id="oficio-tipo" name="tipo_oficio">
-                        <option value="">Selecione…</option>
-                        <optgroup label="Solicitação">
-                            <option value="Ofício Solicitando Reativação do CPF">Ofício solicitando Reativação do CPF</option>
-                            <option value="Ofício Solicitando Suspensão do CPF">Ofício solicitando Suspensão do CPF</option>
-                            <option value="Ofício Solicitando Agendamento de Audiência">Ofício solicitando Agendamento de Audiência</option>
-                        </optgroup>
-                        <optgroup label="Encaminhamento">
-                            <option value="Ofício Encaminhando Decisão de Medida Protetiva">Ofício encaminhando Decisão de Medida Protetiva</option>
-                            <option value="Ofício Encaminhando Decisão Interlocutória">Ofício encaminhando Decisão Interlocutória</option>
-                            <option value="Ofício Encaminhando Documentos">Ofício encaminhando Documentos</option>
-                            <option value="Ofício Encaminhando Sentença">Ofício encaminhando Sentença</option>
-                            <option value="Ofício Encaminhando Informação">Ofício encaminhando Informação</option>
-                        </optgroup>
-                        <optgroup label="Informando">
-                            <option value="Ofício Informando Baixa ao Cedep">Ofício informando Baixa ao Cedep</option>
-                            <option value="Ofício Informando Condenação ao CEDEP">Ofício informando Condenação ao CEDEP</option>
-                        </optgroup>
-                        <optgroup label="Requisitando">
-                            <option value="Ofício Requisitando Policial para Audiência">Ofício requisitando Policial para Audiência</option>
-                            <option value="Ofício Requisitando Preso para Audiência">Ofício requisitando Preso para Audiência</option>
-                            <option value="Ofício Requisitando Servidor para Audiência">Ofício requisitando Servidor para Audiência</option>
-                            <option value="Ofício Requisitando Informações">Ofício requisitando Informações</option>
-                        </optgroup>
-                        <optgroup label="Administrativos">
-                            <option value="Ofício Solicitando Férias" data-oficio-grupo="administrativo">Ofício solicitando Férias</option>
-                            <option value="Ofício Solicitando Licença Prêmio" data-oficio-grupo="administrativo">Ofício solicitando Licença Prêmio</option>
-                            <option value="Ofício Solicitando Reembolso" data-oficio-grupo="administrativo">Ofício solicitando Reembolso</option>
-                            <option value="Ofício Solicitando Afastamento" data-oficio-grupo="administrativo">Ofício solicitando Afastamento</option>
-                            <option value="Ofício Diversos" data-oficio-grupo="administrativo">Ofício diversos</option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div class="col">
-                    <label for="oficio-forma-cumprimento">Forma de cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-500 height-md" id="oficio-forma-cumprimento" name="forma_cumprimento">
-                        <option value="ccm" selected>por Oficial de Justiça (CCM)</option>
-                        <option value="cartorio">pelo Cartório</option>
-                    </select>
-                </div>
-
-                <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
-                <div class="col" id="oficio-meio-envio-row">
-                    <label for="oficio-meio-envio">Meio de envio</label>
-                    <select class="width-400 height-md" id="oficio-meio-envio" name="meio_envio">
-                        <option value="">Selecione…</option>
-                        <option value="email">E-mail</option>
-                        <option value="malote_digital">Malote digital</option>
-                        <option value="pessoalmente">Pessoalmente</option>
-                    </select>
-                </div>
-            </div>
+            
         </div>
 
         <div class="card-buttons padding-x-lg padding-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-md">
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 320px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
+                    <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQueryParams;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                </div>
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <input type="text" class="width-400 height-md" id="filter-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
+                </div>
                 <button type="button" class="btn btn-secondary-outline" id="btn-oficio-limpar">Limpar</button>
             </div>
             <div class="display-flex row row-fit justify-start gap-y-md">
                 <button type="button" class="btn btn-primary-outline" id="alterar-regra-btn" style="display: none;">Alterar regra de alocação</button>
-                <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Cadastrar</button>
-            </div>
-        </div>
-        <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
-        <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
-
-
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa na lista</span>
+                <button type="button" class="btn btn-primary" id=ista</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 320px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
@@ -335,13 +270,10 @@ function cartorio_oficios_label_cumprimento(array $row): string
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
@@ -367,9 +299,6 @@ function cartorio_oficios_label_cumprimento(array $row): string
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </select>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
@@ -601,7 +530,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
 
         </div>
 
-        <div class="card-buttons">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)
@@ -653,57 +582,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
     <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script>
         (function() {
-            function initializeListSectionToggles() {
-                const sections = document.querySelectorAll('[data-list-section]');
-
-                function setSectionVisibility(sectionName, isVisible) {
-                    const section = document.querySelector('[data-list-section="' + sectionName + '"]');
-                    if (!section) {
-                        return;
-                    }
-                    section.style.display = isVisible ? 'flex' : 'none';
-                }
-
-                function handleToggleClick(event, isVisible) {
-                    const sectionName = event.currentTarget.getAttribute(isVisible ? 'data-list-section-trigger' : 'data-list-section-hide');
-                    if (!sectionName) {
-                        return;
-                    }
-                    setSectionVisibility(sectionName, isVisible);
-                }
-
-                function handleToggleKeydown(event, isVisible) {
-                    if (event.key !== 'Enter' && event.key !== ' ') {
-                        return;
-                    }
-                    event.preventDefault();
-                    handleToggleClick(event, isVisible);
-                }
-
-                sections.forEach(function(section) {
-                    section.style.display = 'none';
-                });
-
-                document.querySelectorAll('[data-list-section-trigger]').forEach(function(trigger) {
-                    trigger.addEventListener('click', function(event) {
-                        handleToggleClick(event, true);
-                    });
-                    trigger.addEventListener('keydown', function(event) {
-                        handleToggleKeydown(event, true);
-                    });
-                });
-
-                document.querySelectorAll('[data-list-section-hide]').forEach(function(trigger) {
-                    trigger.addEventListener('click', function(event) {
-                        handleToggleClick(event, false);
-                    });
-                    trigger.addEventListener('keydown', function(event) {
-                        handleToggleKeydown(event, false);
-                    });
-                });
-            }
-
-            initializeListSectionToggles();
+            
 
             if (window.App && App.ListSearch && typeof App.ListSearch.initializeProcessSearch === 'function') {
                 App.ListSearch.initializeProcessSearch({

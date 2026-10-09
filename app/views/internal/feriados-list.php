@@ -46,7 +46,7 @@ $rows = $listResult['rows'] ?? [];
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
 if ($totalDocuments === 0) {
-    $totalPages = 0;
+    $totalPages = 1;
     $currentPage = 1;
     $offset = 0;
 } else {
@@ -149,20 +149,16 @@ if ($totalPages > 0) {
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Cadastro de períodos em que não há expediente forense, para apoio ao cálculo de decurso de prazo e indisponibilidades.</p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
-                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
-                    <i class="fi fi-rr-search"></i>
-                </div>
-                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
-                    <i class="fi fi-rr-filter"></i>
-                </div>
 
-                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
-            </div>
-        </div>
-
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa por descrição</span>
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <input type="text" class="height-md" id="filter-q" placeholder="Parte da descrição" style="width: 290px;" value="<?php echo htmlspecialchars($qFilter); ?>">
+                    <?php
+                $listExportPage = $routePage;
+                $listExportQuery = $baseQueryParams;
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                </div>
+                <butição</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <input type="text" class="height-md" id="filter-q" placeholder="Parte da descrição" style="width: 290px;" value="<?php echo htmlspecialchars($qFilter); ?>">
@@ -171,13 +167,10 @@ if ($totalPages > 0) {
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
@@ -188,9 +181,6 @@ if ($totalPages > 0) {
                         <option value="<?php echo htmlspecialchars($val); ?>"<?php echo $tipoFilter === $val ? ' selected' : ''; ?>><?php echo htmlspecialchars($lab); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
             </div>
         </div>
 
@@ -250,13 +240,13 @@ if ($totalPages > 0) {
             <?php endforeach; ?>
         <?php endif; ?>
 
-        <div class="card-buttons">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $totalDocuments; ?> <?php echo htmlspecialchars($documentsLabel); ?>
                 (<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
             </span>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls gap-y-sm">
+                <div class="pagination-controls">
                     <?php
                     $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                     $prevParams = $baseQueryParams;
@@ -325,6 +315,5 @@ if ($totalPages > 0) {
         });
     })();
     </script>
-    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>
