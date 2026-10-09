@@ -167,6 +167,9 @@ button.pagination-number {
     text-decoration: none;
     background-color: var(--color-background-elevated);
 }
+button.pagination-number {
+    font-size: 12px;
+}
 
 .link-login button.link-like {
     font-family: 'Montserrat', sans-serif;
