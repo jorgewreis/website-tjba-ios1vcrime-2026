@@ -167,6 +167,9 @@ $whatsappTexto = $mostrarCopiaWhatsapp
     ? $numero . ' - Carta Precatória expedida *aguardando envio* para ' . $destino
     : '';
 $historicoLinhas = RegistroMetadataHelper::linhasHistoricoV2CartasExpedidas($row, $connection);
+$historicoRecente = $historicoLinhas !== [] ? $historicoLinhas[count($historicoLinhas) - 1] : null;
+$statusVisivelTexto = $isTerminal || $textoEtapa === '' ? $badgePrincipalTexto : $textoEtapa;
+$statusVisivelClasse = $isTerminal || $classeEtapa === '' ? $badgePrincipalClasse : $classeEtapa;
 
 $subtarefaAtivaId = $subtarefaAtivaUi !== null ? trim((string) ($subtarefaAtivaUi['id'] ?? '')) : '';
 
@@ -324,6 +327,9 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
     <div class="card-line right">
         <div class="register-block">
             <div class="register-block-status">
+                <div class="badge-status-primary <?php echo htmlspecialchars($statusVisivelClasse, ENT_QUOTES); ?>">
+                    <span class="badge-status-text"><?php echo htmlspecialchars($statusVisivelTexto, ENT_QUOTES); ?></span>
+                </div>
                 <?php if (!$isTerminal): ?>
                     <?php
                     $alocadoUnico = CartorioAlocacaoChipHelper::resolverAlocadoUnicoCartasExpedidasListagem(
@@ -365,34 +371,28 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                     }
                     ?>
                 <?php endif; ?>
-                <div class="badge-status-primary <?php echo htmlspecialchars($badgePrincipalClasse, ENT_QUOTES); ?>">
-                    <span class="badge-status-text"><?php echo htmlspecialchars($badgePrincipalTexto, ENT_QUOTES); ?></span>
-                </div>
-            </div>
-            <div class="register-block-status">
                 <?php if ($mostrarCopiaWhatsapp): ?>
                     <button type="button"
-                        class="button-icon-right js-v2-copy-whatsapp"
+                        class="button-icon-right carta-row-action js-v2-copy-whatsapp"
                         data-whatsapp-text="<?php echo htmlspecialchars($whatsappTexto, ENT_QUOTES); ?>"
                         title="Copiar texto para WhatsApp"
                         aria-label="Copiar texto para WhatsApp">
                         <img src="/assets/icons/Whatsapp-Logo--Streamline-Ultimate.png" alt="">
                     </button>
                 <?php endif; ?>
-                <button type="button" class="button-icon-right" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
-                    <img src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="">
-                </button>
+                <?php if ($showEdit): ?>
+                    <button type="button" class="button-icon-right carta-row-action" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
+                        <img src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="">
+                    </button>
+                <?php endif; ?>
                 <?php if ($mostrarContinuar && $textoEtapa !== ''): ?>
-                    <div class="register-block-status-text <?php echo htmlspecialchars($classeEtapa, ENT_QUOTES); ?>">
-                        <span class="register-block-status-text-text"><?php echo htmlspecialchars($textoEtapa, ENT_QUOTES); ?></span>
-                        <button type="button"
-                            class="button-icon-internal js-continuar-subtarefa"
-                            data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
-                            title="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>"
-                            aria-label="Continuar">
-                            <img src="/assets/icons/Button-Play-1--Streamline-Ultimate.png" alt="">
-                        </button>
-                    </div>
+                    <button type="button"
+                        class="button-icon-internal carta-row-action js-continuar-subtarefa"
+                        data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
+                        title="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>"
+                        aria-label="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>">
+                        <img src="/assets/icons/Button-Play-1--Streamline-Ultimate.png" alt="">
+                    </button>
                 <?php endif; ?>
             </div>
         </div>
@@ -404,28 +404,20 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
         <div class="container-historical container-sm media-1024">
             <div class="container-line">
                 <div class="line-content double-line">
-                    <span class="content-classe">Histórico de movimentações</span>
-                    <?php if ($historicoLinhas === []): ?>
+                    <span class="content-classe">Última movimentação</span>
+                    <?php if ($historicoRecente === null): ?>
                         <span class="content-assuntos over">Nenhuma movimentação registrada</span>
                     <?php else: ?>
-                        <?php foreach ($historicoLinhas as $hist):
-                            $dh = trim((string) ($hist['data_hora'] ?? ''));
-                            $rotulo = trim((string) ($hist['rotulo'] ?? ''));
-                            $autor = trim((string) ($hist['autor'] ?? ''));
-                            $contentClass = trim((string) ($hist['content_class'] ?? ''));
-                            $historicoTexto = '';
-                            if ($dh !== '' && $rotulo !== '') {
-                                $historicoTexto = '- ' . $dh . ' | ' . $rotulo;
-                                if ($autor !== '') {
-                                    $historicoTexto .= ' por ' . $autor;
-                                }
-                            }
-                            if ($historicoTexto === '') {
-                                continue;
-                            }
+                        <?php
+                        $historicoData = trim((string) ($historicoRecente['data_hora'] ?? ''));
+                        $historicoAutor = trim((string) ($historicoRecente['autor'] ?? ''));
+                        $historicoClasse = trim((string) ($historicoRecente['content_class'] ?? ''));
+                        $historicoTexto = $historicoData;
+                        if ($historicoAutor !== '') {
+                            $historicoTexto .= ($historicoTexto !== '' ? ' | ' : '') . $historicoAutor;
+                        }
                         ?>
-                            <span class="content-assuntos<?php echo $contentClass !== '' ? ' ' . htmlspecialchars($contentClass, ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($historicoTexto, ENT_QUOTES); ?></span>
-                        <?php endforeach; ?>
+                        <span class="content-assuntos<?php echo $historicoClasse !== '' ? ' ' . htmlspecialchars($historicoClasse, ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($historicoTexto, ENT_QUOTES); ?></span>
                     <?php endif; ?>
                 </div>
             </div>

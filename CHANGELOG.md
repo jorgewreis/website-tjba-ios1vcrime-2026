@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0005
+
+**Data:** 2026-10-09 16:58:21 | **Commit:** `c32dba0e` | **Tipo:** `patch`
+
+- fix(cartas-expedidas): alinhar status e historico ao mockup
+
 ## V. 1.87.0004
 
 **Data:** 2026-08-26 19:16:04 | **Commit:** `f667f197` | **Tipo:** `patch`
@@ -5451,6 +5457,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
