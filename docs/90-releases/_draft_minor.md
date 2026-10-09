@@ -9,4 +9,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(listagens): replicar bloco de historico** `[e16555d7]`
 - **fix(historico): ajustar rotulos e autor de movimentacao** `[f667f197]`
 - **fix(cartas-expedidas): alinhar status e historico ao mockup** `[c32dba0e]`
+- **fix(cartas-expedidas): corrigir fundo e espacos do registro** `[1fb81950]`
 
