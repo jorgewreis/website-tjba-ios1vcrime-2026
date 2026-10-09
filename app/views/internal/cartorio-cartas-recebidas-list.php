@@ -28,10 +28,10 @@ $routePage = trim((string) ($_GET['page'] ?? 'cartasrecebidas'));
 $finalidadeFilter = trim($_GET['finalidade'] ?? '');
 $statusFilter = trim($_GET['status'] ?? '');
 $processoFilter = trim($_GET['processo'] ?? '');
-$allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
+$allowedPerPage = [15];
+$itemsPerPage = 15;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 10;
+    $itemsPerPage = 15;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -164,7 +164,7 @@ if ($totalPages > 0) {
                 <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
 
-                
+
         <!-- IMPORT - FLATICON -->
         <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
         <?php include __DIR__ . '/_toast_script.php'; ?>
@@ -201,9 +201,7 @@ if ($totalPages > 0) {
                 <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
                     <i class="fi fi-rr-filter"></i>
                 </div>
-                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
-                    <i class="fi fi-rr-list"></i>
-                </div>
+
                 <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
@@ -267,23 +265,7 @@ if ($totalPages > 0) {
         </div>
 
         <!-- SUBTITLE SECTION CARD - ITEMS PER PAGE -->
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <!-- Filtro - Itens por página -->
-                <select class="width-300 height-md" id="items-per-page">
-                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                </select>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
-            </div>
-        </div>
+
 
         <!-- TITLE CARD -->
         <!-- <div class="card-title" style="padding: 40px 0 10px 0 !important;">
@@ -296,7 +278,7 @@ if ($totalPages > 0) {
         <!-- REGISTERS LIST -->
         <div class="display-flex col col-full register">
 
-            <!-- SUBTITLE SECTION CARD - FILTERS INFO -->       
+            <!-- SUBTITLE SECTION CARD - FILTERS INFO -->
             <?php
                 $activeFilters = [];
                 if ($statusFilter !== '') {
@@ -540,7 +522,7 @@ if ($totalPages > 0) {
             <?php endif; ?>
         </div>
 
-        <!-- PAGINAÇÃO -->  
+        <!-- PAGINAÇÃO -->
         <div class="card-buttons">
             <span class="pagination-info">
                 Mostrando <?php echo htmlspecialchars((string) $startItem); ?> a <?php echo htmlspecialchars((string) $endItem); ?> de <?php echo htmlspecialchars((string) $totalDocuments); ?> <?php echo htmlspecialchars($documentsLabel); ?>
@@ -591,7 +573,7 @@ if ($totalPages > 0) {
                     </button>
                 </div>
             <?php endif; ?>
-        </div> 
+        </div>
     </div>
 
     <!-- Develop Info -->

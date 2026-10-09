@@ -41,9 +41,9 @@ usort($hojeRows, static function (array $a, array $b) use ($toTimeTs): int {
     return $toTimeTs($a) <=> $toTimeTs($b);
 });
 $maxVagas = SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
-$itemsPerPage = (int) ($_GET['items_per_page'] ?? 25);
-if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
-    $itemsPerPage = 25;
+$itemsPerPage = 15;
+if (!in_array($itemsPerPage, [15], true)) {
+    $itemsPerPage = 15;
 }
 $hojePage = max(1, (int) ($_GET['hoje_page'] ?? 1));
 $minhasPage = max(1, (int) ($_GET['minhas_page'] ?? 1));
@@ -328,19 +328,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start padding-x-md"><h2>Audiências de hoje</h2></div>
         </div>
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <div class="col">
-                    <label for="items-per-page-hoje">Itens por página</label>
-                    <select class="width-300 height-md" id="items-per-page-hoje">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+
         <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
             <div id="timeline-hoje-painel-estudante" class="timeline-day-ruler row row-full"></div>
         </div>
@@ -506,19 +494,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start padding-x-md"><h2>Minhas inscrições</h2></div>
         </div>
-        <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <div class="col">
-                    <label for="items-per-page-minhas">Itens por página</label>
-                    <select class="width-300 height-md" id="items-per-page-minhas">
-                        <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                        <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                        <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                        <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+
         <?php if (count($minhasPageRows) === 0): ?>
         <div class="padding-x-md padding-y-lg">
             <p class="description-page">Nenhuma inscrição encontrada.</p>

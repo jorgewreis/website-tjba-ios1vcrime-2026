@@ -19,7 +19,7 @@
         params.set('periodo', String(document.getElementById('filter-periodo')?.value || '').trim());
         params.set('tipo', String(document.getElementById('filter-tipo')?.value || '').trim());
         params.set('search', String(document.getElementById('search-input')?.value || '').trim());
-        params.set('items_per_page', String(document.getElementById('items-per-page')?.value || '25').trim());
+        params.set('items_per_page', String(document.getElementById('items-per-page')?.value || '15').trim());
         window.location.href = '/frame.php?' + params.toString();
     }
 

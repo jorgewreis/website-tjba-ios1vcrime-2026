@@ -25,7 +25,7 @@ if (!is_array($parsed)) {
 $id = trim((string) ($parsed['id'] ?? ''));
 
 try {
-    $service = new GabineteReusPresosService($connection);
+    $service = new GabineteReusPresosService($connection, (($_GET['contexto'] ?? '') === 'substituto'));
     $service->archive($id);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {

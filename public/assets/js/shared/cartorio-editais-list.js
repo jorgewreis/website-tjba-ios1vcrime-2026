@@ -8,7 +8,7 @@
             const status = global.document.getElementById('filter-status')?.value ?? '';
             const tipoEdital = global.document.getElementById('filter-tipo-edital')?.value ?? '';
             const processo = global.document.getElementById('search-input')?.value?.trim() ?? '';
-            const perPage = global.document.getElementById('items-per-page')?.value ?? '25';
+            const perPage = global.document.getElementById('items-per-page')?.value ?? '15';
             const params = new URLSearchParams(global.location.search);
             params.set('page', routePage);
             params.set('page_number', '1');

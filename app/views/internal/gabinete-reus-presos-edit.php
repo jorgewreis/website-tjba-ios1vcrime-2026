@@ -10,7 +10,9 @@ require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/GabineteReusPresosService.php';
 
 $connection = Conection::getInstance()->getConnection();
-$service = new GabineteReusPresosService($connection);
+$origem = (($_GET['origem'] ?? '') === 'reuspresossubstituto') ? 'reuspresossubstituto' : 'reuspresos';
+$isSubstituto = $origem === 'reuspresossubstituto';
+$service = new GabineteReusPresosService($connection, $isSubstituto);
 
 $id = trim((string) ($_GET['id'] ?? ''));
 $errorMessage = '';

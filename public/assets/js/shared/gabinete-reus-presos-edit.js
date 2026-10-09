@@ -16,13 +16,17 @@
             : null;
 
         function goBack() {
-            global.location.href = settings.backHref || '/frame.php?page=reuspresos';
+            const origem = new URLSearchParams(global.location.search).get('origem');
+            global.location.href = origem === 'reuspresossubstituto' ? '/frame.php?page=reuspresossubstituto' : (settings.backHref || '/frame.php?page=reuspresos');
         }
 
         global.document.getElementById('btn-erro-voltar')?.addEventListener('click', goBack);
         global.document.getElementById('btn-grp-voltar')?.addEventListener('click', goBack);
 
         function postJson(url, body) {
+            if (new URLSearchParams(global.location.search).get('origem') === 'reuspresossubstituto') {
+                url += (url.indexOf('?') === -1 ? '?' : '&') + 'contexto=substituto';
+            }
             return common.postJson(url, body).then(function (result) {
                 return { ok: result.ok, j: result.data || {} };
             });

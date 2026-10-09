@@ -10,10 +10,10 @@ require_once $basePath . '/app/services/GabineteReusPresosService.php';
 
 $connection = Conection::getInstance()->getConnection();
 
-$allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
+$allowedPerPage = [15];
+$itemsPerPage = 15;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 15;
 }
 $pageNumber = isset($_GET['page_number']) ? max(1, (int) $_GET['page_number']) : 1;
 $offset = ($pageNumber - 1) * $itemsPerPage;
@@ -27,7 +27,7 @@ $filters = $q !== ''
     ];
 
 try {
-    $service = new GabineteReusPresosService($connection);
+    $service = new GabineteReusPresosService($connection, (($_GET['contexto'] ?? '') === 'substituto'));
     $result = $service->listAtivos($filters, $itemsPerPage, $offset);
     echo json_encode([
         'rows' => $result['rows'],

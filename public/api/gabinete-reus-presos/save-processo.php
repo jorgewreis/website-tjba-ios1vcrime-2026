@@ -17,7 +17,7 @@ if (!is_array($parsed)) {
 }
 
 try {
-    $service = new GabineteReusPresosService($connection);
+    $service = new GabineteReusPresosService($connection, (($_GET['contexto'] ?? '') === 'substituto'));
     $linkId = $service->saveProcessoLink($parsed);
     echo json_encode(['link_id' => $linkId], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {

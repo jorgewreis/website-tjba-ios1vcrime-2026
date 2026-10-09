@@ -17,7 +17,7 @@ if (!is_array($parsed)) {
 }
 
 try {
-    $service = new GabineteReusPresosService($connection);
+    $service = new GabineteReusPresosService($connection, (($_GET['contexto'] ?? '') === 'substituto'));
     $deleted = $service->deleteMovimentacao(
         trim((string) ($parsed['reu_preso_id'] ?? '')),
         trim((string) ($parsed['movimentacao_id'] ?? ''))

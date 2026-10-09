@@ -7,6 +7,7 @@ if (function_exists('mb_internal_encoding')) {
 }
 
 $routePage = trim((string) ($_GET['page'] ?? 'reuspresoscreate'));
+$origem = (($_GET['origem'] ?? '') === 'reuspresossubstituto') ? 'reuspresossubstituto' : 'reuspresos';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -71,7 +72,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'reuspresoscreate'));
             };
 
             document.getElementById('btn-grp-voltar')?.addEventListener('click', function () {
-                window.location.href = '/frame.php?page=reuspresos';
+                window.location.href = '/frame.php?page=<?php echo $origem; ?>';
             });
 
             document.getElementById('grp-nome')?.addEventListener('blur', function () {
@@ -89,7 +90,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'reuspresoscreate'));
                 }
                 const btn = this;
                 btn.disabled = true;
-                fetch('/api/gabinete-reus-presos/create.php', {
+                fetch('/api/gabinete-reus-presos/create.php' + (new URLSearchParams(window.location.search).get('origem') === 'reuspresossubstituto' ? '?contexto=substituto' : ''), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ nome: nome }),
@@ -99,7 +100,7 @@ $routePage = trim((string) ($_GET['page'] ?? 'reuspresoscreate'));
                 .then(function (res) {
                     if (res.ok && res.j && res.j.id) {
                         notify('success', 'Sucesso', 'Cadastro criado. Redirecionando para edição.');
-                        window.location.href = '/frame.php?page=reuspresosedit&id=' + encodeURIComponent(res.j.id);
+                        window.location.href = '/frame.php?page=reuspresosedit&id=' + encodeURIComponent(res.j.id) + (new URLSearchParams(window.location.search).get('origem') === 'reuspresossubstituto' ? '&origem=reuspresossubstituto' : '');
                     } else {
                         notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao salvar.');
                         btn.disabled = false;

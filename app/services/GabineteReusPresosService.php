@@ -43,10 +43,10 @@ final class GabineteReusPresosService
     private PartesRepository $partesRepository;
     private ProcessosPartesRepository $processosPartesRepository;
 
-    public function __construct(PDO $connection)
+    public function __construct(PDO $connection, bool $substituto = false)
     {
         $this->connection = $connection;
-        $this->reuRepo = new GabineteReuPresoRepository($connection);
+        $this->reuRepo = new GabineteReuPresoRepository($connection, 'gabinete_reu_preso', $substituto ? 'substituto' : 'principal');
         $this->procRepo = new GabineteReuPresoProcessoRepository($connection);
         $this->movRepo = new GabineteReuPresoMovimentacaoRepository($connection);
         $this->pautaRepo = new SalaAudienciasPautaRepository($connection);

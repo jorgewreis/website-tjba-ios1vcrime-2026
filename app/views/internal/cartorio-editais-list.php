@@ -31,10 +31,10 @@ if ($statusFilter === 'em_andamento') {
 }
 $processoFilter = trim($_GET['processo'] ?? '');
 $tipoEditalFilter = trim($_GET['tipo_edital'] ?? '');
-$allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
+$allowedPerPage = [15];
+$itemsPerPage = 15;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 10;
+    $itemsPerPage = 15;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -176,9 +176,7 @@ if ($totalPages > 0) {
                 <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
                     <i class="fi fi-rr-filter"></i>
                 </div>
-                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
-                    <i class="fi fi-rr-list"></i>
-                </div>
+
                 <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
@@ -266,22 +264,7 @@ if ($totalPages > 0) {
         }
         ?>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <select class="width-300 height-md" id="items-per-page">
-                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                </select>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
-            </div>
-        </div>
+
 
         <!-- <div class="card-title" style="padding-top: 40px !important;">
             <div class="display-flex row row-full justify-start">

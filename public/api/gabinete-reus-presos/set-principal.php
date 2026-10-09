@@ -20,7 +20,7 @@ $reuPresoId = trim((string) ($parsed['reu_preso_id'] ?? ''));
 $linkId = trim((string) ($parsed['link_id'] ?? ''));
 
 try {
-    $service = new GabineteReusPresosService($connection);
+    $service = new GabineteReusPresosService($connection, (($_GET['contexto'] ?? '') === 'substituto'));
     $service->setPrincipal($reuPresoId, $linkId);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {

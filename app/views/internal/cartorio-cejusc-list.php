@@ -7,8 +7,8 @@ require_once __DIR__ . '/../../helpers/DeleteAuthorization.php';
 require_once __DIR__ . '/../../repositories/ProcessosPartesRepository.php';
 
 $connection = Conection::getInstance()->getConnection();
-$itemsPerPage = (int) ($_GET['items_per_page'] ?? 10);
-if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) $itemsPerPage = 10;
+$itemsPerPage = 15;
+if (!in_array($itemsPerPage, [15], true)) $itemsPerPage = 15;
 $currentPage = max(1, (int) ($_GET['page_number'] ?? 1));
 $filters = [];
 try {
@@ -103,21 +103,12 @@ function cejusc_resumo_nomes(array $nomes, string $singularOutro = 'outro', stri
                             <option value="<?php echo htmlspecialchars('pdf-' . $exportMonth['value'], ENT_QUOTES); ?>" data-export-href="<?php echo htmlspecialchars($exportMonth['href'], ENT_QUOTES); ?>">PDF - <?php echo htmlspecialchars($exportMonth['label'], ENT_QUOTES); ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <div class="title-icon" title="Itens por página" role="button" tabindex="0" aria-label="Itens por página" data-list-section-trigger="items"><i class="fi fi-rr-list"></i></div>
+
                     <button class="btn btn-primary width-300" type="button" onclick="location.href='/frame.php?page=cejusccreate'">Novo cadastro</button>
                 </div>
             </div>
 
-            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
-                <div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span></div>
-                <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                    <form method="get" class="display-flex row row-fit gap-y-md align-center" data-auto-submit-filters>
-                        <input type="hidden" name="page" value="cejusc">
-                        <select class="width-300 height-md" name="items_per_page" aria-label="Itens por página"><option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option><option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option><option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option><option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option></select>
-                    </form>
-                    <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar itens por página" data-list-section-hide="items"><i class="fi fi-rr-angle-small-up"></i></div>
-                </div>
-            </div>
+
 
             <div class="display-flex col col-full register">
                 <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" style="background-color: var(--color-primary-bg-light);">

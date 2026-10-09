@@ -16,10 +16,10 @@ if ($ativo !== null && $ativo !== '') {
     $ativo = null;
 }
 
-$allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
+$allowedPerPage = [15];
+$itemsPerPage = 15;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 15;
 }
 $pageNumber = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
 $offset = ($pageNumber - 1) * $itemsPerPage;

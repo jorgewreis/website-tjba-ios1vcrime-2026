@@ -19,10 +19,10 @@ $routePage = trim((string) ($_GET['page'] ?? 'consultapartes'));
 $nomeFilter = trim($_GET['nome'] ?? '');
 $cpfFilter = trim($_GET['cpf'] ?? '');
 $instituicaoIdFilter = trim($_GET['instituicao_id'] ?? '');
-$allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
+$allowedPerPage = [15];
+$itemsPerPage = 15;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 15;
 }
 $currentPage = isset($_GET['page_number']) ? max(1, (int) $_GET['page_number']) : (isset($_GET['page']) && is_numeric($_GET['page']) ? max(1, (int) $_GET['page']) : 1);
 
@@ -117,7 +117,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     text-overflow: ellipsis;
                     white-space: nowrap;
                 }
-            
+
             .result-tel {
                 width: 220px;
             }
@@ -185,15 +185,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     $listExportQuery = $baseQueryParams;
                     include __DIR__ . '/_list_export_buttons.php';
                     ?>
-                    <div class="col">
-                        <label for="items-per-page">Itens por página</label>
-                        <select class="width-300 height-md" name="items_per_page" id="items-per-page">
-                            <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                            <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                            <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                            <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                        </select>
-                    </div>
+
                 </div>
             </div>
         </form>
@@ -201,7 +193,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <?php if (!$filtrou): ?>
         <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
             <div class="display-flex row row-full padding-x-sm padding-y-sm">
-                <span class="padding-y-md major-info">Informe ao menos um critério (nome ou CPF); a lista atualiza ao digitar (com pausa) ou ao alterar itens por página.</span>
+                <span class="padding-y-md major-info">Informe ao menos um critério (nome ou CPF); a lista atualiza ao digitar (com pausa).</span>
             </div>
         </div>
 

@@ -55,6 +55,7 @@ final class InternalListExportHandlers
             'oficiosgabinete' => [self::class, 'oficiosGabinete'],
             'monitoramentogabinete' => [self::class, 'monitoramentoGabinete'],
             'reuspresos' => [self::class, 'reusPresos'],
+            'reuspresossubstituto' => [self::class, 'reusPresos'],
             'cartasexpedidas' => [self::class, 'cartasExpedidas'],
             'cartasrecebidas' => [self::class, 'cartasRecebidas'],
             'cejusc' => [self::class, 'cejusc'],
@@ -497,7 +498,7 @@ final class InternalListExportHandlers
                 'nome' => trim((string) ($get['nome'] ?? '')),
                 'processo' => trim((string) ($get['processo'] ?? '')),
             ];
-        $service = new GabineteReusPresosService($pdo);
+        $service = new GabineteReusPresosService($pdo, (($get['page'] ?? '') === 'reuspresossubstituto'));
         $rows = $service->listAtivos($filters, self::MAX_ROWS, 0)['rows'] ?? [];
         $out = [];
         foreach ($rows as $r) {
@@ -513,8 +514,8 @@ final class InternalListExportHandlers
         }
 
         return [
-            'title' => 'Lista de réus presos',
-            'slug' => 'reus-presos',
+            'title' => (($get['page'] ?? '') === 'reuspresossubstituto') ? 'Lista de réus presos - substituto' : 'Lista de réus presos',
+            'slug' => (($get['page'] ?? '') === 'reuspresossubstituto') ? 'reus-presos-substituto' : 'reus-presos',
             'columns' => [
                 ['key' => 'reu_nome', 'label' => 'Nome'],
                 ['key' => 'processo_principal', 'label' => 'Processo principal'],

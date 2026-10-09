@@ -20,7 +20,7 @@ $id = trim((string) ($parsed['id'] ?? ''));
 $nome = trim((string) ($parsed['nome'] ?? ''));
 
 try {
-    $service = new GabineteReusPresosService($connection);
+    $service = new GabineteReusPresosService($connection, (($_GET['contexto'] ?? '') === 'substituto'));
     $service->updateNome($id, $nome);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {

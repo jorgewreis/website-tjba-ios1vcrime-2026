@@ -56,6 +56,7 @@ final class ListExportFilterSummary
                 break;
 
             case 'reuspresos':
+            case 'reuspresossubstituto':
                 $qRp = (string) ($get['q'] ?? '');
                 if ($qRp !== '') {
                     self::pair($parts, 'Busca', $qRp);

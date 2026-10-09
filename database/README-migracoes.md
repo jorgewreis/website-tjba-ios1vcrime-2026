@@ -57,6 +57,12 @@ Cria as tabelas do módulo de acompanhamento de réus presos:
 - `gabinete_reu_preso_processo`
 - `gabinete_reu_preso_movimentacao`
 
+### `20261009_add_gabinete_reu_preso_controle_tipo.sql`
+
+Separa, na tabela `gabinete_reu_preso`, os registros dos controles “Réus Presos” e “Réus Presos - Substituto” por meio de `controle_tipo`. Os registros já existentes recebem o valor `principal`; novos registros do controle substituto recebem `substituto`.
+
+No deploy de produção, a alteração é aplicada de forma idempotente por `php scripts/migrate-gabinete-reu-preso-controle-tipo.php`.
+
 Requer a tabela `processos`.
 
 ## 5. Módulo Ofícios
@@ -163,6 +169,7 @@ quando a localização for `Virtual - Audin`.
 ## 10. Arquivos presentes hoje em `database/migrations/`
 
 - `20260322_gabinete_reus_presos.sql`
+- `20261009_add_gabinete_reu_preso_controle_tipo.sql`
 - `20260322_oficios_criado_por.sql`
 - `20260322_seed_setores_inicial.sql`
 - `20260322_setores_codigo_area.sql`

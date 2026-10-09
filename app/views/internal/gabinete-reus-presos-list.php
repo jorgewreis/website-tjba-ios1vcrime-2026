@@ -19,13 +19,14 @@ if ($currentUserId !== '') {
     $podeVerEmailResumoReusPresos = count(array_intersect($perfisUsuario, ['ADMIN', 'MAGISTRADA'])) > 0;
 }
 
-$routePage = 'reuspresos';
+$routePage = (($_GET['page'] ?? '') === 'reuspresossubstituto') ? 'reuspresossubstituto' : 'reuspresos';
+$isSubstituto = $routePage === 'reuspresossubstituto';
 $qFilter = trim((string) ($_GET['q'] ?? ''));
 
-$allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
+$allowedPerPage = [15];
+$itemsPerPage = 15;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 15;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -39,7 +40,7 @@ $filters = $qFilter !== '' ? ['q' => $qFilter] : [];
 $offset = ($currentPage - 1) * $itemsPerPage;
 
 try {
-    $service = new GabineteReusPresosService($connection);
+    $service = new GabineteReusPresosService($connection, $isSubstituto);
     $listResult = $service->listAtivos($filters, $itemsPerPage, $offset);
 } catch (Throwable $exception) {
     die('Erro ao carregar os dados: ' . $exception->getMessage());
@@ -132,7 +133,7 @@ if ($totalPages > 0) {
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Réus Presos - Gabinete</title>
+    <title><?php echo $isSubstituto ? 'Réus Presos - Substituto' : 'Réus Presos - Gabinete'; ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php include __DIR__ . '/_internal_head_styles.php'; ?>
     <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
@@ -143,7 +144,7 @@ if ($totalPages > 0) {
         /* Destaque da próxima reavaliação (lista Gabinete — réus presos) */
         .grp-revisao-wrap { display: inline-block; max-width: 100%; }
         .grp-revisao-sem { color: var(--color-gray-600); font-weight: 600; }
-        .grp-revisao-normal { 
+        .grp-revisao-normal {
             width: fit-content !important;
             color: var(--color-gray-800);
             font-size: 11px;
@@ -190,7 +191,7 @@ if ($totalPages > 0) {
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Interno - Gabinete - Réus presos -</span>
+            <span class="all">Interno - Gabinete - <?php echo $isSubstituto ? 'Réus Presos - Substituto' : 'Réus presos'; ?> -</span>
             <span class="specific">Lista</span>
         </div>
     </div>
@@ -199,17 +200,15 @@ if ($totalPages > 0) {
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Réus presos</h1>
-                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Acompanhamento de réus presos, processo principal e prazo de reavaliação.</p>
+                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;"><?php echo $isSubstituto ? 'Réus Presos - Substituto' : 'Réus presos'; ?></h1>
+                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;"><?php echo $isSubstituto ? 'Acompanhamento de réus presos em processos sob responsabilidade de outro juiz.' : 'Acompanhamento de réus presos, processo principal e prazo de reavaliação.'; ?></p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
                 <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
                     <i class="fi fi-rr-search"></i>
                 </div>
-                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
-                    <i class="fi fi-rr-list"></i>
-                </div>
-                <?php if ($podeVerEmailResumoReusPresos): ?>
+
+                <?php if ($podeVerEmailResumoReusPresos && !$isSubstituto): ?>
                 <button type="button" class="btn btn-secondary width-300" id="email-resumo-btn">Email resumo</button>
                 <?php endif; ?>
                 <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
@@ -233,22 +232,7 @@ if ($totalPages > 0) {
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <select class="width-300 height-md" id="items-per-page">
-                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                </select>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
-            </div>
-        </div>
+
 
         <div class="display-flex col col-full register">
 
@@ -413,7 +397,7 @@ if ($totalPages > 0) {
 
         var applyFilters = function () {
             var q = document.getElementById('filter-q')?.value?.trim() ?? '';
-            var perPage = document.getElementById('items-per-page')?.value ?? '25';
+            var perPage = document.getElementById('items-per-page')?.value ?? '15';
             var params = new URLSearchParams(window.location.search);
             params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES, 'UTF-8'); ?>');
             params.set('page_number', '1');
@@ -430,7 +414,7 @@ if ($totalPages > 0) {
         });
 
         document.getElementById('novo-cadastro-btn')?.addEventListener('click', function() {
-            window.location.href = '/frame.php?page=reuspresoscreate';
+            window.location.href = '/frame.php?page=reuspresoscreate' + (<?php echo $isSubstituto ? 'true' : 'false'; ?> ? '&origem=reuspresossubstituto' : '');
         });
         document.getElementById('email-resumo-btn')?.addEventListener('click', function () {
             var btn = this;
@@ -466,7 +450,7 @@ if ($totalPages > 0) {
         document.querySelectorAll('.btn-editar').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 var id = this.getAttribute('data-id');
-                if (id) window.location.href = '/frame.php?page=reuspresosedit&id=' + encodeURIComponent(id);
+                if (id) window.location.href = '/frame.php?page=reuspresosedit&id=' + encodeURIComponent(id) + (<?php echo $isSubstituto ? 'true' : 'false'; ?> ? '&origem=reuspresossubstituto' : '');
             });
         });
     })();

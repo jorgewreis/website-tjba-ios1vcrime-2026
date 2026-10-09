@@ -638,7 +638,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Gabinete',
                 items: [
                     { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficiosgabinete' },
-                    { icon: 'fi fi-rs-lock', label: 'Réus Presos', target: 'reuspresos' }
+                    { icon: 'fi fi-rs-lock', label: 'Réus Presos', target: 'reuspresos' },
+                    { icon: 'fi fi-rs-lock', label: 'Réus Presos - Substituto', target: 'reuspresossubstituto' }
                 ]
             },
             {

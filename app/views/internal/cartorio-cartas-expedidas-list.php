@@ -31,10 +31,10 @@ if ($routePage === '') {
 $finalidadeFilter = trim((string) ($_GET['finalidade'] ?? ''));
 $statusFilter = trim((string) ($_GET['status'] ?? ''));
 $processoFilter = trim((string) ($_GET['processo'] ?? ''));
-$allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 10;
+$allowedPerPage = [15];
+$itemsPerPage = 15;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 10;
+    $itemsPerPage = 15;
 }
 
 $pageNumberParam = $_GET['page_number'] ?? null;
@@ -223,9 +223,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                     <div class="button-icon-left" role="button" tabindex="0" aria-label="Exportar" title="Exportar" data-v2-panel-trigger="export">
                         <i class="fi fi-rr-file-export" aria-hidden="true"></i>
                     </div>
-                    <div class="button-icon-left" role="button" tabindex="0" aria-label="Itens por página" title="Itens por página" data-v2-panel-trigger="items">
-                        <i class="fi fi-rr-list" aria-hidden="true"></i>
-                    </div>
+
                     <div class="buttons">
                         <button type="button" class="button-btn btn-primary" id="novo-cadastro-btn">
                             <span class="btn-icon-text">Novo cadastro</span>
@@ -247,7 +245,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                     </div>
                 </a>
                 <a href="./../../documents/pdf/Fluxo_de_Expedição_Carta_Precatória.png" target="_blank">
-                    <div class="page-card-list-document">                        
+                    <div class="page-card-list-document">
                         <i class="fi fi-rr-file-pdf" aria-hidden="true"></i>
                         <span class="page-card-list-document-text">Infográfico - Fluxo de Cumprimento</span>
                     </div>
@@ -270,19 +268,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="card-line full media-768" data-v2-panel="items" hidden>
-            <div class="card-line left">
-                <div class="line-description">Quantidade de itens por página</div>
-            </div>
-            <div class="card-line right">
-                <select class="width-100 height-md" id="items-per-page">
-                    <option value="10" <?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                    <option value="25" <?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                    <option value="50" <?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                    <option value="100" <?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                </select>
-            </div>
-        </div>
+
 
         <div class="card-line full media-768" data-v2-panel="export" hidden>
             <div class="card-line left">

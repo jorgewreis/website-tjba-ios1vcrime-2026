@@ -16,7 +16,7 @@ try {
     if ($id === '') {
         throw new InvalidArgumentException('Identificador obrigatório.');
     }
-    $service = new GabineteReusPresosService($connection);
+    $service = new GabineteReusPresosService($connection, (($_GET['contexto'] ?? '') === 'substituto'));
     $data = $service->findById($id);
     if ($data === null) {
         http_response_code(404);

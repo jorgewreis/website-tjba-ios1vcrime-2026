@@ -50,7 +50,7 @@
 
     function changePageSize() {
         var el = document.getElementById('items-per-page');
-        var n = el ? String(el.value || '25').trim() : '25';
+        var n = el ? String(el.value || '15').trim() : '15';
         var params = new URLSearchParams();
         params.set('page', 'salaata');
         params.set('page_number', '1');

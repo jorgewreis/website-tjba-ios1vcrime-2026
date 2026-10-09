@@ -14,10 +14,10 @@ $connection = Conection::getInstance()->getConnection();
 $routePage = trim((string) ($_GET['page'] ?? 'consultaprocessos'));
 $numeroFilter = trim($_GET['numero'] ?? '');
 $parteNomeFilter = trim($_GET['parte_nome'] ?? '');
-$allowedPerPage = [10, 25, 50, 100];
-$itemsPerPage = isset($_GET['items_per_page']) ? (int) $_GET['items_per_page'] : 25;
+$allowedPerPage = [15];
+$itemsPerPage = 15;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
-    $itemsPerPage = 25;
+    $itemsPerPage = 15;
 }
 $currentPage = isset($_GET['page_number']) ? max(1, (int) $_GET['page_number']) : 1;
 
@@ -139,15 +139,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     $listExportQuery = $baseQueryParams;
                     include __DIR__ . '/_list_export_buttons.php';
                     ?>
-                    <div class="col">
-                        <label for="items-per-page">Itens por página</label>
-                        <select class="width-300 height-md" name="items_per_page" id="items-per-page">
-                            <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                            <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                            <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                            <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                        </select>
-                    </div>
+
                 </div>
             </div>
         </form>

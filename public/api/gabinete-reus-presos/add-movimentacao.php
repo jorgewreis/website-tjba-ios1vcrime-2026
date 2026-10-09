@@ -19,7 +19,7 @@ if (!is_array($parsed)) {
 $parsed['user_cadastro'] = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 
 try {
-    $service = new GabineteReusPresosService($connection);
+    $service = new GabineteReusPresosService($connection, (($_GET['contexto'] ?? '') === 'substituto'));
     $inserted = $service->addMovimentacao($parsed);
     echo json_encode(['success' => true, 'inserted' => $inserted], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {

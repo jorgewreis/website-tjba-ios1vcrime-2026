@@ -7,11 +7,13 @@ final class GabineteReuPresoRepository
 {
     private PDO $connection;
     private string $table;
+    private string $controleTipo;
 
-    public function __construct(PDO $connection, string $table = 'gabinete_reu_preso')
+    public function __construct(PDO $connection, string $table = 'gabinete_reu_preso', string $controleTipo = 'principal')
     {
         $this->connection = $connection;
         $this->table = $table;
+        $this->controleTipo = $controleTipo === 'substituto' ? 'substituto' : 'principal';
     }
 
     public function findById(string $id): ?array
@@ -21,9 +23,10 @@ final class GabineteReuPresoRepository
             return null;
         }
         $st = $this->connection->prepare(
-            sprintf('SELECT * FROM `%s` WHERE `id` = :id LIMIT 1', $this->table)
+            sprintf('SELECT * FROM `%s` WHERE `id` = :id AND `controle_tipo` = :controle_tipo LIMIT 1', $this->table)
         );
         $st->bindValue(':id', $id);
+        $st->bindValue(':controle_tipo', $this->controleTipo);
         $st->execute();
         $row = $st->fetch(PDO::FETCH_ASSOC);
 
@@ -33,8 +36,8 @@ final class GabineteReuPresoRepository
     public function insert(array $row): void
     {
         $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `nome`, `status`, `arquivado_em`, `proxima_revisao`, `created_at`, `updated_at`, `user_cadastro`)
-            VALUES (:id, :nome, :status, :arquivado_em, :proxima_revisao, NOW(), NOW(), :user_cadastro)',
+            'INSERT INTO `%s` (`id`, `nome`, `status`, `arquivado_em`, `proxima_revisao`, `controle_tipo`, `created_at`, `updated_at`, `user_cadastro`)
+            VALUES (:id, :nome, :status, :arquivado_em, :proxima_revisao, :controle_tipo, NOW(), NOW(), :user_cadastro)',
             $this->table
         );
         $st = $this->connection->prepare($sql);
@@ -43,6 +46,7 @@ final class GabineteReuPresoRepository
         $st->bindValue(':status', $row['status'] ?? 'ativo');
         $st->bindValue(':arquivado_em', $row['arquivado_em'] ?? null);
         $st->bindValue(':proxima_revisao', $row['proxima_revisao'] ?? null);
+        $st->bindValue(':controle_tipo', $this->controleTipo);
         $st->bindValue(':user_cadastro', $row['user_cadastro'] ?? null);
         $st->execute();
     }
@@ -50,10 +54,11 @@ final class GabineteReuPresoRepository
     public function updateNome(string $id, string $nome): bool
     {
         $st = $this->connection->prepare(
-            sprintf('UPDATE `%s` SET `nome` = :nome, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
+            sprintf('UPDATE `%s` SET `nome` = :nome, `updated_at` = NOW() WHERE `id` = :id AND `controle_tipo` = :controle_tipo LIMIT 1', $this->table)
         );
         $st->bindValue(':nome', $nome);
         $st->bindValue(':id', $id);
+        $st->bindValue(':controle_tipo', $this->controleTipo);
         $st->execute();
 
         return $st->rowCount() > 0;
@@ -62,10 +67,11 @@ final class GabineteReuPresoRepository
     public function updateProximaRevisao(string $id, ?string $dataYmd): bool
     {
         $st = $this->connection->prepare(
-            sprintf('UPDATE `%s` SET `proxima_revisao` = :d, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
+            sprintf('UPDATE `%s` SET `proxima_revisao` = :d, `updated_at` = NOW() WHERE `id` = :id AND `controle_tipo` = :controle_tipo LIMIT 1', $this->table)
         );
         $st->bindValue(':d', $dataYmd);
         $st->bindValue(':id', $id);
+        $st->bindValue(':controle_tipo', $this->controleTipo);
         $st->execute();
 
         return $st->rowCount() > 0;
@@ -75,13 +81,14 @@ final class GabineteReuPresoRepository
     {
         $st = $this->connection->prepare(
             sprintf(
-                'UPDATE `%s` SET `status` = :st, `arquivado_em` = NOW(), `updated_at` = NOW() WHERE `id` = :id AND `status` = :ativo LIMIT 1',
+                'UPDATE `%s` SET `status` = :st, `arquivado_em` = NOW(), `updated_at` = NOW() WHERE `id` = :id AND `status` = :ativo AND `controle_tipo` = :controle_tipo LIMIT 1',
                 $this->table
             )
         );
         $st->bindValue(':st', 'arquivado');
         $st->bindValue(':ativo', 'ativo');
         $st->bindValue(':id', $id);
+        $st->bindValue(':controle_tipo', $this->controleTipo);
         $st->execute();
 
         return $st->rowCount() > 0;
@@ -93,8 +100,8 @@ final class GabineteReuPresoRepository
      */
     private function buildWhereListAtivos(array $filters): array
     {
-        $where = ['g.`status` = :ativo'];
-        $params = [':ativo' => 'ativo'];
+        $where = ['g.`status` = :ativo', 'g.`controle_tipo` = :controle_tipo'];
+        $params = [':ativo' => 'ativo', ':controle_tipo' => $this->controleTipo];
 
         $q = trim((string) ($filters['q'] ?? ''));
         if ($q !== '') {
@@ -220,6 +227,7 @@ final class GabineteReuPresoRepository
                     AND pp.`situacao` = :situacao_preso
              LEFT JOIN `processos` pr ON pr.`id` = pp.`processo_id`
              WHERE g.`status` = :status_ativo
+               AND g.`controle_tipo` = :controle_tipo
                AND g.`proxima_revisao` IS NOT NULL
                AND (g.`proxima_revisao` <= :limite OR g.`proxima_revisao` < :hoje)
              ORDER BY g.`proxima_revisao` ASC, g.`nome` ASC',
@@ -228,6 +236,7 @@ final class GabineteReuPresoRepository
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':status_ativo', 'ativo');
+        $st->bindValue(':controle_tipo', $this->controleTipo);
         $st->bindValue(':situacao_preso', 'preso');
         $st->bindValue(':hoje', $hojeYmd);
         $st->bindValue(':limite', $limiteYmd);
@@ -242,9 +251,10 @@ final class GabineteReuPresoRepository
      */
     public function listAtivosNomes(): array
     {
-        $sql = sprintf('SELECT DISTINCT TRIM(`nome`) AS `nome` FROM `%s` WHERE `status` = :status_ativo ORDER BY `nome` ASC', $this->table);
+        $sql = sprintf('SELECT DISTINCT TRIM(`nome`) AS `nome` FROM `%s` WHERE `status` = :status_ativo AND `controle_tipo` = :controle_tipo ORDER BY `nome` ASC', $this->table);
         $st = $this->connection->prepare($sql);
         $st->bindValue(':status_ativo', 'ativo');
+        $st->bindValue(':controle_tipo', $this->controleTipo);
         $st->execute();
         $rows = $st->fetchAll(PDO::FETCH_ASSOC);
         if ($rows === false) {

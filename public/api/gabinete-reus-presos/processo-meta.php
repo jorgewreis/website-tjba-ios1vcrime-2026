@@ -45,13 +45,16 @@ try {
     }
 
     $st = $connection->prepare(
-        'SELECT `situacao`, `data_prisao`, `data_fato`
-         FROM `gabinete_reu_preso_processo`
-         WHERE `processo_id` = :pid
-         ORDER BY `updated_at` DESC, `created_at` DESC
+        'SELECT gpp.`situacao`, gpp.`data_prisao`, gpp.`data_fato`
+         FROM `gabinete_reu_preso_processo` gpp
+         INNER JOIN `gabinete_reu_preso` grp ON grp.`id` = gpp.`reu_preso_id`
+         WHERE gpp.`processo_id` = :pid
+           AND grp.`controle_tipo` = :controle_tipo
+         ORDER BY gpp.`updated_at` DESC, gpp.`created_at` DESC
          LIMIT 1'
     );
     $st->bindValue(':pid', (string) $processo['id']);
+    $st->bindValue(':controle_tipo', (($_GET['contexto'] ?? '') === 'substituto') ? 'substituto' : 'principal');
     $st->execute();
     $gpp = $st->fetch(PDO::FETCH_ASSOC) ?: null;
 

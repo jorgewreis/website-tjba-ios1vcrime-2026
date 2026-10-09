@@ -113,7 +113,7 @@
         const applyFilters = function () {
             const status = global.document.getElementById(settings.statusId || 'filter-status')?.value ?? '';
             const processo = global.document.getElementById(settings.searchInputId || 'search-input')?.value?.trim() ?? '';
-            const perPage = global.document.getElementById(settings.itemsPerPageId || 'items-per-page')?.value ?? '25';
+            const perPage = global.document.getElementById(settings.itemsPerPageId || 'items-per-page')?.value ?? '15';
             const params = new URLSearchParams(global.location.search);
             params.set('page', String(settings.routePage || ''));
             params.set('page_number', '1');

@@ -27,8 +27,7 @@
     function initializeProcessSearch(config) {
         const cfg = Object.assign({}, defaultConfig, config);
         const input = document.getElementById(cfg.inputId);
-        const itemsSelect = document.getElementById(cfg.itemsPerPageId);
-        if (!input || !itemsSelect) {
+        if (!input) {
             return null;
         }
 
@@ -78,7 +77,7 @@
                 params.delete(searchParamKey);
             }
 
-            setParam(params, 'items_per_page', itemsSelect.value);
+            setParam(params, 'items_per_page', '15');
             if (routeParamValue) {
                 params.set(routeParamKey, routeParamValue);
             }

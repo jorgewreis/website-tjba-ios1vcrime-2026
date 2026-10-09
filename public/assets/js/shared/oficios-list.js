@@ -140,7 +140,7 @@
     function bindFilters(config) {
         const applyFilters = function () {
             const oficio = global.document.getElementById(config.searchInputId || 'search-input')?.value?.trim() ?? '';
-            const perPage = global.document.getElementById(config.itemsPerPageId || 'items-per-page')?.value ?? '25';
+            const perPage = global.document.getElementById(config.itemsPerPageId || 'items-per-page')?.value ?? '15';
             const params = new URLSearchParams(global.location.search);
             params.set('page', String(config.routePage || ''));
             params.set('page_number', '1');

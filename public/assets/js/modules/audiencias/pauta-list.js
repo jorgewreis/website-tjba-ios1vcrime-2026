@@ -89,7 +89,7 @@
         params.set('periodo', val('filter-periodo'));
         params.set('tipo', val('filter-tipo'));
         params.set('search', val('search-input'));
-        params.set('items_per_page', val('items-per-page') || '25');
+        params.set('items_per_page', val('items-per-page') || '15');
         window.location.href = getFramePhpHref() + '?' + params.toString();
     }
 

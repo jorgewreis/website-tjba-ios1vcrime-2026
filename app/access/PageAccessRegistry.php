@@ -80,6 +80,7 @@ final class PageAccessRegistry
             'salapautaedit' => $areaAudiencias,
             'salapautaparteedit' => $areaAudiencias,
             'reuspresos' => $areaGabinete,
+            'reuspresossubstituto' => $areaGabinete,
             'reuspresoscreate' => $areaGabinete,
             'reuspresosedit' => $areaGabinete,
 

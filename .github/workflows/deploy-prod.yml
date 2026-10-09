@@ -102,6 +102,10 @@ jobs:
               php scripts/migrate-cejusc.php
             fi
 
+            if [ -f scripts/migrate-gabinete-reu-preso-controle-tipo.php ]; then
+              php scripts/migrate-gabinete-reu-preso-controle-tipo.php
+            fi
+
             sudo systemctl reload nginx 2>/dev/null || true
             sudo systemctl reload php8.2-fpm 2>/dev/null || true
             sudo systemctl reload php8.1-fpm 2>/dev/null || true

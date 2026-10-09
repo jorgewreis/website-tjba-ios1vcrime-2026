@@ -20,9 +20,9 @@ if ($statusFilter === 'adiada') {
 $periodoFilter = trim((string) ($_GET['periodo'] ?? ''));
 $tipoFilter = trim((string) ($_GET['tipo'] ?? ''));
 $search = trim((string) ($_GET['search'] ?? ''));
-$itemsPerPage = (int) ($_GET['items_per_page'] ?? 25);
-if (!in_array($itemsPerPage, [10, 25, 50, 100], true)) {
-    $itemsPerPage = 25;
+$itemsPerPage = 15;
+if (!in_array($itemsPerPage, [15], true)) {
+    $itemsPerPage = 15;
 }
 $pageNumber = max(1, (int) ($_GET['page_number'] ?? 1));
 $offset = ($pageNumber - 1) * $itemsPerPage;
@@ -150,9 +150,7 @@ $periodoChipLabels = [
                 <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
                     <i class="fi fi-rr-filter"></i>
                 </div>
-                <div class="title-icon" title="Listar" role="button" tabindex="0" aria-label="Listar" data-list-section-trigger="items">
-                    <i class="fi fi-rr-list"></i>
-                </div>
+
             </div>
         </div>
 
@@ -210,22 +208,7 @@ $periodoChipLabels = [
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="items" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Itens por página</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <select class="width-300 height-md" id="items-per-page">
-                    <option value="10"<?php echo $itemsPerPage === 10 ? ' selected' : ''; ?>>10</option>
-                    <option value="25"<?php echo $itemsPerPage === 25 ? ' selected' : ''; ?>>25</option>
-                    <option value="50"<?php echo $itemsPerPage === 50 ? ' selected' : ''; ?>>50</option>
-                    <option value="100"<?php echo $itemsPerPage === 100 ? ' selected' : ''; ?>>100</option>
-                </select>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="items">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
-            </div>
-        </div>
+
 
         <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
             <?php if ($statusFilter !== '' || $periodoFilter !== '' || $tipoFilter !== '' || $search !== ''): ?>
