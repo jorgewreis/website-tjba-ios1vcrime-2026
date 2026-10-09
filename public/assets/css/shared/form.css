@@ -85,12 +85,13 @@ hr {
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: 6px;
 }
 .pagination-symbol {
-    width: 38px;
-    height: 38px;
-    padding: 13px;
-    margin: 5px 10px 5px 0;
+    width: 30px;
+    height: 30px;
+    padding: 12px;
+    margin: 0;
     
     border-radius: 6px;
     box-sizing: border-box;
@@ -120,23 +121,23 @@ hr {
 }
 
 .pagination-number {
-    width: 38px;
-    height: 38px;
+    width: 30px;
+    height: 30px;
 
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
 
-    margin: 5px 10px 5px 0;
+    margin: 0;
     
-    border-radius: 6px;
+    border-radius: 4px;
     box-sizing: border-box;
     
     background-color: var(--color-background-elevated);
     color: var(--color-text-primary);    
     font-family: 'Poppins', sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.5s ease;
@@ -147,7 +148,7 @@ hr {
     transition: all 0.2s ease;
 }
 .pagination-number.active {
-    background-color: var(--color-primary);
+    background-color: #7352A5;
     color: var(--color-text-on-primary);
     pointer-events: none;
     cursor: default;

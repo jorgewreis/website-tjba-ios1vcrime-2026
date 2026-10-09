@@ -1271,7 +1271,7 @@
         align-items: center;
         flex-wrap: nowrap;
 
-        gap: 5px;
+        gap: 6px;
     }
     .pagination-symbol {
         display: flex;
@@ -1281,6 +1281,8 @@
         flex-wrap: nowrap;
         width: 30px;
         height: 30px;
+        padding: 12px;
+        box-sizing: border-box;
         border-radius: 4px;
         border: 1px solid var(--color-border);
         background-color: var(--color-background-elevated);
@@ -1322,7 +1324,7 @@
         color: var(--color-title-text);
     }
     .pagination-number.active {
-        background-color: var(--color-bg-primary);
+        background-color: #7352A5;
         color: var(--color-text-primary);
         pointer-events: none;
         cursor: default;
