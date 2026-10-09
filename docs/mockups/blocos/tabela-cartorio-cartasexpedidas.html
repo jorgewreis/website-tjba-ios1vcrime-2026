@@ -8,9 +8,7 @@
     <!-- STYLES -->
     <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/4.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Syne+Mono&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Google+Sans+Code:ital,wght,MONO@0,300..800,1;1,300..800,1&family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Syne+Mono&display=swap');
     </style>
 
     <!-- STYLES -->
@@ -21,352 +19,302 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: "JetBrains Mono", monospace;
-            padding: 10px;            
+        :root{
+            --font-family: 'Google Sans Flex', sans-serif;
+            --font-family-mono: 'Syne Mono', monospace;
+            --font-family-code: 'Google Sans Code', monospace;
+            --font-family-title: 'Bebas Neue', sans-serif;
         }
 
-
+        body {
+            font-family: var(--font-family);
+            padding: 20px;            
+        }
 
         .register-line {
-            /* size */
-            width: 100%;
-            height: fit-content;
-
-            /* flex custom */
-            display: flex;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            justify-content: space-between;
-            align-items: flex-start;
-            
-            padding: 5px 10px;
-            gap: 5px;
-            border-bottom: 1px solid #dfdfdf;
-        }
-            .register-line .left{
-                /* flex custom */
-                display: flex;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                justify-content: flex-start;
-                align-items: center;
-                gap: 2px;
-            }
-            .register-line .right{
-                /* flex custom */
-                display: flex;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                justify-content: flex-end;
-                align-items: center;
-                gap: 2px;
-            }
-
-
-
-
-        .container-processo {
-            /* position */
             position: relative;
-
-            /* size */
-            min-width: 20px;
-            min-height: 20px;
-            width: 307px;
-
-            /* space */
-            padding: 2px;
-            gap: 2px;
-            box-sizing: border-box;
-
-            /* flex custom */
-            display: flex;
-            flex-direction: column;
-            flex-wrap: nowrap;
-            justify-content: center;
-            align-items: flex-start;
-
-            /* text */
-            font-family: "JetBrains Mono", monospace;
-        }
-
-            .container-processo.container-sm {
-                width: 307px;
-            }
-
-            .container-processo.container-lg {
-                width: 450px;
-            }
-        
-        .container-processo .container-line {
-            /* size */
             width: 100%;
-            min-height: 20px;
+            min-height: 50px;
 
-            /* space */
-
-            /* flex custom */
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
-            justify-content: space-between;
             align-items: center;
+            justify-content: flex-start;
+
+            background-color: #f8f8f8;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            padding: 5px;
+            margin: 3px;
         }
-            .container-processo .container-line:first-child {
-                border-bottom: 1px solid #efefef;
+            .register-line:hover {
+                background-color: #fefefe;
             }
-            .container-processo .container-line .left{
-                /* size */
-                width: calc(100% - 54px);
-
-                /* flex custom */
-                display: flex;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                justify-content: flex-start;
-                align-items: center;
-
-                gap: 2px;
+            .register-line:hover .actions {
+                opacity: 1;
+                cursor: pointer;
             }
-            .container-processo .container-line .right{
-                 /* flex custom */
-                display: flex;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                justify-content: flex-end;
-                align-items: center;
-
-                gap: 2px;
-            }
-            .container-processo .line-cube {
-                /* position */
-                position: relative;
-
-                /* size */
-                width: 25px;
-                height: 25px;
-
-                /* flex custom */
-                display: flex;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                justify-content: center;
-                align-items: center;
-            }
-                .container-processo .line-cube[role="button"],
-                .container-processo .line-content.box-number.process-info {
+                .register-line:hover .actions img {
                     cursor: pointer;
                 }
-                .container-processo .line-cube.disabled {
-                    opacity: 0.45;
-                    cursor: not-allowed;
-                }
-                .container-processo .cube-icon {
-                    /* size */
-                    width: 18px;
-                    height: 18px;
-                    filter: grayscale(1) brightness(0.5);
-                }
-                .container-processo .line-cube.open .cube-icon {
-                    filter: grayscale(0);
-                }
-            .container-processo .line-content {
-                /* size */
-                width: 100%;
-                min-height: 25px;
 
-                /* space */
-                padding: 0 5px;
+            .block-line {
+                display: flex;
+                flex-direction: column;
+                flex-wrap: nowrap;
+                align-items: flex-start;
+            }
 
-                /* flex custom */
+            .row {
                 display: flex;
                 flex-direction: row;
-                flex-wrap: nowrap;
-                justify-content: flex-start;
-                align-items: center;
             }
-                .container-processo .line-content.double-line {
-                    flex-direction: column;
-                    justify-content: flex-start;
-                    align-items: flex-start;
-                    padding: 5px;
-                }
-                .container-processo .content-number {
-                    /* size */
-                    width: 100%;
+            .col {
+                display: flex;
+                flex-direction: column;
+            }
 
-                    /* text */
-                    font-family: "Syne Mono", monospace;
+                .bl-icon {
+                    width: 30px;
+                    height: 30px;
+
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                    .bl-icon img {
+                        width: 20px;
+                        height: 20px;
+                        transition: opacity 0.3s ease;                    
+                        opacity: 0.3;
+                        cursor: pointer;
+                    }
+                        .bl-icon:hover img {
+                            opacity: 1;
+                        }
+                    .bl-icon.static img {
+                        opacity: 1;
+                        cursor: default;
+                    }
+                    
+                .bl-icon.actions {
+                    opacity: 0;
+                    transition: all 0.3s ease;
+                }
+
+                .bl-title {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: flex-start;
+                    height: 30px;
+                    font-family: var(--font-family-title);
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #333333;
+                }
+                    #span-process-number {
+                        width: 250px;
+                        display: flex;
+                        flex-direction: row;
+                        align-items: center;
+                        padding-left: 10px;
+                        font-family: var(--font-family-code);
+                        font-size: 14px;
+                        color: #333333;
+                    }
+
+                .bl-description {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: flex-start;
+                    padding: 0 10px;
+                    width: 310px;
+                    height: 15px;
+                    font-family: var(--font-family);
                     font-size: 12px;
-                    font-weight: 600;
-                    color: #505050;
+                    color: #666666;
                     overflow: hidden;
                     text-overflow: ellipsis;
-                    white-space: nowrap;
+                    text-wrap: nowrap;
                 }
-                .container-processo .content-classe {
-                    /* size */
-                    width: 100%;
-
-                    /* text */
-                    font-family: "Syne Mono", monospace;
-                    font-size: 10px;
-                    font-weight: 600;
-                    color: #505050;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-                .container-processo .content-assuntos {
-                    /* size */
-                    width: 100%;
-
-                    /* text */
-                    font-family: "Syne Mono", monospace;
+                .bl-description.mini {
+                    width: 310px;
+                    height: 15px;
+                    font-family: var(--font-family);
                     font-size: 9px;
-                    font-weight: 400;
-                    color: #505050;
-                    line-height: 1.35;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
+                    color: #999999;
                 }
-                .container-processo .content-classe.over,
-                .container-processo .content-assuntos.over {
-                    color: #707070;
-                    font-size: 9px;
-                    font-weight: 400;
-                }
-
-
-        .container-historical {
-            /* position */
-            position: relative;
-
-            /* size */
-            min-width: 20px;
-            min-height: 20px;
-            width: 307px;
-
-            /* space */
-            padding: 2px;
-            gap: 2px;
-            box-sizing: border-box;
-
-            /* flex custom */
-            display: flex;
-            flex-direction: column;
-            flex-wrap: nowrap;
-            justify-content: center;
-            align-items: flex-start;
-        }
-            .container-historical .line-content {
-                /* size */
-                width: 100%;
-                min-height: 25px;
-
-                /* space */
-                padding: 0 5px;
-
-                /* flex custom */
-                display: flex;
-                flex-direction: row;
-                flex-wrap: nowrap;
-                justify-content: flex-start;
-                align-items: center;
-            }
-                .container-historical .line-content.double-line {
-                    flex-direction: column;
+                .bl-status {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
                     justify-content: flex-start;
-                    align-items: flex-start;
-                    padding: 5px;
+                    padding: 0 10px;
+                    width: 200px;
+                    height: 30px;
+                    background-color: transparent;
+                    border-radius: 4px;
+                    margin-right: 10px;
+                    font-family: var(--font-family-code);
+                    font-size: 12px;
+                    text-transform: uppercase;
+                    font-weight: bold;
+                    color: #333333;
                 }
-            .container-historical .content-classe {
-                /* size */
-                width: 100%;
-
-                /* text */
-                font-family: "Syne Mono", monospace;
-                font-size: 10px;
-                font-weight: 600;
-                color: #505050;
-                line-height: 20px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
+                    .bl-status.pending {
+                        background-color: #ffd900;
+                        color: #333333;
+                    }
+                    .bl-status.awaiting {
+                        background-color: #e8e2ff;
+                        color: #290868;
+                    }
+            .block-separate {
+                width: 1px;
+                height: 50px;
+                background-color: #e0e0e0;                
+                margin: 0 10px;
             }
-                .container-historical .content-assuntos {
-                    /* size */
-                    width: 100%;
-                    height: fit-content;
 
-                    /* text */
-                    font-family: "Syne Mono", monospace;
-                    font-size: 9px;
-                    font-weight: 400;
-                    line-height: 15px;
-                    color: #505050;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
+
     </style>
 </head>
 <body>
 
     <div class="register-line">
 
-        <!-- LEFT -->
-        <div class="left">
-
-            <!-- CONTAINER PROCESSO - COMPACTO - COMPLETO -->
-            <div class="container-processo container-process container-sm" data-processo-bloco="1">
-                <div class="container-line">
-                    <div class="left">
-                        <!-- mostrar essa div se o processo tiver sigilo -->
-                        <div class="line-cube box-private" title="Sigiloso" aria-label="Sigiloso">                    
-                            <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png">
-                        </div>
-
-                        <div class="line-content box-number process-info" role="button" tabindex="0" title="Copiar número do processo" aria-label="Copiar número do processo">
-                            <span class="content-number major-info">8011335-36.2026.8.05.0103</span>
-                        </div>
+        <!-- dados processuais -->
+        <div class="block-line">
+            <div class="d-flex col">
+                <div class="d-flex row bl-icon"><img src="Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt="Ícone" data-title="Copiar"></div>
+                <div class="d-flex row bl-icon"><img src="Resize-Expand-Corner--Streamline-Ultimate.png" alt="Ícone" data-title="Ver detalhes"></div>
+            </div>
+        </div>
+        <div class="block-line">
+            <div class="d-flex col">
+                <div class="d-flex row">
+                    <div class="d-flex bl-title" id="span-process-number">0501048-40.2019.8.05.0103</div>
+                    <div class="d-flex bl-icon static">
+                        <!-- mostrar quando o processo for sigiloso -->
+                        <img src="View-Off--Streamline-Ultimate.png" alt="Ícone" data-title="Sigiloso">
                     </div>
-
-                    <div class="right">
-                        <div class="line-cube box-open open" title="Réu Preso" aria-label="Réu Preso">
-                            <img class="cube-icon" src="./../../../public/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png">
-                        </div>
-                        <div class="line-cube box-open open" title="Abrir processo" aria-label="Abrir processo" role="button" tabindex="0" data-nav-href="#">
-                            <img class="cube-icon" src="./../../../public/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png">
-                        </div>
+                    <div class="d-flex bl-icon static">
+                        <!-- mostrar quando o processo tiver alguma prioridade cadastrada -->
+                        <img src="Alert-Diamond--Streamline-Ultimate.png" alt="Ícone" data-title="Prioridade">
                     </div>
                 </div>
-                <div class="container-line">
-                    <div class="line-content double-line">
-                        <span class="content-classe">SIGILOSO - Ação Penal - Procedimento Ordinário</span>
-                        <span class="content-assuntos">Leve | Ameaça | <strong>Réu Preso</strong></span>
-                    </div>
+                <div class="d-flex row">
+                    <div class="d-flex bl-description">Ação Penal - Procedimento Ordinário</div>
+                </div>
+                <div class="d-flex row">
+                    <div class="d-flex bl-description mini">Violência doméstica | Competência da Justiça Estadual | Violência Doméstica</div>
                 </div>
             </div>
-
+        </div>
+        <div class="block-line">
+            <div class="d-flex col">
+                <div class="block-separate"></div>
+            </div>
         </div>
 
-        <!-- RIGHT -->
-        <div class="right">
-
-            <!-- CONTAINER HISTORICO - COMPACTO - COMPLETO -->
-            <div class="container-historical container-sm">
-                <div class="container-line">
-                    <div class="line-content double-line">
-                        <span class="content-classe">Histórico de movimentações</span>
-                        <span class="content-assuntos">- 06/04/2026 - 09:44 | Cadastrado por Jorge Wanderley</span>
-                        <span class="content-assuntos">- 08/07/2026 - 14:28 | Enviado por Sheila França</span>
-                    </div>                    
+        <!-- dados de registro e actions -->
+        <div class="block-line">
+            <div class="d-flex col">
+                <div class="d-flex row">
+                    <div class="d-flex bl-status pending">aguardando envio</div>
+                    <div class="d-flex bl-icon static actions">
+                        <img src="Button-Previous--Streamline-Ultimate.png" alt="Ícone" data-title="Refazer tarefa">
+                    </div>
+                    <div class="d-flex bl-icon static actions">
+                        <img src="Button-Play-1--Streamline-Ultimate.png" alt="Ícone" data-title="Movimentar tarefa">
+                    </div>
+                    <div class="d-flex bl-icon static actions">
+                        <img src="Button-Next--Streamline-Ultimate.png" alt="Ícone" data-title="Encerrar tarefa">
+                    </div>
+                    <div class="d-flex bl-icon static actions master">
+                        <img src="Remove-Circle-Bold--Streamline-Ultimate.png" alt="Ícone" data-title="Excluir registro">
+                    </div>
+                </div>
+                <div class="d-flex row">
+                    <div class="d-flex bl-description mini">Última movimentação</div>
+                </div>
+                <div class="d-flex row">
+                    <div class="d-flex bl-description">09.10.2026 - 12:22 | Moacir Bastos</div>
                 </div>
             </div>
+        </div>
 
+    </div>
+
+
+    
+    <div class="register-line">
+
+        <!-- dados processuais -->
+        <div class="block-line">
+            <div class="d-flex col">
+                <div class="d-flex row bl-icon"><img src="Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt="Ícone" data-title="Copiar"></div>
+                <div class="d-flex row bl-icon"><img src="Resize-Expand-Corner--Streamline-Ultimate.png" alt="Ícone" data-title="Ver detalhes"></div>
+            </div>
+        </div>
+        <div class="block-line">
+            <div class="d-flex col">
+                <div class="d-flex row">
+                    <div class="d-flex bl-title" id="span-process-number">0500531-98.2020.8.05.0103</div>
+                    <div class="d-flex bl-icon static">
+                        <!-- mostrar quando o processo for sigiloso -->
+                        <!-- <img src="View-Off--Streamline-Ultimate.png" alt="Ícone" data-title="Sigiloso"> -->
+                    </div>
+                    <div class="d-flex bl-icon static">
+                        <!-- mostrar quando o processo tiver alguma prioridade cadastrada -->
+                        <!-- <img src="Alert-Diamond--Streamline-Ultimate.png" alt="Ícone" data-title="Prioridade"> -->
+                    </div>
+                </div>
+                <div class="d-flex row">
+                    <div class="d-flex bl-description">Procedimento Especial da Lei Antitóxicos</div>
+                </div>
+                <div class="d-flex row">
+                    <div class="d-flex bl-description mini">Tráfico de Drogas e Condutas Afins</div>
+                </div>
+            </div>
+        </div>
+        <div class="block-line">
+            <div class="d-flex col">
+                <div class="block-separate"></div>
+            </div>
+        </div>
+
+        <!-- dados de registro e actions -->
+        <div class="block-line">
+            <div class="d-flex col">
+                <div class="d-flex row">
+                    <div class="d-flex bl-status awaiting">aguardando cumprimento</div>
+                    <div class="d-flex bl-icon static actions">
+                        <img src="Button-Previous--Streamline-Ultimate.png" alt="Ícone" data-title="Sigiloso">
+                    </div>
+                    <div class="d-flex bl-icon static actions">
+                        <img src="Button-Play-1--Streamline-Ultimate.png" alt="Ícone" data-title="Prioridade">
+                    </div>
+                    <div class="d-flex bl-icon static actions">
+                        <img src="Button-Next--Streamline-Ultimate.png" alt="Ícone" data-title="Prioridade">
+                    </div>
+                    <div class="d-flex bl-icon static actions master">
+                        <img src="Remove-Circle-Bold--Streamline-Ultimate.png" alt="Ícone" data-title="Exccluir registro">
+                    </div>
+                    <div class="d-flex bl-icon static actions">
+                        <img src="Whatsapp-Logo--Streamline-Ultimate.png" alt="Ícone" data-title="Texto para WhatsApp">
+                    </div>
+                </div>
+                <div class="d-flex row">
+                    <div class="d-flex bl-description mini">Última movimentação</div>
+                </div>
+                <div class="d-flex row">
+                    <div class="d-flex bl-description">09.10.2026 - 12:22 | Moacir Bastos</div>                    
+                </div>
+            </div>
         </div>
 
     </div>

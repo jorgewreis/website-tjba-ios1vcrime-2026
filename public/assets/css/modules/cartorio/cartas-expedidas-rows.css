@@ -1,42 +1,76 @@
 /* Rows de cartas expedidas alinhadas ao mockup tabela-cartorio-cartasexpedidas. */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
+
 @media (min-width: 390px) {
     .carta-expedida-v2-row {
         align-items: center;
         flex-wrap: nowrap;
-        gap: 12px;
+        gap: 10px;
         min-height: 82px;
-        padding: 8px 12px;
-        border-top: 1px solid #e0e0e0;
+        margin: 3px 0;
+        padding: 6px 10px;
+        border: 1px solid #e0e0e0;
         border-radius: 6px;
         background: #f8f8f8;
     }
 
     .carta-expedida-v2-row > .card-line.left {
-        flex: 1 1 auto;
+        flex: 1 1 620px;
+        width: auto;
         min-width: 0;
         align-items: stretch;
         flex-wrap: nowrap;
-        gap: 8px;
+        gap: 6px;
     }
 
-    .carta-expedida-v2-row > .card-line.left > .register-block:first-child {
-        flex: 1 1 330px;
+    .carta-expedida-v2-row > .card-line.left > .carta-process-tools {
+        flex: 0 0 30px;
+        align-items: center;
+        gap: 0;
+    }
+
+    .carta-expedida-v2-row .carta-process-tools .line-cube {
+        width: 30px;
+        height: 30px;
+        flex: 0 0 30px;
+        cursor: pointer;
+    }
+
+    .carta-expedida-v2-row .carta-process-tools .line-cube img {
+        width: 20px;
+        height: 20px;
+        opacity: .35;
+        transition: opacity .2s ease;
+    }
+
+    .carta-expedida-v2-row .carta-process-tools .line-cube:hover img,
+    .carta-expedida-v2-row .carta-process-tools .line-cube:focus-visible img {
+        opacity: 1;
+    }
+
+    .carta-expedida-v2-row .carta-process-tools .carta-process-tool-open img {
+        filter: none;
+    }
+
+    .carta-expedida-v2-row > .card-line.left > .carta-process-details {
+        flex: 1 1 340px;
         width: auto;
-        min-width: 260px;
+        min-width: 245px;
     }
 
     .carta-expedida-v2-row > .card-line.left > .block-separator-line {
         align-self: stretch;
         width: 1px;
         min-height: 50px;
-        margin: 0 3px;
+        flex: 0 0 1px;
+        margin: 0 2px;
         background: #e0e0e0;
     }
 
     .carta-expedida-v2-row > .card-line.left > .block-separator-line + .register-block {
         flex: 0 1 270px;
         width: auto;
-        min-width: 185px;
+        min-width: 170px;
         justify-content: center;
     }
 
@@ -47,41 +81,59 @@
 
     .carta-expedida-v2-row .container-process .container-line:first-child {
         border-bottom: 0;
+        justify-content: flex-start;
+    }
+
+    .carta-expedida-v2-row .container-process .container-line .carta-process-number-line {
+        width: 100%;
+        min-width: 0;
+        gap: 2px;
     }
 
     .carta-expedida-v2-row .container-process .line-content.box-number {
-        width: 100%;
+        flex: 0 1 250px;
+        width: 250px;
         min-width: 0;
-        justify-content: flex-start;
-        gap: 7px;
-        padding-left: 5px;
-        font-family: 'Google Sans Code', monospace;
-        font-size: 13px;
+        padding-left: 10px;
+        cursor: default;
+    }
+
+    .carta-expedida-v2-row .container-process .content-number {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1;
         color: #333;
     }
 
-    .carta-expedida-v2-row .carta-expedida-copy-icon {
-        width: 16px;
-        height: 16px;
-        opacity: .45;
-        filter: grayscale(1) brightness(.5);
+    .carta-expedida-v2-row .container-process .carta-process-number-line .line-cube {
+        flex: 0 0 23px;
     }
 
-    .carta-expedida-v2-row .line-content.box-number.js-v2-copy-processo:hover .carta-expedida-copy-icon {
-        opacity: 1;
+    .carta-expedida-v2-row .container-process .carta-process-number-line .cube-icon {
+        filter: none;
+    }
+
+    .carta-expedida-v2-row .container-process .line-content.double-line {
+        width: 100%;
+        min-width: 0;
+        align-items: flex-start;
+        padding: 2px 5px;
     }
 
     .carta-expedida-v2-row .container-process .content-classe {
-        color: #333;
+        color: #666;
         font-family: 'Google Sans Flex', 'Google Sans', sans-serif;
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 14px;
+        font-weight: 400;
+        text-transform: none;
     }
 
     .carta-expedida-v2-row .container-process .content-assuntos {
-        color: #777;
+        color: #999;
         font-family: 'Google Sans Flex', 'Google Sans', sans-serif;
-        font-size: 10px;
+        font-size: 9px;
+        text-transform: none;
     }
 
     .carta-expedida-v2-row .container-process .line-cube {
@@ -124,10 +176,11 @@
 
     .carta-expedida-v2-row > .card-line.right {
         flex: 0 1 420px;
+        width: auto;
         min-width: 340px;
         flex-direction: column;
         align-items: stretch;
-        gap: 8px;
+        gap: 2px;
     }
 
     .carta-expedida-v2-row > .card-line.right > .register-block {
@@ -137,23 +190,53 @@
 
     .carta-expedida-v2-row .register-block-status {
         justify-content: flex-start;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin: 0;
+        flex-wrap: nowrap;
+        gap: 5px;
+        min-height: 30px;
+        margin: 0 0 3px;
+    }
+
+    .carta-expedida-v2-row .register-block-status > .badge-allocated,
+    .carta-expedida-v2-row .register-block-status > .badge-status-primary {
+        flex: 0 0 auto;
     }
 
     .carta-expedida-v2-row .badge-status-primary {
-        min-width: 190px;
+        width: 190px;
+        min-width: 0;
         min-height: 28px;
-        padding: 5px 9px;
+        padding: 4px 8px;
         border-radius: 4px;
         font-family: 'Google Sans Code', monospace;
         font-size: 11px;
         text-transform: uppercase;
     }
 
+    .carta-expedida-v2-row .badge-status-primary.status-current {
+        background-color: #ffd900;
+        border-color: #d6b500;
+    }
+
+    .carta-expedida-v2-row .badge-status-primary.status-current .badge-status-text {
+        width: auto;
+        flex: 1 1 auto;
+        color: #333;
+    }
+
+    .carta-expedida-v2-row .badge-status-primary.status-pending {
+        background-color: #e8e2ff;
+        border-color: #d2c7ff;
+    }
+
+    .carta-expedida-v2-row .badge-status-primary.status-pending .badge-status-text {
+        width: auto;
+        flex: 1 1 auto;
+        color: #290868;
+    }
+
     .carta-expedida-v2-row .button-icon-right,
     .carta-expedida-v2-row .register-block-status-text .button-icon-internal {
+        flex: 0 0 28px;
         width: 28px;
         height: 28px;
         padding: 4px;
@@ -176,9 +259,16 @@
     }
 
     .carta-expedida-v2-row .register-block-status-text {
+        flex: 0 1 200px;
+        width: 200px;
+        min-width: 0;
         gap: 6px;
         padding: 3px 5px 3px 9px;
         border-radius: 4px;
+    }
+
+    .carta-expedida-v2-row .register-block-status-text .button-icon-internal {
+        flex: 0 0 28px;
     }
 
     .carta-expedida-v2-row .register-block-status-text-text {
@@ -186,10 +276,17 @@
     }
 
     .carta-expedida-v2-row .container-historical {
+        flex: 0 0 100%;
         width: 100%;
         max-width: 100%;
-        margin-top: 2px;
+        min-height: 0;
+        margin-top: 0;
         display: flex !important;
+    }
+
+    .carta-expedida-v2-row .container-historical .line-content.double-line {
+        min-height: 0;
+        padding: 2px 5px;
     }
 
     .carta-expedida-v2-row .container-historical .content-classe {
@@ -217,13 +314,17 @@
         min-width: 0;
     }
 
-    .carta-expedida-v2-row > .card-line.left > .register-block:first-child {
-        flex-basis: 55%;
-        min-width: 220px;
+    .carta-expedida-v2-row > .card-line.left > .carta-process-tools {
+        flex: 0 0 30px;
+        min-width: 30px;
     }
 
     .carta-expedida-v2-row > .card-line.right > .register-block {
         width: 100%;
+    }
+
+    .carta-expedida-v2-row > .card-line.right {
+        flex-direction: column;
     }
 }
 
@@ -232,7 +333,15 @@
         flex-wrap: wrap;
     }
 
-    .carta-expedida-v2-row > .card-line.left > .register-block:first-child,
+    .carta-expedida-v2-row > .card-line.left > .carta-process-tools {
+        flex: 0 0 100%;
+        width: 100%;
+        min-width: 0;
+        flex-direction: row;
+        justify-content: flex-start;
+    }
+
+    .carta-expedida-v2-row > .card-line.left > .carta-process-details,
     .carta-expedida-v2-row > .card-line.left > .block-separator-line + .register-block {
         flex: 1 1 100%;
         min-width: 0;
@@ -244,5 +353,9 @@
 
     .carta-expedida-v2-row .badge-status-primary {
         min-width: 0;
+    }
+
+    .carta-expedida-v2-row .register-block-status {
+        flex-wrap: wrap;
     }
 }

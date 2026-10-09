@@ -40,7 +40,7 @@ if (!$isTerminal && $subtarefaAtivaUi !== null) {
     $modeloEnvio = true;
 }
 
-$badgePrincipalTexto = 'Em andamento';
+$badgePrincipalTexto = 'Aguardando envio';
 $badgePrincipalClasse = 'status-current';
 $textoEtapa = CartasExpedidasUiCopy::resolverTituloTarefaListagem((string) ($row['Status'] ?? ''), $allSt, $subtarefaAtivaUi);
 $classeEtapa = CartasExpedidasUiCopy::classeCssBadgeStatusTarefaListagem((string) ($row['Status'] ?? ''), $subtarefaAtivaUi);
@@ -180,14 +180,11 @@ foreach ($prioridades as $prioridade) {
     $prioridadesTexto[] = $labelPrioridade;
 }
 $temPrioridadeVisual = $prioridadesTexto !== [];
-$classeExibicao = $sigiloso ? 'SIGILOSO - ' . $classeTexto : $classeTexto;
+$classeExibicao = $classeTexto;
 $classeSemDados = !$classeValid;
 $assuntoSemDados = !$assuntoValid;
 $mostrarSincronizar = $classeSemDados && $assuntoSemDados;
 $classeLinhaExibicao = $classeSemDados ? 'Nenhuma classe cadastrada' : $classeExibicao;
-if ($sigiloso && $classeSemDados) {
-    $classeLinhaExibicao = 'SIGILOSO - Nenhuma classe cadastrada';
-}
 $assuntoExibicao = $assuntoSemDados
     ? 'Nenhum assunto cadastrado. Clique em sincronizar para buscar os dados com a API DataJud'
     : $assuntoTexto;
@@ -210,9 +207,6 @@ $limparCodigosAssuntosCompacto = static function (string $texto): string {
 };
 if (!$classeSemDados) {
     $classeLinhaExibicao = $limparCodigoClasseCompacta($classeLinhaExibicao);
-    if ($sigiloso && str_starts_with($classeLinhaExibicao, 'SIGILOSO - ')) {
-        $classeLinhaExibicao = 'SIGILOSO - ' . $limparCodigoClasseCompacta(substr($classeLinhaExibicao, 11));
-    }
 }
 if (!$assuntoSemDados) {
     $assuntoExibicao = $limparCodigosAssuntosCompacto($assuntoExibicao);
@@ -224,53 +218,51 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
 ?>
 <div class="register-line full carta-expedida-v2-row" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
     <div class="card-line left">
-        <div class="register-block">
+        <div class="register-block carta-process-tools">
+            <?php if ($numero !== ''): ?>
+                <div class="line-cube carta-process-tool js-v2-copy-processo"
+                    role="button"
+                    tabindex="0"
+                    data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES); ?>"
+                    title="Copiar número do processo"
+                    aria-label="Copiar número do processo">
+                    <img src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt="">
+                </div>
+            <?php else: ?>
+                <div class="line-cube carta-process-tool" aria-hidden="true">
+                    <img src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt="">
+                </div>
+            <?php endif; ?>
+            <div class="line-cube box-open open carta-process-tool-open"
+                title="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>"
+                aria-label="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>"
+                <?php if (!$abrirDisabled && $abrirHref !== ''): ?>role="button" tabindex="0" data-nav-href="<?php echo htmlspecialchars($abrirHref, ENT_QUOTES); ?>"<?php endif; ?>>
+                <img class="cube-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES); ?>" alt="">
+            </div>
+        </div>
+        <div class="register-block process carta-process-details">
             <div class="container-process container-sm">
                 <div class="container-line">
-                    <div class="left">
-                        <!-- mostrar essa div se o processo tiver sigilo -->
-                        <div class="line-cube box-private<?php echo $sigiloso ? '' : ' open'; ?>" title="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>" aria-label="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>">
-                            <img class="cube-icon" src="<?php echo htmlspecialchars($iconSigilo, ENT_QUOTES); ?>" alt="">
-                        </div>
-
-                        <div
-                            class="line-content box-number<?php echo $numero !== '' ? ' js-v2-copy-processo' : ''; ?>"
-                            <?php if ($numero !== ''): ?>
-                                role="button"
-                                tabindex="0"
-                                data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES); ?>"
-                                title="Copiar número do processo"
-                                aria-label="Copiar número do processo"
-                            <?php endif; ?>>
-                            <img class="carta-expedida-copy-icon" src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt="">
+                    <div class="left carta-process-number-line">
+                        <div class="line-content box-number">
                             <span class="content-number"><?php echo htmlspecialchars($numero, ENT_QUOTES); ?></span>
                         </div>
-                    </div>
-
-                    <div class="right">
-                        <div class="line-cube box-open<?php echo $temPrioridadeVisual ? ' open' : ''; ?>"<?php if ($temPrioridadeVisual): ?> title="<?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES); ?>"<?php endif; ?>>
-                            <?php if ($temPrioridadeVisual): ?>
+                        <?php if ($sigiloso): ?>
+                            <div class="line-cube box-private" title="Sigiloso" aria-label="Sigiloso">
+                                <img class="cube-icon" src="<?php echo htmlspecialchars($iconSigilo, ENT_QUOTES); ?>" alt="">
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($temPrioridadeVisual): ?>
+                            <div class="line-cube box-open open" title="<?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES); ?>">
                                 <img class="cube-icon" src="<?php echo htmlspecialchars($iconPrioridade, ENT_QUOTES); ?>" alt="">
-                            <?php endif; ?>
-                        </div>
+                            </div>
+                        <?php endif; ?>
                         <?php if ($mostrarSincronizar): ?>
-                            <!-- mostrar essa div desse jeito se o processo não tiver nenhuma classe ou assunto cadastrado -->
-                            <div
-                                class="line-cube box-open open js-v2-sync-processo<?php echo $numero !== '' ? '' : ' disabled'; ?>"
+                            <div class="line-cube box-open open js-v2-sync-processo<?php echo $numero !== '' ? '' : ' disabled'; ?>"
                                 title="Sincronizar dados do processo"
                                 aria-label="Sincronizar dados do processo"
-                                <?php if ($numero !== ''): ?>
-                                    role="button"
-                                    tabindex="0"
-                                    data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES); ?>"
-                                <?php else: ?>
-                                    aria-disabled="true"
-                                <?php endif; ?>>
+                                <?php if ($numero !== ''): ?>role="button" tabindex="0" data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES); ?>"<?php else: ?>aria-disabled="true"<?php endif; ?>>
                                 <img class="cube-icon" src="<?php echo htmlspecialchars($iconSincronizar, ENT_QUOTES); ?>" alt="">
-                            </div>
-                        <?php else: ?>
-                            <div class="line-cube box-open open" title="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>" aria-label="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>"<?php if (!$abrirDisabled && $abrirHref !== ''): ?> role="button" tabindex="0" data-nav-href="<?php echo htmlspecialchars($abrirHref, ENT_QUOTES); ?>"<?php endif; ?>>
-                                <img class="cube-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES); ?>" alt="">
                             </div>
                         <?php endif; ?>
                     </div>
