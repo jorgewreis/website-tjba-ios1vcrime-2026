@@ -30,7 +30,7 @@
         return function applyFilters() {
             const tipo = global.document.getElementById('filter-tipo')?.value || '';
             const status = global.document.getElementById('filter-status')?.value || '';
-            const itemsPerPage = global.document.getElementById('items-per-page')?.value || '15';
+            const itemsPerPage = '15';
             const processo = global.document.getElementById('search-input')?.value?.trim() || '';
             const params = new URLSearchParams(global.location.search);
 
@@ -417,7 +417,7 @@
                 return (settings.editBaseHref || '/frame.php?page=guiasedit&id=') + encodeURIComponent(itemId);
             },
             filters: {
-                triggerIds: ['filter-tipo', 'filter-status', 'items-per-page'],
+                triggerIds: ['filter-tipo', 'filter-status'],
                 searchInputId: 'search-input',
                 searchMode: 'debounce',
                 searchDelay: 800,

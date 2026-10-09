@@ -164,7 +164,11 @@ $formatUltimoAcesso = static function (?string $raw): string {
         $flashMessage = $flashSuccess !== '' ? $flashSuccess : $flashEdit;
         ?>
         <?php if ($flashMessage !== ''): ?>
-        
+        <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
+            <div class="col col-full">
+                <p class="status status-current padding-x-lg"><?php echo htmlspecialchars($flashMessage, ENT_QUOTES, 'UTF-8'); ?></p>
+            </div>
+        </div>
         <?php endif; ?>
 
         <div class="card-title">
@@ -175,6 +179,7 @@ $formatUltimoAcesso = static function (?string $raw): string {
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
 
                 <?php if ($showRowAction): ?>
+
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
                     <?php
                     $listExportPage = $routePage;
@@ -182,23 +187,13 @@ $formatUltimoAcesso = static function (?string $raw): string {
                     include __DIR__ . '/_list_export_buttons.php';
                     ?>
                 </div>
-                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
+<button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
                 <?php endif; ?>
             </div>
         </div>
 
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
-
-            <div class="display-          </div>
-                <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                    <?php
-                    $listExportPage = $routePage;
-                    $listExportQuery = $baseQueryParams;
-                    include __DIR__ . '/_list_export_buttons.php';
-                    ?>
-                </div>
-            </div>
 
             <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
                 <div class="display-flex row row-fit justify-start align-center padding-x-sm">
@@ -235,9 +230,9 @@ $formatUltimoAcesso = static function (?string $raw): string {
                             Estudante (<?php echo (int) ($perfilCounts['estudante'] ?? 0); ?>)
                         </option>
                     </select>
+
                 </div>
             </div>
-
 
         </form>
 

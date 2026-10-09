@@ -204,30 +204,19 @@ if ($totalPages > 0) {
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;"><?php echo $isSubstituto ? 'Acompanhamento de réus presos em processos sob responsabilidade de outro juiz.' : 'Acompanhamento de réus presos, processo principal e prazo de reavaliação.'; ?></p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-
-                <?php if ($podeVerEmailResumoReusPresos && !$isSubstituto): ?>
-                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="height-md" id="filter-q" placeholder="Nome ou número do processo" style="width: 290px;" value="<?php echo htmlspecialchars($qFilter, ENT_QUOTES); ?>">
-                    <?php
-                $listExportPage = $routePage;
-                $listExportQuery = $baseQueryParams;
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
-                </div>
-                <button type="button" class="btn btn-secondary width-300" id="email-resumo-btn">Email resumo</button>
-                <?php endif; ?>>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
                 <input type="text" class="height-md" id="filter-q" placeholder="Nome ou número do processo" style="width: 290px;" value="<?php echo htmlspecialchars($qFilter, ENT_QUOTES); ?>">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
+                <?php if ($podeVerEmailResumoReusPresos && !$isSubstituto): ?>
+                <button type="button" class="btn btn-secondary width-300" id="email-resumo-btn">Email resumo</button>
+                <?php endif; ?>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
-
-
+        </div>
 
         <div class="display-flex col col-full register">
 
@@ -392,7 +381,7 @@ if ($totalPages > 0) {
 
         var applyFilters = function () {
             var q = document.getElementById('filter-q')?.value?.trim() ?? '';
-            var perPage = document.getElementById('items-per-page')?.value ?? '15';
+            var perPage = '15';
             var params = new URLSearchParams(window.location.search);
             params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES, 'UTF-8'); ?>');
             params.set('page_number', '1');
@@ -402,8 +391,6 @@ if ($totalPages > 0) {
             params.delete('processo');
             window.location.href = '?' + params.toString();
         };
-
-        document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
         document.getElementById('filter-q')?.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') { e.preventDefault(); applyFilters(); }
         });

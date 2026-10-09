@@ -40,106 +40,6 @@
         });
     }
 
-    function isPanelOpen(panel) {
-        if (!panel || panel.hasAttribute('hidden')) {
-            return false;
-        }
-        var computed = window.getComputedStyle(panel).display;
-        return computed !== 'none';
-    }
-
-    function hidePanelElement(panel) {
-        if (!panel) {
-            return;
-        }
-        panel.setAttribute('hidden', '');
-        panel.style.setProperty('display', 'none', 'important');
-    }
-
-    function showPanelElement(panel) {
-        if (!panel) {
-            return;
-        }
-        panel.removeAttribute('hidden');
-        panel.style.setProperty('display', 'flex', 'important');
-    }
-
-    function initializePanelToggles() {
-        var panels = document.querySelectorAll('[data-v2-panel]');
-        var triggers = document.querySelectorAll('[data-v2-panel-trigger]');
-
-        function hideAllPanels() {
-            panels.forEach(hidePanelElement);
-        }
-
-        function showPanel(name) {
-            var panel = document.querySelector('[data-v2-panel="' + name + '"]');
-            if (!panel) {
-                return;
-            }
-            hideAllPanels();
-            showPanelElement(panel);
-        }
-
-        function togglePanelFromTrigger(trigger, event) {
-            if (event) {
-                event.stopPropagation();
-            }
-            var name = String(trigger.getAttribute('data-v2-panel-trigger') || '').trim();
-            if (name === '') {
-                return;
-            }
-            var panel = document.querySelector('[data-v2-panel="' + name + '"]');
-            if (isPanelOpen(panel)) {
-                hideAllPanels();
-                return;
-            }
-            showPanel(name);
-        }
-
-        triggers.forEach(function (trigger) {
-            function onActivate(event) {
-                if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') {
-                    return;
-                }
-                if (event.type === 'keydown') {
-                    event.preventDefault();
-                }
-                togglePanelFromTrigger(trigger, event);
-            }
-            trigger.addEventListener('click', onActivate);
-            trigger.addEventListener('keydown', onActivate);
-        });
-
-        panels.forEach(function (panel) {
-            panel.addEventListener('click', function (event) {
-                event.stopPropagation();
-            });
-
-            panel.querySelectorAll('select').forEach(function (selectEl) {
-                selectEl.addEventListener('change', function () {
-                    hideAllPanels();
-                });
-            });
-        });
-
-        document.addEventListener('click', function (event) {
-            var target = event.target;
-            if (!target || !target.closest) {
-                hideAllPanels();
-                return;
-            }
-            if (target.closest('[data-v2-panel]') || target.closest('[data-v2-panel-trigger]')) {
-                return;
-            }
-            hideAllPanels();
-        });
-
-        hideAllPanels();
-
-        return { hideAllPanels: hideAllPanels, hidePanelElement: hidePanelElement };
-    }
-
     function bindCopyProcesso() {
         document.querySelectorAll('.js-v2-copy-processo').forEach(function (btn) {
             function handleCopy(event) {
@@ -318,16 +218,13 @@
         });
     }
 
-    function bindExportSelect(panelApi) {
+    function bindExportSelect() {
         var sel = document.getElementById('list-export-v2');
         if (!sel) {
             return;
         }
         sel.addEventListener('change', function () {
             var v = String(sel.value || '');
-            if (panelApi && typeof panelApi.hideAllPanels === 'function') {
-                panelApi.hideAllPanels();
-            }
             if (v === 'print') {
                 window.print();
                 sel.selectedIndex = 0;
@@ -347,16 +244,14 @@
     }
 
     function initialize(config) {
-        var panelApi = initializePanelToggles();
         bindCopyProcesso();
         bindCopyWhatsapp();
-        bindExportSelect(panelApi);
+        bindExportSelect();
         bindNovoCadastroV2('/frame.php?page=cartasexpedidascreate', 1000);
 
         if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
-            var listSearchApi = window.CartasExpedidasSearch.initializeProcessSearch({
+            window.CartasExpedidasSearch.initializeProcessSearch({
                 inputId: 'search-input',
-                itemsPerPageId: 'items-per-page',
                 filters: [
                     { id: 'filter-tipo', param: 'finalidade' },
                     { id: 'filter-status', param: 'status' }
@@ -365,18 +260,6 @@
                 debounceDelay: 1000,
                 initialProcessFilter: config.initialProcessFilter || ''
             });
-            if (listSearchApi && typeof listSearchApi.applyFilters === 'function') {
-                var hideOnFilterApply = panelApi.hideAllPanels;
-                ['items-per-page', 'filter-status', 'filter-tipo'].forEach(function (id) {
-                    var el = document.getElementById(id);
-                    if (!el) {
-                        return;
-                    }
-                    el.addEventListener('change', function () {
-                        hideOnFilterApply();
-                    }, true);
-                });
-            }
         }
 
         if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {

@@ -33,7 +33,7 @@ $rows = $result['rows'] ?? [];
 $total = (int) ($result['total'] ?? 0);
 
 if ($total === 0) {
-    $totalPages = 0;
+    $totalPages = 1;
     $currentPage = 1;
     $offset = 0;
 } else {
@@ -140,30 +140,9 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Envio do PDF da ata para audiências realizadas. O arquivo fica disponível aos estudantes inscritos por 30 dias.</p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
-                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
-                    <i class="fi fi-rr-search"></i>
-                </div>
 
             </div>
         </div>
-
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Exportação</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <?php
-                $listExportPage = $routePage;
-                $listExportQuery = [];
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
-            </div>
-        </div>
-
-
 
         <div class="display-flex col col-full register">
 
@@ -224,7 +203,15 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
                     </div>
                     <?php if (!$ataRetencaoEncerrada): ?>
                     <input type="file" class="ata-file-input visually-hidden" accept="application/pdf,.pdf" aria-label="Selecionar PDF da ata">
-                    <button type="button" class="btn btn-primary btn-upload-ata" data-pauta="<?php echo $idPauta; ?>"><?php echo $temAta ? 'Substituir PDF' : 'Enviar PDF'; ?></button>
+
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <?php
+                $listExportPage = $routePage;
+                $listExportQuery = [];
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                </div>
+<button type="button" class="btn btn-primary btn-upload-ata" data-pauta="<?php echo $idPauta; ?>"><?php echo $temAta ? 'Substituir PDF' : 'Enviar PDF'; ?></button>
                     <?php endif; ?>
                     <?php include __DIR__ . '/_registro_metadata.php'; ?>
                 </div>
@@ -234,7 +221,7 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
 
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $total; ?> <?php echo $documentsLabel; ?>
                 (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)
@@ -284,6 +271,5 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
     <style>.visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}</style>
     <script src="/assets/js/modules/audiencias/atas-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/atas-list.js') ?: time(); ?>"></script>
     <?php include __DIR__ . '/_copy_process_script.php'; ?>
-    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

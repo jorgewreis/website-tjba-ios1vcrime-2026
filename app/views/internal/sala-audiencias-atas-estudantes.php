@@ -111,23 +111,13 @@ if ($totalPages > 0) {
 
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-600); font-size: 13px;">Não há busca nesta lista.</span>
-            </div>
-        </div>
-
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-600); font-size: 13px;">Não há filtros adicionais.</span>
+
             </div>
         </div>
-
-
 
         <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
             <div class="display-flex row row-full padding-x-sm padding-y-sm">
@@ -236,27 +226,6 @@ if ($totalPages > 0) {
             <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
         </div>
     </div>
-
-    <script>
-    (function () {
-        var el = document.getElementById('items-per-page');
-        if (!el) return;
-        function getFramePhpHref() {
-            var path = window.location.pathname || '/frame.php';
-            var slash = path.lastIndexOf('/');
-            var dir = slash >= 0 ? path.slice(0, slash + 1) : '/';
-            return dir + 'frame.php';
-        }
-        el.addEventListener('change', function () {
-            var n = String(el.value || '15').trim();
-            var params = new URLSearchParams();
-            params.set('page', 'estudaata');
-            params.set('page_number', '1');
-            params.set('items_per_page', n);
-            window.location.href = getFramePhpHref() + '?' + params.toString();
-        });
-    })();
-    </script>
     <?php include __DIR__ . '/_copy_process_script.php'; ?>
 
 </body>

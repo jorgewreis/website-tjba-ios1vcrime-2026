@@ -16,7 +16,7 @@
 
         <!-- IMPORT - FLATICON -->
         <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
-        
+
     </head>
 <body class="page-internal">
 
@@ -32,7 +32,7 @@
         <!-- Título e descrição -->
         <h1 class="title-page">Cartas Expedidas</h1>
         <p class="description-page">Controle de cartas precatórias, rogatórias e de ordem expedidas pelo cartório.</p>
-        
+
         <!-- Badge -->
         <div class="badge file">
             <img src="./../assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
@@ -88,10 +88,10 @@
                 </div>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md">
-                
-            </div>            
+
+            </div>
         </div>
-        
+
         <!-- REGISTER -->
         <div class="display-flex col col-full register border-bottom">
 
@@ -102,7 +102,7 @@
                         <label class="button-table" title="Expandir detalhes">
                             <input type="radio" name="open-subtask" />
                             <i class="fi fi-rr-angle-small-down"></i>
-                        </label>                
+                        </label>
                     </div>
                     <div class="col width-500" title="Clique para copiar">
                         <span class="minor-info text-ellipsis">Cartas Recebidas</span>
@@ -116,14 +116,14 @@
                         <span class="minor-info">Finalidade</span>
                         <span class="major-info text-ellipsis">Intimação para Audiência</span>
                     </div>
-                </div>                
+                </div>
                 <div class="display-flex row row-fit justify-end gap-y-sm">
                     <button type="button" class="btn btn-editar" title="Editar">
                         <i class="fi fi-rr-pen-square"></i>
                     </button>
                     <div class="col" title="aguardando cumprimento">
                         <div class="padding-x-lg status status-current">Em andamento</div>
-                    </div>                
+                    </div>
                 </div>
             </div>
 
@@ -161,7 +161,7 @@
                     <img src="../../public/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
                 </div>
             </div>
-        </div> 
+        </div>
         <!-- Fim da paginação -->
 
     </div>
@@ -180,7 +180,6 @@
             if (window.CartasExpedidasSearch && typeof window.CartasExpedidasSearch.initializeProcessSearch === 'function') {
                 window.CartasExpedidasSearch.initializeProcessSearch({
                     inputId: 'search-input',
-                    itemsPerPageId: 'items-per-page',
                     filters: [
                         { id: 'filter-tipo', param: 'finalidade' },
                         { id: 'filter-status', param: 'status' },

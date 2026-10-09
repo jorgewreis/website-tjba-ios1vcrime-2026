@@ -158,15 +158,7 @@ if ($totalPages > 0) {
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
                 </div>
-                <butição</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <input type="text" class="height-md" id="filter-q" placeholder="Parte da descrição" style="width: 290px;" value="<?php echo htmlspecialchars($qFilter); ?>">
-                <?php
-                $listExportPage = $routePage;
-                $listExportQuery = $baseQueryParams;
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
+<button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
@@ -181,10 +173,9 @@ if ($totalPages > 0) {
                         <option value="<?php echo htmlspecialchars($val); ?>"<?php echo $tipoFilter === $val ? ' selected' : ''; ?>><?php echo htmlspecialchars($lab); ?></option>
                     <?php endforeach; ?>
                 </select>
+
             </div>
         </div>
-
-
 
         <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
             <?php if ($tipoFilter !== '' || $qFilter !== ''): ?>
@@ -284,7 +275,7 @@ if ($totalPages > 0) {
         var applyFilters = function () {
             var tipo = document.getElementById('filter-tipo')?.value ?? '';
             var q = document.getElementById('filter-q')?.value?.trim() ?? '';
-            var perPage = document.getElementById('items-per-page')?.value ?? '15';
+            var perPage = '15';
             var params = new URLSearchParams(window.location.search);
             params.set('page', '<?php echo htmlspecialchars($routePage, ENT_QUOTES, 'UTF-8'); ?>');
             params.set('page_number', '1');
@@ -296,7 +287,6 @@ if ($totalPages > 0) {
         };
 
         document.getElementById('filter-tipo')?.addEventListener('change', applyFilters);
-        document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
         document.getElementById('filter-q')?.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();

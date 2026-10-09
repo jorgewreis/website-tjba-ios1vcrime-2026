@@ -89,7 +89,6 @@
         filterElements.forEach(function (entry) {
             entry.element.addEventListener('change', applyFilters);
         });
-        itemsSelect.addEventListener('change', applyFilters);
 
         input.addEventListener('input', function () {
             const value = normalizeValue(input.value).trim();

@@ -25,7 +25,7 @@ $filtrou = ($numeroFilter !== '' || $parteNomeFilter !== '');
 
 $rows = [];
 $totalDocuments = 0;
-$totalPages = 0;
+$totalPages = 1;
 $startItem = 0;
 $endItem = 0;
 
@@ -42,7 +42,7 @@ if ($filtrou) {
         die('Erro ao carregar os dados: ' . $e->getMessage());
     }
 
-    $totalPages = $totalDocuments > 0 ? (int) ceil($totalDocuments / $itemsPerPage) : 0;
+    $totalPages = max(1, (int) ceil($totalDocuments / $itemsPerPage));
     if ($currentPage > $totalPages && $totalPages > 0) {
         $currentPage = $totalPages;
     }
@@ -171,7 +171,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
         <?php endif; ?>
 
         <?php if ($filtrou): ?>
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 <?php if ($totalPages > 0): ?>(<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)<?php endif; ?>

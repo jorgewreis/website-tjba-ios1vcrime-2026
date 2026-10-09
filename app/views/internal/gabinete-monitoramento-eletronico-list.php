@@ -159,15 +159,14 @@ $statusLabelUi = static function (string $s): string {
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
 
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="height-md" >
-            
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar por processo ou réu..." style="width: 290px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
-                <?php
+                    <input type="text" class="height-md" id="search-input" placeholder="Pesquisar por processo ou réu..." style="width: 290px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                    <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
+                </div>
+<button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
@@ -184,10 +183,9 @@ $statusLabelUi = static function (string $s): string {
                     <option value="finalizada"<?php echo $statusFilter === 'finalizada' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['finalizada'] ?? 0); ?>)</option>
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                 </select>
+
             </div>
         </div>
-
-
 
         <div class="display-flex col col-full register">
 

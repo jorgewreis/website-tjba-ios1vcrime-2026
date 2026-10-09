@@ -170,11 +170,8 @@ $statusFilterLabelsPauta = [
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
 
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="height-md" id="search-input" placeholder="Pesquisar>
-            
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar por processo, parte ou sala..." autocomplete="off" style="width: 290px;" value="<?php echo htmlspecialchars($search, ENT_QUOTES); ?>">
-                <?php
+                    <input type="text" class="height-md" id="search-input" placeholder="Pesquisar por processo, parte ou sala..." autocomplete="off" style="width: 290px;" value="<?php echo htmlspecialchars($search, ENT_QUOTES); ?>">
+                    <?php
                 $listExportPage = $routePage;
                 $listExportQuery = array_filter([
                     'status' => $statusFilter,
@@ -184,8 +181,12 @@ $statusFilterLabelsPauta = [
                 ], static fn ($v) => $v !== null && $v !== '');
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
+                </div>
+<button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
+
+        <!-- SUBTITLE SECTION CARD -->
 
         <!-- SUBTITLE SECTION CARD - FILTERS -->
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
@@ -214,11 +215,11 @@ $statusFilterLabelsPauta = [
                         <option value="<?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?>"<?php echo $tipoFilter === $tpNome ? ' selected' : ''; ?>><?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?></option>
                     <?php endforeach; ?>
                 </select>
+
             </div>
         </div>
 
         <!-- SUBTITLE SECTION CARD - ITEMS PER PAGE -->
-
 
         <!-- REGISTERS LIST -->
         <div class="display-flex col col-full register">
@@ -535,7 +536,7 @@ $statusFilterLabelsPauta = [
 
     <script>
         (function () {
-            
+
         })();
     </script>
     <script src="/assets/js/modules/audiencias/pauta-list.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list.js') ?: time(); ?>"></script>

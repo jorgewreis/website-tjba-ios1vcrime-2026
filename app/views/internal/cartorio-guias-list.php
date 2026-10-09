@@ -220,15 +220,14 @@ if ($totalPages > 0) {
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
 
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="height-md" >
-            
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 295px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
-                <?php
+                    <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 295px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                    <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
+                </div>
+<button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
@@ -252,6 +251,7 @@ if ($totalPages > 0) {
                         </option>
                     <?php endforeach; ?>
                 </select>
+
             </div>
         </div>
 
@@ -287,8 +287,6 @@ if ($totalPages > 0) {
                     </div>';
         }
         ?>
-
-
 
         <!-- <div class="card-title" style="padding-top: 40px !important;">
             <div class="display-flex row row-full justify-start">
@@ -576,7 +574,6 @@ if ($totalPages > 0) {
 
     <script>
         (function () {
-            
 
             if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
                 App.RegistroMetadataList.bind({

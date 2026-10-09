@@ -40,7 +40,7 @@ $total = (int) ($result['total'] ?? 0);
 $statusCounts = $result['statusCounts'] ?? ['designada' => 0, 'realizada' => 0, 'redesignada' => 0, 'cancelada' => 0, 'em_andamento' => 0, 'finalizada' => 0];
 
 if ($total === 0) {
-    $totalPages = 0;
+    $totalPages = 1;
     $pageNumber = 1;
     $offset = 0;
 } else {
@@ -144,39 +144,11 @@ $periodoChipLabels = [
                 <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista de audiências (somente leitura). Use os filtros para localizar por data, tipo ou situação.</p>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                <div class="title-icon" title="Pesquisar" role="button" tabindex="0" aria-label="Pesquisar" data-list-section-trigger="search">
-                    <i class="fi fi-rr-search"></i>
-                </div>
-                <div class="title-icon" title="Filtrar" role="button" tabindex="0" aria-label="Filtrar" data-list-section-trigger="filters">
-                    <i class="fi fi-rr-filter"></i>
-                </div>
 
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="search" style="display: none;">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Pesquisa</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
-                <input type="text" class="height-md" id="search-input" placeholder="Processo, parte ou sala..." autocomplete="off" style="width: 290px;" value="<?php echo htmlspecialchars($search, ENT_QUOTES); ?>">
-                <?php
-                $listExportPage = 'estudapauta';
-                $listExportQuery = array_filter([
-                    'status' => $statusFilter,
-                    'periodo' => $periodoFilter,
-                    'tipo' => $tipoFilter,
-                    'search' => $search,
-                ], static fn ($v) => $v !== null && $v !== '');
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="search">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" data-list-section="filters" style="display: none;">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
@@ -202,13 +174,9 @@ $periodoChipLabels = [
                         <option value="<?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?>"<?php echo $tipoFilter === $tpNome ? ' selected' : ''; ?>><?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?></option>
                     <?php endforeach; ?>
                 </select>
-                <div class="title-icon" title="Ocultar" role="button" tabindex="0" aria-label="Ocultar" data-list-section-hide="filters">
-                    <i class="fi fi-rr-angle-small-up"></i>
-                </div>
+
             </div>
         </div>
-
-
 
         <div class="display-flex col col-full register border-bottom status-current border-bottom" style="margin-bottom: 15px;">
             <?php if ($statusFilter !== '' || $periodoFilter !== '' || $tipoFilter !== '' || $search !== ''): ?>
@@ -271,7 +239,7 @@ $periodoChipLabels = [
         </div>
         <?php endforeach; ?>
 
-        <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm">
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo (int) $startItem; ?>-<?php echo (int) $endItem; ?> de <?php echo (int) $total; ?> <?php echo htmlspecialchars($documentsLabel); ?>
                 (<?php echo (int) $totalPages; ?> <?php echo htmlspecialchars($pagesLabel); ?>, <?php echo (int) $itemsPerPage; ?> <?php echo htmlspecialchars($itemsLabel); ?> por página)
@@ -288,7 +256,21 @@ $periodoChipLabels = [
                     $nextParams['page_number'] = $nextPage;
                     $nextHref = '?' . http_build_query($nextParams);
                     ?>
-                    <button type="button" class="pagination-symbol<?php echo $pageNumber <= 1 ? ' disabled' : ''; ?>" <?php if ($pageNumber > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
+
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <input type="text" class="height-md" id="search-input" placeholder="Processo, parte ou sala..." autocomplete="off" style="width: 290px;" value="<?php echo htmlspecialchars($search, ENT_QUOTES); ?>">
+                    <?php
+                $listExportPage = 'estudapauta';
+                $listExportQuery = array_filter([
+                    'status' => $statusFilter,
+                    'periodo' => $periodoFilter,
+                    'tipo' => $tipoFilter,
+                    'search' => $search,
+                ], static fn ($v) => $v !== null && $v !== '');
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
+                </div>
+<button type="button" class="pagination-symbol<?php echo $pageNumber <= 1 ? ' disabled' : ''; ?>" <?php if ($pageNumber > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior"></button>
                     <?php foreach ($paginationButtons as $pBtn): ?>
                         <?php $pageParams = $baseQueryParams;
                         $pageParams['page_number'] = $pBtn; ?>
@@ -318,6 +300,5 @@ $periodoChipLabels = [
 
     <script src="/assets/js/modules/audiencias/pauta-list-estudantes.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-list-estudantes.js') ?: time(); ?>"></script>
     <?php include __DIR__ . '/_copy_process_script.php'; ?>
-    <?php include __DIR__ . '/_list_section_toggle_script.php'; ?>
 </body>
 </html>

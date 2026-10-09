@@ -19,14 +19,13 @@
         params.set('periodo', String(document.getElementById('filter-periodo')?.value || '').trim());
         params.set('tipo', String(document.getElementById('filter-tipo')?.value || '').trim());
         params.set('search', String(document.getElementById('search-input')?.value || '').trim());
-        params.set('items_per_page', String(document.getElementById('items-per-page')?.value || '15').trim());
+        params.set('items_per_page', '15');
         window.location.href = '/frame.php?' + params.toString();
     }
 
     document.getElementById('filter-periodo')?.addEventListener('change', applyFilters);
     document.getElementById('filter-tipo')?.addEventListener('change', applyFilters);
     document.getElementById('filter-status')?.addEventListener('change', applyFilters);
-    document.getElementById('items-per-page')?.addEventListener('change', applyFilters);
     document.getElementById('search-input')?.addEventListener('keydown', function (ev) {
         if (ev.key === 'Enter') applyFilters();
     });

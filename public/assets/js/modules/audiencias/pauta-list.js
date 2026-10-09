@@ -89,7 +89,7 @@
         params.set('periodo', val('filter-periodo'));
         params.set('tipo', val('filter-tipo'));
         params.set('search', val('search-input'));
-        params.set('items_per_page', val('items-per-page') || '15');
+        params.set('items_per_page', '15');
         window.location.href = getFramePhpHref() + '?' + params.toString();
     }
 
@@ -195,8 +195,6 @@
     if (ft) ft.addEventListener('change', applyFilters);
     var fs = document.getElementById('filter-status');
     if (fs) fs.addEventListener('change', applyFilters);
-    var ipp = document.getElementById('items-per-page');
-    if (ipp) ipp.addEventListener('change', applyFilters);
     var searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('keydown', function (ev) {

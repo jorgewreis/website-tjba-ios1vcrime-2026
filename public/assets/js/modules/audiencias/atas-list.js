@@ -48,19 +48,6 @@
         });
     }
 
-    function changePageSize() {
-        var el = document.getElementById('items-per-page');
-        var n = el ? String(el.value || '15').trim() : '15';
-        var params = new URLSearchParams();
-        params.set('page', 'salaata');
-        params.set('page_number', '1');
-        params.set('items_per_page', n);
-        window.location.href = getFramePhpHref() + '?' + params.toString();
-    }
-
-    var ipp = document.getElementById('items-per-page');
-    if (ipp) ipp.addEventListener('change', changePageSize);
-
     function openFilePicker(inp) {
         if (!inp) return false;
         try {

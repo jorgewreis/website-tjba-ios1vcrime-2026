@@ -167,11 +167,48 @@ if ($totalPages > 0) {
         </div>
 
         <div class="display-flex col col-full padding-x-md padding-y-md gap-y-md">
-            
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
+                        <span>Número do processo <span id="gab-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></span>
+                        <span id="processo-ap-info" class="minor-info" aria-live="polite"></span>
+                    </label>
+                    <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
+                </div>
+                <div class="col">
+                    <label for="filter-classe">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                </div>
+                <div class="col">
+                    <label for="gab-oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                    <select class="width-600 height-md" id="gab-oficio-tipo">
+                        <option value="">Selecione…</option>
+                        <optgroup label="Encaminhamento">
+                            <option value="Encaminhando Informações">Encaminhando informações</option>
+                            <option value="Encaminhando Mandado de Busca e Apreensao">Encaminhando Mandado de Busca e Apreensão </option>
+                            <option value="Encaminhando Mandado de Prisao">Encaminhando Mandado de Prisão</option>
+                            <option value="Encaminhando Pecas Processuais">Encaminhando Peças Processuais</option>
+                        </optgroup>
+                        <optgroup label="Solicitação">
+                            <option value="Solicitando Informacoes">Solicitando informações</option>
+                            <option value="Solicitando Pecas Processuais">Solicitando peças processuais</option>
+                            <option value="Solicitando Providencias">Solicitando providências</option>
+                        </optgroup>
+                        <optgroup label="Administrativos">
+                            <option value="Solicitando Afastamento" data-oficio-grupo="administrativo">Solicitando afastamento</option>
+                            <option value="Solicitando Licença Prêmio" data-oficio-grupo="administrativo">Solicitando licença prêmio</option>
+                            <option value="Solicitando Férias" data-oficio-grupo="administrativo">Solicitando férias</option>
+                            <option value="Solicitando Reembolso" data-oficio-grupo="administrativo">Solicitando reembolso</option>
+                            <option value="Outros" data-oficio-grupo="administrativo">Outros</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <div class="card-buttons padding-x-lg padding-y-sm">
             <div class="display-flex row row-fit justify-start gap-y-md">
+
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
                     <input type="text" class="height-md" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" style="width: 320px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
                     <?php
@@ -180,23 +217,14 @@ if ($totalPages > 0) {
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
                 </div>
-                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
-                </div>
-                <button type="button" class="btn btn-secondary-outline" id="btn-gab-oficio-limpar">Limpar</button>
+<button type="button" class="btn btn-secondary-outline" id="btn-gab-oficio-limpar">Limpar</button>
             </div>
             <div class="display-flex row row-fit justify-start gap-y-md">
-                <button type=ista</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <input type="text" class="height-md" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" style="width: 320px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
-                <?php
-                $listExportPage = $routePage;
-                $listExportQuery = $baseQueryParams;
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
+                <button type="button" class="btn btn-primary" id="btn-gab-oficio-registrar">Registrar</button>
             </div>
         </div>
+        <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
+        <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
@@ -224,10 +252,9 @@ if ($totalPages > 0) {
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </select>
+
             </div>
         </div>
-
-
 
         <div class="display-flex col col-full register">
             <?php
@@ -365,13 +392,10 @@ if ($totalPages > 0) {
     <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script>
         (function() {
-            
 
             if (window.App && App.ListSearch && typeof App.ListSearch.initializeProcessSearch === 'function') {
                 App.ListSearch.initializeProcessSearch({
-                    inputId: 'search-input',
-                    itemsPerPageId: 'items-per-page',
-                    searchParamKey: 'oficio',
+                    inputId: 'search-input',                    searchParamKey: 'oficio',
                     filters: [{
                             id: 'filter-status',
                             param: 'status'

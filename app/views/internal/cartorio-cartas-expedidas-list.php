@@ -216,11 +216,14 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                 <div class="line-right">
 
                     <div class="buttons">
-                        <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                            <input type="text" id="search-input" class="width-300 height-md" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off">
-                            <select class="width-200 height-md list-export-select" id="list-export-v2" data-csv-href="<?php echo htmlspecialchars($exportCsvUrl, ENT_QUOTES); ?>" data-pdf-href="<?php echo htmlspecialchars($exportPdfUrl, ENT_QUOTES); ?>" aria-label="Exportar lista"><option value="" selected disabled>Exportar</option><option value="pdf">PDF</option><option value="csv">CSV</option><option value="print">Imprimir</option></select>
-                        </div>
-                    <button type="button" class="button-btn btn-primary" id="novo-cadastro-btn">
+                        <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap"><input type="text" id="search-input" class="width-300 height-md" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off"></div>
+<div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap"><select class="width-200 height-md list-export-select" id="list-export-v2" data-csv-href="<?php echo htmlspecialchars($exportCsvUrl, ENT_QUOTES); ?>" data-pdf-href="<?php echo htmlspecialchars($exportPdfUrl, ENT_QUOTES); ?>" aria-label="Exportar lista">
+                    <option value="" selected disabled>Exportar</option>
+                    <option value="pdf">PDF</option>
+                    <option value="csv">CSV</option>
+                    <option value="print">Imprimir</option>
+                </select></div>
+<button type="button" class="button-btn btn-primary" id="novo-cadastro-btn">
                             <span class="btn-icon-text">Novo cadastro</span>
                             <div class="btn-icon hidden">
                                 <i class="fi fi-rr-spinner" aria-hidden="true"></i>
@@ -230,12 +233,6 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                 </div>
             </div>
         </div>
-
-        
-
-
-
-        
 
         <div class="card-line full media-1024">
             <div class="card-line left">

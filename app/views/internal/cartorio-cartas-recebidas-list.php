@@ -164,7 +164,6 @@ if ($totalPages > 0) {
                 <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
 
-
         <!-- IMPORT - FLATICON -->
         <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
         <?php include __DIR__ . '/_toast_script.php'; ?>
@@ -197,17 +196,18 @@ if ($totalPages > 0) {
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
 
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="height-md" id="search-input" placeholder="Pesquisar>
-            
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 290px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
-                <?php
+                    <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 290px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                    <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
+                </div>
+<button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
+
+        <!-- SUBTITLE SECTION CARD -->
 
         <!-- SUBTITLE SECTION CARD - FILTERS -->
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
@@ -243,11 +243,11 @@ if ($totalPages > 0) {
                         </option>
                     <?php endforeach; ?>
                 </select>
+
             </div>
         </div>
 
         <!-- SUBTITLE SECTION CARD - ITEMS PER PAGE -->
-
 
         <!-- TITLE CARD -->
         <!-- <div class="card-title" style="padding: 40px 0 10px 0 !important;">
@@ -570,13 +570,10 @@ if ($totalPages > 0) {
     <script src="/assets/js/modules/cartorio/cartas-recebidas/search-list.js"></script>
     <script>
         (function () {
-            
 
             if (window.CartasRecebidasSearch && typeof window.CartasRecebidasSearch.initializeProcessSearch === 'function') {
                 window.CartasRecebidasSearch.initializeProcessSearch({
-                    inputId: 'search-input',
-                    itemsPerPageId: 'items-per-page',
-                    filters: [
+                    inputId: 'search-input',                    filters: [
                         { id: 'filter-tipo', param: 'finalidade' },
                         { id: 'filter-status', param: 'status' },
                     ],

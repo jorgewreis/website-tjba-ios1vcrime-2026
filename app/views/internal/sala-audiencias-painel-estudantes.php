@@ -691,21 +691,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var slash = path.lastIndexOf('/');
             var dir = slash >= 0 ? path.slice(0, slash + 1) : '/';
             return dir + 'frame.php';
-        }
-        function bindItemsPerPage(id) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            el.addEventListener('change', function () {
-                var n = String(el.value || '25').trim();
-                var params = new URLSearchParams();
-                params.set('page', 'estudapainel');
-                params.set('hoje_page', '1');
-                params.set('minhas_page', '1');
-                params.set('items_per_page', n);
-                window.location.href = getFramePhpHref() + '?' + params.toString();
-            });
-        }
-        function scheduledTimestamp(item) {
+        }        function scheduledTimestamp(item) {
             var dataAud = String(item && item.data_audiencia || '').trim();
             var horaAud = String(item && item.hora_audiencia || '').trim();
             return parseDateTime((dataAud + ' ' + horaAud).trim());
@@ -1086,8 +1072,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             // Atualiza dados reais sem recarregar a página.
             refreshStatusAndTime();
         }
-        bindItemsPerPage('items-per-page-hoje');
-        bindItemsPerPage('items-per-page-minhas');
         renderVisibleTimeBlocks(latestItemsById);
         renderTimeline(latestItemsById);
         refreshStatusAndTime();
