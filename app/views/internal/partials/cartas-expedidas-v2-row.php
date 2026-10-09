@@ -217,14 +217,12 @@ if (!$classeSemDados) {
 if (!$assuntoSemDados) {
     $assuntoExibicao = $limparCodigosAssuntosCompacto($assuntoExibicao);
 }
-$iconSigilo = $mostrarSincronizar
-    ? '/assets/icons/Sign-Badge-Rectangular-Round-2--Streamline-Ultimate.png'
-    : '/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png';
-$iconPrioridade = '/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png';
-$iconAbrir = '/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png';
+$iconSigilo = '/assets/icons/View-Off--Streamline-Ultimate.png';
+$iconPrioridade = '/assets/icons/Alert-Diamond--Streamline-Ultimate.png';
+$iconAbrir = '/assets/icons/Cartas-Resize-Expand-Corner--Streamline-Ultimate.png';
 $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
 ?>
-<div class="register-line full" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
+<div class="register-line full carta-expedida-v2-row" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
     <div class="card-line left">
         <div class="register-block">
             <div class="container-process container-sm">
@@ -244,6 +242,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                                 title="Copiar número do processo"
                                 aria-label="Copiar número do processo"
                             <?php endif; ?>>
+                            <img class="carta-expedida-copy-icon" src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt="">
                             <span class="content-number"><?php echo htmlspecialchars($numero, ENT_QUOTES); ?></span>
                         </div>
                     </div>
@@ -385,7 +384,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                         data-whatsapp-text="<?php echo htmlspecialchars($whatsappTexto, ENT_QUOTES); ?>"
                         title="Copiar texto para WhatsApp"
                         aria-label="Copiar texto para WhatsApp">
-                        <img src="/assets/icons/Task-Checklist--Streamline-Ultimate.png" alt="">
+                        <img src="/assets/icons/Whatsapp-Logo--Streamline-Ultimate.png" alt="">
                     </button>
                 <?php endif; ?>
                 <button type="button" class="button-icon-right" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
@@ -399,7 +398,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                             data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
                             title="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>"
                             aria-label="Continuar">
-                            <img src="/assets/icons/Navigation-Arrows-Right-1--Streamline-Ultimate.png" alt="">
+                            <img src="/assets/icons/Button-Play-1--Streamline-Ultimate.png" alt="">
                         </button>
                     </div>
                 <?php endif; ?>
