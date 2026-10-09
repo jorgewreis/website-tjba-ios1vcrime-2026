@@ -275,6 +275,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         }
         .nav-item-user-summary {
             display: none;
+            position: absolute;
+            left: 25px;
             align-items: center;
             flex: 0 1 auto;
             max-width: 400px;
