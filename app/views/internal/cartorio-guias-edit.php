@@ -221,7 +221,6 @@ $tiposOptions = [
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar Guia</h1>
-        <p class="description-page">Altere os dados e acompanhe as subtarefas.</p>
     </div>
 
     <div class="container-full card-page">

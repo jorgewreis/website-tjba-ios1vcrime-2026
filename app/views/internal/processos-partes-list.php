@@ -43,7 +43,6 @@ $endItem = min($currentPage * $itemsPerPage, $totalPartes);
     <div class="header-page">
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Vínculos processo-parte</span></div>
         <h1 class="title-page">Vínculos processo-parte</h1>
-        <p class="description-page">Informe o ID do processo para listar as partes vinculadas.</p>
     </div>
     <div class="container-full card-page">
 
@@ -87,7 +86,27 @@ $endItem = min($currentPage * $itemsPerPage, $totalPartes);
             </div>
             <?php foreach ($partesPage as $p): ?>
             <div class="display-flex col col-full register border-bottom">
-                frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>">Ver pessoa</button>
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
+                    <div class="display-flex row row-fit justify-start gap-y-md">
+                        <div class="col width-400">
+                            <span class="minor-info">Nome</span>
+                            <span class="major-info"><?php echo htmlspecialchars($p['nome_completo'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col width-200">
+                            <span class="minor-info">CPF</span>
+                            <span class="major-info"><?php echo htmlspecialchars($p['cpf'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col width-200">
+                            <span class="minor-info">Tipo</span>
+                            <span class="major-info"><?php echo htmlspecialchars($p['tipo_parte'] ?? '—'); ?></span>
+                        </div>
+                        <div class="col width-200">
+                            <span class="minor-info">Polo</span>
+                            <span class="major-info"><?php echo htmlspecialchars($p['polo'] ?? '—'); ?></span>
+                        </div>
+                    </div>
+                    <div class="display-flex row row-fit justify-end gap-y-sm">
+                        <button type="button" class="btn btn-secondary-outline height-sm" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode($p['parte_id'] ?? ''); ?>">Ver pessoa</button>
                         <button type="button" class="btn btn-secondary-outline height-sm" data-nav-href="/frame.php?page=processospartesedit&id=<?php echo urlencode($p['id'] ?? ''); ?>">Editar vínculo</button>
                     </div>
                 </div>

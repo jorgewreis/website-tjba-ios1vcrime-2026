@@ -34,7 +34,6 @@ $profissaoAtual = '';
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Cadastrar pessoa</h1>
-        <p class="description-page">Dados básicos da parte (pessoa). Apenas o nome completo é obrigatório; documentos, sexo e data de nascimento podem ser informados quando disponíveis.</p>
     </div>
 
     <div class="container-full card-page">

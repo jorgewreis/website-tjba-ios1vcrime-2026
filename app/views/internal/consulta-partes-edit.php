@@ -52,7 +52,6 @@ if ($backPage === 'salapautaedit' && $backId !== '') {
     <div class="header-page">
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Editar pessoa</span></div>
         <h1 class="title-page"><?php echo htmlspecialchars($pessoa['nome_completo'] ?? 'Pessoa'); ?></h1>
-        <p class="description-page">Dados básicos, documentos, telefones e vínculos com instituições.</p>
     </div>
     <div class="container-full card-page">
         <input type="hidden" id="parte-id" value="<?php echo htmlspecialchars(trim((string) ($pessoa['id'] ?? $pessoa['ID'] ?? ''))); ?>">

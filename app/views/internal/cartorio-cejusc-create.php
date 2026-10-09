@@ -2,7 +2,7 @@
 declare(strict_types=1);
 ?>
 <!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Novo cadastro CEJUSC</title><?php include __DIR__ . '/_internal_head_styles.php'; ?><?php include __DIR__ . '/_toast_script.php'; ?><script src="/assets/js/shared/cartorio-cejusc.js"></script></head>
-<body class="page-internal"><div class="spacing-top-page"></div><div class="header-page"><div class="location"><span class="all">Interno - Cartório - Cejusc -</span><span class="specific">Cadastro</span></div><h1 class="title-page">Novo cadastro CEJUSC</h1><p class="description-page">Informe os dados do encaminhamento ao CEJUSC.</p></div>
+<body class="page-internal"><div class="spacing-top-page"></div><div class="header-page"><div class="location"><span class="all">Interno - Cartório - Cejusc -</span><span class="specific">Cadastro</span></div><h1 class="title-page">Novo cadastro CEJUSC</h1></div>
 <div class="container-full card-page">
     <form id="cejusc-form">
         <div class="display-flex row row-full align-center justify-start padding-x-md padding-y-md border-bottom">

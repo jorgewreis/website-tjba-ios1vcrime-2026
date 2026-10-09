@@ -55,7 +55,6 @@ $defPrivadoEhOutro = ($defensorPrivadoAtual === 'outro');
             <span class="specific">Editar parte cadastrada</span>
         </div>
         <h1 class="title-page">Editar parte cadastrada</h1>
-        <p class="description-page">Atualize os dados da parte vinculada à audiência e os identificadores de expedição e cumprimento.</p>
     </div>
 
     <div class="container-full card-page">

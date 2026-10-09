@@ -38,7 +38,6 @@ declare(strict_types=1);
             <span class="specific">Teste PJe Público</span>
         </div>
         <h1 class="title-page">Consulta Processual Pública (PJe)</h1>
-        <p class="description-page">Página de teste isolada para consulta pública via FastAPI e Playwright.</p>
     </div>
 
     <div class="container-full card-page">

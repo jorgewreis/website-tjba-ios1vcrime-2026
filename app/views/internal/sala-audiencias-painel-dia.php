@@ -169,7 +169,6 @@ function painelResumoInscrito(array $inscrito): string
             <span class="specific">Painel do dia</span>
         </div>
         <h1 class="title-page">Painel de Audiências</h1>
-        <p class="description-page">Audiências de hoje (<?php echo htmlspecialchars($dataTitulo, ENT_QUOTES, 'UTF-8'); ?>).</p>
     </div>
 
     <div class="container-full card-page">

@@ -40,7 +40,6 @@ $backHref = $pessoaPrefill !== null
     <div class="header-page">
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Novo vínculo pessoa-instituição</span></div>
         <h1 class="title-page">Novo vínculo pessoa-instituição</h1>
-        <p class="description-page">Vincule uma pessoa a uma instituição.</p>
     </div>
     <div class="container-full card-page">
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">

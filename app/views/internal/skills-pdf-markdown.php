@@ -24,7 +24,6 @@ Security::requireAuthentication();
         <span class="specific">PDF para Markdown</span>
     </div>
     <h1 class="title-page">PDF para Markdown</h1>
-    <p class="description-page">Converta arquivos PDF para Markdown diretamente no navegador.</p>
 </div>
 
 <div class="container-full card-page">

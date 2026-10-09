@@ -37,7 +37,6 @@ $labelsRegra = [
     <div class="header-page">
         <div class="location"><span class="all">Interno - Admin -</span> <span class="specific">Feriados · Novo</span></div>
         <h1 class="title-page">Novo feriado / recesso</h1>
-        <p class="description-page">Registro de períodos de indisponibilidade (tipo, datas, regra fixa/única/móvel e descrição opcional).</p>
     </div>
 
     <div class="container-full card-page">

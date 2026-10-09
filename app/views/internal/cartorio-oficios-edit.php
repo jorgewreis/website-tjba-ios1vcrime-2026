@@ -119,7 +119,6 @@ $subLabels = [
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar ofício</h1>
-        <p class="description-page">Consulta dos dados do ofício e das alocações (por regra e cadastrante, quando aplicável). Cancelar ou excluir conforme permissão e regras.</p>
     </div>
 
     <div class="container-full card-page">

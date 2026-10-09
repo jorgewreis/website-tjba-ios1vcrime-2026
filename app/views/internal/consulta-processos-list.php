@@ -109,7 +109,6 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <span class="specific">Consulta Processos</span>
         </div>
         <h1 class="title-page">Consulta Processos</h1>
-        <p class="description-page">Pesquisa por número do processo ou nome da parte. Informe ao menos um critério e clique em Consultar.</p>
     </div>
 
     <div class="container-full card-page">

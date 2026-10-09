@@ -2,13 +2,12 @@
 declare(strict_types=1);
 
 /**
- * Cabeçalho HTML + header-page para telas cartorio-*-rules.php (até description-page).
+ * Cabeçalho HTML + header-page para telas cartorio-*-rules.php.
  *
  * Variáveis esperadas no escopo do include:
  * - $pageTitle (string, opcional) — <title>; se vazio, usa $h1Text
  * - $locationAll (string) — conteúdo de span.all (ex.: Interno - Cartório - Ceapa -)
  * - $nomeCurtoModulo (string) — ex.: Ceapa; monta specific = "{Nome} - Regras" e h1 = "{Nome} — Regras de alocação"
- * - $description (string) — texto plano da description-page (escapado aqui)
  * - $htmlLang (string, opcional) — default pt-BR
  */
 $htmlLang = isset($htmlLang) && $htmlLang !== '' ? $htmlLang : 'pt-BR';
@@ -38,5 +37,4 @@ $description = (string) ($description ?? '');
             <span class="specific"><?php echo htmlspecialchars($locationSpecific, ENT_QUOTES, 'UTF-8'); ?></span>
         </div>
         <h1 class="title-page"><?php echo htmlspecialchars($h1Text, ENT_QUOTES, 'UTF-8'); ?></h1>
-        <p class="description-page"><?php echo htmlspecialchars($description, ENT_QUOTES, 'UTF-8'); ?></p>
     </div>

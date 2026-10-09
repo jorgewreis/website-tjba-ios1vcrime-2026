@@ -23,7 +23,6 @@ $support_text = $support_text ?? 'Se precisar de ajuda, entre em contato com o s
             <span class="specific">Erro HTTP</span>
         </div>
         <h1 class="title-page"><?php echo htmlspecialchars($pageHeading, ENT_QUOTES, 'UTF-8'); ?></h1>
-        <p class="description-page"><?php echo htmlspecialchars($description, ENT_QUOTES, 'UTF-8'); ?></p>
     </div>
 
     <div class="container-full card-page">

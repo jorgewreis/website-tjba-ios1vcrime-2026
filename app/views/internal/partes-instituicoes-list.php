@@ -50,12 +50,17 @@ $endItem = min($currentPage * $itemsPerPage, $totalRows);
     <div class="spacing-top-page"></div>
     <div class="header-page">
         <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Vínculos pessoa-instituição</span></div>
-        <h1 class="title-page">Vínculos pessoa-instituição</h1>
-        <p class="description-page">Consulte por pessoa ou por instituição.</p>
     </div>
     <div class="container-full card-page">
 
-        
+        <div class="card-title">
+            <h1 class="title-page">Vínculos pessoa-instituição</h1>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                <?php
+                $listExportPage = 'partesinstituicoeslist';
+                $listExportQuery = array_filter(['parte_id' => $parteId, 'instituicao_id' => $instituicaoId], static fn ($v) => $v !== '');
+                include __DIR__ . '/_list_export_buttons.php';
+                ?>
                 <button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=partesinstituicoescreate">Novo vínculo</button>
             </div>
         </div>

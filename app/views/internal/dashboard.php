@@ -208,7 +208,6 @@ if ($userId !== '') {
             <span class="specific">Dashboard</span>
         </div>
         <h1 class="title-page">Dashboard</h1>
-        <p class="description-page">Evolução das metas do cartório e tarefas conforme suas regras de alocação.</p>
     </div>
 
     <div class="container-full card-page">

@@ -49,7 +49,6 @@ try {
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Cadastro de Edital</h1>
-        <p class="description-page">Registre o edital vinculado ao processo para acompanhar expedição, envio ao DJEN, certificação da publicação e decurso do prazo.</p>
     </div>
 
     <div class="container-full card-page">

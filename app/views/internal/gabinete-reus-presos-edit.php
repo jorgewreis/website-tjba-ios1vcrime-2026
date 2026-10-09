@@ -105,7 +105,6 @@ if ($ultimaMov !== null) {
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar réu preso</h1>
-        <p class="description-page">Vincule processos, informe datas e movimentações.</p>
     </div>
 
     <?php if ($errorMessage !== '' || $reu === null): ?>

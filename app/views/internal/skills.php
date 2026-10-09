@@ -24,7 +24,6 @@ Security::requireAuthentication();
         <span class="specific">Skills</span>
     </div>
     <h1 class="title-page">Skills</h1>
-    <p class="description-page">Acesse atalhos de tarefas agênticas do ambiente PJe com um clique.</p>
 </div>
 
 <div class="container-full card-page">

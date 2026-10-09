@@ -121,7 +121,6 @@ if ($dados !== null) {
             <span class="specific">Dados pessoais</span>
         </div>
         <h1 class="title-page">Alterar dados pessoais</h1>
-        <p class="description-page">Visualize e altere seus dados cadastrais. Alguns campos não podem ser alterados por você.</p>
     </div>
 
     <div class="container-full card-page">

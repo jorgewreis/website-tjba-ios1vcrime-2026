@@ -30,7 +30,6 @@ $origem = (($_GET['origem'] ?? '') === 'reuspresossubstituto') ? 'reuspresossubs
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Novo réu preso</h1>
-        <p class="description-page">Informe o nome do réu. Processos, datas e movimentações serão cadastrados na edição.</p>
     </div>
 
     <div class="container-full card-page">

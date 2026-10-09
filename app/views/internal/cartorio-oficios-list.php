@@ -223,8 +223,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Ofícios</h1>
-                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Registro de ofícios expedidos pelo cartório, com cumprimento via CCM ou envio pelo próprio cartório.</p>
+                <h1 class="title-page" style="color: var(--color-primary-active);">Ofícios</h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
 
@@ -326,7 +325,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-top border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>

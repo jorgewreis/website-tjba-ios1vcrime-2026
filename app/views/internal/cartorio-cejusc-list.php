@@ -93,8 +93,7 @@ function cejusc_resumo_nomes(array $nomes, string $singularOutro = 'outro', stri
         <main class="container-full card-page">
             <div class="card-title">
                 <div class="display-flex col col-fit justify-start">
-                    <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Cejusc</h1>
-                    <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Controle dos encaminhamentos enviados ao Centro Judiciário de Solução de Conflitos.</p>
+                    <h1 class="title-page" style="color: var(--color-primary-active);">Cejusc</h1>
                 </div>
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
                     <select id="cejusc-export-pdf" class="list-export-select width-300 height-md white" aria-label="Gerar relatório CEJUSC em PDF">

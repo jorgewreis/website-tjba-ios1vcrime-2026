@@ -51,7 +51,6 @@ $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
         <div class="display-flex row row-full justify-between align-center flex-wrap gap-y-md" style="gap: 12px;">
             <div class="display-flex col" style="width: auto; flex: 1 1 auto;">
                 <h1 class="title-page"><?php echo htmlspecialchars($processo['numero_processo'] ?? 'Processo'); ?></h1>
-                <p class="description-page" style="margin-top: 0;">Classe: <?php echo htmlspecialchars($processo['classe_nome'] ?? '—'); ?></p>
             </div>
         </div>
     </div>

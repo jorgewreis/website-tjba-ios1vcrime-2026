@@ -214,8 +214,7 @@ if ($totalPages > 0) {
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Guias</h1>
-                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Controle de guias de execução e recolhimento.</p>
+                <h1 class="title-page" style="color: var(--color-primary-active);">Guias</h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
 

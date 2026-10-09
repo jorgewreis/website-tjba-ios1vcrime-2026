@@ -270,7 +270,6 @@ $csrfToken = Security::generateCSRFToken();
             <span class="specific">Novo cadastro</span>
         </div>
         <h1 class="title-page">Novo cadastro de usuário</h1>
-        <p class="description-page">Cadastre usuário interno ou externo. Internos operacionais recebem perfil composto (ex.: ESTAGIARIO-CARTORIO, SERVIDOR-GABINETE) conforme cargo e setor. O cadastro inicia como Pendente até ativação.</p>
     </div>
 
     <div class="container-full card-page">

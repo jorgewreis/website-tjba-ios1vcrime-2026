@@ -136,8 +136,7 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Atas de Audiências</h1>
-                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Envio do PDF da ata para audiências realizadas. O arquivo fica disponível aos estudantes inscritos por 30 dias.</p>
+                <h1 class="title-page" style="color: var(--color-primary-active);">Atas de Audiências</h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
 

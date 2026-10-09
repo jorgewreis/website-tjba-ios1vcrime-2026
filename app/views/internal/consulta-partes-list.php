@@ -151,37 +151,31 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <span class="all">Interno - Consultas -</span>
             <span class="specific">Consulta Partes</span>
         </div>
-        <h1 class="title-page">Consulta Partes</h1>
-        <p class="description-page">Pesquisa por pessoa: nome ou CPF. Informe ao menos um critério e clique em Consultar.</p>
     </div>
 
     <div class="container-full card-page">
 
-          $listExportPage = $routePage;
-                    $listExportQuery = $baseQueryParams;
-                    include __DIR__ . '/_list_export_buttons.php';
-                    ?>
-                </div>
-                <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Novo cadastro</button>
-            </div>
-        </div>
-
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
-            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="display-flex row row-fit justify-start gap-y-md">
-                    <div class="col">
-                        <label for="filter-nome">Nome</label>
-                        <input type="text" class="width-600 height-md" id="filter-nome" name="nome" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($nomeFilter); ?>">
-                    </div>
-              </div>
-                <div class="display-flex row row-fit justify-end gap-y-md align-end">
+            <?php if ($instituicaoIdFilter !== ''): ?>
+            <input type="hidden" name="instituicao_id" value="<?php echo htmlspecialchars($instituicaoIdFilter, ENT_QUOTES); ?>">
+            <?php endif; ?>
+            <div class="card-title">
+                <h1 class="title-page">Consulta Partes</h1>
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <input type="text" class="width-600 height-md" id="filter-nome" name="nome" placeholder="Pesquisar por nome" aria-label="Pesquisar por nome" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
                     <?php
                     $listExportPage = $routePage;
                     $listExportQuery = $baseQueryParams;
                     include __DIR__ . '/_list_export_buttons.php';
                     ?>
-
+                    <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Novo cadastro</button>
+                </div>
+            </div>
+            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+                <div class="col">
+                    <label for="filter-cpf">CPF (documento)</label>
+                    <input type="text" class="width-400 height-md" id="filter-cpf" name="cpf" placeholder="000.000.000-00" value="<?php echo htmlspecialchars($cpfFilter, ENT_QUOTES); ?>">
                 </div>
             </div>
         </form>
@@ -285,7 +279,6 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 </div>
             <?php endif; ?>
 
-        <?php if ($filtrou): ?>
         <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
@@ -305,7 +298,6 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 </div>
             <?php endif; ?>
         </div>
-        <?php endif; ?>
     </div>
 
     <div class="footer-page">

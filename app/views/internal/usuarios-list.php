@@ -173,8 +173,7 @@ $formatUltimoAcesso = static function (?string $raw): string {
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Usuários</h1>
-                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Listagem de servidores internos (estagiários, servidores, diretora, admin, magistrada) e externos (estudantes). Os filtros são aplicados automaticamente.</p>
+                <h1 class="title-page" style="color: var(--color-primary-active);">Usuários</h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
 

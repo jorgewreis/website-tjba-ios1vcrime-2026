@@ -88,7 +88,6 @@ $statusLabel = $statusAtual === 'finalizada' ? 'Finalizada' : ($statusAtual === 
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar ofício</h1>
-        <p class="description-page">Dados do ofício do gabinete.</p>
     </div>
 
     <div class="container-full card-page">

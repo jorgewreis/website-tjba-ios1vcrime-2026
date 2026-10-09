@@ -200,8 +200,7 @@ if ($totalPages > 0) {
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;"><?php echo $isSubstituto ? 'Réus Presos - Substituto' : 'Réus presos'; ?></h1>
-                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;"><?php echo $isSubstituto ? 'Acompanhamento de réus presos em processos sob responsabilidade de outro juiz.' : 'Acompanhamento de réus presos, processo principal e prazo de reavaliação.'; ?></p>
+                <h1 class="title-page" style="color: var(--color-primary-active);"><?php echo $isSubstituto ? 'Réus Presos - Substituto' : 'Réus presos'; ?></h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
                 <input type="text" class="height-md" id="filter-q" placeholder="Nome ou número do processo" style="width: 290px;" value="<?php echo htmlspecialchars($qFilter, ENT_QUOTES); ?>">
@@ -215,7 +214,6 @@ if ($totalPages > 0) {
                 <?php endif; ?>
                 <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
-        </div>
         </div>
 
         <div class="display-flex col col-full register">

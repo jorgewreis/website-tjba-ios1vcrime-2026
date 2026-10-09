@@ -343,7 +343,6 @@ function deriveUsuarioStatus(array $usuario): string
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar usuário</h1>
-        <p class="description-page">Altere os dados do cadastro. CPF e tipo não podem ser alterados. Perfis internos usam o modelo composto (ex.: SERVIDOR-GABINETE) alinhado ao setor e à política de acesso.</p>
     </div>
 
     <div class="container-full card-page">

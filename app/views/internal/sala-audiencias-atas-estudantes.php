@@ -101,8 +101,7 @@ if ($totalPages > 0) {
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Atas de Audiências</h1>
-                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Lista das audiências em que você se inscreveu, com situação de disponibilidade da ata para download.</p>
+                <h1 class="title-page" style="color: var(--color-primary-active);">Atas de Audiências</h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
 

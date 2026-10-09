@@ -170,7 +170,6 @@ if ($totalPages > 0) {
 }
 
 $assetsRoot = dirname(__DIR__, 3) . '/public/assets';
-$resetCssV = @filemtime($assetsRoot . '/css/shared/reset.css') ?: time();
 $v2ColorsCssV = @filemtime($assetsRoot . '/css/shared/v2-colors.css') ?: time();
 $v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: time();
 $v2ListJsV = @filemtime($assetsRoot . '/js/modules/cartorio/cartas-expedidas/v2-list.js') ?: time();
@@ -190,56 +189,44 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100..800&family=Syne+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/shared/reset.css?v=<?php echo (int) $resetCssV; ?>">
     <link rel="stylesheet" href="/assets/css/shared/v2-colors.css?v=<?php echo (int) $v2ColorsCssV; ?>">
     <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css?v=<?php echo (int) $v2PageListCssV; ?>">
+    <?php include __DIR__ . '/_internal_head_css.php'; ?>
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>
 
-<body data-theme="light">
+<body class="page-internal" data-theme="light">
 
-    <div class="page-card-list">
-        <div class="page-card-list-title">
-            <div class="page-card-list-title-line">
-                <div class="line-left title">
-                    <span class="page-title-text">Cartas Expedidas</span>
-                </div>
-            </div>
-            <div class="page-card-list-title-line">
-                <div class="line-left description">
-                    <span class="page-description-text">Documentos expedidos pelo Cartório para cumprimento por outras Comarcas</span>
-                </div>
-                <div class="line-right">
+    <div class="spacing-top-page"></div>
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Cartório - Cartas Expedidas -</span>
+            <span class="specific">Lista</span>
+        </div>
+    </div>
 
-                    <div class="buttons">
-                        <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap"><input type="text" id="search-input" class="width-300 height-md" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off"></div>
-<div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap"><select class="width-200 height-md list-export-select" id="list-export-v2" data-csv-href="<?php echo htmlspecialchars($exportCsvUrl, ENT_QUOTES); ?>" data-pdf-href="<?php echo htmlspecialchars($exportPdfUrl, ENT_QUOTES); ?>" aria-label="Exportar lista">
-                    <option value="" selected disabled>Exportar</option>
+    <div class="container-full card-page">
+        <div class="card-title">
+            <h1 class="title-page">Cartas Expedidas</h1>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                <input type="text" id="search-input" class="height-md" style="width: 290px;" placeholder="Pesquisar" aria-label="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off">
+                <select class="width-300 height-md list-export-select white" id="list-export-v2" data-csv-href="<?php echo htmlspecialchars($exportCsvUrl, ENT_QUOTES); ?>" data-pdf-href="<?php echo htmlspecialchars($exportPdfUrl, ENT_QUOTES); ?>" aria-label="Exportar lista">
+                    <option value="" selected disabled>Exportar lista</option>
                     <option value="pdf">PDF</option>
                     <option value="csv">CSV</option>
                     <option value="print">Imprimir</option>
-                </select></div>
-<button type="button" class="button-btn btn-primary" id="novo-cadastro-btn">
-                            <span class="btn-icon-text">Novo cadastro</span>
-                            <div class="btn-icon hidden">
-                                <i class="fi fi-rr-spinner" aria-hidden="true"></i>
-                            </div>
-                        </button>
-                    </div>
-                </div>
+                </select>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
-        <div class="card-line full media-1024">
-            <div class="card-line left">
-                <div class="line-description">Filtrar por</div>
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
-            <div class="card-line right">
-                <select class="width-300 height-md" id="filter-status">
+            <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
+                <select class="width-500 height-md" id="filter-status">
                     <option value="" <?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="aguardando_envio" <?php echo $statusFilter === 'aguardando_envio' ? ' selected' : ''; ?>>
                         Aguardando envio (<?php echo (int) ($statusCounts['aguardando_envio'] ?? 0); ?>)
@@ -254,7 +241,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                         Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)
                     </option>
                 </select>
-                <select class="width-300 height-md" id="filter-tipo">
+                <select class="width-600 height-md" id="filter-tipo">
                     <option value="" <?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Todas as finalidades</option>
                     <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
                         <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>" <?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>

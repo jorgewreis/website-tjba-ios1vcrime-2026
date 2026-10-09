@@ -145,8 +145,7 @@ if ($totalPages > 0) {
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active); font-size: 36px;">Feriados e recessos</h1>
-                <p class="description-page" style="color: var(--color-primary-active); margin-top: -15px;">Cadastro de períodos em que não há expediente forense, para apoio ao cálculo de decurso de prazo e indisponibilidades.</p>
+                <h1 class="title-page" style="color: var(--color-primary-active);">Feriados e recessos</h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
 

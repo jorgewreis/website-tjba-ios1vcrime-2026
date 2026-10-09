@@ -294,7 +294,6 @@ $tiposAudienciaPermitidos = [
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar audiência</h1>
-        <p class="description-page">Atualize os dados da audiência e gerencie as partes vinculadas à pauta.</p>
     </div>
 
     <div class="container-full card-page">
@@ -458,7 +457,6 @@ $tiposAudienciaPermitidos = [
             <h2>Servidores alocados</h2>
         </div>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <p class="description-page" style="margin:0;">Até cinco servidores por audiência. Quem cadastra é incluído automaticamente como responsável.</p>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="pauta-alocar-usuario">Incluir servidor</label>

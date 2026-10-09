@@ -29,7 +29,6 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Novo monitoramento eletrônico</h1>
-        <p class="description-page">Vincule o registro ao processo em contexto e ao réu. Processo e classe são definidos pelo sistema (DataJud).</p>
     </div>
 
     <div class="container-full card-page">

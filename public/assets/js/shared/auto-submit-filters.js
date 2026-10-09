@@ -28,7 +28,7 @@
             }, DEBOUNCE_MS);
         }
 
-        form.querySelectorAll('select').forEach(function (el) {
+        form.querySelectorAll('select:not(.list-export-select)').forEach(function (el) {
             el.addEventListener('change', function () {
                 submitFilterForm(form);
             });

@@ -53,7 +53,6 @@ $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Nova audiência</h1>
-        <p class="description-page">Preencha os dados para incluir uma nova audiência na pauta do cartório.</p>
     </div>
 
     <div class="container-full card-page">

@@ -115,9 +115,6 @@ $dashTituloBoasVindas = $dashSaudacaoBase . ($dashPrimeiroNome !== '' ? ', ' . $
             <span class="specific">Início</span>
         </div>
         <h1 class="title-page"><?php echo htmlspecialchars($dashTituloBoasVindas, ENT_QUOTES, 'UTF-8'); ?></h1>
-        <p class="description-page"><?php echo $dashIsEstudanteExterno
-            ? 'Este é o seu painel de acesso. Pelo menu lateral você pode realizar inscrições e acompanhar suas participações no Painel em tempo real, acessar downloads em Atas de Audiências e, nas configurações, atualizar seus dados pessoais.'
-            : 'Este é o seu painel de acesso ao sistema. Utilize o menu para as consultas liberadas ao seu perfil (partes e instituições públicas) e seus dados pessoais nas configurações.'; ?></p>
     </div>
 
     <div class="container-full card-page">

@@ -50,7 +50,6 @@ try {
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Cadastro de Guia</h1>
-        <p class="description-page">Registre uma nova guia de execução ou recolhimento (processo e denunciado).</p>
     </div>
 
     <div class="container-full card-page">

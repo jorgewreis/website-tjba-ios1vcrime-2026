@@ -91,33 +91,22 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <span class="all">Interno - Consultas -</span>
             <span class="specific">Instituições Públicas</span>
         </div>
-        <h1 class="title-page">Instituições Públicas</h1>
-        <p class="description-page">Cadastro de instituições públicas. Informe o nome (ou parte dele) e clique em Consultar para exibir os resultados.</p>
     </div>
 
     <div class="container-full card-page">
 
-        listExportPage = $routePage;
-                    $listExportQuery = $baseQueryParams;
-                    include __DIR__ . '/_list_export_buttons.php';
-                    ?>
-                </div>
-                <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Nova instituição</button>
-            </div>
-        </div>
-
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
-            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="display-flex row row-fit justify-start gap-y-md">
-                     </div>
-                <div class="display-flex row row-fit justify-end gap-y-md align-end">
+            <div class="card-title">
+                <h1 class="title-page">Instituições Públicas</h1>
+                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                    <input type="text" class="width-600 height-md" id="filter-nome" name="nome" placeholder="Pesquisar instituição" aria-label="Pesquisar instituição" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
                     <?php
                     $listExportPage = $routePage;
                     $listExportQuery = $baseQueryParams;
                     include __DIR__ . '/_list_export_buttons.php';
                     ?>
-
+                    <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Nova instituição</button>
                 </div>
             </div>
         </form>
@@ -163,7 +152,6 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 </div>
             <?php endif; ?>
 
-        <?php if ($filtrou): ?>
         <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
@@ -185,7 +173,6 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                 </div>
             <?php endif; ?>
         </div>
-        <?php endif; ?>
     </div>
 
     <div class="footer-page">

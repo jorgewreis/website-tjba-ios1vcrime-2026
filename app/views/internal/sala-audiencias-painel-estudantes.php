@@ -321,7 +321,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             <span class="specific">Painel em tempo real</span>
         </div>
         <h1 class="title-page">Painel em tempo real</h1>
-        <p class="description-page">Área para inscrições e acompanhamento das suas participações em audiências.</p>
     </div>
 
     <div class="container-full card-page" id="card-audiencias-hoje-estudante">
@@ -334,7 +333,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         </div>
         <?php if (count($hojePageRows) === 0): ?>
         <div class="padding-x-lg padding-y-lg">
-            <p class="description-page">Não há audiências cadastradas para hoje.</p>
         </div>
         <?php endif; ?>
         <?php $processo_bloco_variant = 'estudantes'; ?>
@@ -497,7 +495,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
 
         <?php if (count($minhasPageRows) === 0): ?>
         <div class="padding-x-md padding-y-lg">
-            <p class="description-page">Nenhuma inscrição encontrada.</p>
         </div>
         <?php endif; ?>
         <?php $processo_bloco_variant = 'estudantes'; ?>

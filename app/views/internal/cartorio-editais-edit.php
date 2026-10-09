@@ -160,7 +160,6 @@ $timelineData = $edital !== null
             <span class="specific">Edição</span>
         </div>
         <h1 class="title-page">Editar Edital</h1>
-        <p class="description-page">Acompanhe expedição, envio ao DJEN, certificação da publicação e decurso do prazo.</p>
     </div>
 
     <div class="container-full card-page">

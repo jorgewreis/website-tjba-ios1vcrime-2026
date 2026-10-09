@@ -115,7 +115,6 @@ try {
             <span class="specific">Cadastro</span>
         </div>
         <h1 class="title-page">Cartas Recebidas</h1>
-        <p class="description-page">Cadastro de cartas precatórias recebidas de outros tribunais.</p>
     </div>
 
     <div class="container-full card-page">
