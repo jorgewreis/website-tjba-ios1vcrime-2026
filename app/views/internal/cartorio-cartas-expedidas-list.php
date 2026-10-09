@@ -196,7 +196,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>
 
-<body class="page-internal" data-theme="light">
+<body class="page-internal">
 
     <div class="spacing-top-page"></div>
     <div class="header-page">
