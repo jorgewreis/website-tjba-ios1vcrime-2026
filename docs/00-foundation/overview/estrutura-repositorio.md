@@ -306,8 +306,6 @@ Parciais recomendadas:
   **Por quê:** ícones padronizados e reutilizáveis.
 - `public/assets/img/logo.png`  
   **Por quê:** identidade visual.
-- `public/assets/img/avatars/default.png`  
-  **Por quê:** fallback consistente.
 
 > Regra: não colocar PDF interno, dumps, backups ou arquivos sensíveis em `public/`.
 

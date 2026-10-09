@@ -70,7 +70,6 @@ Colunas opcionais, condicionadas ao ambiente/migrações:
 
 - `sexo`
 - `data_nascimento`
-- `avatar_slug`
 - `created_at`
 - `updated_at`
 - `meta`

@@ -20,7 +20,6 @@ header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../app/models/Usuario.php';
 require_once __DIR__ . '/../app/helpers/EffectiveAccessProfiles.php';
-require_once __DIR__ . '/../app/helpers/AvatarInitialsPalette.php';
 require_once __DIR__ . '/../app/services/LoginRateLimiter.php';
 
 $cpf   = $_POST['cpf'] ?? '';
@@ -105,7 +104,6 @@ $usuario->atualizarToken(
 );
 $usuario->registrarUltimoAcesso($resultado['id_usuario']);
 
-AvatarInitialsPalette::regenerateOnLogin();
 
 $rateLimiter->clear($normalizedCpf, $clientIp);
 

@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/Conection.php';
-require_once __DIR__ . '/../helpers/AvatarCatalog.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../services/ExternalUsersCleanupService.php';
 
@@ -296,10 +295,6 @@ final class Usuario
         if ($this->hasUsuariosColumn('sexo')) {
             $fields[] = 'sexo';
         }
-        if ($this->hasUsuariosColumn('avatar_slug')) {
-            $fields[] = 'avatar_slug';
-        }
-
         $stmt = $this->pdo->prepare(
             'SELECT ' . implode(', ', $fields) . ' FROM usuarios WHERE id_usuario = ? LIMIT 1'
         );
@@ -308,65 +303,7 @@ final class Usuario
         if ($row === false) {
             return null;
         }
-        $slug = trim((string) ($row['avatar_slug'] ?? ''));
-        $row['avatar_slug'] = AvatarCatalog::normalizeStoredSlug($slug);
         return $row;
-    }
-
-    /**
-     * Modo navbar: imagem 3d ou iniciais (externos sempre iniciais).
-     *
-     * @return array{mode: string, initials: string, url: ?string}
-     */
-    public function getAvatarNavbarDisplay(string $idUsuario, bool $isUsuarioExterno, string $nome, string $sobrenome): array
-    {
-        $initials = AvatarCatalog::initialsFromNames($nome, $sobrenome);
-        if ($isUsuarioExterno) {
-            return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
-        }
-        $dados = $this->getDadosPessoais($idUsuario);
-        if ($dados === null) {
-            return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
-        }
-        $slug = AvatarCatalog::normalizeStoredSlug(trim((string) ($dados['avatar_slug'] ?? '')));
-        if (AvatarCatalog::isInitialsSlug($slug)) {
-            return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
-        }
-        $url = AvatarCatalog::urlForSlug($slug);
-        if ($url !== '') {
-            return ['mode' => 'image', 'initials' => $initials, 'url' => $url];
-        }
-        return ['mode' => 'initials', 'initials' => $initials, 'url' => null];
-    }
-
-    /**
-     * Persiste avatar por slug (apenas valores permitidos pelo catálogo).
-     *
-     * @return array{success: bool, message?: string}
-     */
-    public function atualizarAvatarSlug(string $idUsuario, string $slug): array
-    {
-        $idUsuario = trim($idUsuario);
-        if ($idUsuario === '') {
-            return ['success' => false, 'message' => 'Usuário não identificado.'];
-        }
-        $slug = AvatarCatalog::normalizeStoredSlug(trim($slug));
-        if (!AvatarCatalog::isAllowedSlug($slug)) {
-            return ['success' => false, 'message' => 'Avatar inválido.'];
-        }
-
-        try {
-            $stmt = $this->pdo->prepare('UPDATE usuarios SET `avatar_slug` = :slug, `updated_at` = NOW() WHERE id_usuario = :id LIMIT 1');
-            $stmt->bindValue(':slug', $slug);
-            $stmt->bindValue(':id', $idUsuario);
-            $stmt->execute();
-            return ['success' => true];
-        } catch (\PDOException $e) {
-            if (stripos($e->getMessage(), 'avatar_slug') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
-                return ['success' => false, 'message' => 'Avatar não disponível nesta instalação. Execute a migração do banco.'];
-            }
-            throw $e;
-        }
     }
 
     /**

@@ -8,8 +8,6 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
-require_once __DIR__ . '/../../helpers/AvatarCatalog.php';
-require_once __DIR__ . '/../../helpers/AvatarInitialsPalette.php';
 require_once __DIR__ . '/../../helpers/SexoHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -63,22 +61,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token']) && Secu
             'cargo' => $cargo,
             'instituicao' => $instituicao,
         ]);
-        $avatarResult = ['success' => true];
-        if (!$isUsuarioExterno && $resultado['success']) {
-            $slugPost = trim((string) ($_POST['avatar_slug'] ?? ''));
-            if ($slugPost !== '') {
-                $avatarResult = $usuario->atualizarAvatarSlug($userId, $slugPost);
-            }
-        }
-        if ($resultado['success'] && $avatarResult['success']) {
+        if ($resultado['success']) {
             $_SESSION['flash_profile_saved_toast'] = 'Dados atualizados com sucesso.';
             $dashPage = $isUsuarioExterno ? 'dashboardexterno' : 'dashboard';
             header('Location: /frame.php?page=' . $dashPage . '&profile_saved=1', true, 302);
             exit;
         } elseif (!$resultado['success']) {
             $mensagemErro = $resultado['message'] ?? 'Não foi possível atualizar os dados.';
-        } else {
-            $mensagemErro = $avatarResult['message'] ?? 'Não foi possível atualizar o avatar.';
         }
     }
 }
@@ -93,27 +82,8 @@ $perfisTexto = function_exists('mb_strtolower') ? mb_strtolower($perfisTexto, 'U
 $ultimaAlteracaoDadosLower = function_exists('mb_strtolower') ? mb_strtolower($ultimaAlteracaoDados, 'UTF-8') : strtolower($ultimaAlteracaoDados);
 
 $nomeCompletoLeitura = '';
-$avatarSlugForJs = AvatarCatalog::getDefaultSlug();
-$avatarUiEntries = [];
-$avatarPreviewPalette = ['bg' => '#6b7280', 'fg' => '#ffffff'];
-$avatarPreviewInitials = '?';
 if ($dados !== null) {
     $nomeCompletoLeitura = trim(trim((string) ($dados['nome'] ?? '')) . ' ' . trim((string) ($dados['sobrenome'] ?? '')));
-    $avatarSlugForJs = $dados['avatar_slug'] ?? AvatarCatalog::getDefaultSlug();
-    $avatarPreviewPalette = AvatarInitialsPalette::getOrCreate();
-    $avatarPreviewInitials = AvatarCatalog::initialsFromNames(
-        trim((string) ($dados['nome'] ?? '')),
-        trim((string) ($dados['sobrenome'] ?? ''))
-    );
-}
-if (!$isUsuarioExterno && $dados !== null) {
-    foreach (AvatarCatalog::listForUi() as $av) {
-        $avatarUiEntries[] = [
-            'slug' => $av['slug'],
-            'url' => (string) ($av['url'] ?? ''),
-            'is_initial' => !empty($av['is_initial']),
-        ];
-    }
 }
 ?>
 <!DOCTYPE html>
@@ -139,31 +109,6 @@ if (!$isUsuarioExterno && $dados !== null) {
             .regras-alocacao-list .regras-alocacao-item:last-child { border-bottom: none; }
             .regras-alocacao-regra { font-weight: 600; }
             .regras-alocacao-desc { color: var(--color-text-secondary); }
-            .avatar-edit-row { align-items: flex-start; }
-            .avatar-edit-preview-wrap {
-                flex-shrink: 0;
-                width: 160px;
-                height: 96px;
-                border-radius: 8px;
-                overflow: hidden;
-                border: 1px solid var(--color-border);
-                background: var(--color-background-subtle, #f3f4f6);
-            }
-            .avatar-edit-preview-img {
-                display: block;
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-            }
-            .avatar-edit-preview-initials {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 100%;
-                height: 100%;
-                font-size: 1.35rem;
-                font-weight: 600;
-            }
         </style>
     </head>
 <body class="page-internal">
@@ -228,33 +173,6 @@ if (!$isUsuarioExterno && $dados !== null) {
                         </select>
                     </div>
                 </div>
-
-                <?php if (!$isUsuarioExterno): ?>
-                    <?php
-                    $currentAvatarSlug = $dados['avatar_slug'] ?? AvatarCatalog::getDefaultSlug();
-                    $previewIsInitials = AvatarCatalog::isInitialsSlug($currentAvatarSlug);
-                    $previewImgUrl = $previewIsInitials ? '' : AvatarCatalog::urlForSlug($currentAvatarSlug);
-                    ?>
-                    <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Avatar</h2></div>
-                    <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md avatar-edit-row">
-                        <div class="col">
-                            <div class="display-flex row row-full gap-y-md flex-wrap" style="align-items: flex-start; gap: 16px;">
-                                <div class="avatar-edit-preview-wrap" id="avatar-preview-wrap" aria-live="polite">
-                                    <img id="avatar-preview-img" class="avatar-edit-preview-img" src="<?php echo $previewIsInitials ? '' : htmlspecialchars($previewImgUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="" width="96" height="96"<?php echo $previewIsInitials ? ' hidden' : ''; ?>>
-                                    <span id="avatar-preview-initials" class="avatar-edit-preview-initials" style="background-color: <?php echo htmlspecialchars($avatarPreviewPalette['bg'], ENT_QUOTES, 'UTF-8'); ?>; color: <?php echo htmlspecialchars($avatarPreviewPalette['fg'], ENT_QUOTES, 'UTF-8'); ?>;"<?php echo $previewIsInitials ? '' : ' hidden'; ?>><?php echo htmlspecialchars($avatarPreviewInitials, ENT_QUOTES, 'UTF-8'); ?></span>
-                                </div>
-                                <div style="min-width: 0; flex: 1;">
-                                    <label for="edit-avatar-slug">Imagem do perfil</label>
-                                    <select id="edit-avatar-slug" name="avatar_slug" class="width-400 height-md" aria-describedby="avatar-slug-hint">
-                                        <?php foreach (AvatarCatalog::listForUi() as $av): ?>
-                                            <option value="<?php echo htmlspecialchars($av['slug'], ENT_QUOTES, 'UTF-8'); ?>"<?php echo ($currentAvatarSlug === $av['slug']) ? ' selected' : ''; ?>><?php echo htmlspecialchars($av['label'], ENT_QUOTES, 'UTF-8'); ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endif; ?>
 
                 <?php if (!$isUsuarioExterno): ?>
                     <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
@@ -338,10 +256,8 @@ if (!$isUsuarioExterno && $dados !== null) {
             initial: {
                 email: <?php echo json_encode($dados['email'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
                 telefone: <?php echo json_encode($dados['telefone'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
-                sexo: <?php echo json_encode($dados['sexo'] ?? '', JSON_UNESCAPED_UNICODE); ?>,
-                avatarSlug: <?php echo json_encode($avatarSlugForJs, JSON_UNESCAPED_UNICODE); ?>
-            },
-            avatarEntries: <?php echo json_encode($avatarUiEntries, JSON_UNESCAPED_UNICODE); ?>
+                sexo: <?php echo json_encode($dados['sexo'] ?? '', JSON_UNESCAPED_UNICODE); ?>
+            }
         };
         if (window.App && App.AlterarDados && typeof App.AlterarDados.initialize === 'function') {
             App.AlterarDados.initialize(window.__ALTERAR_DADOS_CTX);
