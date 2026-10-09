@@ -210,7 +210,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
         <div class="card-title">
             <h1 class="title-page">Cartas Expedidas</h1>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                <input type="text" id="search-input" class="height-md" style="width: 290px;" placeholder="Pesquisar" aria-label="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off">
+                <input type="text" id="search-input" class="height-md list-search-input" placeholder="Pesquisar" aria-label="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off">
                 <select class="width-300 height-md list-export-select white" id="list-export-v2" data-csv-href="<?php echo htmlspecialchars($exportCsvUrl, ENT_QUOTES); ?>" data-pdf-href="<?php echo htmlspecialchars($exportPdfUrl, ENT_QUOTES); ?>" aria-label="Exportar lista">
                     <option value="" selected disabled>Exportar lista</option>
                     <option value="pdf">PDF</option>
@@ -221,7 +221,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>

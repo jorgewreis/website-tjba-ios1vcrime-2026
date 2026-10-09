@@ -195,7 +195,7 @@ if ($totalPages > 0) {
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
 
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="height-md" id="search-input" placeholder="Pesquisar" style="width: 290px;" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                    <input type="text" class="height-md list-search-input" id="search-input" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
                     <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
@@ -209,7 +209,7 @@ if ($totalPages > 0) {
         <!-- SUBTITLE SECTION CARD -->
 
         <!-- SUBTITLE SECTION CARD - FILTERS -->
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>

@@ -67,15 +67,15 @@ $endItem = min($currentPage * $itemsPerPage, $totalRows);
 
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="partesinstituicoeslist">
-            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
                 <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="parte_id">ID da pessoa (parte)</label>
-                        <input type="text" class="width-400 height-md" id="parte_id" name="parte_id" placeholder="Ex: PRT-..." value="<?php echo htmlspecialchars($parteId); ?>">
+                        <input type="text" class="height-md list-search-input" id="parte_id" name="parte_id" placeholder="Ex: PRT-..." value="<?php echo htmlspecialchars($parteId); ?>">
                     </div>
                     <div class="col">
                         <label for="instituicao_id">ID da instituição</label>
-                        <input type="text" class="width-400 height-md" id="instituicao_id" name="instituicao_id" placeholder="Ex: INS-..." value="<?php echo htmlspecialchars($instituicaoId); ?>">
+                        <input type="text" class="height-md list-search-input" id="instituicao_id" name="instituicao_id" placeholder="Ex: INS-..." value="<?php echo htmlspecialchars($instituicaoId); ?>">
                     </div>
                 </div>
             </div>

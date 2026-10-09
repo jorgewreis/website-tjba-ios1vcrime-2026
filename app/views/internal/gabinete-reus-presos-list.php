@@ -203,7 +203,7 @@ if ($totalPages > 0) {
                 <h1 class="title-page" style="color: var(--color-primary-active);"><?php echo $isSubstituto ? 'Réus Presos - Substituto' : 'Réus presos'; ?></h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                <input type="text" class="height-md" id="filter-q" placeholder="Nome ou número do processo" style="width: 290px;" value="<?php echo htmlspecialchars($qFilter, ENT_QUOTES); ?>">
+                <input type="text" class="height-md list-search-input" id="filter-q" placeholder="Nome ou número do processo" value="<?php echo htmlspecialchars($qFilter, ENT_QUOTES); ?>">
                 <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;

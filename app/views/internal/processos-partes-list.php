@@ -55,11 +55,11 @@ $endItem = min($currentPage * $itemsPerPage, $totalPartes);
 
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="processosparteslist">
-            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
                 <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="processo_id">ID do processo</label>
-                        <input type="text" class="width-500 height-md" id="processo_id" name="processo_id" placeholder="Ex: PRC-..." value="<?php echo htmlspecialchars($processoId); ?>">
+                        <input type="text" class="height-md list-search-input" id="processo_id" name="processo_id" placeholder="Ex: PRC-..." value="<?php echo htmlspecialchars($processoId); ?>">
                     </div>
                 </div>
             </div>

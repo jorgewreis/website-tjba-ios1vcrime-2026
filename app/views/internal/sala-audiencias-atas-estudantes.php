@@ -108,7 +108,7 @@ if ($totalPages > 0) {
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>

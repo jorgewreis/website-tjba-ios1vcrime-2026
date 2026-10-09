@@ -163,7 +163,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <div class="card-title">
                 <h1 class="title-page">Consulta Partes</h1>
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="width-600 height-md" id="filter-nome" name="nome" placeholder="Pesquisar por nome" aria-label="Pesquisar por nome" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
+                    <input type="text" class="height-md list-search-input" id="filter-nome" name="nome" placeholder="Pesquisar por nome" aria-label="Pesquisar por nome" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
                     <?php
                     $listExportPage = $routePage;
                     $listExportQuery = $baseQueryParams;
@@ -172,10 +172,10 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
                     <button type="button" class="btn btn-primary height-md" id="novo-cadastro-btn">Novo cadastro</button>
                 </div>
             </div>
-            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
                 <div class="col">
                     <label for="filter-cpf">CPF (documento)</label>
-                    <input type="text" class="width-400 height-md" id="filter-cpf" name="cpf" placeholder="000.000.000-00" value="<?php echo htmlspecialchars($cpfFilter, ENT_QUOTES); ?>">
+                    <input type="text" class="height-md list-search-input" id="filter-cpf" name="cpf" placeholder="000.000.000-00" value="<?php echo htmlspecialchars($cpfFilter, ENT_QUOTES); ?>">
                 </div>
             </div>
         </form>

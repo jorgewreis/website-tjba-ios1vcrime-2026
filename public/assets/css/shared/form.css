@@ -149,7 +149,7 @@ hr {
     transition: all 0.2s ease;
 }
 .pagination-number.active {
-    background-color: #7352A5;
+    background-color: #47196F;
     color: var(--color-text-on-primary);
     pointer-events: none;
     cursor: default;
@@ -250,19 +250,15 @@ button.link-inline {
 }
 
 .btn-primary {
-    background-color: var(--color-primary);
-    border-color: var(--color-primary);
+    background-color: #47196F;
+    border-color: #47196F;
     color: var(--color-text-on-primary);
 }
 .btn-primary:hover {
-    background-color: var(--color-primary-hover);
-    border-color: var(--color-primary-hover);
-    color: var(--color-text-on-primary);
+    filter: brightness(1.2);
 }
 .btn-primary:active {
-    background-color: var(--color-primary-active);
-    border-color: var(--color-primary-active);
-    color: var(--color-text-on-primary);
+    filter: brightness(1.4);
 }
 
 .btn-primary-outline {
@@ -695,6 +691,10 @@ input[type="time"] {
     margin-left: 30px;
     margin-top: -2px;
     display: block;
+}
+
+input.list-search-input {
+    width: 290px;
 }
 
 input[type="text"].readonly{

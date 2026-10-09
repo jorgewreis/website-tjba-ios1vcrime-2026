@@ -121,15 +121,15 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
-            <div class="display-flex row row-full filters justify-between padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
                 <div class="display-flex row row-fit justify-start gap-y-md">
                     <div class="col">
                         <label for="filter-numero">Número do processo</label>
-                        <input type="text" class="width-500 height-md" id="filter-numero" name="numero" placeholder="0000000-00.0000.0.00.0000" value="<?php echo htmlspecialchars($numeroFilter); ?>">
+                        <input type="text" class="height-md list-search-input" id="filter-numero" name="numero" placeholder="0000000-00.0000.0.00.0000" value="<?php echo htmlspecialchars($numeroFilter); ?>">
                     </div>
                     <div class="col">
                         <label for="filter-parte">Nome da parte</label>
-                        <input type="text" class="width-600 height-md" id="filter-parte" name="parte_nome" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($parteNomeFilter); ?>">
+                        <input type="text" class="height-md list-search-input" id="filter-parte" name="parte_nome" placeholder="Digite o nome completo" value="<?php echo htmlspecialchars($parteNomeFilter); ?>">
                     </div>
                 </div>
                 <div class="display-flex row row-fit justify-end gap-y-md align-end">

@@ -100,7 +100,7 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             <div class="card-title">
                 <h1 class="title-page">Instituições Públicas</h1>
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="width-600 height-md" id="filter-nome" name="nome" placeholder="Pesquisar instituição" aria-label="Pesquisar instituição" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
+                    <input type="text" class="height-md list-search-input" id="filter-nome" name="nome" placeholder="Pesquisar instituição" aria-label="Pesquisar instituição" value="<?php echo htmlspecialchars($nomeFilter, ENT_QUOTES); ?>">
                     <?php
                     $listExportPage = $routePage;
                     $listExportQuery = $baseQueryParams;

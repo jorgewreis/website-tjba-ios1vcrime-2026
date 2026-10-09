@@ -598,14 +598,15 @@
     }
 
     .btn-primary {
-        background-color: var(--color-bg-primary);
-        border-color: var(--color-bg-primary);
+        background-color: #47196F;
+        border-color: #47196F;
         color: var(--color-text-primary);
     }
     .btn-primary:hover {
-        background-color: var(--color-bg-primary-hover);
-        border-color: var(--color-bg-primary-hover);
-        color: var(--color-text-primary);
+        filter: brightness(1.2);
+    }
+    .btn-primary:active {
+        filter: brightness(1.4);
     }
 
     @keyframes rotate {
@@ -1324,7 +1325,7 @@
         color: var(--color-title-text);
     }
     .pagination-number.active {
-        background-color: #7352A5;
+        background-color: #47196F;
         color: var(--color-text-primary);
         pointer-events: none;
         cursor: default;

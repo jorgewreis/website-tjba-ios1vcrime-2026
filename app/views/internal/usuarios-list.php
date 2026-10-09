@@ -194,7 +194,7 @@ $formatUltimoAcesso = static function (?string $raw): string {
         <form method="get" id="form-filters" class="display-flex col col-full" style="width:100%" data-auto-submit-filters>
             <input type="hidden" name="page" value="<?php echo htmlspecialchars($routePage); ?>">
 
-            <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
                 <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                     <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
                 </div>

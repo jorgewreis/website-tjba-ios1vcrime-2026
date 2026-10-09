@@ -114,7 +114,7 @@ h2 {
     height: fit-content;
 
     /* spacing */
-    padding: 0 15px 0 20px;
+    padding: 15px;
     min-height: 80px;
     box-sizing: border-box;
 
@@ -128,7 +128,7 @@ h2 {
 }
 
 .card-title .title-page {
-    margin-bottom: 0;
+    margin-bottom: -6px;
 }
 
 body.page-internal {

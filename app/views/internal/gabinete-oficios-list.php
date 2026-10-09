@@ -209,7 +209,7 @@ if ($totalPages > 0) {
             <div class="display-flex row row-fit justify-start gap-y-md">
 
                 <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="height-md" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" style="width: 320px;" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
+                    <input type="text" class="height-md list-search-input" id="search-input" placeholder="Nº do ofício (ex.: 42, 42/2026) ou processo CNJ" aria-label="Pesquisar por número do ofício (com ou sem ano) ou por número do processo CNJ" value="<?php echo htmlspecialchars($oficioFilter, ENT_QUOTES); ?>">
                     <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
@@ -225,7 +225,7 @@ if ($totalPages > 0) {
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-top border-bottom">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom border-top">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
