@@ -120,11 +120,14 @@ final class DashboardResumoService
             }
         } catch(Throwable $e) { $deadlinesSoon=null;error_log('dashboard resumo [prazos]: '.$e->getMessage()); }
         $overdueDeadlines=['expedidas'=>null,'recebidas'=>null];
+        $mostOverdueExpedidaDays=null;
         if($includeCartorio){
             try {
                 if($this->tableExists('cartas_expedidas')&&$this->tableExists('cartas_expedidas_subtarefas')){
-                    $st=$this->pdo->query("SELECT COUNT(DISTINCT c.id) FROM cartas_expedidas c JOIN cartas_expedidas_subtarefas envio ON envio.carta_expedida_id=c.id AND envio.tipo='aguardando_envio' AND LOWER(envio.status) IN ('concluida','concluída') WHERE c.prazo_dias>0 AND DATE_ADD(DATE(envio.updated_at), INTERVAL c.prazo_dias DAY)<CURDATE() AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");
-                    $overdueDeadlines['expedidas']=(int)$st->fetchColumn();
+                    $st=$this->pdo->query("SELECT COUNT(DISTINCT c.id) total,MAX(DATEDIFF(CURDATE(),DATE_ADD(DATE(envio.updated_at), INTERVAL c.prazo_dias DAY))) maior_atraso FROM cartas_expedidas c JOIN cartas_expedidas_subtarefas envio ON envio.carta_expedida_id=c.id AND envio.tipo='aguardando_envio' AND LOWER(envio.status) IN ('concluida','concluída') WHERE c.prazo_dias>0 AND DATE_ADD(DATE(envio.updated_at), INTERVAL c.prazo_dias DAY)<CURDATE() AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");
+                    $overdueExpedidas=$st->fetch(PDO::FETCH_ASSOC)?:[];
+                    $overdueDeadlines['expedidas']=(int)($overdueExpedidas['total']??0);
+                    $mostOverdueExpedidaDays=isset($overdueExpedidas['maior_atraso'])?(int)$overdueExpedidas['maior_atraso']:null;
                 }
             } catch(Throwable $e) { error_log('dashboard resumo [prazos vencidos expedidas]: '.$e->getMessage()); }
             try {
@@ -135,13 +138,16 @@ final class DashboardResumoService
             } catch(Throwable $e) { error_log('dashboard resumo [prazos vencidos recebidas]: '.$e->getMessage()); }
         }
         $sectorQueues=$includeCartorio?$queues:[];$reportedTotal=$hasQueueErrors?null:$total;$sectorTotal=$includeCartorio?$reportedTotal:null;
-        $alerts=$this->letterAlerts($oldest,$oldestLabel,$cartasEmDevolucao,$oldestReturns,$deadlinesSoon,$nearestDeadline);
+        $alerts=$this->letterAlerts($oldest,$oldestLabel,$cartasEmDevolucao,$oldestReturns,$deadlinesSoon,$nearestDeadline,$mostOverdueExpedidaDays);
         return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'semana'=>['labels'=>$weeklyLabels,'expedidas'=>$weeklyLetters['expedidas'],'recebidas'=>$weeklyLetters['recebidas']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'prazos_vencidos'=>$overdueDeadlines,'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'alertas'=>$alerts,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors];
     }
 
-    private function letterAlerts(?string $oldest,?string $label,?int $returns,?string $oldestReturns,?int $deadlines,?string $nearestDeadline): array
+    private function letterAlerts(?string $oldest,?string $label,?int $returns,?string $oldestReturns,?int $deadlines,?string $nearestDeadline,?int $mostOverdueExpedidaDays): array
     {
         $alerts=[];
+        if($mostOverdueExpedidaDays!==null&&$mostOverdueExpedidaDays>0){
+            $alerts[]=['key'=>'cumprimento_expedido_excedido','label'=>'Prazo de cumprimento excedido','detail'=>'Solicitar devolução de Carta Expedida','value'=>$mostOverdueExpedidaDays,'unit'=>'days','color'=>'danger','priority'=>0,'date'=>'0000-01-01','order'=>0];
+        }
         if($deadlines!==null&&$deadlines>0&&$nearestDeadline!==null){
             $alerts[]=['key'=>'prazos_proximos','label'=>'Prazos próximos','detail'=>'Cartas nos próximos 7 dias','value'=>$deadlines,'unit'=>'count','color'=>'warm','priority'=>0,'date'=>$nearestDeadline,'order'=>0];
         }

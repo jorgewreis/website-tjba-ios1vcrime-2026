@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0012
+
+**Data:** 2026-10-13 19:09:35 | **Commit:** `34f918ec` | **Tipo:** `patch`
+
+- feat(dashboard): alertar prazo de expedida excedido
+
 ## V. 1.87.0011
 
 **Data:** 2026-10-13 19:07:49 | **Commit:** `9dcbe8ad` | **Tipo:** `patch`
@@ -5493,6 +5499,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
