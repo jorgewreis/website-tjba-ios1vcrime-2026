@@ -1,34 +1,14 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../../repositories/CartasRecebidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../../helpers/CartasRecebidasUiCopy.php';
 require_once __DIR__ . '/../../../helpers/RegistroMetadataHelper.php';
 
 $idCarta = trim((string) ($row['IdCarta'] ?? ''));
 $status = strtolower(trim((string) ($row['Status'] ?? '')));
-$allSt = is_array($row['SubtarefasAll'] ?? null) ? $row['SubtarefasAll'] : [];
-$subtarefasPendentes = [];
-$subtarefaAtiva = null;
-foreach ($allSt as $subtarefa) {
-    if (!is_array($subtarefa) || !CartasRecebidasSubtarefasRepository::isTipoAtivo((string) ($subtarefa['tipo'] ?? ''))) {
-        continue;
-    }
-    $subStatus = strtolower(trim((string) ($subtarefa['status'] ?? '')));
-    if ($subStatus === 'em_andamento' && $subtarefaAtiva === null) {
-        $subtarefaAtiva = $subtarefa;
-    }
-    if (in_array($subStatus, ['pendente', 'em_andamento'], true)) {
-        $subtarefasPendentes[] = $subtarefa;
-    }
-}
-usort($subtarefasPendentes, static function (array $a, array $b): int {
-    return ((int) ($a['ordem'] ?? 0)) <=> ((int) ($b['ordem'] ?? 0));
-});
-
 $isConcluida = in_array($status, ['concluída', 'concluida', 'finalizada'], true);
 $isCancelada = $status === 'cancelada';
-$tituloStatus = CartasRecebidasUiCopy::resolverTituloTarefaListagem((string) ($row['Status'] ?? ''), $allSt);
+$tituloStatus = CartasRecebidasUiCopy::resolverTituloTarefaListagem((string) ($row['Status'] ?? ''), []);
 $badgeText = $isConcluida ? 'Finalizada' : ($isCancelada ? 'Cancelada' : $tituloStatus);
 $badgeClass = CartasRecebidasUiCopy::classeCssBadgeStatusTarefa((string) ($row['Status'] ?? ''));
 if ($badgeClass === 'status-cancelled') $badgeClass = 'status-canceled';
@@ -54,18 +34,11 @@ $abrirDisabled = !empty($row['bloco_processo_abrir_disabled']);
 $metadata = RegistroMetadataHelper::fromListRow($row, 'cartas_recebidas', $registroListViewerContext, $connection);
 $editHref = trim((string) ($metadata['edit_href'] ?? ''));
 $showEdit = !empty($metadata['show_edit']) && $editHref !== '' && !$isConcluida && !$isCancelada;
-$historico = RegistroMetadataHelper::resolveUltimaSubtarefaConcluida($allSt, $connection);
-$historicoData = trim((string) ($historico['data'] ?? ''));
-if ($historicoData !== '' && ($historicoTimestamp = strtotime($historicoData)) !== false) {
-    $historicoData = date('d/m/Y H:i', $historicoTimestamp);
-}
-$historicoTexto = $historico !== null ? trim($historicoData . ((string) ($historico['editor'] ?? '') !== '' ? ' | ' . $historico['editor'] : '')) : '';
-$subtarefaId = trim((string) ($subtarefaAtiva['id'] ?? ''));
-$subtarefaTipo = trim((string) ($subtarefaAtiva['tipo'] ?? ''));
 $subtarefaIcone = $status === CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO
     ? 'Button-Next--Streamline-Ultimate.png'
     : 'Button-Play-1--Streamline-Ultimate.png';
-if ($isConcluida || $isCancelada) $subtarefasPendentes = [];
+$podeAvancar = !$isConcluida && !$isCancelada && CartasRecebidasUiCopy::tarefaEstaEmAndamento($status);
+$botaoTitle = $status === CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO ? 'Devolver carta recebida' : 'Registrar cumprimento';
 $showDelete = !empty($metadata['show_delete']);
 ?>
 <div class="register-line full carta-expedida-v2-row carta-recebida-v2-row" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
@@ -105,31 +78,8 @@ $showDelete = !empty($metadata['show_delete']);
                 <div class="badge-status-primary <?php echo htmlspecialchars($badgeClass, ENT_QUOTES); ?>"><span class="badge-status-text"><?php echo htmlspecialchars($badgeText, ENT_QUOTES); ?></span></div>
                 <?php if ($showEdit): ?><button type="button" class="button-icon-right carta-row-action" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar"><img src="/assets/icons/Eject-Button--Streamline-Ultimate.png" alt=""></button><?php endif; ?>
                 <?php if ($showDelete): ?><button type="button" class="button-icon-right carta-row-action" data-action="excluir-registro" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-delete-endpoint="<?php echo htmlspecialchars((string) ($metadata['delete_endpoint'] ?? ''), ENT_QUOTES); ?>" title="<?php echo htmlspecialchars((string) ($metadata['delete_label'] ?? 'Excluir carta recebida'), ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars((string) ($metadata['delete_label'] ?? 'Excluir carta recebida'), ENT_QUOTES); ?>"><img src="/assets/icons/Notes-Remove--Streamline-Ultimate.png" alt=""></button><?php endif; ?>
-                <?php if (!$isConcluida && !$isCancelada && $subtarefaAtiva !== null): ?><button type="button" class="button-icon-internal carta-row-action btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($subtarefaId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($subtarefaTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars(CartasRecebidasUiCopy::tituloBotaoPorTipo($subtarefaTipo), ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars(CartasRecebidasUiCopy::tituloBotaoPorTipo($subtarefaTipo), ENT_QUOTES); ?>"><img src="/assets/icons/<?php echo htmlspecialchars($subtarefaIcone, ENT_QUOTES); ?>" alt=""></button><?php endif; ?>
-                <?php if ($subtarefasPendentes !== []): ?><label class="button-table carta-row-action" title="Expandir etapas"><input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-expanded="false"><i class="fi fi-rr-angle-small-down"></i></label><?php endif; ?>
+                <?php if ($podeAvancar): ?><button type="button" class="button-icon-internal carta-row-action js-mover-carta-recebida" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($botaoTitle, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($botaoTitle, ENT_QUOTES); ?>"><img src="/assets/icons/<?php echo htmlspecialchars($subtarefaIcone, ENT_QUOTES); ?>" alt=""></button><?php endif; ?>
             </div></div>
-            <div class="block-separator-line"></div>
-            <div class="container-historical container-sm media-1024"><div class="container-line"><div class="line-content double-line">
-                <span class="content-classe">Última movimentação</span>
-                <span class="content-assuntos<?php echo $historicoTexto === '' ? ' over' : ''; ?>"><?php echo htmlspecialchars($historicoTexto !== '' ? $historicoTexto : 'Nenhuma movimentação registrada', ENT_QUOTES); ?></span>
-            </div></div></div>
         </div>
     </div>
 </div>
-<?php if ($subtarefasPendentes !== []): ?>
-<div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-hidden="true">
-    <?php foreach ($subtarefasPendentes as $st):
-        $stId = (string) ($st['id'] ?? '');
-        $stTipo = trim((string) ($st['tipo'] ?? ''));
-        $stStatus = strtolower(trim((string) ($st['status'] ?? '')));
-        $stLabel = CartasRecebidasUiCopy::textoSpanStatusSubtarefa($stTipo, $stStatus);
-        $btnTitle = CartasRecebidasUiCopy::tituloBotaoPorTipo($stTipo);
-        $statusClass = CartasRecebidasUiCopy::classeCssSpanStatusSubtarefa($stStatus);
-    ?>
-    <div class="display-flex row row-full justify-between subtask padding-x-sm padding-y-sm border-top" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>">
-        <div class="display-flex row row-fit justify-start gap-y-sm align-center subtask-row-fields"><div class="col task-status"><div class="padding-x-lg height-sm status <?php echo htmlspecialchars($statusClass, ENT_QUOTES); ?>"><?php echo htmlspecialchars($stLabel, ENT_QUOTES); ?></div></div></div>
-        <div class="display-flex row row-fit justify-end align-center gap-y-sm"><button type="button" class="btn btn-primary height-sm btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($stId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($stTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?>"<?php echo $stStatus === 'em_andamento' ? '' : ' disabled'; ?>><span class="value-button"><?php echo htmlspecialchars($btnTitle, ENT_QUOTES); ?></span></button></div>
-    </div>
-    <?php endforeach; ?>
-</div>
-<?php endif; ?>

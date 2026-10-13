@@ -18,22 +18,22 @@
         });
     }
 
-    function bindCompleteSubtasks(ctx) {
-        document.querySelectorAll('.btn-concluir-subtarefa').forEach(function (button) {
+    function bindMainRowMovement(ctx) {
+        document.querySelectorAll('.js-mover-carta-recebida').forEach(function (button) {
             button.addEventListener('click', function () {
-                var subtarefaId = String(button.getAttribute('data-subtarefa-id') || '').trim();
-                if (!subtarefaId || button.disabled) return;
+                var cartaId = String(button.getAttribute('data-carta-id') || '').trim();
+                if (!cartaId || button.disabled) return;
                 button.disabled = true;
-                fetch('/api/cartorio-cartas-recebidas/concluir-subtarefa.php', {
+                fetch('/api/cartorio-cartas-recebidas/avancar.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'same-origin',
-                    body: JSON.stringify({ subtarefa_id: subtarefaId, dados_especificos: null })
+                    body: JSON.stringify({ carta_id: cartaId })
                 }).then(function (response) {
                     return response.json().then(function (data) { return { ok: response.ok, data: data }; });
                 }).then(function (result) {
                     if (result.ok && result.data && result.data.success) {
-                        ctx.queuePostReloadToast('success', 'Sucesso', 'Subtarefa concluída com sucesso.');
+                        ctx.queuePostReloadToast('success', 'Sucesso', 'Carta recebida movimentada com sucesso.');
                         if (result.data.tarefa_principal_concluida && result.data.tarefa_principal_mensagem) {
                             ctx.queuePostReloadToast('success', 'Sucesso', result.data.tarefa_principal_mensagem);
                         }
@@ -82,7 +82,7 @@
                 newButtonId: 'novo-cadastro-btn',
                 newHref: '/frame.php?page=cartasrecebidascreate',
                 onReady: function (ctx) {
-                    bindCompleteSubtasks(ctx);
+                    bindMainRowMovement(ctx);
                     if (window.App.Page && typeof App.Page.flushPostReloadToast === 'function') App.Page.flushPostReloadToast('cartorio.postReloadToast');
                 }
             });

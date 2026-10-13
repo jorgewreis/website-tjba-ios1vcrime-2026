@@ -43,16 +43,6 @@ final class CartasRecebidasService
     public function listCartas(array $filters, int $limit, int $offset): array
     {
         $rows = $this->repository->fetchList($filters, $limit, $offset);
-        foreach ($rows as $i => $row) {
-            $idCarta = (string) ($row['IdCarta'] ?? '');
-            if ($idCarta !== '') {
-                $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
-                $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
-            } else {
-                $rows[$i]['Subtarefas'] = [];
-                $rows[$i]['SubtarefasAll'] = [];
-            }
-        }
         return [
             'rows' => $rows,
             'total' => $this->repository->count($filters),
