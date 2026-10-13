@@ -24,4 +24,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(editais): alinhar lista e formulários ao padrão de cartas** `[03110ab8]`
 - **fix(editais): acertar alinhamento fino do formulario** `[00f2688d]`
 - **fix(editais): eliminar overflow em telas estreitas** `[bad0b91d]`
+- **fix(editais): ajustar colunas e icone de expansao** `[52713ec0]`
 
