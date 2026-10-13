@@ -16,6 +16,7 @@ require_once __DIR__ . '/../../../helpers/RegistroMetadataHelper.php';
 
 $idCarta = trim((string) ($row['IdCarta'] ?? ''));
 $st = strtolower(trim((string) ($row['Status'] ?? '')));
+$isAguardandoCumprimento = $st === 'aguardando cumprimento';
 /** @var list<array<string, mixed>> $allSt */
 $allSt = is_array($row['SubtarefasAll'] ?? null) ? $row['SubtarefasAll'] : [];
 $subtarefaAtivaUi = CartasExpedidasSubtarefasRepository::resolverSubtarefaAtivaPorLista($allSt);
@@ -346,7 +347,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                         data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
                         title="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>"
                         aria-label="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>">
-                        <img src="/assets/icons/Button-Play-1--Streamline-Ultimate.png" alt="">
+                        <img src="/assets/icons/<?php echo $isAguardandoCumprimento ? 'Navigation-Arrows-Right-1--Streamline-Ultimate.png' : 'Button-Play-1--Streamline-Ultimate.png'; ?>" alt="">
                     </button>
                 <?php endif; ?>
             </div>

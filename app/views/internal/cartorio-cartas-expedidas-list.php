@@ -81,16 +81,6 @@ $statusCounts = [
     'cancelada' => (int) ($rawStatusCounts['cancelada'] ?? 0),
 ];
 
-// Contadores da barra de results: sempre globais (ignoram filtros aplicados).
-$globalStatusCounts = $service->getStatusCounts([]);
-$globalAtivosTotal = (int) ($globalStatusCounts['em_andamento'] ?? 0)
-    + (int) ($globalStatusCounts['aguardando envio'] ?? 0)
-    + (int) ($globalStatusCounts['aguardando cumprimento'] ?? 0);
-$globalAguardandoEnvio = (int) ($globalStatusCounts['em_andamento'] ?? 0)
-    + (int) ($globalStatusCounts['aguardando envio'] ?? 0);
-
-$alertAguardandoEnvio = $globalAguardandoEnvio >= 1;
-
 $defaultFinalidades = [
     'Intimação para Audiência',
     'Intimação de Decisão Interlocutória',
@@ -229,19 +219,6 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                         </option>
                     <?php endforeach; ?>
                 </select>
-            </div>
-        </div>
-
-        <div class="card-line full results">
-            <div class="card-line left results">
-                <div class="line-results">
-                    <div class="number left"><?php echo (int) $globalAtivosTotal; ?></div>
-                    <div class="text">Documentos cadastrados</div>
-                </div>
-                <div class="line-results<?php echo $alertAguardandoEnvio ? ' alert' : ''; ?>">
-                    <div class="number left"><?php echo (int) $globalAguardandoEnvio; ?></div>
-                    <div class="text">Aguardando envio</div>
-                </div>
             </div>
         </div>
 
