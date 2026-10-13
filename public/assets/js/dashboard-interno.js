@@ -2,7 +2,6 @@
   'use strict';
   const $=id=>document.getElementById(id), charts=[];
   const colors={purple:'#7950ad',mint:'#4f9f88',blue:'#5b8fca',orange:'#d99a39',red:'#ca6868'};
-  const areaNames={CARTORIO:'Cartório',GABINETE:'Gabinete',AUDIENCIAS:'Sala de Audiências'};
   if(window.Chart) Chart.defaults.font.family="'Google Sans', sans-serif";
 
   function set(id,value){const el=$(id);if(el)el.textContent=value;}
@@ -10,11 +9,11 @@
   function destroyCharts(){charts.splice(0).forEach(c=>c.destroy());}
   function spark(id,labels,values,color){
     const el=$(id);if(!el||!window.Chart)return;
-    charts.push(new Chart(el,{type:'line',data:{labels,datasets:[{data:values,borderColor:color,backgroundColor:color+'22',borderWidth:2,pointRadius:0,tension:.42,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}},layout:{padding:2}}}));
+    charts.push(new Chart(el,{type:'bar',data:{labels,datasets:[{data:values,backgroundColor:values.map((_,i)=>i===values.length-1?color:color+'88'),borderWidth:0,borderRadius:2,maxBarThickness:8}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:true,displayColors:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}},layout:{padding:1}}}));
   }
-  function line(id,labels,datasets){
+  function weeklyBars(id,labels,datasets){
     const el=$(id);if(!el||!window.Chart)return;
-    charts.push(new Chart(el,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#777183',maxRotation:0,autoSkip:false,font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0,color:'#777183',font:{size:10}},grid:{color:'rgba(39,31,50,.08)'}}}}}));
+    charts.push(new Chart(el,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#777183',maxRotation:0,autoSkip:false,font:{size:9}}},y:{beginAtZero:true,ticks:{precision:0,maxTicksLimit:4,color:'#777183',font:{size:10}},border:{display:false},grid:{color:'rgba(39,31,50,.06)'}}}}}));
   }
   function activeQueueCount(queues,key,type){
     const broken=(queues||[]).some(row=>row.key===key&&row.error);
@@ -31,9 +30,9 @@
     return Math.max(0,Math.floor((today-parsed)/86400000));
   }
 
-  async function load(sector){
+  async function load(){
     const error=$('dashboard-erro');if(error)error.hidden=true;
-    const url='/api/dashboard/resumo.php'+(sector?'?setor='+encodeURIComponent(sector):'');
+    const url='/api/dashboard/resumo.php';
     try{
       const response=await fetch(url,{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});
       const data=await response.json();
@@ -44,22 +43,18 @@
       const week=registered.semana||{labels:[],expedidas:[],recebidas:[]};
       set('dash-registered-expedidas',count(registered.expedidas));
       set('dash-registered-recebidas',count(registered.recebidas));
+      set('dash-week-expedidas','+'+count((week.expedidas||[]).reduce((total,value)=>total+Number(value),0))+' nos últimos 7 dias');
+      set('dash-week-recebidas','+'+count((week.recebidas||[]).reduce((total,value)=>total+Number(value),0))+' nos últimos 7 dias');
       spark('dash-spark-expedidas',week.labels||[],week.expedidas||[],colors.purple);
       spark('dash-spark-recebidas',week.labels||[],week.recebidas||[],colors.mint);
-      line('dash-chart-cadastros-semana',week.labels||[],[
-        {label:'Expedidas',data:week.expedidas||[],borderColor:colors.purple,backgroundColor:colors.purple+'22',borderWidth:2,pointRadius:2,pointBackgroundColor:colors.purple,tension:.36,fill:true},
-        {label:'Recebidas',data:week.recebidas||[],borderColor:colors.mint,backgroundColor:colors.mint+'22',borderWidth:2,pointRadius:2,pointBackgroundColor:colors.mint,tension:.36,fill:true}
+      weeklyBars('dash-chart-cadastros-semana',week.labels||[],[
+        {label:'Expedidas',data:week.expedidas||[],backgroundColor:colors.purple,borderRadius:3,maxBarThickness:10},
+        {label:'Recebidas',data:week.recebidas||[],backgroundColor:colors.mint,borderRadius:3,maxBarThickness:10}
       ]);
 
-      const selected=data.setor?.selecionado||'';
-      const areas=data.setor?.areas||[];
-      const selector=$('dash-sector-filter');
-      if(selector){
-        const current=sector||selected||selector.value;
-        selector.innerHTML='<option value="">Todas as áreas autorizadas</option>'+areas.map(area=>'<option value="'+area+'">'+(areaNames[area]||area)+'</option>').join('');
-        selector.value=areas.includes(current)?current:'';
-      }
-      set('dash-areas',data.setor?.conectado?(selected?(areaNames[selected]||selected):'Todas as áreas autorizadas'):'Setor sem indicadores de cartas');
+      const cartorioEnabled=Boolean(data.setor?.conectado)&&(data.setor?.areas||[]).includes('CARTORIO');
+      const queueCard=$('dash-cartorio-queue');
+      if(queueCard)queueCard.hidden=!cartorioEnabled;
       const sectorQueues=data.setor?.filas||[];
       set('dash-queue-expedidas',data.setor?.conectado?count(activeQueueCount(sectorQueues,'cartas_expedidas','aguardando_envio')):'—');
       set('dash-queue-recebidas',data.setor?.conectado?count(activeQueueCount(sectorQueues,'cartas_recebidas','devolucao')):'—');
@@ -83,8 +78,6 @@
   }
 
   document.addEventListener('DOMContentLoaded',()=>{
-    load('');
-    const selector=$('dash-sector-filter');
-    if(selector)selector.addEventListener('change',event=>load(event.target.value));
+    load();
   });
 })();

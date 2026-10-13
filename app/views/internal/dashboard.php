@@ -21,25 +21,28 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
         <section class="dashboard-column dashboard-system" aria-labelledby="dash-system-title">
           <header><span class="column-kicker">01 / SISTEMA</span><h2 id="dash-system-title">Fluxo geral</h2><p>Cartas Expedidas e Cartas Recebidas da Vara</p></header>
           <div class="dash-kpi-grid">
-            <article class="dash-card dash-kpi-card dash-kpi-purple"><span class="dash-kpi-label">Cartas Expedidas</span><strong class="dash-kpi-value" id="dash-registered-expedidas">—</strong><div class="dash-kpi-foot"><span>cadastradas</span><canvas id="dash-spark-expedidas" aria-label="Cadastros de cartas expedidas na semana"></canvas></div></article>
-            <article class="dash-card dash-kpi-card dash-kpi-mint"><span class="dash-kpi-label">Cartas Recebidas</span><strong class="dash-kpi-value" id="dash-registered-recebidas">—</strong><div class="dash-kpi-foot"><span>cadastradas</span><canvas id="dash-spark-recebidas" aria-label="Cadastros de cartas recebidas na semana"></canvas></div></article>
+            <article class="dash-card dash-kpi-card dash-kpi-purple">
+              <div class="dash-kpi-main"><span class="dash-kpi-label">Cartas Expedidas</span><strong class="dash-kpi-value" id="dash-registered-expedidas">—</strong><span class="dash-kpi-unit">cadastradas</span><small id="dash-week-expedidas">Últimos 7 dias</small></div>
+              <div class="dash-mini-chart"><canvas id="dash-spark-expedidas" aria-label="Sete barras com os cadastros diários de cartas expedidas"></canvas></div>
+            </article>
+            <article class="dash-card dash-kpi-card dash-kpi-mint">
+              <div class="dash-kpi-main"><span class="dash-kpi-label">Cartas Recebidas</span><strong class="dash-kpi-value" id="dash-registered-recebidas">—</strong><span class="dash-kpi-unit">cadastradas</span><small id="dash-week-recebidas">Últimos 7 dias</small></div>
+              <div class="dash-mini-chart"><canvas id="dash-spark-recebidas" aria-label="Sete barras com os cadastros diários de cartas recebidas"></canvas></div>
+            </article>
           </div>
-          <article class="dash-card dash-weekly-card"><h3>Cadastros · últimos 7 dias</h3><canvas id="dash-chart-cadastros-semana" aria-label="Evolução semanal de cartas expedidas e recebidas cadastradas"></canvas><div class="dash-chart-legend"><span><i class="legend-dot legend-purple"></i>Expedidas</span><span><i class="legend-dot legend-mint"></i>Recebidas</span></div></article>
+          <article class="dash-card dash-weekly-card"><h3>Cadastros na semana</h3><div class="dash-chart-legend"><span><i class="legend-dot legend-purple"></i>Expedidas</span><span><i class="legend-dot legend-mint"></i>Recebidas</span></div><div class="dash-weekly-chart"><canvas id="dash-chart-cadastros-semana" aria-label="Cadastros por dia nos últimos sete dias, separados em expedidas e recebidas"></canvas></div></article>
         </section>
         <section class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title">
           <header><span class="column-kicker">02 / SETOR</span><h2 id="dash-sector-title">Minha área</h2><p>Pendências de cartas no setor autorizado</p></header>
-          <label class="dash-filter" for="dash-sector-filter">Filtrar setor</label><select id="dash-sector-filter" class="dashboard-sector-filter"><option value="">Todas as áreas autorizadas</option></select>
-          <article class="dash-card dash-sector-queue">
-            <div class="dash-sector-heading"><div><span class="dash-kpi-label">FILA DO CARTÓRIO</span><strong id="dash-areas">Áreas autorizadas</strong></div><span class="dash-sector-mark" aria-hidden="true">C</span></div>
+          <article id="dash-cartorio-queue" class="dash-card dash-sector-queue" hidden>
             <div class="dash-sector-metric"><span>Cartas Expedidas<br>aguardando envio</span><strong id="dash-queue-expedidas">—</strong></div>
             <div class="dash-sector-metric"><span>Cartas Recebidas<br>aguardando devolução</span><strong id="dash-queue-recebidas">—</strong></div>
-            <small class="dash-sector-footnote">Pendências na etapa atual do setor.</small>
           </article>
         </section>
         <section class="dashboard-column dashboard-work" aria-labelledby="dash-work-title">
           <header><span class="column-kicker">03 / PRODUTIVIDADE</span><h2 id="dash-work-title">Meu trabalho</h2><p>Movimentações feitas pelo usuário nas duas páginas</p></header>
-          <article class="dash-card dash-production-card"><div><span class="dash-kpi-label">ÚLTIMOS 30 DIAS</span><strong class="dash-production-number" id="dash-done-expedidas">—</strong><span class="dash-production-label">Cartas Expedidas movimentadas</span></div><canvas id="dash-spark-user-expedidas" aria-label="Movimentações de cartas expedidas pelo usuário na semana"></canvas></article>
-          <article class="dash-card dash-production-card dash-production-mint"><div><span class="dash-kpi-label">ÚLTIMOS 30 DIAS</span><strong class="dash-production-number" id="dash-done-recebidas">—</strong><span class="dash-production-label">Cartas Recebidas movimentadas</span></div><canvas id="dash-spark-user-recebidas" aria-label="Movimentações de cartas recebidas pelo usuário na semana"></canvas></article>
+          <article class="dash-card dash-production-card"><div><span class="dash-kpi-label">ÚLTIMOS 30 DIAS</span><strong class="dash-production-number" id="dash-done-expedidas">—</strong><span class="dash-production-label">Cartas Expedidas movimentadas</span></div><div class="dash-mini-chart"><canvas id="dash-spark-user-expedidas" aria-label="Movimentações diárias de cartas expedidas pelo usuário nos últimos sete dias"></canvas></div></article>
+          <article class="dash-card dash-production-card dash-production-mint"><div><span class="dash-kpi-label">ÚLTIMOS 30 DIAS</span><strong class="dash-production-number" id="dash-done-recebidas">—</strong><span class="dash-production-label">Cartas Recebidas movimentadas</span></div><div class="dash-mini-chart"><canvas id="dash-spark-user-recebidas" aria-label="Movimentações diárias de cartas recebidas pelo usuário nos últimos sete dias"></canvas></div></article>
           <article class="dash-card dash-note-card"><span class="dash-note">Conta movimentações realizadas pelo usuário autenticado. O histórico começa no registro implantado.</span></article>
         </section>
         <section class="dashboard-column dashboard-agenda" aria-labelledby="dash-agenda-title">

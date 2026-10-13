@@ -22,7 +22,7 @@ A idade da fila usa o `updated_at` da etapa que está em andamento, que é atual
 
 ## Acesso e recortes
 
-A API exige sessão autenticada e perfil interno. Externos são rejeitados. O filtro de setor aceita somente áreas presentes nos perfis operacionais efetivos da sessão; a API responde 403 para qualquer outro valor. O recorte atual desses cinco módulos representa Cartório. Perfis sem Cartório autorizado veem os indicadores gerais agregados, mas não um total setorial inventado; a coluna informa que não há fluxo desses módulos ligado àquela área.
+A API exige sessão autenticada e perfil interno. Externos são rejeitados. A coluna do setor usa automaticamente as áreas dos perfis operacionais efetivos da sessão. O card de fila das cartas aparece apenas para quem tem Cartório autorizado, incluindo perfis com múltiplos setores. Usuários com somente Gabinete ou Sala de Audiências não veem esse card nem recebem filas de cartas em `setor.filas`. Não há seletor de setor ou cabeçalho de áreas autorizadas no card. Os indicadores gerais da Vara continuam na primeira coluna.
 
 ## Histórico de produtividade
 
@@ -31,6 +31,7 @@ A API exige sessão autenticada e perfil interno. Externos são rejeitados. O fi
 ## Limites dos indicadores
 
 - Cadastros da semana usam `created_at` dos registros principais.
+- Os cards apresentam sete barras diárias compactas e o gráfico semanal compara expedidas e recebidas por data. As áreas dos canvases têm dimensões definidas, sem curvas interpoladas entre contagens diárias.
 - Prazos próximos contam Cartas Expedidas na etapa de cumprimento a partir da ativação dessa etapa e Cartas Recebidas em cumprimento a partir da data de recebimento (ou criação, quando não informada), somando o prazo em dias registrado no documento. A janela mostrada é de hoje até os próximos sete dias; o card não rotula itens como vencidos.
 - A agenda de audiências e os dias não úteis permanecem disponíveis na API, mas não aparecem nos cards desta etapa.
 - Dados são consultados ao carregar ou recarregar a página. Não há atualização automática em segundo plano.
