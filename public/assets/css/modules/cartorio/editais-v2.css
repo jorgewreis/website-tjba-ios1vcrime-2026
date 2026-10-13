@@ -172,6 +172,15 @@
 .editais-v2-page .btn-primary-outline { border: 1px solid #47196f; }
 .editais-v2-page .status-classe { justify-content: flex-start; }
 
+@media (min-width: 1500px) {
+    .register.register-with-metadata.register-line.editais-v2-row {
+        grid-template-columns: 39px 478px 371px 188px minmax(240px, 1fr);
+    }
+    .editais-v2-cell-type { padding-left: 0; }
+    .editais-v2-cell-status { padding-left: 0; }
+    .editais-v2-cell-history { padding-left: 0; }
+}
+
 @media (max-width: 1100px) {
     .editais-v2-row { grid-template-columns: 39px minmax(0, 1fr) minmax(210px, .8fr); row-gap: 10px; }
     .editais-v2-row-expander { grid-column: 1; grid-row: 1 / span 2; }
