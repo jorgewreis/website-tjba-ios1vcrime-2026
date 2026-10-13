@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0033
+
+**Data:** 2026-10-13 20:22:26 | **Commit:** `b2898c5e` | **Tipo:** `patch`
+
+- fix(editais): reutilizar estrutura visual das linhas de cartas
+
 ## V. 1.87.0032
 
 **Data:** 2026-10-13 20:17:08 | **Commit:** `c3f876fb` | **Tipo:** `patch`
@@ -5619,6 +5625,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -1,0 +1,36 @@
+/* A listagem de Editais usa a estrutura e o CSS dos registros de Cartas. */
+.register-line.carta-expedida-v2-row.edital-row {
+    width: 100%;
+    min-height: 75px;
+    box-sizing: border-box;
+}
+.edital-row .register-block-content { color: #6d7681; }
+.edital-row .container-process { position: relative; }
+.edital-row .container-process .js-processo-datajud-sync {
+    position: absolute;
+    top: 30px;
+    right: 0;
+    opacity: .3;
+    cursor: pointer;
+}
+.edital-row .container-process .js-processo-datajud-sync:hover,
+.edital-row .container-process .js-processo-datajud-sync:focus-visible { opacity: 1; }
+.edital-row .container-process:has(.js-processo-datajud-sync) .line-content.double-line { padding-right: 40px; }
+.edital-row .edital-row-expand { position: relative; cursor: pointer; }
+.edital-row .edital-row-expand input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+.edital-row .edital-row-expand:focus-within { outline: 2px solid #47196f; outline-offset: 2px; }
+.edital-record > .editais-v2-subtasks { margin: 0; padding: 10px; border-bottom: 1px solid #e0e0e0; }
+@media (max-width: 1120px) {
+    .register-line.carta-expedida-v2-row.edital-row { padding: 10px; }
+}
+@media (max-width: 700px) {
+    .edital-row .register-block-status > .carta-row-action { opacity: 1; }
+}

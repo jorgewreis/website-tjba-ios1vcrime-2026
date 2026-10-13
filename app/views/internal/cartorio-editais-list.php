@@ -133,6 +133,8 @@ if ($totalPages > 0) {
 $assetsRoot = dirname(__DIR__, 3) . '/public/assets';
 $v2ColorsCssV = @filemtime($assetsRoot . '/css/shared/v2-colors.css') ?: time();
 $v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: time();
+$cartasRowsCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cartas-expedidas-rows.css') ?: time();
+$editaisRowsCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-rows.css') ?: time();
 $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') ?: time();
 ?>
 <!DOCTYPE html>
@@ -148,6 +150,8 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <link rel="stylesheet" href="/assets/css/modules/cartorio/editais-v2.css?v=<?php echo (int) $editaisCssV; ?>">
+        <link rel="stylesheet" href="/assets/css/modules/cartorio/cartas-expedidas-rows.css?v=<?php echo (int) $cartasRowsCssV; ?>">
+        <link rel="stylesheet" href="/assets/css/modules/cartorio/editais-rows.css?v=<?php echo (int) $editaisRowsCssV; ?>">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
@@ -311,50 +315,54 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                 }
             ?>
             <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'editais', $registroListViewerContext, $connection); ?>
-            <div class="register-line full register register-with-metadata editais-v2-row" role="listitem" data-edital-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idEdital); ?>">
-                <div class="editais-v2-row-expander">
-                    <?php if ($podeExpandirSubtarefas): ?>
-                        <label class="button-table" title="Expandir detalhes">
-                            <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idEdital); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" aria-expanded="false" aria-label="Expandir detalhes do edital <?php echo htmlspecialchars((string) ($row['numero_processo'] ?? ''), ENT_QUOTES); ?>" />
-                            <i class="fi fi-rr-angle-small-down" aria-hidden="true"></i>
-                        </label>
-                    <?php else: ?>
-                        <span class="button-table" style="visibility:hidden;" aria-hidden="true"><i class="fi fi-rr-angle-small-down"></i></span>
-                    <?php endif; ?>
+            <?php
+            $historicoLinhas = $registroMetadata['historico_linhas'] ?? [];
+            $historicoRecente = $historicoLinhas !== [] ? $historicoLinhas[count($historicoLinhas) - 1] : null;
+            $historicoTexto = $historicoRecente !== null ? trim((string) ($historicoRecente['data_hora'] ?? '')) : '';
+            $historicoAutor = $historicoRecente !== null ? trim((string) ($historicoRecente['autor'] ?? '')) : '';
+            if ($historicoAutor !== '') {
+                $historicoTexto .= ($historicoTexto !== '' ? ' | ' : '') . $historicoAutor;
+            }
+            $editalBadgeClass = $tarefaConcluida ? 'status-finished' : ($statusTarefaNorm === 'cancelada' ? 'status-cancelled' : ($statusTarefaNorm === 'pendente' ? 'status-current' : 'status-pending'));
+            $editalBadgeLabel = $tarefaConcluida ? 'Finalizada' : ($statusTarefaNorm === 'cancelada' ? 'Cancelada' : $currentSubtarefaTitle);
+            ?>
+            <div class="edital-record" role="listitem" data-edital-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>">
+            <div class="register-line full carta-expedida-v2-row edital-row" data-registro-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>">
+                <div class="left carta-expedida-left">
+                    <?php include __DIR__ . '/partials/editais-v2-process.php'; ?>
                 </div>
-                <div class="editais-v2-cell editais-v2-cell-process">
-                    <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                <div class="right carta-expedida-right">
+                    <div class="register-block">
+                        <div class="register-block-content">
+                            <div class="register-block-content-item"><strong class="register-block-content-item-value"><?php echo htmlspecialchars((string) ($row['tipo_edital'] ?? $row['TipoEdital'] ?? '—')); ?></strong></div>
+                            <div class="register-block-content-item"><span class="register-block-content-item-text">Tipo de edital</span></div>
+                        </div>
+                    </div>
+                    <div class="carta-expedida-status-group">
+                        <div class="register-block-status">
+                            <div class="badge-status-primary <?php echo htmlspecialchars($editalBadgeClass, ENT_QUOTES); ?>"><span class="badge-status-text"><?php echo htmlspecialchars($editalBadgeLabel, ENT_QUOTES); ?></span></div>
+                            <?php if (!empty($registroMetadata['show_edit']) && !empty($registroMetadata['edit_href'])): ?>
+                            <button type="button" class="carta-row-action" data-action="editar-registro" data-edit-href="<?php echo htmlspecialchars($registroMetadata['edit_href'], ENT_QUOTES); ?>" title="Editar edital" aria-label="Editar edital"><img src="/assets/icons/Eject-Button--Streamline-Ultimate.png" alt=""></button>
+                            <?php endif; ?>
+                            <?php if ($podeExpandirSubtarefas): ?>
+                            <label class="carta-row-action edital-row-expand" title="Expandir etapas do edital">
+                                <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" aria-expanded="false" aria-label="Expandir etapas do edital" />
+                                <img src="/assets/icons/Button-Next--Streamline-Ultimate.png" alt="">
+                            </label>
+                            <?php endif; ?>
+                            <?php if (!empty($registroMetadata['show_cancel'])): ?>
+                            <button type="button" class="carta-row-action" data-action="cancelar-registro" data-registro-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" data-cancel-endpoint="<?php echo htmlspecialchars($registroMetadata['cancel_endpoint'], ENT_QUOTES); ?>" title="Cancelar edital" aria-label="Cancelar edital"><img src="/assets/icons/Notes-Remove--Streamline-Ultimate.png" alt=""></button>
+                            <?php endif; ?>
+                        </div>
+                        <div class="container-historical container-sm">
+                            <div class="container-line"><div class="line-content double-line">
+                                <span class="content-classe">Última movimentação</span>
+                                <span class="content-assuntos<?php echo $historicoTexto === '' ? ' over' : ''; ?>"><?php echo htmlspecialchars($historicoTexto !== '' ? $historicoTexto : 'Nenhuma movimentação registrada', ENT_QUOTES); ?></span>
+                            </div></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="editais-v2-cell editais-v2-cell-type" title="Tipo de edital">
-                    <span class="minor-info">Tipo de edital</span>
-                    <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['tipo_edital'] ?? $row['TipoEdital'] ?? '—')); ?></span>
-                </div>
-                <div class="editais-v2-cell editais-v2-cell-status<?php echo $mostrarBarraStatus ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
-                            <?php
-                            if ($statusTarefaNorm === 'concluida') {
-                                echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
-                            } elseif ($statusTarefaNorm === 'cancelada') {
-                                echo '<div class="width-300 padding-x-lg status status-cancelled">Cancelada</div>';
-                            } elseif ($mostrarBarraStatus) {
-                                $labelStatus = EditaisUiCopy::rotuloBadgeStatusTarefa($statusTarefa);
-                                $classStatus = EditaisUiCopy::classeCssBadgeStatusTarefa($statusTarefa);
-                                echo '<div class="width-300 status ' . htmlspecialchars($classStatus, ENT_QUOTES) . ' status-with-progress">';
-                                echo '<span class="status-task-label width-300" style="justify-content: flex-start; font-size: 10px;">' . htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES) . '</span>';
-                                $concluidosBarra = 1 + count(array_filter($progressStatuses, static fn ($x) => $x === 'concluida'));
-                                $maxBarra = 1 + count($ordensSubtarefasAtivas);
-                                echo '<div class="status-task-progress" role="progressbar" aria-valuenow="' . $concluidosBarra . '" aria-valuemin="0" aria-valuemax="' . $maxBarra . '" aria-label="Progresso das subtarefas">';
-                                foreach ($segmentosBarra as $seg) {
-                                    echo '<div class="status-task-progress-segment ' . htmlspecialchars($seg['class'], ENT_QUOTES) . '" title="' . htmlspecialchars($seg['title'], ENT_QUOTES) . '"></div>';
-                                }
-                                echo '</div></div>';
-                            } else {
-                                echo '<div class="width-300 padding-x-lg status status-pending">Pendente</div>';
-                            }
-                            ?>
-                </div>
-                <div class="editais-v2-cell editais-v2-cell-history">
-                    <?php include __DIR__ . '/_registro_metadata.php'; ?>
-                </div>
+            </div>
 
                 <?php if ($podeExpandirSubtarefas): ?>
                     <div class="display-flex col col-full subtask subtask-collapsed editais-v2-subtasks" id="subtask-<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" aria-hidden="true">
