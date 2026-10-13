@@ -2,7 +2,7 @@
 
 ## Escopo atual
 
-Os cards visíveis nesta etapa cobrem Cartas Expedidas e Cartas Recebidas. A primeira coluna reúne em um único card de até 160 px os totais ativos de cada tipo, os cadastros recentes ainda ativos e o gráfico diário dos últimos sete dias. A segunda mostra Cartas Expedidas aguardando envio e Cartas Recebidas aguardando devolução no setor autorizado. A terceira conta movimentações do usuário autenticado por página nos últimos 30 dias, com mini séries diárias. A quarta destaca a etapa ativa mais antiga, prazos previstos para os próximos sete dias e Cartas Recebidas aguardando devolução.
+Os cards visíveis nesta etapa cobrem Cartas Expedidas e Cartas Recebidas. A primeira coluna reúne em um único card de até 160 px os totais ativos de cada tipo, os cadastros recentes ainda ativos e o gráfico diário dos últimos sete dias. A segunda mostra Cartas Expedidas aguardando envio e Cartas Recebidas aguardando devolução no setor autorizado. A terceira conta movimentações do usuário autenticado por página nos últimos 30 dias, com mini séries diárias. A quarta apresenta cards compactos ordenados automaticamente por prioridade: prazos próximos, seguidos das filas com maior espera. Cards sem cartas correspondentes ou sem dados disponíveis são omitidos.
 
 Os cartões de cartas ativas contam os registros principais com o mesmo recorte padrão das listagens: excluem concluídas e canceladas. A série semanal usa o mesmo filtro e agrupa somente as cartas ainda ativas por data de cadastro, nos últimos sete dias. As filas contam somente etapas executáveis. O serviço não apresenta quantidade de processos distintos.
 
@@ -18,7 +18,7 @@ Uma fila conta subtarefas com `status = em_andamento`, associadas a um registro 
 | Editais | publicação; decurso de prazo |
 | Ofícios do Cartório | envio de ofício |
 
-A idade da fila usa o `updated_at` da etapa que está em andamento, que é atualizado quando a etapa passa a ser executável. Esse indicador informa há quanto tempo a etapa está na fila; não declara vencimento.
+A fila mais antiga da quarta coluna considera exclusivamente Cartas Expedidas aguardando envio e Cartas Recebidas aguardando devolução. A idade usa o `updated_at` da etapa em andamento, atualizado quando ela passa a ser executável. Cumprimento de cartas, Guias, Editais e Ofícios não concorrem para esse alerta. O indicador informa o tempo de espera e não declara vencimento.
 
 ## Acesso e recortes
 
@@ -32,6 +32,7 @@ A API exige sessão autenticada e perfil interno. Externos são rejeitados. A co
 
 - Cadastros da semana usam `created_at` dos registros principais.
 - O card combinado compara expedidas e recebidas com barras diárias e mantém os totais ativos e os quantitativos de cadastros recentes por tipo. A área do canvas tem dimensões definidas dentro do limite de 160 px do card.
-- Prazos próximos contam Cartas Expedidas na etapa de cumprimento a partir da ativação dessa etapa e Cartas Recebidas em cumprimento a partir da data de recebimento (ou criação, quando não informada), somando o prazo em dias registrado no documento. A janela mostrada é de hoje até os próximos sete dias; o card não rotula itens como vencidos.
+- Prazos próximos contam Cartas Expedidas em cumprimento a partir da conclusão registrada do envio, usando a mesma origem de data da listagem. Cartas Recebidas em cumprimento usam a data de recebimento preenchida; a criação não substitui uma data ausente. Soma-se o prazo em dias registrado. A janela vai de hoje até os próximos sete dias; o card é omitido quando a contagem é zero.
+- A API fornece `alertas` já ordenados: cartas com prazo próximo precedem as filas sem vencimento definido; estas usam a data de entrada na fila, da mais antiga para a mais recente. A tela respeita essa ordem, sem seções ou textos de prioridade adicionais.
 - A agenda de audiências e os dias não úteis permanecem disponíveis na API, mas não aparecem nos cards desta etapa.
 - Dados são consultados ao carregar ou recarregar a página. Não há atualização automática em segundo plano.

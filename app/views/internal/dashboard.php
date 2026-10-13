@@ -45,9 +45,7 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
         </section>
         <section class="dashboard-column dashboard-agenda" aria-labelledby="dash-agenda-title">
           <header><span class="column-kicker">04 / AGENDA</span><h2 id="dash-agenda-title">Agenda e alertas</h2><p>Janelas próximas e referência de fila</p></header>
-          <article class="dash-card dash-alert-card"><span class="dash-kpi-label">FILA MAIS ANTIGA</span><strong class="dash-alert-number" id="dash-oldest-days">—</strong><span class="dash-alert-detail" id="dash-oldest-label">Idade da etapa atual</span></article>
-          <article class="dash-card dash-alert-card dash-alert-warm"><span class="dash-kpi-label">PRAZOS PRÓXIMOS</span><strong class="dash-alert-number" id="dash-deadlines-soon">—</strong><span class="dash-alert-detail">Cartas com prazo nos próximos 7 dias</span></article>
-          <article class="dash-card dash-alert-card dash-alert-mint"><span class="dash-kpi-label">DEVOLUÇÕES AGUARDANDO</span><strong class="dash-alert-number" id="dash-waiting-returns">—</strong><span class="dash-alert-detail">Cartas Recebidas na etapa de devolução</span></article>
+          <div id="dash-alerts" class="dash-alert-list"></div>
         </section>
       </div>
     </main>

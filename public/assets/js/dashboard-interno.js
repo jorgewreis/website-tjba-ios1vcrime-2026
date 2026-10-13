@@ -22,12 +22,19 @@
     return row?row.count:0;
   }
   function moduleTotal(modules,module){const row=(modules||[]).find(item=>item.modulo===module);return row?Number(row.total):0;}
-  function ageInDays(value){
-    if(!value)return null;
-    const parsed=new Date(String(value).replace(' ','T'));
-    if(Number.isNaN(parsed.getTime()))return null;
-    const today=new Date();today.setHours(0,0,0,0);parsed.setHours(0,0,0,0);
-    return Math.max(0,Math.floor((today-parsed)/86400000));
+  function renderAlerts(items){
+    const container=$('dash-alerts');if(!container)return;
+    container.replaceChildren();
+    (items||[]).forEach(item=>{
+      const card=document.createElement('article');card.className='dash-card dash-alert-card';card.dataset.alertKey=item.key;
+      if(item.color==='mint'||item.color==='warm')card.classList.add('dash-alert-'+item.color);
+      const copy=document.createElement('div');copy.className='dash-alert-copy';
+      const label=document.createElement('strong');label.textContent=item.label;
+      const detail=document.createElement('span');detail.textContent=item.detail;
+      const value=document.createElement('span');value.className='dash-alert-number';
+      value.textContent=count(item.value)+(item.unit==='days'?' '+(Number(item.value)===1?'dia':'dias'):'');
+      copy.append(label,detail);card.append(copy,value);container.append(card);
+    });
   }
 
   async function load(){
@@ -65,11 +72,7 @@
       spark('dash-spark-user-expedidas',labels,weeklyModules.cartas_expedidas||[],colors.purple);
       spark('dash-spark-user-recebidas',labels,weeklyModules.cartas_recebidas||[],colors.mint);
 
-      const age=ageInDays(data.fila_mais_antiga_em);
-      set('dash-oldest-days',age===null?'—':age+' '+(age===1?'dia':'dias'));
-      set('dash-oldest-label',data.fila_mais_antiga_etapa||'Sem cartas pendentes na fila');
-      set('dash-deadlines-soon',count(data.prazos_proximos_7d));
-      set('dash-waiting-returns',count(data.cartas_recebidas_aguardando_devolucao));
+      renderAlerts(data.alertas);
     }catch(error){
       if($('dashboard-erro')){$('dashboard-erro').textContent=error.message||'Não foi possível carregar os indicadores.';$('dashboard-erro').hidden=false;}
     }
