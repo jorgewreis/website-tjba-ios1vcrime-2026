@@ -42,4 +42,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(editais): copiar numero sem duplicar texto no hover** `[c790236b]`
 - **fix(editais): ajustar bloco processual em telas pequenas** `[4259ba61]`
 - **fix(editais): restringir cancelamento a pagina de edicao** `[48113cd2]`
+- **feat(dashboard): mostrar editais aguardando publicacao** `[f5b90998]`
 
