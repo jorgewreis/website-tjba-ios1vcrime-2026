@@ -2,10 +2,20 @@
   'use strict';
   const $=id=>document.getElementById(id), charts=[];
   const colors={purple:'#7950ad',mint:'#4f9f88',blue:'#5b8fca',orange:'#d99a39',red:'#ca6868'};
+  const countBadgeClasses=['dash-count-mint','dash-count-purple','dash-count-warning','dash-count-danger'];
   if(window.Chart) Chart.defaults.font.family="'Google Sans', sans-serif";
 
   function set(id,value){const el=$(id);if(el)el.textContent=value;}
   function count(value){return value===null||value===undefined?'—':Number(value).toLocaleString('pt-BR');}
+  function applyCountBadge(element,value){
+    if(!element)return;
+    element.classList.remove(...countBadgeClasses);
+    if(value===null||value===undefined||value==='')return;
+    const number=Number(value);
+    if(!Number.isFinite(number))return;
+    const tier=number<4?'dash-count-mint':number<=7?'dash-count-purple':number<=10?'dash-count-warning':'dash-count-danger';
+    element.classList.add(tier);
+  }
   function recentRegistrations(values){const total=(values||[]).reduce((sum,value)=>sum+Number(value),0);return count(total)+' '+(total===1?'cadastrada':'cadastradas')+' em 7 dias';}
   function destroyCharts(){charts.splice(0).forEach(c=>c.destroy());}
   function spark(id,labels,values,color){
@@ -37,6 +47,7 @@
       const detail=document.createElement('span');detail.textContent=item.detail;
       const value=document.createElement('span');value.className='dash-alert-number';
       value.textContent=count(item.value)+(item.unit==='days'?' '+(Number(item.value)===1?'dia':'dias'):'');
+      applyCountBadge(value,item.value);
       copy.append(label,detail);card.append(copy,value);container.append(card);
     });
   }
@@ -65,8 +76,19 @@
       const queueCard=$('dash-cartorio-queue');
       if(queueCard)queueCard.hidden=!cartorioEnabled;
       const sectorQueues=data.setor?.filas||[];
-      set('dash-queue-expedidas',data.setor?.conectado?count(activeQueueCount(sectorQueues,'cartas_expedidas','aguardando_envio')):'—');
-      set('dash-queue-recebidas',data.setor?.conectado?count(activeQueueCount(sectorQueues,'cartas_recebidas','devolucao')):'—');
+      const queueExpedidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_expedidas','aguardando_envio'):null;
+      const queueRecebidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_recebidas','devolucao'):null;
+      set('dash-queue-expedidas',count(queueExpedidas));
+      set('dash-queue-recebidas',count(queueRecebidas));
+      applyCountBadge($('dash-queue-expedidas'),queueExpedidas);
+      applyCountBadge($('dash-queue-recebidas'),queueRecebidas);
+      const overdue=data.setor?.prazos_vencidos||{};
+      [['expedidas','dash-overdue-expedidas-row','dash-overdue-expedidas'],['recebidas','dash-overdue-recebidas-row','dash-overdue-recebidas']].forEach(([key,rowId,valueId])=>{
+        const row=$(rowId),value=overdue[key];
+        if(row)row.hidden=!(value!==null&&value!==undefined&&Number(value)>0);
+        if(value!==null&&value!==undefined)set(valueId,count(value));
+        applyCountBadge($(valueId),value);
+      });
 
       const modules=data.usuario?.modules||[];
       set('dash-done-expedidas',count(moduleTotal(modules,'cartas_expedidas')));

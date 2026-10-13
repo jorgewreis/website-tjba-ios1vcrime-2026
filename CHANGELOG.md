@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0009
+
+**Data:** 2026-10-13 19:02:00 | **Commit:** `4961782d` | **Tipo:** `patch`
+
+- feat(dashboard): exibir prazos vencidos e colorir badges
+
 ## V. 1.87.0008
 
 **Data:** 2026-10-13 18:45:24 | **Commit:** `4dc1dd5d` | **Tipo:** `patch`
@@ -5475,6 +5481,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
