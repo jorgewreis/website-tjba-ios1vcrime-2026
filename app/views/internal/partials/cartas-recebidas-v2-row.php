@@ -62,6 +62,9 @@ if ($historicoData !== '' && ($historicoTimestamp = strtotime($historicoData)) !
 $historicoTexto = $historico !== null ? trim($historicoData . ((string) ($historico['editor'] ?? '') !== '' ? ' | ' . $historico['editor'] : '')) : '';
 $subtarefaId = trim((string) ($subtarefaAtiva['id'] ?? ''));
 $subtarefaTipo = trim((string) ($subtarefaAtiva['tipo'] ?? ''));
+$subtarefaIcone = $status === CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO
+    ? 'Button-Next--Streamline-Ultimate.png'
+    : 'Button-Play-1--Streamline-Ultimate.png';
 if ($isConcluida || $isCancelada) $subtarefasPendentes = [];
 $showDelete = !empty($metadata['show_delete']);
 ?>
@@ -102,7 +105,7 @@ $showDelete = !empty($metadata['show_delete']);
                 <div class="badge-status-primary <?php echo htmlspecialchars($badgeClass, ENT_QUOTES); ?>"><span class="badge-status-text"><?php echo htmlspecialchars($badgeText, ENT_QUOTES); ?></span></div>
                 <?php if ($showEdit): ?><button type="button" class="button-icon-right carta-row-action" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar"><img src="/assets/icons/Eject-Button--Streamline-Ultimate.png" alt=""></button><?php endif; ?>
                 <?php if ($showDelete): ?><button type="button" class="button-icon-right carta-row-action" data-action="excluir-registro" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-delete-endpoint="<?php echo htmlspecialchars((string) ($metadata['delete_endpoint'] ?? ''), ENT_QUOTES); ?>" title="<?php echo htmlspecialchars((string) ($metadata['delete_label'] ?? 'Excluir carta recebida'), ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars((string) ($metadata['delete_label'] ?? 'Excluir carta recebida'), ENT_QUOTES); ?>"><img src="/assets/icons/Notes-Remove--Streamline-Ultimate.png" alt=""></button><?php endif; ?>
-                <?php if (!$isConcluida && !$isCancelada && $subtarefaAtiva !== null): ?><button type="button" class="button-icon-internal carta-row-action btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($subtarefaId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($subtarefaTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars(CartasRecebidasUiCopy::tituloBotaoPorTipo($subtarefaTipo), ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars(CartasRecebidasUiCopy::tituloBotaoPorTipo($subtarefaTipo), ENT_QUOTES); ?>"><img src="/assets/icons/Button-Play-1--Streamline-Ultimate.png" alt=""></button><?php endif; ?>
+                <?php if (!$isConcluida && !$isCancelada && $subtarefaAtiva !== null): ?><button type="button" class="button-icon-internal carta-row-action btn-concluir-subtarefa" data-subtarefa-id="<?php echo htmlspecialchars($subtarefaId, ENT_QUOTES); ?>" data-subtarefa-tipo="<?php echo htmlspecialchars($subtarefaTipo, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars(CartasRecebidasUiCopy::tituloBotaoPorTipo($subtarefaTipo), ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars(CartasRecebidasUiCopy::tituloBotaoPorTipo($subtarefaTipo), ENT_QUOTES); ?>"><img src="/assets/icons/<?php echo htmlspecialchars($subtarefaIcone, ENT_QUOTES); ?>" alt=""></button><?php endif; ?>
                 <?php if ($subtarefasPendentes !== []): ?><label class="button-table carta-row-action" title="Expandir etapas"><input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" aria-expanded="false"><i class="fi fi-rr-angle-small-down"></i></label><?php endif; ?>
             </div></div>
             <div class="block-separator-line"></div>
