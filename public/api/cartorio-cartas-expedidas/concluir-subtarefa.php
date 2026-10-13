@@ -8,6 +8,7 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CartorioSubtarefaUsuarioSessao.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
+require_once $basePath . '/app/services/DashboardResumoService.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -30,8 +31,10 @@ if ($subtarefaId === '') {
 }
 
 try {
+    $before = DashboardResumoService::statusAnterior($connection, 'cartas_expedidas_subtarefas', $subtarefaId);
     $service = new CartasExpedidasService($connection);
     $resultado = $service->concluirSubtarefa($subtarefaId, $dadosEspecificos);
+    DashboardResumoService::registrarConclusao($connection, $before, 'cartas_expedidas', 'CARTORIO', trim((string)($_SESSION['id_usuario'] ?? '')));
     echo json_encode(array_merge(['success' => true], is_array($resultado) ? $resultado : []), JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);

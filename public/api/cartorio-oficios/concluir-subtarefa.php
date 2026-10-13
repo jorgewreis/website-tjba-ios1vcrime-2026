@@ -7,6 +7,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/OficiosCartorioService.php';
+require_once $basePath . '/app/services/DashboardResumoService.php';
 
 if (!bootstrapRequireTrustedPostRequest()) {
     http_response_code(403);
@@ -32,8 +33,10 @@ if ($subtarefaId === '') {
 $uid = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 
 try {
+    $before = DashboardResumoService::statusAnterior($connection, 'oficios_cartorio_subtarefas', $subtarefaId);
     $service = new OficiosCartorioService($connection);
     $resultado = $service->concluirSubtarefa($subtarefaId, $uid !== '' ? $uid : null);
+    DashboardResumoService::registrarConclusao($connection, $before, 'oficios', 'CARTORIO', $uid);
     echo json_encode(array_merge(['success' => true], is_array($resultado) ? $resultado : []), JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);

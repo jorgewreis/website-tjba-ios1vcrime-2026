@@ -106,6 +106,10 @@ jobs:
               php scripts/migrate-gabinete-reu-preso-controle-tipo.php
             fi
 
+            if [ -f scripts/migrate-dashboard-conclusoes.php ]; then
+              php scripts/migrate-dashboard-conclusoes.php
+            fi
+
             sudo systemctl reload nginx 2>/dev/null || true
             sudo systemctl reload php8.2-fpm 2>/dev/null || true
             sudo systemctl reload php8.1-fpm 2>/dev/null || true
