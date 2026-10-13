@@ -120,9 +120,11 @@
 .editais-v2-cell-type { display: flex; flex-direction: column; gap: 3px; padding: 0 10px; }
 .editais-v2-cell-type > .minor-info,
 .editais-v2-cell-type > .major-info { display: block; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.editais-v2-cell-type > .minor-info,
+.editais-v2-cell-type > .major-info { margin-left: 0; margin-right: 0; }
 .editais-v2-cell-type .minor-info { color: #827a8c; font-size: 10px; }
 .editais-v2-cell-type .major-info { color: #43394e; font-size: 13px; font-weight: 600; }
-.editais-v2-cell-status { padding: 0 10px; }
+.editais-v2-cell-status { min-width: 0; margin-left: 0; padding: 0 10px; }
 .editais-v2-cell-status .status { width: min(150px, 100%); max-width: 100%; border-radius: 8px; box-sizing: border-box; }
 .editais-v2-cell-status .status-task-label { width: 100%; max-width: 100%; font-size: 11px !important; }
 .editais-v2-cell-history { padding-left: 10px; }
