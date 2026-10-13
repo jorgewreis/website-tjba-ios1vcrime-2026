@@ -15,10 +15,11 @@
         flex-wrap: nowrap;
         gap: 0;
         min-height: 50px;
-        margin: 3px;
+        margin: 0;
         padding: 5px;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
+        border: 0;
+        border-radius: 0;
+        border-bottom: 1px solid #e0e0e0;
         background-color: #fdfbff;
     }
 
@@ -60,9 +61,14 @@
     }
 
     .carta-expedida-v2-row .carta-process-tools {
+        display: none;
         flex: 0 0 30px;
         align-items: center;
         gap: 0;
+    }
+
+    .register-line.carta-expedida-v2-row:hover .carta-process-tools {
+        display: flex;
     }
 
     .carta-expedida-v2-row .carta-process-tools .line-cube {
@@ -377,8 +383,8 @@
     }
 
     .carta-expedida-v2-row .register-block-status > .carta-row-action img {
-        width: 20px;
-        height: 20px;
+        width: 24px;
+        height: 24px;
         object-fit: contain;
     }
 

@@ -277,6 +277,21 @@ button.link-inline {
     color: var(--color-text-on-primary);
 }
 
+.btn-cartas-voltar.btn-primary-outline {
+    border-color: #47196F;
+    color: #47196F;
+}
+.btn-cartas-voltar.btn-primary-outline:hover {
+    background-color: #47196F;
+    border-color: #47196F;
+    color: var(--color-text-on-primary);
+}
+.btn-cartas-voltar.btn-primary-outline:active {
+    background-color: #3B155C;
+    border-color: #3B155C;
+    color: var(--color-text-on-primary);
+}
+
 /* -- COR SECUNDÁRIA (Voltar) */
 .btn-secondary {
     background-color: var(--color-secondary);

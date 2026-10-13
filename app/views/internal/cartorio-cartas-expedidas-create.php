@@ -237,7 +237,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
 
         <div class="card-buttons">
             <div class="display-flex row row-fit gap-y-md align-center justify-start">
-                <button class="btn btn-secondary" id="voltar-btn" type="button" data-allow-during-loading="true">Voltar</button>
+                <button class="btn btn-primary-outline btn-cartas-voltar" id="voltar-btn" type="button" data-allow-during-loading="true">Voltar</button>
             </div>
             <div class="display-flex row row-fit gap-y-md align-center justify-end">
                 <button class="btn btn-primary disabled" id="cadastrar-btn" type="button" disabled aria-disabled="true">

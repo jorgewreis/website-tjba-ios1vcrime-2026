@@ -163,10 +163,13 @@ $v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: ti
 
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
-                <label class="status-classe" for="filter-classe"><span>Classe processual</span></label>
-                <input type="text" class="height-md" style="width: 350px;" id="filter-classe" data-datajud-related="true" value="" disabled autocomplete="off">
-                <label id="filter-assuntos" class="processo-bd-info empty" data-empty-prefix="Assuntos:" hidden></label>
-                <label id="filter-prioridades" class="processo-bd-info empty" data-empty-prefix="Prioridades:" hidden></label>
+                <label class="status-classe" for="filter-classe"><span>Classe processual</span> <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="height-md" style="width: 350px;" id="filter-classe" required>
+                    <option value="" selected disabled>Selecione aqui</option>
+                    <option value="355">355 - Carta Precatória Criminal</option>
+                    <option value="335">335 - Carta de Ordem Criminal</option>
+                    <option value="375">375 - Carta Rogatória Criminal</option>
+                </select>
             </div>
         </div>
 
@@ -183,7 +186,7 @@ $v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: ti
 
         <div class="card-buttons">
             <div class="display-flex row row-fit gap-y-md align-center justify-start">
-                <button class="btn btn-secondary" id="voltar-btn" type="button" data-allow-during-loading="true">Voltar</button>
+                <button class="btn btn-primary-outline btn-cartas-voltar" id="voltar-btn" type="button" data-allow-during-loading="true">Voltar</button>
             </div>
             <div class="display-flex row row-fit gap-y-md align-center justify-end">
                 <button class="btn btn-primary disabled" id="cadastrar-btn" type="button" disabled aria-disabled="true"><span class="btn-icon-text">Cadastrar</span><span class="btn-icon hidden"><i class="fi fi-rr-spinner" aria-hidden="true"></i></span></button>
@@ -199,12 +202,10 @@ $v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: ti
         </div>
     </div>
 
-    <?php include __DIR__ . '/_datajud_scripts.php'; ?>
     <script>
         (function () {
             if (window.App && App.CartorioCreateBootstrap) {
                 App.CartorioCreateBootstrap.bindBackButton({ href: '/frame.php?page=cartasrecebidas' });
-                App.CartorioCreateBootstrap.bindClasseResetOnShortProcess();
             }
             if (window.App && App.CartorioCityLookup) {
                 App.CartorioCityLookup.initialize({

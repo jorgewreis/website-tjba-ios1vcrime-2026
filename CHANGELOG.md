@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0007
+
+**Data:** 2026-10-13 18:41:30 | **Commit:** `1a58b2d5` | **Tipo:** `patch`
+
+- feat(cartorio): ajustar cadastro e botoes das cartas
+
 ## V. 1.87.0006
 
 **Data:** 2026-10-09 16:59:50 | **Commit:** `1fb81950` | **Tipo:** `patch`
@@ -5463,6 +5469,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

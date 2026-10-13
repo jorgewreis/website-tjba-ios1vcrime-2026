@@ -130,11 +130,15 @@ final class CartasRecebidasService
         $classeId = null;
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
         $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-        if ($classeCodigo !== '' && $classeDescricao !== '') {
-            $classeId = $this->classesRepository->ensureClass($classeCodigo, TextFormatter::formatProperName($classeDescricao, 200));
-        } elseif ($classeCodigo !== '') {
-            $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeCodigo);
+        $classesCartaRecebida = [
+            '355' => 'Carta Precatória Criminal',
+            '335' => 'Carta de Ordem Criminal',
+            '375' => 'Carta Rogatória Criminal',
+        ];
+        if (!isset($classesCartaRecebida[$classeCodigo])) {
+            throw new InvalidArgumentException('Selecione uma das classes permitidas para carta recebida.');
         }
+        $classeId = $this->classesRepository->ensureClass($classeCodigo, $classesCartaRecebida[$classeCodigo]);
 
         $processoOrigemId = null;
         if (strlen($digits) === 20) {

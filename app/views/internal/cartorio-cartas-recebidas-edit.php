@@ -265,7 +265,7 @@ $stateOptions = [
         <?php endif; ?>
         <div class="card-buttons">
             <div class="display-flex row row-fit gap-y-md align-center justify-start">
-                <button class="btn btn-secondary" id="voltar-btn" type="button">Voltar</button>
+                <button class="btn btn-primary-outline btn-cartas-voltar" id="voltar-btn" type="button">Voltar</button>
                 <?php if ($errorMessage === '' && $podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
                     <button class="btn btn-danger-outline" id="cancelar-tarefa-btn" type="button" title="Alterar status da tarefa para Cancelada (não exclui dados)">Cancelar tarefa</button>
                 <?php endif; ?>

@@ -14,20 +14,21 @@
         const gate = helpers.initCreateButtonGate({ button: button, initialLabel: 'Novo cadastro', readyLabel: 'Cadastrar' });
         const feedback = helpers.notify;
         const processoInput = global.document.getElementById('filter-processo');
+        const classeSelect = global.document.getElementById('filter-classe');
 
         if (!button) {
             return;
         }
-        processoInput?.addEventListener('input', function () { gate.setWaiting(); });
+        gate.setWaiting();
+        processoInput?.addEventListener('input', function () {
+            const digits = String(processoInput.value || '').replace(/\D/g, '');
+            if (digits.length === 20) gate.setReady();
+            else gate.setWaiting();
+        });
         global.addEventListener('cnjInvalid', function (event) {
             const id = event && event.detail ? event.detail.inputId : '';
             if (!id || id === 'filter-processo') gate.setError();
         });
-        global.addEventListener('datajudClasseResolved', function (event) {
-            const detail = event && event.detail ? event.detail : {};
-            if (!detail.processoInputId || detail.processoInputId === 'filter-processo') gate.setReady();
-        });
-
         button.addEventListener('click', async function (event) {
             event.preventDefault();
             if (button.disabled) {
@@ -66,10 +67,11 @@
                 return;
             }
 
-            const classeVal = helpers.getValue('filter-classe');
-            if (classeVal === 'Aguarde...') {
-                feedback('Aguarde a consulta ao DataJud terminar antes de cadastrar.', 'error');
-                gate.setWaiting();
+            const classeCodigo = String(classeSelect?.value || '').trim();
+            const classeDescricao = String(classeSelect?.selectedOptions?.[0]?.textContent || '').replace(/^\d+\s*-\s*/, '').trim();
+            if (!classeCodigo || !classeDescricao) {
+                feedback('Selecione a classe processual da carta recebida.', 'error');
+                classeSelect?.focus();
                 return;
             }
 
@@ -80,7 +82,10 @@
                 uf_origem: ufOrigem,
                 finalidade: finalidade,
                 prazo_dias: prazo
-            }, helpers.buildClassePayload({ classeValue: classeVal }));
+            }, {
+                classe_codigo: classeCodigo,
+                classe_descricao: classeDescricao
+            });
 
             gate.setSubmitting();
             feedback('Enviando dados...', 'info', 'Informação');
