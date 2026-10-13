@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0037
+
+**Data:** 2026-10-13 20:27:04 | **Commit:** `4259ba61` | **Tipo:** `patch`
+
+- fix(editais): ajustar bloco processual em telas pequenas
+
 ## V. 1.87.0036
 
 **Data:** 2026-10-13 20:25:59 | **Commit:** `c790236b` | **Tipo:** `patch`
@@ -5643,6 +5649,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

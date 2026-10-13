@@ -33,5 +33,6 @@
     .register-line.carta-expedida-v2-row.edital-row { padding: 10px; }
 }
 @media (max-width: 700px) {
+    .edital-row .carta-expedida-process-group { width: 100%; min-width: 0; }
     .edital-row .register-block-status > .carta-row-action { opacity: 1; }
 }
