@@ -39,4 +39,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(editais): reutilizar estrutura visual das linhas de cartas** `[b2898c5e]`
 - **fix(editais): igualar altura das linhas a cartas** `[8052c5fa]`
 - **fix(editais): habilitar foco no botao de etapas** `[2246f121]`
+- **fix(editais): copiar numero sem duplicar texto no hover** `[c790236b]`
 
