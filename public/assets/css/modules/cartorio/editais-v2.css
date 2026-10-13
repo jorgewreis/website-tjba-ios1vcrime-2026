@@ -212,6 +212,9 @@
     .editais-form-field.editais-field-type,
     .editais-form-field.editais-field-deadline,
     .editais-form-field.editais-field-observations { width: 100%; }
+    .editais-edit-page .editais-form-field.editais-field-process,
+    .editais-edit-page .editais-form-field.editais-field-class,
+    .editais-edit-page .editais-form-field.editais-field-type { width: 100%; }
     .editais-edit-page .header-page .title-page { font-size: 32px; line-height: 1.2; }
     .editais-v2-page .card-buttons { align-items: stretch; flex-direction: column; padding: 14px; }
     .editais-v2-page .card-buttons > div { justify-content: stretch; width: 100%; }
