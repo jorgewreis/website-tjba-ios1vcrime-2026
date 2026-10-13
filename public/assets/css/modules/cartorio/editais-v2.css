@@ -86,6 +86,7 @@
 .editais-v2-row {
     display: block;
     width: 100%;
+    height: auto;
     min-height: 0;
     margin: 0;
     padding: 14px 18px;
@@ -130,6 +131,8 @@
 .editais-v2-row-secondary .status { max-width: 100%; border-radius: 8px; }
 .editais-v2-row-secondary .status-task-label { width: 100%; max-width: 100%; font-size: 11px !important; }
 .editais-v2-row-secondary .container-historical { width: 100%; min-width: 0; padding: 0; }
+.editais-v2-row .container-data-create,
+.editais-v2-row .container-historical { flex: 1 1 auto; width: 100%; min-width: 0; min-height: 0; margin-left: 0; }
 .editais-v2-row-secondary .container-historical .line-content { width: 100%; padding: 0; }
 .editais-v2-row-secondary .container-historical .content-classe,
 .editais-v2-row-secondary .container-historical .content-assuntos { white-space: normal; overflow-wrap: anywhere; font-family: 'Google Sans', sans-serif; font-size: 10px; }

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0016
+
+**Data:** 2026-10-13 19:28:11 | **Commit:** `16bad15e` | **Tipo:** `patch`
+
+- fix(editais): ajustar altura das linhas da listagem
+
 ## V. 1.87.0015
 
 **Data:** 2026-10-13 19:26:26 | **Commit:** `147df2d0` | **Tipo:** `patch`
@@ -5517,6 +5523,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
