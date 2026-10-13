@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0021
+
+**Data:** 2026-10-13 19:50:12 | **Commit:** `52713ec0` | **Tipo:** `patch`
+
+- fix(editais): ajustar colunas e icone de expansao
+
 ## V. 1.87.0020
 
 **Data:** 2026-10-13 19:47:28 | **Commit:** `bad0b91d` | **Tipo:** `patch`
@@ -5547,6 +5553,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
