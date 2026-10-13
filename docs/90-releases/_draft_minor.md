@@ -20,4 +20,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **refactor(editais): alinhar telas ao padrão v2 e remover alocações** `[3204f114]`
 - **fix(editais): ajustar timeline em telas pequenas** `[147df2d0]`
 - **fix(editais): ajustar altura das linhas da listagem** `[16bad15e]`
+- **fix(editais): alinhar cabeçalho e filtros ao padrão de cartas** `[5c03c81d]`
 
