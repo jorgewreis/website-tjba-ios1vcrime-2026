@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
-require_once __DIR__ . '/../../repositories/CartasExpedidasAlocadosRepository.php';
 require_once __DIR__ . '/../../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/TribunaisRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
@@ -94,29 +92,6 @@ if ($carta !== null) {
     }
 }
 
-$ruleServidor = '?';
-$ruleName = 'ALLOCATE-CARTASEXPEDIDAS';
-try {
-    $regrasRepo = new AlocacoesRegrasRepository($connection);
-    $ruleRow = $regrasRepo->findByRegra($ruleName);
-    $allocatedUserId = $ruleRow['usuario_id'] ?? null;
-    if ($allocatedUserId !== null && $allocatedUserId !== '') {
-        $stmt = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
-        $stmt->execute([$allocatedUserId]);
-        $u = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($u !== false) {
-            $nome = trim((string) ($u['nome'] ?? ''));
-            $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
-            $ruleServidor = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-            if ($ruleServidor === '') {
-                $ruleServidor = '?';
-            }
-        }
-    }
-} catch (\Throwable $exception) {
-    // Mantém o valor padrão se houver erro na leitura do banco.
-}
-
 $finalidadeOptions = [
     'Intimação para Audiência',
     'Intimação de Decisão Interlocutória',
@@ -150,38 +125,11 @@ $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExc
 /** Perfis que podem cancelar a tarefa (apenas altera status para Cancelada): servidor, admin, diretora, magistrada. */
 $podeCancelarTarefa = $userIdEdit !== '';
 $tarefaFinalizadaOuCancelada = in_array($statusAtual ?? '', ['cancelada', 'concluída'], true);
-$perfisGestaoAlocCartExp = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
-$isGestaoAlocEditCartExp = count(array_intersect($userPerfisEdit, $perfisGestaoAlocCartExp)) > 0;
-
-$alocadosEditCartExp = [];
-if ($carta !== null) {
-    $tipoOrderAloc = ['rule' => 0, 'all' => 1, 'specific' => 2];
-    $repoAlocCartExp = new CartasExpedidasAlocadosRepository($connection);
-    $alocadosRawCartExp = $repoAlocCartExp->findByCartaId($idCarta);
-    foreach (array_slice($alocadosRawCartExp, 0, 5) as $a) {
-        $tipo = trim((string) ($a['tipo'] ?? ''));
-        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
-            $tipo = 'specific';
-        }
-        $alocadosEditCartExp[] = [
-            'alocado_id' => trim((string) ($a['id'] ?? '')),
-            'iniciais' => $a['iniciais'] ?? '—',
-            'nome_completo' => $a['nome_completo'] ?? '',
-            'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
-            'tipo' => $tipo,
-        ];
-    }
-    usort($alocadosEditCartExp, static function (array $a, array $b) use ($tipoOrderAloc): int {
-        return ($tipoOrderAloc[$a['tipo']] ?? 9) <=> ($tipoOrderAloc[$b['tipo']] ?? 9);
-    });
-}
-
 $timelineData = $carta !== null
     ? cartorioTimelineBuildViewData('cartas_expedidas', [
         'task' => $carta,
         'task_status' => $statusAtual,
         'subtarefas' => $subtarefas ?? [],
-        'ruleServidor' => $ruleServidor,
         'tribunaisRepo' => $tribunaisRepo ?? null,
         'connection' => $connection,
     ])
@@ -305,18 +253,6 @@ $stateOptions = [
                     </select>
                 </div>
             </div>
-
-            <?php
-            $cartorioAlocacaoPrefix = 'cartas-exp';
-            $cartorioAlocacaoEntityId = $idCarta;
-            $cartorioAlocacaoDesalocarEndpoint = '/api/cartorio-cartas-expedidas/desalocar.php';
-            $cartorioAlocacaoAlocarEndpoint = '/api/cartorio-cartas-expedidas/alocar.php';
-            $cartorioAlocacaoAlocados = $alocadosEditCartExp;
-            $cartorioAlocacaoBloqueada = $tarefaFinalizadaOuCancelada;
-            $cartorioAlocacaoUserId = $userIdEdit !== null ? trim((string) $userIdEdit) : '';
-            $cartorioAlocacaoIsGestao = $isGestaoAlocEditCartExp;
-            include __DIR__ . '/_cartorio_alocacao_direcionada_edit.php';
-            ?>
 
             <!-- Timeline de subtarefas -->
             <?php include __DIR__ . '/_cartorio_timeline.php'; ?>

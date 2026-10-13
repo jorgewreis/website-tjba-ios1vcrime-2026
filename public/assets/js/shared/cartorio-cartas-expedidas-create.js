@@ -45,11 +45,6 @@
             if (!detail.processoInputId || detail.processoInputId === 'filter-processo') gate.setReady();
         });
 
-        let alocState = null;
-        if (settings.alocacaoPrefix && App.CartorioAlocacaoDirecionadaCreate && typeof App.CartorioAlocacaoDirecionadaCreate.init === 'function') {
-            alocState = App.CartorioAlocacaoDirecionadaCreate.init(settings.alocacaoPrefix);
-        }
-
         const requiredFields = [
             { id: 'filter-processo', label: 'Número do processo' },
             { id: 'filter-tipo', label: 'Finalidade' },
@@ -130,13 +125,6 @@
                 cidade: cidadeDestino,
                 usuario: usuarioAtual
             }, helpers.buildClassePayload({ classeValue: classeVal }));
-
-            if (alocState && typeof alocState.getIds === 'function') {
-                const extra = alocState.getIds();
-                if (extra && extra.length) {
-                    payload.alocar_usuario_ids = extra;
-                }
-            }
 
             gate.setSubmitting();
             feedback('Enviando dados...', 'info', 'Informação');

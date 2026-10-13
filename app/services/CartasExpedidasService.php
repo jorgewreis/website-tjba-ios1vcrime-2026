@@ -9,12 +9,10 @@ require_once __DIR__ . '/../repositories/TribunaisRepository.php';
 require_once __DIR__ . '/../repositories/ComarcasRepository.php';
 require_once __DIR__ . '/../repositories/VarasRepository.php';
 require_once __DIR__ . '/../repositories/CartasExpedidasAlocadosRepository.php';
-require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/DataJudService.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
-require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
 
 final class CartasExpedidasService
@@ -28,10 +26,8 @@ final class CartasExpedidasService
     private ComarcasRepository $comarcasRepository;
     private VarasRepository $varasRepository;
     private CartasExpedidasAlocadosRepository $alocadosRepository;
-    private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private ?DataJudService $dataJudService;
 
-    private const REGRA_ALOCAR_CARTAS = 'ALLOCATE-CARTASEXPEDIDAS';
 
     public function __construct(PDO $connection, ?DataJudService $dataJudService = null)
     {
@@ -44,7 +40,6 @@ final class CartasExpedidasService
         $this->comarcasRepository = new ComarcasRepository($connection);
         $this->varasRepository = new VarasRepository($connection);
         $this->alocadosRepository = new CartasExpedidasAlocadosRepository($connection);
-        $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->dataJudService = $dataJudService;
     }
 
@@ -79,17 +74,6 @@ final class CartasExpedidasService
     public function getStatusCounts(array $filters): array
     {
         return $this->repository->countByStatus($filters);
-    }
-
-    /**
-     * Contagem global por status restrita às cartas em que o usuário informado é alocado
-     * (qualquer tipo: all, rule ou specific). Ignora filtros aplicados pelo usuário.
-     *
-     * @return array<string, int>
-     */
-    public function getStatusCountsByUser(string $usuarioId): array
-    {
-        return $this->repository->countByStatusForUser($usuarioId);
     }
 
     public function getClasseCounts(array $filters): array
@@ -216,41 +200,6 @@ final class CartasExpedidasService
 
         $this->repository->insert($row);
 
-        // 1) Quem cadastrou a carta é alocado com tipo 'all' (usuário principal da tarefa). CHEFIA não é autoalocado.
-        if ($usuarioCadastroId !== ''
-            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {
-            $this->alocadosRepository->addAlocado($idCarta, $usuarioCadastroId, CartasExpedidasAlocadosRepository::TIPO_ALL);
-        }
-
-        // 2) Alocação por regra (tipo 'rule'): omitir se for o mesmo usuário que cadastrou ou se o da regra for CHEFIA.
-        $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_CARTAS);
-        if ($regra !== null) {
-            $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId
-                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra)) {
-                $this->alocadosRepository->addAlocado($idCarta, $usuarioIdRegra, CartasExpedidasAlocadosRepository::TIPO_RULE);
-            }
-        }
-
-        // 3) Usuário principal explícito do formulário (tipo 'all'), se informado e diferente do cadastro.
-        $usuarioPrincipalId = trim((string) ($payload['usuario_principal_id'] ?? $payload['usuario_alocado_principal_id'] ?? ''));
-        if ($usuarioPrincipalId !== '' && $usuarioPrincipalId !== $usuarioCadastroId) {
-            $this->alocadosRepository->addAlocado($idCarta, $usuarioPrincipalId, CartasExpedidasAlocadosRepository::TIPO_ALL);
-        }
-
-        AlocacaoTarefasPerfisHelper::registrarAlocacoesDirecionadasNoCadastro(
-            $this->connection,
-            $usuarioCadastroId,
-            $payload,
-            function (string $uid) use ($idCarta): void {
-                try {
-                    $this->alocadosRepository->addAlocado($idCarta, $uid, CartasExpedidasAlocadosRepository::TIPO_SPECIFIC);
-                } catch (Throwable $e) {
-                    // limite ou duplicata
-                }
-            }
-        );
-
         $this->subtarefasRepository->create(
             $idCarta,
             CartasExpedidasSubtarefasRepository::TIPO_ENVIO,
@@ -291,23 +240,6 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual. Atualize a página.');
         }
 
-        $dadosArray = [];
-        if ($dadosJson !== null && $dadosJson !== '') {
-            $decoded = json_decode($dadosJson, true);
-            if (is_array($decoded)) {
-                $dadosArray = $decoded;
-            }
-        }
-
-        $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
-        if ($usuarioIdMovimentacao !== '') {
-            try {
-                $this->alocadosRepository->addAlocado($cartaId, $usuarioIdMovimentacao);
-            } catch (\RuntimeException $e) {
-                // limite ou duplicata — não impede a conclusão da subtarefa
-            }
-        }
-
         $this->subtarefasRepository->marcarConcluidaComDados($subtarefaId, $dadosJson);
 
         $proximaOrdem = $this->subtarefasRepository->obterProximaOrdem($ordem);
@@ -341,52 +273,6 @@ final class CartasExpedidasService
             'tarefa_principal_concluida' => true,
             'tarefa_principal_mensagem' => $msg,
         ];
-    }
-
-    private function normalizeTipoAlocado(string $tipo): string
-    {
-        $t = trim($tipo);
-        if ($t === CartasExpedidasAlocadosRepository::TIPO_RULE || $t === 'rule') {
-            return 'rule';
-        }
-        if ($t === CartasExpedidasAlocadosRepository::TIPO_ALL || $t === 'all') {
-            return 'all';
-        }
-        return 'specific';
-    }
-
-    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
-    {
-        $alocadoId     = trim($alocadoId);
-        $requestUserId = trim($requestUserId);
-        if ($alocadoId === '' || $requestUserId === '') {
-            return false;
-        }
-        return $this->alocadosRepository->deleteById($alocadoId);
-    }
-
-    public function alocarUsuarioDirecionado(string $cartaId, string $targetUsuarioId, string $actorId): void
-    {
-        $cartaId = trim($cartaId);
-        if ($cartaId === '') {
-            throw new InvalidArgumentException('Identificador da carta inválido.');
-        }
-        $row = $this->repository->find($cartaId);
-        if ($row === null) {
-            throw new InvalidArgumentException('Carta expedida não encontrada.');
-        }
-        $st = trim((string) ($row['status'] ?? ''));
-        if (in_array($st, ['cancelada', 'concluída'], true)) {
-            throw new InvalidArgumentException('Não é possível alterar alocações neste status.');
-        }
-        AlocacaoTarefasPerfisHelper::registrarAlocacaoDirecionadaNaEdicao(
-            $this->connection,
-            $actorId,
-            $targetUsuarioId,
-            function (string $uid) use ($cartaId): void {
-                $this->alocadosRepository->addAlocado($cartaId, $uid, CartasExpedidasAlocadosRepository::TIPO_SPECIFIC);
-            }
-        );
     }
 
     private function normalizeTribunalSigla(string $sigla): string
@@ -490,12 +376,6 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
-        $usuarioId = trim((string) ($payload['usuario_id'] ?? ''));
-        unset($payload['usuario_id']);
-        if ($usuarioId !== '') {
-            $this->alocadosRepository->addAlocado($id, $usuarioId);
-        }
-
         return $this->repository->update($id, $payload);
     }
 
@@ -544,10 +424,9 @@ final class CartasExpedidasService
     /**
      * Cria as subtarefas iniciais (envio + devolução pendente) quando a carta ainda não possui nenhuma.
      *
-     * @param string|null $usuarioId Usuário que está criando; se informado, é alocado na tarefa principal.
      * @throws InvalidArgumentException Se a carta não existir ou já possuir subtarefas.
      */
-    public function criarPrimeiraSubtarefa(string $cartaId, ?string $usuarioId = null): void
+    public function criarPrimeiraSubtarefa(string $cartaId): void
     {
         $cartaId = trim($cartaId);
         if ($cartaId === '') {
@@ -575,8 +454,5 @@ final class CartasExpedidasService
             null
         );
         $this->repository->update($cartaId, ['status' => 'em_andamento']);
-        if ($usuarioId !== null && trim($usuarioId) !== '') {
-            $this->alocadosRepository->addAlocado($cartaId, trim($usuarioId));
-        }
     }
 }

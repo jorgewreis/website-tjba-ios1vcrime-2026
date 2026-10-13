@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/GuiasRepository.php';
-require_once __DIR__ . '/../repositories/CartasExpedidasRepository.php';
 require_once __DIR__ . '/../repositories/CartasRecebidasRepository.php';
 require_once __DIR__ . '/../repositories/EditaisRepository.php';
 require_once __DIR__ . '/../repositories/OficiosCartorioRepository.php';
@@ -15,7 +14,6 @@ final class DashboardInternoAlocacaoResumoHelper
 {
     private const REGRA_POR_TABELA_ALOCADOS = [
         'guias_alocados' => 'ALLOCATE-GUIAS',
-        'cartas_expedidas_alocados' => 'ALLOCATE-CARTASEXPEDIDAS',
         'cartas_recebidas_alocados' => 'ALLOCATE-CARTASRECEBIDAS',
         'editais_alocados' => 'ALLOCATE-EDITAIS',
         'cartorio_oficios_alocados' => 'ALLOCATE-CARTORIOOFICIOS',
@@ -23,7 +21,6 @@ final class DashboardInternoAlocacaoResumoHelper
 
     private const ORDEM_REGRAS = [
         'ALLOCATE-GUIAS',
-        'ALLOCATE-CARTASEXPEDIDAS',
         'ALLOCATE-CARTASRECEBIDAS',
         'ALLOCATE-EDITAIS',
         'ALLOCATE-CARTORIOOFICIOS',
@@ -41,13 +38,6 @@ final class DashboardInternoAlocacaoResumoHelper
             'status_col' => 'status',
             'aloc_table' => 'guias_alocados',
             'aloc_fk' => 'guia_id',
-        ],
-        'ALLOCATE-CARTASEXPEDIDAS' => [
-            'main_table' => 'cartas_expedidas',
-            'main_pk' => 'id',
-            'status_col' => 'status',
-            'aloc_table' => 'cartas_expedidas_alocados',
-            'aloc_fk' => 'carta_expedida_id',
         ],
         'ALLOCATE-CARTASRECEBIDAS' => [
             'main_table' => 'cartas_recebidas',
@@ -169,20 +159,6 @@ final class DashboardInternoAlocacaoResumoHelper
                     'status_blocos' => self::blocosGuias($byStatus),
                 ];
 
-            case 'ALLOCATE-CARTASEXPEDIDAS':
-                $emAnd = (int) ($byStatus['em_andamento'] ?? 0);
-
-                return [
-                    'regra' => $code,
-                    'titulo' => 'Cartas expedidas',
-                    'frame_page' => 'cartasexpedidas',
-                    'total' => $total,
-                    'em_andamento' => $emAnd,
-                    'em_andamento_label' => 'Em andamento',
-                    'em_andamento_title' => 'Cartas expedidas com status «em andamento».',
-                    'status_blocos' => self::blocosCartasExpedidas($byStatus),
-                ];
-
             case 'ALLOCATE-CARTASRECEBIDAS':
                 $aguardandoDevolucao = (int) ($byStatus['aguardando devolução'] ?? 0)
                     + (int) ($byStatus['em_andamento'] ?? 0);
@@ -284,27 +260,6 @@ final class DashboardInternoAlocacaoResumoHelper
             'em_andamento' => ['Em andamento', 'Guias com status «em andamento» na tarefa principal.'],
             'concluída' => ['Concluídas', 'Guias com status «concluída».'],
             'cancelada' => ['Canceladas', 'Guias com status «cancelada».'],
-        ];
-
-        return self::buildBlocosFromMap($byStatus, $map);
-    }
-
-    /**
-     * @param array<string, int> $byStatus
-     * @return list<array{label:string,count:int,title:string}>
-     */
-    /**
-     * @param array<string, int> $byStatus
-     * @return list<array{label:string,count:int,title:string}>
-     */
-    private static function blocosCartasExpedidas(array $byStatus): array
-    {
-        $map = [
-            'em_andamento' => ['Aguardando envio', 'Cartas expedidas aguardando envio.'],
-            'aguardando envio' => ['Aguardando envio', 'Aguardando envio da carta.'],
-            'aguardando cumprimento' => ['Aguardando cumprimento', 'Aguardando cumprimento.'],
-            'concluída' => ['Concluídas', 'Cartas expedidas concluídas.'],
-            'cancelada' => ['Canceladas', 'Cartas expedidas canceladas.'],
         ];
 
         return self::buildBlocosFromMap($byStatus, $map);

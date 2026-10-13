@@ -7,7 +7,6 @@ if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
 }
 
-require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -82,28 +81,6 @@ if ($currentUserId !== '') {
 $currentUserPerfis = $currentUserId !== ''
     ? UsuarioPerfisAutorizacao::perfisDoUsuario($currentUserId)
     : [];
-
-$ruleServidor = '';
-$hasRuleAllocation = false;
-$ruleName = 'ALLOCATE-CARTASEXPEDIDAS';
-try {
-    $regrasRepo = new AlocacoesRegrasRepository($connection);
-    $ruleRow = $regrasRepo->findByRegra($ruleName);
-    $allocatedUserId = $ruleRow['usuario_id'] ?? null;
-    if ($allocatedUserId !== null && $allocatedUserId !== '') {
-        $stmt = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
-        $stmt->execute([$allocatedUserId]);
-        $u = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($u !== false) {
-            $nome = trim((string) ($u['nome'] ?? ''));
-            $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
-            $ruleServidor = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-            $hasRuleAllocation = $ruleServidor !== '';
-        }
-    }
-} catch (\Throwable $exception) {
-    // Mantém o valor padrão se houver erro na leitura do banco.
-}
 
 $estados = [
     'AC' => 'Acre',
@@ -260,17 +237,6 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
         <input type="hidden" id="filter-sistema-envio" name="sistema_envio" value="outro">
 
         <div class="card-line full">
-            <div class="card-line left results">
-                <div class="line-results alert" id="banner-alterar-regra" data-rule-target="cartasexpedidasrules" role="note">
-                    <div class="text rule">
-                        <?php if ($hasRuleAllocation): ?>
-                            Envio de Cartas Expedidas será realizado por <span class="text-primary"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></span> conforme regra definida.
-                        <?php else: ?>
-                            Nenhum usuário alocado por regra para o envio de Cartas Expedidas.
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
             <div class="card-line right">
                 <div class="buttons" style="display: flex;">
                     <button type="button" class="button-btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">
@@ -300,7 +266,6 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
         window.__APP_CONTEXT = Object.assign({}, window.__APP_CONTEXT || {}, {
             initialPerfis: <?php echo json_encode(array_values($normalizedPerfis), JSON_UNESCAPED_UNICODE); ?>,
             fallbackPerfis: [],
-            allowedRulePerfis: ['ADMIN', 'DIRETORA', 'MAGISTRADA'],
             currentUser: {
                 id: <?php echo json_encode($currentUserId, JSON_UNESCAPED_UNICODE); ?>,
                 nome: <?php echo json_encode($sessionUserName, JSON_UNESCAPED_UNICODE); ?>,
@@ -483,38 +448,10 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
                     loadInfo(initialDigits);
                 }
             })();
-
-            // Banner clic\u00e1vel: admin/chefia abre a p\u00e1gina de altera\u00e7\u00e3o de regra de aloca\u00e7\u00e3o.
-            (function setupRuleBannerClick() {
-                var banner = document.getElementById('banner-alterar-regra');
-                if (!banner) return;
-                var targetPage = banner.getAttribute('data-rule-target') || '';
-                if (!targetPage) return;
-                if (!window.App || !App.User || typeof App.User.fetchPerfis !== 'function' || typeof App.User.canChangeRule !== 'function') return;
-                App.User.fetchPerfis().then(function (perfis) {
-                    if (!App.User.canChangeRule(perfis)) return;
-                    banner.classList.add('clickable');
-                    banner.setAttribute('role', 'button');
-                    banner.setAttribute('tabindex', '0');
-                    banner.setAttribute('title', 'Alterar regra de alocação');
-                    banner.setAttribute('aria-label', 'Alterar regra de alocação');
-                    var navigate = function () {
-                        window.location.href = '/frame.php?page=' + encodeURIComponent(targetPage);
-                    };
-                    banner.addEventListener('click', navigate);
-                    banner.addEventListener('keydown', function (event) {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                            event.preventDefault();
-                            navigate();
-                        }
-                    });
-                }).catch(function () { /* silent */ });
-            })();
-
             if (!window.App || !App.CartorioCartasExpedidasCreate || typeof App.CartorioCartasExpedidasCreate.initialize !== 'function') {
                 return;
             }
-            App.CartorioCartasExpedidasCreate.initialize({ alocacaoPrefix: 'cartas-exp', submitDelayMs: 1000 });
+            App.CartorioCartasExpedidasCreate.initialize({ submitDelayMs: 1000 });
 
             // Botão Cadastrar inicia desabilitado; só habilita quando TODOS os campos
             // marcados com "*" estiverem preenchidos. Trabalha em conjunto com o gate

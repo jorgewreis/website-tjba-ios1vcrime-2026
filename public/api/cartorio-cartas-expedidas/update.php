@@ -16,11 +16,6 @@ if (!is_array($parsed)) {
     $parsed = $_POST;
 }
 
-$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-if ($usuarioId !== '') {
-    $parsed['usuario_id'] = $usuarioId;
-}
-
 $id = trim((string) ($parsed['id'] ?? $_GET['id'] ?? ''));
 if ($id === '') {
     http_response_code(400);

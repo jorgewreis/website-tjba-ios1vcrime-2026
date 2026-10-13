@@ -291,7 +291,9 @@ if (!function_exists('cartorioTimelineGetConfig')) {
         $label = cartorioTimelineGetConfig($module)['cadastro_label'];
         $dateLabel = $createdAt !== '' ? ('Cadastro realizado em ' . $createdAt) : 'Cadastro realizado';
 
-        if ($module === 'cartas_expedidas' || $module === 'cartas_recebidas') {
+        if ($module === 'cartas_expedidas') {
+            $dateLabel = $createdAt !== '' ? ('Carta expedida cadastrada em ' . $createdAt) : 'Carta expedida cadastrada';
+        } elseif ($module === 'cartas_recebidas') {
             $ruleServidor = trim((string) ($options['ruleServidor'] ?? ''));
             $dateLabel = $createdAt !== '' ? ('Documento cadastrado por ' . ($ruleServidor !== '' ? $ruleServidor : '—') . ' em ' . $createdAt) : 'Documento cadastrado';
         } elseif ($module === 'editais') {

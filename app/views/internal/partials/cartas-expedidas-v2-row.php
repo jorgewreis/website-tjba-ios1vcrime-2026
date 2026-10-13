@@ -159,7 +159,7 @@ if ($isConcluida) {
 
 $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_expedidas', $registroListViewerContext, $connection);
 $editHref = trim((string) ($registroMetadata['edit_href'] ?? ''));
-$showEdit = !empty($registroMetadata['show_edit']) && $editHref !== '';
+$showEdit = !empty($registroMetadata['show_edit']) && $editHref !== '' && !$isAguardandoCumprimento;
 $mostrarCopiaWhatsapp = $modeloEnvio && !$isTerminal && $numero !== '' && $destino !== '';
 $whatsappTexto = $mostrarCopiaWhatsapp
     ? $numero . ' - Carta Precatória expedida *aguardando envio* para ' . $destino
@@ -338,7 +338,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                 <?php endif; ?>
                 <?php if ($showEdit): ?>
                     <button type="button" class="button-icon-right carta-row-action" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
-                        <img src="/assets/icons/Eject-Button--Streamline-Emojitwo.svg" alt="">
+                        <img src="/assets/icons/Eject-Button--Streamline-Emojitwo.png" alt="">
                     </button>
                 <?php endif; ?>
                 <?php if ($mostrarContinuar && $textoEtapa !== ''): ?>
@@ -347,7 +347,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                         data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
                         title="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>"
                         aria-label="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>">
-                        <img src="/assets/icons/<?php echo $isAguardandoCumprimento ? 'Navigation-Arrows-Right-1--Streamline-Ultimate.png' : 'Button-Play-1--Streamline-Ultimate.png'; ?>" alt="">
+                        <img src="/assets/icons/<?php echo $isAguardandoCumprimento ? 'Button-Next--Streamline-Core.png' : 'Button-Play-1--Streamline-Ultimate.png'; ?>" alt="">
                     </button>
                 <?php endif; ?>
             </div>
