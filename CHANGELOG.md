@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0029
+
+**Data:** 2026-10-13 20:13:33 | **Commit:** `d2047e97` | **Tipo:** `patch`
+
+- style(editais): redesenhar blocos das linhas
+
 ## V. 1.87.0028
 
 **Data:** 2026-10-13 20:11:37 | **Commit:** `efc1b8ce` | **Tipo:** `patch`
@@ -5595,6 +5601,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
