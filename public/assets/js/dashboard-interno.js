@@ -85,7 +85,9 @@
       const queueRecebidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_recebidas','devolucao'):null;
       set('dash-queue-expedidas',count(queueExpedidas));
       set('dash-queue-recebidas',count(queueRecebidas));
-      let hasAnyMetric=showPositiveMetric('dash-queue-expedidas-row',queueExpedidas)||showPositiveMetric('dash-queue-recebidas-row',queueRecebidas);
+      const hasExpedidasMetric=showPositiveMetric('dash-queue-expedidas-row',queueExpedidas);
+      const hasRecebidasMetric=showPositiveMetric('dash-queue-recebidas-row',queueRecebidas);
+      let hasAnyMetric=hasExpedidasMetric||hasRecebidasMetric;
       applyCountBadge($('dash-queue-expedidas'),queueExpedidas);
       applyCountBadge($('dash-queue-recebidas'),queueRecebidas);
       const overdue=data.setor?.prazos_vencidos||{};
