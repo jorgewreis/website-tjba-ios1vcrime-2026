@@ -37,10 +37,12 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
         </section>
         <section class="dashboard-column dashboard-work" aria-labelledby="dash-work-title">
           <header><span class="column-kicker">03 / PRODUTIVIDADE</span><h2 id="dash-work-title">Meu trabalho</h2><p>Movimentações feitas pelo usuário nas duas páginas</p></header>
-          <article class="dash-card dash-production-summary">
-            <span class="dash-kpi-label">ÚLTIMOS 30 DIAS</span>
-            <div class="dash-production-row"><div><strong class="dash-production-number" id="dash-done-expedidas">—</strong><span class="dash-production-label">Cartas Expedidas movimentadas</span></div><div class="dash-mini-chart"><canvas id="dash-spark-user-expedidas" aria-label="Movimentações diárias de cartas expedidas pelo usuário nos últimos sete dias"></canvas></div></div>
-            <div class="dash-production-row dash-production-mint"><div><strong class="dash-production-number" id="dash-done-recebidas">—</strong><span class="dash-production-label">Cartas Recebidas movimentadas</span></div><div class="dash-mini-chart"><canvas id="dash-spark-user-recebidas" aria-label="Movimentações diárias de cartas recebidas pelo usuário nos últimos sete dias"></canvas></div></div>
+          <article class="dash-card dash-production-summary" aria-label="Movimentações do usuário nos últimos 30 dias">
+            <div class="dash-production-heading"><strong>Movimentações</strong><span class="dash-production-period">Últimos 30 dias</span></div>
+            <div class="dash-production-grid">
+              <div class="dash-production-metric"><span class="dash-production-label"><i class="legend-dot legend-purple" aria-hidden="true"></i>Cartas Expedidas</span><div class="dash-production-value"><strong class="dash-production-number" id="dash-done-expedidas">—</strong><span>movimentadas</span></div><div class="dash-mini-chart" hidden><canvas id="dash-spark-user-expedidas" aria-label="Movimentações diárias de cartas expedidas pelo usuário nos últimos sete dias"></canvas></div></div>
+              <div class="dash-production-metric dash-production-mint"><span class="dash-production-label"><i class="legend-dot legend-mint" aria-hidden="true"></i>Cartas Recebidas</span><div class="dash-production-value"><strong class="dash-production-number" id="dash-done-recebidas">—</strong><span>movimentadas</span></div><div class="dash-mini-chart" hidden><canvas id="dash-spark-user-recebidas" aria-label="Movimentações diárias de cartas recebidas pelo usuário nos últimos sete dias"></canvas></div></div>
+            </div>
           </article>
         </section>
         <section class="dashboard-column dashboard-agenda" aria-labelledby="dash-agenda-title">

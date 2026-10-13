@@ -9,6 +9,9 @@
   function destroyCharts(){charts.splice(0).forEach(c=>c.destroy());}
   function spark(id,labels,values,color){
     const el=$(id);if(!el||!window.Chart)return;
+    const hasMovement=values.some(value=>Number(value)>0);
+    el.parentElement.hidden=!hasMovement;
+    if(!hasMovement)return;
     charts.push(new Chart(el,{type:'bar',data:{labels,datasets:[{data:values,backgroundColor:values.map((_,i)=>i===values.length-1?color:color+'88'),borderWidth:0,borderRadius:2,maxBarThickness:8}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:true,displayColors:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}},layout:{padding:1}}}));
   }
   function weeklyBars(id,labels,datasets){
