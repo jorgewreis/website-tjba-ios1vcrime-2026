@@ -445,6 +445,12 @@
     .editais-v2-cell-history { min-height: 42px; padding-left: 30px; }
     .editais-v2-cell-history .container-historical { min-height: 36px; }
     .editais-v2-cell-history .container-historical .historical-actions { right: 0; }
+    .editais-v2-cell-process .container-processo > .container-line:first-child > .right,
+    .editais-v2-cell-history .container-historical .historical-actions {
+        opacity: 1;
+        pointer-events: auto;
+        transform: none;
+    }
     .editais-v2-row-expander { grid-column: 1; grid-row: 1 / span 4; justify-content: flex-start; }
     .editais-v2-cell-process { grid-column: 2; grid-row: 1; padding-right: 0; }
     .editais-v2-cell-type { grid-column: 2; grid-row: 2; padding: 0; }
