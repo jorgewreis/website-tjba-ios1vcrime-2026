@@ -16,13 +16,12 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
     <div class="spacing-top-page"></div>
     <header class="header-page"><div class="location"><span class="all">Interno -</span> <span class="specific">Dashboard</span></div><h1 class="title-page">Visão operacional</h1></header>
     <main id="dashboard-interno" class="dashboard-shell" aria-label="Visão operacional do sistema" aria-live="polite">
-      <div class="dashboard-meta"><span>Indicadores consultados ao abrir esta página</span><span id="dashboard-atualizado">Carregando…</span></div>
       <div id="dashboard-erro" class="dashboard-error" hidden></div>
       <div class="dashboard-interno-columns">
         <section class="dashboard-column dashboard-system" aria-labelledby="dash-system-title">
           <header><span class="column-kicker">01 / SISTEMA</span><h2 id="dash-system-title">Fluxo geral</h2><p>Pendências atuais em cinco fluxos operacionais do Cartório</p></header>
           <article class="dash-card dash-hero"><span class="dash-label">Tarefas em andamento</span><strong class="dash-number" id="dash-total-geral">—</strong><small>Subtarefas na etapa atual</small></article>
-          <article class="dash-card"><h3>Fila por módulo</h3><div id="dash-filas-geral" class="dash-queue"></div><canvas id="dash-chart-geral" aria-label="Gráfico de pendências por módulo"></canvas></article>
+          <article class="dash-card"><h3>Fila por módulo</h3><div id="dash-filas-geral" class="dash-queue"></div><canvas id="dash-chart-geral" aria-label="Gráfico horizontal de pendências por etapa"></canvas></article>
           <article class="dash-card"><h3>Cadastros nos últimos seis meses</h3><canvas id="dash-chart-cadastros" aria-label="Cadastros mensais dos módulos conectados"></canvas></article>
           <article class="dash-card"><h3>Etapas concluídas · últimos 7 dias</h3><canvas id="dash-chart-conclusoes" aria-label="Conclusões de etapas nos últimos sete dias"></canvas></article>
           <a class="dash-link" href="/frame.php?page=cartasexpedidas">Abrir fluxos do Cartório <span aria-hidden="true">↗</span></a>
@@ -30,8 +29,11 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
         <section class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title">
           <header><span class="column-kicker">02 / SETOR</span><h2 id="dash-sector-title">Minha área</h2><p>Filas operacionais da área autorizada selecionada</p></header>
           <label class="dash-filter" for="dash-sector-filter">Filtrar setor</label><select id="dash-sector-filter" class="dashboard-sector-filter"><option value="">Todas as áreas autorizadas</option></select>
-          <article class="dash-card dash-hero"><span class="dash-label">Tarefas em andamento</span><strong class="dash-number" id="dash-total-setor">—</strong><small id="dash-areas">Áreas autorizadas</small></article>
-          <article class="dash-card"><h3>Etapas executáveis</h3><div id="dash-filas-setor" class="dash-queue"></div><canvas id="dash-chart-sector" aria-label="Comparação das filas do setor"></canvas></article>
+          <article class="dash-card dash-sector-overview">
+            <div class="dash-sector-heading"><div><span class="dash-label">ÁREA SELECIONADA</span><strong id="dash-areas">Áreas autorizadas</strong></div><div class="dash-sector-total"><strong id="dash-total-setor">—</strong><span>tarefas</span></div></div>
+            <h3>Composição da fila</h3>
+            <div class="dash-sector-chart"><canvas id="dash-chart-sector" aria-label="Distribuição das etapas pendentes no setor"></canvas><div id="dash-sector-legend" class="dash-sector-legend"></div></div>
+          </article>
           <article class="dash-card"><h3>Cadastros dos fluxos conectados · seis meses</h3><canvas id="dash-chart-sector-month" aria-label="Evolução mensal dos cadastros do setor"></canvas></article>
         </section>
         <section class="dashboard-column dashboard-work" aria-labelledby="dash-work-title">
