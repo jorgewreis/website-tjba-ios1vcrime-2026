@@ -139,10 +139,10 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
             <span class="all">Interno - Editais -</span>
             <span class="specific">Edição</span>
         </div>
+        <h1 class="title-page">Editar Edital</h1>
     </div>
 
     <div class="container-full card-page">
-        <div class="card-title"><h1 class="title-page">Editar Edital</h1></div>
         <?php if ($errorMessage !== ''): ?>
             <script>
                 if (typeof showToast === 'function') {
@@ -150,29 +150,27 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                 }
             </script>
         <?php else: ?>
-            <div class="editais-form-section-title">Informações do edital</div>
-            <div class="editais-form-grid">
-                <div class="col filter editais-form-field">
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom editais-form-section-title"><h2>Informações principais</h2></div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md editais-form-grid">
+                <div class="col filter editais-form-field editais-field-process">
                     <label for="filter-processo">Processo</label>
                     <input type="text" id="filter-processo" class="readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
-                <div class="col filter editais-form-field">
+                <div class="col filter editais-form-field editais-field-class">
                     <label for="filter-classe">Classe</label>
                     <input type="text" id="filter-classe" class="readonly" value="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" readonly>
                 </div>
-            </div>
-            <div class="editais-form-grid">
-                <div class="col filter editais-form-field">
+                <div class="col filter editais-form-field editais-field-type">
                     <label for="edit-tipo-edital">Tipo de edital</label>
                     <input type="text" id="edit-tipo-edital" class="readonly" value="<?php echo htmlspecialchars($tipoEditalValue, ENT_QUOTES); ?>" readonly>
                 </div>
-                <div class="col filter editais-form-field">
+            </div>
+            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md editais-form-grid">
+                <div class="col filter editais-form-field editais-field-deadline">
                     <label for="edit-prazo-dias">Prazo do edital (dias)</label>
                     <input type="text" id="edit-prazo-dias" class="readonly" value="<?php echo $prazoDiasValue > 0 ? (int) $prazoDiasValue : '—'; ?>" readonly>
                 </div>
-            </div>
-            <div class="editais-form-grid">
-                <div class="col filter editais-form-field full">
+                <div class="col filter editais-form-field editais-field-observations">
                     <label for="edit-observacoes">Observações</label>
                     <input type="text" id="edit-observacoes" value="<?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>

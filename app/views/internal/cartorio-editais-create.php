@@ -34,21 +34,21 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
 
     <div class="container-full card-page">
         <div class="card-title"><h1 class="title-page">Cadastrar Edital</h1></div>
-        <div class="editais-form-section-title">Informações do edital</div>
-        <div class="editais-form-grid">
-            <div class="col filter editais-form-field">
+        <div class="editais-form-section-title"><h2>Informações do edital</h2></div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md editais-form-grid">
+            <div class="col filter editais-form-field editais-field-process">
                 <label for="filter-processo">Processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required autocomplete="off">
             </div>
-            <div class="col filter editais-form-field">
+            <div class="col filter editais-form-field editais-field-class">
                 <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
                 <input type="text" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
             </div>
         </div>
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
-        <div class="editais-form-grid">
-            <div class="col filter editais-form-field">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md editais-form-grid">
+            <div class="col filter editais-form-field editais-field-type">
                 <label for="filter-tipo-edital">Tipo de edital <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <select id="filter-tipo-edital" required>
                     <option value="">Selecione</option>
@@ -58,7 +58,7 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                     <option value="Outro">Outro</option>
                 </select>
             </div>
-            <div class="col filter editais-form-field">
+            <div class="col filter editais-form-field editais-field-deadline">
                 <label for="filter-prazo-dias">Prazo do edital (dias) <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="number" id="filter-prazo-dias" min="1" placeholder="Ex.: 15" required title="Prazo em dias a partir da data de publicação">
             </div>
