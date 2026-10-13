@@ -65,7 +65,6 @@ $allowed_pages = [
     'cartasrecebidas'       => $PAGES . '/cartorio-cartas-recebidas-list.php',
     'cartasrecebidasedit'   => $PAGES . '/cartorio-cartas-recebidas-edit.php',
     'cartasrecebidascreate' => $PAGES . '/cartorio-cartas-recebidas-create.php',
-    'cartasrecebidasrules'  => $PAGES . '/cartorio-cartas-recebidas-rules.php',
     'notificacoes'          => $PAGES . '/notificacoes.php',
     'usuarioslist'          => $PAGES . '/usuarios-list.php',
     'usuarioscreate'        => $PAGES . '/usuarios-create.php',

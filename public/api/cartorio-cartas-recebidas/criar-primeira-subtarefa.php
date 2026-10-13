@@ -17,7 +17,6 @@ if (!is_array($parsed)) {
 }
 
 $cartaId = trim((string) ($parsed['carta_id'] ?? $parsed['cartaId'] ?? $_GET['carta_id'] ?? ''));
-$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 
 if ($cartaId === '') {
     http_response_code(400);
@@ -27,7 +26,7 @@ if ($cartaId === '') {
 
 try {
     $service = new CartasRecebidasService($connection);
-    $service->criarPrimeiraSubtarefa($cartaId, $usuarioId !== '' ? $usuarioId : null);
+    $service->criarPrimeiraSubtarefa($cartaId);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);

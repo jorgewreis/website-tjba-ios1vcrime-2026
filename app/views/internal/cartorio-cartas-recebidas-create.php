@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
-
 $connection = Conection::getInstance()->getConnection();
 
 function onlyDigits(string $value): string
@@ -58,50 +56,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$currentUserName = '';
-$currentUserId = $_SESSION['id_usuario'] ?? null;
-if ($currentUserId !== null && $currentUserId !== '') {
-    $stmtU = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
-    $stmtU->execute([$currentUserId]);
-    $u = $stmtU->fetch(PDO::FETCH_ASSOC);
-    if ($u !== false) {
-        $n = trim((string) ($u['nome'] ?? ''));
-        $s = trim((string) ($u['sobrenome'] ?? ''));
-        $currentUserName = $s !== '' ? $n . ' ' . $s : $n;
-    }
-}
-
-$ruleServidor = '';
-$hasRuleAllocation = false;
-$ruleName = 'ALLOCATE-CARTASRECEBIDAS';
-try {
-    $regrasRepo = new AlocacoesRegrasRepository($connection);
-    $ruleRow = $regrasRepo->findByRegra($ruleName);
-    $allocatedUserId = $ruleRow['usuario_id'] ?? null;
-    if ($allocatedUserId !== null && $allocatedUserId !== '') {
-        $stmt = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
-        $stmt->execute([$allocatedUserId]);
-        $u = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($u !== false) {
-            $nome = trim((string) ($u['nome'] ?? ''));
-            $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
-            $ruleServidor = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-            $hasRuleAllocation = $ruleServidor !== '';
-        }
-    }
-} catch (\Throwable $exception) {
-    // Mantém o valor padrão se houver erro na leitura do banco.
-}
+$assetsRoot = dirname(__DIR__, 3) . '/public/assets';
+$v2ColorsCssV = @filemtime($assetsRoot . '/css/shared/v2-colors.css') ?: time();
+$v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: time();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Cartas Recebidas - Cadastro - Primeira Vara Crime de Ilhéus</title>
+        <title>Novo cadastro de Carta Recebida - Primeira Vara Crime de Ilhéus</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/assets/css/shared/v2-colors.css?v=<?php echo (int) $v2ColorsCssV; ?>">
+        <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css?v=<?php echo (int) $v2PageListCssV; ?>">
                 <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
+        <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
 
         <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
@@ -114,35 +85,21 @@ try {
             <span class="all">Interno - Cartório - Cartas Recebidas -</span>
             <span class="specific">Cadastro</span>
         </div>
-        <h1 class="title-page">Cartas Recebidas</h1>
     </div>
 
     <div class="container-full card-page">
         <div class="card-title">
-            <div class="display-flex row row-fit justify-start">
-                <h2>Cadastro</h2>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md">
-                <div class="card-allocate-rule">
-                    <?php if ($hasRuleAllocation): ?>
-                        <span>*Conforme regra, as Cartas Recebidas serão alocadas automaticamente para <strong style="margin-left: 3px"><?php echo htmlspecialchars($ruleServidor, ENT_QUOTES); ?></strong></span>
-                    <?php else: ?>
-                        <span>*Não existe nenhum usuário alocado para esta tarefa por regra.</span>
-                    <?php endif; ?>
-                </div>
-            </div>
+            <h1 class="title-page">Novo cadastro de Carta Recebida</h1>
         </div>
-        <div class="display-flex row row-full padding-x-md padding-y-md gap-y-md">
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações da carta</h2></div>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
-                <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
-                    <span>Processo <span class="label-hint-obrigatorio">*obrigatório</span></span>
-                    <span id="processo-ap-info" class="minor-info" aria-live="polite" style="display: none;"></span>
-                </label>
-                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" required>
+                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span><span id="processo-ap-info" class="label-hint-consulta-datajud" aria-live="polite"></span></label>
+                <input type="text" class="height-md" style="width: 220px;" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off" required>
             </div>
             <div class="col filter">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-600 height-md" id="filter-tipo" required>
+                <select class="height-md" style="width: 350px;" id="filter-tipo" required>
                     <option value="" selected disabled>Selecione aqui</option>
                     <option value="Intimação para Audiência">Intimação para Audiência</option>
                     <option value="Intimação de Decisão Interlocutória">Intimação de Decisão</option>
@@ -154,15 +111,14 @@ try {
                 </select>
             </div>
         </div>
-        <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-cidade">Cidade de origem <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" required>
+                <input type="text" class="height-md" style="width: 350px;" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" autocomplete="off" required>
             </div>
             <div class="col filter">
                 <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-400 height-md" id="filter-estado" required>
+                <select class="height-md" style="width: 220px;" id="filter-estado" required>
                     <option value="AC">Acre</option>
                     <option value="AL">Alagoas</option>
                     <option value="AP">Amapá</option>
@@ -205,8 +161,14 @@ try {
             </div>
         </div>        
 
-        <!-- Alocação de servidor -->
-        <?php $cartorioAlocacaoPrefix = 'cartas-rec'; include __DIR__ . '/_cartorio_alocacao_direcionada_create.php'; ?>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="col filter">
+                <label class="status-classe" for="filter-classe"><span>Classe processual</span></label>
+                <input type="text" class="height-md" style="width: 350px;" id="filter-classe" data-datajud-related="true" value="" disabled autocomplete="off">
+                <label id="filter-assuntos" class="processo-bd-info empty" data-empty-prefix="Assuntos:" hidden></label>
+                <label id="filter-prioridades" class="processo-bd-info empty" data-empty-prefix="Prioridades:" hidden></label>
+            </div>
+        </div>
 
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
@@ -224,8 +186,7 @@ try {
                 <button class="btn btn-secondary" id="voltar-btn" type="button" data-allow-during-loading="true">Voltar</button>
             </div>
             <div class="display-flex row row-fit gap-y-md align-center justify-end">
-                <button class="btn btn-primary-outline" id="alterar-regra-btn" type="button" style="display: none;">Alterar regra de alocação</button>
-                <button class="btn btn-primary" id="cadastrar-btn" type="button">Cadastrar</button>
+                <button class="btn btn-primary disabled" id="cadastrar-btn" type="button" disabled aria-disabled="true"><span class="btn-icon-text">Cadastrar</span><span class="btn-icon hidden"><i class="fi fi-rr-spinner" aria-hidden="true"></i></span></button>
             </div>
         </div>
     </div>
@@ -244,7 +205,6 @@ try {
             if (window.App && App.CartorioCreateBootstrap) {
                 App.CartorioCreateBootstrap.bindBackButton({ href: '/frame.php?page=cartasrecebidas' });
                 App.CartorioCreateBootstrap.bindClasseResetOnShortProcess();
-                App.CartorioCreateBootstrap.setupRuleButton({ targetPage: 'cartasrecebidasrules' });
             }
             if (window.App && App.CartorioCityLookup) {
                 App.CartorioCityLookup.initialize({
@@ -258,7 +218,7 @@ try {
                 return;
             }
 
-            App.CartorioCartasRecebidasCreate.initialize({ alocacaoPrefix: 'cartas-rec' });
+            App.CartorioCartasRecebidasCreate.initialize({});
         })();
     </script>
 </body>

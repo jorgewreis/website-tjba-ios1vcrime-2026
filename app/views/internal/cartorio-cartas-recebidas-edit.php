@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
-require_once __DIR__ . '/../../repositories/CartasRecebidasAlocadosRepository.php';
 require_once __DIR__ . '/../../repositories/CartasRecebidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
@@ -92,29 +90,6 @@ if ($carta !== null) {
     }
 }
 
-$ruleServidor = '?';
-$ruleName = 'ALLOCATE-CARTASRECEBIDAS';
-try {
-    $regrasRepo = new AlocacoesRegrasRepository($connection);
-    $ruleRow = $regrasRepo->findByRegra($ruleName);
-    $allocatedUserId = $ruleRow['usuario_id'] ?? null;
-    if ($allocatedUserId !== null && $allocatedUserId !== '') {
-        $stmt = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
-        $stmt->execute([$allocatedUserId]);
-        $u = $stmt->fetch(PDO::FETCH_ASSOC);
-        if ($u !== false) {
-            $nome = trim((string) ($u['nome'] ?? ''));
-            $sobrenome = trim((string) ($u['sobrenome'] ?? ''));
-            $ruleServidor = $sobrenome !== '' ? $nome . ' ' . $sobrenome : $nome;
-            if ($ruleServidor === '') {
-                $ruleServidor = '?';
-            }
-        }
-    }
-} catch (\Throwable $exception) {
-    // Mantém o valor padrão se houver erro na leitura do banco.
-}
-
 $finalidadeOptions = [
     'Intimação para Audiência',
     'Intimação de Decisão Interlocutória',
@@ -147,38 +122,21 @@ $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExc
 /** Perfis que podem cancelar a tarefa (apenas altera status para Cancelada): servidor, admin, diretora, magistrada. */
 $podeCancelarTarefa = $userIdEdit !== '';
 $tarefaFinalizadaOuCancelada = in_array($statusAtual ?? '', ['cancelada', 'concluída'], true);
-$perfisGestaoAlocCartRec = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
-$isGestaoAlocEditCartRec = count(array_intersect($userPerfisEdit, $perfisGestaoAlocCartRec)) > 0;
-
-$alocadosEditCartRec = [];
-if ($carta !== null) {
-    $tipoOrderAloc = ['rule' => 0, 'all' => 1, 'specific' => 2];
-    $repoAlocCartRec = new CartasRecebidasAlocadosRepository($connection);
-    $alocadosRawCartRec = $repoAlocCartRec->findByCartaId($idCarta);
-    foreach (array_slice($alocadosRawCartRec, 0, 5) as $a) {
-        $tipo = trim((string) ($a['tipo'] ?? ''));
-        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
-            $tipo = 'specific';
-        }
-        $alocadosEditCartRec[] = [
-            'alocado_id' => trim((string) ($a['id'] ?? '')),
-            'iniciais' => $a['iniciais'] ?? '—',
-            'nome_completo' => $a['nome_completo'] ?? '',
-            'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
-            'tipo' => $tipo,
-        ];
+$criadorCarta = '';
+if ($carta !== null && trim((string) ($carta['criado_por'] ?? '')) !== '') {
+    $stmtCriador = $connection->prepare('SELECT `nome`, `sobrenome` FROM `usuarios` WHERE `id_usuario` = ? LIMIT 1');
+    $stmtCriador->execute([trim((string) $carta['criado_por'])]);
+    $criadorRow = $stmtCriador->fetch(PDO::FETCH_ASSOC);
+    if ($criadorRow !== false) {
+        $criadorCarta = trim((string) ($criadorRow['nome'] ?? '') . ' ' . (string) ($criadorRow['sobrenome'] ?? ''));
     }
-    usort($alocadosEditCartRec, static function (array $a, array $b) use ($tipoOrderAloc): int {
-        return ($tipoOrderAloc[$a['tipo']] ?? 9) <=> ($tipoOrderAloc[$b['tipo']] ?? 9);
-    });
 }
-
 $timelineData = $carta !== null
     ? cartorioTimelineBuildViewData('cartas_recebidas', [
         'task' => $carta,
         'task_status' => $statusAtual,
         'subtarefas' => $subtarefas ?? [],
-        'ruleServidor' => $ruleServidor,
+        'ruleServidor' => $criadorCarta,
         'tribunaisRepo' => $tribunaisRepo ?? null,
         'connection' => $connection,
     ])
@@ -223,6 +181,8 @@ $stateOptions = [
         <title>Edição de Carta Recebida - Primeira Vara Crime de Ilhéus</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/assets/css/shared/v2-colors.css?v=<?php echo @filemtime(dirname(__DIR__, 3) . '/public/assets/css/shared/v2-colors.css') ?: time(); ?>">
+        <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css?v=<?php echo @filemtime(dirname(__DIR__, 3) . '/public/assets/css/shared/v2-page-list.css') ?: time(); ?>">
                 <?php include __DIR__ . '/_internal_head_styles.php'; ?>
 
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
@@ -234,14 +194,9 @@ $stateOptions = [
 
     <div class="header-page">
         <div class="location">
-            <span class="all">Internal - Cartório - Cartas Recebidas -</span>
+            <span class="all">Interno - Cartório - Cartas Recebidas -</span>
             <span class="specific">Edição</span>
         </div>
-        <h1 class="title-page">Editar Carta Recebida</h1>
-        <button type="button" class="badge file" data-nav-href="/documents/pdf/PJBA - 1VCR - POP - Expedição e Envio de Cartas Precatórias.pdf" data-nav-target="_blank">
-            <img src="/assets/icons/Office-File-Pdf-1--Streamline-Ultimate.png" alt="Ícone de arquivo PDF">
-            <span>Passo a passo - Expedição de Cartas Precatórias</span>
-        </button>
     </div>
 
     <div class="container-full card-page">
@@ -252,24 +207,25 @@ $stateOptions = [
                 }
             </script>
         <?php else: ?>
-            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações obrigatórias</h2></div>
+            <div class="card-title"><h1 class="title-page">Editar Carta Recebida</h1></div>
+            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações da carta</h2></div>
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label for="filter-processo">Processo</label>
-                    <input type="text" id="filter-processo" class="width-400 height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-processo" class="height-md readonly" style="width: 220px;" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
                 <div class="col filter">
                     <label for="filter-classe">Classe</label>
                     <?php
                     $classeReadonly = ($classeNome !== 'Classe não informada');
                     $classeValue = $classeReadonly ? $classeNome : '';
-                    $classeClass = 'width-600 height-md readonly';
+                    $classeClass = 'height-md readonly';
                     ?>
-                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>" placeholder="Sem classe vinculada — cadastre na página do processo" readonly>
+                    <input type="text" id="filter-classe" class="<?php echo htmlspecialchars($classeClass, ENT_QUOTES); ?>" style="width: 350px;" value="<?php echo htmlspecialchars($classeValue, ENT_QUOTES); ?>" placeholder="Sem classe vinculada — cadastre na página do processo" readonly>
                 </div>
                 <div class="col filter">
                     <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-500 height-md" id="filter-tipo" required>
+                    <select class="height-md" style="width: 350px;" id="filter-tipo" required>
                         <option value="" disabled>Selecione aqui</option>
                         <?php foreach ($finalidadeOptions as $option): ?>
                             <option value="<?php echo htmlspecialchars($option, ENT_QUOTES); ?>"<?php echo $finalidadeValue === $option ? ' selected' : ''; ?>><?php echo htmlspecialchars($option); ?></option>
@@ -280,11 +236,11 @@ $stateOptions = [
             <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
                 <div class="col filter">
                     <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
+                    <input type="text" class="height-md" style="width: 350px;" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
                 </div>
                 <div class="col filter">
                     <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                    <select class="width-400 height-md" id="filter-estado" required>
+                    <select class="height-md" style="width: 220px;" id="filter-estado" required>
                         <?php foreach ($stateOptions as $code => $label): ?>
                             <option value="<?php echo htmlspecialchars($code, ENT_QUOTES); ?>"<?php echo $ufValue === $code ? ' selected' : ''; ?>><?php echo htmlspecialchars($label); ?></option>
                         <?php endforeach; ?>
@@ -300,17 +256,6 @@ $stateOptions = [
                     </select>
                 </div>
             </div>
-            <?php
-            $cartorioAlocacaoPrefix = 'cartas-rec';
-            $cartorioAlocacaoEntityId = $idCarta;
-            $cartorioAlocacaoDesalocarEndpoint = '/api/cartorio-cartas-recebidas/desalocar.php';
-            $cartorioAlocacaoAlocarEndpoint = '/api/cartorio-cartas-recebidas/alocar.php';
-            $cartorioAlocacaoAlocados = $alocadosEditCartRec;
-            $cartorioAlocacaoBloqueada = $tarefaFinalizadaOuCancelada;
-            $cartorioAlocacaoUserId = $userIdEdit !== null ? trim((string) $userIdEdit) : '';
-            $cartorioAlocacaoIsGestao = $isGestaoAlocEditCartRec;
-            include __DIR__ . '/_cartorio_alocacao_direcionada_edit.php';
-            ?>
             <!-- Timeline de subtarefas -->
             <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 

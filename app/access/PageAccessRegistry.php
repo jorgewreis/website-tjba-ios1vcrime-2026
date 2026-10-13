@@ -62,7 +62,6 @@ final class PageAccessRegistry
             'cartasrecebidas' => $areaCartorio,
             'cartasrecebidasedit' => $areaCartorio,
             'cartasrecebidascreate' => $areaCartorio,
-            'cartasrecebidasrules' => $areaCartorio,
 
             'oficiosgabinete' => $areaGabinete,
             'oficiosgabineteedit' => $areaGabinete,

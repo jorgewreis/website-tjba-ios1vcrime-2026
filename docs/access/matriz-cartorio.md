@@ -8,7 +8,7 @@ Todas as rotas abaixo usam **modo A** (`area_a` + `CARTORIO`), salvo entrada exp
 | guias, guiasedit, guiascreate, guiasrules | A | `*-CARTORIO` |
 | oficioscartorio, oficioscartorioedit | A | `*-CARTORIO` |
 | cartasexpedidas, cartasexpedidasedit, cartasexpedidascreate | A | `*-CARTORIO` |
-| cartasrecebidas, cartasrecebidasedit, cartasrecebidascreate, cartasrecebidasrules | A | `*-CARTORIO` |
+| cartasrecebidas, cartasrecebidasedit, cartasrecebidascreate | A | `*-CARTORIO` |
 | consultapartescreate, consultapartesedit | A | `*-CARTORIO` |
 | instituicoespublicascreate, instituicoespublicasedit | A | `*-CARTORIO` |
 | processospartescreate, processosparteslist, processospartesedit | A | `*-CARTORIO` |

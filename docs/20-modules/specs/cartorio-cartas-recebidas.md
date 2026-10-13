@@ -46,15 +46,13 @@ Script único: [`scripts/migrate-cartas-recebidas-2-subtarefas.php`](../../../sc
 
 ## 7. Alocação
 
-- Regra em `alocacoes_regras`: `ALLOCATE-CARTASRECEBIDAS` (um usuario_id).
-- Tipos de alocado: `rule`, `specific`, `all`.
-- Máximo 5 alocados por carta.
+- Cartas Recebidas não utiliza alocação automática, regra de responsável ou alocação direcionada.
+- Registros de alocação antigos podem permanecer no banco para preservação histórica, mas não são exibidos nem alterados pelo fluxo atual.
 
 ## 8. Permissões
 
 - **Cancelar tarefa:** SERVIDOR, ADMIN, DIRETORA, MAGISTRADA.
 - **Excluir tarefa:** ADMIN, DIRETORA, MAGISTRADA.
-- **Alterar regra de alocação:** ADMIN, DIRETORA, MAGISTRADA.
 
 ## 9. Referências
 
