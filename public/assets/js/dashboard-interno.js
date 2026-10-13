@@ -1,23 +1,90 @@
 (function(){
   'use strict';
   const $=id=>document.getElementById(id), charts=[];
+  const colors={purple:'#7950ad',mint:'#4f9f88',blue:'#5b8fca',orange:'#d99a39',red:'#ca6868'};
+  const areaNames={CARTORIO:'Cartório',GABINETE:'Gabinete',AUDIENCIAS:'Sala de Audiências'};
   if(window.Chart) Chart.defaults.font.family="'Google Sans', sans-serif";
-  const labels={cartas_expedidas:'Cartas expedidas',cartas_recebidas:'Cartas recebidas',guias:'Guias',editais:'Editais',oficios:'Ofícios'};
-  const colors=['#8b5bc0','#66ad9b','#e0aa4d','#d37575','#5f8fc2'];
-  const shortLabel=s=>({'Cumprimento de carta expedida':'Expedida · cumprir','Envio de carta expedida':'Expedida · enviar','Cumprimento de carta recebida':'Recebida · cumprir','Devolução de carta recebida':'Recebida · devolver','Expedição de guia':'Guia · expedir','Publicação de edital':'Edital · publicar','Decurso de prazo':'Edital · decurso','Envio de ofício':'Ofício · enviar'}[s]||s);
-  const days=()=>Array.from({length:7},(_,i)=>{const d=new Date();d.setHours(12,0,0,0);d.setDate(d.getDate()-6+i);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});});
-  const fmtDate=v=>{if(!v)return 'Sem itens executáveis';const d=new Date(String(v).replace(' ','T'));return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString('pt-BR')};
-  function rows(target,items,canOpen){$(target).innerHTML=(items||[]).map(x=>{const content='<span>'+esc(x.label)+'</span><strong>'+(x.count===null?'—':Number(x.count).toLocaleString('pt-BR'))+'</strong>';return canOpen?'<a class="dash-queue-row" href="/frame.php?page='+encodeURIComponent(x.route)+'">'+content+'</a>':'<div class="dash-queue-row">'+content+'</div>';}).join('')||'<p class="dash-note">Sem filas executáveis para este recorte.</p>';}
-  function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-  function chart(id,type,chartLabels,data,color,horizontal){const el=$(id);if(!el||!window.Chart)return;const options={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}};if(type!=='doughnut'){if(horizontal){options.indexAxis='y';options.scales={x:{beginAtZero:true,ticks:{precision:0,color:'#6f6879'},grid:{color:'rgba(39,31,50,.10)'}},y:{ticks:{color:'#6f6879',font:{size:10}},grid:{display:false}}};}else{options.scales={x:{ticks:{color:'#6f6879',maxRotation:0,autoSkip:true},grid:{display:false}},y:{beginAtZero:true,ticks:{precision:0,color:'#6f6879'},grid:{color:'rgba(39,31,50,.10)'}}};}}charts.push(new Chart(el,{type,data:{labels:chartLabels,datasets:[{data,backgroundColor:color,borderColor:color,borderWidth:type==='doughnut'?0:2,tension:.35,fill:type==='line'?{target:'origin',above:'rgba(209,168,255,.16)'}:false,borderRadius:type==='bar'?6:0}]},options}));}
-  async function load(sector){$('dashboard-erro').hidden=true;const url='/api/dashboard/resumo.php'+(sector?'?setor='+encodeURIComponent(sector):'');try{const res=await fetch(url,{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});const data=await res.json();if(!res.ok)throw new Error(data.error||'Erro ao consultar o dashboard.');
-    $('dash-total-geral').textContent=data.geral?.tarefas_abertas===null?'—':Number(data.geral?.tarefas_abertas||0).toLocaleString('pt-BR');$('dash-total-setor').textContent=data.setor?.tarefas_abertas===null?'—':Number(data.setor?.tarefas_abertas||0).toLocaleString('pt-BR');
-    const canOpen=(data.setor?.areas||[]).includes('CARTORIO');rows('dash-filas-geral',data.geral?.filas,canOpen);$('dash-areas').textContent=data.setor?.conectado?(data.setor?.selecionado?({CARTORIO:'Cartório',GABINETE:'Gabinete',AUDIENCIAS:'Sala de Audiências'}[data.setor?.selecionado]||data.setor?.selecionado):'Todos os setores autorizados'):'Área sem módulos conectados';
-    const sel=$('dash-sector-filter'), existing=sel.value;const areas=data.setor?.areas||[];const areaNames={CARTORIO:'Cartório',GABINETE:'Gabinete',AUDIENCIAS:'Sala de Audiências'};sel.innerHTML='<option value="">Todas as áreas autorizadas</option>'+areas.map(a=>'<option value="'+esc(a)+'">'+esc(areaNames[a]||a)+'</option>').join('');if(areas.includes(existing))sel.value=existing;
-    $('dash-done-7').textContent=Number(data.usuario?.['7d']||0).toLocaleString('pt-BR');$('dash-done-30').textContent=Number(data.usuario?.['30d']||0).toLocaleString('pt-BR');$('dash-audiencias').textContent=data.agenda?.audiencias_7d===null?'—':Number(data.agenda?.audiencias_7d||0).toLocaleString('pt-BR');$('dash-nao-uteis').textContent=data.agenda?.dias_nao_uteis_30d===null?'—':Number(data.agenda?.dias_nao_uteis_30d||0).toLocaleString('pt-BR');$('dash-oldest').textContent=fmtDate(data.fila_mais_antiga_em);
-    charts.splice(0).forEach(c=>c.destroy());const generalRows=data.geral?.filas||[];chart('dash-chart-geral','bar',generalRows.map(x=>shortLabel(x.label)),generalRows.map(x=>x.count||0),'#c9a3f4',true);chart('dash-chart-sector','doughnut',(data.setor?.filas||[]).map(x=>shortLabel(x.label)),(data.setor?.filas||[]).map(x=>x.count||0),colors);const sectorRows=data.setor?.filas||[];$('dash-sector-legend').innerHTML=sectorRows.map((x,i)=>'<div class="dash-sector-legend-row"><i class="dash-sector-legend-dot" style="background:'+colors[i%colors.length]+'"></i><span>'+esc(shortLabel(x.label))+'</span><strong>'+(x.count===null?'—':Number(x.count).toLocaleString('pt-BR'))+'</strong></div>').join('')||'<p class="dash-note">Sem filas executáveis para este recorte.</p>';chart('dash-chart-cadastros','line',data.geral?.cadastros_mensais?.labels||[],data.geral?.cadastros_mensais?.values||[],'#b2e5dc');chart('dash-chart-sector-month','line',data.setor?.cadastros_mensais?.labels||[],data.setor?.cadastros_mensais?.values||[],'#d1a8ff');chart('dash-chart-conclusoes','bar',days(),data.geral?.conclusoes_semanais||[0,0,0,0,0,0,0],'#b2e5dc');chart('dash-chart-work','line',days(),data.usuario?.weekly||[0,0,0,0,0,0,0],'#d1a8ff');
-    const modulos=data.usuario?.modules||[];chart('dash-chart-modules','doughnut',modulos.map(x=>labels[x.modulo]||x.modulo),modulos.map(x=>Number(x.total)),colors);
-    $('dash-missing').textContent=(data.usuario?.['30d']===0?'O histórico individual começa com as conclusões registradas após a implantação. ':'')+(data.agenda?.audiencias_7d===null?'Agenda de audiências indisponível. ':'')+(data.fila_parcial?'Uma ou mais filas estão indisponíveis; os totais mostram — quando incompletos.':'');
-  }catch(e){$('dashboard-erro').textContent=e.message||'Falha ao carregar os indicadores.';$('dashboard-erro').hidden=false;}}
-  document.addEventListener('DOMContentLoaded',()=>{load('');$('dash-sector-filter').addEventListener('change',e=>load(e.target.value));});
+
+  function set(id,value){const el=$(id);if(el)el.textContent=value;}
+  function count(value){return value===null||value===undefined?'—':Number(value).toLocaleString('pt-BR');}
+  function destroyCharts(){charts.splice(0).forEach(c=>c.destroy());}
+  function spark(id,labels,values,color){
+    const el=$(id);if(!el||!window.Chart)return;
+    charts.push(new Chart(el,{type:'line',data:{labels,datasets:[{data:values,borderColor:color,backgroundColor:color+'22',borderWidth:2,pointRadius:0,tension:.42,fill:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}},layout:{padding:2}}}));
+  }
+  function line(id,labels,datasets){
+    const el=$(id);if(!el||!window.Chart)return;
+    charts.push(new Chart(el,{type:'line',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{color:'#777183',maxRotation:0,autoSkip:false,font:{size:10}}},y:{beginAtZero:true,ticks:{precision:0,color:'#777183',font:{size:10}},grid:{color:'rgba(39,31,50,.08)'}}}}}));
+  }
+  function activeQueueCount(queues,key,type){
+    const broken=(queues||[]).some(row=>row.key===key&&row.error);
+    if(broken)return null;
+    const row=(queues||[]).find(item=>item.key===key&&item.type===type);
+    return row?row.count:0;
+  }
+  function moduleTotal(modules,module){const row=(modules||[]).find(item=>item.modulo===module);return row?Number(row.total):0;}
+  function ageInDays(value){
+    if(!value)return null;
+    const parsed=new Date(String(value).replace(' ','T'));
+    if(Number.isNaN(parsed.getTime()))return null;
+    const today=new Date();today.setHours(0,0,0,0);parsed.setHours(0,0,0,0);
+    return Math.max(0,Math.floor((today-parsed)/86400000));
+  }
+
+  async function load(sector){
+    const error=$('dashboard-erro');if(error)error.hidden=true;
+    const url='/api/dashboard/resumo.php'+(sector?'?setor='+encodeURIComponent(sector):'');
+    try{
+      const response=await fetch(url,{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});
+      const data=await response.json();
+      if(!response.ok)throw new Error(data.error||'Não foi possível carregar os indicadores.');
+      destroyCharts();
+
+      const registered=data.geral?.cartas_cadastradas||{};
+      const week=registered.semana||{labels:[],expedidas:[],recebidas:[]};
+      set('dash-registered-expedidas',count(registered.expedidas));
+      set('dash-registered-recebidas',count(registered.recebidas));
+      spark('dash-spark-expedidas',week.labels||[],week.expedidas||[],colors.purple);
+      spark('dash-spark-recebidas',week.labels||[],week.recebidas||[],colors.mint);
+      line('dash-chart-cadastros-semana',week.labels||[],[
+        {label:'Expedidas',data:week.expedidas||[],borderColor:colors.purple,backgroundColor:colors.purple+'22',borderWidth:2,pointRadius:2,pointBackgroundColor:colors.purple,tension:.36,fill:true},
+        {label:'Recebidas',data:week.recebidas||[],borderColor:colors.mint,backgroundColor:colors.mint+'22',borderWidth:2,pointRadius:2,pointBackgroundColor:colors.mint,tension:.36,fill:true}
+      ]);
+
+      const selected=data.setor?.selecionado||'';
+      const areas=data.setor?.areas||[];
+      const selector=$('dash-sector-filter');
+      if(selector){
+        const current=sector||selected||selector.value;
+        selector.innerHTML='<option value="">Todas as áreas autorizadas</option>'+areas.map(area=>'<option value="'+area+'">'+(areaNames[area]||area)+'</option>').join('');
+        selector.value=areas.includes(current)?current:'';
+      }
+      set('dash-areas',data.setor?.conectado?(selected?(areaNames[selected]||selected):'Todas as áreas autorizadas'):'Setor sem indicadores de cartas');
+      const sectorQueues=data.setor?.filas||[];
+      set('dash-queue-expedidas',data.setor?.conectado?count(activeQueueCount(sectorQueues,'cartas_expedidas','aguardando_envio')):'—');
+      set('dash-queue-recebidas',data.setor?.conectado?count(activeQueueCount(sectorQueues,'cartas_recebidas','devolucao')):'—');
+
+      const modules=data.usuario?.modules||[];
+      set('dash-done-expedidas',count(moduleTotal(modules,'cartas_expedidas')));
+      set('dash-done-recebidas',count(moduleTotal(modules,'cartas_recebidas')));
+      const weeklyModules=data.usuario?.weekly_by_module||{};
+      const labels=week.labels||[];
+      spark('dash-spark-user-expedidas',labels,weeklyModules.cartas_expedidas||[],colors.purple);
+      spark('dash-spark-user-recebidas',labels,weeklyModules.cartas_recebidas||[],colors.mint);
+
+      const age=ageInDays(data.fila_mais_antiga_em);
+      set('dash-oldest-days',age===null?'—':age+' '+(age===1?'dia':'dias'));
+      set('dash-oldest-label',data.fila_mais_antiga_etapa||'Sem cartas pendentes na fila');
+      set('dash-deadlines-soon',count(data.prazos_proximos_7d));
+      set('dash-waiting-returns',count(data.cartas_recebidas_aguardando_devolucao));
+    }catch(error){
+      if($('dashboard-erro')){$('dashboard-erro').textContent=error.message||'Não foi possível carregar os indicadores.';$('dashboard-erro').hidden=false;}
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded',()=>{
+    load('');
+    const selector=$('dash-sector-filter');
+    if(selector)selector.addEventListener('change',event=>load(event.target.value));
+  });
 })();

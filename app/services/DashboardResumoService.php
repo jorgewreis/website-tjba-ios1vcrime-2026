@@ -39,6 +39,18 @@ final class DashboardResumoService
         $total = 0;
         $hasQueueErrors = false;
         $oldest = null;
+        $oldestLabel = null;
+        $lettersRegistered = ['expedidas'=>null,'recebidas'=>null];
+        $weeklyLabels=[];$weeklyLetters=['expedidas'=>array_fill(0,7,0),'recebidas'=>array_fill(0,7,0)];
+        for($i=6;$i>=0;$i--){$day=(new DateTimeImmutable('today'))->modify('-'.$i.' days');$weeklyLabels[]=$day->format('d/m');}
+        foreach(['expedidas'=>'cartas_expedidas','recebidas'=>'cartas_recebidas'] as $kind=>$table){
+            try {
+                if (!$this->tableExists($table)) continue;
+                $count=$this->pdo->query("SELECT COUNT(*) FROM `{$table}`");$lettersRegistered[$kind]=(int)$count->fetchColumn();
+                $weekly=$this->pdo->query("SELECT DATE(created_at) dia, COUNT(*) total FROM `{$table}` WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)");
+                foreach($weekly->fetchAll(PDO::FETCH_ASSOC) as $dayRow){$idx=array_search(date('d/m',strtotime((string)$dayRow['dia'])),$weeklyLabels,true);if($idx!==false)$weeklyLetters[$kind][$idx]=(int)$dayRow['total'];}
+            } catch(Throwable $e) { error_log('dashboard resumo [cadastros '.$kind.']: '.$e->getMessage()); }
+        }
         $registrations = array_fill(0,6,0);
         $registrationLabels=[];
         for($i=5;$i>=0;$i--){$d=(new DateTimeImmutable('first day of this month'))->modify('-'.$i.' months');$registrationLabels[]=$d->format('m/Y');}
@@ -47,22 +59,23 @@ final class DashboardResumoService
                 try {
                     if (!$this->tableExists($meta['table']) || !$this->tableExists($meta['parent'])) { $hasQueueErrors=true; $queues[]=['key'=>$key,'label'=>$meta['label'],'count'=>null,'route'=>$meta['route'],'error'=>true]; continue; }
                     $types=array_keys($meta['types']);$marks=implode(',',array_fill(0,count($types),'?'));
-                    $stmt = $this->pdo->prepare("SELECT s.tipo,COUNT(*) total,MIN(s.created_at) oldest FROM `{$meta['table']}` s JOIN `{$meta['parent']}` p ON p.id=s.`{$meta['fk']}` WHERE s.status='em_andamento' AND s.tipo IN ({$marks}) AND LOWER(COALESCE(p.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada') GROUP BY s.tipo");
+                    $stmt = $this->pdo->prepare("SELECT s.tipo,COUNT(*) total,MIN(s.updated_at) oldest FROM `{$meta['table']}` s JOIN `{$meta['parent']}` p ON p.id=s.`{$meta['fk']}` WHERE s.status='em_andamento' AND s.tipo IN ({$marks}) AND LOWER(COALESCE(p.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada') GROUP BY s.tipo");
                     $stmt->execute($types);$moduleCount=0;
-                    foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){$count=(int)$row['total'];$moduleCount+=$count;$date=$row['oldest']??null;if($date&&($oldest===null||$date<$oldest))$oldest=$date;$queues[]=['key'=>$key,'type'=>$row['tipo'],'label'=>$meta['types'][$row['tipo']]??$key,'count'=>$count,'route'=>$meta['route']];}
+                    foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){$count=(int)$row['total'];$moduleCount+=$count;$date=$row['oldest']??null;if($date&&($oldest===null||$date<$oldest)){$oldest=$date;$oldestLabel=$meta['types'][$row['tipo']]??$key;}$queues[]=['key'=>$key,'type'=>$row['tipo'],'label'=>$meta['types'][$row['tipo']]??$key,'count'=>$count,'route'=>$meta['route']];}
                     $total += $moduleCount;
                     try { $monthStmt=$this->pdo->query("SELECT DATE_FORMAT(p.created_at,'%m/%Y') mes,COUNT(*) total FROM `{$meta['parent']}` p WHERE p.created_at >= DATE_SUB(DATE_FORMAT(CURDATE(),'%Y-%m-01'), INTERVAL 5 MONTH) GROUP BY DATE_FORMAT(p.created_at,'%Y-%m') ORDER BY DATE_FORMAT(p.created_at,'%Y-%m')"); foreach($monthStmt->fetchAll(PDO::FETCH_ASSOC) as $monthRow){$idx=array_search((string)$monthRow['mes'],$registrationLabels,true);if($idx!==false)$registrations[$idx]+=(int)$monthRow['total'];} } catch (Throwable $ignored) {}
                 } catch (Throwable $e) { $hasQueueErrors=true; $queues[] = ['key'=>$key,'label'=>$meta['label'],'count'=>null,'route'=>$meta['route'],'error'=>true]; }
             }
         }
-        $completed = ['7d'=>0,'30d'=>0,'weekly'=>array_fill(0,7,0),'modules'=>[]];
+        $completed = ['7d'=>0,'30d'=>0,'weekly'=>array_fill(0,7,0),'weekly_by_module'=>['cartas_expedidas'=>array_fill(0,7,0),'cartas_recebidas'=>array_fill(0,7,0)],'modules'=>[]];
         try {
             if ($this->tableExists('dashboard_conclusoes')) {
-                $st=$this->pdo->prepare("SELECT COUNT(*) FROM dashboard_conclusoes WHERE usuario_id=? AND concluido_em >= DATE_SUB(NOW(), INTERVAL 7 DAY)"); $st->execute([$userId]); $completed['7d']=(int)$st->fetchColumn();
-                $st=$this->pdo->prepare("SELECT COUNT(*) FROM dashboard_conclusoes WHERE usuario_id=? AND concluido_em >= DATE_SUB(NOW(), INTERVAL 30 DAY)"); $st->execute([$userId]); $completed['30d']=(int)$st->fetchColumn();
-                $st=$this->pdo->prepare("SELECT modulo, COUNT(*) total FROM dashboard_conclusoes WHERE usuario_id=? AND concluido_em >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY modulo"); $st->execute([$userId]); $completed['modules']=$st->fetchAll(PDO::FETCH_ASSOC);
-                $st=$this->pdo->prepare("SELECT DATEDIFF(CURDATE(), DATE(concluido_em)) age, COUNT(*) total FROM dashboard_conclusoes WHERE usuario_id=? AND concluido_em >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(concluido_em)"); $st->execute([$userId]);
-                foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $row) { $i=6-(int)$row['age']; if ($i>=0 && $i<7) $completed['weekly'][$i]=(int)$row['total']; }
+                $scope="usuario_id=? AND modulo IN ('cartas_expedidas','cartas_recebidas')";
+                $st=$this->pdo->prepare("SELECT COUNT(*) FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(NOW(), INTERVAL 7 DAY)"); $st->execute([$userId]); $completed['7d']=(int)$st->fetchColumn();
+                $st=$this->pdo->prepare("SELECT COUNT(*) FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(NOW(), INTERVAL 30 DAY)"); $st->execute([$userId]); $completed['30d']=(int)$st->fetchColumn();
+                $st=$this->pdo->prepare("SELECT modulo, COUNT(*) total FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY modulo"); $st->execute([$userId]); $completed['modules']=$st->fetchAll(PDO::FETCH_ASSOC);
+                $st=$this->pdo->prepare("SELECT modulo,DATEDIFF(CURDATE(),DATE(concluido_em)) age,COUNT(*) total FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY modulo,DATE(concluido_em)"); $st->execute([$userId]);
+                foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $row) { $i=6-(int)$row['age'];$module=(string)$row['modulo'];if($i>=0&&$i<7){$completed['weekly'][$i]+=(int)$row['total'];if(isset($completed['weekly_by_module'][$module]))$completed['weekly_by_module'][$module][$i]=(int)$row['total'];} }
             }
         } catch (Throwable $e) { error_log('dashboard resumo [produtividade]: '.$e->getMessage()); }
         $calendar=['audiencias_7d'=>null,'dias_nao_uteis_30d'=>null];
@@ -77,8 +90,26 @@ final class DashboardResumoService
         } catch(Throwable $e) {}
         $globalCompletions=array_fill(0,7,0);
         try { if($this->tableExists('dashboard_conclusoes')){ $st=$this->pdo->query("SELECT DATEDIFF(CURDATE(),DATE(concluido_em)) age,COUNT(*) total FROM dashboard_conclusoes WHERE concluido_em>=DATE_SUB(CURDATE(),INTERVAL 6 DAY) GROUP BY DATE(concluido_em)"); foreach($st->fetchAll(PDO::FETCH_ASSOC) as $r){$idx=6-(int)$r['age'];if($idx>=0&&$idx<7)$globalCompletions[$idx]=(int)$r['total'];} } } catch(Throwable $e) { error_log('dashboard resumo [conclusoes gerais]: '.$e->getMessage()); }
+        $cartasEmDevolucao=$this->queueCount($queues,'cartas_recebidas','devolucao');
+        $deadlinesSoon=null;
+        try {
+            $deadlinesSoon=0;
+            if($this->tableExists('cartas_expedidas')&&$this->tableExists('cartas_expedidas_subtarefas')){
+                $st=$this->pdo->query("SELECT COUNT(*) FROM cartas_expedidas c JOIN cartas_expedidas_subtarefas s ON s.carta_expedida_id=c.id WHERE s.tipo='aguardando_devolucao' AND s.status='em_andamento' AND c.prazo_dias>0 AND DATE_ADD(DATE(s.updated_at), INTERVAL c.prazo_dias DAY) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");$deadlinesSoon+=(int)$st->fetchColumn();
+            }
+            if($this->tableExists('cartas_recebidas')&&$this->tableExists('cartas_recebidas_subtarefas')){
+                $st=$this->pdo->query("SELECT COUNT(*) FROM cartas_recebidas c JOIN cartas_recebidas_subtarefas s ON s.carta_recebida_id=c.id WHERE s.tipo='cumprimento' AND s.status='em_andamento' AND c.prazo_dias>0 AND DATE_ADD(DATE(COALESCE(c.data_recebimento,c.created_at)), INTERVAL c.prazo_dias DAY) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");$deadlinesSoon+=(int)$st->fetchColumn();
+            }
+        } catch(Throwable $e) { $deadlinesSoon=null;error_log('dashboard resumo [prazos]: '.$e->getMessage()); }
         $sectorQueues=$includeCartorio?$queues:[];$reportedTotal=$hasQueueErrors?null:$total;$sectorTotal=$includeCartorio?$reportedTotal:null;
-        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'fila_mais_antiga_em'=>$oldest,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors];
+        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'semana'=>['labels'=>$weeklyLabels,'expedidas'=>$weeklyLetters['expedidas'],'recebidas'=>$weeklyLetters['recebidas']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors];
+    }
+
+    private function queueCount(array $queues,string $key,string $type): ?int
+    {
+        foreach($queues as $queue){if(($queue['key']??'')===$key&&($queue['error']??false))return null;}
+        foreach($queues as $queue){if(($queue['key']??'')===$key&&($queue['type']??'')===$type)return $queue['count']===null?null:(int)$queue['count'];}
+        return 0;
     }
 
     private function tableExists(string $table): bool

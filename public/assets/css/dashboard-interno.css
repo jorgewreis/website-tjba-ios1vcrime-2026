@@ -101,6 +101,49 @@
 .dashboard-error { margin:0 0 12px; padding:12px; border-radius:10px; color:#8c1d27; background:#fff0f0; }
 .dashboard-interno .footer-page { display:none; }
 
+/* Compact KPI cards inspired by the supplied reference. */
+.dash-kpi-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.dash-kpi-card { min-width:0; margin:10px 0 0; padding:12px; border-radius:14px; }
+.dash-kpi-purple { border-color:#ece3f8; background:linear-gradient(145deg,#faf7ff,#fff); }
+.dash-kpi-mint { border-color:#e0f0e9; background:linear-gradient(145deg,#f3fbf8,#fff); }
+.dash-kpi-label { display:block; color:#777183; font-size:10px; font-weight:500; line-height:1.35; }
+.dash-kpi-value { display:block; margin:6px 0 3px; color:#332b3d; font-size:27px; font-weight:700; line-height:1; letter-spacing:-.045em; }
+.dash-kpi-foot { display:flex; align-items:center; justify-content:space-between; gap:5px; color:#858091; font-size:9px; }
+.dash-kpi-foot canvas { width:56px!important; height:24px!important; max-height:24px; }
+.dash-weekly-card { margin-top:10px; padding:13px; }
+.dash-weekly-card h3 { margin-bottom:5px; }
+.dash-weekly-card canvas { height:130px!important; max-height:130px; }
+.dash-chart-legend { display:flex; justify-content:flex-end; gap:12px; color:#777183; font-size:9px; }
+.dash-chart-legend span { display:flex; align-items:center; gap:4px; }
+.legend-dot { width:7px; height:7px; border-radius:50%; }
+.legend-purple { background:#7950ad; }
+.legend-mint { background:#4f9f88; }
+.dash-sector-queue { margin-top:11px; padding:15px; border-color:#e5e1ed; background:linear-gradient(150deg,#fff,#faf9fc); }
+.dash-sector-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:12px; border-bottom:1px solid #efedf3; }
+.dash-sector-heading strong { display:block; margin-top:3px; color:#40374b; font-size:14px; font-weight:650; }
+.dash-sector-mark { display:flex; align-items:center; justify-content:center; width:29px; height:29px; border-radius:9px; color:#6842a0; background:#eee8f8; font-size:12px; font-weight:700; }
+.dash-sector-metric { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 0; border-bottom:1px solid #efedf3; }
+.dash-sector-metric span { color:#575160; font-size:11px; line-height:1.4; }
+.dash-sector-metric strong { display:flex; align-items:center; justify-content:center; min-width:36px; height:34px; padding:0 8px; border-radius:10px; color:#62418f; background:#f1ecf8; font-size:20px; font-weight:700; }
+.dash-sector-metric:nth-of-type(3) strong { color:#287c68; background:#e8f5ef; }
+.dash-sector-footnote { display:block; padding-top:10px; color:#858091; font-size:10px; }
+.dash-production-card { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:106px; padding:13px; border-color:#e9e3f2; background:linear-gradient(140deg,#faf7ff,#fff); }
+.dash-production-mint { border-color:#e0eee8; background:linear-gradient(140deg,#f3faf7,#fff); }
+.dash-production-card>div { min-width:0; }
+.dash-production-number { display:block; margin:4px 0 2px; color:#6842a0; font-size:30px; font-weight:700; line-height:1; letter-spacing:-.045em; }
+.dash-production-mint .dash-production-number { color:#31856f; }
+.dash-production-label { display:block; color:#5d5666; font-size:10px; line-height:1.35; }
+.dash-production-card canvas { width:70px!important; height:32px!important; max-height:32px; flex:0 0 70px; }
+.dash-note-card { padding:11px 13px; background:#fff; }
+.dash-alert-card { min-height:94px; padding:13px; border-left:3px solid #8b5bc0; background:linear-gradient(130deg,#fbf8ff,#fff); }
+.dash-alert-warm { border-left-color:#d99a39; background:linear-gradient(130deg,#fffaf1,#fff); }
+.dash-alert-mint { border-left-color:#4f9f88; background:linear-gradient(130deg,#f3fbf8,#fff); }
+.dash-alert-number { display:block; margin:5px 0 2px; color:#6842a0; font-size:25px; font-weight:700; line-height:1.05; }
+.dash-alert-warm .dash-alert-number { color:#b87b20; }
+.dash-alert-mint .dash-alert-number { color:#31856f; }
+.dash-alert-detail { display:block; color:#777183; font-size:10px; line-height:1.35; }
+.dash-card canvas { width:100%!important; height:160px!important; max-height:160px; }
+
 @media(max-width:1150px) { .dashboard-column { flex-basis:calc(33.333% - 14px); } }
 @media(max-width:900px) { .dashboard-shell { padding:4px 20px 28px; } .dashboard-column { flex-basis:calc(50% - 10px); } }
 @media(max-width:600px) { .dashboard-shell { padding:4px 12px 24px; } .dashboard-column { flex-basis:100%; min-width:0; } .dashboard-column>header { min-height:112px; } }
