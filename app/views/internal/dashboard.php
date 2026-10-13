@@ -37,8 +37,11 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
         </section>
         <section class="dashboard-column dashboard-work" aria-labelledby="dash-work-title">
           <header><span class="column-kicker">03 / PRODUTIVIDADE</span><h2 id="dash-work-title">Meu trabalho</h2><p>Movimentações feitas pelo usuário nas duas páginas</p></header>
-          <article class="dash-card dash-production-card"><div><span class="dash-kpi-label">ÚLTIMOS 30 DIAS</span><strong class="dash-production-number" id="dash-done-expedidas">—</strong><span class="dash-production-label">Cartas Expedidas movimentadas</span></div><div class="dash-mini-chart"><canvas id="dash-spark-user-expedidas" aria-label="Movimentações diárias de cartas expedidas pelo usuário nos últimos sete dias"></canvas></div></article>
-          <article class="dash-card dash-production-card dash-production-mint"><div><span class="dash-kpi-label">ÚLTIMOS 30 DIAS</span><strong class="dash-production-number" id="dash-done-recebidas">—</strong><span class="dash-production-label">Cartas Recebidas movimentadas</span></div><div class="dash-mini-chart"><canvas id="dash-spark-user-recebidas" aria-label="Movimentações diárias de cartas recebidas pelo usuário nos últimos sete dias"></canvas></div></article>
+          <article class="dash-card dash-production-summary">
+            <span class="dash-kpi-label">ÚLTIMOS 30 DIAS</span>
+            <div class="dash-production-row"><div><strong class="dash-production-number" id="dash-done-expedidas">—</strong><span class="dash-production-label">Cartas Expedidas movimentadas</span></div><div class="dash-mini-chart"><canvas id="dash-spark-user-expedidas" aria-label="Movimentações diárias de cartas expedidas pelo usuário nos últimos sete dias"></canvas></div></div>
+            <div class="dash-production-row dash-production-mint"><div><strong class="dash-production-number" id="dash-done-recebidas">—</strong><span class="dash-production-label">Cartas Recebidas movimentadas</span></div><div class="dash-mini-chart"><canvas id="dash-spark-user-recebidas" aria-label="Movimentações diárias de cartas recebidas pelo usuário nos últimos sete dias"></canvas></div></div>
+          </article>
         </section>
         <section class="dashboard-column dashboard-agenda" aria-labelledby="dash-agenda-title">
           <header><span class="column-kicker">04 / AGENDA</span><h2 id="dash-agenda-title">Agenda e alertas</h2><p>Janelas próximas e referência de fila</p></header>

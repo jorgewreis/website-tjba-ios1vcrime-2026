@@ -140,9 +140,10 @@
 .dash-sector-metric strong { display:flex; align-items:center; justify-content:center; min-width:36px; height:34px; padding:0 8px; border-radius:10px; color:#62418f; background:#f1ecf8; font-size:12px; font-weight:700; }
 .dash-sector-metric:last-child strong { color:#287c68; background:#e8f5ef; }
 .dash-sector-footnote { display:block; padding-top:10px; color:#858091; font-size:10px; }
-.dash-production-card { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:106px; padding:13px; border-color:#e9e3f2; background:linear-gradient(140deg,#faf7ff,#fff); }
-.dash-production-mint { border-color:#e0eee8; background:linear-gradient(140deg,#f3faf7,#fff); }
-.dash-production-card>div { min-width:0; }
+.dash-production-summary { padding:13px; background:#fff; }
+.dash-production-row { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 0; border-bottom:1px solid #efedf3; }
+.dash-production-row:last-child { padding-bottom:0; border-bottom:0; }
+.dash-production-row>div { min-width:0; }
 .dash-production-number { display:block; margin:4px 0 2px; color:#6842a0; font-size:30px; font-weight:700; line-height:1; letter-spacing:-.045em; }
 .dash-production-mint .dash-production-number { color:#31856f; }
 .dash-production-label { display:block; color:#5d5666; font-size:10px; line-height:1.35; }
