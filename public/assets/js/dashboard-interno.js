@@ -106,13 +106,17 @@
       const sectorQueues=data.setor?.filas||[];
       const queueExpedidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_expedidas','aguardando_envio'):null;
       const queueRecebidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_recebidas','devolucao'):null;
+      const queueEditais=data.setor?.conectado?activeQueueCount(sectorQueues,'editais','certificacao_publicacao'):null;
       set('dash-queue-expedidas',count(queueExpedidas));
       set('dash-queue-recebidas',count(queueRecebidas));
+      set('dash-queue-editais',count(queueEditais));
       const hasExpedidasMetric=showPositiveMetric('dash-queue-expedidas-row',queueExpedidas);
       const hasRecebidasMetric=showPositiveMetric('dash-queue-recebidas-row',queueRecebidas);
-      let hasAnyMetric=hasExpedidasMetric||hasRecebidasMetric;
+      const hasEditaisMetric=showPositiveMetric('dash-queue-editais-row',queueEditais);
+      let hasAnyMetric=hasExpedidasMetric||hasRecebidasMetric||hasEditaisMetric;
       applyCountBadge($('dash-queue-expedidas'),queueExpedidas);
       applyCountBadge($('dash-queue-recebidas'),queueRecebidas);
+      applyCountBadge($('dash-queue-editais'),queueEditais);
       const overdue=data.setor?.prazos_vencidos||{};
       const overdueDays=data.setor?.prazos_vencidos_dias||{};
       [['expedidas','dash-overdue-expedidas-row','dash-overdue-expedidas'],['recebidas','dash-overdue-recebidas-row','dash-overdue-recebidas']].forEach(([key,rowId,valueId])=>{

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0039
+
+**Data:** 2026-10-13 20:32:55 | **Commit:** `f5b90998` | **Tipo:** `patch`
+
+- feat(dashboard): mostrar editais aguardando publicacao
+
 ## V. 1.87.0038
 
 **Data:** 2026-10-13 20:28:41 | **Commit:** `48113cd2` | **Tipo:** `patch`
@@ -5655,6 +5661,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
