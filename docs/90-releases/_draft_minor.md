@@ -34,4 +34,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(editais): remover recuos herdados das colunas** `[efc1b8ce]`
 - **style(editais): redesenhar blocos das linhas** `[d2047e97]`
 - **fix(editais): exibir ações nas linhas mobile** `[e26f4ce4]`
+- **fix(editais): adequar ações em telas estreitas** `[9967b2fb]`
 
