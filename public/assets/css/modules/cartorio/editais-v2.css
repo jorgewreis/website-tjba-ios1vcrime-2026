@@ -182,7 +182,7 @@
 }
 
 @media (max-width: 1100px) {
-    .editais-v2-row { grid-template-columns: 39px minmax(0, 1fr) minmax(210px, .8fr); row-gap: 10px; }
+    .register.register-with-metadata.register-line.editais-v2-row { grid-template-columns: 39px minmax(0, 1fr) minmax(210px, .8fr); row-gap: 10px; }
     .editais-v2-row-expander { grid-column: 1; grid-row: 1 / span 2; }
     .editais-v2-cell-process { grid-column: 2; grid-row: 1; }
     .editais-v2-cell-type { grid-column: 3; grid-row: 1; padding-left: 12px; }
@@ -202,7 +202,7 @@
     .editais-v2-page .list-search-input,
     .editais-filters-controls select,
     .editais-filters-controls .btn { width: 100% !important; min-width: 0; }
-    .editais-v2-row { grid-template-columns: 34px minmax(0,1fr); row-gap: 10px; padding: 12px; }
+    .register.register-with-metadata.register-line.editais-v2-row { grid-template-columns: 34px minmax(0,1fr); row-gap: 10px; padding: 12px; }
     .editais-v2-row-expander { grid-column: 1; grid-row: 1 / span 4; justify-content: flex-start; }
     .editais-v2-cell-process { grid-column: 2; grid-row: 1; padding-right: 0; }
     .editais-v2-cell-type { grid-column: 2; grid-row: 2; padding: 0; }
