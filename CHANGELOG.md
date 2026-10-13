@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0031
+
+**Data:** 2026-10-13 20:16:05 | **Commit:** `9967b2fb` | **Tipo:** `patch`
+
+- fix(editais): adequar ações em telas estreitas
+
 ## V. 1.87.0030
 
 **Data:** 2026-10-13 20:15:06 | **Commit:** `e26f4ce4` | **Tipo:** `patch`
@@ -5607,6 +5613,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

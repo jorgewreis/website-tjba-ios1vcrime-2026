@@ -392,6 +392,9 @@
     height: 28px;
     border-radius: 6px;
 }
+.editais-v2-cell-history .historical-actions .btn-mini-icon { opacity: .8; filter: none; }
+.editais-v2-cell-history .historical-actions .btn-mini:hover .btn-mini-icon,
+.editais-v2-cell-history .historical-actions .btn-mini:focus-visible .btn-mini-icon { opacity: 1; }
 
 @media (hover: none) {
     .editais-v2-cell-process .container-processo > .container-line:first-child > .right,
@@ -444,7 +447,17 @@
     .editais-v2-cell-status .status { max-width: 260px; }
     .editais-v2-cell-history { min-height: 42px; padding-left: 30px; }
     .editais-v2-cell-history .container-historical { min-height: 36px; }
-    .editais-v2-cell-history .container-historical .historical-actions { right: 0; }
+    .editais-v2-cell-history .container-historical .historical-actions {
+        position: static;
+        width: fit-content;
+        margin: 4px 0 0 auto;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        transform: none;
+    }
+    .editais-v2-cell-history .container-historical .historical-actions .right { display: flex; gap: 3px; }
     .editais-v2-cell-process .container-processo > .container-line:first-child > .right,
     .editais-v2-cell-history .container-historical .historical-actions {
         opacity: 1;
