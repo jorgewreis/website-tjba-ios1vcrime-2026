@@ -338,7 +338,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                 <?php endif; ?>
                 <?php if ($showEdit): ?>
                     <button type="button" class="button-icon-right carta-row-action" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
-                        <img src="/assets/icons/Notes-Edit--Streamline-Ultimate.png" alt="">
+                        <img src="/assets/icons/Eject-Button--Streamline-Emojitwo.svg" alt="">
                     </button>
                 <?php endif; ?>
                 <?php if ($mostrarContinuar && $textoEtapa !== ''): ?>
