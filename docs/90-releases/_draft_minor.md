@@ -11,4 +11,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(cartas-expedidas): alinhar status e historico ao mockup** `[c32dba0e]`
 - **fix(cartas-expedidas): corrigir fundo e espacos do registro** `[1fb81950]`
 - **feat(cartorio): ajustar cadastro e botoes das cartas** `[1a58b2d5]`
+- **fix(cartorio): manter spinner dentro do botao** `[4dc1dd5d]`
 
