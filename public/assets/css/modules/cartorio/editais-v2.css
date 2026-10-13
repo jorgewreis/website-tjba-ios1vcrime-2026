@@ -2,7 +2,7 @@
 .editais-v2-page .container-full.card-page {
     align-items: stretch;
     flex-wrap: nowrap;
-    margin: 16px 20px 24px;
+    margin: 20px 20px 24px;
     width: calc(100% - 40px);
     overflow: hidden;
     border: 1px solid var(--color-border);
@@ -49,12 +49,12 @@
     gap: 10px;
     width: 100%;
     min-height: 61px;
-    padding: 10px 20px;
+    padding: 10px 15px;
     border-bottom: 1px solid var(--color-border);
     background: var(--color-background-elevated);
 }
 
-.editais-list-page .editais-filters-title { color: var(--color-description-text); font-size: 12px; font-weight: 600; }
+.editais-list-page .editais-filters-title { color: var(--color-gray-900); font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 500; line-height: 19.5px; }
 .editais-list-page .editais-filters-controls { display: flex; align-items: center; justify-content: flex-end; flex: 0 1 auto; flex-wrap: wrap; gap: 10px; }
 .editais-list-page .editais-filters-controls #filter-status { width: 250px; }
 .editais-list-page .editais-filters-controls #filter-tipo-edital { width: 350px; }
@@ -166,7 +166,7 @@
 .editais-edit-page .editais-form-field.editais-field-process { width: 200px; }
 .editais-edit-page .editais-form-field.editais-field-class { width: 300px; }
 .editais-edit-page .editais-form-field.editais-field-type { width: 250px; }
-.editais-form-field > label { margin: 10px 0 0 13px; color: var(--color-text-primary); font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 400; line-height: 18px; }
+.editais-form-field > label { width: max-content; max-width: none; margin: 10px 0 0 13px; color: var(--color-text-primary); font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 400; line-height: 18px; white-space: nowrap; }
 .editais-form-field > input,
 .editais-form-field > select,
 .editais-form-field > textarea { width: 100% !important; }
