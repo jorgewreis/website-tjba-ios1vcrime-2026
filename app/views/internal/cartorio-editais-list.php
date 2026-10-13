@@ -248,6 +248,7 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
             </div>
         </div> -->
 
+        <div class="editais-list-results" role="list" aria-label="Resultados dos editais">
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
                 $idEdital = $row['IdEdital'];
@@ -310,30 +311,25 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                 }
             ?>
             <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'editais', $registroListViewerContext, $connection); ?>
-            <div class="register-line full register register-with-metadata editais-v2-row" data-edital-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idEdital); ?>">
-
-                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center editais-v2-row-main">
-                    <div class="display-flex row row-fit justify-start gap-y-sm align-center editais-v2-row-primary">
-                        <div class="col">
-                            <?php if ($podeExpandirSubtarefas): ?>
-                                <label class="button-table" title="Expandir detalhes">
-                                    <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idEdital); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idEdital); ?>" aria-expanded="false" />
-                                    <i class="fi fi-rr-angle-small-down"></i>
-                                </label>
-                            <?php else: ?>
-                                <span class="button-table" style="visibility:hidden;" aria-hidden="true"><i class="fi fi-rr-angle-small-down"></i></span>
-                            <?php endif; ?>
-                        </div>
-                        <div class="col width-500 col-process">
-                            <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
-                        </div>
-                        <div class="col width-600 col-tipo-edital" title="Clique para copiar">
-                            <span class="minor-info">Tipo de edital</span>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['tipo_edital'] ?? $row['TipoEdital'] ?? '—')); ?></span>
-                        </div>
-                    </div>
-                    <div class="display-flex row row-fit justify-end gap-y-sm align-center editais-v2-row-secondary">
-                        <div class="col<?php echo $mostrarBarraStatus ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
+            <div class="register-line full register register-with-metadata editais-v2-row" role="listitem" data-edital-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idEdital); ?>">
+                <div class="editais-v2-row-expander">
+                    <?php if ($podeExpandirSubtarefas): ?>
+                        <label class="button-table" title="Expandir detalhes">
+                            <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idEdital); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" aria-expanded="false" aria-label="Expandir detalhes do edital <?php echo htmlspecialchars((string) ($row['numero_processo'] ?? ''), ENT_QUOTES); ?>" />
+                            <i class="fi fi-rr-angle-small-down" aria-hidden="true"></i>
+                        </label>
+                    <?php else: ?>
+                        <span class="button-table" style="visibility:hidden;" aria-hidden="true"><i class="fi fi-rr-angle-small-down"></i></span>
+                    <?php endif; ?>
+                </div>
+                <div class="editais-v2-cell editais-v2-cell-process">
+                    <?php include __DIR__ . '/_processo_bloco_listagem.php'; ?>
+                </div>
+                <div class="editais-v2-cell editais-v2-cell-type" title="Tipo de edital">
+                    <span class="minor-info">Tipo de edital</span>
+                    <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['tipo_edital'] ?? $row['TipoEdital'] ?? '—')); ?></span>
+                </div>
+                <div class="editais-v2-cell editais-v2-cell-status<?php echo $mostrarBarraStatus ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                             <?php
                             if ($statusTarefaNorm === 'concluida') {
                                 echo '<div class="width-300 padding-x-lg status status-finished">Finalizada</div>';
@@ -355,9 +351,9 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                                 echo '<div class="width-300 padding-x-lg status status-pending">Pendente</div>';
                             }
                             ?>
-                        </div>
-                        <?php include __DIR__ . '/_registro_metadata.php'; ?>
-                    </div>
+                </div>
+                <div class="editais-v2-cell editais-v2-cell-history">
+                    <?php include __DIR__ . '/_registro_metadata.php'; ?>
                 </div>
 
                 <?php if ($podeExpandirSubtarefas): ?>
@@ -429,12 +425,18 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                 <?php endif; ?>
             </div>
             <?php endforeach; ?>
+            <?php else: ?>
+                <div class="editais-list-empty" role="status">
+                    <strong>Nenhum edital encontrado</strong>
+                    <span>Ajuste os filtros ou a pesquisa para ver outros resultados.</span>
+                </div>
             <?php endif; ?>
+        </div>
 
         <div class="card-line full pagination editais-list-pagination">
             <div class="card-line left">
             <span class="pagination-info">
-                Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
+                Mostrando <?php echo $startItem; ?> a <?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)
             </span>
             </div>
@@ -450,22 +452,22 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                     $nextParams['page_number'] = $nextPage;
                     $nextHref = '?' . http_build_query($nextParams);
                     ?>
-                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
-                        <img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt="Página anterior">
+                    <button type="button" class="pagination-symbol<?php echo $currentPage <= 1 ? ' disabled' : ''; ?>" aria-label="Página anterior" title="Página anterior" <?php if ($currentPage > 1): ?>data-nav-href="<?php echo htmlspecialchars($prevHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                        <i class="fi fi-rr-angle-small-left" aria-hidden="true"></i>
                     </button>
                     <?php foreach ($paginationButtons as $page): ?>
                         <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
+                        <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page === $currentPage): ?>aria-current="page" disabled<?php else: ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php endif; ?>><?php echo $page; ?></button>
                     <?php endforeach; ?>
                     <?php if ($paginationEllipsis && !empty($trailingPages)): ?>
-                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><img src="/assets/icons/Navigation-Menu-Horizontal--Streamline-Ultimate.png" alt="Mais páginas"></span>
+                        <span class="pagination-symbol pagination-ellipsis" aria-hidden="true"><i class="fi fi-rr-menu-dots"></i></span>
                         <?php foreach ($trailingPages as $page): ?>
                             <?php $pageParams = $baseQueryParams; $pageParams['page_number'] = $page; ?>
-                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page !== $currentPage): ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php else: ?>disabled<?php endif; ?>><?php echo $page; ?></button>
+                            <button type="button" class="pagination-number<?php echo $page === $currentPage ? ' active' : ''; ?>" <?php if ($page === $currentPage): ?>aria-current="page" disabled<?php else: ?>data-nav-href="?<?php echo htmlspecialchars(http_build_query($pageParams), ENT_QUOTES); ?>"<?php endif; ?>><?php echo $page; ?></button>
                         <?php endforeach; ?>
                     <?php endif; ?>
-                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
-                        <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
+                    <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" aria-label="Próxima página" title="Próxima página" <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
+                        <i class="fi fi-rr-angle-small-right" aria-hidden="true"></i>
                     </button>
                 </div></div>
             <?php endif; ?>
