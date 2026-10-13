@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0020
+
+**Data:** 2026-10-13 19:47:28 | **Commit:** `bad0b91d` | **Tipo:** `patch`
+
+- fix(editais): eliminar overflow em telas estreitas
+
 ## V. 1.87.0019
 
 **Data:** 2026-10-13 19:45:25 | **Commit:** `00f2688d` | **Tipo:** `patch`
@@ -5541,6 +5547,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
