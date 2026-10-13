@@ -17,6 +17,10 @@
             cidadeInput.setAttribute('maxlength', String(settings.maxLength));
         }
 
+        cidadeInput.addEventListener('input', function () {
+            delete cidadeInput.dataset.ccmBlocked;
+        });
+
         cidadeInput.addEventListener('blur', function () {
             cidadeInput.value = (App.ProperNameHelper && App.ProperNameHelper.formatProper)
                 ? App.ProperNameHelper.formatProper(cidadeInput.value, settings.formatMaxLength || 50)
@@ -26,7 +30,9 @@
                 return;
             }
 
-            fetch((settings.endpoint || '') + encodeURIComponent(cidade))
+            const endpoint = (settings.endpoint || '') + encodeURIComponent(cidade)
+                + (estadoSelect && estadoSelect.value ? '&uf=' + encodeURIComponent(estadoSelect.value) : '');
+            fetch(endpoint, { credentials: 'same-origin' })
                 .then(function (response) { return response.json(); })
                 .then(function (data) {
                     if (!data.found) {
@@ -38,9 +44,8 @@
                     }
 
                     const status = String(data.status_cidade || '').trim();
-                    if (settings.blockCcm && status.toUpperCase() === 'CCM') {
-                        helpers.notify('Comarca com Central de Mandados', 'info', 'Informação');
-                        cidadeInput.value = '';
+                    if (settings.blockCcm && (data.is_ccm === true || status.toUpperCase() === 'CCM')) {
+                        cidadeInput.dataset.ccmBlocked = 'true';
                         return;
                     }
 

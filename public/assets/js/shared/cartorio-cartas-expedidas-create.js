@@ -91,9 +91,41 @@
                 return;
             }
 
+            const cidadeInput = global.document.getElementById('filter-cidade');
+            const estadoSelect = global.document.getElementById('filter-estado');
+            if (cidadeInput && cidadeInput.dataset.ccmBlocked === 'true') {
+                feedback('A comarca já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.', 'error');
+                gate.setError();
+                return;
+            }
+
             const cidadeDestino = App.ProperNameHelper && App.ProperNameHelper.formatProper
                 ? App.ProperNameHelper.formatProper(helpers.getValue('filter-cidade'), 50)
                 : helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
+            const cityLookupEndpoint = String(settings.cityLookupEndpoint || '').trim();
+            if (cityLookupEndpoint) {
+                try {
+                    const lookupUrl = new URL(cityLookupEndpoint, global.location.origin);
+                    lookupUrl.searchParams.set('cidade', cidadeDestino);
+                    lookupUrl.searchParams.set('uf', estadoSelect ? estadoSelect.value : '');
+                    const lookupResponse = await fetch(lookupUrl.toString(), { credentials: 'same-origin' });
+                    const lookupData = await lookupResponse.json();
+                    if (!lookupResponse.ok) {
+                        throw new Error(lookupData.error || 'Não foi possível validar a comarca de destino.');
+                    }
+                    if (lookupData.is_ccm === true || String(lookupData.status_cidade || '').trim().toUpperCase() === 'CCM') {
+                        if (cidadeInput) cidadeInput.dataset.ccmBlocked = 'true';
+                        feedback('A comarca já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.', 'error');
+                        gate.setError();
+                        return;
+                    }
+                } catch (error) {
+                    feedback(error.message || 'Não foi possível validar a comarca de destino.', 'error');
+                    gate.setError();
+                    return;
+                }
+            }
+
             if (normalizeCidadeForCompare(cidadeDestino) === 'ilheus') {
                 feedback('O cadastro não é permitido para a cidade de Ilhéus (comarca de origem).', 'error');
                 gate.setError();

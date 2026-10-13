@@ -183,7 +183,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off" required value="<?php echo htmlspecialchars($submittedProcesso, ENT_QUOTES); ?>">
+                <input type="text" class="height-md" style="width: 220px;" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off" required value="<?php echo htmlspecialchars($submittedProcesso, ENT_QUOTES); ?>">
             </div>
             <div class="col filter">
                 <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -207,7 +207,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
                 <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="width-400 height-md" id="filter-estado" required>
+                <select class="height-md" style="width: 220px;" id="filter-estado" required>
                     <?php foreach ($estados as $uf => $nomeEstado): ?>
                         <option value="<?php echo htmlspecialchars($uf, ENT_QUOTES); ?>"<?php echo $uf === 'BA' ? ' selected' : ''; ?>><?php echo htmlspecialchars($nomeEstado, ENT_QUOTES); ?></option>
                     <?php endforeach; ?>
@@ -215,7 +215,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
             </div>
             <div class="col filter">
                 <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" autocomplete="off" required>
+                <input type="text" class="height-md" style="width: 350px;" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" autocomplete="off" required>
             </div>
         </div>
 
@@ -225,7 +225,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
                     <span>Classe processual</span>
                     <span class="label-hint-consulta-datajud" id="processo-ap-info" aria-live="polite"></span>
                 </label>
-                <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" value="" disabled autocomplete="off">
+                <input type="text" class="height-md" style="width: 350px;" id="filter-classe" data-datajud-related="true" value="" disabled autocomplete="off">
                 <label id="filter-assuntos" class="processo-bd-info empty" data-empty-prefix="Assuntos:" hidden></label>
                 <label id="filter-prioridades" class="processo-bd-info empty" data-empty-prefix="Prioridades:" hidden></label>
             </div>
@@ -454,7 +454,10 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
             if (!window.App || !App.CartorioCartasExpedidasCreate || typeof App.CartorioCartasExpedidasCreate.initialize !== 'function') {
                 return;
             }
-            App.CartorioCartasExpedidasCreate.initialize({ submitDelayMs: 1000 });
+            App.CartorioCartasExpedidasCreate.initialize({
+                submitDelayMs: 1000,
+                cityLookupEndpoint: '/api/cartorio-cartas-expedidas/buscar-cidade.php'
+            });
 
             // Botão Cadastrar inicia desabilitado; só habilita quando TODOS os campos
             // marcados com "*" estiverem preenchidos. Trabalha em conjunto com o gate

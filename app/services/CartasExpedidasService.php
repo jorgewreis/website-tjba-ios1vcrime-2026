@@ -14,6 +14,7 @@ require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
+require_once __DIR__ . '/../helpers/CentralMandadosCcm.php';
 
 final class CartasExpedidasService
 {
@@ -100,6 +101,25 @@ final class CartasExpedidasService
 
         $numeroFormatado = $this->formatarCNJ($digits);
 
+        $ufDestino = strtoupper(trim((string) ($payload['estado'] ?? $payload['uf'] ?? '')));
+        if (strlen($ufDestino) !== 2) {
+            throw new InvalidArgumentException('O estado (UF) de destino é obrigatório (2 caracteres).');
+        }
+
+        $cidadeDestino = trim((string) ($payload['cidade'] ?? ''));
+        if ($cidadeDestino === '') {
+            throw new InvalidArgumentException('A cidade de destino é obrigatória.');
+        }
+        $cidadeDestino = TextFormatter::formatProperName($cidadeDestino, 120);
+
+        if (CentralMandadosCcm::contains($cidadeDestino, $ufDestino)) {
+            throw new InvalidArgumentException(CentralMandadosCcm::MESSAGE);
+        }
+        $cidadeDestinoNormalizada = $this->normalizeNomeCidade($cidadeDestino);
+        if ($cidadeDestinoNormalizada === 'ilheus') {
+            throw new InvalidArgumentException('O cadastro de carta expedida não é permitido para a cidade de Ilhéus (comarca de origem).');
+        }
+
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
         $classeNome = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
         $sigiloso = !empty($payload['nivel_sigilo']);
@@ -138,22 +158,6 @@ final class CartasExpedidasService
             $classeId = $this->classesRepository->ensureClass((string) $classeCodigo, $classeNome !== '' ? TextFormatter::formatProperName((string) $classeNome, 200) : (string) $classeCodigo);
         }
         $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, $sigiloso);
-
-        $ufDestino = strtoupper(trim((string) ($payload['estado'] ?? $payload['uf'] ?? '')));
-        if (strlen($ufDestino) !== 2) {
-            throw new InvalidArgumentException('O estado (UF) de destino é obrigatório (2 caracteres).');
-        }
-
-        $cidadeDestino = trim((string) ($payload['cidade'] ?? ''));
-        if ($cidadeDestino === '') {
-            throw new InvalidArgumentException('A cidade de destino é obrigatória.');
-        }
-        $cidadeDestino = TextFormatter::formatProperName($cidadeDestino, 120);
-
-        $cidadeDestinoNormalizada = $this->normalizeNomeCidade($cidadeDestino);
-        if ($cidadeDestinoNormalizada === 'ilheus') {
-            throw new InvalidArgumentException('O cadastro de carta expedida não é permitido para a cidade de Ilhéus (comarca de origem).');
-        }
 
         $tribunalDestinoSigla = 'TJ' . $ufDestino;
         $tribunalDestinoId = $this->tribunaisRepository->ensureTribunal($tribunalDestinoSigla, 'Tribunal de Justiça do Estado');
