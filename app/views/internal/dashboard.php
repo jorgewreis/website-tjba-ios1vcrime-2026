@@ -22,8 +22,8 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
           <header><span class="column-kicker">01 / SISTEMA</span><h2 id="dash-system-title">Fluxo geral</h2><p>Cartas Expedidas e Cartas Recebidas da Vara</p></header>
           <article class="dash-card dash-letters-card" aria-label="Cartas ativas e cadastros dos últimos sete dias">
             <div class="dash-letters-summary">
-              <div class="dash-letters-stat"><span class="dash-letters-label"><i class="legend-dot legend-purple" aria-hidden="true"></i>Cartas Expedidas</span><div><strong id="dash-registered-expedidas">—</strong><span>ativas</span></div><small id="dash-week-expedidas">Últimos 7 dias</small></div>
-              <div class="dash-letters-stat dash-letters-mint"><span class="dash-letters-label"><i class="legend-dot legend-mint" aria-hidden="true"></i>Cartas Recebidas</span><div><strong id="dash-registered-recebidas">—</strong><span>ativas</span></div><small id="dash-week-recebidas">Últimos 7 dias</small></div>
+              <div class="dash-letters-stat"><span class="dash-letters-label"><i class="legend-dot legend-purple" aria-hidden="true"></i>Cartas Expedidas</span><div><strong id="dash-registered-expedidas">—</strong></div><small id="dash-week-expedidas">Últimos 7 dias</small></div>
+              <div class="dash-letters-stat dash-letters-mint"><span class="dash-letters-label"><i class="legend-dot legend-mint" aria-hidden="true"></i>Cartas Recebidas</span><div><strong id="dash-registered-recebidas">—</strong></div><small id="dash-week-recebidas">Últimos 7 dias</small></div>
             </div>
             <div class="dash-weekly-chart"><canvas id="dash-chart-cadastros-semana" aria-label="Cartas ainda ativas cadastradas por dia nos últimos sete dias: expedidas em roxo e recebidas em verde"></canvas></div>
           </article>
@@ -39,7 +39,6 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
           <header><span class="column-kicker">03 / PRODUTIVIDADE</span><h2 id="dash-work-title">Meu trabalho</h2><p>Movimentações feitas pelo usuário nas duas páginas</p></header>
           <article class="dash-card dash-production-card"><div><span class="dash-kpi-label">ÚLTIMOS 30 DIAS</span><strong class="dash-production-number" id="dash-done-expedidas">—</strong><span class="dash-production-label">Cartas Expedidas movimentadas</span></div><div class="dash-mini-chart"><canvas id="dash-spark-user-expedidas" aria-label="Movimentações diárias de cartas expedidas pelo usuário nos últimos sete dias"></canvas></div></article>
           <article class="dash-card dash-production-card dash-production-mint"><div><span class="dash-kpi-label">ÚLTIMOS 30 DIAS</span><strong class="dash-production-number" id="dash-done-recebidas">—</strong><span class="dash-production-label">Cartas Recebidas movimentadas</span></div><div class="dash-mini-chart"><canvas id="dash-spark-user-recebidas" aria-label="Movimentações diárias de cartas recebidas pelo usuário nos últimos sete dias"></canvas></div></article>
-          <article class="dash-card dash-note-card"><span class="dash-note">Conta movimentações realizadas pelo usuário autenticado. O histórico começa no registro implantado.</span></article>
         </section>
         <section class="dashboard-column dashboard-agenda" aria-labelledby="dash-agenda-title">
           <header><span class="column-kicker">04 / AGENDA</span><h2 id="dash-agenda-title">Agenda e alertas</h2><p>Janelas próximas e referência de fila</p></header>
