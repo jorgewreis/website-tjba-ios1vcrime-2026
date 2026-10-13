@@ -103,6 +103,11 @@ if ($tipoEditalFilter !== '') {
     $baseQueryParams['tipo_edital'] = $tipoEditalFilter;
 }
 $baseQueryParams['items_per_page'] = $itemsPerPage;
+$exportQueryParams = $baseQueryParams;
+$exportQueryParams['page'] = $routePage;
+unset($exportQueryParams['page_number'], $exportQueryParams['items_per_page']);
+$exportCsvUrl = '/api/internal-list-export/csv.php?' . http_build_query($exportQueryParams);
+$exportPdfUrl = '/api/internal-list-export/pdf.php?' . http_build_query($exportQueryParams);
 
 $paginationButtons = [];
 $paginationEllipsis = false;
@@ -162,27 +167,24 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
     <div class="container-full card-page editais-v2-card">
 
         <div class="card-title">
-            <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page">Editais</h1>
-            </div>
-            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
-
-                <div class="editais-filters-controls">
-                    <input type="text" class="height-md list-search-input" id="search-input" placeholder="Pesquisar por processo" aria-label="Pesquisar por processo" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off">
-                    <?php
-                $listExportPage = $routePage;
-                $listExportQuery = $baseQueryParams;
-                include __DIR__ . '/_list_export_buttons.php';
-                ?>
-                </div>
-<button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
+            <h1 class="title-page">Editais</h1>
+            <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
+                <input type="text" id="search-input" class="height-md list-search-input" placeholder="Pesquisar" aria-label="Pesquisar por processo" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off">
+                <select class="width-300 height-md list-export-select white" id="list-export-v2" data-csv-href="<?php echo htmlspecialchars($exportCsvUrl, ENT_QUOTES); ?>" data-pdf-href="<?php echo htmlspecialchars($exportPdfUrl, ENT_QUOTES); ?>" aria-label="Exportar lista">
+                    <option value="" selected disabled>Exportar lista</option>
+                    <option value="pdf">Exportar PDF</option>
+                    <option value="csv">Exportar CSV</option>
+                </select>
+                <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
-        <div class="editais-filters">
-            <span class="editais-filters-title">Filtros</span>
-            <div class="editais-filters-controls">
-                <select id="filter-status" aria-label="Filtrar por status">
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom editais-filters">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis editais-filters-title">Filtros</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap editais-filters-controls">
+                <select class="width-500 height-md" id="filter-status" aria-label="Filtrar por status">
                     <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
                     <option value="<?php echo htmlspecialchars(EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO, ENT_QUOTES); ?>"<?php echo $statusFilter === EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO ? ' selected' : ''; ?>>
@@ -194,7 +196,7 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                     <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)</option>
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                 </select>
-                <select id="filter-tipo-edital" aria-label="Filtrar por tipo de edital">
+                <select class="height-md" id="filter-tipo-edital" aria-label="Filtrar por tipo de edital">
                     <option value=""<?php echo $tipoEditalFilter === '' ? ' selected' : ''; ?>>Todos os tipos</option>
                     <?php foreach ($tipoEditalOptions as $tipoEditalOption): ?>
                         <option value="<?php echo htmlspecialchars($tipoEditalOption, ENT_QUOTES); ?>"<?php echo $tipoEditalFilter === $tipoEditalOption ? ' selected' : ''; ?>>
@@ -202,7 +204,6 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                         </option>
                     <?php endforeach; ?>
                 </select>
-
             </div>
         </div>
 
@@ -247,20 +248,6 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
             </div>
         </div> -->
 
-        <div class="display-flex col col-full register editais-v2-register">
-            <div class="editais-list-count">
-                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
-                        <?php
-                            $totalRegistros = (int) ($totalDocuments ?? 0);
-                            if ($totalRegistros === 0) {
-                                echo 'Nenhum registro encontrado';
-                            } else {
-                                $totalRegistrosText = $totalRegistros === 1 ? 'registro encontrado' : 'registros encontrados';
-                                echo htmlspecialchars((string) $totalRegistros, ENT_QUOTES) . ' ' . htmlspecialchars($totalRegistrosText, ENT_QUOTES);
-                            }
-                        ?>
-                    </span>
-            </div>
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
                 $idEdital = $row['IdEdital'];
@@ -443,15 +430,16 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
             </div>
             <?php endforeach; ?>
             <?php endif; ?>
-        </div>
 
-        <div class="editais-list-pagination">
+        <div class="card-line full pagination editais-list-pagination">
+            <div class="card-line left">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)
             </span>
+            </div>
             <?php if ($totalPages > 0): ?>
-                <div class="pagination-controls">
+                <div class="card-line right"><div class="pagination-controls">
                     <?php
                     $prevPage = $currentPage > 1 ? $currentPage - 1 : 1;
                     $prevParams = $baseQueryParams;
@@ -479,7 +467,7 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                     <button type="button" class="pagination-symbol<?php echo $currentPage >= $totalPages ? ' disabled' : ''; ?>" <?php if ($currentPage < $totalPages): ?>data-nav-href="<?php echo htmlspecialchars($nextHref, ENT_QUOTES); ?>"<?php else: ?>disabled aria-disabled="true"<?php endif; ?>>
                         <img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt="Próxima página">
                     </button>
-                </div>
+                </div></div>
             <?php endif; ?>
         </div>
     </div>

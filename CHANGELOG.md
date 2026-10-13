@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0017
+
+**Data:** 2026-10-13 19:34:50 | **Commit:** `5c03c81d` | **Tipo:** `patch`
+
+- fix(editais): alinhar cabeçalho e filtros ao padrão de cartas
+
 ## V. 1.87.0016
 
 **Data:** 2026-10-13 19:28:11 | **Commit:** `16bad15e` | **Tipo:** `patch`
@@ -5523,6 +5529,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

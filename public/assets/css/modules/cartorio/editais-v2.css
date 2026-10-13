@@ -12,8 +12,8 @@
 
 .editais-v2-page .card-title {
     height: auto;
-    min-height: 72px;
-    padding: 16px 20px;
+    min-height: 80px;
+    padding: 15px 20px;
     border-bottom: 1px solid var(--color-border);
 }
 
@@ -40,21 +40,26 @@
 .editais-v2-page .btn-primary-outline { color: #47196f; border-color: #47196f; background: transparent; }
 .editais-v2-page .btn-primary-outline:hover { color: #fff; background: #47196f; }
 
-.editais-filters {
+.editais-list-page .editais-filters {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-wrap: nowrap;
+    gap: 10px;
     width: 100%;
-    padding: 14px 20px;
+    min-height: 68px;
+    padding: 12px 20px;
     border-bottom: 1px solid var(--color-border);
     background: var(--color-background-elevated);
 }
 
-.editais-filters-title { color: var(--color-description-text); font-size: 12px; font-weight: 600; }
-.editais-filters-controls { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.editais-list-page .editais-filters-title { color: var(--color-description-text); font-size: 12px; font-weight: 600; }
+.editais-list-page .editais-filters-controls { display: flex; align-items: center; justify-content: flex-end; flex: 0 1 auto; flex-wrap: wrap; gap: 10px; }
+.editais-list-page .editais-filters-controls #filter-status { width: 210px; }
+.editais-list-page .editais-filters-controls #filter-tipo-edital { width: 134px; }
 .editais-v2-page .list-search-input { width: min(280px, 100%); min-width: 190px; }
+.editais-list-page .card-title > .display-flex.row-fit { width: auto; max-width: 100%; flex: 0 1 auto; }
+.editais-list-page .list-search-input { width: 290px; min-width: 190px; }
 .editais-v2-page select,
 .editais-v2-page input[type="text"],
 .editais-v2-page input[type="number"],
@@ -93,7 +98,7 @@
     border: 0;
     border-bottom: 1px solid #e0e0e0;
     border-radius: 0;
-    background: #fff;
+    background: #fdfbff;
     box-sizing: border-box;
 }
 .editais-v2-row:hover { background: #fcfbfd; }
@@ -143,8 +148,8 @@
 .editais-v2-subtasks .task-status .status { min-width: 210px; border-radius: 7px; }
 .editais-v2-subtasks input[type="date"] { width: 190px; }
 .editais-v2-subtasks .btn { min-height: 36px; border-radius: 7px; }
-.editais-list-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; width: 100%; padding: 14px 20px; }
-.editais-list-pagination .pagination-info { margin: 0; color: #726a7c; font-family: 'Google Sans', sans-serif; font-size: 12px; }
+.editais-list-pagination { margin: 0; padding: 14px 20px; }
+.editais-list-pagination .pagination-info { margin: 0; color: var(--color-description-text); font-family: 'Google Sans Code', monospace; font-size: 12px; }
 .editais-list-pagination .pagination-number.active { border-color: #47196f; background: #47196f; }
 
 .editais-form-section { width: 100%; border-bottom: 1px solid var(--color-border); }
@@ -171,8 +176,10 @@
     .editais-v2-page .container-full.card-page { margin: 12px 10px 20px; width: calc(100% - 20px); }
     .editais-v2-page .card-title { align-items: flex-start; padding: 14px; }
     .editais-v2-page .card-title .title-page { font-size: 26px; }
-    .editais-filters { align-items: stretch; padding: 12px 14px; }
-    .editais-filters-controls { display: grid; grid-template-columns: minmax(0,1fr); justify-content: stretch; width: 100%; }
+    .editais-list-page .card-title > .display-flex.row-fit { flex: 1 1 100%; width: 100%; }
+    .editais-list-page .card-title > .display-flex.row-fit > * { width: 100%; }
+    .editais-list-page .editais-filters { align-items: stretch; flex-wrap: wrap; padding: 12px 14px; }
+    .editais-list-page .editais-filters-controls { display: grid; grid-template-columns: minmax(0,1fr); justify-content: stretch; width: 100%; }
     .editais-v2-page .list-search-input,
     .editais-filters-controls select,
     .editais-filters-controls .btn { width: 100% !important; min-width: 0; }
@@ -188,8 +195,7 @@
     .editais-v2-page .card-buttons { align-items: stretch; flex-direction: column; padding: 14px; }
     .editais-v2-page .card-buttons > div { justify-content: stretch; width: 100%; }
     .editais-v2-page .card-buttons .btn { flex: 1 1 100%; }
-    .editais-list-pagination { align-items: flex-start; padding: 12px 14px; }
-    .editais-list-pagination .pagination-controls { max-width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+    .editais-list-pagination { align-items: flex-start; flex-wrap: wrap; padding: 12px 14px; }
     .editais-edit-page .timeline-header { align-items: stretch !important; flex-direction: column; gap: 10px; padding: 14px !important; }
     .editais-edit-page .timeline-header > .col { width: 100%; margin: 0 !important; align-items: stretch !important; }
     .editais-edit-page .timeline-header .status { width: 100% !important; min-width: 0; max-width: 100%; }
