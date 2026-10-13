@@ -219,6 +219,9 @@
     .editais-v2-page .card-buttons { align-items: stretch; flex-direction: column; padding: 14px; }
     .editais-v2-page .card-buttons > div { justify-content: stretch; width: 100%; }
     .editais-v2-page .card-buttons .btn { flex: 1 1 100%; }
+    .editais-create-page .card-buttons { align-items: center; flex-direction: row; justify-content: space-between; padding: 10px 14px; }
+    .editais-create-page .card-buttons > div { flex: 0 0 auto; width: auto; }
+    .editais-create-page .card-buttons .btn { flex: 0 0 auto; }
     .editais-list-pagination { align-items: flex-start; flex-wrap: wrap; padding: 12px 14px; }
     .editais-edit-page .timeline-header { align-items: stretch !important; flex-direction: column; gap: 10px; padding: 14px !important; }
     .editais-edit-page .timeline-header > .col { width: 100%; margin: 0 !important; align-items: stretch !important; }
