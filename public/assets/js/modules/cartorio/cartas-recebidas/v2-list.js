@@ -73,12 +73,7 @@
             });
         }
         if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') {
-            App.RegistroMetadataList.bind({
-                storageKey: 'cartorio.postReloadToast',
-                cancelEndpoint: '/api/cartorio-cartas-recebidas/cancel.php',
-                cancelToastKey: 'cartorio.cartas_recebidas.cancel.success',
-                cancelFallback: { type: 'success', title: 'Sucesso', message: 'Carta cancelada.' }
-            });
+            App.RegistroMetadataList.bind({ storageKey: 'cartorio.postReloadToast' });
         }
         if (window.App && App.CartorioTaskList && typeof App.CartorioTaskList.initialize === 'function') {
             App.CartorioTaskList.initialize({
