@@ -69,9 +69,10 @@
                     const status = String(data.status_cidade || '').trim();
                     if (settings.blockCcm && (data.is_ccm === true || status.toUpperCase() === 'CCM')) {
                         cidadeInput.dataset.ccmBlocked = 'true';
+                        cidadeInput.dataset.ccmCity = cidade;
                         if (lastBlockedCity !== cidadeKey) {
                             helpers.notify(
-                                settings.ccmErrorMessage || 'A comarca já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.',
+                                settings.ccmErrorMessage || 'A comarca de ' + cidade + ' já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.',
                                 'error'
                             );
                         }
@@ -96,6 +97,7 @@
 
         cidadeInput.addEventListener('input', function () {
             delete cidadeInput.dataset.ccmBlocked;
+            delete cidadeInput.dataset.ccmCity;
             lastBlockedCity = '';
             if (!settings.blockCcm) return;
             if (validationTimer !== null) global.clearTimeout(validationTimer);

@@ -93,7 +93,8 @@
             const cidadeInput = global.document.getElementById('filter-cidade');
             const estadoSelect = global.document.getElementById('filter-estado');
             if (cidadeInput && cidadeInput.dataset.ccmBlocked === 'true') {
-                feedback('A comarca já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.', 'error');
+                const cidadeBloqueada = cidadeInput.dataset.ccmCity || cidadeInput.value.trim();
+                feedback('A comarca de ' + cidadeBloqueada + ' já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.', 'error');
                 cidadeInput.value = '';
                 return;
             }
@@ -113,8 +114,11 @@
                         throw new Error(lookupData.error || 'Não foi possível validar a comarca de destino.');
                     }
                     if (lookupData.is_ccm === true || String(lookupData.status_cidade || '').trim().toUpperCase() === 'CCM') {
-                        if (cidadeInput) cidadeInput.dataset.ccmBlocked = 'true';
-                        feedback('A comarca já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.', 'error');
+                        if (cidadeInput) {
+                            cidadeInput.dataset.ccmBlocked = 'true';
+                            cidadeInput.dataset.ccmCity = cidadeDestino;
+                        }
+                        feedback('A comarca de ' + cidadeDestino + ' já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.', 'error');
                         if (cidadeInput) cidadeInput.value = '';
                         return;
                     }
