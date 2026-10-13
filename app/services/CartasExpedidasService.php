@@ -65,28 +65,9 @@ final class CartasExpedidasService
                 }
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
-                $alocadosRaw = $this->alocadosRepository->findByCartaId($idCarta);
-                $alocados = [];
-                $max = 5;
-                foreach (array_slice($alocadosRaw, 0, $max) as $a) {
-                    $tipo = $this->normalizeTipoAlocado((string) ($a['tipo'] ?? ''));
-                    $alocados[] = [
-                        'alocado_id'    => $a['id'] ?? '',
-                        'iniciais'      => $a['iniciais'] ?? '—',
-                        'nome_completo' => $a['nome_completo'] ?? '',
-                        'usuario_id'    => $a['usuario_id'] ?? '',
-                        'tipo'          => $tipo,
-                    ];
-                }
-                usort($alocados, static function (array $a, array $b): int {
-                    static $order = ['rule' => 0, 'all' => 1, 'specific' => 2];
-                    return ($order[$a['tipo']] ?? 9) <=> ($order[$b['tipo']] ?? 9);
-                });
-                $rows[$i]['Alocados'] = $alocados;
             } else {
                 $rows[$i]['Subtarefas'] = [];
                 $rows[$i]['SubtarefasAll'] = [];
-                $rows[$i]['Alocados'] = [];
             }
         }
         return [

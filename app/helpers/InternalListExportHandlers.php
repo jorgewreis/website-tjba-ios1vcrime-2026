@@ -558,7 +558,6 @@ final class InternalListExportHandlers
                 ['key' => 'Processo', 'label' => 'Processo'],
                 ['key' => 'Finalidade', 'label' => 'Finalidade'],
                 ['key' => 'ComarcaDestino', 'label' => 'Comarca de destino'],
-                ['key' => 'Alocados', 'label' => 'Alocações'],
                 ['key' => 'StatusTituloPrincipal', 'label' => 'Situação da tarefa'],
             ],
             'rows' => $rows,

@@ -6,15 +6,12 @@ declare(strict_types=1);
  * Card de listagem v2 — uma carta expedida.
  *
  * @var array<string, mixed> $row
- * @var bool $isGestao
- * @var string $currentUserId
  * @var array{usuario_id: string, perfis: list<string>} $registroListViewerContext
  * @var PDO $connection
  */
 
 require_once __DIR__ . '/../../../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../../helpers/CartasExpedidasUiCopy.php';
-require_once __DIR__ . '/../../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../../helpers/RegistroMetadataHelper.php';
 
 $idCarta = trim((string) ($row['IdCarta'] ?? ''));
@@ -220,7 +217,8 @@ $iconAbrir = '/assets/icons/Cartas-Resize-Expand-Corner--Streamline-Ultimate.png
 $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
 ?>
 <div class="register-line full carta-expedida-v2-row" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
-    <div class="card-line left">
+    <div class="left carta-expedida-left">
+        <div class="carta-expedida-process-group">
         <div class="register-block carta-process-tools">
             <?php if ($numero !== ''): ?>
                 <div class="line-cube carta-process-tool js-v2-copy-processo"
@@ -284,14 +282,13 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
             </div>
         </div>
 
-        <div class="block-separator-line"></div>
-
+        </div>
+    </div>
+    <div class="right carta-expedida-right">
         <div class="register-block">
-            <div class="register-block-title">Dados da Carta</div>
             <div class="register-block-content">
                 <div class="register-block-content-item">
-                    <span class="register-block-content-item-text">Destino:</span>
-                    <span class="register-block-content-item-value"><?php echo htmlspecialchars($destino, ENT_QUOTES); ?></span>
+                    <strong class="register-block-content-item-value"><?php echo htmlspecialchars($destino, ENT_QUOTES); ?></strong>
                 </div>
                 <?php if ($mostrarCartaParcial): ?>
                     <div class="register-block-content-item">
@@ -323,54 +320,12 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                 <?php endif; ?>
             </div>
         </div>
-    </div>
-    <div class="card-line right">
+        <div class="carta-expedida-status-group">
         <div class="register-block">
             <div class="register-block-status">
                 <div class="badge-status-primary <?php echo htmlspecialchars($statusVisivelClasse, ENT_QUOTES); ?>">
                     <span class="badge-status-text"><?php echo htmlspecialchars($statusVisivelTexto, ENT_QUOTES); ?></span>
                 </div>
-                <?php if (!$isTerminal): ?>
-                    <?php
-                    $alocadoUnico = CartorioAlocacaoChipHelper::resolverAlocadoUnicoCartasExpedidasListagem(
-                        is_array($row['Alocados'] ?? null) ? $row['Alocados'] : [],
-                        $allSt
-                    );
-                    if ($alocadoUnico !== null) {
-                        $chip = CartorioAlocacaoChipHelper::buildChipData($alocadoUnico, [
-                            'entity_id' => $idCarta,
-                            'origem' => 'cartas_expedidas.v2_list',
-                        ]);
-                        if ($chip !== null) {
-                            $tipo = $chip['tipo'];
-                            $nomeExibir = RegistroMetadataHelper::compactarNome(trim((string) ($alocadoUnico['nome_completo'] ?? '')));
-                            if ($nomeExibir === '') {
-                                $nomeExibir = trim((string) ($chip['iniciais'] ?? ''));
-                            }
-                            $usuarioIdStr = $chip['usuario_id'];
-                            $podeRemover = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
-                            ?>
-                            <div class="badge-allocated allocated-direct" title="<?php echo htmlspecialchars($chip['title'], ENT_QUOTES); ?>">
-                                <span class="badge-allocated-text"><?php echo htmlspecialchars($nomeExibir, ENT_QUOTES); ?></span>
-                                <?php if ($podeRemover): ?>
-                                    <button type="button"
-                                        class="badge-allocated-icon js-desalocar"
-                                        data-alocado-id="<?php echo htmlspecialchars($chip['alocado_id'], ENT_QUOTES); ?>"
-                                        data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
-                                        data-endpoint="/api/cartorio-cartas-expedidas/desalocar.php"
-                                        title="Remover alocação"
-                                        aria-label="Remover alocação">
-                                        <i class="fi fi-rr-cross-circle" aria-hidden="true"></i>
-                                    </button>
-                                <?php else: ?>
-                                    <span class="badge-allocated-icon hidden"><i class="fi fi-rr-cross-circle" aria-hidden="true"></i></span>
-                                <?php endif; ?>
-                            </div>
-                            <?php
-                        }
-                    }
-                    ?>
-                <?php endif; ?>
                 <?php if ($mostrarCopiaWhatsapp): ?>
                     <button type="button"
                         class="button-icon-right carta-row-action js-v2-copy-whatsapp"
@@ -421,6 +376,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                     <?php endif; ?>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </div>

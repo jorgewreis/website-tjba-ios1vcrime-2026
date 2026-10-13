@@ -6,7 +6,7 @@
         position: relative;
         display: flex;
         flex-direction: row;
-        justify-content: flex-start;
+        justify-content: space-between;
         width: calc(100% - 6px);
         height: auto;
         font-family: 'Google Sans Flex', sans-serif;
@@ -40,20 +40,26 @@
         background-color: #ffffff;
     }
 
-    .carta-expedida-v2-row > .card-line.left {
+    .carta-expedida-v2-row .carta-expedida-left {
         display: flex;
         flex-direction: row;
         flex: 0 0 auto;
         width: auto;
         min-width: 0;
-        align-items: stretch;
-        flex-wrap: nowrap;
+        align-items: center;
         gap: 0;
         padding: 0;
         height: auto;
     }
 
-    .carta-expedida-v2-row > .card-line.left > .carta-process-tools {
+    .carta-expedida-v2-row .carta-expedida-process-group {
+        display: flex;
+        flex: 0 0 auto;
+        align-items: stretch;
+        flex-wrap: nowrap;
+    }
+
+    .carta-expedida-v2-row .carta-process-tools {
         flex: 0 0 30px;
         align-items: center;
         gap: 0;
@@ -82,7 +88,7 @@
         filter: none;
     }
 
-    .carta-expedida-v2-row > .card-line.left > .carta-process-details {
+    .carta-expedida-v2-row .carta-process-details {
         flex: 0 0 310px;
         width: 310px;
         min-width: 310px;
@@ -97,13 +103,6 @@
         flex: 0 0 1px;
         margin: 0 10px;
         background: #e0e0e0;
-    }
-
-    .carta-expedida-v2-row > .card-line.left > .block-separator-line + .register-block {
-        flex: 0 0 270px;
-        width: 270px;
-        min-width: 170px;
-        justify-content: center;
     }
 
     .carta-expedida-v2-row .container-process.container-sm {
@@ -250,23 +249,35 @@
         text-overflow: ellipsis;
     }
 
-    .carta-expedida-v2-row > .card-line.right {
+    .carta-expedida-v2-row .carta-expedida-right {
         display: flex;
-        flex: 0 0 auto;
+        flex: 0 1 auto;
         width: auto;
-        min-width: 340px;
-        flex-direction: column;
-        align-items: flex-start;
+        min-width: 0;
+        flex-direction: row;
+        align-items: center;
         gap: 0;
         padding: 0;
-        margin-left: 10px;
+        margin-left: 16px;
     }
 
-    .carta-expedida-v2-row > .card-line.right > .register-block {
-        width: 100%;
+    .carta-expedida-v2-row .carta-expedida-right > .register-block {
+        flex: 0 0 350px;
+        width: 350px;
+        min-width: 350px;
         flex-direction: column;
         align-items: stretch;
         gap: 0;
+        justify-content: center;
+    }
+
+    .carta-expedida-v2-row .carta-expedida-status-group {
+        display: flex;
+        flex: 0 0 auto;
+        flex-direction: column;
+        align-items: flex-start;
+        min-width: 340px;
+        margin-left: 10px;
     }
 
     .carta-expedida-v2-row .register-block-status {
@@ -280,7 +291,7 @@
         margin: 0;
     }
 
-    .carta-expedida-v2-row > .card-line.right > .block-separator-line { display: none; }
+    .carta-expedida-v2-row .carta-expedida-status-group > .block-separator-line { display: none; }
 
     .carta-expedida-v2-row .badge-status-primary .badge-status-text {
         display: flex;
@@ -315,23 +326,6 @@
     .carta-expedida-v2-row:focus-within .register-block-status > .carta-row-action {
         opacity: 1;
     }
-
-    .carta-expedida-v2-row .register-block-status > .badge-allocated {
-        display: flex;
-        align-items: center;
-        width: 105px;
-        height: 20px;
-        border: 1px solid #3786a5;
-        border-radius: 3px;
-        background: #ffffff;
-        font-family: 'Google Sans Code', monospace;
-        font-size: 9px;
-        line-height: normal;
-        flex: 0 0 auto;
-        order: 2;
-        margin-left: 5px;
-    }
-    .carta-expedida-v2-row .badge-allocated-text { flex: 1 1 auto; min-width: 0; padding: 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
     .carta-expedida-v2-row .badge-status-primary {
         flex: 0 0 200px;
@@ -382,7 +376,7 @@
         width: 310px;
         max-width: 310px;
         min-height: 0;
-        margin: 0;
+        margin: 4px 0 0;
         padding: 0;
         display: flex !important;
     }
@@ -444,27 +438,34 @@
         row-gap: 10px;
     }
 
-    .carta-expedida-v2-row > .card-line.left,
-    .carta-expedida-v2-row > .card-line.right {
+    .carta-expedida-v2-row > .carta-expedida-left,
+    .carta-expedida-v2-row > .carta-expedida-right {
         flex: 1 1 100%;
         width: 100%;
         min-width: 0;
     }
 
-    .carta-expedida-v2-row > .card-line.left > .carta-process-tools {
+    .carta-expedida-v2-row > .carta-expedida-left > .carta-expedida-process-group > .carta-process-tools {
         flex: 0 0 30px;
         min-width: 30px;
     }
 
-    .carta-expedida-v2-row > .card-line.right > .register-block {
+    .carta-expedida-v2-row .carta-expedida-right > .register-block {
         width: 100%;
+        min-width: 0;
+        flex: 1 1 350px;
     }
 
-    .carta-expedida-v2-row > .card-line.right {
+    .carta-expedida-v2-row .carta-expedida-right {
         flex-direction: column;
-        flex: 1 1 calc(100% - 30px);
-        width: calc(100% - 30px);
-        margin-left: 30px;
+        align-items: stretch;
+        margin-left: 0;
+    }
+
+    .carta-expedida-v2-row .carta-expedida-status-group {
+        width: 100%;
+        min-width: 0;
+        margin-left: 0;
     }
 }
 
@@ -473,32 +474,20 @@
 }
 
 @media (max-width: 700px) {
-    .carta-expedida-v2-row > .card-line.left {
+    .carta-expedida-v2-row .carta-expedida-process-group {
         flex-wrap: wrap;
     }
 
-    .carta-expedida-v2-row > .card-line.left > .carta-process-tools {
+    .carta-expedida-v2-row .carta-process-tools {
         flex: 0 0 30px;
         width: 30px;
         min-width: 30px;
     }
 
-    .carta-expedida-v2-row > .card-line.left > .carta-process-details {
+    .carta-expedida-v2-row .carta-process-details {
         flex: 1 1 calc(100% - 30px);
         min-width: 0;
         max-width: 310px;
-    }
-
-    .carta-expedida-v2-row > .card-line.left > .block-separator-line + .register-block {
-        flex: 1 1 calc(100% - 30px);
-        width: calc(100% - 30px);
-        min-width: 0;
-        max-width: 100%;
-        margin-left: 30px;
-    }
-
-    .carta-expedida-v2-row > .card-line.left > .block-separator-line {
-        display: none;
     }
 
     .carta-expedida-v2-row .badge-status-primary {
@@ -509,7 +498,6 @@
         flex-wrap: wrap;
     }
 
-    .carta-expedida-v2-row > .card-line.right { margin-left: 30px; }
     .carta-expedida-v2-row .container-process.container-sm {
         width: 100%;
         min-width: 0;
@@ -517,5 +505,4 @@
     }
     .carta-expedida-v2-row .container-process .line-content.box-number { flex: 1 1 auto; min-width: 0; }
     .carta-expedida-v2-row .container-historical { width: 100%; min-width: 0; }
-    .carta-expedida-v2-row .register-block-status > .badge-allocated { margin: 5px 0 0 10px; }
 }

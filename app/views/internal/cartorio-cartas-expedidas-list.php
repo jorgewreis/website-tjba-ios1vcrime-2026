@@ -15,15 +15,6 @@ require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
 
-$currentUserId = trim((string) ($_SESSION['id_usuario'] ?? ''));
-$perfisGestaoLst = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
-$isGestao = false;
-if ($currentUserId !== '') {
-    require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
-    $perfisUsuario = UsuarioPerfisAutorizacao::perfisDoUsuario($currentUserId);
-    $isGestao = count(array_intersect($perfisUsuario, $perfisGestaoLst)) > 0;
-}
-
 $routePage = trim((string) ($_GET['page'] ?? 'cartasexpedidas'));
 if ($routePage === '') {
     $routePage = 'cartasexpedidas';
@@ -98,20 +89,7 @@ $globalAtivosTotal = (int) ($globalStatusCounts['em_andamento'] ?? 0)
 $globalAguardandoEnvio = (int) ($globalStatusCounts['em_andamento'] ?? 0)
     + (int) ($globalStatusCounts['aguardando envio'] ?? 0);
 
-// Contadores "para você" só fazem sentido para perfis não-gestão. Para gestão, ocultamos o bloco.
-$userAtivosTotal = 0;
-$userAguardandoEnvio = 0;
-if (!$isGestao && $currentUserId !== '') {
-    $userStatusCounts = $service->getStatusCountsByUser($currentUserId);
-    $userAtivosTotal = (int) ($userStatusCounts['em_andamento'] ?? 0)
-        + (int) ($userStatusCounts['aguardando envio'] ?? 0)
-        + (int) ($userStatusCounts['aguardando cumprimento'] ?? 0);
-    $userAguardandoEnvio = (int) ($userStatusCounts['em_andamento'] ?? 0)
-        + (int) ($userStatusCounts['aguardando envio'] ?? 0);
-}
-
-$mostraParaVoce = !$isGestao && $currentUserId !== '';
-$alertAguardandoEnvio = $mostraParaVoce ? ($userAguardandoEnvio >= 1) : ($globalAguardandoEnvio >= 1);
+$alertAguardandoEnvio = $globalAguardandoEnvio >= 1;
 
 $defaultFinalidades = [
     'Intimação para Audiência',
@@ -243,7 +221,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                         Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)
                     </option>
                 </select>
-                <select class="width-600 height-md" id="filter-tipo">
+                <select class="height-md" id="filter-tipo" style="width: 350px;">
                     <option value="" <?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Todas as finalidades</option>
                     <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
                         <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>" <?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>
@@ -259,18 +237,10 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                 <div class="line-results">
                     <div class="number left"><?php echo (int) $globalAtivosTotal; ?></div>
                     <div class="text">Documentos cadastrados</div>
-                    <?php if ($mostraParaVoce && $userAtivosTotal > 0): ?>
-                        <div class="text right">para você</div>
-                        <div class="number right"><?php echo (int) $userAtivosTotal; ?></div>
-                    <?php endif; ?>
                 </div>
                 <div class="line-results<?php echo $alertAguardandoEnvio ? ' alert' : ''; ?>">
                     <div class="number left"><?php echo (int) $globalAguardandoEnvio; ?></div>
                     <div class="text">Aguardando envio</div>
-                    <?php if ($mostraParaVoce && $userAguardandoEnvio > 0): ?>
-                        <div class="text right">para você</div>
-                        <div class="number right"><?php echo (int) $userAguardandoEnvio; ?></div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>

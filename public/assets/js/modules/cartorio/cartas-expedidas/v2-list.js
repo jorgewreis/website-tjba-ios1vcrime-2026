@@ -277,6 +277,7 @@
 
         App.CartorioTaskList.initialize({
             storageKey: 'cartorio.postReloadToast',
+            enableDesalocar: false,
             onReady: function (ctx) {
                 bindSyncProcessoDataJud(ctx);
                 bindContinuarSubtarefa(ctx);
