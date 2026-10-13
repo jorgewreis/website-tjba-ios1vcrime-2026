@@ -28,4 +28,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(editais): adaptar campos de edicao no celular** `[31d5d654]`
 - **fix(editais): manter botoes do cadastro em linha no celular** `[6a3cd2e6]`
 - **refactor(editais): estruturar tabela em colunas responsivas** `[119812cd]`
+- **fix(editais): alinhar colunas da tabela ao mockup** `[17a86be3]`
 
