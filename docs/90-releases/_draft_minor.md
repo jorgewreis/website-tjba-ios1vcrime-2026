@@ -10,4 +10,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(historico): ajustar rotulos e autor de movimentacao** `[f667f197]`
 - **fix(cartas-expedidas): alinhar status e historico ao mockup** `[c32dba0e]`
 - **fix(cartas-expedidas): corrigir fundo e espacos do registro** `[1fb81950]`
+- **feat(cartorio): ajustar cadastro e botoes das cartas** `[1a58b2d5]`
 
