@@ -18,6 +18,7 @@
 .edital-row .container-process:has(.js-processo-datajud-sync) .line-content.double-line { padding-right: 40px; }
 .edital-row .register-block-status > .edital-row-expand { position: relative; margin: 0; cursor: pointer; }
 .edital-row .edital-row-expand input {
+    display: block;
     position: absolute;
     inset: 0;
     width: 100%;

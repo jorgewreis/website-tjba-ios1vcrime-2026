@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0035
+
+**Data:** 2026-10-13 20:24:42 | **Commit:** `2246f121` | **Tipo:** `patch`
+
+- fix(editais): habilitar foco no botao de etapas
+
 ## V. 1.87.0034
 
 **Data:** 2026-10-13 20:23:50 | **Commit:** `8052c5fa` | **Tipo:** `patch`
@@ -5631,6 +5637,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
