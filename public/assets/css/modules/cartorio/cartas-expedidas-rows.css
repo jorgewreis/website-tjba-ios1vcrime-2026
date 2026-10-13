@@ -199,7 +199,7 @@
         text-transform: none;
     }
 
-    .carta-expedida-v2-row .container-process .content-assuntos.over {
+    .carta-expedida-v2-row .container-process .content-assuntos:not(.over) {
         color: #9779d1;
     }
 
