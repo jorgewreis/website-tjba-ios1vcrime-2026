@@ -21,4 +21,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(editais): ajustar timeline em telas pequenas** `[147df2d0]`
 - **fix(editais): ajustar altura das linhas da listagem** `[16bad15e]`
 - **fix(editais): alinhar cabeçalho e filtros ao padrão de cartas** `[5c03c81d]`
+- **fix(editais): alinhar lista e formulários ao padrão de cartas** `[03110ab8]`
 
