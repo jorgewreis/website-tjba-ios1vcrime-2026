@@ -12,4 +12,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(cartas-expedidas): corrigir fundo e espacos do registro** `[1fb81950]`
 - **feat(cartorio): ajustar cadastro e botoes das cartas** `[1a58b2d5]`
 - **fix(cartorio): manter spinner dentro do botao** `[4dc1dd5d]`
+- **feat(dashboard): exibir prazos vencidos e colorir badges** `[4961782d]`
 
