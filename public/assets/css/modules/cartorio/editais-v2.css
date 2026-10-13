@@ -187,4 +187,11 @@
     .editais-v2-page .card-buttons .btn { flex: 1 1 100%; }
     .editais-list-pagination { align-items: flex-start; padding: 12px 14px; }
     .editais-list-pagination .pagination-controls { max-width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+    .editais-edit-page .timeline-header { align-items: stretch !important; flex-direction: column; gap: 10px; padding: 14px !important; }
+    .editais-edit-page .timeline-header > .col { width: 100%; margin: 0 !important; align-items: stretch !important; }
+    .editais-edit-page .timeline-header .status { width: 100% !important; min-width: 0; max-width: 100%; }
+    .editais-edit-page .timeline-header .status-task-label { min-height: 34px; padding: 8px 10px; white-space: normal; text-align: center; }
+    .editais-edit-page .timeline.row { align-items: flex-start !important; flex-direction: column; gap: 4px; min-width: 0; padding: 10px 14px !important; }
+    .editais-edit-page .timeline.row > .display-flex.col.row-fit { width: 100%; margin: 0 !important; padding-left: 32px; box-sizing: border-box; }
+    .editais-edit-page .timeline .subtask-date { width: 100%; margin: 0 !important; align-items: flex-start !important; }
 }
