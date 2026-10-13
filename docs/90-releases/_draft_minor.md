@@ -36,4 +36,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(editais): exibir ações nas linhas mobile** `[e26f4ce4]`
 - **fix(editais): adequar ações em telas estreitas** `[9967b2fb]`
 - **fix(editais): reforcar contraste das acoes** `[c3f876fb]`
+- **fix(editais): reutilizar estrutura visual das linhas de cartas** `[b2898c5e]`
 
