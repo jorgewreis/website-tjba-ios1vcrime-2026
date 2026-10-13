@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0027
+
+**Data:** 2026-10-13 20:09:47 | **Commit:** `91a65180` | **Tipo:** `patch`
+
+- fix(editais): ajustar posições das colunas no desktop
+
 ## V. 1.87.0026
 
 **Data:** 2026-10-13 20:08:10 | **Commit:** `ad2d88a5` | **Tipo:** `patch`
@@ -5583,6 +5589,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

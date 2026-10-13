@@ -174,7 +174,7 @@
 
 @media (min-width: 1500px) {
     .register.register-with-metadata.register-line.editais-v2-row {
-        grid-template-columns: 39px 478px 371px 188px minmax(240px, 1fr);
+        grid-template-columns: 39px 478px 350px 209px minmax(240px, 1fr);
     }
     .editais-v2-cell-type { padding-left: 0; }
     .editais-v2-cell-status { padding-left: 0; }
