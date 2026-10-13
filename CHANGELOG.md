@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0034
+
+**Data:** 2026-10-13 20:23:50 | **Commit:** `8052c5fa` | **Tipo:** `patch`
+
+- fix(editais): igualar altura das linhas a cartas
+
 ## V. 1.87.0033
 
 **Data:** 2026-10-13 20:22:26 | **Commit:** `b2898c5e` | **Tipo:** `patch`
@@ -5625,6 +5631,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
