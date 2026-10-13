@@ -338,7 +338,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                 <?php endif; ?>
                 <?php if ($showEdit): ?>
                     <button type="button" class="button-icon-right carta-row-action" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
-                        <img src="/assets/icons/Eject-Button--Streamline-Emojitwo.png" alt="">
+                        <img src="/assets/icons/Eject-Button--Streamline-Ultimate.png" alt="">
                     </button>
                 <?php endif; ?>
                 <?php if ($mostrarContinuar && $textoEtapa !== ''): ?>
@@ -347,7 +347,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                         data-subtarefa-id="<?php echo htmlspecialchars($subtarefaAtivaId, ENT_QUOTES); ?>"
                         title="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>"
                         aria-label="<?php echo htmlspecialchars(CartasExpedidasUiCopy::tituloBotaoPorTipo(trim((string) ($subtarefaAtivaUi['tipo'] ?? ''))), ENT_QUOTES); ?>">
-                        <img src="/assets/icons/<?php echo $isAguardandoCumprimento ? 'Button-Next--Streamline-Core.png' : 'Button-Play-1--Streamline-Ultimate.png'; ?>" alt="">
+                        <img src="/assets/icons/<?php echo $isAguardandoCumprimento ? 'Button-Next--Streamline-Ultimate.png' : 'Button-Play-1--Streamline-Ultimate.png'; ?>" alt="">
                     </button>
                 <?php endif; ?>
             </div>

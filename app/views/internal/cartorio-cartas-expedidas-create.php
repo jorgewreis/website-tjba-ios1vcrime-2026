@@ -136,7 +136,6 @@ $createHelpersV       = @filemtime($assetsRoot . '/js/shared/cartorio-create-hel
 $createBootstrapV     = @filemtime($assetsRoot . '/js/shared/cartorio-create-bootstrap.js') ?: time();
 $cityLookupV          = @filemtime($assetsRoot . '/js/shared/cartorio-city-lookup.js') ?: time();
 $cartasExpCreateV     = @filemtime($assetsRoot . '/js/shared/cartorio-cartas-expedidas-create.js') ?: time();
-$resetCssV            = @filemtime($assetsRoot . '/css/shared/reset.css') ?: time();
 $v2ColorsCssV         = @filemtime($assetsRoot . '/css/shared/v2-colors.css') ?: time();
 $v2PageListCssV       = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: time();
 
@@ -155,49 +154,49 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cartas Expedidas - Primeira Vara Crime de Ilhéus</title>
-    <link rel="stylesheet" href="/assets/css/shared/reset.css?v=<?php echo (int) $resetCssV; ?>">
+    <title>Novo cadastro de Carta Expedida - Primeira Vara Crime de Ilhéus</title>
     <link rel="stylesheet" href="/assets/css/shared/v2-colors.css?v=<?php echo (int) $v2ColorsCssV; ?>">
     <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css?v=<?php echo (int) $v2PageListCssV; ?>">
+    <?php include __DIR__ . '/_internal_head_css.php'; ?>
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>
 
-<body data-theme="light">
+<body class="page-internal">
 
-    <div class="page-card-list">
+    <div class="spacing-top-page"></div>
+    <div class="header-page">
+        <div class="location">
+            <span class="all">Interno - Cartório - Cartas Expedidas -</span>
+            <span class="specific">Cadastro</span>
+        </div>
+    </div>
 
-        <div class="page-card-list-title">
-            <div class="page-card-list-title-line">
-                <div class="line-left title">
-                    <span class="page-title-text">Novo Cadastro de Carta Expedida</span>
-                </div>
-            </div>
-            <div class="page-card-list-title-line">
-                <div class="line-left description">
-                    <span class="page-description-text">Documentos expedidos pelo Cartório para cumprimento por outras Comarcas</span>
-                </div>
-                <div class="line-right"></div>
-            </div>
+    <div class="container-full card-page">
+        <div class="card-title">
+            <h1 class="title-page">Novo cadastro de Carta Expedida</h1>
+        </div>
+        <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom">
+            <h2>Informações da carta</h2>
         </div>
 
-        <div class="card-line">
-            <div class="block-cell">
-                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*</span></label>
-                <input type="text" class="width-300 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off" required value="<?php echo htmlspecialchars($submittedProcesso, ENT_QUOTES); ?>">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="col filter">
+                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off" required value="<?php echo htmlspecialchars($submittedProcesso, ENT_QUOTES); ?>">
             </div>
-            <div class="block-cell">
-                <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*</span></label>
-                <select class="width-300 height-md" id="filter-tipo" required>
+            <div class="col filter">
+                <label for="filter-tipo">Finalidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="height-md" style="width: 350px;" id="filter-tipo" required>
                     <option value="" selected disabled>Selecione aqui</option>
                     <?php foreach ($finalidades as $valor => $rotulo): ?>
                         <option value="<?php echo htmlspecialchars($valor, ENT_QUOTES); ?>"><?php echo htmlspecialchars($rotulo, ENT_QUOTES); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="block-cell">
-                <label for="filter-prazo">Prazo de cumprimento <span class="label-hint-obrigatorio">*</span></label>
-                <select class="width-200 height-md" id="filter-prazo" required>
+            <div class="col filter">
+                <label for="filter-prazo">Prazo de cumprimento <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-300 height-md" id="filter-prazo" required>
                     <?php foreach ($prazos as $prazoOpcao): ?>
                         <option value="<?php echo htmlspecialchars($prazoOpcao, ENT_QUOTES); ?>"<?php echo $prazoOpcao === $prazoDefault ? ' selected' : ''; ?>><?php echo htmlspecialchars($prazoOpcao, ENT_QUOTES); ?></option>
                     <?php endforeach; ?>
@@ -205,28 +204,28 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
             </div>
         </div>
 
-        <div class="card-line">
-            <div class="block-cell">
-                <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*</span></label>
-                <select class="width-200 height-md" id="filter-estado" required>
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="col filter">
+                <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <select class="width-400 height-md" id="filter-estado" required>
                     <?php foreach ($estados as $uf => $nomeEstado): ?>
                         <option value="<?php echo htmlspecialchars($uf, ENT_QUOTES); ?>"<?php echo $uf === 'BA' ? ' selected' : ''; ?>><?php echo htmlspecialchars($nomeEstado, ENT_QUOTES); ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
-            <div class="block-cell">
-                <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*</span></label>
-                <input type="text" class="width-400 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" autocomplete="off" required>
+            <div class="col filter">
+                <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
+                <input type="text" class="width-600 height-md" id="filter-cidade" placeholder="Digite o nome da cidade" maxlength="50" autocomplete="off" required>
             </div>
         </div>
 
-        <div class="card-line full">
-            <div class="block-cell full">
+        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
+            <div class="col filter">
                 <label class="status-classe" for="filter-classe">
                     <span>Classe processual</span>
                     <span class="label-hint-consulta-datajud" id="processo-ap-info" aria-live="polite"></span>
                 </label>
-                <input type="text" class="width-400 height-md" id="filter-classe" data-datajud-related="true" value="" disabled autocomplete="off">
+                <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" value="" disabled autocomplete="off">
                 <label id="filter-assuntos" class="processo-bd-info empty" data-empty-prefix="Assuntos:" hidden></label>
                 <label id="filter-prioridades" class="processo-bd-info empty" data-empty-prefix="Prioridades:" hidden></label>
             </div>
@@ -236,22 +235,26 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
         <input type="hidden" id="filter-sistema-envio" name="sistema_envio" value="outro">
 
-        <div class="card-line full">
-            <div class="card-line right">
-                <div class="buttons" style="display: flex;">
-                    <button type="button" class="button-btn btn-secondary" id="voltar-btn" data-allow-during-loading="true">
-                        <span class="btn-icon-text">Voltar</span>
-                    </button>
-                    <button type="button" class="button-btn btn-primary disabled" id="cadastrar-btn" disabled aria-disabled="true">
-                        <span class="btn-icon-text">Cadastrar</span>
-                        <div class="btn-icon hidden">
-                            <i class="fi fi-rr-spinner" aria-hidden="true"></i>
-                        </div>
-                    </button>
-                </div>
+        <div class="card-buttons">
+            <div class="display-flex row row-fit gap-y-md align-center justify-start">
+                <button class="btn btn-secondary" id="voltar-btn" type="button" data-allow-during-loading="true">Voltar</button>
+            </div>
+            <div class="display-flex row row-fit gap-y-md align-center justify-end">
+                <button class="btn btn-primary disabled" id="cadastrar-btn" type="button" disabled aria-disabled="true">
+                    <span class="btn-icon-text">Cadastrar</span>
+                    <span class="btn-icon hidden"><i class="fi fi-rr-spinner" aria-hidden="true"></i></span>
+                </button>
             </div>
         </div>
 
+    </div>
+
+    <div class="footer-page">
+        <div class="location">
+            <span class="all">Aplicativo web desenvolvido integralmente por </span>
+            <span class="specific">Jorge Reis Develop</span>
+            <span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span>
+        </div>
     </div>
 
     <?php if ($cnjError): ?>
