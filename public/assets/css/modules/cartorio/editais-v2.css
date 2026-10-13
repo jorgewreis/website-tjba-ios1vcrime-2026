@@ -1,0 +1,190 @@
+/* Padrão visual do módulo Editais alinhado às listas e formulários v2 de Cartas. */
+.editais-v2-page .container-full.card-page {
+    align-items: stretch;
+    flex-wrap: nowrap;
+    margin: 16px 20px 24px;
+    width: calc(100% - 40px);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-background-elevated);
+}
+
+.editais-v2-page .card-title {
+    height: auto;
+    min-height: 72px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.editais-v2-page .card-title .title-page {
+    margin: 0;
+    color: #47196f;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    line-height: 1;
+}
+
+.editais-v2-page .btn-primary,
+.editais-v2-page .btn-primary-outline,
+.editais-v2-page .btn-danger,
+.editais-v2-page .btn-danger-outline {
+    min-height: 40px;
+    border-radius: 8px;
+    font-family: 'Google Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.editais-v2-page .btn-primary { background: #47196f; border-color: #47196f; }
+.editais-v2-page .btn-primary-outline { color: #47196f; border-color: #47196f; background: transparent; }
+.editais-v2-page .btn-primary-outline:hover { color: #fff; background: #47196f; }
+
+.editais-filters {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-background-elevated);
+}
+
+.editais-filters-title { color: var(--color-description-text); font-size: 12px; font-weight: 600; }
+.editais-filters-controls { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.editais-v2-page .list-search-input { width: min(280px, 100%); min-width: 190px; }
+.editais-v2-page select,
+.editais-v2-page input[type="text"],
+.editais-v2-page input[type="number"],
+.editais-v2-page input[type="date"],
+.editais-v2-page textarea {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+    height: 40px;
+    border: 1px solid #d8d4de;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #3f3747;
+    font-family: 'Google Sans', sans-serif;
+    font-size: 13px;
+}
+.editais-v2-page select { padding: 0 34px 0 12px; }
+.editais-v2-page input[type="text"],
+.editais-v2-page input[type="number"],
+.editais-v2-page input[type="date"],
+.editais-v2-page textarea { padding: 0 12px; }
+.editais-v2-page input:focus,
+.editais-v2-page select:focus,
+.editais-v2-page textarea:focus { border-color: #7950ad; outline: 3px solid rgba(121,80,173,.14); }
+.editais-v2-page input.readonly,
+.editais-v2-page input[readonly] { background: #f8f7fa; color: #686172; }
+
+.editais-list-count { width: 100%; padding: 12px 20px; border-bottom: 1px solid var(--color-border); color: #655d6d; font-size: 12px; }
+.editais-v2-row {
+    display: block;
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    padding: 14px 18px;
+    border: 0;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 0;
+    background: #fff;
+    box-sizing: border-box;
+}
+.editais-v2-row:hover { background: #fcfbfd; }
+.editais-v2-row-main {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+    padding: 0 !important;
+}
+.editais-v2-row-primary {
+    display: grid !important;
+    grid-template-columns: 28px minmax(240px, 1.25fr) minmax(150px, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+.editais-v2-row-primary > .col,
+.editais-v2-row-secondary > .col { min-width: 0; width: auto; padding: 0; }
+.editais-v2-row-primary .col-process { width: 100%; }
+.editais-v2-row-primary .container-process { width: 100%; min-width: 0; }
+.editais-v2-row-primary .container-process .container-line { min-width: 0; }
+.editais-v2-row-primary .container-process .line-content { min-width: 0; }
+.editais-v2-row-primary .col-tipo-edital { display: flex; flex-direction: column; gap: 3px; }
+.editais-v2-row-primary .minor-info { color: #827a8c; font-size: 10px; }
+.editais-v2-row-primary .major-info { color: #43394e; font-size: 13px; font-weight: 600; }
+.editais-v2-row-secondary {
+    display: grid !important;
+    grid-template-columns: minmax(175px, .9fr) minmax(230px, 1.1fr);
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+.editais-v2-row-secondary .status { max-width: 100%; border-radius: 8px; }
+.editais-v2-row-secondary .status-task-label { width: 100%; max-width: 100%; font-size: 11px !important; }
+.editais-v2-row-secondary .container-historical { width: 100%; min-width: 0; padding: 0; }
+.editais-v2-row-secondary .container-historical .line-content { width: 100%; padding: 0; }
+.editais-v2-row-secondary .container-historical .content-classe,
+.editais-v2-row-secondary .container-historical .content-assuntos { white-space: normal; overflow-wrap: anywhere; font-family: 'Google Sans', sans-serif; font-size: 10px; }
+.editais-v2-row .button-table { width: 26px; height: 26px; border-radius: 7px; }
+.editais-v2-subtasks { margin: 12px 0 0 38px; padding: 0; border-top: 1px solid #eeeaf2; }
+.editais-v2-subtasks .subtask { align-items: center; gap: 12px; padding: 12px 8px; border-bottom: 1px solid #f0edf3; }
+.editais-v2-subtasks .subtask-row-fields { flex-wrap: wrap; gap: 12px; }
+.editais-v2-subtasks .task-status .status { min-width: 210px; border-radius: 7px; }
+.editais-v2-subtasks input[type="date"] { width: 190px; }
+.editais-v2-subtasks .btn { min-height: 36px; border-radius: 7px; }
+.editais-list-pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; width: 100%; padding: 14px 20px; }
+.editais-list-pagination .pagination-info { margin: 0; color: #726a7c; font-family: 'Google Sans', sans-serif; font-size: 12px; }
+.editais-list-pagination .pagination-number.active { border-color: #47196f; background: #47196f; }
+
+.editais-form-section { width: 100%; border-bottom: 1px solid var(--color-border); }
+.editais-form-section-title { padding: 15px 20px; border-bottom: 1px solid #efedf3; color: #4a4055; font-size: 14px; font-weight: 700; }
+.editais-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; width: 100%; padding: 18px 20px; box-sizing: border-box; }
+.editais-form-field { display: flex; flex-direction: column; align-items: stretch; gap: 6px; min-width: 0; }
+.editais-form-field.full { grid-column: 1 / -1; }
+.editais-form-field > label { margin: 0; color: #5e5668; font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 600; }
+.editais-form-field > input,
+.editais-form-field > select,
+.editais-form-field > textarea { width: 100% !important; }
+.editais-form-field > textarea { height: auto; min-height: 84px; padding-top: 10px; resize: vertical; }
+.editais-v2-page .card-buttons { height: auto; min-height: 72px; gap: 12px; padding: 14px 20px; border-top: 1px solid #efedf3; }
+.editais-v2-page .card-buttons > div { flex-wrap: wrap; gap: 10px; }
+.editais-v2-page .btn-primary-outline { border: 1px solid #47196f; }
+.editais-v2-page .status-classe { justify-content: flex-start; }
+
+@media (max-width: 1100px) {
+    .editais-v2-row-main { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .editais-v2-row-secondary { grid-template-columns: minmax(180px, .8fr) minmax(250px, 1.2fr); padding-left: 38px; }
+}
+
+@media (max-width: 680px) {
+    .editais-v2-page .container-full.card-page { margin: 12px 10px 20px; width: calc(100% - 20px); }
+    .editais-v2-page .card-title { align-items: flex-start; padding: 14px; }
+    .editais-v2-page .card-title .title-page { font-size: 26px; }
+    .editais-filters { align-items: stretch; padding: 12px 14px; }
+    .editais-filters-controls { display: grid; grid-template-columns: minmax(0,1fr); justify-content: stretch; width: 100%; }
+    .editais-v2-page .list-search-input,
+    .editais-filters-controls select,
+    .editais-filters-controls .btn { width: 100% !important; min-width: 0; }
+    .editais-v2-row { padding: 12px; }
+    .editais-v2-row-primary { grid-template-columns: 26px minmax(0,1fr); gap: 8px; }
+    .editais-v2-row-primary .col-tipo-edital { grid-column: 2; }
+    .editais-v2-row-secondary { grid-template-columns: minmax(0,1fr); gap: 10px; padding-left: 34px; }
+    .editais-v2-subtasks { margin-left: 0; }
+    .editais-v2-subtasks .subtask { align-items: flex-start; flex-direction: column; }
+    .editais-v2-subtasks .task-status .status { min-width: 0; width: 100%; }
+    .editais-form-grid { grid-template-columns: minmax(0,1fr); gap: 13px; padding: 14px; }
+    .editais-form-field.full { grid-column: auto; }
+    .editais-v2-page .card-buttons { align-items: stretch; flex-direction: column; padding: 14px; }
+    .editais-v2-page .card-buttons > div { justify-content: stretch; width: 100%; }
+    .editais-v2-page .card-buttons .btn { flex: 1 1 100%; }
+    .editais-list-pagination { align-items: flex-start; padding: 12px 14px; }
+    .editais-list-pagination .pagination-controls { max-width: 100%; flex-wrap: wrap; justify-content: flex-start; }
+}

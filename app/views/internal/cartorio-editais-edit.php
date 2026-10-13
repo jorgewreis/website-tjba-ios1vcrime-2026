@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../repositories/AlocacoesRegrasRepository.php';
-require_once __DIR__ . '/../../repositories/EditaisAlocadosRepository.php';
 require_once __DIR__ . '/../../repositories/EditaisSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../../repositories/ClassesRepository.php';
@@ -103,31 +101,6 @@ if ($userIdEdit !== null && trim((string) $userIdEdit) !== '') {
 $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExcluir)) > 0;
 $podeCancelarTarefa = $userIdEdit !== '';
 $tarefaFinalizadaOuCancelada = in_array($statusAtual, ['cancelada', 'concluída'], true);
-$perfisGestaoAlocEdital = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
-$isGestaoAlocEditEdital = count(array_intersect($userPerfisEdit, $perfisGestaoAlocEdital)) > 0;
-
-$alocadosEditEdital = [];
-if ($edital !== null) {
-    $tipoOrderAloc = ['rule' => 0, 'all' => 1, 'specific' => 2];
-    $repoAlocEdital = new EditaisAlocadosRepository($connection);
-    $alocadosRawEdital = $repoAlocEdital->findByEditalId($idEdital);
-    foreach (array_slice($alocadosRawEdital, 0, 5) as $a) {
-        $tipo = trim((string) ($a['tipo'] ?? ''));
-        if (!in_array($tipo, ['rule', 'all', 'specific'], true)) {
-            $tipo = 'specific';
-        }
-        $alocadosEditEdital[] = [
-            'alocado_id' => trim((string) ($a['id'] ?? '')),
-            'iniciais' => $a['iniciais'] ?? '—',
-            'nome_completo' => $a['nome_completo'] ?? '',
-            'usuario_id' => trim((string) ($a['usuario_id'] ?? '')),
-            'tipo' => $tipo,
-        ];
-    }
-    usort($alocadosEditEdital, static function (array $a, array $b) use ($tipoOrderAloc): int {
-        return ($tipoOrderAloc[$a['tipo']] ?? 9) <=> ($tipoOrderAloc[$b['tipo']] ?? 9);
-    });
-}
 
 $timelineData = $edital !== null
     ? cartorioTimelineBuildViewData('editais', [
@@ -137,6 +110,10 @@ $timelineData = $edital !== null
         'connection' => $connection,
     ])
     : [];
+$assetsRoot = dirname(__DIR__, 3) . '/public/assets';
+$v2ColorsCssV = @filemtime($assetsRoot . '/css/shared/v2-colors.css') ?: time();
+$v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: time();
+$editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') ?: time();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -145,12 +122,15 @@ $timelineData = $edital !== null
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>Edição Edital - Primeira Vara Crime de Ilhéus</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
-                <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+        <link rel="stylesheet" href="/assets/css/shared/v2-colors.css?v=<?php echo (int) $v2ColorsCssV; ?>">
+        <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css?v=<?php echo (int) $v2PageListCssV; ?>">
+        <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+        <link rel="stylesheet" href="/assets/css/modules/cartorio/editais-v2.css?v=<?php echo (int) $editaisCssV; ?>">
 
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
-<body class="page-internal">
+<body class="page-internal editais-v2-page editais-edit-page">
 
     <div class="spacing-top-page"></div>
 
@@ -159,10 +139,10 @@ $timelineData = $edital !== null
             <span class="all">Interno - Editais -</span>
             <span class="specific">Edição</span>
         </div>
-        <h1 class="title-page">Editar Edital</h1>
     </div>
 
     <div class="container-full card-page">
+        <div class="card-title"><h1 class="title-page">Editar Edital</h1></div>
         <?php if ($errorMessage !== ''): ?>
             <script>
                 if (typeof showToast === 'function') {
@@ -170,45 +150,33 @@ $timelineData = $edital !== null
                 }
             </script>
         <?php else: ?>
-            <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações</h2></div>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md" style="justify-content: flex-start;">
-                <div class="col filter">
+            <div class="editais-form-section-title">Informações do edital</div>
+            <div class="editais-form-grid">
+                <div class="col filter editais-form-field">
                     <label for="filter-processo">Processo</label>
-                    <input type="text" id="filter-processo" class="width-400 height-md readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-processo" class="readonly" value="<?php echo htmlspecialchars($processoNumero, ENT_QUOTES); ?>" readonly>
                 </div>
-                <div class="col filter">
+                <div class="col filter editais-form-field">
                     <label for="filter-classe">Classe</label>
-                    <input type="text" id="filter-classe" class="width-600 height-md readonly" value="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="filter-classe" class="readonly" value="<?php echo htmlspecialchars($classeNome, ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col filter">
+            <div class="editais-form-grid">
+                <div class="col filter editais-form-field">
                     <label for="edit-tipo-edital">Tipo de edital</label>
-                    <input type="text" id="edit-tipo-edital" class="width-400 height-md readonly" value="<?php echo htmlspecialchars($tipoEditalValue, ENT_QUOTES); ?>" readonly>
+                    <input type="text" id="edit-tipo-edital" class="readonly" value="<?php echo htmlspecialchars($tipoEditalValue, ENT_QUOTES); ?>" readonly>
                 </div>
-                <div class="col filter">
+                <div class="col filter editais-form-field">
                     <label for="edit-prazo-dias">Prazo do edital (dias)</label>
-                    <input type="text" id="edit-prazo-dias" class="width-300 height-md readonly" value="<?php echo $prazoDiasValue > 0 ? (int) $prazoDiasValue : '—'; ?>" readonly>
+                    <input type="text" id="edit-prazo-dias" class="readonly" value="<?php echo $prazoDiasValue > 0 ? (int) $prazoDiasValue : '—'; ?>" readonly>
                 </div>
             </div>
-            <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-                <div class="col filter">
+            <div class="editais-form-grid">
+                <div class="col filter editais-form-field full">
                     <label for="edit-observacoes">Observações</label>
-                    <input type="text" id="edit-observacoes" class="width-800 height-md" value="<?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?>" placeholder="Opcional">
+                    <input type="text" id="edit-observacoes" value="<?php echo htmlspecialchars($observacoesValue, ENT_QUOTES); ?>" placeholder="Opcional">
                 </div>
             </div>
-
-            <?php
-            $cartorioAlocacaoPrefix = 'editais';
-            $cartorioAlocacaoEntityId = $idEdital;
-            $cartorioAlocacaoDesalocarEndpoint = '/api/cartorio-editais/desalocar.php';
-            $cartorioAlocacaoAlocarEndpoint = '/api/cartorio-editais/alocar.php';
-            $cartorioAlocacaoAlocados = $alocadosEditEdital;
-            $cartorioAlocacaoBloqueada = $tarefaFinalizadaOuCancelada;
-            $cartorioAlocacaoUserId = $userIdEdit !== null ? trim((string) $userIdEdit) : '';
-            $cartorioAlocacaoIsGestao = $isGestaoAlocEditEdital;
-            include __DIR__ . '/_cartorio_alocacao_direcionada_edit.php';
-            ?>
 
             <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 
@@ -217,7 +185,7 @@ $timelineData = $edital !== null
 
         <div class="card-buttons">
             <div class="display-flex row row-fit gap-y-md align-center justify-start">
-                <button class="btn btn-secondary" id="voltar-btn" type="button">Voltar</button>
+                <button class="btn btn-primary-outline" id="voltar-btn" type="button">Voltar</button>
                 <?php if ($errorMessage === '' && $podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
                     <button class="btn btn-danger-outline" id="cancelar-tarefa-btn" type="button">Cancelar tarefa</button>
                 <?php endif; ?>
@@ -232,10 +200,6 @@ $timelineData = $edital !== null
             </div>
         </div>
 
-        <div class="row pagination">
-            <div class="col">
-            </div>
-        </div>
     </div>
 
     <div class="footer-page">

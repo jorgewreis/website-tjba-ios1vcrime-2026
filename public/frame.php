@@ -33,7 +33,6 @@ $allowed_pages = [
     'editais'               => $PAGES . '/cartorio-editais-list.php',
     'editaisedit'           => $PAGES . '/cartorio-editais-edit.php',
     'editaiscreate'         => $PAGES . '/cartorio-editais-create.php',
-    'editaisrules'          => $PAGES . '/cartorio-editais-rules.php',
     'guias'                 => $PAGES . '/cartorio-guias-list.php',
     'guiasedit'             => $PAGES . '/cartorio-guias-edit.php',
     'guiascreate'           => $PAGES . '/cartorio-guias-create.php',

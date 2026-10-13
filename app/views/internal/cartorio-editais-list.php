@@ -9,20 +9,10 @@ if (function_exists('mb_internal_encoding')) {
 require_once __DIR__ . '/../../services/EditaisService.php';
 require_once __DIR__ . '/../../repositories/EditaisSubtarefasRepository.php';
 require_once __DIR__ . '/../../helpers/EditaisUiCopy.php';
-require_once __DIR__ . '/../../helpers/CartorioAlocacaoChipHelper.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
 $connection = Conection::getInstance()->getConnection();
-
-$currentUserId   = trim((string) ($_SESSION['id_usuario'] ?? ''));
-$perfisGestaoLst = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
-$isGestao        = false;
-if ($currentUserId !== '') {
-    require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
-    $perfisUsuario = UsuarioPerfisAutorizacao::perfisDoUsuario($currentUserId);
-    $isGestao = count(array_intersect($perfisUsuario, $perfisGestaoLst)) > 0;
-}
 
 $routePage = trim((string) ($_GET['page'] ?? 'editais'));
 $statusFilter = trim($_GET['status'] ?? '');
@@ -135,6 +125,10 @@ if ($totalPages > 0) {
         }
     }
 }
+$assetsRoot = dirname(__DIR__, 3) . '/public/assets';
+$v2ColorsCssV = @filemtime($assetsRoot . '/css/shared/v2-colors.css') ?: time();
+$v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: time();
+$editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') ?: time();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -144,13 +138,16 @@ if ($totalPages > 0) {
         <title>Editais - Primeira Vara Crime de Ilhéus</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/assets/css/shared/v2-colors.css?v=<?php echo (int) $v2ColorsCssV; ?>">
+        <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css?v=<?php echo (int) $v2PageListCssV; ?>">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
+        <link rel="stylesheet" href="/assets/css/modules/cartorio/editais-v2.css?v=<?php echo (int) $editaisCssV; ?>">
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
     </head>
-<body class="page-internal">
+<body class="page-internal editais-v2-page editais-list-page">
 
     <div class="spacing-top-page"></div>
 
@@ -162,32 +159,30 @@ if ($totalPages > 0) {
         </div>
     </div>
 
-    <div class="container-full card-page">
+    <div class="container-full card-page editais-v2-card">
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active);">Editais</h1>
+                <h1 class="title-page">Editais</h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md">
 
-                <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
-                    <input type="text" class="height-md list-search-input" id="search-input" placeholder="Pesquisar" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>">
+                <div class="editais-filters-controls">
+                    <input type="text" class="height-md list-search-input" id="search-input" placeholder="Pesquisar por processo" aria-label="Pesquisar por processo" value="<?php echo htmlspecialchars($processoFilter, ENT_QUOTES); ?>" autocomplete="off">
                     <?php
                 $listExportPage = $routePage;
                 $listExportQuery = $baseQueryParams;
                 include __DIR__ . '/_list_export_buttons.php';
                 ?>
                 </div>
-<button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
+<button type="button" class="btn btn-primary" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
-                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
-            </div>
-            <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <select class="width-500 height-md" id="filter-status">
+        <div class="editais-filters">
+            <span class="editais-filters-title">Filtros</span>
+            <div class="editais-filters-controls">
+                <select id="filter-status" aria-label="Filtrar por status">
                     <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
                     <option value="<?php echo htmlspecialchars(EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO, ENT_QUOTES); ?>"<?php echo $statusFilter === EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO ? ' selected' : ''; ?>>
@@ -199,7 +194,7 @@ if ($totalPages > 0) {
                     <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)</option>
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                 </select>
-                <select class="width-700 height-md" id="filter-tipo-edital">
+                <select id="filter-tipo-edital" aria-label="Filtrar por tipo de edital">
                     <option value=""<?php echo $tipoEditalFilter === '' ? ' selected' : ''; ?>>Todos os tipos</option>
                     <?php foreach ($tipoEditalOptions as $tipoEditalOption): ?>
                         <option value="<?php echo htmlspecialchars($tipoEditalOption, ENT_QUOTES); ?>"<?php echo $tipoEditalFilter === $tipoEditalOption ? ' selected' : ''; ?>>
@@ -252,10 +247,8 @@ if ($totalPages > 0) {
             </div>
         </div> -->
 
-        <div class="display-flex col col-full register">
-            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom"
-            style="background-color: var(--color-primary-bg-light);">
-                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+        <div class="display-flex col col-full register editais-v2-register">
+            <div class="editais-list-count">
                     <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
                         <?php
                             $totalRegistros = (int) ($totalDocuments ?? 0);
@@ -267,7 +260,6 @@ if ($totalPages > 0) {
                             }
                         ?>
                     </span>
-                </div>
             </div>
         <?php if (!empty($rows)): ?>
             <?php foreach ($rows as $row):
@@ -331,10 +323,10 @@ if ($totalPages > 0) {
                 }
             ?>
             <?php $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'editais', $registroListViewerContext, $connection); ?>
-            <div class="display-flex col col-full register register-with-metadata border-bottom" data-edital-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idEdital); ?>">
+            <div class="register-line full register register-with-metadata editais-v2-row" data-edital-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" id="<?php echo htmlspecialchars($idEdital); ?>">
 
-                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
-                    <div class="display-flex row row-fit justify-start gap-y-sm align-center">
+                <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center editais-v2-row-main">
+                    <div class="display-flex row row-fit justify-start gap-y-sm align-center editais-v2-row-primary">
                         <div class="col">
                             <?php if ($podeExpandirSubtarefas): ?>
                                 <label class="button-table" title="Expandir detalhes">
@@ -353,43 +345,7 @@ if ($totalPages > 0) {
                             <span class="major-info text-ellipsis"><?php echo htmlspecialchars((string) ($row['tipo_edital'] ?? $row['TipoEdital'] ?? '—')); ?></span>
                         </div>
                     </div>
-                    <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <div class="display-flex row row-fit justify-end gap-y-sm allocate-chips-row allocate-users">
-                        <?php
-                            $alocados = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($row['Alocados'] ?? []);
-                            foreach ($alocados as $alocado) {
-                                $chip = CartorioAlocacaoChipHelper::buildChipData($alocado, [
-                                    'entity_id' => (string) ($idEdital ?? ''),
-                                    'origem' => 'editais.list',
-                                ]);
-                                if ($chip === null) {
-                                    continue;
-                                }
-                                $tipo         = $chip['tipo'];
-                                $iniciais     = htmlspecialchars($chip['iniciais'], ENT_QUOTES);
-                                $chipTitle    = $chip['title'];
-                                $chipAria     = $chip['aria_label'];
-                                $classeTipo   = $chip['classe_tipo'];
-                                $alocadoIdStr = htmlspecialchars($chip['alocado_id'], ENT_QUOTES);
-                                $usuarioIdStr = $chip['usuario_id'];
-                                $podeRemover  = $isGestao || ($tipo === 'specific' && $usuarioIdStr === $currentUserId);
-                                ?>
-                                <span class="user-allocate-wrap">
-                                    <span class="user-allocate<?php echo $classeTipo; ?>" title="<?php echo htmlspecialchars($chipTitle, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($chipAria, ENT_QUOTES); ?>"><?php echo $iniciais; ?></span>
-                                    <?php if ($podeRemover): ?>
-                                    <button type="button"
-                                        class="user-allocate-remove js-desalocar"
-                                        data-alocado-id="<?php echo $alocadoIdStr; ?>"
-                                        data-tipo="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"
-                                        data-endpoint="/api/cartorio-editais/desalocar.php"
-                                        title="Remover alocação"
-                                        aria-label="Remover alocação">×</button>
-                                    <?php endif; ?>
-                                </span>
-                                <?php
-                            }
-                            ?>
-                        </div>
+                    <div class="display-flex row row-fit justify-end gap-y-sm align-center editais-v2-row-secondary">
                         <div class="col<?php echo $mostrarBarraStatus ? ' status-task' : ''; ?>" title="<?php echo htmlspecialchars($currentSubtarefaTitle, ENT_QUOTES); ?>">
                             <?php
                             if ($statusTarefaNorm === 'concluida') {
@@ -418,7 +374,7 @@ if ($totalPages > 0) {
                 </div>
 
                 <?php if ($podeExpandirSubtarefas): ?>
-                    <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" aria-hidden="true">
+                    <div class="display-flex col col-full subtask subtask-collapsed editais-v2-subtasks" id="subtask-<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" aria-hidden="true">
                         <?php foreach ($subtarefasExpansao as $st):
                             $stId = $st['id'] ?? '';
                             $stTipo = $st['tipo'] ?? '';
@@ -489,7 +445,7 @@ if ($totalPages > 0) {
             <?php endif; ?>
         </div>
 
-        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
+        <div class="editais-list-pagination">
             <span class="pagination-info">
                 Mostrando <?php echo $startItem; ?>-<?php echo $endItem; ?> de <?php echo $totalDocuments; ?> <?php echo $documentsLabel; ?>
                 (<?php echo $totalPages; ?> <?php echo $pagesLabel; ?>, <?php echo $itemsPerPage; ?> <?php echo $itemsLabel; ?> por página)

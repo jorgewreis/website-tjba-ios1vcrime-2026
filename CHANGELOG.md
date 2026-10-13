@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0014
+
+**Data:** 2026-10-13 19:23:27 | **Commit:** `3204f114` | **Tipo:** `patch`
+
+- refactor(editais): alinhar telas ao padrão v2 e remover alocações
+
 ## V. 1.87.0013
 
 **Data:** 2026-10-13 19:11:27 | **Commit:** `29770c32` | **Tipo:** `patch`
@@ -5505,6 +5511,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

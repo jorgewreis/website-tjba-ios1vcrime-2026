@@ -48,7 +48,6 @@ final class PageAccessRegistry
             'editais' => $areaCartorio,
             'editaisedit' => $areaCartorio,
             'editaiscreate' => $areaCartorio,
-            'editaisrules' => $areaCartorio,
             'guias' => $areaCartorio,
             'guiasedit' => $areaCartorio,
             'guiascreate' => $areaCartorio,

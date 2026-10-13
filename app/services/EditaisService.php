@@ -4,14 +4,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/EditaisRepository.php';
 require_once __DIR__ . '/../repositories/EditaisSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/EditaisAlocadosRepository.php';
-require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/FeriadosRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
-require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../helpers/CartorioTarefaStatusPrincipalHelper.php';
 
 final class EditaisService
@@ -20,12 +18,10 @@ final class EditaisService
     private EditaisRepository $repository;
     private EditaisSubtarefasRepository $subtarefasRepository;
     private EditaisAlocadosRepository $alocadosRepository;
-    private AlocacoesRegrasRepository $alocacoesRegrasRepository;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
     private FeriadosRepository $feriadosRepository;
 
-    private const REGRA_ALOCAR_EDITAIS = 'ALLOCATE-EDITAIS';
 
     public function __construct(PDO $connection)
     {
@@ -33,7 +29,6 @@ final class EditaisService
         $this->repository = new EditaisRepository($connection);
         $this->subtarefasRepository = new EditaisSubtarefasRepository($connection);
         $this->alocadosRepository = new EditaisAlocadosRepository($connection);
-        $this->alocacoesRegrasRepository = new AlocacoesRegrasRepository($connection);
         $this->processosRepository = new ProcessosRepository($connection);
         $this->classesRepository = new ClassesRepository($connection);
         $this->feriadosRepository = new FeriadosRepository($connection);
@@ -55,29 +50,10 @@ final class EditaisService
                 if ($editalAtualizado !== null) {
                     $rows[$i]['Status'] = (string) ($editalAtualizado['status'] ?? $rows[$i]['Status'] ?? '');
                 }
-                $alocadosRaw = $this->alocadosRepository->findByEditalId($idEdital);
-                $alocados = [];
-                $max = 5;
-                foreach (array_slice($alocadosRaw, 0, $max) as $a) {
-                    $tipo = $this->normalizeTipoAlocado((string) ($a['tipo'] ?? ''));
-                    $alocados[] = [
-                        'alocado_id'    => $a['id'] ?? '',
-                        'iniciais'      => $a['iniciais'] ?? '—',
-                        'nome_completo' => $a['nome_completo'] ?? '',
-                        'usuario_id'    => $a['usuario_id'] ?? '',
-                        'tipo'          => $tipo,
-                    ];
-                }
-                usort($alocados, static function (array $a, array $b): int {
-                    static $order = ['rule' => 0, 'all' => 1, 'specific' => 2];
-                    return ($order[$a['tipo']] ?? 9) <=> ($order[$b['tipo']] ?? 9);
-                });
-                $rows[$i]['Alocados'] = $alocados;
                 $rows[$i]['DecursoInfo'] = $this->getDecursoInfo($idEdital);
             } else {
                 $rows[$i]['Subtarefas'] = [];
                 $rows[$i]['SubtarefasAll'] = [];
-                $rows[$i]['Alocados'] = [];
                 $rows[$i]['DecursoInfo'] = [
                     'data_publicacao' => '',
                     'data_inicio_contagem' => '',
@@ -166,37 +142,10 @@ final class EditaisService
 
         $this->repository->insert($row);
 
-        if ($usuarioCadastroId !== ''
-            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioCadastroId)) {
-            $this->alocadosRepository->addAlocado($idEdital, $usuarioCadastroId, EditaisAlocadosRepository::TIPO_SPECIFIC);
-        }
-
-        $regra = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_EDITAIS);
-        if ($regra !== null) {
-            $usuarioIdRegra = trim((string) ($regra['usuario_id'] ?? ''));
-            if ($usuarioIdRegra !== '' && $usuarioIdRegra !== $usuarioCadastroId
-                && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao($usuarioIdRegra)) {
-                $this->alocadosRepository->addAlocado($idEdital, $usuarioIdRegra, EditaisAlocadosRepository::TIPO_RULE);
-            }
-        }
-
-        AlocacaoTarefasPerfisHelper::registrarAlocacoesDirecionadasNoCadastro(
-            $this->connection,
-            $usuarioCadastroId,
-            $payload,
-            function (string $uid) use ($idEdital): void {
-                try {
-                    $this->alocadosRepository->addAlocado($idEdital, $uid, EditaisAlocadosRepository::TIPO_SPECIFIC);
-                } catch (Throwable $e) {
-                    // limite ou duplicata
-                }
-            }
-        );
-
         return $idEdital;
     }
 
-    public function criarPrimeiraSubtarefa(string $editalId, ?string $usuarioId = null): void
+    public function criarPrimeiraSubtarefa(string $editalId): void
     {
         $editalId = trim($editalId);
         if ($editalId === '') {
@@ -224,10 +173,6 @@ final class EditaisService
         require_once __DIR__ . '/../helpers/EditaisUiCopy.php';
         $this->repository->update($editalId, ['status' => EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO]);
 
-        if ($usuarioId !== null && trim($usuarioId) !== ''
-            && !AlocacaoTarefasPerfisHelper::usuarioComPerfilChefiaSemAutoalocacao(trim($usuarioId))) {
-            $this->alocadosRepository->addAlocado($editalId, trim($usuarioId), EditaisAlocadosRepository::TIPO_SPECIFIC);
-        }
     }
 
     public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
@@ -255,21 +200,6 @@ final class EditaisService
 
         if ($editalId === '') {
             throw new InvalidArgumentException('Edital da subtarefa não identificado.');
-        }
-
-        $usuarioIdMovimentacao = null;
-        if ($dadosJson !== null && $dadosJson !== '') {
-            $dadosArray = json_decode($dadosJson, true);
-            if (is_array($dadosArray)) {
-                $usuarioIdMovimentacao = trim((string) ($dadosArray['usuario_id'] ?? ''));
-            }
-        }
-        if ($usuarioIdMovimentacao !== null && $usuarioIdMovimentacao !== '') {
-            try {
-                $this->alocadosRepository->addAlocado($editalId, $usuarioIdMovimentacao, EditaisAlocadosRepository::TIPO_SPECIFIC);
-            } catch (\RuntimeException $e) {
-                // limite ou duplicata — não impede a conclusão da subtarefa
-            }
         }
 
         if ($dadosJson !== null && $dadosJson !== '') {
@@ -715,52 +645,6 @@ final class EditaisService
         }
 
         return $this->feriadosRepository->isDiaNaoUtil($data);
-    }
-
-    private function normalizeTipoAlocado(string $tipo): string
-    {
-        $t = trim($tipo);
-        if ($t === EditaisAlocadosRepository::TIPO_RULE || $t === 'rule') {
-            return 'rule';
-        }
-        if ($t === 'all') {
-            return 'all';
-        }
-        return 'specific';
-    }
-
-    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
-    {
-        $alocadoId     = trim($alocadoId);
-        $requestUserId = trim($requestUserId);
-        if ($alocadoId === '' || $requestUserId === '') {
-            return false;
-        }
-        return $this->alocadosRepository->deleteById($alocadoId);
-    }
-
-    public function alocarUsuarioDirecionado(string $editalId, string $targetUsuarioId, string $actorId): void
-    {
-        $editalId = trim($editalId);
-        if ($editalId === '') {
-            throw new InvalidArgumentException('Identificador do edital inválido.');
-        }
-        $row = $this->repository->findById($editalId);
-        if ($row === null) {
-            throw new InvalidArgumentException('Edital não encontrado.');
-        }
-        $st = trim((string) ($row['status'] ?? ''));
-        if (in_array($st, ['cancelada', 'concluída'], true)) {
-            throw new InvalidArgumentException('Não é possível alterar alocações neste status.');
-        }
-        AlocacaoTarefasPerfisHelper::registrarAlocacaoDirecionadaNaEdicao(
-            $this->connection,
-            $actorId,
-            $targetUsuarioId,
-            function (string $uid) use ($editalId): void {
-                $this->alocadosRepository->addAlocado($editalId, $uid, EditaisAlocadosRepository::TIPO_SPECIFIC);
-            }
-        );
     }
 
     private function formatarCNJ(string $digits): string

@@ -17,7 +17,6 @@ if (!is_array($parsed)) {
 }
 
 $editalId = trim((string) ($parsed['edital_id'] ?? $parsed['editalId'] ?? $_GET['edital_id'] ?? ''));
-$usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 
 if ($editalId === '') {
     http_response_code(400);
@@ -27,7 +26,7 @@ if ($editalId === '') {
 
 try {
     $service = new EditaisService($connection);
-    $service->criarPrimeiraSubtarefa($editalId, $usuarioId !== '' ? $usuarioId : null);
+    $service->criarPrimeiraSubtarefa($editalId);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);
