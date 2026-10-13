@@ -18,4 +18,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(dashboard): alertar prazo de expedida excedido** `[34f918ec]`
 - **fix(dashboard): ordenar indicadores por urgencia** `[29770c32]`
 - **refactor(editais): alinhar telas ao padrão v2 e remover alocações** `[3204f114]`
+- **fix(editais): ajustar timeline em telas pequenas** `[147df2d0]`
 
