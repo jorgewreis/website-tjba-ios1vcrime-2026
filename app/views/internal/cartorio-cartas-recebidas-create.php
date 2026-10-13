@@ -189,7 +189,7 @@ $v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: ti
                 <button class="btn btn-primary-outline btn-cartas-voltar" id="voltar-btn" type="button" data-allow-during-loading="true">Voltar</button>
             </div>
             <div class="display-flex row row-fit gap-y-md align-center justify-end">
-                <button class="btn btn-primary disabled" id="cadastrar-btn" type="button" disabled aria-disabled="true"><span class="btn-icon-text">Cadastrar</span><span class="btn-icon hidden"><i class="fi fi-rr-spinner" aria-hidden="true"></i></span></button>
+                <button class="btn btn-primary btn-with-spinner disabled" id="cadastrar-btn" type="button" disabled aria-disabled="true"><span class="btn-icon-text">Cadastrar</span><span class="btn-icon hidden"><i class="fi fi-rr-spinner" aria-hidden="true"></i></span></button>
             </div>
         </div>
     </div>

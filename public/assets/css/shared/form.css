@@ -234,6 +234,26 @@ button.link-inline {
     transition: all 0.5s ease;
 }
 
+.btn.btn-with-spinner {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 160px;
+}
+.btn.btn-with-spinner .btn-icon-text {
+    width: auto;
+    height: auto;
+    justify-content: center;
+}
+.btn.btn-with-spinner .btn-icon.hidden {
+    display: none;
+}
+.btn.btn-with-spinner .btn-icon {
+    flex: 0 0 auto;
+    line-height: 1;
+}
+
 .btn-small {
     height: 30px;
     padding: 0 10px;

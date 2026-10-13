@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0008
+
+**Data:** 2026-10-13 18:45:24 | **Commit:** `4dc1dd5d` | **Tipo:** `patch`
+
+- fix(cartorio): manter spinner dentro do botao
+
 ## V. 1.87.0007
 
 **Data:** 2026-10-13 18:41:30 | **Commit:** `1a58b2d5` | **Tipo:** `patch`
@@ -5469,6 +5475,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
