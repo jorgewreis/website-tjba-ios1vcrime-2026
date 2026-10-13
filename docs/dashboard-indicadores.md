@@ -2,9 +2,9 @@
 
 ## Escopo atual
 
-Os cards visíveis nesta etapa cobrem Cartas Expedidas e Cartas Recebidas. A primeira coluna mostra o total cadastrado de cada tipo e os cadastros diários dos últimos sete dias. A segunda mostra Cartas Expedidas aguardando envio e Cartas Recebidas aguardando devolução no setor autorizado. A terceira conta movimentações do usuário autenticado por página nos últimos 30 dias, com mini séries diárias. A quarta destaca a etapa ativa mais antiga, prazos previstos para os próximos sete dias e Cartas Recebidas aguardando devolução.
+Os cards visíveis nesta etapa cobrem Cartas Expedidas e Cartas Recebidas. A primeira coluna reúne em um único card de até 130 px os totais ativos de cada tipo, os cadastros recentes ainda ativos e o gráfico diário dos últimos sete dias. A segunda mostra Cartas Expedidas aguardando envio e Cartas Recebidas aguardando devolução no setor autorizado. A terceira conta movimentações do usuário autenticado por página nos últimos 30 dias, com mini séries diárias. A quarta destaca a etapa ativa mais antiga, prazos previstos para os próximos sete dias e Cartas Recebidas aguardando devolução.
 
-Os cartões de totais cadastrados contam registros principais, inclusive os concluídos e cancelados. As filas contam somente etapas executáveis. O serviço não apresenta quantidade de processos distintos.
+Os cartões de cartas ativas contam os registros principais com o mesmo recorte padrão das listagens: excluem concluídas e canceladas. A série semanal usa o mesmo filtro e agrupa somente as cartas ainda ativas por data de cadastro, nos últimos sete dias. As filas contam somente etapas executáveis. O serviço não apresenta quantidade de processos distintos.
 
 ## Filas
 
@@ -31,7 +31,7 @@ A API exige sessão autenticada e perfil interno. Externos são rejeitados. A co
 ## Limites dos indicadores
 
 - Cadastros da semana usam `created_at` dos registros principais.
-- Os cards apresentam sete barras diárias compactas e o gráfico semanal compara expedidas e recebidas por data. As áreas dos canvases têm dimensões definidas, sem curvas interpoladas entre contagens diárias.
+- O card combinado compara expedidas e recebidas com barras diárias e mantém os totais ativos e os quantitativos de cadastros recentes por tipo. A área do canvas tem dimensões definidas dentro do limite de 130 px do card.
 - Prazos próximos contam Cartas Expedidas na etapa de cumprimento a partir da ativação dessa etapa e Cartas Recebidas em cumprimento a partir da data de recebimento (ou criação, quando não informada), somando o prazo em dias registrado no documento. A janela mostrada é de hoje até os próximos sete dias; o card não rotula itens como vencidos.
 - A agenda de audiências e os dias não úteis permanecem disponíveis na API, mas não aparecem nos cards desta etapa.
 - Dados são consultados ao carregar ou recarregar a página. Não há atualização automática em segundo plano.

@@ -13,7 +13,7 @@
   }
   function weeklyBars(id,labels,datasets){
     const el=$(id);if(!el||!window.Chart)return;
-    charts.push(new Chart(el,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#777183',maxRotation:0,autoSkip:false,font:{size:9}}},y:{beginAtZero:true,ticks:{precision:0,maxTicksLimit:4,color:'#777183',font:{size:10}},border:{display:false},grid:{color:'rgba(39,31,50,.06)'}}}}}));
+    charts.push(new Chart(el,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#777183',maxRotation:0,autoSkip:false,padding:1,font:{size:8}}},y:{beginAtZero:true,ticks:{precision:0,maxTicksLimit:3,padding:2,color:'#777183',font:{size:8}},border:{display:false},grid:{color:'rgba(39,31,50,.06)'}}}}}));
   }
   function activeQueueCount(queues,key,type){
     const broken=(queues||[]).some(row=>row.key===key&&row.error);
@@ -43,10 +43,8 @@
       const week=registered.semana||{labels:[],expedidas:[],recebidas:[]};
       set('dash-registered-expedidas',count(registered.expedidas));
       set('dash-registered-recebidas',count(registered.recebidas));
-      set('dash-week-expedidas','+'+count((week.expedidas||[]).reduce((total,value)=>total+Number(value),0))+' nos últimos 7 dias');
-      set('dash-week-recebidas','+'+count((week.recebidas||[]).reduce((total,value)=>total+Number(value),0))+' nos últimos 7 dias');
-      spark('dash-spark-expedidas',week.labels||[],week.expedidas||[],colors.purple);
-      spark('dash-spark-recebidas',week.labels||[],week.recebidas||[],colors.mint);
+      set('dash-week-expedidas',count((week.expedidas||[]).reduce((total,value)=>total+Number(value),0))+' cadastradas em 7 dias');
+      set('dash-week-recebidas',count((week.recebidas||[]).reduce((total,value)=>total+Number(value),0))+' cadastradas em 7 dias');
       weeklyBars('dash-chart-cadastros-semana',week.labels||[],[
         {label:'Expedidas',data:week.expedidas||[],backgroundColor:colors.purple,borderRadius:3,maxBarThickness:10},
         {label:'Recebidas',data:week.recebidas||[],backgroundColor:colors.mint,borderRadius:3,maxBarThickness:10}

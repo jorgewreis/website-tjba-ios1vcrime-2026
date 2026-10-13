@@ -20,23 +20,19 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
       <div class="dashboard-interno-columns">
         <section class="dashboard-column dashboard-system" aria-labelledby="dash-system-title">
           <header><span class="column-kicker">01 / SISTEMA</span><h2 id="dash-system-title">Fluxo geral</h2><p>Cartas Expedidas e Cartas Recebidas da Vara</p></header>
-          <div class="dash-kpi-grid">
-            <article class="dash-card dash-kpi-card dash-kpi-purple">
-              <div class="dash-kpi-main"><span class="dash-kpi-label">Cartas Expedidas</span><strong class="dash-kpi-value" id="dash-registered-expedidas">—</strong><span class="dash-kpi-unit">cadastradas</span><small id="dash-week-expedidas">Últimos 7 dias</small></div>
-              <div class="dash-mini-chart"><canvas id="dash-spark-expedidas" aria-label="Sete barras com os cadastros diários de cartas expedidas"></canvas></div>
-            </article>
-            <article class="dash-card dash-kpi-card dash-kpi-mint">
-              <div class="dash-kpi-main"><span class="dash-kpi-label">Cartas Recebidas</span><strong class="dash-kpi-value" id="dash-registered-recebidas">—</strong><span class="dash-kpi-unit">cadastradas</span><small id="dash-week-recebidas">Últimos 7 dias</small></div>
-              <div class="dash-mini-chart"><canvas id="dash-spark-recebidas" aria-label="Sete barras com os cadastros diários de cartas recebidas"></canvas></div>
-            </article>
-          </div>
-          <article class="dash-card dash-weekly-card"><h3>Cadastros na semana</h3><div class="dash-chart-legend"><span><i class="legend-dot legend-purple"></i>Expedidas</span><span><i class="legend-dot legend-mint"></i>Recebidas</span></div><div class="dash-weekly-chart"><canvas id="dash-chart-cadastros-semana" aria-label="Cadastros por dia nos últimos sete dias, separados em expedidas e recebidas"></canvas></div></article>
+          <article class="dash-card dash-letters-card" aria-label="Cartas ativas e cadastros dos últimos sete dias">
+            <div class="dash-letters-summary">
+              <div class="dash-letters-stat"><span class="dash-letters-label"><i class="legend-dot legend-purple" aria-hidden="true"></i>Cartas Expedidas</span><div><strong id="dash-registered-expedidas">—</strong><span>ativas</span></div><small id="dash-week-expedidas">Últimos 7 dias</small></div>
+              <div class="dash-letters-stat dash-letters-mint"><span class="dash-letters-label"><i class="legend-dot legend-mint" aria-hidden="true"></i>Cartas Recebidas</span><div><strong id="dash-registered-recebidas">—</strong><span>ativas</span></div><small id="dash-week-recebidas">Últimos 7 dias</small></div>
+            </div>
+            <div class="dash-weekly-chart"><canvas id="dash-chart-cadastros-semana" aria-label="Cartas ainda ativas cadastradas por dia nos últimos sete dias: expedidas em roxo e recebidas em verde"></canvas></div>
+          </article>
         </section>
         <section class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title">
           <header><span class="column-kicker">02 / SETOR</span><h2 id="dash-sector-title">Minha área</h2><p>Pendências de cartas no setor autorizado</p></header>
           <article id="dash-cartorio-queue" class="dash-card dash-sector-queue" hidden>
-            <div class="dash-sector-metric"><span>Cartas Expedidas<br>aguardando envio</span><strong id="dash-queue-expedidas">—</strong></div>
-            <div class="dash-sector-metric"><span>Cartas Recebidas<br>aguardando devolução</span><strong id="dash-queue-recebidas">—</strong></div>
+            <div class="dash-sector-metric"><span><b>Cartas Expedidas</b><br>aguardando envio</span><strong id="dash-queue-expedidas">—</strong></div>
+            <div class="dash-sector-metric"><span><b>Cartas Recebidas</b><br>aguardando devolução</span><strong id="dash-queue-recebidas">—</strong></div>
           </article>
         </section>
         <section class="dashboard-column dashboard-work" aria-labelledby="dash-work-title">
