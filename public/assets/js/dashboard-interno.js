@@ -21,6 +21,25 @@
     if(row)row.hidden=value===null||value===undefined||value===''||!Number.isFinite(number)||number<=0;
     return value!==null&&value!==undefined&&value!==''&&Number.isFinite(number)&&number>0;
   }
+  function metricNumber(element){
+    const text=(element?.textContent||'').trim().replace(/\./g,'').replace(',','.');
+    const value=Number(text);
+    return Number.isFinite(value)?value:0;
+  }
+  function sortSectorMetrics(){
+    const container=$('dash-cartorio-queue');if(!container)return;
+    const rows=[...container.querySelectorAll(':scope > .dash-sector-metric')].filter(row=>!row.hidden);
+    rows.sort((a,b)=>{
+      const overdueA=a.classList.contains('dash-sector-overdue'),overdueB=b.classList.contains('dash-sector-overdue');
+      if(overdueA!==overdueB)return overdueA?-1:1;
+      if(overdueA){
+        const daysA=Number(a.dataset.urgencyDays)||0,daysB=Number(b.dataset.urgencyDays)||0;
+        if(daysA!==daysB)return daysB-daysA;
+      }
+      return metricNumber(b.querySelector('strong'))-metricNumber(a.querySelector('strong'));
+    });
+    rows.forEach(row=>container.appendChild(row));
+  }
   function recentRegistrations(values){const total=(values||[]).reduce((sum,value)=>sum+Number(value),0);return count(total)+' '+(total===1?'cadastrada':'cadastradas')+' em 7 dias';}
   function destroyCharts(){charts.splice(0).forEach(c=>c.destroy());}
   function spark(id,labels,values,color){
@@ -44,7 +63,11 @@
   function renderAlerts(items){
     const container=$('dash-alerts');if(!container)return;
     container.replaceChildren();
-    (items||[]).forEach(item=>{
+    [...(items||[])].sort((a,b)=>{
+      const overdueA=a.key==='cumprimento_expedido_excedido',overdueB=b.key==='cumprimento_expedido_excedido';
+      if(overdueA!==overdueB)return overdueA?-1:1;
+      return Number(b.value)-Number(a.value);
+    }).forEach(item=>{
       if(!showPositiveMetric(null,item.value))return;
       const card=document.createElement('article');card.className='dash-card dash-alert-card';card.dataset.alertKey=item.key;
       if(item.color==='mint'||item.color==='warm')card.classList.add('dash-alert-'+item.color);
@@ -91,12 +114,16 @@
       applyCountBadge($('dash-queue-expedidas'),queueExpedidas);
       applyCountBadge($('dash-queue-recebidas'),queueRecebidas);
       const overdue=data.setor?.prazos_vencidos||{};
+      const overdueDays=data.setor?.prazos_vencidos_dias||{};
       [['expedidas','dash-overdue-expedidas-row','dash-overdue-expedidas'],['recebidas','dash-overdue-recebidas-row','dash-overdue-recebidas']].forEach(([key,rowId,valueId])=>{
         const value=overdue[key];
+        const row=$(rowId),days=overdueDays[key];
+        if(row){if(days===null||days===undefined)delete row.dataset.urgencyDays;else row.dataset.urgencyDays=String(days);}
         hasAnyMetric=showPositiveMetric(rowId,value)||hasAnyMetric;
         if(value!==null&&value!==undefined)set(valueId,count(value));
         applyCountBadge($(valueId),value);
       });
+      sortSectorMetrics();
       if(queueCard)queueCard.hidden=!cartorioEnabled||!hasAnyMetric;
 
       const modules=data.usuario?.modules||[];

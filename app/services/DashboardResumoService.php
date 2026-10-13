@@ -121,6 +121,7 @@ final class DashboardResumoService
         } catch(Throwable $e) { $deadlinesSoon=null;error_log('dashboard resumo [prazos]: '.$e->getMessage()); }
         $overdueDeadlines=['expedidas'=>null,'recebidas'=>null];
         $mostOverdueExpedidaDays=null;
+        $mostOverdueRecebidaDays=null;
         if($includeCartorio){
             try {
                 if($this->tableExists('cartas_expedidas')&&$this->tableExists('cartas_expedidas_subtarefas')){
@@ -132,14 +133,16 @@ final class DashboardResumoService
             } catch(Throwable $e) { error_log('dashboard resumo [prazos vencidos expedidas]: '.$e->getMessage()); }
             try {
                 if($this->tableExists('cartas_recebidas')&&$this->tableExists('cartas_recebidas_subtarefas')){
-                    $st=$this->pdo->query("SELECT COUNT(DISTINCT c.id) FROM cartas_recebidas c JOIN cartas_recebidas_subtarefas pendente ON pendente.carta_recebida_id=c.id AND pendente.tipo='cumprimento' AND pendente.status='em_andamento' WHERE c.prazo_dias>0 AND c.data_recebimento IS NOT NULL AND DATE_ADD(DATE(c.data_recebimento), INTERVAL c.prazo_dias DAY)<CURDATE() AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");
-                    $overdueDeadlines['recebidas']=(int)$st->fetchColumn();
+                    $st=$this->pdo->query("SELECT COUNT(DISTINCT c.id) total,MAX(DATEDIFF(CURDATE(),DATE_ADD(DATE(c.data_recebimento), INTERVAL c.prazo_dias DAY))) maior_atraso FROM cartas_recebidas c JOIN cartas_recebidas_subtarefas pendente ON pendente.carta_recebida_id=c.id AND pendente.tipo='cumprimento' AND pendente.status='em_andamento' WHERE c.prazo_dias>0 AND c.data_recebimento IS NOT NULL AND DATE_ADD(DATE(c.data_recebimento), INTERVAL c.prazo_dias DAY)<CURDATE() AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");
+                    $overdueRecebidas=$st->fetch(PDO::FETCH_ASSOC)?:[];
+                    $overdueDeadlines['recebidas']=(int)($overdueRecebidas['total']??0);
+                    $mostOverdueRecebidaDays=isset($overdueRecebidas['maior_atraso'])?(int)$overdueRecebidas['maior_atraso']:null;
                 }
             } catch(Throwable $e) { error_log('dashboard resumo [prazos vencidos recebidas]: '.$e->getMessage()); }
         }
         $sectorQueues=$includeCartorio?$queues:[];$reportedTotal=$hasQueueErrors?null:$total;$sectorTotal=$includeCartorio?$reportedTotal:null;
         $alerts=$this->letterAlerts($oldest,$oldestLabel,$cartasEmDevolucao,$oldestReturns,$deadlinesSoon,$nearestDeadline,$mostOverdueExpedidaDays);
-        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'semana'=>['labels'=>$weeklyLabels,'expedidas'=>$weeklyLetters['expedidas'],'recebidas'=>$weeklyLetters['recebidas']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'prazos_vencidos'=>$overdueDeadlines,'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'alertas'=>$alerts,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors];
+        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'semana'=>['labels'=>$weeklyLabels,'expedidas'=>$weeklyLetters['expedidas'],'recebidas'=>$weeklyLetters['recebidas']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'prazos_vencidos'=>$overdueDeadlines,'prazos_vencidos_dias'=>['expedidas'=>$mostOverdueExpedidaDays,'recebidas'=>$mostOverdueRecebidaDays],'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'alertas'=>$alerts,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors];
     }
 
     private function letterAlerts(?string $oldest,?string $label,?int $returns,?string $oldestReturns,?int $deadlines,?string $nearestDeadline,?int $mostOverdueExpedidaDays): array
