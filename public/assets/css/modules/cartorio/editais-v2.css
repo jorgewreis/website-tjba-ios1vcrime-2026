@@ -387,14 +387,14 @@
     pointer-events: auto;
     transform: translate(0, -50%);
 }
-.editais-v2-cell-history .historical-actions .btn-mini {
+.editais-v2-cell-history .container-historical .historical-actions .right .btn-mini {
     width: 28px;
     height: 28px;
     border-radius: 6px;
 }
-.editais-v2-cell-history .historical-actions .btn-mini-icon { opacity: .8; filter: none; }
-.editais-v2-cell-history .historical-actions .btn-mini:hover .btn-mini-icon,
-.editais-v2-cell-history .historical-actions .btn-mini:focus-visible .btn-mini-icon { opacity: 1; }
+.editais-v2-cell-history .container-historical .historical-actions .right .btn-mini .btn-mini-icon { opacity: .8; filter: none; }
+.editais-v2-cell-history .container-historical .historical-actions .right .btn-mini:hover .btn-mini-icon,
+.editais-v2-cell-history .container-historical .historical-actions .right .btn-mini:focus-visible .btn-mini-icon { opacity: 1; }
 
 @media (hover: none) {
     .editais-v2-cell-process .container-processo > .container-line:first-child > .right,

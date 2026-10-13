@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0032
+
+**Data:** 2026-10-13 20:17:08 | **Commit:** `c3f876fb` | **Tipo:** `patch`
+
+- fix(editais): reforcar contraste das acoes
+
 ## V. 1.87.0031
 
 **Data:** 2026-10-13 20:16:05 | **Commit:** `9967b2fb` | **Tipo:** `patch`
@@ -5613,6 +5619,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
