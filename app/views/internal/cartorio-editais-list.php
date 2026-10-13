@@ -350,9 +350,6 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                                 <img src="/assets/icons/Button-Next--Streamline-Ultimate.png" alt="">
                             </label>
                             <?php endif; ?>
-                            <?php if (!empty($registroMetadata['show_cancel'])): ?>
-                            <button type="button" class="carta-row-action" data-action="cancelar-registro" data-registro-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>" data-cancel-endpoint="<?php echo htmlspecialchars($registroMetadata['cancel_endpoint'], ENT_QUOTES); ?>" title="Cancelar edital" aria-label="Cancelar edital"><img src="/assets/icons/Notes-Remove--Streamline-Ultimate.png" alt=""></button>
-                            <?php endif; ?>
                         </div>
                         <div class="container-historical container-sm">
                             <div class="container-line"><div class="line-content double-line">

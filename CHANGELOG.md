@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0038
+
+**Data:** 2026-10-13 20:28:41 | **Commit:** `48113cd2` | **Tipo:** `patch`
+
+- fix(editais): restringir cancelamento a pagina de edicao
+
 ## V. 1.87.0037
 
 **Data:** 2026-10-13 20:27:04 | **Commit:** `4259ba61` | **Tipo:** `patch`
@@ -5649,6 +5655,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
