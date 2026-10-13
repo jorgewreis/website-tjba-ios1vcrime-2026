@@ -16,4 +16,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(dashboard): corrigir visibilidade e contagem de prazos** `[179e10f9]`
 - **fix(dashboard): ocultar linha com fila zerada** `[9dcbe8ad]`
 - **feat(dashboard): alertar prazo de expedida excedido** `[34f918ec]`
+- **fix(dashboard): ordenar indicadores por urgencia** `[29770c32]`
 
