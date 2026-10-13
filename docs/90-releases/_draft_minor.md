@@ -26,4 +26,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(editais): eliminar overflow em telas estreitas** `[bad0b91d]`
 - **fix(editais): ajustar colunas e icone de expansao** `[52713ec0]`
 - **fix(editais): adaptar campos de edicao no celular** `[31d5d654]`
+- **fix(editais): manter botoes do cadastro em linha no celular** `[6a3cd2e6]`
 
