@@ -76,6 +76,7 @@
                             );
                         }
                         lastBlockedCity = cidadeKey;
+                        cidadeInput.value = '';
                         return;
                     }
 
