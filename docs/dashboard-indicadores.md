@@ -2,9 +2,9 @@
 
 ## Escopo atual
 
-Os cards visíveis nesta etapa cobrem Cartas Expedidas e Cartas Recebidas. A primeira coluna reúne em um único card de até 160 px os totais ativos de cada tipo, os cadastros recentes ainda ativos e o gráfico diário dos últimos sete dias. A segunda mostra Cartas Expedidas aguardando envio e Cartas Recebidas aguardando devolução no setor autorizado. A terceira conta movimentações do usuário autenticado por página nos últimos 30 dias, com mini séries diárias. A quarta apresenta cards compactos ordenados automaticamente por prioridade: prazos próximos, seguidos das filas com maior espera. Cards sem cartas correspondentes ou sem dados disponíveis são omitidos.
+Os cards visíveis nesta etapa cobrem Cartas Expedidas e Cartas Recebidas. A primeira coluna reúne em um único card de até 160 px os totais ativos de cada tipo, todos os cadastros recentes e o gráfico diário dos últimos sete dias. A segunda mostra Cartas Expedidas aguardando envio e Cartas Recebidas aguardando devolução no setor autorizado. A terceira conta movimentações do usuário autenticado por página nos últimos 30 dias, com mini séries diárias. A quarta apresenta cards compactos ordenados automaticamente por prioridade: prazos próximos, seguidos das filas com maior espera. Cards sem cartas correspondentes ou sem dados disponíveis são omitidos.
 
-Os cartões de cartas ativas contam os registros principais com o mesmo recorte padrão das listagens: excluem concluídas e canceladas. A série semanal usa o mesmo filtro e agrupa somente as cartas ainda ativas por data de cadastro, nos últimos sete dias. As filas contam somente etapas executáveis. O serviço não apresenta quantidade de processos distintos.
+Os totais grandes de cartas ativas usam o mesmo recorte padrão das listagens: excluem concluídas e canceladas. O gráfico diário e os quantitativos de cadastros recentes incluem todos os registros criados nos últimos sete dias, independentemente do status atual. As filas contam somente etapas executáveis. O serviço não apresenta quantidade de processos distintos.
 
 ## Filas
 

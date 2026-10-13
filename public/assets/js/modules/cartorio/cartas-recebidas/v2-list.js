@@ -83,6 +83,7 @@
                 newHref: '/frame.php?page=cartasrecebidascreate',
                 onReady: function (ctx) {
                     bindMainRowMovement(ctx);
+                    if(App.CartasReiniciar)App.CartasReiniciar.bind(ctx);
                     if (window.App.Page && typeof App.Page.flushPostReloadToast === 'function') App.Page.flushPostReloadToast('cartorio.postReloadToast');
                 }
             });

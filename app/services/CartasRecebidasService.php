@@ -66,6 +66,32 @@ final class CartasRecebidasService
 
     public function create(array $payload): string
     {
+        $numero=trim((string)($payload['numero_processo_origem']??$payload['processo']??''));
+        $digits=preg_replace('/\D+/', '', $numero);
+        if(strlen($digits)!==20)throw new InvalidArgumentException('O número do processo de origem deve conter os 20 dígitos do CNJ.');
+        $lockName='cr_cnj_'.substr(hash('sha256',$digits),0,56);
+        $lock=$this->connection->prepare('SELECT GET_LOCK(?, 10)');$lock->execute([$lockName]);
+        if((int)$lock->fetchColumn()!==1)throw new RuntimeException('Não foi possível verificar o cadastro da carta. Tente novamente.');
+        $ownsTransaction=!$this->connection->inTransaction();
+        try {
+            if($ownsTransaction)$this->connection->beginTransaction();
+            if($this->repository->existsByNumeroProcessoOrigem($digits)){
+                throw new InvalidArgumentException('Já existe uma carta recebida cadastrada para o processo '.$this->formatarCNJ($digits).'. Reinicie o registro existente.');
+            }
+            $id=$this->createCarta($payload);
+            if($ownsTransaction)$this->connection->commit();
+            return $id;
+        } catch(Throwable $e) {
+            if($ownsTransaction&&$this->connection->inTransaction())$this->connection->rollBack();
+            throw $e;
+        } finally {
+            try {$release=$this->connection->prepare('SELECT RELEASE_LOCK(?)');$release->execute([$lockName]);}
+            catch(Throwable $releaseError){error_log('liberar bloqueio carta recebida: '.$releaseError->getMessage());}
+        }
+    }
+
+    private function createCarta(array $payload): string
+    {
         $numeroProcesso = trim((string) ($payload['numero_processo_origem'] ?? $payload['processo'] ?? ''));
         if ($numeroProcesso === '') {
             throw new InvalidArgumentException('O número do processo de origem é obrigatório.');

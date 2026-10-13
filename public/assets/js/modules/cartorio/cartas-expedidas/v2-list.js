@@ -281,6 +281,7 @@
             onReady: function (ctx) {
                 bindSyncProcessoDataJud(ctx);
                 bindContinuarSubtarefa(ctx);
+                if(App.CartasReiniciar)App.CartasReiniciar.bind(ctx);
                 if (window.App && App.Page && typeof App.Page.flushPostReloadToast === 'function') {
                     App.Page.flushPostReloadToast('cartorio.postReloadToast');
                 }

@@ -164,6 +164,7 @@ foreach (['user-context.js', 'page-helpers.js', 'toast-catalog.js', 'list-search
     <script src="/assets/js/shared/registro-metadata-list.js?v=<?php echo (int) $sharedJs['registro-metadata-list.js']; ?>"></script>
     <script src="/assets/js/shared/navigate-buttons.js?v=<?php echo (int) $sharedJs['navigate-buttons.js']; ?>"></script>
     <script src="/assets/js/modules/cartorio/cartas-recebidas/search-list.js?v=<?php echo (int) $searchListV; ?>"></script>
+    <script src="/assets/js/shared/cartas-reiniciar.js?v=<?php echo (int) @filemtime(dirname(__DIR__,3).'/public/assets/js/shared/cartas-reiniciar.js'); ?>"></script>
     <script src="/assets/js/modules/cartorio/cartas-recebidas/v2-list.js?v=<?php echo (int) $v2ListJsV; ?>"></script>
     <script>(function(){if(window.CartasRecebidasV2List)CartasRecebidasV2List.initialize({initialProcessFilter:<?php echo json_encode($processoFilter, JSON_UNESCAPED_UNICODE); ?>});})();</script>
 </body>

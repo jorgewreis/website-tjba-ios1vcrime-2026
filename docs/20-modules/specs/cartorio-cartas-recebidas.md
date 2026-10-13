@@ -33,6 +33,8 @@ Textos canônicos: [`app/helpers/CartasRecebidasUiCopy.php`](../../../app/helper
 - Cadastro cria as duas subtarefas: ordem 1 `em_andamento`, ordem 2 `pendente`.
 - Concluir ordem 1: tarefa → `aguardando devolução`; ordem 2 → `em_andamento`.
 - Concluir ordem 2: tarefa → `concluída`.
+- Quando o status visível é diferente de `Aguardando cumprimento`, a linha principal mostra o PNG `Button-Previous--Streamline-Ultimate.png` antes do botão de avançar. Reiniciar retorna a primeira etapa para `em_andamento`, a segunda para `pendente` e o registro principal para `aguardando cumprimento`, em transação. Os eventos de produção registrados permanecem preservados.
+- Cadastro duplicado é bloqueado pelo número do processo de origem normalizado para os 20 dígitos CNJ, independentemente da finalidade ou do status do registro existente. A verificação inclui concluídas e canceladas e usa bloqueio de banco por CNJ durante a criação, evitando cadastros concorrentes repetidos.
 
 ## 5. Timeline (edição)
 

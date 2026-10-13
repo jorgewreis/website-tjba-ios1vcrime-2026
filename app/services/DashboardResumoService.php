@@ -50,7 +50,7 @@ final class DashboardResumoService
                 // Mesmo recorte padrão das listagens: concluídas e canceladas ficam fora.
                 $activeWhere="`status` COLLATE utf8mb4_unicode_ci NOT IN ('concluída','cancelada')";
                 $count=$this->pdo->query("SELECT COUNT(*) FROM `{$table}` WHERE {$activeWhere}");$lettersRegistered[$kind]=(int)$count->fetchColumn();
-                $weekly=$this->pdo->query("SELECT DATE(created_at) dia, COUNT(*) total FROM `{$table}` WHERE {$activeWhere} AND created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)");
+                $weekly=$this->pdo->query("SELECT DATE(created_at) dia, COUNT(*) total FROM `{$table}` WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)");
                 foreach($weekly->fetchAll(PDO::FETCH_ASSOC) as $dayRow){$idx=array_search(date('d/m',strtotime((string)$dayRow['dia'])),$weeklyLabels,true);if($idx!==false)$weeklyLetters[$kind][$idx]=(int)$dayRow['total'];}
             } catch(Throwable $e) { error_log('dashboard resumo [cadastros '.$kind.']: '.$e->getMessage()); }
         }

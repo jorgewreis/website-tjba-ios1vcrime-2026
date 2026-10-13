@@ -168,6 +168,7 @@ $historicoLinhas = RegistroMetadataHelper::linhasHistoricoV2CartasExpedidas($row
 $historicoRecente = $historicoLinhas !== [] ? $historicoLinhas[count($historicoLinhas) - 1] : null;
 $statusVisivelTexto = $isTerminal || $textoEtapa === '' ? $badgePrincipalTexto : $textoEtapa;
 $statusVisivelClasse = $isTerminal || $classeEtapa === '' ? $badgePrincipalClasse : $classeEtapa;
+$mostrarReiniciar = strcasecmp(trim($statusVisivelTexto),'Aguardando envio')!==0;
 
 $subtarefaAtivaId = $subtarefaAtivaUi !== null ? trim((string) ($subtarefaAtivaUi['id'] ?? '')) : '';
 
@@ -340,6 +341,9 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                     <button type="button" class="button-icon-right carta-row-action" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar">
                         <img src="/assets/icons/Eject-Button--Streamline-Ultimate.png" alt="">
                     </button>
+                <?php endif; ?>
+                <?php if ($mostrarReiniciar): ?>
+                    <button type="button" class="button-icon-internal carta-row-action js-reiniciar-carta" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-modulo="expedidas" title="Reiniciar: voltar para Aguardando envio" aria-label="Reiniciar: voltar para Aguardando envio"><img src="/assets/icons/Button-Previous--Streamline-Ultimate.png" alt=""></button>
                 <?php endif; ?>
                 <?php if ($mostrarContinuar && $textoEtapa !== ''): ?>
                     <button type="button"

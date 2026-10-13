@@ -262,6 +262,15 @@ final class CartasRecebidasRepository
         return $this->table;
     }
 
+    public function existsByNumeroProcessoOrigem(string $numero): bool
+    {
+        $digits=preg_replace('/\D+/', '', $numero);
+        $normalized="REPLACE(REPLACE(REPLACE(REPLACE(TRIM(numero_processo_origem),'.',''),'-',''),' ',''),'/','')";
+        $st=$this->connection->prepare("SELECT 1 FROM `{$this->table}` WHERE {$normalized}=? LIMIT 1");
+        $st->execute([$digits]);
+        return (bool)$st->fetchColumn();
+    }
+
     private function buildFromClause(): string
     {
         require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';

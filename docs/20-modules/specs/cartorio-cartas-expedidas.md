@@ -30,6 +30,8 @@ A UI **não** exibe o rótulo genérico «Em andamento» nem o valor bruto `em_a
 
 Quando as duas subtarefas estão concluídas, a tarefa passa a **concluída**.
 
+Quando o status visível é diferente de **Aguardando envio**, a linha principal mostra o PNG `Button-Previous--Streamline-Ultimate.png` antes do botão de avançar. A ação reinicia o registro existente: principal em `em_andamento` (Aguardando envio), envio em `em_andamento` e devolução em `pendente`. O reinício é transacional e preserva os eventos de conclusão já registrados no dashboard.
+
 ## 5. Subtarefas (2 etapas)
 
 Tipos em `CartasExpedidasSubtarefasRepository`: `aguardando_envio` (ordem **1**), `aguardando_devolucao` (ordem **2**).

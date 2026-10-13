@@ -38,6 +38,7 @@ $subtarefaIcone = $status === CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO
     ? 'Button-Next--Streamline-Ultimate.png'
     : 'Button-Play-1--Streamline-Ultimate.png';
 $podeAvancar = !$isConcluida && !$isCancelada && CartasRecebidasUiCopy::tarefaEstaEmAndamento($status);
+$mostrarReiniciar = $status!==CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO;
 $botaoTitle = $status === CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO ? 'Devolver carta recebida' : 'Registrar cumprimento';
 $showDelete = !empty($metadata['show_delete']);
 ?>
@@ -78,6 +79,7 @@ $showDelete = !empty($metadata['show_delete']);
                 <div class="badge-status-primary <?php echo htmlspecialchars($badgeClass, ENT_QUOTES); ?>"><span class="badge-status-text"><?php echo htmlspecialchars($badgeText, ENT_QUOTES); ?></span></div>
                 <?php if ($showEdit): ?><button type="button" class="button-icon-right carta-row-action" data-nav-href="<?php echo htmlspecialchars($editHref, ENT_QUOTES); ?>" title="Editar" aria-label="Editar"><img src="/assets/icons/Eject-Button--Streamline-Ultimate.png" alt=""></button><?php endif; ?>
                 <?php if ($showDelete): ?><button type="button" class="button-icon-right carta-row-action" data-action="excluir-registro" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-delete-endpoint="<?php echo htmlspecialchars((string) ($metadata['delete_endpoint'] ?? ''), ENT_QUOTES); ?>" title="<?php echo htmlspecialchars((string) ($metadata['delete_label'] ?? 'Excluir carta recebida'), ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars((string) ($metadata['delete_label'] ?? 'Excluir carta recebida'), ENT_QUOTES); ?>"><img src="/assets/icons/Notes-Remove--Streamline-Ultimate.png" alt=""></button><?php endif; ?>
+                <?php if ($mostrarReiniciar): ?><button type="button" class="button-icon-internal carta-row-action js-reiniciar-carta" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-modulo="recebidas" title="Reiniciar: voltar para Aguardando cumprimento" aria-label="Reiniciar: voltar para Aguardando cumprimento"><img src="/assets/icons/Button-Previous--Streamline-Ultimate.png" alt=""></button><?php endif; ?>
                 <?php if ($podeAvancar): ?><button type="button" class="button-icon-internal carta-row-action js-mover-carta-recebida" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" title="<?php echo htmlspecialchars($botaoTitle, ENT_QUOTES); ?>" aria-label="<?php echo htmlspecialchars($botaoTitle, ENT_QUOTES); ?>"><img src="/assets/icons/<?php echo htmlspecialchars($subtarefaIcone, ENT_QUOTES); ?>" alt=""></button><?php endif; ?>
             </div></div>
         </div>

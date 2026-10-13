@@ -292,6 +292,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
     <script src="/assets/js/shared/registro-metadata-list.js?v=<?php echo (int) $registroMetaV; ?>"></script>
     <script src="/assets/js/shared/navigate-buttons.js?v=<?php echo (int) $navBtnV; ?>"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/search-list.js?v=<?php echo (int) $searchListV; ?>"></script>
+    <script src="/assets/js/shared/cartas-reiniciar.js?v=<?php echo (int) @filemtime(dirname(__DIR__,3).'/public/assets/js/shared/cartas-reiniciar.js'); ?>"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/v2-list.js?v=<?php echo (int) $v2ListJsV; ?>"></script>
     <script>
         (function() {

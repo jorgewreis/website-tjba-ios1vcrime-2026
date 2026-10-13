@@ -25,7 +25,7 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
               <div class="dash-letters-stat"><span class="dash-letters-label"><i class="legend-dot legend-purple" aria-hidden="true"></i>Cartas Expedidas</span><div><strong id="dash-registered-expedidas">—</strong></div><small id="dash-week-expedidas">Últimos 7 dias</small></div>
               <div class="dash-letters-stat dash-letters-mint"><span class="dash-letters-label"><i class="legend-dot legend-mint" aria-hidden="true"></i>Cartas Recebidas</span><div><strong id="dash-registered-recebidas">—</strong></div><small id="dash-week-recebidas">Últimos 7 dias</small></div>
             </div>
-            <div class="dash-weekly-chart"><canvas id="dash-chart-cadastros-semana" aria-label="Cartas ainda ativas cadastradas por dia nos últimos sete dias: expedidas em roxo e recebidas em verde"></canvas></div>
+            <div class="dash-weekly-chart"><canvas id="dash-chart-cadastros-semana" aria-label="Todas as cartas cadastradas por dia nos últimos sete dias: expedidas em roxo e recebidas em verde"></canvas></div>
           </article>
         </section>
         <section class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title">
