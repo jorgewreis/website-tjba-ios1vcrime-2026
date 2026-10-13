@@ -104,8 +104,7 @@
         if (container.disabled || container.getAttribute('aria-disabled') === 'true') return;
         if (e && typeof e.preventDefault === 'function') e.preventDefault();
         var major = container.querySelector('.major-info');
-        if (!major) return;
-        var text = (major.textContent || '').trim();
+        var text = (container.getAttribute('data-processo-numero') || (major ? major.textContent : '') || '').trim();
         if (!text) return;
         copyToClipboard(text, function () {
             showSuccessToast(text);

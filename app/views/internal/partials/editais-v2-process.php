@@ -89,11 +89,11 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                     data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES); ?>"
                     title="Copiar número do processo"
                     aria-label="Copiar número do processo">
-                    <img src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt=""><span class="major-info" hidden><?php echo htmlspecialchars($numero, ENT_QUOTES); ?></span>
+                    <img src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt="">
                 </div>
             <?php else: ?>
                 <div class="line-cube carta-process-tool" aria-hidden="true">
-                    <img src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt=""><span class="major-info" hidden><?php echo htmlspecialchars($numero, ENT_QUOTES); ?></span>
+                    <img src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt="">
                 </div>
             <?php endif; ?>
             <div class="line-cube box-open open carta-process-tool-open"

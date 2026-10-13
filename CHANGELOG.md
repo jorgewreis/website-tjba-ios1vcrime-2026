@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0036
+
+**Data:** 2026-10-13 20:25:59 | **Commit:** `c790236b` | **Tipo:** `patch`
+
+- fix(editais): copiar numero sem duplicar texto no hover
+
 ## V. 1.87.0035
 
 **Data:** 2026-10-13 20:24:42 | **Commit:** `2246f121` | **Tipo:** `patch`
@@ -5637,6 +5643,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
