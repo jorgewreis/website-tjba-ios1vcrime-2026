@@ -76,7 +76,7 @@ final class DashboardResumoService
         $globalCompletions=array_fill(0,7,0);
         if($this->tableExists('dashboard_conclusoes')){ $st=$this->pdo->query("SELECT DATEDIFF(CURDATE(),DATE(concluido_em)) age,COUNT(*) total FROM dashboard_conclusoes WHERE concluido_em>=DATE_SUB(CURDATE(),INTERVAL 6 DAY) GROUP BY DATE(concluido_em)"); foreach($st->fetchAll(PDO::FETCH_ASSOC) as $r){$idx=6-(int)$r['age'];if($idx>=0&&$idx<7)$globalCompletions[$idx]=(int)$r['total'];} }
         $sectorQueues=$includeCartorio?$queues:[];$reportedTotal=$hasQueueErrors?null:$total;$sectorTotal=$includeCartorio?$reportedTotal:null;
-        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues], 'usuario'=>$completed, 'agenda'=>$calendar,'fila_mais_antiga_em'=>$oldest,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors];
+        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'fila_mais_antiga_em'=>$oldest,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors];
     }
 
     private function tableExists(string $table): bool

@@ -32,6 +32,7 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
           <label class="dash-filter" for="dash-sector-filter">Filtrar setor</label><select id="dash-sector-filter" class="dashboard-sector-filter"><option value="">Todas as áreas autorizadas</option></select>
           <article class="dash-card dash-hero"><span class="dash-label">Tarefas em andamento</span><strong class="dash-number" id="dash-total-setor">—</strong><small id="dash-areas">Áreas autorizadas</small></article>
           <article class="dash-card"><h3>Etapas executáveis</h3><div id="dash-filas-setor" class="dash-queue"></div><canvas id="dash-chart-sector" aria-label="Comparação das filas do setor"></canvas></article>
+          <article class="dash-card"><h3>Cadastros dos fluxos conectados · seis meses</h3><canvas id="dash-chart-sector-month" aria-label="Evolução mensal dos cadastros do setor"></canvas></article>
         </section>
         <section class="dashboard-column dashboard-work" aria-labelledby="dash-work-title">
           <header><span class="column-kicker">03 / PRODUTIVIDADE</span><h2 id="dash-work-title">Meu trabalho</h2><p>Conclusões registradas a partir da implantação</p></header>
