@@ -16,6 +16,11 @@
     const tier=number<4?'dash-count-mint':number<=7?'dash-count-purple':number<=10?'dash-count-warning':'dash-count-danger';
     element.classList.add(tier);
   }
+  function showPositiveMetric(rowId,value){
+    const row=$(rowId),number=Number(value);
+    if(row)row.hidden=value===null||value===undefined||value===''||!Number.isFinite(number)||number<=0;
+    return value!==null&&value!==undefined&&value!==''&&Number.isFinite(number)&&number>0;
+  }
   function recentRegistrations(values){const total=(values||[]).reduce((sum,value)=>sum+Number(value),0);return count(total)+' '+(total===1?'cadastrada':'cadastradas')+' em 7 dias';}
   function destroyCharts(){charts.splice(0).forEach(c=>c.destroy());}
   function spark(id,labels,values,color){
@@ -40,6 +45,7 @@
     const container=$('dash-alerts');if(!container)return;
     container.replaceChildren();
     (items||[]).forEach(item=>{
+      if(!showPositiveMetric(null,item.value))return;
       const card=document.createElement('article');card.className='dash-card dash-alert-card';card.dataset.alertKey=item.key;
       if(item.color==='mint'||item.color==='warm')card.classList.add('dash-alert-'+item.color);
       const copy=document.createElement('div');copy.className='dash-alert-copy';
@@ -74,21 +80,22 @@
 
       const cartorioEnabled=Boolean(data.setor?.conectado)&&(data.setor?.areas||[]).includes('CARTORIO');
       const queueCard=$('dash-cartorio-queue');
-      if(queueCard)queueCard.hidden=!cartorioEnabled;
       const sectorQueues=data.setor?.filas||[];
       const queueExpedidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_expedidas','aguardando_envio'):null;
       const queueRecebidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_recebidas','devolucao'):null;
       set('dash-queue-expedidas',count(queueExpedidas));
       set('dash-queue-recebidas',count(queueRecebidas));
+      let hasAnyMetric=showPositiveMetric('dash-queue-expedidas-row',queueExpedidas)||showPositiveMetric('dash-queue-recebidas-row',queueRecebidas);
       applyCountBadge($('dash-queue-expedidas'),queueExpedidas);
       applyCountBadge($('dash-queue-recebidas'),queueRecebidas);
       const overdue=data.setor?.prazos_vencidos||{};
       [['expedidas','dash-overdue-expedidas-row','dash-overdue-expedidas'],['recebidas','dash-overdue-recebidas-row','dash-overdue-recebidas']].forEach(([key,rowId,valueId])=>{
-        const row=$(rowId),value=overdue[key];
-        if(row)row.hidden=!(value!==null&&value!==undefined&&Number(value)>0);
+        const value=overdue[key];
+        hasAnyMetric=showPositiveMetric(rowId,value)||hasAnyMetric;
         if(value!==null&&value!==undefined)set(valueId,count(value));
         applyCountBadge($(valueId),value);
       });
+      if(queueCard)queueCard.hidden=!cartorioEnabled||!hasAnyMetric;
 
       const modules=data.usuario?.modules||[];
       set('dash-done-expedidas',count(moduleTotal(modules,'cartas_expedidas')));

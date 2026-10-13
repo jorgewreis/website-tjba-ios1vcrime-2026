@@ -130,7 +130,6 @@
 .legend-mint { background:#4f9f88; }
 .dash-sector-queue { margin-top:10px; padding:0 14px; border-color:#efedf3; background:#fff; }
 .dash-sector-queue[hidden] { display:none; }
-.dash-sector-queue .dash-sector-metric:nth-child(2) { border-bottom:0; }
 .dash-sector-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:12px; border-bottom:1px solid #efedf3; }
 .dash-sector-heading strong { display:block; margin-top:3px; color:#40374b; font-size:14px; font-weight:650; }
 .dash-sector-mark { display:flex; align-items:center; justify-content:center; width:29px; height:29px; border-radius:9px; color:#6842a0; background:#eee8f8; font-size:12px; font-weight:700; }

@@ -123,7 +123,7 @@ final class DashboardResumoService
         if($includeCartorio){
             try {
                 if($this->tableExists('cartas_expedidas')&&$this->tableExists('cartas_expedidas_subtarefas')){
-                    $st=$this->pdo->query("SELECT COUNT(DISTINCT c.id) FROM cartas_expedidas c JOIN cartas_expedidas_subtarefas pendente ON pendente.carta_expedida_id=c.id AND pendente.tipo='aguardando_devolucao' AND pendente.status='em_andamento' JOIN cartas_expedidas_subtarefas envio ON envio.carta_expedida_id=c.id AND envio.tipo='aguardando_envio' AND LOWER(envio.status) IN ('concluida','concluída') WHERE c.prazo_dias>0 AND DATE_ADD(DATE(envio.updated_at), INTERVAL c.prazo_dias DAY)<CURDATE() AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");
+                    $st=$this->pdo->query("SELECT COUNT(DISTINCT c.id) FROM cartas_expedidas c JOIN cartas_expedidas_subtarefas envio ON envio.carta_expedida_id=c.id AND envio.tipo='aguardando_envio' AND LOWER(envio.status) IN ('concluida','concluída') WHERE c.prazo_dias>0 AND DATE_ADD(DATE(envio.updated_at), INTERVAL c.prazo_dias DAY)<CURDATE() AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");
                     $overdueDeadlines['expedidas']=(int)$st->fetchColumn();
                 }
             } catch(Throwable $e) { error_log('dashboard resumo [prazos vencidos expedidas]: '.$e->getMessage()); }

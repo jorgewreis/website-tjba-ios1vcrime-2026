@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0010
+
+**Data:** 2026-10-13 19:06:08 | **Commit:** `179e10f9` | **Tipo:** `patch`
+
+- fix(dashboard): corrigir visibilidade e contagem de prazos
+
 ## V. 1.87.0009
 
 **Data:** 2026-10-13 19:02:00 | **Commit:** `4961782d` | **Tipo:** `patch`
@@ -5481,6 +5487,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

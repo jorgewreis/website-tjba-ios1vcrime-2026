@@ -31,8 +31,8 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
         <section class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title">
           <header><span class="column-kicker">02 / SETOR</span><h2 id="dash-sector-title">Minha área</h2><p>Pendências de cartas no setor autorizado</p></header>
           <article id="dash-cartorio-queue" class="dash-card dash-sector-queue" hidden>
-            <div class="dash-sector-metric"><span><b>Cartas Expedidas</b><br>aguardando envio</span><strong id="dash-queue-expedidas">—</strong></div>
-            <div class="dash-sector-metric"><span><b>Cartas Recebidas</b><br>aguardando devolução</span><strong id="dash-queue-recebidas">—</strong></div>
+            <div class="dash-sector-metric" id="dash-queue-expedidas-row"><span><b>Cartas Expedidas</b><br>aguardando envio</span><strong id="dash-queue-expedidas">—</strong></div>
+            <div class="dash-sector-metric" id="dash-queue-recebidas-row"><span><b>Cartas Recebidas</b><br>aguardando devolução</span><strong id="dash-queue-recebidas">—</strong></div>
             <div class="dash-sector-metric dash-sector-overdue" id="dash-overdue-expedidas-row" hidden><span><b>Cartas Expedidas</b><br>com prazo vencido</span><strong id="dash-overdue-expedidas">—</strong></div>
             <div class="dash-sector-metric dash-sector-overdue" id="dash-overdue-recebidas-row" hidden><span><b>Cartas Recebidas</b><br>com prazo vencido</span><strong id="dash-overdue-recebidas">—</strong></div>
           </article>
