@@ -14,4 +14,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(cartorio): manter spinner dentro do botao** `[4dc1dd5d]`
 - **feat(dashboard): exibir prazos vencidos e colorir badges** `[4961782d]`
 - **fix(dashboard): corrigir visibilidade e contagem de prazos** `[179e10f9]`
+- **fix(dashboard): ocultar linha com fila zerada** `[9dcbe8ad]`
 
