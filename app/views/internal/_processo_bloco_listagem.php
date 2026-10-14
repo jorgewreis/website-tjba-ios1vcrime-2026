@@ -98,34 +98,37 @@ $assuntoExibicao = $assuntoSemDados
     ? 'Nenhum assunto cadastrado. Clique em sincronizar para buscar os dados com a API DataJud'
     : ($processoBlocoIsFull ? str_replace('; ', ' | ', $assuntoTexto) : $limparCodigosAssuntosCompacto($assuntoTexto));
 
-$iconSigilo = $processoSemClasseAssunto
-    ? '/assets/icons/Sign-Badge-Rectangular-Round-2--Streamline-Ultimate.png'
-    : '/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png';
-$iconPrioridade = '/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png';
-$iconAbrir = '/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png';
-$iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
+$iconSigilo = $processoBlocoRowV2
+    ? '/assets/icons/View-Off--Streamline-Ultimate.png'
+    : ($processoSemClasseAssunto
+        ? '/assets/icons/Sign-Badge-Rectangular-Round-2--Streamline-Ultimate.png'
+        : '/assets/icons/Sign-Badge-Rectangular-Round--Streamline-Ultimate.png');
+$iconPrioridade = $processoBlocoRowV2 ? '/assets/icons/Alert-Diamond--Streamline-Ultimate.png' : '/assets/icons/Sign-Badge-Circle--Streamline-Ultimate.png';
+$iconAbrir = $processoBlocoRowV2 ? '/assets/icons/Cartas-Resize-Expand-Corner--Streamline-Ultimate.png' : '/assets/icons/Resize-Expand-Corner-1--Streamline-Ultimate.png';
+$iconSincronizar = $processoBlocoRowV2 ? '/assets/icons/Server-Sync-1--Streamline-Ultimate.png' : '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
 ?>
 <div class="container-processo container-process <?php echo $processoBlocoIsFull ? 'container-lg' : 'container-sm'; ?>" data-processo-bloco="1">
     <div class="container-line">
         <div class="left<?php echo $processoBlocoRowV2 ? ' carta-process-number-line' : ''; ?>">
-            <!-- mostrar essa div se o processo tiver sigilo -->
-            <div class="line-cube box-private<?php echo $sigiloso ? '' : ' open'; ?>" title="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>" aria-label="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>">
-                <img class="cube-icon" src="<?php echo htmlspecialchars($iconSigilo, ENT_QUOTES, 'UTF-8'); ?>" alt="">
-            </div>
-
-            <div
-                class="line-content box-number<?php echo $numero !== '' ? ' process-info' : ''; ?>"
-                <?php if ($numero !== ''): ?>
-                    role="button"
-                    tabindex="0"
-                    title="Copiar número do processo"
-                    aria-label="Copiar número do processo"
-                <?php endif; ?>>
-                <span class="content-number major-info"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></span>
-            </div>
+            <?php if ($processoBlocoRowV2): ?>
+                <div class="line-content box-number<?php echo $numero !== '' ? ' process-info' : ''; ?>"<?php if ($numero !== ''): ?> role="button" tabindex="0" title="Copiar número do processo" aria-label="Copiar número do processo"<?php endif; ?>>
+                    <span class="content-number major-info"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <?php if ($sigiloso): ?><div class="line-cube box-private" title="Sigiloso" aria-label="Sigiloso"><img class="cube-icon" src="<?php echo htmlspecialchars($iconSigilo, ENT_QUOTES, 'UTF-8'); ?>" alt=""></div><?php endif; ?>
+                <?php if ($temPrioridadeVisual): ?><div class="line-cube box-open open" title="<?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES, 'UTF-8'); ?>"><img class="cube-icon" src="<?php echo htmlspecialchars($iconPrioridade, ENT_QUOTES, 'UTF-8'); ?>" alt=""></div><?php endif; ?>
+                <?php if ($mostrarSincronizar): ?><div class="line-cube box-open open js-v2-sync-processo<?php echo $processoBlocoRowV2 ? ' js-processo-datajud-sync' : ''; ?><?php echo $numero !== '' ? '' : ' disabled'; ?>" title="Sincronizar dados do processo" aria-label="Sincronizar dados do processo"<?php if ($numero !== ''): ?> role="button" tabindex="0" data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?>"<?php else: ?> aria-disabled="true"<?php endif; ?>><img class="cube-icon" src="<?php echo htmlspecialchars($iconSincronizar, ENT_QUOTES, 'UTF-8'); ?>" alt=""></div><?php endif; ?>
+            <?php else: ?>
+                <div class="line-cube box-private<?php echo $sigiloso ? '' : ' open'; ?>" title="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>" aria-label="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>">
+                    <img class="cube-icon" src="<?php echo htmlspecialchars($iconSigilo, ENT_QUOTES, 'UTF-8'); ?>" alt="">
+                </div>
+                <div class="line-content box-number<?php echo $numero !== '' ? ' process-info' : ''; ?>"<?php if ($numero !== ''): ?> role="button" tabindex="0" title="Copiar número do processo" aria-label="Copiar número do processo"<?php endif; ?>>
+                    <span class="content-number major-info"><?php echo htmlspecialchars($numero, ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+            <?php endif; ?>
         </div>
 
-        <div class="right">
+        <div class="right<?php echo $processoBlocoRowV2 ? ' carta-process-row-open' : ''; ?>">
+            <?php if (!$processoBlocoRowV2): ?>
             <div class="line-cube box-open<?php echo $temPrioridadeVisual ? ' open' : ''; ?>"<?php if ($temPrioridadeVisual): ?> title="<?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES, 'UTF-8'); ?>" aria-label="<?php echo htmlspecialchars(implode(' | ', $prioridadesTexto), ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>>
                 <?php if ($temPrioridadeVisual): ?>
                     <img class="cube-icon" src="<?php echo htmlspecialchars($iconPrioridade, ENT_QUOTES, 'UTF-8'); ?>" alt="">
@@ -150,6 +153,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                 <div class="line-cube box-open open" title="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>" aria-label="<?php echo $abrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>"<?php if (!$abrirDisabled && $abrirHref !== ''): ?> role="button" tabindex="0" data-nav-href="<?php echo htmlspecialchars($abrirHref, ENT_QUOTES, 'UTF-8'); ?>"<?php endif; ?>>
                     <img class="cube-icon" src="<?php echo htmlspecialchars($iconAbrir, ENT_QUOTES, 'UTF-8'); ?>" alt="">
                 </div>
+            <?php endif; ?>
             <?php endif; ?>
         </div>
     </div>

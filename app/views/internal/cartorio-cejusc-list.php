@@ -110,7 +110,16 @@ $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?:
                 $dataEnvioTexto = $dataEnvioRaw !== '' ? cejusc_date($dataEnvioRaw) : 'Data não informada';
                 ?>
                 <article class="register-line carta-expedida-v2-row cejusc-record" role="listitem" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>"<?php echo $processoIdBlocoCejusc !== '' ? ' data-processo-id="' . htmlspecialchars($processoIdBlocoCejusc, ENT_QUOTES) . '"' : ''; ?> id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>">
-                    <div class="left carta-expedida-left cejusc-process-column"><?php $processo_bloco_row_v2 = true; include __DIR__ . '/_processo_bloco_listagem.php'; unset($processo_bloco_row_v2); ?></div>
+                    <div class="left carta-expedida-left cejusc-process-column">
+                        <div class="carta-expedida-process-group">
+                            <div class="register-block carta-process-tools">
+                                <div class="line-cube carta-process-tool js-v2-copy-processo" role="button" tabindex="0" data-processo-numero="<?php echo htmlspecialchars((string) ($row['numero_processo'] ?? ''), ENT_QUOTES); ?>" title="Copiar número do processo" aria-label="Copiar número do processo"><img src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt=""></div>
+                                <?php $processoBlocoCejuscAbrirHref = trim((string) ($row['bloco_processo_abrir_href'] ?? '')); $processoBlocoCejuscAbrirDisabled = !empty($row['bloco_processo_abrir_disabled']); ?>
+                                <div class="line-cube box-open open carta-process-tool-open" title="<?php echo $processoBlocoCejuscAbrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>" aria-label="<?php echo $processoBlocoCejuscAbrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>"<?php if (!$processoBlocoCejuscAbrirDisabled && $processoBlocoCejuscAbrirHref !== ''): ?> role="button" tabindex="0" data-nav-href="<?php echo htmlspecialchars($processoBlocoCejuscAbrirHref, ENT_QUOTES); ?>"<?php endif; ?>><img class="cube-icon" src="/assets/icons/Cartas-Resize-Expand-Corner--Streamline-Ultimate.png" alt=""></div>
+                            </div>
+                            <div class="register-block process carta-process-details"><?php $processo_bloco_row_v2 = true; include __DIR__ . '/_processo_bloco_listagem.php'; unset($processo_bloco_row_v2); ?></div>
+                        </div>
+                    </div>
                     <div class="right carta-expedida-right cejusc-record-columns">
                         <div class="register-block cejusc-party-column"><div class="register-block-title">Nome da parte</div><div class="register-block-content"><div class="register-block-content-item"><strong class="register-block-content-item-value"><?php echo htmlspecialchars((string) $row['nome_parte'], ENT_QUOTES); ?></strong></div></div><?php if ($vitimaResumoCejusc !== ''): ?><div class="register-block-content cejusc-victim">Vítima: <?php echo htmlspecialchars($vitimaResumoCejusc, ENT_QUOTES); ?></div><?php endif; ?></div>
                         <div class="register-block cejusc-date-column"><div class="register-block-title">Data de envio</div><div class="register-block-content"><strong><?php echo htmlspecialchars($dataEnvioTexto, ENT_QUOTES); ?></strong></div><span class="cejusc-column-caption">Ao CEJUSC</span></div>
