@@ -43,7 +43,12 @@ $__alocsEd = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($__alocsEd);
 $__usersAlocEd = [];
 if ($__showAlocDirEd && !$__bloqueadaEd && count($__alocsEd) < 5) {
     try {
-        $__usersAlocEd = AlocacaoRegrasUsuariosHelper::listUsuariosInternos($connection);
+        $__usersAlocEd = array_values(array_filter(
+            AlocacaoRegrasUsuariosHelper::listUsuariosInternos($connection),
+            static function (array $usuario) use ($__uidEd): bool {
+                return trim((string) ($usuario['id'] ?? '')) !== $__uidEd;
+            }
+        ));
     } catch (Throwable $e) {
         $__usersAlocEd = [];
     }
