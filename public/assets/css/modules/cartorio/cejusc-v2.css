@@ -48,6 +48,7 @@
 .cejusc-record .cejusc-party-column { flex:1 1 230px; min-width:180px; }
 .cejusc-record .cejusc-date-column { flex:0 0 150px; width:150px; }
 .cejusc-record .cejusc-history-column { flex:1 1 210px; min-width:140px; }
+.cejusc-record .cejusc-history-list { display:flex; flex-direction:column; gap:2px; }
 .cejusc-record .register-block-title { margin-bottom:4px; color:#77717f; font-family:'Google Sans Flex','Google Sans',sans-serif; font-size:10px; font-weight:500; line-height:14px; }
 .cejusc-record .register-block-content, .cejusc-record .cejusc-history-text { overflow:hidden; color:#38313f; font-family:'Google Sans Flex','Google Sans',sans-serif; font-size:12px; line-height:17px; text-overflow:ellipsis; }
 .cejusc-record .register-block-content-item { max-width:100%; }
