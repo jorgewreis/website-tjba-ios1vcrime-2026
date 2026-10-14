@@ -106,31 +106,35 @@ $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?:
                 $vitimaResumoCejusc = cejusc_resumo_nomes($cejuscVitimasPorProcesso[$processoIdBlocoCejusc] ?? [], 'outra', 'outras');
                 $dataEnvioRaw = trim((string) ($row['data_envio_cejusc'] ?? ''));
                 $dataEnvioTexto = $dataEnvioRaw !== '' ? cejusc_date($dataEnvioRaw) : 'Data não informada';
+                $cejuscStatusLabel = $dataEnvioRaw !== '' ? 'Enviado ao Cejusc' : 'Aguardando envio';
+                $cejuscStatusClass = $dataEnvioRaw !== '' ? 'status-pending' : 'status-current';
+                $historicoRecente = $historicoLinhasCejusc !== [] ? $historicoLinhasCejusc[count($historicoLinhasCejusc) - 1] : null;
+                $historicoTexto = is_array($historicoRecente) ? trim((string) ($historicoRecente['data_hora'] ?? '')) : '';
+                $historicoAutor = is_array($historicoRecente) ? trim((string) ($historicoRecente['autor'] ?? '')) : '';
+                if ($historicoAutor !== '') $historicoTexto .= ($historicoTexto !== '' ? ' | ' : '') . $historicoAutor;
                 ?>
                 <article class="register-line carta-expedida-v2-row cejusc-record" role="listitem" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>"<?php echo $processoIdBlocoCejusc !== '' ? ' data-processo-id="' . htmlspecialchars($processoIdBlocoCejusc, ENT_QUOTES) . '"' : ''; ?> id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>">
-                    <div class="left carta-expedida-left cejusc-process-column">
-                        <div class="carta-expedida-process-group">
-                            <div class="register-block carta-process-tools">
-                                <div class="line-cube carta-process-tool process-info" role="button" tabindex="0" data-processo-numero="<?php echo htmlspecialchars((string) ($row['numero_processo'] ?? ''), ENT_QUOTES); ?>" title="Copiar número do processo" aria-label="Copiar número do processo"><img src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt=""></div>
-                                <?php $processoBlocoCejuscAbrirHref = trim((string) ($row['bloco_processo_abrir_href'] ?? '')); $processoBlocoCejuscAbrirDisabled = !empty($row['bloco_processo_abrir_disabled']); ?>
-                                <div class="line-cube box-open open carta-process-tool-open" title="<?php echo $processoBlocoCejuscAbrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>" aria-label="<?php echo $processoBlocoCejuscAbrirDisabled ? 'Processo não cadastrado no sistema' : 'Abrir processo'; ?>"<?php if (!$processoBlocoCejuscAbrirDisabled && $processoBlocoCejuscAbrirHref !== ''): ?> role="button" tabindex="0" data-nav-href="<?php echo htmlspecialchars($processoBlocoCejuscAbrirHref, ENT_QUOTES); ?>"<?php endif; ?>><img class="cube-icon" src="/assets/icons/Cartas-Resize-Expand-Corner--Streamline-Ultimate.png" alt=""></div>
-                            </div>
-                            <div class="register-block process carta-process-details"><?php $processo_bloco_row_v2 = true; include __DIR__ . '/_processo_bloco_listagem.php'; unset($processo_bloco_row_v2); ?></div>
-                        </div>
+                    <div class="left carta-expedida-left">
+                        <?php include __DIR__ . '/partials/processo-v2.php'; ?>
                     </div>
-                    <div class="right carta-expedida-right cejusc-record-columns">
+                    <div class="right carta-expedida-right">
                         <div class="register-block cejusc-party-column">
                             <div class="register-block-title">Nome da parte</div>
                             <div class="register-block-content"><strong class="register-block-content-item-value"><?php echo htmlspecialchars((string) $row['nome_parte'], ENT_QUOTES); ?></strong></div>
                             <div class="register-block-content cejusc-date-line"><?php echo htmlspecialchars($dataEnvioTexto . ' - Enviado ao Cejusc', ENT_QUOTES); ?></div>
                             <?php if ($vitimaResumoCejusc !== ''): ?><div class="register-block-content cejusc-victim">Vítima: <?php echo htmlspecialchars($vitimaResumoCejusc, ENT_QUOTES); ?></div><?php endif; ?>
                         </div>
-                        <div class="register-block cejusc-history-column">
-                            <div class="cejusc-history-copy">
-                                <div class="register-block-title">Histórico de movimentações</div>
-                                <?php $historicoLinhaCejuscAtual = $historicoLinhasCejusc !== [] ? $historicoLinhasCejusc[count($historicoLinhasCejusc) - 1] : null; if (!is_array($historicoLinhaCejuscAtual)): ?><div class="cejusc-history-text over">Nenhuma movimentação registrada</div><?php else: ?><?php $historicoData = trim((string) ($historicoLinhaCejuscAtual['data_hora'] ?? '')); $historicoRotulo = trim((string) ($historicoLinhaCejuscAtual['rotulo'] ?? '')); $historicoAutor = trim((string) ($historicoLinhaCejuscAtual['autor'] ?? '')); $historicoTexto = '- ' . $historicoData . ' | ' . $historicoRotulo . ($historicoAutor !== '' ? ' por ' : '') . $historicoAutor; ?><div class="cejusc-history-text<?php echo !empty($historicoLinhaCejuscAtual['content_class']) ? ' ' . htmlspecialchars((string) $historicoLinhaCejuscAtual['content_class'], ENT_QUOTES) : ''; ?>"><?php echo htmlspecialchars($historicoTexto, ENT_QUOTES); ?></div><?php endif; ?>
+                        <div class="carta-expedida-status-group">
+                            <div class="register-block-status">
+                                <div class="badge-status-primary <?php echo htmlspecialchars($cejuscStatusClass, ENT_QUOTES); ?>"><span class="badge-status-text"><?php echo htmlspecialchars($cejuscStatusLabel, ENT_QUOTES); ?></span></div>
+                                <?php if (!empty($registroMetadata['show_edit']) && !empty($registroMetadata['edit_href'])): ?><button type="button" class="carta-row-action" data-action="editar-registro" data-edit-href="<?php echo htmlspecialchars($registroMetadata['edit_href'], ENT_QUOTES); ?>" title="Editar cadastro" aria-label="Editar cadastro"><img src="/assets/icons/Eject-Button--Streamline-Ultimate.png" alt=""></button><?php endif; ?>
                             </div>
-                            <?php if (!empty($registroMetadata['show_edit']) && !empty($registroMetadata['edit_href'])): ?><div class="register-block"><div class="register-block-status cejusc-row-actions"><button type="button" class="button-icon-right carta-row-action" data-action="editar-registro" data-edit-href="<?php echo htmlspecialchars($registroMetadata['edit_href'], ENT_QUOTES); ?>" title="Editar cadastro" aria-label="Editar cadastro"><img src="/assets/icons/Eject-Button--Streamline-Ultimate.png" alt=""></button></div></div><?php endif; ?>
+                            <div class="container-historical container-sm">
+                                <div class="container-line"><div class="line-content double-line">
+                                    <span class="content-classe">Última movimentação</span>
+                                    <span class="content-assuntos<?php echo $historicoTexto === '' ? ' over' : ''; ?>"><?php echo htmlspecialchars($historicoTexto !== '' ? $historicoTexto : 'Nenhuma movimentação registrada', ENT_QUOTES); ?></span>
+                                </div></div>
+                            </div>
                         </div>
                     </div>
                 </article>
