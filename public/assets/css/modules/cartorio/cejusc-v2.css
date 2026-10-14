@@ -66,6 +66,7 @@
 .cejusc-record .cejusc-date-line { color:#777; }
 .cejusc-record .cejusc-history-column { display:grid; grid-template-columns:minmax(0,1fr) 30px; align-items:center; gap:12px; }
 .cejusc-record .cejusc-history-copy { min-width:0; }
+.cejusc-record .cejusc-history-column > .register-block { width:30px; min-width:30px; max-width:30px; }
 .cejusc-record .cejusc-history-list { display:flex; flex-direction:column; gap:0; }
 .cejusc-record .register-block-content, .cejusc-record .cejusc-history-text { overflow:hidden; color:#38313f; font-family:'Google Sans Flex','Google Sans',sans-serif; font-size:12px; line-height:17px; text-overflow:ellipsis; }
 .cejusc-record .register-block-content-item { max-width:100%; }
