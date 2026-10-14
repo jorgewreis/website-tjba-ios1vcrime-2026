@@ -40,7 +40,7 @@
 .cejusc-list-page .cejusc-filter-controls input[type="month"] { width:190px; }
 .cejusc-list-count { width:100%; padding:12px 20px; border-bottom:1px solid var(--color-border); color:#655d6d; font-family:'Google Sans',sans-serif; font-size:12px; }
 .cejusc-list-results { display:block; width:100%; }
-.cejusc-record { width:calc(100% - 6px); min-height:74px; }
+.register-line.carta-expedida-v2-row.cejusc-record { width:calc(100% - 6px); min-height:75px; }
 .cejusc-record .cejusc-process-column { flex:0 0 310px; width:310px; min-width:310px; }
 .cejusc-record .cejusc-process-column .container-process.container-sm { width:310px; min-width:310px; max-width:310px; }
 .cejusc-record .cejusc-record-columns {
