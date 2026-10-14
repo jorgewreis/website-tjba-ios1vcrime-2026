@@ -55,6 +55,7 @@ function cejusc_resumo_nomes(array $nomes, string $singularOutro = 'outro', stri
 $assetsRoot = dirname(__DIR__, 3) . '/public/assets';
 $v2ColorsCssV = @filemtime($assetsRoot . '/css/shared/v2-colors.css') ?: time();
 $v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: time();
+$cartasExpedidasRowsCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cartas-expedidas-rows.css') ?: time();
 $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?: time();
 ?>
 <!DOCTYPE html>
@@ -66,6 +67,7 @@ $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?:
     <link rel="stylesheet" href="/assets/css/shared/v2-colors.css?v=<?php echo (int) $v2ColorsCssV; ?>">
     <link rel="stylesheet" href="/assets/css/shared/v2-page-list.css?v=<?php echo (int) $v2PageListCssV; ?>">
     <?php include __DIR__ . '/_internal_head_styles.php'; ?>
+    <link rel="stylesheet" href="/assets/css/modules/cartorio/cartas-expedidas-rows.css?v=<?php echo (int) $cartasExpedidasRowsCssV; ?>">
     <link rel="stylesheet" href="/assets/css/modules/cartorio/cejusc-v2.css?v=<?php echo (int) $cejuscCssV; ?>">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime($assetsRoot . '/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
