@@ -23,6 +23,7 @@ declare(strict_types=1);
  */
 
 $processoBlocoVariant = isset($processo_bloco_variant) ? (string) $processo_bloco_variant : '';
+$processoBlocoRowV2 = !empty($processo_bloco_row_v2);
 $processoBlocoIsEstudantes = ($processoBlocoVariant === 'estudantes');
 $processoBlocoHideActions = $processoBlocoIsEstudantes;
 $processoBlocoForceOpenWhenMissingData = ($processoBlocoVariant === 'consulta-processos');
@@ -106,7 +107,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
 ?>
 <div class="container-processo container-process <?php echo $processoBlocoIsFull ? 'container-lg' : 'container-sm'; ?>" data-processo-bloco="1">
     <div class="container-line">
-        <div class="left">
+        <div class="left<?php echo $processoBlocoRowV2 ? ' carta-process-number-line' : ''; ?>">
             <!-- mostrar essa div se o processo tiver sigilo -->
             <div class="line-cube box-private<?php echo $sigiloso ? '' : ' open'; ?>" title="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>" aria-label="<?php echo $sigiloso ? 'Sigiloso' : 'Processo sem sigilo'; ?>">
                 <img class="cube-icon" src="<?php echo htmlspecialchars($iconSigilo, ENT_QUOTES, 'UTF-8'); ?>" alt="">
