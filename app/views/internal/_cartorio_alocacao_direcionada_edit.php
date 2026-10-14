@@ -37,18 +37,22 @@ $__alocsEd = is_array($cartorioAlocacaoAlocados) ? $cartorioAlocacaoAlocados : [
 $__bloqueadaEd = !empty($cartorioAlocacaoBloqueada);
 $__uidEd = trim((string) ($cartorioAlocacaoUserId ?? ''));
 $__gestaoEd = !empty($cartorioAlocacaoIsGestao);
+$__allowSelfAllocationEd = !empty($cartorioAlocacaoAllowSelfAllocation);
 
 $__showAlocDirEd = ($__uidEd !== '' && AlocacaoTarefasPerfisHelper::usuarioAdminOuChefiaPodeAlocarOutrosCadastro($__uidEd));
 $__alocsEd = CartorioAlocacaoChipHelper::ordenarAlocadosPorTipo($__alocsEd);
 $__usersAlocEd = [];
 if ($__showAlocDirEd && !$__bloqueadaEd && count($__alocsEd) < 5) {
     try {
-        $__usersAlocEd = array_values(array_filter(
-            AlocacaoRegrasUsuariosHelper::listUsuariosInternos($connection),
-            static function (array $usuario) use ($__uidEd): bool {
-                return trim((string) ($usuario['id'] ?? '')) !== $__uidEd;
-            }
-        ));
+        $__usersAlocEd = AlocacaoRegrasUsuariosHelper::listUsuariosInternos($connection);
+        if (!$__allowSelfAllocationEd) {
+            $__usersAlocEd = array_values(array_filter(
+                $__usersAlocEd,
+                static function (array $usuario) use ($__uidEd): bool {
+                    return trim((string) ($usuario['id'] ?? '')) !== $__uidEd;
+                }
+            ));
+        }
     } catch (Throwable $e) {
         $__usersAlocEd = [];
     }

@@ -118,14 +118,15 @@ final class AlocacaoTarefasPerfisHelper
         PDO $connection,
         string $actorId,
         string $targetUsuarioId,
-        callable $addSpecific
+        callable $addSpecific,
+        bool $allowSelfAllocation = false
     ): void {
         $actorId = trim($actorId);
         $targetUsuarioId = trim($targetUsuarioId);
         if ($actorId === '' || $targetUsuarioId === '') {
             throw new \InvalidArgumentException('Usuário alvo é obrigatório.');
         }
-        if ($targetUsuarioId === $actorId) {
+        if (!$allowSelfAllocation && $targetUsuarioId === $actorId) {
             throw new \InvalidArgumentException('Não é possível alocar a si mesmo.');
         }
         if (!self::usuarioAdminOuChefiaPodeAlocarOutrosCadastro($actorId)) {

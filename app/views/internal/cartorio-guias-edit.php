@@ -309,6 +309,7 @@ $tiposOptions = [
                 $cartorioAlocacaoBloqueada = $tarefaFinalizadaOuCancelada;
                 $cartorioAlocacaoUserId = $userId !== null ? trim((string) $userId) : '';
                 $cartorioAlocacaoIsGestao = $isGestaoAlocEdit;
+                $cartorioAlocacaoAllowSelfAllocation = true;
                 include __DIR__ . '/_cartorio_alocacao_direcionada_edit.php';
                 ?>
             <?php endif; ?>

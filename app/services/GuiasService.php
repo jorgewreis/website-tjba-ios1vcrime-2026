@@ -784,7 +784,8 @@ final class GuiasService
             $targetUsuarioId,
             function (string $uid) use ($guiaId): void {
                 $this->alocadosRepository->addAlocado($guiaId, $uid, GuiasAlocadosRepository::TIPO_SPECIFIC);
-            }
+            },
+            true
         );
     }
 
