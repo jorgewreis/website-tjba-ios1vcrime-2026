@@ -113,6 +113,20 @@
 .dash-weekly-card h3 { margin-bottom:8px; }
 .dash-weekly-chart { position:relative; width:100%; min-width:0; min-height:0; margin-top:10px; overflow:hidden; }
 .dash-letters-card { display:grid; grid-template-rows:44px minmax(0,1fr); gap:4px; height:160px; max-height:160px; padding:10px; overflow:hidden; }
+.dash-offices-card { padding:12px 14px 10px; }
+.dash-offices-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:9px; color:#575160; font-size:11px; }
+.dash-offices-heading strong { font-weight:700; }
+.dash-offices-heading > span { color:#81798d; font-size:9px; }
+.dash-offices-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.dash-offices-summary > div { display:flex; align-items:center; gap:5px; min-width:0; }
+.dash-offices-summary > div + div { padding-left:10px; border-left:1px solid #efedf3; }
+.dash-offices-summary > div > span { display:flex; align-items:center; gap:4px; color:#6f687b; font-size:9px; }
+.dash-offices-summary .legend-dot { width:6px; height:6px; flex:0 0 6px; }
+.dash-offices-summary strong { margin-left:auto; color:#49335f; font-size:18px; line-height:1; }
+.dash-offices-summary > div + div strong { color:#337c68; }
+.dash-offices-period { display:block; margin-top:12px; color:#777183; font-size:9px; }
+.dash-offices-chart { position:relative; height:96px; margin-top:2px; overflow:hidden; }
+.dash-offices-chart canvas { display:block; width:100%!important; height:100%!important; }
 .dash-letters-summary { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; min-width:0; }
 .dash-letters-stat { min-width:0; }
 .dash-letters-label { display:flex; align-items:center; gap:4px; color:#6f687b; font-size:9px; font-weight:600; line-height:11px; white-space:nowrap; }

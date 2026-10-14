@@ -101,6 +101,16 @@
         {label:'Recebidas',data:week.recebidas||[],backgroundColor:colors.mint,borderRadius:3,maxBarThickness:10}
       ]);
 
+      const offices=data.geral?.oficios_cadastrados||{};
+      const officesYear=offices.ano||{};
+      const officesWeek=offices.semana||{labels:[],cartorio:[],gabinete:[]};
+      set('dash-offices-year-cartorio',count(officesYear.cartorio));
+      set('dash-offices-year-gabinete',count(officesYear.gabinete));
+      weeklyBars('dash-chart-oficios-semana',officesWeek.labels||[],[
+        {label:'Cartório',data:officesWeek.cartorio||[],backgroundColor:colors.purple,borderRadius:3,maxBarThickness:10},
+        {label:'Gabinete',data:officesWeek.gabinete||[],backgroundColor:colors.mint,borderRadius:3,maxBarThickness:10}
+      ]);
+
       const cartorioEnabled=Boolean(data.setor?.conectado)&&(data.setor?.areas||[]).includes('CARTORIO');
       const queueCard=$('dash-cartorio-queue');
       const sectorQueues=data.setor?.filas||[];
