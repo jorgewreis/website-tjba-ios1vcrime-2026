@@ -42,6 +42,7 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
           <article id="dash-cartorio-queue" class="dash-card dash-sector-queue" hidden>
             <div class="dash-sector-metric" id="dash-queue-expedidas-row"><span><b>Cartas Expedidas</b><br>aguardando envio</span><strong id="dash-queue-expedidas">—</strong></div>
             <div class="dash-sector-metric" id="dash-queue-recebidas-row"><span><b>Cartas Recebidas</b><br>aguardando devolução</span><strong id="dash-queue-recebidas">—</strong></div>
+            <div class="dash-sector-metric" id="dash-queue-oficios-row"><span><b>Ofícios do Cartório</b><br>aguardando envio</span><strong id="dash-queue-oficios">0</strong></div>
             <div class="dash-sector-metric" id="dash-queue-editais-row" hidden><span><b>Editais</b><br>aguardando publicação</span><strong id="dash-queue-editais">—</strong></div>
             <div class="dash-sector-metric dash-sector-overdue" id="dash-overdue-expedidas-row" hidden><span><b>Cartas Expedidas</b><br>com prazo vencido</span><strong id="dash-overdue-expedidas">—</strong></div>
             <div class="dash-sector-metric dash-sector-overdue" id="dash-overdue-recebidas-row" hidden><span><b>Cartas Recebidas</b><br>com prazo vencido</span><strong id="dash-overdue-recebidas">—</strong></div>
