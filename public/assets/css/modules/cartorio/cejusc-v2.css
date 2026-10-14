@@ -43,10 +43,11 @@
 .register-line.carta-expedida-v2-row.cejusc-record { width:calc(100% - 6px); min-height:75px; }
 .cejusc-record .cejusc-process-column { flex:0 0 310px; width:310px; min-width:310px; }
 .cejusc-record .cejusc-process-column .container-process.container-sm { width:310px; min-width:310px; max-width:310px; }
+.cejusc-record .container-process .line-content.box-number { justify-content:flex-start; text-align:left; }
 .cejusc-record .cejusc-record-columns {
     display:grid;
     flex:1 1 0;
-    grid-template-columns:minmax(0, 1.05fr) 150px minmax(0, 1fr) 60px;
+    grid-template-columns:350px minmax(0, 1fr);
     align-items:center;
     min-width:0;
     margin-left:16px;
@@ -61,15 +62,17 @@
 }
 .cejusc-record .register-block { min-width:0; }
 .cejusc-record .cejusc-party-column,
-.cejusc-record .cejusc-date-column,
 .cejusc-record .cejusc-history-column { min-width:0; width:auto; }
-.cejusc-record .cejusc-history-list { display:flex; flex-direction:column; gap:2px; }
+.cejusc-record .cejusc-date-line { color:#777; }
+.cejusc-record .cejusc-history-column { display:grid; grid-template-columns:minmax(0,1fr) 30px; align-items:center; gap:12px; }
+.cejusc-record .cejusc-history-copy { min-width:0; }
+.cejusc-record .cejusc-history-list { display:flex; flex-direction:column; gap:0; }
 .cejusc-record .register-block-content, .cejusc-record .cejusc-history-text { overflow:hidden; color:#38313f; font-family:'Google Sans Flex','Google Sans',sans-serif; font-size:12px; line-height:17px; text-overflow:ellipsis; }
 .cejusc-record .register-block-content-item { max-width:100%; }
 .cejusc-record .register-block-content-item-value { font-weight:600; }
 .cejusc-record .cejusc-victim { margin-top:3px; color:#786c84; font-size:10px; }
 .cejusc-record .cejusc-column-caption { color:#786c84; font-family:'Google Sans Flex','Google Sans',sans-serif; font-size:10px; }
-.cejusc-record .cejusc-history-text { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.cejusc-record .cejusc-history-text { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-height:15px; }
 .cejusc-record .cejusc-history-text.over { color:#999; }
 .cejusc-record .cejusc-row-actions { min-width:0; justify-content:flex-end; }
 .cejusc-list-empty { display:flex; min-height:160px; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:24px; border-bottom:1px solid var(--color-border); color:var(--color-description-text); text-align:center; }
@@ -97,7 +100,7 @@
     .cejusc-record .cejusc-process-column { flex:1 1 100%; width:100%; min-width:0; }
     .cejusc-record .cejusc-record-columns {
         flex:1 1 100%;
-        grid-template-columns:minmax(0,1.2fr) minmax(130px,.7fr) minmax(0,1.5fr) 72px;
+        grid-template-columns:minmax(280px,350px) minmax(0,1fr);
         margin:8px 0 0;
     }
     .cejusc-record .cejusc-process-column .container-process.container-sm { width:100%; min-width:0; max-width:400px; }
@@ -112,10 +115,8 @@
     .cejusc-list-page .cejusc-filter-controls { display:grid; grid-template-columns:minmax(0,1fr); justify-content:stretch; }
     .cejusc-list-page .cejusc-filter-controls input[type="month"], .cejusc-list-page .cejusc-filter-controls .btn { width:100%; }
     .cejusc-record .carta-expedida-left, .cejusc-record .carta-expedida-right { flex:1 1 100%; width:100%; min-width:0; }
-    .cejusc-record .cejusc-record-columns { grid-template-columns:minmax(0,1fr) auto; gap:12px; }
-    .cejusc-record .cejusc-party-column, .cejusc-record .cejusc-history-column { grid-column:1 / 2; }
-    .cejusc-record .cejusc-date-column { grid-column:1 / 2; }
-    .cejusc-record .cejusc-row-actions { grid-column:2; grid-row:1 / span 3; align-self:center; }
+    .cejusc-record .cejusc-record-columns { grid-template-columns:minmax(0,1fr); gap:14px; }
+    .cejusc-record .cejusc-party-column, .cejusc-record .cejusc-history-column { grid-column:1; }
     .cejusc-list-pagination { align-items:flex-start; flex-wrap:wrap; padding:12px 14px; }
     .cejusc-list-pagination .pagination-info { width:100%; }
     .cejusc-list-pagination .pagination-controls { justify-content:flex-end; width:100%; }
