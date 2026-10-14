@@ -41,13 +41,6 @@
     rows.forEach(row=>container.appendChild(row));
   }
   function destroyCharts(){charts.splice(0).forEach(c=>c.destroy());}
-  function spark(id,labels,values,color){
-    const el=$(id);if(!el||!window.Chart)return;
-    const hasMovement=values.some(value=>Number(value)>0);
-    el.parentElement.hidden=!hasMovement;
-    if(!hasMovement)return;
-    charts.push(new Chart(el,{type:'bar',data:{labels,datasets:[{data:values,backgroundColor:values.map((_,i)=>i===values.length-1?color:color+'88'),borderWidth:0,borderRadius:2,maxBarThickness:8}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},tooltip:{enabled:true,displayColors:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}},layout:{padding:1}}}));
-  }
   function weeklyBars(id,labels,datasets){
     const el=$(id);if(!el||!window.Chart)return;
     charts.push(new Chart(el,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#777183',maxRotation:0,autoSkip:false,padding:1,font:{size:8}}},y:{beginAtZero:true,ticks:{precision:0,maxTicksLimit:3,padding:2,color:'#777183',font:{size:8}},border:{display:false},grid:{color:'rgba(39,31,50,.06)'}}}}}));
@@ -146,10 +139,8 @@
       const modules=data.usuario?.modules||[];
       set('dash-done-expedidas',count(moduleTotal(modules,'cartas_expedidas')));
       set('dash-done-recebidas',count(moduleTotal(modules,'cartas_recebidas')));
-      const weeklyModules=data.usuario?.weekly_by_module||{};
-      const labels=week.labels||[];
-      spark('dash-spark-user-expedidas',labels,weeklyModules.cartas_expedidas||[],colors.purple);
-      spark('dash-spark-user-recebidas',labels,weeklyModules.cartas_recebidas||[],colors.mint);
+      set('dash-done-oficios',count(moduleTotal(modules,'oficios')));
+      set('dash-done-medidas-protetivas',count(data.usuario?.medidas_protetivas_expedidas_30d));
 
       renderAlerts(data.alertas);
     }catch(error){

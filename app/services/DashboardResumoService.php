@@ -91,10 +91,10 @@ final class DashboardResumoService
                 } catch (Throwable $e) { $hasQueueErrors=true; $queues[] = ['key'=>$key,'label'=>$meta['label'],'count'=>null,'route'=>$meta['route'],'error'=>true]; }
             }
         }
-        $completed = ['7d'=>0,'30d'=>0,'weekly'=>array_fill(0,7,0),'weekly_by_module'=>['cartas_expedidas'=>array_fill(0,7,0),'cartas_recebidas'=>array_fill(0,7,0)],'modules'=>[]];
+        $completed = ['7d'=>0,'30d'=>0,'weekly'=>array_fill(0,7,0),'weekly_by_module'=>['cartas_expedidas'=>array_fill(0,7,0),'cartas_recebidas'=>array_fill(0,7,0),'oficios'=>array_fill(0,7,0)],'modules'=>[],'medidas_protetivas_expedidas_30d'=>null];
         try {
             if ($this->tableExists('dashboard_conclusoes')) {
-                $scope="usuario_id=? AND modulo IN ('cartas_expedidas','cartas_recebidas')";
+                $scope="usuario_id=? AND modulo IN ('cartas_expedidas','cartas_recebidas','oficios')";
                 $st=$this->pdo->prepare("SELECT COUNT(*) FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(NOW(), INTERVAL 7 DAY)"); $st->execute([$userId]); $completed['7d']=(int)$st->fetchColumn();
                 $st=$this->pdo->prepare("SELECT COUNT(*) FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(NOW(), INTERVAL 30 DAY)"); $st->execute([$userId]); $completed['30d']=(int)$st->fetchColumn();
                 $st=$this->pdo->prepare("SELECT modulo, COUNT(*) total FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY modulo"); $st->execute([$userId]); $completed['modules']=$st->fetchAll(PDO::FETCH_ASSOC);
@@ -102,6 +102,13 @@ final class DashboardResumoService
                 foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $row) { $i=6-(int)$row['age'];$module=(string)$row['modulo'];if($i>=0&&$i<7){$completed['weekly'][$i]+=(int)$row['total'];if(isset($completed['weekly_by_module'][$module]))$completed['weekly_by_module'][$module][$i]=(int)$row['total'];} }
             }
         } catch (Throwable $e) { error_log('dashboard resumo [produtividade]: '.$e->getMessage()); }
+        try {
+            if ($this->tableExists('cejusc_registros')) {
+                $st=$this->pdo->prepare('SELECT COUNT(*) FROM cejusc_registros WHERE criado_por=? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)');
+                $st->execute([$userId]);
+                $completed['medidas_protetivas_expedidas_30d']=(int)$st->fetchColumn();
+            }
+        } catch(Throwable $e) { error_log('dashboard resumo [medidas protetivas expedidas]: '.$e->getMessage()); }
         $calendar=['audiencias_7d'=>null,'dias_nao_uteis_30d'=>null];
         try { if ($this->tableExists('sala_audiencias_pauta')) { $st=$this->pdo->query("SELECT COUNT(*) FROM sala_audiencias_pauta WHERE ativo=1 AND data_audiencia BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) AND LOWER(COALESCE(status,'')) NOT IN ('cancelada','cancelado')"); $calendar['audiencias_7d']=(int)$st->fetchColumn(); } } catch(Throwable $e) {}
         try {
