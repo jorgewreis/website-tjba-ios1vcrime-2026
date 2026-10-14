@@ -19,7 +19,7 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
       <div id="dashboard-erro" class="dashboard-error" hidden></div>
       <div class="dashboard-interno-columns">
         <section class="dashboard-column dashboard-system" aria-labelledby="dash-system-title">
-          <header><span class="column-kicker">01 / SISTEMA</span><h2 id="dash-system-title">Fluxo geral</h2><p>Cartas da Vara e ofícios do Cartório e Gabinete</p></header>
+          <header><span class="column-kicker">SISTEMA</span><h2 id="dash-system-title">Fluxo geral</h2></header>
           <article class="dash-card dash-letters-card" aria-label="Cartas ativas e cadastros dos últimos sete dias">
             <div class="dash-summary-heading"><strong>Cartas ativas</strong><span>Total atual</span></div>
             <div class="dash-summary-stats">
@@ -40,7 +40,7 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
           </article>
         </section>
         <section class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title">
-          <header><span class="column-kicker">02 / SETOR</span><h2 id="dash-sector-title">Minha área</h2><p>Pendências no setor autorizado</p></header>
+          <header><span class="column-kicker">SETOR</span><h2 id="dash-sector-title">Minha área</h2></header>
           <article id="dash-cartorio-queue" class="dash-card dash-sector-queue" hidden>
             <div class="dash-sector-metric" id="dash-queue-expedidas-row"><span><b>Cartas Expedidas</b><br>aguardando envio</span><strong id="dash-queue-expedidas">—</strong></div>
             <div class="dash-sector-metric" id="dash-queue-recebidas-row"><span><b>Cartas Recebidas</b><br>aguardando devolução</span><strong id="dash-queue-recebidas">—</strong></div>
@@ -51,7 +51,7 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
           </article>
         </section>
         <section class="dashboard-column dashboard-work" aria-labelledby="dash-work-title">
-          <header><span class="column-kicker">03 / PRODUTIVIDADE</span><h2 id="dash-work-title">Meu trabalho</h2><p>Movimentações feitas pelo usuário</p></header>
+          <header><span class="column-kicker">PRODUTIVIDADE</span><h2 id="dash-work-title">Meu trabalho</h2></header>
           <article class="dash-card dash-production-summary" aria-label="Movimentações do usuário nos últimos 30 dias">
             <div class="dash-summary-heading"><strong>Movimentações</strong><span class="dash-production-period">Últimos 30 dias</span></div>
             <div class="dash-production-grid">
@@ -63,7 +63,7 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
           </article>
         </section>
         <section class="dashboard-column dashboard-agenda" aria-labelledby="dash-agenda-title">
-          <header><span class="column-kicker">04 / AGENDA</span><h2 id="dash-agenda-title">Agenda e alertas</h2><p>Janelas próximas e referência de fila</p></header>
+          <header><span class="column-kicker">AGENDA</span><h2 id="dash-agenda-title">Agenda e alertas</h2></header>
           <div id="dash-alerts" class="dash-alert-list"></div>
         </section>
       </div>
