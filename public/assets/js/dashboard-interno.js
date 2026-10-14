@@ -40,7 +40,6 @@
     });
     rows.forEach(row=>container.appendChild(row));
   }
-  function recentRegistrations(values){const total=(values||[]).reduce((sum,value)=>sum+Number(value),0);return count(total)+' '+(total===1?'cadastrada':'cadastradas')+' em 7 dias';}
   function destroyCharts(){charts.splice(0).forEach(c=>c.destroy());}
   function spark(id,labels,values,color){
     const el=$(id);if(!el||!window.Chart)return;
@@ -94,8 +93,6 @@
       const week=registered.semana||{labels:[],expedidas:[],recebidas:[]};
       set('dash-registered-expedidas',count(registered.expedidas));
       set('dash-registered-recebidas',count(registered.recebidas));
-      set('dash-week-expedidas',recentRegistrations(week.expedidas));
-      set('dash-week-recebidas',recentRegistrations(week.recebidas));
       weeklyBars('dash-chart-cadastros-semana',week.labels||[],[
         {label:'Expedidas',data:week.expedidas||[],backgroundColor:colors.purple,borderRadius:3,maxBarThickness:10},
         {label:'Recebidas',data:week.recebidas||[],backgroundColor:colors.mint,borderRadius:3,maxBarThickness:10}

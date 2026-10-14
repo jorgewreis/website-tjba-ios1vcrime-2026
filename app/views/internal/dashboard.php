@@ -21,20 +21,22 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
         <section class="dashboard-column dashboard-system" aria-labelledby="dash-system-title">
           <header><span class="column-kicker">01 / SISTEMA</span><h2 id="dash-system-title">Fluxo geral</h2><p>Cartas da Vara e ofícios do Cartório e Gabinete</p></header>
           <article class="dash-card dash-letters-card" aria-label="Cartas ativas e cadastros dos últimos sete dias">
-            <div class="dash-letters-summary">
-              <div class="dash-letters-stat"><span class="dash-letters-label"><i class="legend-dot legend-purple" aria-hidden="true"></i>Cartas Expedidas</span><div><strong id="dash-registered-expedidas">—</strong></div><small id="dash-week-expedidas">Últimos 7 dias</small></div>
-              <div class="dash-letters-stat dash-letters-mint"><span class="dash-letters-label"><i class="legend-dot legend-mint" aria-hidden="true"></i>Cartas Recebidas</span><div><strong id="dash-registered-recebidas">—</strong></div><small id="dash-week-recebidas">Últimos 7 dias</small></div>
+            <div class="dash-summary-heading"><strong>Cartas ativas</strong><span>Total atual</span></div>
+            <div class="dash-summary-stats">
+              <div><span><i class="legend-dot legend-purple" aria-hidden="true"></i>Expedidas</span><strong id="dash-registered-expedidas">—</strong></div>
+              <div><span><i class="legend-dot legend-mint" aria-hidden="true"></i>Recebidas</span><strong id="dash-registered-recebidas">—</strong></div>
             </div>
-            <div class="dash-weekly-chart"><canvas id="dash-chart-cadastros-semana" aria-label="Todas as cartas cadastradas por dia nos últimos sete dias: expedidas em roxo e recebidas em verde"></canvas></div>
+            <small class="dash-summary-period">Cadastros por dia · últimos 7 dias</small>
+            <div class="dash-letters-chart"><canvas id="dash-chart-cadastros-semana" aria-label="Todas as cartas cadastradas por dia nos últimos sete dias: expedidas em roxo e recebidas em verde"></canvas></div>
           </article>
           <article class="dash-card dash-offices-card" aria-label="Ofícios cadastrados no ano corrente e nos últimos sete dias">
-            <div class="dash-offices-heading"><strong>Ofícios cadastrados</strong><span>Ano corrente</span></div>
-            <div class="dash-offices-summary">
+            <div class="dash-summary-heading"><strong>Ofícios cadastrados</strong><span>Ano corrente</span></div>
+            <div class="dash-summary-stats">
               <div><span><i class="legend-dot legend-purple" aria-hidden="true"></i>Cartório</span><strong id="dash-offices-year-cartorio">—</strong></div>
               <div><span><i class="legend-dot legend-mint" aria-hidden="true"></i>Gabinete</span><strong id="dash-offices-year-gabinete">—</strong></div>
             </div>
-            <small class="dash-offices-period">Cadastros por dia · últimos 7 dias</small>
-            <div class="dash-offices-chart"><canvas id="dash-chart-oficios-semana" aria-label="Quantidade de ofícios cadastrados por dia nos últimos sete dias, no Cartório e no Gabinete"></canvas></div>
+            <small class="dash-summary-period">Cadastros por dia · últimos 7 dias</small>
+            <div class="dash-weekly-chart dash-offices-chart"><canvas id="dash-chart-oficios-semana" aria-label="Quantidade de ofícios cadastrados por dia nos últimos sete dias, no Cartório e no Gabinete"></canvas></div>
           </article>
         </section>
         <section class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title">
