@@ -91,7 +91,7 @@ final class DashboardResumoService
                 } catch (Throwable $e) { $hasQueueErrors=true; $queues[] = ['key'=>$key,'label'=>$meta['label'],'count'=>null,'route'=>$meta['route'],'error'=>true]; }
             }
         }
-        $completed = ['7d'=>0,'30d'=>0,'weekly'=>array_fill(0,7,0),'weekly_by_module'=>['cartas_expedidas'=>array_fill(0,7,0),'cartas_recebidas'=>array_fill(0,7,0),'oficios'=>array_fill(0,7,0)],'modules'=>[],'medidas_protetivas_expedidas_30d'=>null];
+        $completed = ['7d'=>0,'30d'=>0,'weekly'=>array_fill(0,7,0),'weekly_by_module'=>['cartas_expedidas'=>array_fill(0,7,0),'cartas_recebidas'=>array_fill(0,7,0),'oficios'=>array_fill(0,7,0)],'modules'=>[],'oficios_expedidos_30d'=>0,'medidas_protetivas_expedidas_30d'=>null];
         try {
             if ($this->tableExists('dashboard_conclusoes')) {
                 $scope="usuario_id=? AND modulo IN ('cartas_expedidas','cartas_recebidas','oficios')";
@@ -102,6 +102,17 @@ final class DashboardResumoService
                 foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $row) { $i=6-(int)$row['age'];$module=(string)$row['modulo'];if($i>=0&&$i<7){$completed['weekly'][$i]+=(int)$row['total'];if(isset($completed['weekly_by_module'][$module]))$completed['weekly_by_module'][$module][$i]=(int)$row['total'];} }
             }
         } catch (Throwable $e) { error_log('dashboard resumo [produtividade]: '.$e->getMessage()); }
+        try {
+            $officeTables = ['oficios_cartorio', 'oficios_gabinete'];
+            $counts = [];
+            foreach ($officeTables as $table) {
+                if (!$this->tableExists($table)) continue;
+                $st = $this->pdo->prepare("SELECT COUNT(*) FROM `{$table}` WHERE criado_por=? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)");
+                $st->execute([$userId]);
+                $counts[] = (int) $st->fetchColumn();
+            }
+            $completed['oficios_expedidos_30d'] = array_sum($counts);
+        } catch (Throwable $e) { error_log('dashboard resumo [oficios expedidos]: '.$e->getMessage()); }
         try {
             if ($this->tableExists('cejusc_registros')) {
                 $st=$this->pdo->prepare('SELECT COUNT(*) FROM cejusc_registros WHERE criado_por=? AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)');

@@ -139,7 +139,7 @@
       const modules=data.usuario?.modules||[];
       set('dash-done-expedidas',count(moduleTotal(modules,'cartas_expedidas')));
       set('dash-done-recebidas',count(moduleTotal(modules,'cartas_recebidas')));
-      set('dash-done-oficios',count(moduleTotal(modules,'oficios')));
+      set('dash-done-oficios',count(data.usuario?.oficios_expedidos_30d));
       set('dash-done-medidas-protetivas',count(data.usuario?.medidas_protetivas_expedidas_30d));
 
       renderAlerts(data.alertas);
