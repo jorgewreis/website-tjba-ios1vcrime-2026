@@ -112,6 +112,7 @@ $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?:
                 $historicoTexto = is_array($historicoRecente) ? trim((string) ($historicoRecente['data_hora'] ?? '')) : '';
                 $historicoAutor = is_array($historicoRecente) ? trim((string) ($historicoRecente['autor'] ?? '')) : '';
                 if ($historicoAutor !== '') $historicoTexto .= ($historicoTexto !== '' ? ' | ' : '') . $historicoAutor;
+                $cejuscWhatsappTexto = trim((string) ($row['numero_processo'] ?? '')) . ' - Mandado de Medida Protetiva expedido e *aguardando assinatura* no BNMP';
                 ?>
                 <article class="register-line carta-expedida-v2-row cejusc-record" role="listitem" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>"<?php echo $processoIdBlocoCejusc !== '' ? ' data-processo-id="' . htmlspecialchars($processoIdBlocoCejusc, ENT_QUOTES) . '"' : ''; ?> id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>">
                     <div class="left carta-expedida-left">
@@ -126,6 +127,7 @@ $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?:
                         <div class="carta-expedida-status-group">
                             <div class="register-block-status">
                                 <div class="badge-status-primary <?php echo htmlspecialchars($cejuscStatusClass, ENT_QUOTES); ?>"><span class="badge-status-text"><?php echo htmlspecialchars($cejuscStatusLabel, ENT_QUOTES); ?></span></div>
+                                <button type="button" class="button-icon-right carta-row-action js-v2-copy-whatsapp" data-whatsapp-text="<?php echo htmlspecialchars($cejuscWhatsappTexto, ENT_QUOTES); ?>" title="Copiar texto para WhatsApp" aria-label="Copiar texto para WhatsApp"><img src="/assets/icons/Whatsapp-Logo--Streamline-Ultimate.png" alt=""></button>
                                 <?php if (!empty($registroMetadata['show_edit']) && !empty($registroMetadata['edit_href'])): ?><button type="button" class="carta-row-action" data-action="editar-registro" data-edit-href="<?php echo htmlspecialchars($registroMetadata['edit_href'], ENT_QUOTES); ?>" title="Editar cadastro" aria-label="Editar cadastro"><img src="/assets/icons/Eject-Button--Streamline-Ultimate.png" alt=""></button><?php endif; ?>
                             </div>
                             <div class="container-historical container-sm">
@@ -151,8 +153,10 @@ $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?:
         </div>
     </main>
     <div class="footer-page"><div class="location"><span class="all">Aplicativo web desenvolvido integralmente por </span><span class="specific">Jorge Reis Develop</span><span class="all">- Copyright 2018 a 2026 - Todos os direitos reservados.</span></div></div>
+    <script src="/assets/js/shared/copy-whatsapp-text.js?v=<?php echo (int) (@filemtime($assetsRoot . '/js/shared/copy-whatsapp-text.js') ?: time()); ?>"></script>
     <script>
     (function () {
+        if (window.App && App.WhatsappCopy) App.WhatsappCopy.bind();
         if (window.App && App.RegistroMetadataList && typeof App.RegistroMetadataList.bind === 'function') App.RegistroMetadataList.bind({deleteEndpoint:'/api/cartorio-cejusc/delete.php',deleteFallback:{type:'success',title:'Sucesso',message:'Registro CEJUSC removido.'}});
         if(window.App&&App.ListSearch&&typeof App.ListSearch.initializeProcessSearch==='function')App.ListSearch.initializeProcessSearch({inputId:'cejusc-search',searchParamKey:'q',initialProcessFilter:<?php echo json_encode($queryFilter, JSON_UNESCAPED_UNICODE); ?>,minSearchDigits:1,debounceDelay:750,filters:[{id:'cejusc-month',param:'mes_envio'}]});
         var exportSelect=document.getElementById('cejusc-export-pdf');

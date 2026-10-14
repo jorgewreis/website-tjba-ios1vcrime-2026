@@ -28,18 +28,6 @@
         });
     }
 
-    function copyWhatsappText(texto) {
-        var text = String(texto || '').trim();
-        if (text === '') {
-            return;
-        }
-        copyToClipboard(text, {
-            type: 'success',
-            title: 'Sucesso',
-            message: 'Texto para WhatsApp copiado com sucesso.'
-        });
-    }
-
     function bindCopyProcesso() {
         document.querySelectorAll('.js-v2-copy-processo').forEach(function (btn) {
             function handleCopy(event) {
@@ -59,13 +47,7 @@
     }
 
     function bindCopyWhatsapp() {
-        document.querySelectorAll('.js-v2-copy-whatsapp').forEach(function (btn) {
-            btn.addEventListener('click', function (event) {
-                event.preventDefault();
-                var texto = btn.getAttribute('data-whatsapp-text') || '';
-                copyWhatsappText(texto);
-            });
-        });
+        if (window.App && App.WhatsappCopy) App.WhatsappCopy.bind();
     }
 
     function bindSyncProcessoDataJud(ctx) {

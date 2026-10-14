@@ -294,6 +294,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
     <script src="/assets/js/modules/cartorio/cartas-expedidas/search-list.js?v=<?php echo (int) $searchListV; ?>"></script>
     <script src="/assets/js/shared/cartas-reiniciar.js?v=<?php echo (int) @filemtime(dirname(__DIR__,3).'/public/assets/js/shared/cartas-reiniciar.js'); ?>"></script>
     <script src="/assets/js/modules/cartorio/cartas-expedidas/v2-list.js?v=<?php echo (int) $v2ListJsV; ?>"></script>
+    <script src="/assets/js/shared/copy-whatsapp-text.js?v=<?php echo (int) (@filemtime($assetsRoot . '/js/shared/copy-whatsapp-text.js') ?: time()); ?>"></script>
     <script>
         (function() {
             if (window.CartasExpedidasV2List && typeof window.CartasExpedidasV2List.initialize === 'function') {
