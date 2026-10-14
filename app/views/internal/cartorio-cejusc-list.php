@@ -119,7 +119,6 @@ $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?:
                     </div>
                     <div class="right carta-expedida-right">
                         <div class="register-block cejusc-party-column">
-                            <div class="register-block-title">Nome da parte</div>
                             <div class="register-block-content"><strong class="register-block-content-item-value"><?php echo htmlspecialchars((string) $row['nome_parte'], ENT_QUOTES); ?></strong></div>
                             <div class="register-block-content cejusc-date-line"><?php echo htmlspecialchars($dataEnvioTexto . ' - Enviado ao Cejusc', ENT_QUOTES); ?></div>
                             <?php if ($vitimaResumoCejusc !== ''): ?><div class="register-block-content cejusc-victim">Vítima: <?php echo htmlspecialchars($vitimaResumoCejusc, ENT_QUOTES); ?></div><?php endif; ?>
