@@ -496,15 +496,14 @@ body {
         cursor: pointer;
     }
 
-    .menu-inner:hover > .menu-item:not(.active) .menu-link:not(.open) i {
+    .menu-inner > .menu-item:not(.active):hover .menu-link:not(.open) i {
         filter: grayscale(0);
         transition: filter 0.3s ease;
     }
 
-    .menu-inner:hover > .menu-item:not(.active) .menu-link:not(.open) .text {
-        background-color: #47196F;
-        color: #ffffffcc;
-        transition: background-color 0.3s ease;
+    .menu-inner > .menu-item:not(.active):hover .menu-link:not(.open) .text {
+        color: #47196F;
+        transition: color 0.3s ease;
     }
 
     /* Menu Link */
@@ -549,7 +548,6 @@ body {
     /* Menu Link States */
     .menu-inner .menu-item .menu-link {
         width: 220px;
-        background-color: var(--color-background-elevated);
         color: var(--color-text-primary);
     }
 

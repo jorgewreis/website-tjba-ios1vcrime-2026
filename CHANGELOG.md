@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0046
+
+**Data:** 2026-10-15 20:45:46 | **Commit:** `5572f6f6` | **Tipo:** `patch`
+
+- style(menu): ajustar estado hover dos itens
+
 ## V. 1.87.0045
 
 **Data:** 2026-10-15 20:40:49 | **Commit:** `d9ea27e7` | **Tipo:** `patch`
@@ -5697,6 +5703,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
