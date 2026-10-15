@@ -220,7 +220,6 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
 ?>
 <div class="register-line full carta-expedida-v2-row" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
     <div class="left carta-expedida-left">
-        <div class="carta-expedida-process-group">
         <div class="register-block carta-process-tools">
             <?php if ($numero !== ''): ?>
                 <div class="line-cube carta-process-tool js-v2-copy-processo"
@@ -282,8 +281,6 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                     </div>
                 </div>
             </div>
-        </div>
-
         </div>
     </div>
     <div class="right carta-expedida-right">

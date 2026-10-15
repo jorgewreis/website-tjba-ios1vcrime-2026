@@ -114,9 +114,7 @@
       set('dash-queue-editais',count(queueEditais));
       const hasExpedidasMetric=showPositiveMetric('dash-queue-expedidas-row',queueExpedidas);
       const hasRecebidasMetric=showPositiveMetric('dash-queue-recebidas-row',queueRecebidas);
-      const oficiosRow=$('dash-queue-oficios-row');
-      if(oficiosRow)oficiosRow.hidden=!cartorioEnabled||queueOficios===null||queueOficios===undefined;
-      const hasOficiosMetric=Boolean(cartorioEnabled&&queueOficios!==null&&queueOficios!==undefined);
+      const hasOficiosMetric=showPositiveMetric('dash-queue-oficios-row',cartorioEnabled?queueOficios:null);
       const hasEditaisMetric=showPositiveMetric('dash-queue-editais-row',queueEditais);
       let hasAnyMetric=hasExpedidasMetric||hasRecebidasMetric||hasOficiosMetric||hasEditaisMetric;
       applyCountBadge($('dash-queue-expedidas'),queueExpedidas);

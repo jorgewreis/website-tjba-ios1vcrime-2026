@@ -178,14 +178,14 @@ final class DashboardResumoService
     {
         $alerts=[];
         if($mostOverdueExpedidaDays!==null&&$mostOverdueExpedidaDays>0){
-            $alerts[]=['key'=>'cumprimento_expedido_excedido','label'=>'Prazo de cumprimento excedido','detail'=>'Solicitar devolução de Carta Expedida','value'=>$mostOverdueExpedidaDays,'unit'=>'days','color'=>'danger','priority'=>0,'date'=>'0000-01-01','order'=>0];
+            $alerts[]=['key'=>'cumprimento_expedido_excedido','label'=>'Cartas Expedidas','detail'=>'com prazo de cumprimento excedido','value'=>$mostOverdueExpedidaDays,'unit'=>'days','color'=>'danger','priority'=>0,'date'=>'0000-01-01','order'=>0];
         }
         if($deadlines!==null&&$deadlines>0&&$nearestDeadline!==null){
             $alerts[]=['key'=>'prazos_proximos','label'=>'Prazos próximos','detail'=>'Cartas nos próximos 7 dias','value'=>$deadlines,'unit'=>'count','color'=>'warm','priority'=>0,'date'=>$nearestDeadline,'order'=>0];
         }
         if($oldest!==null){
             $days=max(0,(int)(new DateTimeImmutable($oldest))->setTime(0,0)->diff(new DateTimeImmutable('today'))->format('%r%a'));
-            $alerts[]=['key'=>'fila_mais_antiga','label'=>'Fila mais antiga','detail'=>$label,'value'=>$days,'unit'=>'days','color'=>'purple','priority'=>1,'date'=>$oldest,'order'=>1];
+            $alerts[]=['key'=>'fila_mais_antiga','label'=>'Cartas Expedidas','detail'=>'aguardando envio','value'=>$days,'unit'=>'days','color'=>'purple','priority'=>1,'date'=>$oldest,'order'=>1];
         }
         if($returns!==null&&$returns>0){
             $alerts[]=['key'=>'devolucoes_aguardando','label'=>'Devoluções aguardando','detail'=>'Cartas Recebidas','value'=>$returns,'unit'=>'count','color'=>'mint','priority'=>1,'date'=>$oldestReturns??'9999-12-31','order'=>2];

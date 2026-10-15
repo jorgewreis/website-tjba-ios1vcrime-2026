@@ -44,7 +44,6 @@ $showDelete = !empty($metadata['show_delete']);
 ?>
 <div class="register-line full carta-expedida-v2-row carta-recebida-v2-row" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
     <div class="left carta-expedida-left">
-        <div class="carta-expedida-process-group">
             <div class="register-block carta-process-tools">
                 <div class="line-cube carta-process-tool js-v2-copy-processo" role="button" tabindex="0" data-processo-numero="<?php echo htmlspecialchars($numero, ENT_QUOTES); ?>" title="Copiar número do processo" aria-label="Copiar número do processo">
                     <img src="/assets/icons/Coding-Apps-Website-Web-Form-Number-Field--Streamline-Ultimate.png" alt="">
@@ -66,7 +65,6 @@ $showDelete = !empty($metadata['show_delete']);
                     </div></div>
                 </div>
             </div>
-        </div>
     </div>
     <div class="right carta-expedida-right">
         <div class="register-block"><div class="register-block-content">

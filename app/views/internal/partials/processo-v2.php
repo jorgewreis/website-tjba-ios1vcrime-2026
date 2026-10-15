@@ -80,7 +80,6 @@ $iconPrioridade = '/assets/icons/Alert-Diamond--Streamline-Ultimate.png';
 $iconAbrir = '/assets/icons/Cartas-Resize-Expand-Corner--Streamline-Ultimate.png';
 $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
 ?>
-        <div class="carta-expedida-process-group">
         <div class="register-block carta-process-tools">
             <?php if ($numero !== ''): ?>
                 <div class="line-cube carta-process-tool process-info"
@@ -142,6 +141,4 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                     </div>
                 </div>
             </div>
-        </div>
-
         </div>

@@ -48,27 +48,20 @@
         width: auto;
         min-width: 0;
         align-items: center;
-        gap: 0;
+        gap: 20px;
         padding: 0;
         height: auto;
     }
 
-    .carta-expedida-v2-row .carta-expedida-process-group {
-        display: flex;
-        flex: 0 0 auto;
-        align-items: stretch;
-        flex-wrap: nowrap;
-    }
-
     .carta-expedida-v2-row .carta-process-tools {
-        display: none;
+        visibility: hidden;
         flex: 0 0 30px;
         align-items: center;
         gap: 0;
     }
 
     .register-line.carta-expedida-v2-row:hover .carta-process-tools {
-        display: flex;
+        visibility: visible;
     }
 
     .carta-expedida-v2-row .carta-process-tools .line-cube {
@@ -292,16 +285,17 @@
         display: flex;
         flex: 0 0 auto;
         flex-direction: column;
-        align-items: flex-start;
+        align-items: flex-end;
         min-width: 340px;
         margin-left: 10px;
+        text-align: right;
     }
 
     .carta-expedida-v2-row .register-block-status {
         display: flex;
         flex-direction: row;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: flex-end;
         flex-wrap: nowrap;
         gap: 0;
         min-height: 30px;
@@ -351,13 +345,22 @@
         height: 30px;
         min-height: 30px;
         padding: 0 10px;
-        margin-right: 10px;
+        margin-right: 0;
+        margin-left: 10px;
         border: 0;
         border-radius: 4px;
         font-family: 'Google Sans Code', monospace;
         font-size: 12px;
         font-weight: 700;
         text-transform: uppercase;
+        order: 2;
+    }
+
+    .carta-expedida-v2-row .container-historical .container-line,
+    .carta-expedida-v2-row .container-historical .line-content.double-line {
+        align-items: flex-end;
+        justify-content: flex-end;
+        text-align: right;
     }
 
     .carta-expedida-v2-row .badge-status-primary.status-current {
@@ -433,7 +436,7 @@
 
     .carta-expedida-v2-row .container-historical .content-assuntos {
         font-family: 'Google Sans Flex', 'Google Sans', sans-serif;
-        font-size: 12px;
+        font-size: 9px;
         font-weight: 400;
         line-height: 15px;
         height: 15px;
@@ -462,7 +465,7 @@
         min-width: 0;
     }
 
-    .carta-expedida-v2-row > .carta-expedida-left > .carta-expedida-process-group > .carta-process-tools {
+    .carta-expedida-v2-row > .carta-expedida-left > .carta-process-tools {
         flex: 0 0 30px;
         min-width: 30px;
     }
@@ -491,7 +494,7 @@
 }
 
 @media (max-width: 700px) {
-    .carta-expedida-v2-row .carta-expedida-process-group {
+    .carta-expedida-v2-row .carta-expedida-left {
         flex-wrap: wrap;
     }
 
