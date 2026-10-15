@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0045
+
+**Data:** 2026-10-15 20:40:49 | **Commit:** `d9ea27e7` | **Tipo:** `patch`
+
+- fix(cache): gerar versao do css pelo conteudo
+
 ## V. 1.87.0044
 
 **Data:** 2026-10-15 20:38:23 | **Commit:** `ca1cfd21` | **Tipo:** `patch`
@@ -5691,6 +5697,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

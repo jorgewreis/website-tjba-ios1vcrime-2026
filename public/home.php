@@ -213,7 +213,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
     <link rel="stylesheet" href="/assets/css/shared/reset.css">
     <link rel="stylesheet" href="/assets/css/shared/color.css">
-    <link rel="stylesheet" href="/assets/css/shared/layout.css?v=20261015-menu-header-v2">
+    <link rel="stylesheet" href="/assets/css/shared/layout.css?v=<?php echo hash_file('sha256', __DIR__ . '/assets/css/shared/layout.css') ?: time(); ?>">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
     <style>
         /* Navbar: avatar + resumo à esquerda (modelo model-page-home-header) */
