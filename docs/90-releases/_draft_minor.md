@@ -48,4 +48,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **style(menu): refinar tipografia dos cabecalhos** `[087915c6]`
 - **fix(menu): atualizar versao e fonte dos estilos** `[04ff9b77]`
 - **style(menu): refinar itens e estados do menu** `[ca1cfd21]`
+- **fix(cache): gerar versao do css pelo conteudo** `[d9ea27e7]`
 
