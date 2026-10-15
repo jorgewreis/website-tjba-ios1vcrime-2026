@@ -117,13 +117,13 @@ $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?:
                 <article class="register-line carta-expedida-v2-row cejusc-record" role="listitem" data-registro-id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>"<?php echo $processoIdBlocoCejusc !== '' ? ' data-processo-id="' . htmlspecialchars($processoIdBlocoCejusc, ENT_QUOTES) . '"' : ''; ?> id="<?php echo htmlspecialchars((string) $row['id'], ENT_QUOTES); ?>">
                     <div class="left carta-expedida-left">
                         <?php include __DIR__ . '/partials/processo-v2.php'; ?>
-                    </div>
-                    <div class="right carta-expedida-right">
-                        <div class="register-block cejusc-party-column">
+                        <div class="register-block carta-info-column cejusc-party-column">
                             <div class="register-block-content"><strong class="register-block-content-item-value"><?php echo htmlspecialchars((string) $row['nome_parte'], ENT_QUOTES); ?></strong></div>
                             <div class="register-block-content cejusc-date-line"><?php echo htmlspecialchars($dataEnvioTexto . ' - Enviado ao Cejusc', ENT_QUOTES); ?></div>
                             <?php if ($vitimaResumoCejusc !== ''): ?><div class="register-block-content cejusc-victim">Vítima: <?php echo htmlspecialchars($vitimaResumoCejusc, ENT_QUOTES); ?></div><?php endif; ?>
                         </div>
+                    </div>
+                    <div class="right carta-expedida-right">
                         <div class="carta-expedida-status-group">
                             <div class="register-block-status">
                                 <div class="badge-status-primary <?php echo htmlspecialchars($cejuscStatusClass, ENT_QUOTES); ?>"><span class="badge-status-text"><?php echo htmlspecialchars($cejuscStatusLabel, ENT_QUOTES); ?></span></div>

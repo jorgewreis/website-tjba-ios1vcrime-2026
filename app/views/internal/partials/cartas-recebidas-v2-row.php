@@ -65,13 +65,13 @@ $showDelete = !empty($metadata['show_delete']);
                     </div></div>
                 </div>
             </div>
+            <div class="register-block carta-info-column"><div class="register-block-content">
+                <div class="register-block-content-item"><strong class="register-block-content-item-value"><?php echo htmlspecialchars($comarca, ENT_QUOTES); ?></strong></div>
+                <div class="register-block-content-item"><span class="register-block-content-item-text">Finalidade:</span><span class="register-block-content-item-value"><?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?></span></div>
+                <div class="register-block-content-item"><span class="register-block-content-item-text">Prazo:</span><span class="register-block-content-item-value"><?php echo htmlspecialchars($prazo . ' dias', ENT_QUOTES); ?></span></div>
+            </div></div>
     </div>
     <div class="right carta-expedida-right">
-        <div class="register-block"><div class="register-block-content">
-            <div class="register-block-content-item"><strong class="register-block-content-item-value"><?php echo htmlspecialchars($comarca, ENT_QUOTES); ?></strong></div>
-            <div class="register-block-content-item"><span class="register-block-content-item-text">Finalidade:</span><span class="register-block-content-item-value"><?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?></span></div>
-            <div class="register-block-content-item"><span class="register-block-content-item-text">Prazo:</span><span class="register-block-content-item-value"><?php echo htmlspecialchars($prazo . ' dias', ENT_QUOTES); ?></span></div>
-        </div></div>
         <div class="carta-expedida-status-group">
             <div class="register-block"><div class="register-block-status">
                 <div class="badge-status-primary <?php echo htmlspecialchars($badgeClass, ENT_QUOTES); ?>"><span class="badge-status-text"><?php echo htmlspecialchars($badgeText, ENT_QUOTES); ?></span></div>

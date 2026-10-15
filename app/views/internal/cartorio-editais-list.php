@@ -330,14 +330,14 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
             <div class="register-line full carta-expedida-v2-row edital-row" data-registro-id="<?php echo htmlspecialchars($idEdital, ENT_QUOTES); ?>">
                 <div class="left carta-expedida-left">
                     <?php include __DIR__ . '/partials/editais-v2-process.php'; ?>
-                </div>
-                <div class="right carta-expedida-right">
-                    <div class="register-block">
+                    <div class="register-block carta-info-column">
                         <div class="register-block-content">
                             <div class="register-block-content-item"><strong class="register-block-content-item-value"><?php echo htmlspecialchars((string) ($row['tipo_edital'] ?? $row['TipoEdital'] ?? '—')); ?></strong></div>
                             <div class="register-block-content-item"><span class="register-block-content-item-text">Tipo de edital</span></div>
                         </div>
                     </div>
+                </div>
+                <div class="right carta-expedida-right">
                     <div class="carta-expedida-status-group">
                         <div class="register-block-status">
                             <div class="badge-status-primary <?php echo htmlspecialchars($editalBadgeClass, ENT_QUOTES); ?>"><span class="badge-status-text"><?php echo htmlspecialchars($editalBadgeLabel, ENT_QUOTES); ?></span></div>

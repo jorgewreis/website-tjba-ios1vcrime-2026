@@ -72,7 +72,6 @@
 
 @media (max-width:1120px) {
     .register-line.carta-expedida-v2-row.cejusc-record { padding:10px; }
-    .cejusc-record .carta-expedida-right > .register-block { flex:0 0 auto; }
     .cejusc-record .carta-expedida-right { gap:10px; }
 }
 @media (max-width:700px) {

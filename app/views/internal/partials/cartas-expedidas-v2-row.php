@@ -282,9 +282,7 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                 </div>
             </div>
         </div>
-    </div>
-    <div class="right carta-expedida-right">
-        <div class="register-block">
+        <div class="register-block carta-info-column">
             <div class="register-block-content">
                 <div class="register-block-content-item">
                     <strong class="register-block-content-item-value"><?php echo htmlspecialchars($destino, ENT_QUOTES); ?></strong>
@@ -319,6 +317,8 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
                 <?php endif; ?>
             </div>
         </div>
+    </div>
+    <div class="right carta-expedida-right">
         <div class="carta-expedida-status-group">
         <div class="register-block">
             <div class="register-block-status">

@@ -271,7 +271,7 @@
         margin-left: 16px;
     }
 
-    .carta-expedida-v2-row .carta-expedida-right > .register-block {
+    .carta-expedida-v2-row .carta-expedida-left > .carta-info-column {
         flex: 0 0 350px;
         width: 350px;
         min-width: 350px;
@@ -470,7 +470,7 @@
         min-width: 30px;
     }
 
-    .carta-expedida-v2-row .carta-expedida-right > .register-block {
+    .carta-expedida-v2-row .carta-expedida-left > .carta-info-column {
         width: 100%;
         min-width: 0;
         flex: 1 1 350px;
@@ -508,6 +508,12 @@
         flex: 1 1 calc(100% - 30px);
         min-width: 0;
         max-width: 310px;
+    }
+
+    .carta-expedida-v2-row .carta-expedida-left > .carta-info-column {
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 0;
     }
 
     .carta-expedida-v2-row .badge-status-primary {
