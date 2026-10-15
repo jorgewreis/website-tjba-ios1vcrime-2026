@@ -474,7 +474,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 <ul class="menu-inner">
                     <li class="menu-item active">
                         <button type="button" class="menu-link" data-target="<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>">
-                            <i class="fi fi-rs-home"></i>
+                            <img class="icon-menu" src="/assets/icons/House-1--Streamline-Ultimate.png" alt="">
                             <span class="text"><?php echo $isUsuarioExterno ? 'Início' : 'Dashboard'; ?></span>
                         </button>
                     </li>

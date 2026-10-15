@@ -496,7 +496,18 @@ body {
         cursor: pointer;
     }
 
-    .menu-inner > .menu-item:not(.active):hover .menu-link:not(.open) i {
+    .menu-inner .menu-item .icon-menu {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        padding: 3px;
+        width: 30px;
+        height:30px;
+    }
+
+    .menu-inner > .menu-item:not(.active):hover .menu-link:not(.open) i,
+    .menu-inner > .menu-item:not(.active):hover .menu-link:not(.open) .icon-menu {
         filter: grayscale(0);
         transition: filter 0.3s ease;
     }
