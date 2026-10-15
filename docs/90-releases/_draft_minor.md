@@ -45,4 +45,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(dashboard): mostrar editais aguardando publicacao** `[f5b90998]`
 - **style(menu): ajustar cabecalhos do menu lateral** `[671cf309]`
 - **fix(menu): atualizar cache dos estilos da home** `[c2bb31f7]`
+- **style(menu): refinar tipografia dos cabecalhos** `[087915c6]`
 
