@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0041
+
+**Data:** 2026-10-15 20:02:39 | **Commit:** `c2bb31f7` | **Tipo:** `patch`
+
+- fix(menu): atualizar cache dos estilos da home
+
 ## V. 1.87.0040
 
 **Data:** 2026-10-15 20:00:40 | **Commit:** `671cf309` | **Tipo:** `patch`
@@ -5667,6 +5673,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
