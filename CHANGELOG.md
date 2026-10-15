@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0040
+
+**Data:** 2026-10-15 20:00:40 | **Commit:** `671cf309` | **Tipo:** `patch`
+
+- style(menu): ajustar cabecalhos do menu lateral
+
 ## V. 1.87.0039
 
 **Data:** 2026-10-13 20:32:55 | **Commit:** `f5b90998` | **Tipo:** `patch`
@@ -5661,6 +5667,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

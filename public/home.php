@@ -434,7 +434,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             }
         }
     </style>
-    
+
     <!-- Ícones: fi-rs-* (regular-straight), fi-br-* (bold-rounded) -->
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-straight/css/uicons-regular-straight.css">
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-bold-rounded/css/uicons-bold-rounded.css">
@@ -452,7 +452,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
     </script>
 </head>
 <body>
-    
+
     <!-- PAGE DISPOSITIVOS INCOMPATIVEIS -->
     <div class="noview"></div>
 
@@ -563,7 +563,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                     </div>
                 </nav>
                 <!-- /NAVBAR -->
-                
+
                 <!-- CONTENT WRAPER -->
                 <div class="content-wrapper">
                     <iframe class="target-page" id="frame" src="/frame.php?page=<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>"></iframe>
@@ -979,6 +979,10 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 const header = document.createElement('li');
                 header.className = 'menu-header';
 
+                const headerLine = document.createElement('div');
+                headerLine.className = 'menu-header-line';
+                header.appendChild(headerLine);
+
                 const headerText = document.createElement('span');
                 headerText.className = 'menu-header-text';
                 headerText.textContent = section.section;
@@ -1235,7 +1239,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             }
         });
     </script>
-    
+
 </body>
 
 </html>
