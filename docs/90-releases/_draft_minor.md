@@ -50,4 +50,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **style(menu): refinar itens e estados do menu** `[ca1cfd21]`
 - **fix(cache): gerar versao do css pelo conteudo** `[d9ea27e7]`
 - **style(menu): ajustar estado hover dos itens** `[5572f6f6]`
+- **fix(home): corrigir caminho do icone inicial** `[b27255b2]`
 
