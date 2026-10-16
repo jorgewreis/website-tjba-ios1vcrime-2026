@@ -54,4 +54,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(menu): atualizar modulos do menu** `[5ac1a46f]`
 - **style(menu): usar icones de imagem nos links do cartorio** `[7a903f2b]`
 - **style(menu): atualizar icone de tarefas** `[980efe8a]`
+- **style(menu): separar classes dos icones** `[0ab47a77]`
 
