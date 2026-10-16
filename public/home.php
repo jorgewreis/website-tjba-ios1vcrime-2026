@@ -833,7 +833,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
             if (iconImage) {
                 const iconElement = document.createElement('img');
-                iconElement.className = 'icon-menu icon-menu-list';
+                iconElement.className = 'icon-menu-list';
                 iconElement.src = iconImage;
                 iconElement.alt = '';
                 link.appendChild(iconElement);

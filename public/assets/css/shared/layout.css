@@ -496,7 +496,8 @@ body {
         cursor: pointer;
     }
 
-    .menu-inner .menu-item .icon-menu {
+    .menu-inner .menu-item .icon-menu,
+    .menu-inner .menu-item .icon-menu-list {
         display: flex;
         flex-direction: row;
         align-items: center;
@@ -509,7 +510,8 @@ body {
     }
 
     .menu-inner > .menu-item:not(.active):hover .menu-link:not(.open) i,
-    .menu-inner > .menu-item:not(.active):hover .menu-link:not(.open) .icon-menu {
+    .menu-inner > .menu-item:not(.active):hover .menu-link:not(.open) .icon-menu,
+    .menu-inner > .menu-item:not(.active):hover .menu-link:not(.open) .icon-menu-list {
         filter: invert(0%) sepia(0%) hue-rotate(70deg) contrast(100%) grayscale(0);
         transition: filter 0.3s ease;
     }

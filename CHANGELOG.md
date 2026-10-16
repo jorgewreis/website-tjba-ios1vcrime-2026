@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0051
+
+**Data:** 2026-10-15 21:49:23 | **Commit:** `0ab47a77` | **Tipo:** `patch`
+
+- style(menu): separar classes dos icones
+
 ## V. 1.87.0050
 
 **Data:** 2026-10-15 21:48:02 | **Commit:** `980efe8a` | **Tipo:** `patch`
@@ -5727,6 +5733,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
