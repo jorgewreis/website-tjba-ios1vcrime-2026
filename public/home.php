@@ -604,12 +604,12 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Cartório',
                 items: [
                     { icon: 'fi fi-rs-task-checklist', label: 'Tarefas', target: 'tarefas' },
-                    { icon: 'fi fi-rs-envelope', label: 'Cartas Expedidas', target: 'cartasexpedidas' },
-                    { icon: 'fi fi-rs-envelope-open-text', label: 'Cartas Recebidas', target: 'cartasrecebidas' },
-                    { icon: 'fi fi-rs-document', label: 'Editais', target: 'editais' },
-                    { icon: 'fi fi-rs-hand-holding-heart', label: 'Cejusc', target: 'cejusc' },
-                    { icon: 'fi fi-rs-blog-text', label: 'Guias', target: 'guias' },
-                    { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficioscartorio' }
+                    { iconImage: '/assets/icons/Email-Action-Send-2--Streamline-Ultimate.png', label: 'Cartas Expedidas', target: 'cartasexpedidas' },
+                    { iconImage: '/assets/icons/Email-Action-Read-Document--Streamline-Ultimate.png', label: 'Cartas Recebidas', target: 'cartasrecebidas' },
+                    { iconImage: '/assets/icons/Newspaper-Fold--Streamline-Ultimate.png', label: 'Editais', target: 'editais' },
+                    { iconImage: '/assets/icons/Certified-Diploma-2--Streamline-Ultimate.png', label: 'Cejusc', target: 'cejusc' },
+                    { iconImage: '/assets/icons/Office-Business-Card--Streamline-Ultimate.png', label: 'Guias', target: 'guias' },
+                    { iconImage: '/assets/icons/Business-Contract-Give--Streamline-Ultimate.png', label: 'Ofícios', target: 'oficioscartorio' }
                 ]
             },
             {
@@ -822,7 +822,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             return new Set(computePermittedMenuSectionsFromPerfis(perfis));
         }
 
-        function createMenuLink({ icon, label, target }) {
+        function createMenuLink({ icon, iconImage, label, target }) {
             const link = document.createElement('button');
             link.type = 'button';
             link.className = 'menu-link';
@@ -831,7 +831,13 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 link.dataset.target = target;
             }
 
-            if (icon) {
+            if (iconImage) {
+                const iconElement = document.createElement('img');
+                iconElement.className = 'icon-menu';
+                iconElement.src = iconImage;
+                iconElement.alt = '';
+                link.appendChild(iconElement);
+            } else if (icon) {
                 const iconElement = document.createElement('i');
                 iconElement.className = icon;
                 link.appendChild(iconElement);

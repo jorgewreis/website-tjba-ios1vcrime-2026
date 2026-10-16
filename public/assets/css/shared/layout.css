@@ -505,7 +505,7 @@ body {
         width: 30px;
         height:30px;
         filter: invert(0%) sepia(0%) hue-rotate(70deg) contrast(100%) grayscale(1);
-        opacity: 0.5;
+        opacity: 0.2;
     }
 
     .menu-inner > .menu-item:not(.active):hover .menu-link:not(.open) i,
@@ -546,7 +546,7 @@ body {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        padding: 0 6px;
+        padding: 0 10px;
     }
 
     /* Menu Link States */

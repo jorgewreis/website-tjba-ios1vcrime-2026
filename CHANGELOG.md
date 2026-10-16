@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0049
+
+**Data:** 2026-10-15 21:42:14 | **Commit:** `7a903f2b` | **Tipo:** `patch`
+
+- style(menu): usar icones de imagem nos links do cartorio
+
 ## V. 1.87.0048
 
 **Data:** 2026-10-15 21:20:45 | **Commit:** `5ac1a46f` | **Tipo:** `patch`
@@ -5715,6 +5721,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
