@@ -53,4 +53,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(home): corrigir caminho do icone inicial** `[b27255b2]`
 - **feat(menu): atualizar modulos do menu** `[5ac1a46f]`
 - **style(menu): usar icones de imagem nos links do cartorio** `[7a903f2b]`
+- **style(menu): atualizar icone de tarefas** `[980efe8a]`
 
