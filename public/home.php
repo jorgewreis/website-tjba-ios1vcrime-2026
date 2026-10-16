@@ -603,7 +603,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             {
                 section: 'Cartório',
                 items: [
-                    { icon: 'fi fi-rs-task-checklist', label: 'Tarefas', target: 'tarefas' },
+                    { iconImage: '/assets/icons/Task-Checklist--Streamline-Ultimate.png', label: 'Tarefas', target: 'tarefas' },
                     { iconImage: '/assets/icons/Email-Action-Send-2--Streamline-Ultimate.png', label: 'Cartas Expedidas', target: 'cartasexpedidas' },
                     { iconImage: '/assets/icons/Email-Action-Read-Document--Streamline-Ultimate.png', label: 'Cartas Recebidas', target: 'cartasrecebidas' },
                     { iconImage: '/assets/icons/Newspaper-Fold--Streamline-Ultimate.png', label: 'Editais', target: 'editais' },
@@ -833,7 +833,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
             if (iconImage) {
                 const iconElement = document.createElement('img');
-                iconElement.className = 'icon-menu';
+                iconElement.className = 'icon-menu icon-menu-list';
                 iconElement.src = iconImage;
                 iconElement.alt = '';
                 link.appendChild(iconElement);

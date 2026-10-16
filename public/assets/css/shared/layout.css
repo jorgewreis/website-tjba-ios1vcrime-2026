@@ -563,6 +563,10 @@ body {
         filter: invert(0%) sepia(0%) hue-rotate(70deg) contrast(100%) grayscale(0);
         opacity: 1;
     }
+    .menu-item.active .menu-link .icon-menu-list {
+        filter: grayscale(0);
+        opacity: 1;
+    }
 
     .menu-item.active .menu-link .text{
         color: #47196F;
