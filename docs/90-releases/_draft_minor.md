@@ -51,4 +51,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(cache): gerar versao do css pelo conteudo** `[d9ea27e7]`
 - **style(menu): ajustar estado hover dos itens** `[5572f6f6]`
 - **fix(home): corrigir caminho do icone inicial** `[b27255b2]`
+- **feat(menu): atualizar modulos do menu** `[5ac1a46f]`
 
