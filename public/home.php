@@ -603,15 +603,9 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             {
                 section: 'Cartório',
                 items: [
-                    {
-                        type: 'submenu',
-                        icon: 'fi fi-rs-envelope-open-text',
-                        label: 'Cartas',
-                        children: [
-                            { label: 'Cartas Expedidas', target: 'cartasexpedidas' },
-                            { label: 'Cartas Recebidas', target: 'cartasrecebidas' }
-                        ]
-                    },
+                    { icon: 'fi fi-rs-task-checklist', label: 'Tarefas', target: 'tarefas' },
+                    { icon: 'fi fi-rs-envelope', label: 'Cartas Expedidas', target: 'cartasexpedidas' },
+                    { icon: 'fi fi-rs-envelope-open-text', label: 'Cartas Recebidas', target: 'cartasrecebidas' },
                     { icon: 'fi fi-rs-document', label: 'Editais', target: 'editais' },
                     { icon: 'fi fi-rs-hand-holding-heart', label: 'Cejusc', target: 'cejusc' },
                     { icon: 'fi fi-rs-blog-text', label: 'Guias', target: 'guias' },
@@ -623,7 +617,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 items: [
                     { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficiosgabinete' },
                     { icon: 'fi fi-rs-lock', label: 'Réus Presos', target: 'reuspresos' },
-                    { icon: 'fi fi-rs-lock', label: 'Réus Presos - Substituto', target: 'reuspresossubstituto' }
+                    { icon: 'fi fi-rs-lock', label: 'Réus Presos - Substituto', target: 'reuspresossubstituto' },
+                    { icon: 'fi fi-rs-sensor-on', label: 'Monitoramento', target: 'monitoramentogabinete'}
                 ]
             },
             {
@@ -645,9 +640,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Consultas',
                 items: [
                     { icon: 'fi fi-rs-users-alt', label: 'Consulta Partes', target: 'consultapartes' },
-                    { icon: 'fi fi-rs-building', label: 'Instituições Públicas', target: 'instituicoespublicas' },
                     { icon: 'fi fi-rs-folder-open', label: 'Consulta Processos', target: 'consultaprocessos' },
-                    { icon: 'fi fi-rs-sensor-on', label: 'Monitoramento Eletrônico', target: 'monitoramentogabinete' }
+                    { icon: 'fi fi-rs-building', label: 'Consulta Orgãos', target: 'instituicoespublicas' }
                 ]
             },
             {
