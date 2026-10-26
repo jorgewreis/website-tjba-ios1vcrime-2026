@@ -657,13 +657,27 @@ function cartorio_oficios_label_cumprimento(array $row): string
         (function() {
             const formaSel = document.getElementById('oficio-forma-cumprimento');
             const meioRow = document.getElementById('oficio-meio-envio-row');
+            const tipoSel = document.getElementById('oficio-tipo');
+            const meioSel = document.getElementById('oficio-meio-envio');
+            const tiposCedepEmail = new Set([
+                'Ofício Informando Baixa ao Cedep',
+                'Ofício Informando Condenação ao CEDEP'
+            ]);
 
             function toggleMeioEnvio() {
                 if (!meioRow || !formaSel) return;
                 meioRow.style.display = formaSel.value === 'cartorio' ? '' : 'none';
             }
 
+            function aplicarPadraoCedep() {
+                if (!tipoSel || !formaSel || !meioSel || !tiposCedepEmail.has(tipoSel.value)) return;
+                formaSel.value = 'cartorio';
+                meioSel.value = 'email';
+                toggleMeioEnvio();
+            }
+
             formaSel?.addEventListener('change', toggleMeioEnvio);
+            tipoSel?.addEventListener('change', aplicarPadraoCedep);
 
             if (!window.App || !App.OficiosList || typeof App.OficiosList.initialize !== 'function') {
                 return;
