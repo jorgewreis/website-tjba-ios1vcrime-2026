@@ -62,4 +62,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **style(cartorio): reproduzir visual da lista de tarefas** `[7cdf2d84]`
 - **style(cartorio): ajustar lista de tarefas** `[63c5aacc]`
 - **style(cartorio): adicionar botoes de tarefas** `[55a06f4e]`
+- **feat(cartorio): ordenar tarefas por processo** `[b83eb846]`
 
