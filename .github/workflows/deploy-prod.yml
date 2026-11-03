@@ -106,6 +106,10 @@ jobs:
               php scripts/migrate-cartorio-tarefas.php
             fi
 
+            if [ -f scripts/migrate-cartorio-tarefas-automacao.php ]; then
+              php scripts/migrate-cartorio-tarefas-automacao.php
+            fi
+
             if [ -f scripts/migrate-gabinete-reu-preso-controle-tipo.php ]; then
               php scripts/migrate-gabinete-reu-preso-controle-tipo.php
             fi
