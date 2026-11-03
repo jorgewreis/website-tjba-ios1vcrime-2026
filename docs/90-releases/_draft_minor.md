@@ -76,4 +76,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): ordenar tarefas por usuario e prioridade** `[266443b1]`
 - **style(cartorio): separar linhas das tarefas** `[98b1c0d8]`
 - **style(cartorio): ajustar feedback de cnj valido** `[a100d233]`
+- **feat(cartorio): destacar e limpar cnj invalido** `[97ca88ec]`
 
