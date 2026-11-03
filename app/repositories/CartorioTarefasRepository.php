@@ -28,10 +28,14 @@ final class CartorioTarefasRepository
         $id = IdGenerator::generateUniquePrefixedId($this->db, 'cartorio_tarefas', 'id', 'TAR');
         $this->db->beginTransaction();
         try {
-            $task = $this->db->prepare('INSERT INTO cartorio_tarefas (id, titulo, numero_processo, tipo, tipo_documento, especificacao_documento, local_tarefa, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+            $task = $this->db->prepare('INSERT INTO cartorio_tarefas (id, titulo, numero_processo, tipo, tipo_documento, especificacao_documento, local_tarefa, status, alocado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)');
             $task->execute([$id, self::TIPOS[$tipo] . ' ' . $documento, $numeroProcesso, $tipo, $documento, $especificacao !== '' ? $especificacao : null, $local, 'a_fazer']);
             $allocation = $this->db->prepare('INSERT INTO cartorio_tarefas_servidores (tarefa_id, usuario_id) VALUES (?, ?)');
             $allocation->execute([$id, $usuario]);
+            require_once __DIR__ . '/../services/CartorioTarefasAutomacaoService.php';
+            $automacao = new CartorioTarefasAutomacaoService($this->db);
+            $automacao->registrarEvento($id, 'criacao');
+            $automacao->registrarEvento($id, 'alocacao');
             $this->db->commit();
         } catch (Throwable $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();
@@ -44,8 +48,8 @@ final class CartorioTarefasRepository
     {
         $sql = "SELECT DISTINCT u.id_usuario AS id, u.nome, u.sobrenome
                 FROM usuarios u INNER JOIN usuario_perfil p ON p.usuario = u.id_usuario
-                WHERE UPPER(TRIM(p.perfil)) IN ('ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA', 'SERVIDOR', 'ESTAGIARIO', 'CARTORIO', 'GABINETE', 'AUDIENCIA')
-                   OR UPPER(TRIM(p.perfil)) IN ('SERVIDOR-CARTORIO', 'SERVIDOR-GABINETE', 'SERVIDOR-AUDIENCIAS', 'ESTAGIARIO-CARTORIO', 'ESTAGIARIO-GABINETE', 'ESTAGIARIO-AUDIENCIAS')
+                WHERE COALESCE(u.cadastro_ativo, 1) = 1 AND (UPPER(TRIM(p.perfil)) IN ('ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA', 'SERVIDOR', 'ESTAGIARIO', 'CARTORIO', 'GABINETE', 'AUDIENCIA')
+                   OR UPPER(TRIM(p.perfil)) IN ('SERVIDOR-CARTORIO', 'SERVIDOR-GABINETE', 'SERVIDOR-AUDIENCIAS', 'ESTAGIARIO-CARTORIO', 'ESTAGIARIO-GABINETE', 'ESTAGIARIO-AUDIENCIAS'))
                 ORDER BY u.nome, u.sobrenome";
         $users = [];
         foreach ($this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC) as $row) {
@@ -60,13 +64,8 @@ final class CartorioTarefasRepository
         if (!preg_match('/^TAR-[A-F0-9]{26}$/', $id) || !isset(self::STATUS[$status])) {
             throw new InvalidArgumentException('Tarefa ou status inválido.');
         }
-        $statement = $this->db->prepare("UPDATE cartorio_tarefas SET finalizado_em = CASE WHEN :final = 'finalizada' THEN COALESCE(finalizado_em, CURRENT_TIMESTAMP) ELSE NULL END, status = :status WHERE id = :id");
-        $statement->execute([':final' => $status, ':status' => $status, ':id' => $id]);
-        if ($statement->rowCount() === 0) {
-            $check = $this->db->prepare('SELECT 1 FROM cartorio_tarefas WHERE id = ?');
-            $check->execute([$id]);
-            if ($check->fetchColumn() === false) throw new InvalidArgumentException('Tarefa não encontrada.');
-        }
+        require_once __DIR__ . '/../services/CartorioTarefasAutomacaoService.php';
+        (new CartorioTarefasAutomacaoService($this->db))->alterarStatusManual($id, $status);
     }
 
     public function listar(array $filters, int $limit, int $offset, string $usuarioAtual): array

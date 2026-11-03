@@ -14,6 +14,24 @@ final class CartorioTarefasAutomacaoService
         $this->regras = new CartorioTarefasRegrasRepository($db);
     }
 
+    public function alterarStatusManual(string $id, string $status): void
+    {
+        if (!in_array($status, CartorioTarefasRegras::STATUS, true)) throw new InvalidArgumentException('Status inválido.');
+        $this->db->beginTransaction();
+        try {
+            $sql = 'SELECT id FROM cartorio_tarefas WHERE id = ?';
+            if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $sql .= ' FOR UPDATE';
+            $st = $this->db->prepare($sql);
+            $st->execute([$id]);
+            if (!$st->fetchColumn()) throw new InvalidArgumentException('Tarefa não encontrada.');
+            $this->alterarStatus($id, $status, []);
+            $this->db->commit();
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $e;
+        }
+    }
+
     public function registrarEvento(string $tarefaId, string $evento, ?string $origemId = null, ?string $status = null, array $caminho = [], ?int $regraAlvo = null, ?int $versao = null): void
     {
         if (!in_array($evento, CartorioTarefasRegras::EVENTOS, true)) throw new InvalidArgumentException('Evento inválido.');

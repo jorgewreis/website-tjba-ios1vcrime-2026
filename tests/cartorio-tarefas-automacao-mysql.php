@@ -80,6 +80,34 @@ $lote = $st->fetch(PDO::FETCH_ASSOC);
 if ($lote['estado'] !== 'concluido' || (int) $lote['total'] !== (int) $lote['processadas']) throw new RuntimeException('O lote não concluiu o processamento da fotografia inicial.');
 echo "Fila e reprocessamento por fotografia verificados.\n";
 
+$cnj = '';
+for ($dv = 0; $dv < 100; $dv++) {
+    $candidato = '0000001-' . str_pad((string) $dv, 2, '0', STR_PAD_LEFT) . '.2020.8.05.0103';
+    if (CnjValidator::isValid($candidato)) { $cnj = $candidato; break; }
+}
+$tarefas = new CartorioTarefasRepository($db);
+$manual = $tarefas->cadastrar('expedicao', 'Ofício', 'Cartório', 'USR-1', $cnj);
+$st = $db->prepare('SELECT evento FROM cartorio_tarefas_automacao_eventos WHERE tarefa_id = ? ORDER BY id');
+$st->execute([$manual]);
+if ($st->fetchAll(PDO::FETCH_COLUMN) !== ['criacao', 'alocacao']) throw new RuntimeException('O cadastro manual não registrou os eventos.');
+$tarefas->alterarStatus($manual, 'em_andamento');
+$tarefas->alterarStatus($manual, 'finalizada');
+$st = $db->prepare('SELECT status, finalizado_em, primeiro_andamento_em FROM cartorio_tarefas WHERE id = ?');
+$st->execute([$manual]);
+$atual = $st->fetch(PDO::FETCH_ASSOC);
+if ($atual['status'] !== 'finalizada' || !$atual['finalizado_em'] || !$atual['primeiro_andamento_em']) throw new RuntimeException('Alteração de status manual não registrou os marcos.');
+$st = $db->prepare("SELECT COUNT(*) FROM cartorio_tarefas_automacao_eventos WHERE tarefa_id = ? AND evento = 'finalizacao'");
+$st->execute([$manual]);
+if ((int) $st->fetchColumn() !== 1) throw new RuntimeException('Finalização manual não registrou o evento.');
+$db->exec("UPDATE usuarios SET cadastro_ativo = 0 WHERE id_usuario = 'USR-1'");
+try {
+    $tarefas->cadastrar('expedicao', 'Ofício', 'Cartório', 'USR-1', $cnj);
+    throw new RuntimeException('Usuário inativo foi aceito no cadastro.');
+} catch (InvalidArgumentException $e) {
+    // Esperado.
+}
+echo "Cadastro e alterações manuais integrados à fila.\n";
+
 $insertRetencao = $db->prepare("INSERT INTO cartorio_tarefas (id, titulo, tipo, status, finalizado_em, sequencia_id) VALUES (?, 'Retenção', 'expedicao', ?, ?, ?)");
 $doisAnos = (new DateTimeImmutable('-2 years'))->format('Y-m-d H:i:s');
 $seisMeses = (new DateTimeImmutable('-6 months'))->format('Y-m-d H:i:s');
