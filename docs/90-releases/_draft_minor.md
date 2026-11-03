@@ -81,4 +81,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(tarefas): comparar condicoes de regras de automacao** `[425237e6]`
 - **feat(tarefas): validar regras e resolver precedencia** `[dca8c332]`
 - **feat(tarefas): persistir regras e lotes de reprocessamento** `[e405bb25]`
+- **feat(tarefas): preparar eventos prazos e vinculos de sequencia** `[f71df1f9]`
 
