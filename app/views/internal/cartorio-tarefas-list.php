@@ -133,8 +133,7 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
             <div class="register-line-header">
                 <div class="register-col col-processo">Processo</div>
                 <a class="col-header-icons" href="<?= $escape($url(1, $ordem === 'asc' ? 'desc' : 'asc')) ?>" aria-label="Ordenar processos em ordem <?= $ordem === 'asc' ? 'decrescente' : 'crescente' ?>" title="Ordenar processos em ordem <?= $ordem === 'asc' ? 'decrescente' : 'crescente' ?>">
-                    <img src="/assets/icons/Arrow-Button-Up-<?= $ordem === 'asc' ? '2' : '1' ?>--Streamline-Ultimate.png" alt="">
-                    <img src="/assets/icons/Arrow-Button-Down-<?= $ordem === 'desc' ? '2' : '1' ?>--Streamline-Ultimate.png" alt="">
+                    <img src="/assets/icons/Arrow-Button-<?= $ordem === 'asc' ? 'Up' : 'Down' ?>-2--Streamline-Ultimate.png" alt="">
                 </a>
             </div>
         </div>

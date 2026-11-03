@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0062
+
+**Data:** 2026-11-03 18:03:56 | **Commit:** `efde0afa` | **Tipo:** `patch`
+
+- style(cartorio): exibir somente seta ativa
+
 ## V. 1.87.0061
 
 **Data:** 2026-11-03 18:02:22 | **Commit:** `d6a27466` | **Tipo:** `patch`
@@ -5793,6 +5799,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
