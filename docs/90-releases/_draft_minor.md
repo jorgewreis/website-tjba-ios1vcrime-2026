@@ -65,4 +65,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): ordenar tarefas por processo** `[b83eb846]`
 - **feat(cartorio): criar pagina de cadastro de tarefas** `[7f2d37b5]`
 - **feat(cartorio): salvar cadastro de tarefas** `[d6a27466]`
+- **style(cartorio): exibir somente seta ativa** `[efde0afa]`
 
