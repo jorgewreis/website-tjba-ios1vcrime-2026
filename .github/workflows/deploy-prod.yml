@@ -102,6 +102,10 @@ jobs:
               php scripts/migrate-cejusc.php
             fi
 
+            if [ -f scripts/migrate-cartorio-tarefas.php ]; then
+              php scripts/migrate-cartorio-tarefas.php
+            fi
+
             if [ -f scripts/migrate-gabinete-reu-preso-controle-tipo.php ]; then
               php scripts/migrate-gabinete-reu-preso-controle-tipo.php
             fi

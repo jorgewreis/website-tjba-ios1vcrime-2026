@@ -1,0 +1,30 @@
+name: Retenção de tarefas do Cartório
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v6
+      - name: Preparar acesso SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: bash .github/scripts/deploy-ssh-target-prepare.sh
+      - name: Configurar chave SSH
+        env:
+          DEPLOY_KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+        run: bash .github/scripts/deploy-ssh-setup.sh
+      - name: Remover tarefas finalizadas há pelo menos um ano
+        env:
+          PROD_PATH: ${{ secrets.PROD_PATH }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "${{ env.DEPLOY_USER_EFFECTIVE }}@${{ env.DEPLOY_HOST_EFFECTIVE }}" \
+            "cd \"${PROD_PATH}\" && php scripts/purge-cartorio-tarefas.php"

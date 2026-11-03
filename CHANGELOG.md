@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0054
+
+**Data:** 2026-11-03 16:16:17 | **Commit:** `ea965899` | **Tipo:** `patch`
+
+- feat(cartorio): filtrar tarefas por status servidor e tipo
+
 ## V. 1.87.0053
 
 **Data:** 2026-11-03 15:59:45 | **Commit:** `e5e8dea9` | **Tipo:** `patch`
@@ -5745,6 +5751,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
