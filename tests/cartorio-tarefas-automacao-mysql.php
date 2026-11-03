@@ -192,6 +192,20 @@ $manualAlternativa = $tarefas->cadastrar('expedicao', 'Ofício', 'Cartório', 'U
 $st = $db->prepare('SELECT COUNT(*) FROM cartorio_tarefas_automacao_falhas WHERE tarefa_id = ? AND regra_id IS NOT NULL');
 $st->execute([$manualAlternativa]);
 if ((int) $st->fetchColumn() !== 1) throw new RuntimeException('A alocação inválida no cadastro manual não foi registrada.');
+$semResponsavel = 'TAR-66666666666666666666666666';
+$db->prepare("INSERT INTO cartorio_tarefas (id, titulo, tipo, tipo_documento, local_tarefa, status) VALUES (?, 'Expedir Ofício', 'expedicao', 'Ofício', 'Cartório', 'a_fazer')")->execute([$semResponsavel]);
+$servico->registrarEvento($semResponsavel, 'criacao');
+$servico->processarEvento((int) $db->lastInsertId());
+$st = $db->prepare('SELECT COUNT(*) FROM cartorio_tarefas_servidores WHERE tarefa_id = ?');
+$st->execute([$semResponsavel]);
+if ((int) $st->fetchColumn() !== 0) throw new RuntimeException('A tarefa automática foi alocada a usuário inativo.');
+$st = $db->prepare('SELECT COUNT(*) FROM cartorio_tarefas_automacao_falhas WHERE tarefa_id = ?');
+$st->execute([$semResponsavel]);
+if ((int) $st->fetchColumn() !== 1) throw new RuntimeException('A falha da alocação automática não foi registrada.');
+$servico->atribuirManual($semResponsavel, 'USR-2');
+$st = $db->prepare('SELECT usuario_id FROM cartorio_tarefas_servidores WHERE tarefa_id = ?');
+$st->execute([$semResponsavel]);
+if ($st->fetchColumn() !== 'USR-2') throw new RuntimeException('A chefia não conseguiu atribuir a tarefa sem responsável.');
 try {
     $tarefas->cadastrar('expedicao', 'Ofício', 'Cartório', 'USR-1', $cnj);
     throw new RuntimeException('Usuário inativo foi aceito no cadastro.');
