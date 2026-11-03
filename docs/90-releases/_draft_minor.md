@@ -103,4 +103,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(tarefas): verificar versao ativa do agendador** `[62b3d65e]`
 - **fix(tarefas): permitir propagacao estavel de status** `[1eaee5e3]`
 - **fix(tarefas): manter nome curto na lista de responsaveis** `[edb4006a]`
+- **fix(tarefas): permitir alertas a toda equipe interna** `[e3d2036e]`
 
