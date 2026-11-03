@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0072
+
+**Data:** 2026-11-03 19:08:59 | **Commit:** `a100d233` | **Tipo:** `patch`
+
+- style(cartorio): ajustar feedback de cnj valido
+
 ## V. 1.87.0071
 
 **Data:** 2026-11-03 19:04:48 | **Commit:** `98b1c0d8` | **Tipo:** `patch`
@@ -5853,6 +5859,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

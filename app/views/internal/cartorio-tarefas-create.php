@@ -62,6 +62,7 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
         .tarefas-form-field select#especificacao-documento { width: 360px; }
         .tarefas-form-field input { width: 280px; max-width: calc(100vw - 60px); }
         .cnj-feedback { font-size: 12px; }
+        .cnj-feedback.valid { font-size: 10px; border-radius: 7px; color: #57b557; background-color: #e9ffe9; padding: 5px 15px; }
     </style>
 </head>
 <body class="page-internal">
@@ -137,6 +138,7 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
         const value = input.value.trim();
         const formatOk = /^\d{20}$/.test(value) || /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/.test(value);
         const valid = formatOk && typeof window.validarCNJ === 'function' && window.validarCNJ(value);
+        feedback.classList.toggle('valid', valid);
         submit.disabled = !valid || !usersAvailable;
         input.setCustomValidity(valid ? '' : 'Informe um número de processo CNJ válido.');
         input.setAttribute('aria-invalid', value !== '' && !valid && (showIncomplete || value.replace(/\D/g, '').length >= 20) ? 'true' : 'false');
