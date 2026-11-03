@@ -93,7 +93,7 @@ final class CartorioTarefasRepository
         $total = (int) $count->fetchColumn();
         $offset = min($offset, max(0, (int) ceil($total / $limit) - 1) * $limit);
         $direction = $ordem === 'asc' ? 'ASC' : 'DESC';
-        $query = $this->db->prepare('SELECT t.id, t.titulo, t.numero_processo, t.status, t.tipo, t.tipo_documento, t.especificacao_documento, t.local_tarefa, t.criado_em FROM cartorio_tarefas t' . $clause . " ORDER BY CASE WHEN t.numero_processo IS NULL OR TRIM(t.numero_processo) = '' THEN 1 ELSE 0 END, t.numero_processo $direction, t.id $direction LIMIT :limite OFFSET :inicio");
+        $query = $this->db->prepare('SELECT t.id, t.titulo, t.numero_processo, t.status, t.tipo, t.tipo_documento, t.especificacao_documento, t.local_tarefa, t.criado_em, t.finalizado_em FROM cartorio_tarefas t' . $clause . " ORDER BY CASE WHEN t.numero_processo IS NULL OR TRIM(t.numero_processo) = '' THEN 1 ELSE 0 END, t.numero_processo $direction, t.id $direction LIMIT :limite OFFSET :inicio");
         foreach ($params as $key => $value) $query->bindValue($key, $value);
         $query->bindValue(':limite', $limit, PDO::PARAM_INT);
         $query->bindValue(':inicio', $offset, PDO::PARAM_INT);

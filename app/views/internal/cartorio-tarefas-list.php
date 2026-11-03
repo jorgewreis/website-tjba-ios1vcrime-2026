@@ -66,13 +66,13 @@ if ($server !== '') {
 if ($type !== '') $selectedFilters[] = 'Tarefa [' . $types[$type] . ']';
 $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
 $csrfToken = Security::generateCSRFToken();
-$elapsedSinceRegistration = static function (string $value): string {
-    if (trim($value) === '') return '—';
+$elapsedSinceRegistration = static function (string $value, ?string $end = null): string {
+    if (trim($value) === '' || ($end !== null && trim($end) === '')) return '—';
     try {
         $created = new DateTimeImmutable($value);
-        $now = new DateTimeImmutable('now');
-        if ($created > $now) return '0seg';
-        $interval = $created->diff($now);
+        $until = new DateTimeImmutable($end ?? 'now');
+        if ($created > $until) return '0seg';
+        $interval = $created->diff($until);
         if ($interval->y > 0) return $interval->y . 'a';
         if ($interval->m > 0) return $interval->m . 'm';
         $days = (int) $interval->days;
@@ -113,6 +113,10 @@ $elapsedSinceRegistration = static function (string $value): string {
         .pagination-symbol img { width: 14px; height: 14px; }
         .tarefa-status-form { width: 100%; }
         .tarefa-status-form select { width: 140px; max-width: 100%; }
+        .tarefa-status-form select[data-status="em_andamento"], .tarefa-status-form option[value="em_andamento"] { background-color: gold; color: #202020; }
+        .tarefa-status-form select[data-status="com_pendencias"], .tarefa-status-form option[value="com_pendencias"] { background-color: crimson; color: white; }
+        .tarefa-status-form select[data-status="finalizada"], .tarefa-status-form option[value="finalizada"] { background-color: lime; color: #202020; }
+        .tarefa-status-form option[value="a_fazer"] { background-color: white; color: #202020; }
     </style>
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
 </head>
@@ -208,13 +212,13 @@ $elapsedSinceRegistration = static function (string $value): string {
                     <form class="tarefa-status-form" method="post" action="<?= $escape($url($pageNumber, $ordem)) ?>">
                         <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
                         <input type="hidden" name="tarefa_id" value="<?= $escape((string) $row['id']) ?>">
-                        <select name="novo_status" class="height-sm" aria-label="Alterar status da tarefa <?= $escape($taskLabel) ?>">
+                        <select name="novo_status" class="height-sm" data-status="<?= $escape((string) $row['status']) ?>" aria-label="Alterar status da tarefa <?= $escape($taskLabel) ?>">
                             <?php foreach ($statusOptions as $value => $label): ?><option value="<?= $escape($value) ?>" <?= $row['status'] === $value ? 'selected' : '' ?>><?= $escape($label) ?></option><?php endforeach; ?>
                         </select>
                         <noscript><button type="submit" class="btn btn-secondary">Alterar</button></noscript>
                     </form>
                 </div>
-                <div class="register-col" title="Tempo desde o cadastro"><?= $escape($elapsedSinceRegistration((string) ($row['criado_em'] ?? ''))) ?></div>
+                <div class="register-col" title="<?= $row['status'] === 'finalizada' ? 'Tempo até a finalização' : 'Tempo desde o cadastro' ?>"><?= $escape($elapsedSinceRegistration((string) ($row['criado_em'] ?? ''), $row['status'] === 'finalizada' ? (string) ($row['finalizado_em'] ?? '') : null)) ?></div>
             </div>
             <?php endforeach; ?>
         </div>
@@ -239,6 +243,6 @@ $elapsedSinceRegistration = static function (string $value): string {
 </div>
 
 <script>document.querySelectorAll('#tarefas-filtros select').forEach(function (select) { select.addEventListener('change', function () { document.getElementById('tarefas-filtros').requestSubmit(); }); });</script>
-<script>document.querySelectorAll('.tarefa-status-form select').forEach(function (select) { select.addEventListener('change', function () { this.form.requestSubmit(); }); });</script>
+<script>document.querySelectorAll('.tarefa-status-form select').forEach(function (select) { select.addEventListener('change', function () { this.dataset.status = this.value; this.form.requestSubmit(); }); });</script>
 </body>
 </html>
