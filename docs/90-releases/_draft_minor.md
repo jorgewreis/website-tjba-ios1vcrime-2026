@@ -98,4 +98,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(tarefas): respeitar precedencia de prazos entre eventos** `[36177e9e]`
 - **feat(tarefas): monitorar execucao automatica no deploy** `[d6695038]`
 - **fix(tarefas): alinhar botoes e largura das regras** `[80bac740]`
+- **feat(tarefas): incluir comprovante de envio** `[8bd425fb]`
 
