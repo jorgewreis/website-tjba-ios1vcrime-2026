@@ -56,6 +56,10 @@ $seq['acoes'] = [$regra['acoes'][0]];
 verificar(!CartorioTarefasRegras::conflitantes($seq, $seq), 'Criações independentes não devem conflitar.');
 $seq['acoes'][] = ['id' => 'alocar_filha', 'tipo' => 'alocar', 'alvo' => 'oficio', 'usuario_id' => 'USR-1'];
 verificar(!CartorioTarefasRegras::conflitantes($seq, $seq), 'Ações em filhas criadas por regras diferentes não devem conflitar.');
+$prazoA = ['nome' => 'Prazo A', 'evento' => 'criacao', 'prioridade' => 0, 'condicoes' => [[]], 'acoes' => [['id' => 'p', 'tipo' => 'definir_prazo', 'inicio' => 'criacao', 'dias' => 3, 'alerta_dias' => 1]]];
+$prazoB = $prazoA;
+$prazoB['evento'] = 'alocacao';
+verificar(CartorioTarefasRegras::conflitantes($prazoA, $prazoB), 'Prazos empatados em eventos diferentes devem ser rejeitados.');
 $statusA = ['nome' => 'A para B', 'evento' => 'status_vinculada', 'evento_status' => 'a_fazer', 'prioridade' => 0, 'condicoes' => [[]], 'acoes' => [['id' => 'status', 'tipo' => 'alterar_status', 'status' => 'em_andamento']]];
 $statusB = ['nome' => 'B para A', 'evento' => 'status_vinculada', 'evento_status' => 'em_andamento', 'prioridade' => 0, 'condicoes' => [[]], 'acoes' => [['id' => 'status', 'tipo' => 'alterar_status', 'status' => 'a_fazer']]];
 try {

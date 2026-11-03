@@ -317,7 +317,7 @@ final class CartorioTarefasAutomacaoService
                 } elseif ($tipo === 'alterar_status') {
                     $this->alterarStatus($tarefaId, $acao['status'], $caminho);
                 } elseif ($tipo === 'definir_prazo') {
-                    $this->definirPrazo($tarefaId, $regra['id'], $acao);
+                    $this->definirPrazo($tarefaId, $regra, $acao);
                 }
             }
             $this->marcarEventoRegra((int) $evento['id'], (int) $regra['id']);
@@ -400,10 +400,28 @@ final class CartorioTarefasAutomacaoService
         $this->recalcularPrazo($id);
     }
 
-    private function definirPrazo(string $id, int $regraId, array $acao): void
+    private function definirPrazo(string $id, array $regra, array $acao): void
     {
+        $tarefa = $this->tarefa($id);
+        if (!$tarefa) throw new RuntimeException('Tarefa não encontrada.');
+        $regraAnterior = $tarefa['prazo_regra_id'] ? $this->regras->obter((int) $tarefa['prazo_regra_id']) : null;
+        if ($regraAnterior && $regraAnterior['ativa'] && $regraAnterior['id'] !== $regra['id']) {
+            $comparacao = CartorioTarefasCondicoes::comparar($regraAnterior['condicoes'], $regra['condicoes']);
+            if ($comparacao['primeiro_mais_especifico']) return;
+            if (!$comparacao['segundo_mais_especifico']) {
+                if ($regraAnterior['prioridade'] > $regra['prioridade']) return;
+                if ($regraAnterior['prioridade'] === $regra['prioridade']) throw new LogicException('Regras de prazo concorrentes empatadas.');
+            }
+        }
+        if ($regraAnterior && $regraAnterior['id'] === $regra['id']
+            && $tarefa['prazo_inicio'] === $acao['inicio']
+            && (int) $tarefa['prazo_dias'] === $acao['dias']
+            && (int) $tarefa['prazo_alerta_dias'] === $acao['alerta_dias']) {
+            $this->recalcularPrazo($id);
+            return;
+        }
         $st = $this->db->prepare('UPDATE cartorio_tarefas SET prazo_regra_id = ?, prazo_inicio = ?, prazo_dias = ?, prazo_alerta_dias = ?, prazo_em = NULL, prazo_evento_em = NULL WHERE id = ?');
-        $st->execute([$regraId, $acao['inicio'], $acao['dias'], $acao['alerta_dias'], $id]);
+        $st->execute([$regra['id'], $acao['inicio'], $acao['dias'], $acao['alerta_dias'], $id]);
         $this->recalcularPrazo($id);
     }
 

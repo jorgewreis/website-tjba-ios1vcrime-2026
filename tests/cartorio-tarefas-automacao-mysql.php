@@ -153,6 +153,24 @@ $db->prepare("UPDATE cartorio_tarefas SET prazo_regra_id = ?, alocado_em = '2024
 $servico->recalcularPrazo($nova);
 $st->execute([$nova]);
 if ($st->fetchColumn() !== '2024-02-04 23:59:00') throw new RuntimeException('Regra desativada alterou o prazo existente.');
+$prazoEspecifico = ['nome' => 'Prazo específico', 'evento' => 'criacao', 'prioridade' => 0, 'condicoes' => [['tipo' => 'envio']], 'acoes' => [['id' => 'p', 'tipo' => 'definir_prazo', 'inicio' => 'criacao', 'dias' => 7, 'alerta_dias' => 1]], 'ativa' => true];
+$prazoGeral = ['nome' => 'Prazo geral', 'evento' => 'alocacao', 'prioridade' => 100, 'condicoes' => [[]], 'acoes' => [['id' => 'p', 'tipo' => 'definir_prazo', 'inicio' => 'criacao', 'dias' => 1, 'alerta_dias' => 0]], 'ativa' => true];
+$prazoEspecificoId = $repositorio->salvar($prazoEspecifico);
+$repositorio->salvar($prazoGeral);
+$prazoTask = 'TAR-22222222222222222222222222';
+$db->prepare("INSERT INTO cartorio_tarefas (id, titulo, tipo, tipo_documento, local_tarefa, status, criado_em) VALUES (?, 'Enviar Ofício', 'envio', 'Ofício', 'Cartório', 'a_fazer', '2024-01-01 10:00:00')")->execute([$prazoTask]);
+foreach (['criacao', 'alocacao'] as $eventoPrazo) {
+    $servico->registrarEvento($prazoTask, $eventoPrazo);
+    $servico->processarEvento((int) $db->lastInsertId());
+}
+$st->execute([$prazoTask]);
+if ($st->fetchColumn() !== '2024-01-08 23:59:00') throw new RuntimeException('Um prazo geral posterior substituiu a regra mais específica.');
+$prazoEspecifico['ativa'] = false;
+$repositorio->salvar($prazoEspecifico, $prazoEspecificoId);
+$servico->registrarEvento($prazoTask, 'alocacao');
+$servico->processarEvento((int) $db->lastInsertId());
+$st->execute([$prazoTask]);
+if ($st->fetchColumn() !== '2024-01-02 23:59:00') throw new RuntimeException('Prazo da regra desativada impediu nova regra válida.');
 $db->exec("UPDATE usuarios SET cadastro_ativo = 0 WHERE id_usuario = 'USR-1'");
 if ($servico->sugerirAlocacao(['tipo' => 'expedicao', 'tipo_documento' => 'Ofício', 'local_tarefa' => 'Cartório']) !== null) throw new RuntimeException('Usuário inativo foi sugerido.');
 try {

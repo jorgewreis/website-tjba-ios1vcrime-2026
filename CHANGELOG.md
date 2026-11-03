@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0092
+
+**Data:** 2026-11-03 20:37:20 | **Commit:** `36177e9e` | **Tipo:** `patch`
+
+- fix(tarefas): respeitar precedencia de prazos entre eventos
+
 ## V. 1.87.0091
 
 **Data:** 2026-11-03 20:35:19 | **Commit:** `2cf61fb7` | **Tipo:** `patch`
@@ -5973,6 +5979,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

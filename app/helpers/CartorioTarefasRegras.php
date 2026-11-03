@@ -78,8 +78,7 @@ final class CartorioTarefasRegras
     /** Verdadeiro quando uma regra ativa concorrente deve impedir o salvamento. */
     public static function conflitantes(array $a, array $b): bool
     {
-        if (($a['evento'] ?? null) !== ($b['evento'] ?? null) || ($a['prioridade'] ?? null) !== ($b['prioridade'] ?? null)) return false;
-        if (($a['evento'] ?? null) === 'status_vinculada' && ($a['evento_status'] ?? null) !== ($b['evento_status'] ?? null)) return false;
+        if (($a['prioridade'] ?? null) !== ($b['prioridade'] ?? null)) return false;
         $alvos = static function (array $regra): array {
             $tipos = [];
             foreach ($regra['acoes'] as $acao) {
@@ -87,7 +86,13 @@ final class CartorioTarefasRegras
             }
             return array_unique($tipos);
         };
-        if (!array_intersect($alvos($a), $alvos($b))) return false;
+        $tiposComuns = array_intersect($alvos($a), $alvos($b));
+        if (!$tiposComuns) return false;
+        $mesmoEvento = ($a['evento'] ?? null) === ($b['evento'] ?? null)
+            && (($a['evento'] ?? null) !== 'status_vinculada' || ($a['evento_status'] ?? null) === ($b['evento_status'] ?? null));
+        // Prazos permanecem vinculados à tarefa e podem concorrer mesmo quando
+        // os eventos que os definem ocorrem em momentos diferentes.
+        if (!$mesmoEvento && !in_array('definir_prazo', $tiposComuns, true)) return false;
         $comparacao = CartorioTarefasCondicoes::comparar($a['condicoes'], $b['condicoes']);
         return $comparacao['sobrepoem'] && !$comparacao['primeiro_mais_especifico'] && !$comparacao['segundo_mais_especifico'];
     }
