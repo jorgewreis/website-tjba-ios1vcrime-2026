@@ -106,4 +106,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(tarefas): permitir alertas a toda equipe interna** `[e3d2036e]`
 - **test(tarefas): verificar pagina eventos e sequencias** `[0d69c32f]`
 - **test(tarefas): verificar atribuicao apos usuario inativo** `[e1a74460]`
+- **fix(tarefas): ocultar campo de status quando nao aplicavel** `[71674dfe]`
 
