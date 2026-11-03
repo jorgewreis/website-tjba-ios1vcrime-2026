@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0077
+
+**Data:** 2026-11-03 19:56:52 | **Commit:** `e405bb25` | **Tipo:** `patch`
+
+- feat(tarefas): persistir regras e lotes de reprocessamento
+
 ## V. 1.87.0076
 
 **Data:** 2026-11-03 19:55:18 | **Commit:** `dca8c332` | **Tipo:** `patch`
@@ -5883,6 +5889,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
