@@ -1,8 +1,10 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../app/helpers/Conection.php';
-$db = Conection::getInstance()->getConnection();
+if (!isset($db) || !$db instanceof PDO) {
+    require_once __DIR__ . '/../app/helpers/Conection.php';
+    $db = Conection::getInstance()->getConnection();
+}
 
 // As tabelas são aditivas; nenhuma regra é ativada pela migração.
 $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_lock (
@@ -49,5 +51,43 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_falhas (
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_tarefas_falha_regra (regra_id, criado_em),
     KEY idx_tarefas_falha_tarefa (tarefa_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$colunas = [
+    'sequencia_id' => 'CHAR(30) DEFAULT NULL',
+    'origem_id' => 'CHAR(30) DEFAULT NULL',
+    'primeiro_andamento_em' => 'DATETIME DEFAULT NULL',
+    'alocado_em' => 'DATETIME DEFAULT NULL',
+    'prazo_em' => 'DATETIME DEFAULT NULL',
+    'prazo_regra_id' => 'BIGINT UNSIGNED DEFAULT NULL',
+    'prazo_inicio' => 'VARCHAR(30) DEFAULT NULL',
+    'prazo_dias' => 'INT UNSIGNED DEFAULT NULL',
+    'prazo_alerta_dias' => 'INT UNSIGNED DEFAULT NULL',
+];
+foreach ($colunas as $nome => $definicao) {
+    $st = $db->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+    $st->execute(['cartorio_tarefas', $nome]);
+    if (!(int) $st->fetchColumn()) $db->exec("ALTER TABLE cartorio_tarefas ADD COLUMN `$nome` $definicao");
+}
+$st = $db->prepare('SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?');
+$st->execute(['cartorio_tarefas', 'idx_tarefas_sequencia']);
+if (!(int) $st->fetchColumn()) $db->exec('CREATE INDEX idx_tarefas_sequencia ON cartorio_tarefas (sequencia_id)');
+$db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_eventos (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    tarefa_id CHAR(30) NOT NULL,
+    evento VARCHAR(30) NOT NULL,
+    origem_id CHAR(30) DEFAULT NULL,
+    status_evento VARCHAR(30) DEFAULT NULL,
+    caminho LONGTEXT DEFAULT NULL,
+    criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    KEY idx_tarefas_eventos_fila (id),
+    KEY idx_tarefas_eventos_tarefa (tarefa_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_criacoes (
+    tarefa_origem_id CHAR(30) NOT NULL,
+    regra_id BIGINT UNSIGNED NOT NULL,
+    acao_id VARCHAR(40) NOT NULL,
+    tarefa_criada_id CHAR(30) NOT NULL,
+    PRIMARY KEY (tarefa_origem_id, regra_id, acao_id),
+    KEY idx_tarefas_criadas (tarefa_criada_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 fwrite(STDOUT, "Migração de regras de tarefas concluída.\n");
