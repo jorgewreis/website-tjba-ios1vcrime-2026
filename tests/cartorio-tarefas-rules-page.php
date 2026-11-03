@@ -11,13 +11,13 @@ final class Security
     public static function generateCSRFToken(): string { return 'teste'; }
 }
 $_SESSION = [];
-$userPerfils = ['ADMIN'];
-$userId = 'USR-1';
 $mode = (string) getenv('TAREFAS_TEST_PAGE_MODE');
-$_SERVER['REQUEST_METHOD'] = $mode === 'salvar' ? 'POST' : 'GET';
-$_POST = $mode === 'salvar' ? [
-    'csrf_token' => 'teste', 'acao' => 'salvar', 'regra_id' => '0',
+$userPerfils = $mode === 'operacional' ? ['SERVIDOR-CARTORIO'] : ['ADMIN'];
+$userId = 'USR-1';
+$_SERVER['REQUEST_METHOD'] = in_array($mode, ['salvar', 'csrf', 'alternar'], true) ? 'POST' : 'GET';
+$_POST = in_array($mode, ['salvar', 'csrf'], true) ? [
+    'csrf_token' => $mode === 'csrf' ? 'inválido' : 'teste', 'acao' => 'salvar', 'regra_id' => '0',
     'regra_json' => json_encode(['nome' => 'Regra de teste da página', 'evento' => 'criacao', 'prioridade' => 99, 'ativa' => true, 'condicoes' => [['local_tarefa' => 'Sala de Audiências']], 'acoes' => [['id' => 'prazo', 'tipo' => 'definir_prazo', 'inicio' => 'criacao', 'dias' => 3, 'alerta_dias' => 1]]], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
-] : [];
-$_GET = [];
+] : ($mode === 'alternar' ? ['csrf_token' => 'teste', 'acao' => 'alternar', 'regra_id' => getenv('TAREFAS_TEST_RULE_ID')] : []);
+$_GET = $mode === 'editar' ? ['editar' => getenv('TAREFAS_TEST_RULE_ID')] : [];
 require __DIR__ . '/../app/views/internal/cartorio-tarefas-rules.php';
