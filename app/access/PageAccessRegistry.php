@@ -42,6 +42,7 @@ final class PageAccessRegistry
         $map = [
             'dashboard' => ['kind' => 'all_internal'],
             'dashboardexterno' => ['kind' => 'externo_only'],
+            'tarefas' => $areaCartorio,
             'cejusc' => $areaCartorio,
             'cejusccreate' => $areaCartorio,
             'cejuscedit' => $areaCartorio,

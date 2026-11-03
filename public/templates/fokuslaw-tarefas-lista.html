@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Tarefas - Primeira Vara Crime de Ilhéus</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- IMPORT STYLES -->
+        <link rel="stylesheet" href="/assets/css/shared/reset.css">
+        <link rel="stylesheet" href="/assets/css/shared/color.css">
+        <link rel="stylesheet" href="/assets/css/shared/layout.css">
+        <link rel="stylesheet" href="/assets/css/shared/page.css">
+        <link rel="stylesheet" href="/assets/css/shared/form.css">
+        <link rel="stylesheet" href="/assets/css/shared/table.css">
+        <link rel="stylesheet" href="/assets/css/shared/toast.css">
+
+        <!-- IMPORT - FLATICON -->
+        <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    </head>
+<body class="page-internal">
+
+    <!-- SPACING -->
+    <div class="spacing-top-page"></div>
+
+
+    <!-- HEADER PAGE -->
+    <div class="header-page">
+        <!-- MAPA DE NAVEGAÇÃO DO SITE -->
+        <div class="location">
+            <span class="all">FokusLaw - Tarefas -</span>
+            <span class="specific">Lista</span>
+        </div>
+
+        <!-- TITLE CARD -->
+        <div class="card-title">
+            <div class="display-flex col col-full justify-start">
+                <!-- TÍTULO E DESCRIÇÃO DA PÁGINA -->
+                <h1 class="title-page" style="color: var(--color-primary-active);">Tarefas</h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD PAGE -->
+    <div class="container-full card-page">       
+
+        <!-- SUBTITLE SECTION CARD -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom">
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">            
+            </div>            
+        </div>
+
+        <!-- SUBTITLE SECTION CARD - FILTERS -->        
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); 
+                font-size: 13px;">Filtros</span>
+            </div>
+            <div class="display-flex row row-fit justify-end gap-y-md align-center">
+                <select class="width-400 height-md" id="filter-status">
+                    <option value="">Todos os status</option>
+                    <option value="todos_ativos" selected>Todos exceto finalizadas</option>
+                    <option value="a_fazer">A fazer</option>
+                    <option value="em_andamento">Em andamento</option>
+                    <option value="com_pendencias">Com pendências</option>
+                    <option value="finalizada">Finalizada</option>
+                </select>
+                <select class="width-400 height-md" id="filter-user">
+                    <option value="">Todos os servidores</option>
+                    <!-- lista de servidores -->
+                </select>
+                <select class="width-600 height-md" id="filter-finalidade">
+                    <option value="">Todas as tarefas</option>
+                    <option value="assinatura">Assinatura</option>
+                    <option value="expedicao">Expedição</option>
+                    <option value="envio">Envio</option>
+                    <option value="juntada">Juntada</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- SUBTITLE SECTION CARD - FILTERS INFO -->
+        <!-- Mostrar apenas se for selecionado algum filtro -->
+        <div class="display-flex row row-full justify-between padding-x-lg padding-y-sm border-bottom" 
+        style="background-color: var(--color-primary-bg-light);">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">                
+                <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); 
+                font-size: 12px; padding: 5px 0;">Lista com os seguintes filtros: Status [Pendente] + Finalidade [Intimação para Audiência]</span>
+            </div>
+        </div>
+
+        <!-- SUBTITLE SECTION CARD - ITEMS PER PAGE -->
+        
+        
+        <!-- TITLE CARD -->
+        <div class="card-title" style="padding-top: 40px !important;">
+            <div class="display-flex row row-full justify-start">
+                <h2>Lista de Tarefas</h2>
+            </div>
+        </div>
+
+        <!-- REGISTERS LIST -->
+        <div class="display-flex col col-full register">
+
+            <!-- Informa a quantidade de registros encontrados (x ou nenhum) -->
+            <div class="display-flex row row-full padding-x-sm padding-y-sm align-center justify-start border-bottom" 
+            style="background-color: var(--color-primary-bg-light);">
+                <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm">
+                    <span class="text" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">16 registros encontrados.</span>
+                </div>
+            </div>
+
+            <!-- Linha completa do registro -->
+            <div class="register-line">               
+            </div>
+
+        </div>
+            
+
+        <!-- PAGINATION INFO -->
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
+            <span class="pagination-info">
+                Mostrando 1-1 de 1 documento (1 página, 15 itens por página)
+            </span>
+            <div class="pagination-controls">
+                <a class="pagination-symbol disabled" aria-disabled="true">‹</a>
+                <span class="pagination-number active" aria-current="page">1</span>
+                <a class="pagination-symbol disabled" aria-disabled="true">›</a>
+            </div>
+        </div> 
+    </div>
+    
+
+</body>
+</html>

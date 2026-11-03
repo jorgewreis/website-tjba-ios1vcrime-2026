@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0053
+
+**Data:** 2026-11-03 15:59:45 | **Commit:** `e5e8dea9` | **Tipo:** `patch`
+
+- feat(cartorio): add tasks list page
+
 ## V. 1.87.0052
 
 **Data:** 2026-10-15 21:51:52 | **Commit:** `7688cad2` | **Tipo:** `patch`
@@ -5739,6 +5745,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -5,6 +5,7 @@ Todas as rotas abaixo usam **modo A** (`area_a` + `CARTORIO`), salvo entrada exp
 | page (frame.php) | Modo | Perfis |
 |------------------|------|--------|
 | editais, editaisedit, editaiscreate, editaisrules | A | `*-CARTORIO` |
+| tarefas | A | `*-CARTORIO` |
 | guias, guiasedit, guiascreate, guiasrules | A | `*-CARTORIO` |
 | oficioscartorio, oficioscartorioedit | A | `*-CARTORIO` |
 | cartasexpedidas, cartasexpedidasedit, cartasexpedidascreate | A | `*-CARTORIO` |

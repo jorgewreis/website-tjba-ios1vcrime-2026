@@ -27,6 +27,7 @@ $ERRORS = $PAGES . '/errors';
 $allowed_pages = [
     'dashboard'             => $PAGES . '/dashboard.php',
     'dashboardexterno'      => $PAGES . '/dashboard-externo.php',
+    'tarefas'               => realpath(__DIR__ . '/templates/fokuslaw-tarefas-lista.html'),
     'cejusc'                => $PAGES . '/cartorio-cejusc-list.php',
     'cejusccreate'          => $PAGES . '/cartorio-cejusc-create.php',
     'cejuscedit'            => $PAGES . '/cartorio-cejusc-edit.php',
