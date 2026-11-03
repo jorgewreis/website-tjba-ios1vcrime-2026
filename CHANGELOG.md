@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0064
+
+**Data:** 2026-11-03 18:09:48 | **Commit:** `9557353e` | **Tipo:** `patch`
+
+- feat(cartorio): adicionar especificacao do documento
+
 ## V. 1.87.0063
 
 **Data:** 2026-11-03 18:04:52 | **Commit:** `d9f91630` | **Tipo:** `patch`
@@ -5805,6 +5811,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

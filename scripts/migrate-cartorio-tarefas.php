@@ -9,6 +9,7 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas (
     titulo VARCHAR(255) NOT NULL,
     numero_processo VARCHAR(40) DEFAULT NULL,
     tipo_documento VARCHAR(100) DEFAULT NULL,
+    especificacao_documento VARCHAR(180) DEFAULT NULL,
     local_tarefa VARCHAR(40) DEFAULT NULL,
     status VARCHAR(30) NOT NULL DEFAULT 'a_fazer',
     tipo VARCHAR(30) NOT NULL,
@@ -21,6 +22,7 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas (
 foreach ([
     'numero_processo' => 'ALTER TABLE cartorio_tarefas ADD COLUMN numero_processo VARCHAR(40) DEFAULT NULL AFTER titulo',
     'tipo_documento' => 'ALTER TABLE cartorio_tarefas ADD COLUMN tipo_documento VARCHAR(100) DEFAULT NULL',
+    'especificacao_documento' => 'ALTER TABLE cartorio_tarefas ADD COLUMN especificacao_documento VARCHAR(180) DEFAULT NULL',
     'local_tarefa' => 'ALTER TABLE cartorio_tarefas ADD COLUMN local_tarefa VARCHAR(40) DEFAULT NULL',
 ] as $name => $sql) {
     $column = $db->query("SHOW COLUMNS FROM cartorio_tarefas WHERE Field = '$name'");

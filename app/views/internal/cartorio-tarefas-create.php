@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../repositories/CartorioTarefasRepository.php';
 $users = [];
 $usersError = false;
 $error = '';
-$form = ['tipo_tarefa' => '', 'tipo_documento' => '', 'local' => '', 'usuario' => ''];
+$form = ['tipo_tarefa' => '', 'tipo_documento' => '', 'especificacao_documento' => '', 'local' => '', 'usuario' => ''];
 try {
     $repository = new CartorioTarefasRepository($connection);
     $users = $repository->listarUsuariosInternos();
@@ -25,7 +25,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $error = 'Não foi possível carregar os usuários. Tente novamente.';
     } else {
         try {
-            $repository->cadastrar($form['tipo_tarefa'], $form['tipo_documento'], $form['local'], $form['usuario']);
+            $repository->cadastrar($form['tipo_tarefa'], $form['tipo_documento'], $form['local'], $form['usuario'], $form['especificacao_documento']);
             $_SESSION['cartorio_tarefa_cadastrada'] = true;
             header('Location: /frame.php?page=tarefas', true, 303);
             exit;
@@ -40,6 +40,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
 $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $taskTypes = CartorioTarefasRepository::TIPOS;
 $documentTypes = CartorioTarefasRepository::DOCUMENTOS;
+$specifications = CartorioTarefasRepository::ESPECIFICACOES;
 $locations = CartorioTarefasRepository::LOCAIS;
 $csrfToken = Security::generateCSRFToken();
 $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
@@ -54,9 +55,11 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
     <link rel="stylesheet" href="/assets/css/shared/<?= $css ?>.css?v=<?= $escape((string) (@hash_file('sha256', $assetRoot . $css . '.css') ?: '1')) ?>">
     <?php endforeach; ?>
     <style>
+        #tarefa-cadastro { width: 100%; box-sizing: border-box; }
         .tarefas-form-fields { display: flex; flex-wrap: wrap; gap: 15px; }
-        .tarefas-form-field { display: flex; flex-direction: column; flex: 1 1 220px; min-width: 0; gap: 5px; }
-        .tarefas-form-field select { width: 100%; }
+        .tarefas-form-field { display: flex; flex-direction: column; flex: 0 1 auto; min-width: 0; gap: 5px; }
+        .tarefas-form-field select { width: 240px; max-width: calc(100vw - 60px); }
+        .tarefas-form-field select#especificacao-documento { width: 360px; }
     </style>
 </head>
 <body class="page-internal">
@@ -83,6 +86,13 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
                 <select id="tipo-documento" name="tipo_documento" class="height-md" required>
                     <option value="">Selecione</option>
                     <?php foreach ($documentTypes as $type): ?><option value="<?= $escape($type) ?>" <?= $form['tipo_documento'] === $type ? 'selected' : '' ?>><?= $escape($type) ?></option><?php endforeach; ?>
+                </select>
+            </div>
+            <div class="tarefas-form-field">
+                <label for="especificacao-documento">Especificação do documento</label>
+                <select id="especificacao-documento" name="especificacao_documento" class="height-md">
+                    <option value="">Selecione</option>
+                    <?php foreach ($specifications as $specification): ?><option value="<?= $escape($specification) ?>" <?= $form['especificacao_documento'] === $specification ? 'selected' : '' ?>><?= $escape($specification) ?></option><?php endforeach; ?>
                 </select>
             </div>
             <div class="tarefas-form-field">

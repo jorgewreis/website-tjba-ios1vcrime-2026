@@ -7,20 +7,21 @@ final class CartorioTarefasRepository
 {
     public const TIPOS = ['expedicao' => 'Expedir', 'assinatura' => 'Assinar', 'envio' => 'Enviar', 'juntada' => 'Juntar', 'arquivar' => 'Arquivar', 'desentranhar' => 'Desentranhar'];
     public const DOCUMENTOS = ['Certidão', 'Ofício', 'Mandado', 'Carta Precatória', 'Guia', 'Edital', 'Ato Ordinatório', 'Petição', 'Resumo', 'Peças processuais', 'Laudo', 'Inquérito Policial', 'Medidas Protetivas'];
+    public const ESPECIFICACOES = ['Informando Baixa', 'Informando Condenação', 'Para intimação da Sentença', 'Para intimação da Decisão Interlocutória', 'Para intimação da Decisão de Medida Protetiva', 'Para Defesa Preliminar', 'Para comparecimento em Audiência'];
     public const LOCAIS = ['Cartório', 'Gabinete', 'Sala de Audiências'];
 
     public function __construct(private PDO $db) {}
 
-    public function cadastrar(string $tipo, string $documento, string $local, string $usuario): string
+    public function cadastrar(string $tipo, string $documento, string $local, string $usuario, string $especificacao = ''): string
     {
-        if (!isset(self::TIPOS[$tipo]) || !in_array($documento, self::DOCUMENTOS, true) || !in_array($local, self::LOCAIS, true) || !in_array($usuario, array_column($this->listarUsuariosInternos(), 'id'), true)) {
+        if (!isset(self::TIPOS[$tipo]) || !in_array($documento, self::DOCUMENTOS, true) || ($especificacao !== '' && !in_array($especificacao, self::ESPECIFICACOES, true)) || !in_array($local, self::LOCAIS, true) || !in_array($usuario, array_column($this->listarUsuariosInternos(), 'id'), true)) {
             throw new InvalidArgumentException('Selecione um valor válido em cada campo.');
         }
         $id = IdGenerator::generateUniquePrefixedId($this->db, 'cartorio_tarefas', 'id', 'TAR');
         $this->db->beginTransaction();
         try {
-            $task = $this->db->prepare('INSERT INTO cartorio_tarefas (id, titulo, tipo, tipo_documento, local_tarefa, status) VALUES (?, ?, ?, ?, ?, ?)');
-            $task->execute([$id, self::TIPOS[$tipo] . ' ' . $documento, $tipo, $documento, $local, 'a_fazer']);
+            $task = $this->db->prepare('INSERT INTO cartorio_tarefas (id, titulo, tipo, tipo_documento, especificacao_documento, local_tarefa, status) VALUES (?, ?, ?, ?, ?, ?, ?)');
+            $task->execute([$id, self::TIPOS[$tipo] . ' ' . $documento, $tipo, $documento, $especificacao !== '' ? $especificacao : null, $local, 'a_fazer']);
             $allocation = $this->db->prepare('INSERT INTO cartorio_tarefas_servidores (tarefa_id, usuario_id) VALUES (?, ?)');
             $allocation->execute([$id, $usuario]);
             $this->db->commit();
