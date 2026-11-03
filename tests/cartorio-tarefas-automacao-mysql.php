@@ -98,6 +98,9 @@ $st = $db->prepare('SELECT estado, total, processadas FROM cartorio_tarefas_regr
 $st->execute([$novaRegraId]);
 $lote = $st->fetch(PDO::FETCH_ASSOC);
 if ($lote['estado'] !== 'concluido' || (int) $lote['total'] !== (int) $lote['processadas']) throw new RuntimeException('O lote não concluiu o processamento da fotografia inicial.');
+$st = $db->prepare('SELECT COUNT(*) FROM cartorio_tarefas_regra_lote_itens WHERE lote_id = (SELECT MAX(id) FROM cartorio_tarefas_regra_lotes WHERE regra_id = ?)');
+$st->execute([$novaRegraId]);
+if ((int) $st->fetchColumn() !== 0) throw new RuntimeException('Identificadores de tarefas processadas foram mantidos no lote.');
 echo "Fila e reprocessamento por fotografia verificados.\n";
 
 $cnj = '';

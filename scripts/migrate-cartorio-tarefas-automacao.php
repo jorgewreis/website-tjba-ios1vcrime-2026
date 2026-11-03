@@ -60,6 +60,7 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_regra_lote_itens (
     PRIMARY KEY (lote_id, tarefa_id),
     CONSTRAINT fk_tarefas_lote_item_lote FOREIGN KEY (lote_id) REFERENCES cartorio_tarefas_regra_lotes(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$db->exec("DELETE i FROM cartorio_tarefas_regra_lote_itens i JOIN cartorio_tarefas_regra_lotes l ON l.id = i.lote_id WHERE l.estado IN ('concluido', 'cancelado') OR (l.cursor_tarefa IS NOT NULL AND i.tarefa_id <= l.cursor_tarefa)");
 $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_falhas (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     regra_id BIGINT UNSIGNED DEFAULT NULL,

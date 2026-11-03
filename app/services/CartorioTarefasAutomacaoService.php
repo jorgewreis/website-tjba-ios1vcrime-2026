@@ -227,8 +227,7 @@ final class CartorioTarefasAutomacaoService
             $status = null;
             $aplicavel = $tarefa['id'] !== null;
             if (!$aplicavel) {
-                $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET cursor_tarefa = ?, processadas = processadas + 1, atualizado_em = CURRENT_TIMESTAMP WHERE id = ? AND estado = 'processando'");
-                $st->execute([$tarefa['item_tarefa_id'], $lote['id']]);
+                $this->concluirItemLote((int) $lote['id'], (string) $tarefa['item_tarefa_id'], 0);
                 continue;
             }
             if ($regra['evento'] === 'finalizacao') $aplicavel = $tarefa['status'] === 'finalizada';
@@ -257,14 +256,30 @@ final class CartorioTarefasAutomacaoService
                 }
                 $falha = $this->contarFalhas((int) $regra['id'], (string) $tarefa['id']) > $antes ? 1 : 0;
             }
-            $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET cursor_tarefa = ?, processadas = processadas + 1, falhas = falhas + ?, atualizado_em = CURRENT_TIMESTAMP WHERE id = ? AND estado = 'processando'");
-            $st->execute([$tarefa['id'], $falha, $lote['id']]);
+            $this->concluirItemLote((int) $lote['id'], (string) $tarefa['id'], $falha);
         }
         if (count($tarefas) < $limite) {
             $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET estado = 'concluido', atualizado_em = CURRENT_TIMESTAMP WHERE id = ? AND estado = 'processando'");
             $st->execute([$lote['id']]);
         }
         return count($tarefas);
+    }
+
+    private function concluirItemLote(int $loteId, string $tarefaId, int $falha): void
+    {
+        $this->db->beginTransaction();
+        try {
+            $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET cursor_tarefa = ?, processadas = processadas + 1, falhas = falhas + ?, atualizado_em = CURRENT_TIMESTAMP WHERE id = ? AND estado = 'processando'");
+            $st->execute([$tarefaId, $falha, $loteId]);
+            if ($st->rowCount()) {
+                $st = $this->db->prepare('DELETE FROM cartorio_tarefas_regra_lote_itens WHERE lote_id = ? AND tarefa_id = ?');
+                $st->execute([$loteId, $tarefaId]);
+            }
+            $this->db->commit();
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $e;
+        }
     }
 
     private function contarFalhas(int $regraId, string $tarefaId): int

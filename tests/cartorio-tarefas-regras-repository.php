@@ -34,4 +34,5 @@ verificarRepositorio($repo->obter($id)['versao'] === 2 && $lotes[1]['estado'] ==
 $regra['ativa'] = false;
 $repo->salvar($regra, $id);
 verificarRepositorio(count($repo->listar(true)) === 0 && $repo->lotesRecentes()[0]['estado'] === 'cancelado', 'Desativação deve cancelar o lote.');
+verificarRepositorio((int) $db->query('SELECT COUNT(*) FROM cartorio_tarefas_regra_lote_itens')->fetchColumn() === 0, 'Itens de lotes cancelados devem ser removidos.');
 echo "Persistência de regras verificada.\n";

@@ -58,6 +58,8 @@ final class CartorioTarefasRegrasRepository
                 $st->execute([...$params, $versao, $ultimoEvento, $id]);
                 $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET estado = 'cancelado', atualizado_em = CURRENT_TIMESTAMP WHERE regra_id = ? AND estado IN ('pendente', 'processando')");
                 $st->execute([$id]);
+                $st = $this->db->prepare("DELETE FROM cartorio_tarefas_regra_lote_itens WHERE lote_id IN (SELECT id FROM cartorio_tarefas_regra_lotes WHERE regra_id = ? AND estado = 'cancelado')");
+                $st->execute([$id]);
             }
             if ($ativa) {
                 $st = $this->db->prepare('INSERT INTO cartorio_tarefas_regra_lotes (regra_id, versao, total) VALUES (?, ?, 0)');
