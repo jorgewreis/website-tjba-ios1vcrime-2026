@@ -102,4 +102,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(tarefas): reaplicar status sem recriar sequencia** `[d5c637f7]`
 - **fix(tarefas): verificar versao ativa do agendador** `[62b3d65e]`
 - **fix(tarefas): permitir propagacao estavel de status** `[1eaee5e3]`
+- **fix(tarefas): manter nome curto na lista de responsaveis** `[edb4006a]`
 
