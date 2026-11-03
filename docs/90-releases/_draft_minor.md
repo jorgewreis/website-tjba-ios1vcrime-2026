@@ -86,4 +86,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(tarefas): processar fila e reavaliacao em lotes** `[d6253d8a]`
 - **chore(deploy): preparar banco para automacao de tarefas** `[6b0c22f7]`
 - **fix(tarefas): preservar sequencias na retencao** `[66f1eb49]`
+- **feat(tarefas): registrar eventos nas alteracoes manuais** `[15fc1b21]`
 
