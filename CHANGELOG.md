@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0085
+
+**Data:** 2026-11-03 20:17:47 | **Commit:** `5137a104` | **Tipo:** `patch`
+
+- feat(tarefas): mostrar alertas de prazo no dashboard
+
 ## V. 1.87.0084
 
 **Data:** 2026-11-03 20:14:00 | **Commit:** `18bf7f5b` | **Tipo:** `patch`
@@ -5931,6 +5937,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

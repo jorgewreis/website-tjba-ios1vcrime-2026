@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../repositories/CartorioTarefasRepository.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 
 $canManageAutomationRules = ProfileNormalizer::isElevated(ProfileNormalizer::normalize($userPerfils ?? []));
+$canAccessCartorioTasks = AccessEvaluator::canAccessPage('tarefascreate', $userPerfils ?? []);
 $statusOptions = CartorioTarefasRepository::STATUS;
 $statuses = ['todos_ativos' => 'Todos exceto finalizadas'] + $statusOptions;
 $types = CartorioTarefasRepository::TIPOS;
@@ -20,6 +21,7 @@ $status = $status === '' || isset($statuses[$status]) ? $status : 'todos_ativos'
 $type = is_string($_GET['tipo'] ?? null) ? $_GET['tipo'] : '';
 $type = isset($types[$type]) ? $type : '';
 $server = is_string($_GET['servidor'] ?? null) ? trim($_GET['servidor']) : '';
+$deadline = is_string($_GET['prazo'] ?? null) && in_array($_GET['prazo'], ['proximo', 'vencido'], true) ? $_GET['prazo'] : '';
 $pageNumber = max(1, min(1000000, (int) ($_GET['pagina'] ?? 1)));
 $perPage = 15;
 $error = false;
@@ -45,12 +47,12 @@ try {
                     (new CartorioTarefasAutomacaoService($connection))->atribuirManual($taskId, $usuario);
                     $_SESSION['cartorio_tarefa_alocacao_atualizada'] = true;
                 } elseif ($action === 'status') {
-                    $repository->alterarStatus($taskId, $newStatus);
+                    $repository->alterarStatus($taskId, $newStatus, ($canAccessCartorioTasks || $canManageAutomationRules) ? '' : $userId);
                     $_SESSION['cartorio_tarefa_status_atualizado'] = true;
                 } else {
                     throw new InvalidArgumentException('Ação inválida.');
                 }
-                header('Location: /frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'pagina' => $pageNumber]), true, 303);
+                header('Location: /frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'prazo' => $deadline, 'pagina' => $pageNumber]), true, 303);
                 exit;
             } catch (InvalidArgumentException $e) {
                 $statusError = $e->getMessage();
@@ -60,7 +62,7 @@ try {
             }
         }
     }
-    $result = $repository->listar(['status' => $status, 'tipo' => $type, 'servidor' => $server], $perPage, ($pageNumber - 1) * $perPage, $userId);
+    $result = $repository->listar(['status' => $status, 'tipo' => $type, 'servidor' => $server, 'prazo' => $deadline, 'prazo_usuario' => $canManageAutomationRules ? '' : $userId, 'usuario_proprio' => ($canAccessCartorioTasks || $canManageAutomationRules) ? '' : $userId], $perPage, ($pageNumber - 1) * $perPage, $userId);
 } catch (Throwable $e) {
     error_log('Falha ao carregar tarefas do Cartório: ' . $e->getMessage());
     $error = true;
@@ -69,13 +71,14 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
 $total = $result['total'];
 $pageNumber = (int) ($result['offset'] / $perPage) + 1;
 $pages = max(1, (int) ceil($total / $perPage));
-$url = static fn(int $page): string => '/frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'pagina' => $page]);
+$url = static fn(int $page): string => '/frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'prazo' => $deadline, 'pagina' => $page]);
 $selectedFilters = [];
 if ($status !== '') $selectedFilters[] = 'Status [' . $statuses[$status] . ']';
 if ($server !== '') {
     foreach ($users as $user) if ($user['id'] === $server) $selectedFilters[] = 'Servidor [' . $user['name'] . ']';
 }
 if ($type !== '') $selectedFilters[] = 'Tarefa [' . $types[$type] . ']';
+if ($deadline !== '') $selectedFilters[] = 'Prazo [' . ($deadline === 'proximo' ? 'próximo' : 'vencido') . ']';
 $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
 $csrfToken = Security::generateCSRFToken();
 $elapsedSinceRegistration = static function (string $value, ?string $end = null): string {
@@ -154,10 +157,11 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
     <?php if ($statusError !== ''): ?><div class="card-line-info" role="alert"><?= $escape($statusError) ?></div><?php endif; ?>
     <div class="display-flex row row-full justify-end align-center gap-y-md padding-x-lg padding-y-md border-bottom">
         <button type="button" class="btn btn-secondary" <?= $canManageAutomationRules ? "onclick=\"location.href='/frame.php?page=tarefasrules'\"" : 'disabled' ?>>Regras de automação</button>
-        <button type="button" class="btn btn-primary" onclick="location.href='/frame.php?page=tarefascreate'">Cadastrar tarefa</button>
+        <button type="button" class="btn btn-primary" <?= $canAccessCartorioTasks ? "onclick=\"location.href='/frame.php?page=tarefascreate'\"" : 'disabled' ?>>Cadastrar tarefa</button>
     </div>
     <form action="/frame.php" method="get" id="tarefas-filtros" class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
         <input type="hidden" name="page" value="tarefas">
+        <?php if ($deadline !== ''): ?><input type="hidden" name="prazo" value="<?= $escape($deadline) ?>"><?php endif; ?>
         <div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Filtros</span></div>
         <div class="display-flex row row-fit justify-end gap-y-md align-center">
             <select class="width-400 height-md" name="status" aria-label="Filtrar por status">

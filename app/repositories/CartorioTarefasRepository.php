@@ -59,13 +59,13 @@ final class CartorioTarefasRepository
         return $users;
     }
 
-    public function alterarStatus(string $id, string $status): void
+    public function alterarStatus(string $id, string $status, string $usuarioRestrito = ''): void
     {
         if (!preg_match('/^TAR-[A-F0-9]{26}$/', $id) || !isset(self::STATUS[$status])) {
             throw new InvalidArgumentException('Tarefa ou status inválido.');
         }
         require_once __DIR__ . '/../services/CartorioTarefasAutomacaoService.php';
-        (new CartorioTarefasAutomacaoService($this->db))->alterarStatusManual($id, $status);
+        (new CartorioTarefasAutomacaoService($this->db))->alterarStatusManual($id, $status, $usuarioRestrito);
     }
 
     public function listar(array $filters, int $limit, int $offset, string $usuarioAtual): array
@@ -85,6 +85,15 @@ final class CartorioTarefasRepository
         if ($filters['servidor'] !== '') {
             $where[] = 'EXISTS (SELECT 1 FROM cartorio_tarefas_servidores ts WHERE ts.tarefa_id = t.id AND ts.usuario_id = :servidor)';
             $params[':servidor'] = $filters['servidor'];
+        }
+        if (!empty($filters['usuario_proprio'])) {
+            $where[] = 'EXISTS (SELECT 1 FROM cartorio_tarefas_servidores proprios WHERE proprios.tarefa_id = t.id AND proprios.usuario_id = :usuario_proprio)';
+            $params[':usuario_proprio'] = $filters['usuario_proprio'];
+        }
+        if (!empty($filters['prazo'])) {
+            [$prazoWhere, $prazoParams] = $this->filtroPrazo((string) $filters['prazo'], (string) ($filters['prazo_usuario'] ?? ''));
+            $where[] = $prazoWhere;
+            $params += $prazoParams;
         }
         $clause = $where ? ' WHERE ' . implode(' AND ', $where) : '';
         $count = $this->db->prepare('SELECT COUNT(*) FROM cartorio_tarefas t' . $clause);
@@ -132,5 +141,34 @@ final class CartorioTarefasRepository
             unset($row);
         }
         return ['rows' => $rows, 'total' => $total, 'offset' => $offset];
+    }
+
+    public function contarPrazos(string $tipo, string $usuarioRestrito = ''): int
+    {
+        [$where, $params] = $this->filtroPrazo($tipo, $usuarioRestrito);
+        $st = $this->db->prepare('SELECT COUNT(*) FROM cartorio_tarefas t WHERE ' . $where);
+        $st->execute($params);
+        return (int) $st->fetchColumn();
+    }
+
+    private function filtroPrazo(string $tipo, string $usuarioRestrito): array
+    {
+        if (!in_array($tipo, ['proximo', 'vencido'], true)) throw new InvalidArgumentException('Filtro de prazo inválido.');
+        $agora = (new DateTimeImmutable('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
+        $where = "t.status <> 'finalizada' AND t.prazo_em IS NOT NULL";
+        $params = [':prazo_agora' => $agora];
+        if ($tipo === 'vencido') {
+            $where .= ' AND t.prazo_em <= :prazo_agora';
+        } else {
+            $sqlite = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite';
+            $inicio = $sqlite ? "datetime(t.prazo_em, '-' || COALESCE(t.prazo_alerta_dias, 0) || ' days')" : 'DATE_SUB(t.prazo_em, INTERVAL COALESCE(t.prazo_alerta_dias, 0) DAY)';
+            $where .= " AND t.prazo_em > :prazo_agora AND $inicio <= :prazo_alerta_agora";
+            $params[':prazo_alerta_agora'] = $agora;
+        }
+        if ($usuarioRestrito !== '') {
+            $where .= ' AND EXISTS (SELECT 1 FROM cartorio_tarefas_servidores tp WHERE tp.tarefa_id = t.id AND tp.usuario_id = :prazo_usuario)';
+            $params[':prazo_usuario'] = $usuarioRestrito;
+        }
+        return [$where, $params];
     }
 }

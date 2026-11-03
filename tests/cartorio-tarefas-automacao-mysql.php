@@ -105,6 +105,19 @@ $servico->atribuirManual($nova, 'USR-1');
 $st = $db->prepare('SELECT usuario_id FROM cartorio_tarefas_servidores WHERE tarefa_id = ?');
 $st->execute([$nova]);
 if ($st->fetchColumn() !== 'USR-1') throw new RuntimeException('A alocação manual não foi gravada.');
+try {
+    $tarefas->alterarStatus($nova, 'finalizada', 'OUTRO');
+    throw new RuntimeException('Foi permitida alteração de tarefa de outro responsável.');
+} catch (InvalidArgumentException $e) {
+    // Esperado.
+}
+$agoraBahia = new DateTimeImmutable('now', new DateTimeZone('America/Bahia'));
+$st = $db->prepare('UPDATE cartorio_tarefas SET prazo_em = ?, prazo_alerta_dias = 2 WHERE id = ?');
+$st->execute([$agoraBahia->modify('+1 day')->format('Y-m-d H:i:s'), $antiga]);
+$st->execute([$agoraBahia->modify('-1 day')->format('Y-m-d H:i:s'), $nova]);
+if ($tarefas->contarPrazos('proximo', 'USR-1') !== 1 || $tarefas->contarPrazos('vencido', 'USR-1') !== 1 || $tarefas->contarPrazos('vencido', 'OUTRO') !== 0) throw new RuntimeException('Contagens de prazo ou privacidade estão incorretas.');
+$listagem = $tarefas->listar(['status' => 'todos_ativos', 'tipo' => '', 'servidor' => '', 'prazo' => 'vencido', 'prazo_usuario' => 'USR-1'], 15, 0, 'USR-1');
+if ($listagem['total'] !== 1 || $listagem['rows'][0]['id'] !== $nova) throw new RuntimeException('Filtro de prazo vencido está incorreto.');
 $db->exec("UPDATE usuarios SET cadastro_ativo = 0 WHERE id_usuario = 'USR-1'");
 if ($servico->sugerirAlocacao(['tipo' => 'expedicao', 'tipo_documento' => 'Ofício', 'local_tarefa' => 'Cartório']) !== null) throw new RuntimeException('Usuário inativo foi sugerido.');
 try {

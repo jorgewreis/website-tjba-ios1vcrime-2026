@@ -14,7 +14,7 @@ final class CartorioTarefasAutomacaoService
         $this->regras = new CartorioTarefasRegrasRepository($db);
     }
 
-    public function alterarStatusManual(string $id, string $status): void
+    public function alterarStatusManual(string $id, string $status, string $usuarioRestrito = ''): void
     {
         if (!in_array($status, CartorioTarefasRegras::STATUS, true)) throw new InvalidArgumentException('Status inválido.');
         $this->db->beginTransaction();
@@ -24,6 +24,11 @@ final class CartorioTarefasAutomacaoService
             $st = $this->db->prepare($sql);
             $st->execute([$id]);
             if (!$st->fetchColumn()) throw new InvalidArgumentException('Tarefa não encontrada.');
+            if ($usuarioRestrito !== '') {
+                $st = $this->db->prepare('SELECT 1 FROM cartorio_tarefas_servidores WHERE tarefa_id = ? AND usuario_id = ?');
+                $st->execute([$id, $usuarioRestrito]);
+                if (!$st->fetchColumn()) throw new InvalidArgumentException('Você só pode alterar suas próprias tarefas.');
+            }
             $this->alterarStatus($id, $status, []);
             $this->db->commit();
         } catch (Throwable $e) {

@@ -3,6 +3,18 @@ declare(strict_types=1);
 Security::requireAuthentication();
 $dashboardJs = dirname(__DIR__, 3) . '/public/assets/js/dashboard-interno.js';
 $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css';
+require_once __DIR__ . '/../../repositories/CartorioTarefasRepository.php';
+require_once __DIR__ . '/../../access/ProfileNormalizer.php';
+$tarefasPrazos = ['proximo' => null, 'vencido' => null];
+try {
+    $gestao = ProfileNormalizer::isElevated(ProfileNormalizer::normalize($userPerfils ?? []));
+    $tarefasRepository = new CartorioTarefasRepository($connection);
+    foreach (array_keys($tarefasPrazos) as $tipoPrazo) {
+        $tarefasPrazos[$tipoPrazo] = $tarefasRepository->contarPrazos($tipoPrazo, $gestao ? '' : (string) $userId);
+    }
+} catch (Throwable $e) {
+    error_log('Falha ao carregar prazos de tarefas no dashboard: ' . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -64,6 +76,10 @@ $dashboardCss = dirname(__DIR__, 3) . '/public/assets/css/dashboard-interno.css'
         </section>
         <section class="dashboard-column dashboard-agenda" aria-labelledby="dash-agenda-title">
           <header><span class="column-kicker">AGENDA</span><h2 id="dash-agenda-title">Agenda e alertas</h2></header>
+          <div class="dash-task-deadlines" aria-label="Prazos de tarefas">
+            <a class="dash-card dash-task-deadline" href="/frame.php?page=tarefas&amp;prazo=proximo"><span>Tarefas com prazo próximo</span><strong><?= $tarefasPrazos['proximo'] === null ? '—' : (int) $tarefasPrazos['proximo'] ?></strong></a>
+            <a class="dash-card dash-task-deadline" href="/frame.php?page=tarefas&amp;prazo=vencido"><span>Tarefas com prazo vencido</span><strong><?= $tarefasPrazos['vencido'] === null ? '—' : (int) $tarefasPrazos['vencido'] ?></strong></a>
+          </div>
           <div id="dash-alerts" class="dash-alert-list"></div>
         </section>
       </div>
