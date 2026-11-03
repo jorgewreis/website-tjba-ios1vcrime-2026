@@ -78,6 +78,10 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
 </div>
 
 <div class="container-full card-page">
+    <div class="display-flex row row-full justify-end align-center gap-y-md padding-x-lg padding-y-md border-bottom">
+        <button type="button" class="btn btn-secondary">Regras de automação</button>
+        <button type="button" class="btn btn-primary">Cadastrar tarefa</button>
+    </div>
     <form action="/frame.php" method="get" id="tarefas-filtros" class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
         <input type="hidden" name="page" value="tarefas">
         <div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Filtros</span></div>
@@ -121,14 +125,47 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
             </div>
         </div>
         <div class="register-line">
-            <div class="register-line-header"><div class="register-col col-processo">Processo</div><div class="col-header-icons" aria-hidden="true"><img src="/assets/icons/Arrow-Button-Up-1--Streamline-Ultimate.png" alt=""><img src="/assets/icons/Arrow-Button-Down-2--Streamline-Ultimate.png" class="active" alt=""></div></div>
+            <div class="register-line-header">
+                <div class="register-col col-processo">Processo</div>
+                <div class="col-header-icons" aria-hidden="true">
+                    <img src="/assets/icons/Arrow-Button-Up-1--Streamline-Ultimate.png" alt="">
+                    <img src="/assets/icons/Arrow-Button-Down-2--Streamline-Ultimate.png" class="active" alt="">
+                </div>
+            </div>
+        </div>
+        <div class="register-line">            
             <?php foreach ($result['rows'] as $row): ?>
-            <div class="register-line-content"><div class="register-col col-processo">—</div><div class="col-content-icon" aria-hidden="true"><img src="/assets/icons/Folder-File--Streamline-Ultimate.png" alt=""></div><div class="register-col"><strong><?= $escape((string) $row['titulo']) ?></strong><span><?= $escape($types[$row['tipo']] ?? (string) $row['tipo']) ?> · <?= $escape($statuses[$row['status']] ?? (string) $row['status']) ?></span></div></div>
+            <div class="register-line-content">
+                <div class="register-col col-processo">—</div>
+                <div class="col-content-icon" aria-hidden="true">
+                    <img src="/assets/icons/Folder-File--Streamline-Ultimate.png" alt="">
+                </div>
+                <div class="register-col">
+                    <strong><?= $escape((string) $row['titulo']) ?></strong>
+                    <span><?= $escape($types[$row['tipo']] ?? (string) $row['tipo']) ?> · <?= $escape($statuses[$row['status']] ?? (string) $row['status']) ?></span>
+                </div>
+            </div>
             <?php endforeach; ?>
         </div>
     </div>
-    <?php if (!$error): ?><div class="display-flex row row-full justify-between padding-x-md padding-y-md"><span class="pagination-info">Mostrando <?= $total > 0 ? $result['offset'] + 1 : 0 ?>–<?= min($result['offset'] + $perPage, $total) ?> de <?= $total ?> tarefas</span><div class="pagination-controls"><?php if ($pageNumber > 1): ?><a class="pagination-symbol" href="<?= $escape($url($pageNumber - 1)) ?>" aria-label="Página anterior">‹</a><?php else: ?><span class="pagination-symbol disabled" aria-disabled="true">‹</span><?php endif; ?><span class="pagination-number active" aria-current="page"><?= $pageNumber ?></span><?php if ($pageNumber < $pages): ?><a class="pagination-symbol" href="<?= $escape($url($pageNumber + 1)) ?>" aria-label="Próxima página">›</a><?php else: ?><span class="pagination-symbol disabled" aria-disabled="true">›</span><?php endif; ?></div></div><?php endif; ?>
+    <?php if (!$error): ?>
+        <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
+            <span class="pagination-info">Mostrando <?= $total > 0 ? $result['offset'] + 1 : 0 ?>–<?= min($result['offset'] + $perPage, $total) ?> de <?= $total ?> tarefas</span>
+            <div class="pagination-controls"><?php if ($pageNumber > 1): ?>
+            <a class="pagination-symbol" href="<?= $escape($url($pageNumber - 1)) ?>" aria-label="Página anterior">‹</a>
+            <?php else: ?>
+            <span class="pagination-symbol disabled" aria-disabled="true">‹</span>
+            <?php endif; ?>
+            <span class="pagination-number active" aria-current="page"><?= $pageNumber ?></span>
+            <?php if ($pageNumber < $pages): ?>
+                <a class="pagination-symbol" href="<?= $escape($url($pageNumber + 1)) ?>" aria-label="Próxima página">›</a>
+                <?php else: ?>
+                <span class="pagination-symbol disabled" aria-disabled="true">›</span>
+                <?php endif; ?>
+            </div>
+        </div><?php endif; ?>
 </div>
+
 <script>document.querySelectorAll('#tarefas-filtros select').forEach(function (select) { select.addEventListener('change', function () { document.getElementById('tarefas-filtros').requestSubmit(); }); });</script>
 </body>
 </html>
