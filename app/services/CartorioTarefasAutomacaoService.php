@@ -15,11 +15,20 @@ final class CartorioTarefasAutomacaoService
         $this->regras = new CartorioTarefasRegrasRepository($db);
     }
 
+    public function bloquearAutomacao(): void
+    {
+        if (!$this->db->inTransaction()) throw new LogicException('O bloqueio exige uma transação.');
+        $sql = 'SELECT id FROM cartorio_tarefas_automacao_lock WHERE id = 1';
+        if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $sql .= ' FOR UPDATE';
+        if (!$this->db->query($sql)->fetchColumn()) throw new RuntimeException('A migração de automação não foi concluída.');
+    }
+
     public function alterarStatusManual(string $id, string $status, string $usuarioRestrito = ''): void
     {
         if (!in_array($status, CartorioTarefasRegras::STATUS, true)) throw new InvalidArgumentException('Status inválido.');
         $this->db->beginTransaction();
         try {
+            $this->bloquearAutomacao();
             $sql = 'SELECT id FROM cartorio_tarefas WHERE id = ?';
             if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $sql .= ' FOR UPDATE';
             $st = $this->db->prepare($sql);
@@ -59,6 +68,7 @@ final class CartorioTarefasAutomacaoService
         }
         $this->db->beginTransaction();
         try {
+            $this->bloquearAutomacao();
             $sql = 'SELECT id FROM cartorio_tarefas WHERE id = ?';
             if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $sql .= ' FOR UPDATE';
             $st = $this->db->prepare($sql);
@@ -87,7 +97,7 @@ final class CartorioTarefasAutomacaoService
     public function registrarEvento(string $tarefaId, string $evento, ?string $origemId = null, ?string $status = null, array $caminho = [], ?int $regraAlvo = null, ?int $versao = null, bool $retroativo = false): void
     {
         if (!in_array($evento, CartorioTarefasRegras::EVENTOS, true)) throw new InvalidArgumentException('Evento inválido.');
-        if ($this->db->inTransaction() && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $this->db->query('SELECT id FROM cartorio_tarefas_automacao_lock WHERE id = 1 FOR UPDATE')->fetchColumn();
+        if ($this->db->inTransaction()) $this->bloquearAutomacao();
         $st = $this->db->prepare('INSERT INTO cartorio_tarefas_automacao_eventos (tarefa_id, evento, origem_id, status_evento, caminho, regra_alvo_id, regra_versao, retroativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
         $st->execute([$tarefaId, $evento, $origemId, $status, json_encode($caminho, JSON_THROW_ON_ERROR), $regraAlvo, $versao, $retroativo ? 1 : 0]);
     }
@@ -96,6 +106,7 @@ final class CartorioTarefasAutomacaoService
     {
         $this->db->beginTransaction();
         try {
+            $this->bloquearAutomacao();
             $sql = 'SELECT * FROM cartorio_tarefas_automacao_falhas WHERE id = ?';
             if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $sql .= ' FOR UPDATE';
             $st = $this->db->prepare($sql);
@@ -148,6 +159,7 @@ final class CartorioTarefasAutomacaoService
         foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $id) {
             $this->db->beginTransaction();
             try {
+                $this->bloquearAutomacao();
                 $atualizar = $this->db->prepare("UPDATE cartorio_tarefas SET prazo_evento_em = prazo_em WHERE id = ? AND status <> 'finalizada' AND prazo_em <= ? AND (prazo_evento_em IS NULL OR prazo_evento_em <> prazo_em)");
                 $atualizar->execute([$id, $agora]);
                 if ($atualizar->rowCount()) $this->registrarEvento((string) $id, 'prazo');
@@ -265,6 +277,10 @@ final class CartorioTarefasAutomacaoService
     {
         $this->db->beginTransaction();
         try {
+            // Sincroniza a execução com edição e desativação de regras.
+            $this->bloquearAutomacao();
+            $regraAtual = $this->regras->obter((int) $regra['id']);
+            if (!$regraAtual || !$regraAtual['ativa'] || $regraAtual['versao'] !== $regra['versao']) { $this->db->rollBack(); return; }
             $lock = 'SELECT id FROM cartorio_tarefas_automacao_eventos WHERE id = ?';
             if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $lock .= ' FOR UPDATE';
             $st = $this->db->prepare($lock);
@@ -395,6 +411,10 @@ final class CartorioTarefasAutomacaoService
     {
         $tarefa = $this->tarefa($id);
         if (!$tarefa || !$tarefa['prazo_inicio'] || !$tarefa['prazo_dias']) return;
+        if ($tarefa['prazo_regra_id']) {
+            $regra = $this->regras->obter((int) $tarefa['prazo_regra_id']);
+            if (!$regra || !$regra['ativa']) return;
+        }
         // Somente uma nova alocação reinicia um prazo já iniciado.
         if ($tarefa['prazo_em'] && $tarefa['prazo_inicio'] !== 'alocacao') return;
         $inicio = null;

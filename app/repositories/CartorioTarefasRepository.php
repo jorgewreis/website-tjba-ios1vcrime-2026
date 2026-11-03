@@ -29,14 +29,15 @@ final class CartorioTarefasRepository
             throw new InvalidArgumentException('Selecione um valor válido em cada campo.');
         }
         $id = IdGenerator::generateUniquePrefixedId($this->db, 'cartorio_tarefas', 'id', 'TAR');
+        require_once __DIR__ . '/../services/CartorioTarefasAutomacaoService.php';
+        $automacao = new CartorioTarefasAutomacaoService($this->db);
         $this->db->beginTransaction();
         try {
+            $automacao->bloquearAutomacao();
             $task = $this->db->prepare('INSERT INTO cartorio_tarefas (id, titulo, numero_processo, tipo, tipo_documento, especificacao_documento, local_tarefa, status, alocado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)');
             $task->execute([$id, self::TIPOS[$tipo] . ' ' . $documento, $numeroProcesso, $tipo, $documento, $especificacao !== '' ? $especificacao : null, $local, 'a_fazer']);
             $allocation = $this->db->prepare('INSERT INTO cartorio_tarefas_servidores (tarefa_id, usuario_id) VALUES (?, ?)');
             $allocation->execute([$id, $usuario]);
-            require_once __DIR__ . '/../services/CartorioTarefasAutomacaoService.php';
-            $automacao = new CartorioTarefasAutomacaoService($this->db);
             $automacao->registrarEvento($id, 'criacao');
             $automacao->registrarEvento($id, 'alocacao');
             $this->db->commit();

@@ -11,6 +11,7 @@ $db->exec("SET time_zone = '-03:00'");
 // contra reaberturas simultâneas. A execução é diária e fora do horário comercial.
 $db->beginTransaction();
 try {
+    if (!$db->query('SELECT id FROM cartorio_tarefas_automacao_lock WHERE id = 1 FOR UPDATE')->fetchColumn()) throw new RuntimeException('A migração de automação não foi concluída.');
     $locked = $db->query('SELECT id FROM cartorio_tarefas ORDER BY id FOR UPDATE');
     while ($locked->fetchColumn() !== false) { /* apenas adquirir os bloqueios */ }
     $db->exec('DROP TEMPORARY TABLE IF EXISTS tarefas_retencao_elegiveis');

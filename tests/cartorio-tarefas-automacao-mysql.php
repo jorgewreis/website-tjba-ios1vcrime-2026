@@ -146,6 +146,13 @@ $db->prepare("UPDATE cartorio_tarefas SET alocado_em = '2024-02-01 10:00:00' WHE
 $servico->recalcularPrazo($nova);
 $st->execute([$nova]);
 if ($st->fetchColumn() !== '2024-02-04 23:59:00') throw new RuntimeException('A transferência deve reiniciar o prazo de alocação.');
+$regraDesativada = $repositorio->obter($novaRegraId);
+$regraDesativada['ativa'] = false;
+$repositorio->salvar($regraDesativada, $novaRegraId);
+$db->prepare("UPDATE cartorio_tarefas SET prazo_regra_id = ?, alocado_em = '2024-03-01 10:00:00' WHERE id = ?")->execute([$novaRegraId, $nova]);
+$servico->recalcularPrazo($nova);
+$st->execute([$nova]);
+if ($st->fetchColumn() !== '2024-02-04 23:59:00') throw new RuntimeException('Regra desativada alterou o prazo existente.');
 $db->exec("UPDATE usuarios SET cadastro_ativo = 0 WHERE id_usuario = 'USR-1'");
 if ($servico->sugerirAlocacao(['tipo' => 'expedicao', 'tipo_documento' => 'Ofício', 'local_tarefa' => 'Cartório']) !== null) throw new RuntimeException('Usuário inativo foi sugerido.');
 try {
