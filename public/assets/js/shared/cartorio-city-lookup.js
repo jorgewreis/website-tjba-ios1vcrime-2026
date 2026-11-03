@@ -73,14 +73,16 @@
                             : helpers.formatProperName(cidade, settings.formatMaxLength || 50);
                         cidadeInput.dataset.ccmBlocked = 'true';
                         cidadeInput.dataset.ccmCity = cidadeExibicao;
-                        if (lastBlockedCity !== cidadeKey) {
+                        if (lastBlockedCity !== cidadeKey && typeof settings.onCcmCity === 'function') {
+                            settings.onCcmCity(cidadeExibicao, data);
+                        } else if (lastBlockedCity !== cidadeKey) {
                             helpers.notify(
                                 settings.ccmErrorMessage || 'A comarca de ' + cidadeExibicao + ' já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.',
                                 'error'
                             );
                         }
                         lastBlockedCity = cidadeKey;
-                        cidadeInput.value = '';
+                        if (settings.clearCcmCity !== false) cidadeInput.value = '';
                         return;
                     }
 

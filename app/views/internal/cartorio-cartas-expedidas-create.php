@@ -298,6 +298,12 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
                 App.CartorioCityLookup.initialize({
                     endpoint: '/api/cartorio-cartas-expedidas/buscar-cidade.php?cidade=',
                     blockCcm: true,
+                    clearCcmCity: false,
+                    onCcmCity: function (city) {
+                        if (App.CartorioCartasExpedidasCreate && App.CartorioCartasExpedidasCreate.confirmCcm) {
+                            App.CartorioCartasExpedidasCreate.confirmCcm(city);
+                        }
+                    },
                     maxLength: 50,
                     formatMaxLength: 50
                 });

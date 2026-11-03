@@ -31,10 +31,19 @@
         const submitDelayMs = (typeof settings.submitDelayMs === 'number' && settings.submitDelayMs >= 0)
             ? settings.submitDelayMs
             : 0;
+        const ccmConfirmed = new Set();
+        function confirmCcm(city) {
+            const key = normalizeCidadeForCompare(city);
+            if (ccmConfirmed.has(key)) return true;
+            const accepted = global.confirm('A comarca de ' + city + ' j� possui Central de Mandados (CCM). Em regra, deve ser expedido Mandado em vez de Carta Precat�ria. Deseja cadastrar a carta mesmo assim?');
+            if (accepted) ccmConfirmed.add(key);
+            return accepted;
+        }
 
         if (!button) {
             return;
         }
+        App.CartorioCartasExpedidasCreate.confirmCcm = confirmCcm;
         processoInput?.addEventListener('input', function () { gate.setWaiting(); });
         global.addEventListener('cnjInvalid', function (event) {
             const id = event && event.detail ? event.detail.inputId : '';
@@ -92,13 +101,6 @@
 
             const cidadeInput = global.document.getElementById('filter-cidade');
             const estadoSelect = global.document.getElementById('filter-estado');
-            if (cidadeInput && cidadeInput.dataset.ccmBlocked === 'true') {
-                const cidadeBloqueada = cidadeInput.dataset.ccmCity || cidadeInput.value.trim();
-                feedback('A comarca de ' + cidadeBloqueada + ' já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.', 'error');
-                cidadeInput.value = '';
-                return;
-            }
-
             const cidadeDestino = App.ProperNameHelper && App.ProperNameHelper.formatProper
                 ? App.ProperNameHelper.formatProper(helpers.getValue('filter-cidade'), 50)
                 : helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
@@ -114,13 +116,8 @@
                         throw new Error(lookupData.error || 'Não foi possível validar a comarca de destino.');
                     }
                     if (lookupData.is_ccm === true || String(lookupData.status_cidade || '').trim().toUpperCase() === 'CCM') {
-                        if (cidadeInput) {
-                            cidadeInput.dataset.ccmBlocked = 'true';
-                            cidadeInput.dataset.ccmCity = cidadeDestino;
-                        }
-                        feedback('A comarca de ' + cidadeDestino + ' já possui Central de Mandados (CCM). Deve ser expedido Mandado em vez de Carta Precatória.', 'error');
-                        if (cidadeInput) cidadeInput.value = '';
-                        return;
+                        if (!confirmCcm(cidadeDestino)) return;
+                        if (cidadeInput) delete cidadeInput.dataset.ccmBlocked;
                     }
                 } catch (error) {
                     feedback(error.message || 'Não foi possível validar a comarca de destino.', 'error');
