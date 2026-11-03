@@ -69,4 +69,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **style(cartorio): usar imagens na paginacao** `[d9f91630]`
 - **feat(cartorio): adicionar especificacao do documento** `[9557353e]`
 - **feat(cartorio): restringir botao de automacao** `[7a89d2e3]`
+- **feat(cartorio): validar processo no cadastro de tarefas** `[2f28b2b0]`
 
