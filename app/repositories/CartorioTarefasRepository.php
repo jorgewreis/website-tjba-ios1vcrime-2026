@@ -69,7 +69,7 @@ final class CartorioTarefasRepository
         }
     }
 
-    public function listar(array $filters, int $limit, int $offset, string $ordem = 'desc'): array
+    public function listar(array $filters, int $limit, int $offset, string $usuarioAtual): array
     {
         $where = [];
         $params = [];
@@ -92,9 +92,24 @@ final class CartorioTarefasRepository
         $count->execute($params);
         $total = (int) $count->fetchColumn();
         $offset = min($offset, max(0, (int) ceil($total / $limit) - 1) * $limit);
-        $direction = $ordem === 'asc' ? 'ASC' : 'DESC';
-        $query = $this->db->prepare('SELECT t.id, t.titulo, t.numero_processo, t.status, t.tipo, t.tipo_documento, t.especificacao_documento, t.local_tarefa, t.criado_em, t.finalizado_em FROM cartorio_tarefas t' . $clause . " ORDER BY CASE WHEN t.numero_processo IS NULL OR TRIM(t.numero_processo) = '' THEN 1 ELSE 0 END, t.numero_processo $direction, t.id $direction LIMIT :limite OFFSET :inicio");
+        $sqlite = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite';
+        $nome = $sqlite
+            ? "TRIM(COALESCE(u.nome, '') || ' ' || COALESCE(u.sobrenome, ''))"
+            : "TRIM(CONCAT(COALESCE(u.nome, ''), ' ', COALESCE(u.sobrenome, '')))";
+        $fim = "CASE WHEN t.status = 'finalizada' THEN t.finalizado_em ELSE CURRENT_TIMESTAMP END";
+        $tempo = $sqlite
+            ? "(strftime('%s', $fim) - strftime('%s', t.criado_em))"
+            : "TIMESTAMPDIFF(SECOND, t.criado_em, $fim)";
+        $query = $this->db->prepare('SELECT t.id, t.titulo, t.numero_processo, t.status, t.tipo, t.tipo_documento, t.especificacao_documento, t.local_tarefa, t.criado_em, t.finalizado_em FROM cartorio_tarefas t'
+            . " LEFT JOIN (SELECT ts.tarefa_id, MIN($nome) AS nome_ordem, MAX(CASE WHEN ts.usuario_id = :usuario_atual THEN 1 ELSE 0 END) AS usuario_logado FROM cartorio_tarefas_servidores ts JOIN usuarios u ON u.id_usuario = ts.usuario_id GROUP BY ts.tarefa_id) alocacao ON alocacao.tarefa_id = t.id"
+            . $clause
+            . " ORDER BY CASE WHEN alocacao.usuario_logado = 1 THEN 0 WHEN alocacao.nome_ordem IS NOT NULL THEN 1 ELSE 2 END,"
+            . " CASE WHEN alocacao.usuario_logado = 1 THEN '' ELSE alocacao.nome_ordem END ASC,"
+            . " CASE t.status WHEN 'a_fazer' THEN 0 WHEN 'em_andamento' THEN 1 WHEN 'com_pendencias' THEN 2 WHEN 'finalizada' THEN 3 ELSE 4 END,"
+            . " CASE WHEN t.criado_em IS NULL OR (t.status = 'finalizada' AND t.finalizado_em IS NULL) THEN 1 ELSE 0 END, $tempo DESC,"
+            . " CASE WHEN t.numero_processo IS NULL OR TRIM(t.numero_processo) = '' THEN 1 ELSE 0 END, t.numero_processo ASC, t.titulo ASC, COALESCE(t.especificacao_documento, '') ASC, t.id ASC LIMIT :limite OFFSET :inicio");
         foreach ($params as $key => $value) $query->bindValue($key, $value);
+        $query->bindValue(':usuario_atual', $usuarioAtual);
         $query->bindValue(':limite', $limit, PDO::PARAM_INT);
         $query->bindValue(':inicio', $offset, PDO::PARAM_INT);
         $query->execute();

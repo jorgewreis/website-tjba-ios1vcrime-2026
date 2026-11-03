@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0070
+
+**Data:** 2026-11-03 18:46:05 | **Commit:** `266443b1` | **Tipo:** `patch`
+
+- feat(cartorio): ordenar tarefas por usuario e prioridade
+
 ## V. 1.87.0069
 
 **Data:** 2026-11-03 18:32:24 | **Commit:** `fc824324` | **Tipo:** `patch`
@@ -5841,6 +5847,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

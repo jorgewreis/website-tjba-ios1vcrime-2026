@@ -18,7 +18,6 @@ $status = $status === '' || isset($statuses[$status]) ? $status : 'todos_ativos'
 $type = is_string($_GET['tipo'] ?? null) ? $_GET['tipo'] : '';
 $type = isset($types[$type]) ? $type : '';
 $server = is_string($_GET['servidor'] ?? null) ? trim($_GET['servidor']) : '';
-$ordem = ($_GET['ordem'] ?? '') === 'asc' ? 'asc' : 'desc';
 $pageNumber = max(1, min(1000000, (int) ($_GET['pagina'] ?? 1)));
 $perPage = 15;
 $error = false;
@@ -38,7 +37,7 @@ try {
             try {
                 $repository->alterarStatus($taskId, $newStatus);
                 $_SESSION['cartorio_tarefa_status_atualizado'] = true;
-                header('Location: /frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'pagina' => $pageNumber, 'ordem' => $ordem]), true, 303);
+                header('Location: /frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'pagina' => $pageNumber]), true, 303);
                 exit;
             } catch (InvalidArgumentException $e) {
                 $statusError = $e->getMessage();
@@ -48,7 +47,7 @@ try {
             }
         }
     }
-    $result = $repository->listar(['status' => $status, 'tipo' => $type, 'servidor' => $server], $perPage, ($pageNumber - 1) * $perPage, $ordem);
+    $result = $repository->listar(['status' => $status, 'tipo' => $type, 'servidor' => $server], $perPage, ($pageNumber - 1) * $perPage, $userId);
 } catch (Throwable $e) {
     error_log('Falha ao carregar tarefas do Cartório: ' . $e->getMessage());
     $error = true;
@@ -57,7 +56,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
 $total = $result['total'];
 $pageNumber = (int) ($result['offset'] / $perPage) + 1;
 $pages = max(1, (int) ceil($total / $perPage));
-$url = static fn(int $page, string $sort): string => '/frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'pagina' => $page, 'ordem' => $sort]);
+$url = static fn(int $page): string => '/frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'pagina' => $page]);
 $selectedFilters = [];
 if ($status !== '') $selectedFilters[] = 'Status [' . $statuses[$status] . ']';
 if ($server !== '') {
@@ -104,9 +103,7 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
         .register-line-content { background-color: #20202010; }
         .register-col { display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: flex-start; box-sizing: border-box; }
         .col-processo { display: flex; flex-direction: row; align-items: center; gap: 10px; }
-        .col-header-icons { display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .col-content-icon { width: 50px; display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: center; align-items: center; box-sizing: border-box; border-right: solid 1px #20202040; cursor: pointer; }
-        .col-header-icons img { width: 10px; height: 10px; }
         .col-content-icon img { width: 20px; height: 20px; opacity: 0.3; }
         .col-content-icon:hover img { opacity: 1; }
         .pagination-symbol { display: flex; align-items: center; justify-content: center; padding: 0; }
@@ -146,7 +143,6 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
     </div>
     <form action="/frame.php" method="get" id="tarefas-filtros" class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
         <input type="hidden" name="page" value="tarefas">
-        <input type="hidden" name="ordem" value="<?= $escape($ordem) ?>">
         <div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Filtros</span></div>
         <div class="display-flex row row-fit justify-end gap-y-md align-center">
             <select class="width-400 height-md" name="status" aria-label="Filtrar por status">
@@ -190,7 +186,7 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
         <div class="tarefas-table-scroll">
         <div class="register-line">
             <div class="register-line-header">
-                <div class="col-processo"><span>Processo</span><a class="col-header-icons" href="<?= $escape($url(1, $ordem === 'asc' ? 'desc' : 'asc')) ?>" aria-label="Ordenar processos em ordem <?= $ordem === 'asc' ? 'decrescente' : 'crescente' ?>" title="Ordenar processos em ordem <?= $ordem === 'asc' ? 'decrescente' : 'crescente' ?>"><img src="/assets/icons/Arrow-Button-<?= $ordem === 'asc' ? 'Up' : 'Down' ?>-2--Streamline-Ultimate.png" alt=""></a></div>
+                <div class="col-processo">Processo</div>
                 <div>Tarefa</div>
                 <div>Local</div>
                 <div>Usuário alocado</div>
@@ -209,7 +205,7 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
                 <div class="register-col"><?= $escape(trim((string) ($row['local_tarefa'] ?? '')) ?: '—') ?></div>
                 <div class="register-col"><?= $escape(implode(', ', $row['alocados'] ?? []) ?: '—') ?></div>
                 <div class="register-col">
-                    <form class="tarefa-status-form" method="post" action="<?= $escape($url($pageNumber, $ordem)) ?>">
+                    <form class="tarefa-status-form" method="post" action="<?= $escape($url($pageNumber)) ?>">
                         <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
                         <input type="hidden" name="tarefa_id" value="<?= $escape((string) $row['id']) ?>">
                         <select name="novo_status" class="height-sm" data-status="<?= $escape((string) $row['status']) ?>" aria-label="Alterar status da tarefa <?= $escape($taskLabel) ?>">
@@ -228,13 +224,13 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
         <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">Mostrando <?= $total > 0 ? $result['offset'] + 1 : 0 ?>–<?= min($result['offset'] + $perPage, $total) ?> de <?= $total ?> tarefas</span>
             <div class="pagination-controls"><?php if ($pageNumber > 1): ?>
-            <a class="pagination-symbol" href="<?= $escape($url($pageNumber - 1, $ordem)) ?>" aria-label="Página anterior"><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt=""></a>
+            <a class="pagination-symbol" href="<?= $escape($url($pageNumber - 1)) ?>" aria-label="Página anterior"><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt=""></a>
             <?php else: ?>
             <span class="pagination-symbol disabled" aria-disabled="true" aria-label="Página anterior"><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt=""></span>
             <?php endif; ?>
             <span class="pagination-number active" aria-current="page"><?= $pageNumber ?></span>
             <?php if ($pageNumber < $pages): ?>
-                <a class="pagination-symbol" href="<?= $escape($url($pageNumber + 1, $ordem)) ?>" aria-label="Próxima página"><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt=""></a>
+                <a class="pagination-symbol" href="<?= $escape($url($pageNumber + 1)) ?>" aria-label="Próxima página"><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt=""></a>
                 <?php else: ?>
                 <span class="pagination-symbol disabled" aria-disabled="true" aria-label="Próxima página"><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt=""></span>
                 <?php endif; ?>
