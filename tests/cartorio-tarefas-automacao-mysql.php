@@ -79,3 +79,27 @@ $st->execute([$novaRegraId]);
 $lote = $st->fetch(PDO::FETCH_ASSOC);
 if ($lote['estado'] !== 'concluido' || (int) $lote['total'] !== (int) $lote['processadas']) throw new RuntimeException('O lote não concluiu o processamento da fotografia inicial.');
 echo "Fila e reprocessamento por fotografia verificados.\n";
+
+$insertRetencao = $db->prepare("INSERT INTO cartorio_tarefas (id, titulo, tipo, status, finalizado_em, sequencia_id) VALUES (?, 'Retenção', 'expedicao', ?, ?, ?)");
+$doisAnos = (new DateTimeImmutable('-2 years'))->format('Y-m-d H:i:s');
+$seisMeses = (new DateTimeImmutable('-6 months'))->format('Y-m-d H:i:s');
+$prefixo = 'TAR-111111111111111111111111';
+$abertaRaiz = $prefixo . '01';
+$abertaFilha = $prefixo . '02';
+$recenteRaiz = $prefixo . '03';
+$recenteFilha = $prefixo . '04';
+$antigaRaiz = $prefixo . '05';
+$antigaFilha = $prefixo . '06';
+$isolada = $prefixo . '07';
+foreach ([[$abertaRaiz, 'finalizada', $doisAnos, null], [$abertaFilha, 'a_fazer', null, $abertaRaiz], [$recenteRaiz, 'finalizada', $doisAnos, null], [$recenteFilha, 'finalizada', $seisMeses, $recenteRaiz], [$antigaRaiz, 'finalizada', $doisAnos, null], [$antigaFilha, 'finalizada', $doisAnos, $antigaRaiz], [$isolada, 'finalizada', $doisAnos, null]] as $linha) $insertRetencao->execute($linha);
+require __DIR__ . '/../scripts/purge-cartorio-tarefas.php';
+$st = $db->prepare('SELECT COUNT(*) FROM cartorio_tarefas WHERE id = ?');
+foreach ([$abertaRaiz, $abertaFilha, $recenteRaiz, $recenteFilha] as $id) {
+    $st->execute([$id]);
+    if ((int) $st->fetchColumn() !== 1) throw new RuntimeException('Uma sequência aberta ou recente foi excluída.');
+}
+foreach ([$antigaRaiz, $antigaFilha, $isolada] as $id) {
+    $st->execute([$id]);
+    if ((int) $st->fetchColumn() !== 0) throw new RuntimeException('Uma sequência elegível não foi excluída.');
+}
+echo "Retenção por sequência verificada.\n";
