@@ -69,15 +69,18 @@ $csrfToken = Security::generateCSRFToken();
 $elapsedSinceRegistration = static function (string $value): string {
     if (trim($value) === '') return '—';
     try {
-        $created = (new DateTimeImmutable($value))->setTime(0, 0);
-        $today = new DateTimeImmutable('today');
-        if ($created > $today) return '0d';
-        $interval = $created->diff($today);
+        $created = new DateTimeImmutable($value);
+        $now = new DateTimeImmutable('now');
+        if ($created > $now) return '0seg';
+        $interval = $created->diff($now);
         if ($interval->y > 0) return $interval->y . 'a';
         if ($interval->m > 0) return $interval->m . 'm';
         $days = (int) $interval->days;
         if ($days >= 7) return intdiv($days, 7) . 's';
-        return $days . 'd';
+        if ($days > 0) return $days . 'd';
+        if ($interval->h > 0) return $interval->h . 'h';
+        if ($interval->i > 0) return $interval->i . 'min';
+        return $interval->s . 'seg';
     } catch (Throwable $e) {
         return '—';
     }

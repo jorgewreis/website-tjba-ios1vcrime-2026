@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0068
+
+**Data:** 2026-11-03 18:28:33 | **Commit:** `2a4fab85` | **Tipo:** `patch`
+
+- feat(cartorio): exibir tempo curto das tarefas
+
 ## V. 1.87.0067
 
 **Data:** 2026-11-03 18:24:52 | **Commit:** `9622ad55` | **Tipo:** `patch`
@@ -5829,6 +5835,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
