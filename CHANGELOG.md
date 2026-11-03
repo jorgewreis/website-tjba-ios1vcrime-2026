@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0079
+
+**Data:** 2026-11-03 20:02:58 | **Commit:** `2795ec54` | **Tipo:** `patch`
+
+- feat(tarefas): processar eventos de automacao transacionais
+
 ## V. 1.87.0078
 
 **Data:** 2026-11-03 19:58:37 | **Commit:** `f71df1f9` | **Tipo:** `patch`
@@ -5895,6 +5901,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

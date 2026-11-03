@@ -62,6 +62,7 @@ $colunas = [
     'prazo_inicio' => 'VARCHAR(30) DEFAULT NULL',
     'prazo_dias' => 'INT UNSIGNED DEFAULT NULL',
     'prazo_alerta_dias' => 'INT UNSIGNED DEFAULT NULL',
+    'prazo_evento_em' => 'DATETIME DEFAULT NULL',
 ];
 foreach ($colunas as $nome => $definicao) {
     $st = $db->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
@@ -89,5 +90,11 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_criacoes (
     tarefa_criada_id CHAR(30) NOT NULL,
     PRIMARY KEY (tarefa_origem_id, regra_id, acao_id),
     KEY idx_tarefas_criadas (tarefa_criada_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_eventos_regras (
+    evento_id BIGINT UNSIGNED NOT NULL,
+    regra_id BIGINT UNSIGNED NOT NULL,
+    PRIMARY KEY (evento_id, regra_id),
+    CONSTRAINT fk_tarefas_evento_regra_evento FOREIGN KEY (evento_id) REFERENCES cartorio_tarefas_automacao_eventos(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 fwrite(STDOUT, "Migração de regras de tarefas concluída.\n");
