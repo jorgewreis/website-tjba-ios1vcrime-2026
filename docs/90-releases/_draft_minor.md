@@ -89,4 +89,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(tarefas): registrar eventos nas alteracoes manuais** `[15fc1b21]`
 - **feat(tarefas): sugerir e alterar responsavel pela tarefa** `[18bf7f5b]`
 - **feat(tarefas): mostrar alertas de prazo no dashboard** `[5137a104]`
+- **feat(tarefas): preparar editor visual de automacoes** `[45efa807]`
 
