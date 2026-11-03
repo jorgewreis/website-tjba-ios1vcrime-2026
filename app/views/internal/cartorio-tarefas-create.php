@@ -63,6 +63,7 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
         .tarefas-form-field input { width: 280px; max-width: calc(100vw - 60px); }
         .cnj-feedback { font-size: 12px; }
         .cnj-feedback.valid { font-size: 10px; border-radius: 7px; color: #57b557; background-color: #e9ffe9; padding: 5px 15px; }
+        .cnj-feedback.invalid { font-size: 10px; border-radius: 7px; color: #c71c33; background-color: #ffe9e9; padding: 5px 15px; }
     </style>
 </head>
 <body class="page-internal">
@@ -136,16 +137,20 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
     const usersAvailable = <?= $usersError ? 'false' : 'true' ?>;
     function validate(showIncomplete) {
         const value = input.value.trim();
+        if (value === '' && showIncomplete && feedback.classList.contains('invalid')) return;
         const formatOk = /^\d{20}$/.test(value) || /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/.test(value);
         const valid = formatOk && typeof window.validarCNJ === 'function' && window.validarCNJ(value);
+        const invalid = value !== '' && !valid && (showIncomplete || value.replace(/\D/g, '').length >= 20);
         feedback.classList.toggle('valid', valid);
+        feedback.classList.toggle('invalid', invalid);
         submit.disabled = !valid || !usersAvailable;
         input.setCustomValidity(valid ? '' : 'Informe um número de processo CNJ válido.');
-        input.setAttribute('aria-invalid', value !== '' && !valid && (showIncomplete || value.replace(/\D/g, '').length >= 20) ? 'true' : 'false');
+        input.setAttribute('aria-invalid', invalid ? 'true' : 'false');
         if (valid) {
             input.value = window.formatarCNJ(value);
             feedback.textContent = 'Número CNJ válido.';
-        } else if (value !== '' && (showIncomplete || value.replace(/\D/g, '').length >= 20)) {
+        } else if (invalid) {
+            input.value = '';
             feedback.textContent = 'Número CNJ incompleto ou inválido.';
         } else {
             feedback.textContent = '';
