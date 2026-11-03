@@ -94,4 +94,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(tarefas): permitir nova tentativa segura de falhas** `[4671c428]`
 - **fix(dashboard): alinhar alertas de tarefas ao visual existente** `[338d3a49]`
 - **feat(tarefas): disponibilizar administracao de automacoes** `[c6cd2421]`
+- **fix(tarefas): sincronizar regras e preservar prazos desativados** `[2cf61fb7]`
 
