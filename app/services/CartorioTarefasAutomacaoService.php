@@ -84,12 +84,42 @@ final class CartorioTarefasAutomacaoService
         }
     }
 
-    public function registrarEvento(string $tarefaId, string $evento, ?string $origemId = null, ?string $status = null, array $caminho = [], ?int $regraAlvo = null, ?int $versao = null): void
+    public function registrarEvento(string $tarefaId, string $evento, ?string $origemId = null, ?string $status = null, array $caminho = [], ?int $regraAlvo = null, ?int $versao = null, bool $retroativo = false): void
     {
         if (!in_array($evento, CartorioTarefasRegras::EVENTOS, true)) throw new InvalidArgumentException('Evento inválido.');
         if ($this->db->inTransaction() && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $this->db->query('SELECT id FROM cartorio_tarefas_automacao_lock WHERE id = 1 FOR UPDATE')->fetchColumn();
         $st = $this->db->prepare('INSERT INTO cartorio_tarefas_automacao_eventos (tarefa_id, evento, origem_id, status_evento, caminho, regra_alvo_id, regra_versao, retroativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
-        $st->execute([$tarefaId, $evento, $origemId, $status, json_encode($caminho, JSON_THROW_ON_ERROR), $regraAlvo, $versao, $regraAlvo === null ? 0 : 1]);
+        $st->execute([$tarefaId, $evento, $origemId, $status, json_encode($caminho, JSON_THROW_ON_ERROR), $regraAlvo, $versao, $retroativo ? 1 : 0]);
+    }
+
+    public function tentarFalha(int $falhaId): void
+    {
+        $this->db->beginTransaction();
+        try {
+            $sql = 'SELECT * FROM cartorio_tarefas_automacao_falhas WHERE id = ?';
+            if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $sql .= ' FOR UPDATE';
+            $st = $this->db->prepare($sql);
+            $st->execute([$falhaId]);
+            $falha = $st->fetch(PDO::FETCH_ASSOC);
+            if (!$falha || !$falha['pode_tentar'] || $falha['resolvida_em']) throw new InvalidArgumentException('Esta falha não está disponível para nova tentativa.');
+            $contexto = json_decode((string) $falha['contexto'], true, 512, JSON_THROW_ON_ERROR);
+            $regra = $this->regras->obter((int) $falha['regra_id']);
+            $tarefa = $this->tarefa((string) $falha['tarefa_id']);
+            if (!$regra || !$regra['ativa'] || $regra['versao'] !== (int) ($contexto['versao'] ?? 0) || !$tarefa) throw new InvalidArgumentException('A tarefa ou a versão ativa da regra mudou; revise a situação antes de tentar novamente.');
+            if ($falha['evento'] === 'finalizacao' && $tarefa['status'] !== 'finalizada') throw new InvalidArgumentException('A tarefa não está mais finalizada.');
+            if ($falha['evento'] === 'status_vinculada') {
+                $origem = $this->tarefa((string) ($contexto['origem_id'] ?? ''));
+                if (!$origem || $origem['status'] !== ($contexto['status_evento'] ?? null)) throw new InvalidArgumentException('O status da tarefa vinculada mudou.');
+            }
+            if ($falha['evento'] === 'prazo' && ($tarefa['status'] === 'finalizada' || !$tarefa['prazo_em'] || $tarefa['prazo_em'] > (new DateTimeImmutable('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s'))) throw new InvalidArgumentException('A tarefa não está mais com o prazo vencido.');
+            $this->registrarEvento((string) $falha['tarefa_id'], (string) $falha['evento'], $contexto['origem_id'] ?? null, $contexto['status_evento'] ?? null, $contexto['caminho'] ?? [], (int) $regra['id'], (int) $regra['versao'], !empty($contexto['retroativo']));
+            $st = $this->db->prepare('UPDATE cartorio_tarefas_automacao_falhas SET resolvida_em = CURRENT_TIMESTAMP, pode_tentar = 0 WHERE id = ?');
+            $st->execute([$falhaId]);
+            $this->db->commit();
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $e;
+        }
     }
 
     /** Executado pelo agendador: um único processo consome a fila por vez. */
@@ -178,7 +208,7 @@ final class CartorioTarefasAutomacaoService
             if ($aplicavel) {
                 $antes = $this->contarFalhas((int) $regra['id'], (string) $tarefa['id']);
                 try {
-                    $this->registrarEvento((string) $tarefa['id'], $regra['evento'], $origemId, $status, [], (int) $regra['id'], (int) $regra['versao']);
+                    $this->registrarEvento((string) $tarefa['id'], $regra['evento'], $origemId, $status, [], (int) $regra['id'], (int) $regra['versao'], true);
                     $this->processarEvento((int) $this->db->lastInsertId());
                 } catch (Throwable $e) {
                     $this->registrarFalha((int) $regra['id'], (string) $tarefa['id'], $regra['evento'], $e->getMessage(), false);
@@ -280,7 +310,8 @@ final class CartorioTarefasAutomacaoService
             if ($this->db->inTransaction()) $this->db->rollBack();
             $this->db->beginTransaction();
             try {
-                $this->registrarFalha((int) $regra['id'], (string) $evento['tarefa_id'], (string) $evento['evento'], $e->getMessage(), false);
+                $contexto = ['versao' => $regra['versao'], 'origem_id' => $evento['origem_id'], 'status_evento' => $evento['status_evento'], 'retroativo' => (bool) $evento['retroativo'], 'caminho' => json_decode((string) ($evento['caminho'] ?: '[]'), true, 512, JSON_THROW_ON_ERROR)];
+                $this->registrarFalha((int) $regra['id'], (string) $evento['tarefa_id'], (string) $evento['evento'], $e->getMessage(), !str_contains($e->getMessage(), 'Ciclo de automação'), $contexto);
                 $this->marcarEventoRegra((int) $evento['id'], (int) $regra['id']);
                 $this->db->commit();
             } catch (Throwable $inner) {
@@ -392,10 +423,10 @@ final class CartorioTarefasAutomacaoService
         return $tarefa;
     }
 
-    private function registrarFalha(?int $regraId, ?string $tarefaId, string $evento, string $mensagem, bool $podeTentar): void
+    private function registrarFalha(?int $regraId, ?string $tarefaId, string $evento, string $mensagem, bool $podeTentar, ?array $contexto = null): void
     {
-        $st = $this->db->prepare('INSERT INTO cartorio_tarefas_automacao_falhas (regra_id, tarefa_id, evento, detalhes, pode_tentar) VALUES (?, ?, ?, ?, ?)');
-        $st->execute([$regraId, $tarefaId, $evento, mb_substr($mensagem, 0, 2000), $podeTentar ? 1 : 0]);
+        $st = $this->db->prepare('INSERT INTO cartorio_tarefas_automacao_falhas (regra_id, tarefa_id, evento, detalhes, pode_tentar, contexto) VALUES (?, ?, ?, ?, ?, ?)');
+        $st->execute([$regraId, $tarefaId, $evento, mb_substr($mensagem, 0, 2000), $podeTentar ? 1 : 0, $contexto === null ? null : json_encode($contexto, JSON_THROW_ON_ERROR)]);
     }
 
     private function marcarEventoRegra(int $eventoId, int $regraId): void

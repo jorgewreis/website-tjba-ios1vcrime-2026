@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0088
+
+**Data:** 2026-11-03 20:23:17 | **Commit:** `4671c428` | **Tipo:** `patch`
+
+- feat(tarefas): permitir nova tentativa segura de falhas
+
 ## V. 1.87.0087
 
 **Data:** 2026-11-03 20:21:15 | **Commit:** `a76b9eeb` | **Tipo:** `patch`
@@ -5949,6 +5955,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

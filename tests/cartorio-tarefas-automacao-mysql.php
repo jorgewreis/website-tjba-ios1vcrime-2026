@@ -57,6 +57,17 @@ $idEvento = (int) $db->query('SELECT MAX(id) FROM cartorio_tarefas_automacao_eve
 $servico->processarEvento($idEvento);
 $st->execute([$origem]);
 if (count($st->fetchAll(PDO::FETCH_ASSOC)) !== 1 || (int) $db->query('SELECT COUNT(*) FROM cartorio_tarefas_automacao_falhas')->fetchColumn() !== 1) throw new RuntimeException('A falha deveria reverter a regra e manter a tarefa original.');
+$falhaId = (int) $db->query('SELECT MAX(id) FROM cartorio_tarefas_automacao_falhas')->fetchColumn();
+$servico->tentarFalha($falhaId);
+try {
+    $servico->tentarFalha($falhaId);
+    throw new RuntimeException('A falha foi reenfileirada duas vezes.');
+} catch (InvalidArgumentException $e) {
+    // A tentativa só pode ser solicitada uma vez.
+}
+$idEvento = (int) $db->query('SELECT MAX(id) FROM cartorio_tarefas_automacao_eventos')->fetchColumn();
+$servico->processarEvento($idEvento);
+if ((int) $db->query('SELECT COUNT(*) FROM cartorio_tarefas_automacao_falhas')->fetchColumn() !== 2) throw new RuntimeException('Uma nova falha na tentativa deve ser registrada.');
 echo "Sequência, idempotência e reversão verificadas.\n";
 
 $antiga = 'TAR-00000000000000000000000002';
