@@ -72,4 +72,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): validar processo no cadastro de tarefas** `[2f28b2b0]`
 - **feat(cartorio): exibir tarefas e atualizar status** `[9622ad55]`
 - **feat(cartorio): exibir tempo curto das tarefas** `[2a4fab85]`
+- **feat(cartorio): colorir status e congelar tempo finalizado** `[fc824324]`
 
