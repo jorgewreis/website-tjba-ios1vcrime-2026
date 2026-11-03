@@ -91,4 +91,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(tarefas): mostrar alertas de prazo no dashboard** `[5137a104]`
 - **feat(tarefas): preparar editor visual de automacoes** `[45efa807]`
 - **feat(tarefas): agendar automacao e usar horario da bahia** `[a76b9eeb]`
+- **feat(tarefas): permitir nova tentativa segura de falhas** `[4671c428]`
 
