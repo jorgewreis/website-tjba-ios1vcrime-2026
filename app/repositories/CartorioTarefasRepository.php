@@ -10,6 +10,7 @@ final class CartorioTarefasRepository
     public const DOCUMENTOS = ['Certidão', 'Ofício', 'Mandado', 'Carta Precatória', 'Guia', 'Edital', 'Ato Ordinatório', 'Petição', 'Resumo', 'Peças processuais', 'Laudo', 'Inquérito Policial', 'Medidas Protetivas'];
     public const ESPECIFICACOES = ['Informando Baixa', 'Informando Condenação', 'Para intimação da Sentença', 'Para intimação da Decisão Interlocutória', 'Para intimação da Decisão de Medida Protetiva', 'Para Defesa Preliminar', 'Para comparecimento em Audiência'];
     public const LOCAIS = ['Cartório', 'Gabinete', 'Sala de Audiências'];
+    public const STATUS = ['a_fazer' => 'A fazer', 'em_andamento' => 'Em andamento', 'com_pendencias' => 'Pendente', 'finalizada' => 'Finalizada'];
 
     public function __construct(private PDO $db) {}
 
@@ -54,6 +55,20 @@ final class CartorioTarefasRepository
         return $users;
     }
 
+    public function alterarStatus(string $id, string $status): void
+    {
+        if (!preg_match('/^TAR-[A-F0-9]{26}$/', $id) || !isset(self::STATUS[$status])) {
+            throw new InvalidArgumentException('Tarefa ou status inválido.');
+        }
+        $statement = $this->db->prepare("UPDATE cartorio_tarefas SET finalizado_em = CASE WHEN :final = 'finalizada' THEN COALESCE(finalizado_em, CURRENT_TIMESTAMP) ELSE NULL END, status = :status WHERE id = :id");
+        $statement->execute([':final' => $status, ':status' => $status, ':id' => $id]);
+        if ($statement->rowCount() === 0) {
+            $check = $this->db->prepare('SELECT 1 FROM cartorio_tarefas WHERE id = ?');
+            $check->execute([$id]);
+            if ($check->fetchColumn() === false) throw new InvalidArgumentException('Tarefa não encontrada.');
+        }
+    }
+
     public function listar(array $filters, int $limit, int $offset, string $ordem = 'desc'): array
     {
         $where = [];
@@ -78,11 +93,25 @@ final class CartorioTarefasRepository
         $total = (int) $count->fetchColumn();
         $offset = min($offset, max(0, (int) ceil($total / $limit) - 1) * $limit);
         $direction = $ordem === 'asc' ? 'ASC' : 'DESC';
-        $query = $this->db->prepare('SELECT t.id, t.titulo, t.numero_processo, t.status, t.tipo FROM cartorio_tarefas t' . $clause . " ORDER BY CASE WHEN t.numero_processo IS NULL OR TRIM(t.numero_processo) = '' THEN 1 ELSE 0 END, t.numero_processo $direction, t.id $direction LIMIT :limite OFFSET :inicio");
+        $query = $this->db->prepare('SELECT t.id, t.titulo, t.numero_processo, t.status, t.tipo, t.tipo_documento, t.especificacao_documento, t.local_tarefa, t.criado_em FROM cartorio_tarefas t' . $clause . " ORDER BY CASE WHEN t.numero_processo IS NULL OR TRIM(t.numero_processo) = '' THEN 1 ELSE 0 END, t.numero_processo $direction, t.id $direction LIMIT :limite OFFSET :inicio");
         foreach ($params as $key => $value) $query->bindValue($key, $value);
         $query->bindValue(':limite', $limit, PDO::PARAM_INT);
         $query->bindValue(':inicio', $offset, PDO::PARAM_INT);
         $query->execute();
-        return ['rows' => $query->fetchAll(PDO::FETCH_ASSOC), 'total' => $total, 'offset' => $offset];
+        $rows = $query->fetchAll(PDO::FETCH_ASSOC);
+        if ($rows) {
+            $ids = array_column($rows, 'id');
+            $marks = implode(',', array_fill(0, count($ids), '?'));
+            $allocated = $this->db->prepare("SELECT ts.tarefa_id, u.nome, u.sobrenome FROM cartorio_tarefas_servidores ts JOIN usuarios u ON u.id_usuario = ts.usuario_id WHERE ts.tarefa_id IN ($marks) ORDER BY u.nome, u.sobrenome");
+            $allocated->execute($ids);
+            $names = [];
+            foreach ($allocated->fetchAll(PDO::FETCH_ASSOC) as $user) {
+                $parts = preg_split('/\s+/u', trim((string) $user['nome'] . ' ' . (string) $user['sobrenome']), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                if ($parts) $names[$user['tarefa_id']][] = count($parts) > 1 ? $parts[0] . ' ' . end($parts) : $parts[0];
+            }
+            foreach ($rows as &$row) $row['alocados'] = $names[$row['id']] ?? [];
+            unset($row);
+        }
+        return ['rows' => $rows, 'total' => $total, 'offset' => $offset];
     }
 }
