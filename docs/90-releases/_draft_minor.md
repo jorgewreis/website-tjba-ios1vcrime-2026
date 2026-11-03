@@ -57,4 +57,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **style(menu): separar classes dos icones** `[0ab47a77]`
 - **style(menu): finalizar estilos dos icones de lista** `[7688cad2]`
 - **feat(cartorio): add tasks list page** `[e5e8dea9]`
+- **feat(cartorio): filtrar tarefas por status servidor e tipo** `[ea965899]`
 
