@@ -29,6 +29,7 @@ $allowed_pages = [
     'dashboardexterno'      => $PAGES . '/dashboard-externo.php',
     'tarefas'               => $PAGES . '/cartorio-tarefas-list.php',
     'tarefascreate'         => $PAGES . '/cartorio-tarefas-create.php',
+    'tarefasrules'          => $PAGES . '/cartorio-tarefas-rules.php',
     'cejusc'                => $PAGES . '/cartorio-cejusc-list.php',
     'cejusccreate'          => $PAGES . '/cartorio-cejusc-create.php',
     'cejuscedit'            => $PAGES . '/cartorio-cejusc-edit.php',

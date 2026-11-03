@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0074
+
+**Data:** 2026-11-03 19:17:13 | **Commit:** `c3698f57` | **Tipo:** `patch`
+
+- feat(cartorio): preparar regras e local padrao de tarefas
+
 ## V. 1.87.0073
 
 **Data:** 2026-11-03 19:10:17 | **Commit:** `97ca88ec` | **Tipo:** `patch`
@@ -5865,6 +5871,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

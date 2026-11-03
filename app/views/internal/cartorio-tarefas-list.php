@@ -139,7 +139,7 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
     <?php if ($statusSuccess): ?><div class="card-line-info" role="status">Status atualizado com sucesso.</div><?php endif; ?>
     <?php if ($statusError !== ''): ?><div class="card-line-info" role="alert"><?= $escape($statusError) ?></div><?php endif; ?>
     <div class="display-flex row row-full justify-end align-center gap-y-md padding-x-lg padding-y-md border-bottom">
-        <button type="button" class="btn btn-secondary" <?= $canManageAutomationRules ? '' : 'disabled' ?>>Regras de automação</button>
+        <button type="button" class="btn btn-secondary" <?= $canManageAutomationRules ? "onclick=\"location.href='/frame.php?page=tarefasrules'\"" : 'disabled' ?>>Regras de automação</button>
         <button type="button" class="btn btn-primary" onclick="location.href='/frame.php?page=tarefascreate'">Cadastrar tarefa</button>
     </div>
     <form action="/frame.php" method="get" id="tarefas-filtros" class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">

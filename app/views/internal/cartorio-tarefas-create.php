@@ -2,11 +2,18 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../repositories/CartorioTarefasRepository.php';
+require_once __DIR__ . '/../../helpers/TarefasLocalHelper.php';
 
 $users = [];
 $usersError = false;
 $error = '';
 $form = ['numero_processo' => '', 'tipo_tarefa' => '', 'tipo_documento' => '', 'especificacao_documento' => '', 'local' => '', 'usuario' => ''];
+try {
+    $form['local'] = TarefasLocalHelper::localPadrao($connection, $userId, $userPerfils ?? []);
+} catch (Throwable $e) {
+    error_log('Falha ao identificar local padrão da tarefa: ' . $e->getMessage());
+    $form['local'] = 'Cartório';
+}
 try {
     $repository = new CartorioTarefasRepository($connection);
     $users = $repository->listarUsuariosInternos();
@@ -109,7 +116,6 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
             <div class="tarefas-form-field">
                 <label for="local-tarefa">Local</label>
                 <select id="local-tarefa" name="local" class="height-md" required>
-                    <option value="">Selecione</option>
                     <?php foreach ($locations as $location): ?><option value="<?= $escape($location) ?>" <?= $form['local'] === $location ? 'selected' : '' ?>><?= $escape($location) ?></option><?php endforeach; ?>
                 </select>
             </div>

@@ -16,3 +16,5 @@ Todas as rotas abaixo usam **modo A** (`area_a` + `CARTORIO`), salvo entrada exp
 | partesinstituicoescreate, partesinstituicoesedit | A | `*-CARTORIO` |
 
 **Bypass:** `ADMIN`, `CHEFIA` (e equivalentes).
+
+`tarefasrules` é restrita a `ADMIN` e `CHEFIA` (incluindo equivalentes).
