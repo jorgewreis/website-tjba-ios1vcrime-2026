@@ -35,11 +35,15 @@ final class CartorioTarefasRegrasRepository
             $anterior = $id === null ? null : $this->obter($id);
             if ($id !== null && $anterior === null) throw new InvalidArgumentException('Regra não encontrada.');
             if ($ativa) {
+                $conjunto = [];
                 foreach ($this->listar(true) as $existente) {
                     if ((int) $existente['id'] !== $id && CartorioTarefasRegras::conflitantes($regra, $existente)) {
                         throw new InvalidArgumentException('Conflito com a regra ativa: ' . $existente['nome'] . '. Ajuste as condições ou a prioridade.');
                     }
+                    if ((int) $existente['id'] !== $id) $conjunto[] = $existente;
                 }
+                $conjunto[] = $regra;
+                CartorioTarefasRegras::validarCiclos($conjunto);
             }
             $ultimoEvento = (int) $this->db->query('SELECT COALESCE(MAX(id), 0) FROM cartorio_tarefas_automacao_eventos')->fetchColumn();
             $params = [trim($regra['nome']), $regra['evento'], $regra['evento_status'] ?? null, $regra['prioridade'], json_encode($regra['condicoes'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), json_encode($regra['acoes'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), $ativa ? 1 : 0];

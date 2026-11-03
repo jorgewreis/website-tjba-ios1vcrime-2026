@@ -5,7 +5,9 @@
     const gruposEl = document.getElementById('regra-grupos');
     const acoesEl = document.getElementById('regra-acoes');
     const estado = dados.regra || { condicoes: [{}], acoes: [] };
-    estado.condicoes = Array.isArray(estado.condicoes) && estado.condicoes.length ? estado.condicoes : [{}];
+    estado.condicoes = Array.isArray(estado.condicoes) && estado.condicoes.length
+        ? estado.condicoes.map(grupo => Array.isArray(grupo) ? Object.assign({}, grupo) : grupo)
+        : [{}];
     estado.acoes = Array.isArray(estado.acoes) ? estado.acoes : [];
     const campos = [
         ['tipo', 'Tipo de tarefa', dados.tipos],

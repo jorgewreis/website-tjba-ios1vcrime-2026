@@ -395,6 +395,8 @@ final class CartorioTarefasAutomacaoService
     {
         $tarefa = $this->tarefa($id);
         if (!$tarefa || !$tarefa['prazo_inicio'] || !$tarefa['prazo_dias']) return;
+        // Somente uma nova alocação reinicia um prazo já iniciado.
+        if ($tarefa['prazo_em'] && $tarefa['prazo_inicio'] !== 'alocacao') return;
         $inicio = null;
         if ($tarefa['prazo_inicio'] === 'criacao') $inicio = $tarefa['criado_em'];
         if ($tarefa['prazo_inicio'] === 'andamento') $inicio = $tarefa['primeiro_andamento_em'] ?: ($tarefa['status'] === 'em_andamento' ? $tarefa['criado_em'] : null);

@@ -1,0 +1,21 @@
+.automacao-pagina { box-sizing:border-box; }
+.automacao-secao { padding:20px; border-bottom:1px solid lightgray; }
+.automacao-secao h2 { margin:0 0 15px; font-size:18px; }
+.automacao-secao h3 { margin:22px 0 8px; font-size:15px; }
+.automacao-secao p { margin:8px 0 12px; }
+.automacao-campos, .automacao-controles { display:flex; flex-wrap:wrap; align-items:end; gap:12px; }
+.automacao-campo { display:flex; flex-direction:column; gap:5px; min-width:180px; max-width:100%; }
+.automacao-campo select, .automacao-campo input { width:240px; max-width:100%; }
+.automacao-checkbox { display:flex; align-items:center; gap:8px; padding:10px 0; }
+.automacao-bloco { border:1px solid lightgray; border-radius:6px; padding:12px; margin:10px 0; }
+.automacao-bloco legend { padding:0 5px; font-weight:600; }
+.automacao-bloco .automacao-controles { margin-top:12px; }
+.automacao-ajuda, .automacao-linha small { color:#555; font-size:12px; }
+.automacao-ou { font-weight:700; color:var(--color-primary-active); }
+.automacao-linha { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid lightgray; }
+.automacao-linha:last-child { border-bottom:0; }
+.automacao-linha form { margin:0; }
+.automacao-salvar { margin-top:20px; }
+.automacao-mensagem { padding:12px 20px; background:#e9ffe9; color:#257c25; }
+.automacao-mensagem.erro { background:#ffe9e9; color:#a91d31; }
+@media (max-width:600px) { .automacao-linha { align-items:flex-start; flex-direction:column; } .automacao-campo { width:100%; } .automacao-campo select,.automacao-campo input { width:100%; } }

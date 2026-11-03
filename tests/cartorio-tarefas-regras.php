@@ -54,4 +54,25 @@ $seq = $base;
 $seq['evento'] = 'finalizacao';
 $seq['acoes'] = [$regra['acoes'][0]];
 verificar(!CartorioTarefasRegras::conflitantes($seq, $seq), 'Criações independentes não devem conflitar.');
+$seq['acoes'][] = ['id' => 'alocar_filha', 'tipo' => 'alocar', 'alvo' => 'oficio', 'usuario_id' => 'USR-1'];
+verificar(!CartorioTarefasRegras::conflitantes($seq, $seq), 'Ações em filhas criadas por regras diferentes não devem conflitar.');
+$statusA = ['nome' => 'A para B', 'evento' => 'status_vinculada', 'evento_status' => 'a_fazer', 'prioridade' => 0, 'condicoes' => [[]], 'acoes' => [['id' => 'status', 'tipo' => 'alterar_status', 'status' => 'em_andamento']]];
+$statusB = ['nome' => 'B para A', 'evento' => 'status_vinculada', 'evento_status' => 'em_andamento', 'prioridade' => 0, 'condicoes' => [[]], 'acoes' => [['id' => 'status', 'tipo' => 'alterar_status', 'status' => 'a_fazer']]];
+try {
+    CartorioTarefasRegras::validarCiclos([$statusA, $statusB]);
+    throw new RuntimeException('Um ciclo de status foi aceito.');
+} catch (InvalidArgumentException $e) {}
+CartorioTarefasRegras::validarCiclos([$statusA]);
+$seqA = ['nome' => 'A para B', 'evento' => 'finalizacao', 'prioridade' => 0, 'condicoes' => [['tipo' => 'expedicao']], 'acoes' => [
+    ['id' => 'filha', 'tipo' => 'criar_tarefa', 'tipo_tarefa' => 'assinatura', 'tipo_documento' => 'Ofício', 'local_tarefa' => 'Cartório'],
+    ['id' => 'final', 'tipo' => 'alterar_status', 'alvo' => 'filha', 'status' => 'finalizada']
+]];
+$seqB = $seqA;
+$seqB['condicoes'] = [['tipo' => 'assinatura']];
+$seqB['acoes'][0]['tipo_tarefa'] = 'expedicao';
+try {
+    CartorioTarefasRegras::validarCiclos([$seqA, $seqB]);
+    throw new RuntimeException('Um ciclo de criação em sequência foi aceito.');
+} catch (InvalidArgumentException $e) {}
+CartorioTarefasRegras::validarCiclos([$seqA]);
 echo "Regras de automação verificadas.\n";

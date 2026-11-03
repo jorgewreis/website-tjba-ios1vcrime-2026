@@ -83,13 +83,66 @@ final class CartorioTarefasRegras
         $alvos = static function (array $regra): array {
             $tipos = [];
             foreach ($regra['acoes'] as $acao) {
-                if (in_array($acao['tipo'], ['alocar', 'alterar_status', 'definir_prazo'], true)) $tipos[] = $acao['tipo'];
+                if (($acao['alvo'] ?? 'original') === 'original' && in_array($acao['tipo'], ['alocar', 'alterar_status', 'definir_prazo'], true)) $tipos[] = $acao['tipo'];
             }
             return array_unique($tipos);
         };
         if (!array_intersect($alvos($a), $alvos($b))) return false;
         $comparacao = CartorioTarefasCondicoes::comparar($a['condicoes'], $b['condicoes']);
         return $comparacao['sobrepoem'] && !$comparacao['primeiro_mais_especifico'] && !$comparacao['segundo_mais_especifico'];
+    }
+
+    /** Impede ciclos identificáveis entre regras ativas antes do salvamento. */
+    public static function validarCiclos(array $regras): void
+    {
+        $statusGraph = [];
+        foreach ($regras as $regra) {
+            if ($regra['evento'] !== 'status_vinculada') continue;
+            foreach ($regra['acoes'] as $acao) {
+                if ($acao['tipo'] === 'alterar_status' && ($acao['alvo'] ?? 'original') === 'original') {
+                    $statusGraph[$regra['evento_status']][] = $acao['status'];
+                }
+            }
+        }
+        self::verificarGrafo($statusGraph, 'As regras de status formam um ciclo entre tarefas vinculadas.');
+
+        $sequencias = array_values(array_filter($regras, static fn(array $regra): bool => $regra['evento'] === 'finalizacao'));
+        $criacao = array_values(array_filter($regras, static fn(array $regra): bool => $regra['evento'] === 'criacao'));
+        $sequenciaGraph = [];
+        foreach ($sequencias as $i => $regra) {
+            foreach ($regra['acoes'] as $acao) {
+                if ($acao['tipo'] !== 'criar_tarefa') continue;
+                $filha = ['tipo' => $acao['tipo_tarefa'], 'tipo_documento' => $acao['tipo_documento'], 'especificacao_documento' => $acao['especificacao_documento'] ?? '', 'local_tarefa' => $acao['local_tarefa']];
+                $finalizada = false;
+                foreach ($regra['acoes'] as $subacao) {
+                    if ($subacao['tipo'] === 'alterar_status' && ($subacao['alvo'] ?? '') === $acao['id'] && $subacao['status'] === 'finalizada') $finalizada = true;
+                }
+                foreach ($criacao as $regraCriacao) {
+                    if (!CartorioTarefasCondicoes::corresponde($regraCriacao['condicoes'], $filha)) continue;
+                    foreach ($regraCriacao['acoes'] as $subacao) {
+                        if ($subacao['tipo'] === 'alterar_status' && ($subacao['alvo'] ?? 'original') === 'original' && $subacao['status'] === 'finalizada') $finalizada = true;
+                    }
+                }
+                if (!$finalizada) continue;
+                foreach ($sequencias as $j => $proxima) {
+                    if (CartorioTarefasCondicoes::corresponde($proxima['condicoes'], $filha)) $sequenciaGraph[(string) $i][] = (string) $j;
+                }
+            }
+        }
+        self::verificarGrafo($sequenciaGraph, 'As regras podem criar e finalizar tarefas em um ciclo.');
+    }
+
+    private static function verificarGrafo(array $grafo, string $mensagem): void
+    {
+        $estado = [];
+        $visitar = static function ($no) use (&$visitar, &$estado, $grafo, $mensagem): void {
+            if (($estado[$no] ?? 0) === 1) throw new InvalidArgumentException($mensagem);
+            if (($estado[$no] ?? 0) === 2) return;
+            $estado[$no] = 1;
+            foreach ($grafo[$no] ?? [] as $proximo) $visitar($proximo);
+            $estado[$no] = 2;
+        };
+        foreach (array_keys($grafo) as $no) $visitar($no);
     }
 
     /** Seleciona o vencedor de um tipo de ação aplicável à tarefa. */
