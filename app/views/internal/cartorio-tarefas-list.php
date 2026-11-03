@@ -61,6 +61,8 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
         .col-header-icons img { width: 10px; height: 10px; }
         .col-content-icon img { width: 20px; height: 20px; opacity: 0.3; }
         .col-content-icon:hover img { opacity: 1; }
+        .pagination-symbol { display: flex; align-items: center; justify-content: center; padding: 0; }
+        .pagination-symbol img { width: 14px; height: 14px; }
     </style>
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
 </head>
@@ -156,15 +158,15 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
         <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">Mostrando <?= $total > 0 ? $result['offset'] + 1 : 0 ?>–<?= min($result['offset'] + $perPage, $total) ?> de <?= $total ?> tarefas</span>
             <div class="pagination-controls"><?php if ($pageNumber > 1): ?>
-            <a class="pagination-symbol" href="<?= $escape($url($pageNumber - 1, $ordem)) ?>" aria-label="Página anterior">‹</a>
+            <a class="pagination-symbol" href="<?= $escape($url($pageNumber - 1, $ordem)) ?>" aria-label="Página anterior"><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt=""></a>
             <?php else: ?>
-            <span class="pagination-symbol disabled" aria-disabled="true">‹</span>
+            <span class="pagination-symbol disabled" aria-disabled="true" aria-label="Página anterior"><img src="/assets/icons/Arrow-Button-Left-2--Streamline-Ultimate.png" alt=""></span>
             <?php endif; ?>
             <span class="pagination-number active" aria-current="page"><?= $pageNumber ?></span>
             <?php if ($pageNumber < $pages): ?>
-                <a class="pagination-symbol" href="<?= $escape($url($pageNumber + 1, $ordem)) ?>" aria-label="Próxima página">›</a>
+                <a class="pagination-symbol" href="<?= $escape($url($pageNumber + 1, $ordem)) ?>" aria-label="Próxima página"><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt=""></a>
                 <?php else: ?>
-                <span class="pagination-symbol disabled" aria-disabled="true">›</span>
+                <span class="pagination-symbol disabled" aria-disabled="true" aria-label="Próxima página"><img src="/assets/icons/Arrow-Button-Right-2--Streamline-Ultimate.png" alt=""></span>
                 <?php endif; ?>
             </div>
         </div><?php endif; ?>
