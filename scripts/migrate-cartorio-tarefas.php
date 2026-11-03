@@ -7,6 +7,7 @@ $db = Conection::getInstance()->getConnection();
 $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas (
     id CHAR(30) NOT NULL PRIMARY KEY,
     titulo VARCHAR(255) NOT NULL,
+    numero_processo VARCHAR(40) DEFAULT NULL,
     status VARCHAR(30) NOT NULL DEFAULT 'a_fazer',
     tipo VARCHAR(30) NOT NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -15,6 +16,10 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas (
     KEY idx_cartorio_tarefas_status_tipo (status, tipo),
     KEY idx_cartorio_tarefas_retencao (status, finalizado_em)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$column = $db->query("SHOW COLUMNS FROM cartorio_tarefas WHERE Field = 'numero_processo'")->fetch(PDO::FETCH_ASSOC);
+if ($column === false) {
+    $db->exec('ALTER TABLE cartorio_tarefas ADD COLUMN numero_processo VARCHAR(40) DEFAULT NULL AFTER titulo');
+}
 $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_servidores (
     tarefa_id CHAR(30) NOT NULL,
     usuario_id VARCHAR(80) NOT NULL,

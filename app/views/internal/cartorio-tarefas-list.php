@@ -10,6 +10,7 @@ $status = $status === '' || isset($statuses[$status]) ? $status : 'todos_ativos'
 $type = is_string($_GET['tipo'] ?? null) ? $_GET['tipo'] : '';
 $type = isset($types[$type]) ? $type : '';
 $server = is_string($_GET['servidor'] ?? null) ? trim($_GET['servidor']) : '';
+$ordem = ($_GET['ordem'] ?? '') === 'asc' ? 'asc' : 'desc';
 $pageNumber = max(1, min(1000000, (int) ($_GET['pagina'] ?? 1)));
 $perPage = 15;
 $error = false;
@@ -19,7 +20,7 @@ try {
     $repository = new CartorioTarefasRepository($connection);
     $users = $repository->listarUsuariosInternos();
     if (!in_array($server, array_column($users, 'id'), true)) $server = '';
-    $result = $repository->listar(['status' => $status, 'tipo' => $type, 'servidor' => $server], $perPage, ($pageNumber - 1) * $perPage);
+    $result = $repository->listar(['status' => $status, 'tipo' => $type, 'servidor' => $server], $perPage, ($pageNumber - 1) * $perPage, $ordem);
 } catch (Throwable $e) {
     error_log('Falha ao carregar tarefas do Cartório: ' . $e->getMessage());
     $error = true;
@@ -28,7 +29,7 @@ $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTE
 $total = $result['total'];
 $pageNumber = (int) ($result['offset'] / $perPage) + 1;
 $pages = max(1, (int) ceil($total / $perPage));
-$url = static fn(int $page): string => '/frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'pagina' => $page]);
+$url = static fn(int $page, string $sort): string => '/frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'pagina' => $page, 'ordem' => $sort]);
 $selectedFilters = [];
 if ($status !== '') $selectedFilters[] = 'Status [' . $statuses[$status] . ']';
 if ($server !== '') {
@@ -55,9 +56,9 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
         .col-processo { width: 200px; }
         .col-header-icons { width: 50px; display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: center; align-items: center; box-sizing: border-box; gap: 2px; border-right: solid 1px #20202040; cursor: pointer; }
         .col-content-icon { width: 50px; display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: center; align-items: center; box-sizing: border-box; border-right: solid 1px #20202040; cursor: pointer; }
-        .col-header-icons img { width: 10px; height: 10px; opacity: 0.3; }
+        .col-header-icons img { width: 10px; height: 10px; }
         .col-content-icon img { width: 20px; height: 20px; opacity: 0.3; }
-        .col-header-icons img.active, .col-content-icon:hover img { opacity: 1; }
+        .col-content-icon:hover img { opacity: 1; }
     </style>
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
 </head>
@@ -84,6 +85,7 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
     </div>
     <form action="/frame.php" method="get" id="tarefas-filtros" class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
         <input type="hidden" name="page" value="tarefas">
+        <input type="hidden" name="ordem" value="<?= $escape($ordem) ?>">
         <div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Filtros</span></div>
         <div class="display-flex row row-fit justify-end gap-y-md align-center">
             <select class="width-400 height-md" name="status" aria-label="Filtrar por status">
@@ -127,16 +129,16 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
         <div class="register-line">
             <div class="register-line-header">
                 <div class="register-col col-processo">Processo</div>
-                <div class="col-header-icons" aria-hidden="true">
-                    <img src="/assets/icons/Arrow-Button-Up-1--Streamline-Ultimate.png" alt="">
-                    <img src="/assets/icons/Arrow-Button-Down-2--Streamline-Ultimate.png" class="active" alt="">
-                </div>
+                <a class="col-header-icons" href="<?= $escape($url(1, $ordem === 'asc' ? 'desc' : 'asc')) ?>" aria-label="Ordenar processos em ordem <?= $ordem === 'asc' ? 'decrescente' : 'crescente' ?>" title="Ordenar processos em ordem <?= $ordem === 'asc' ? 'decrescente' : 'crescente' ?>">
+                    <img src="/assets/icons/Arrow-Button-Up-<?= $ordem === 'asc' ? '2' : '1' ?>--Streamline-Ultimate.png" alt="">
+                    <img src="/assets/icons/Arrow-Button-Down-<?= $ordem === 'desc' ? '2' : '1' ?>--Streamline-Ultimate.png" alt="">
+                </a>
             </div>
         </div>
         <div class="register-line">            
             <?php foreach ($result['rows'] as $row): ?>
             <div class="register-line-content">
-                <div class="register-col col-processo">—</div>
+                <div class="register-col col-processo"><?= $escape(trim((string) ($row['numero_processo'] ?? '')) ?: '—') ?></div>
                 <div class="col-content-icon" aria-hidden="true">
                     <img src="/assets/icons/Folder-File--Streamline-Ultimate.png" alt="">
                 </div>
@@ -152,13 +154,13 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
         <div class="display-flex row row-full justify-between padding-x-md padding-y-md">
             <span class="pagination-info">Mostrando <?= $total > 0 ? $result['offset'] + 1 : 0 ?>–<?= min($result['offset'] + $perPage, $total) ?> de <?= $total ?> tarefas</span>
             <div class="pagination-controls"><?php if ($pageNumber > 1): ?>
-            <a class="pagination-symbol" href="<?= $escape($url($pageNumber - 1)) ?>" aria-label="Página anterior">‹</a>
+            <a class="pagination-symbol" href="<?= $escape($url($pageNumber - 1, $ordem)) ?>" aria-label="Página anterior">‹</a>
             <?php else: ?>
             <span class="pagination-symbol disabled" aria-disabled="true">‹</span>
             <?php endif; ?>
             <span class="pagination-number active" aria-current="page"><?= $pageNumber ?></span>
             <?php if ($pageNumber < $pages): ?>
-                <a class="pagination-symbol" href="<?= $escape($url($pageNumber + 1)) ?>" aria-label="Próxima página">›</a>
+                <a class="pagination-symbol" href="<?= $escape($url($pageNumber + 1, $ordem)) ?>" aria-label="Próxima página">›</a>
                 <?php else: ?>
                 <span class="pagination-symbol disabled" aria-disabled="true">›</span>
                 <?php endif; ?>

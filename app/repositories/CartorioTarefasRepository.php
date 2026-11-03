@@ -20,7 +20,7 @@ final class CartorioTarefasRepository
         return $users;
     }
 
-    public function listar(array $filters, int $limit, int $offset): array
+    public function listar(array $filters, int $limit, int $offset, string $ordem = 'desc'): array
     {
         $where = [];
         $params = [];
@@ -43,7 +43,8 @@ final class CartorioTarefasRepository
         $count->execute($params);
         $total = (int) $count->fetchColumn();
         $offset = min($offset, max(0, (int) ceil($total / $limit) - 1) * $limit);
-        $query = $this->db->prepare('SELECT t.id, t.titulo, t.status, t.tipo FROM cartorio_tarefas t' . $clause . ' ORDER BY t.criado_em DESC, t.id DESC LIMIT :limite OFFSET :inicio');
+        $direction = $ordem === 'asc' ? 'ASC' : 'DESC';
+        $query = $this->db->prepare('SELECT t.id, t.titulo, t.numero_processo, t.status, t.tipo FROM cartorio_tarefas t' . $clause . " ORDER BY CASE WHEN t.numero_processo IS NULL OR TRIM(t.numero_processo) = '' THEN 1 ELSE 0 END, t.numero_processo $direction, t.id $direction LIMIT :limite OFFSET :inicio");
         foreach ($params as $key => $value) $query->bindValue($key, $value);
         $query->bindValue(':limite', $limit, PDO::PARAM_INT);
         $query->bindValue(':inicio', $offset, PDO::PARAM_INT);
