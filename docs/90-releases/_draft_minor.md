@@ -63,4 +63,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **style(cartorio): ajustar lista de tarefas** `[63c5aacc]`
 - **style(cartorio): adicionar botoes de tarefas** `[55a06f4e]`
 - **feat(cartorio): ordenar tarefas por processo** `[b83eb846]`
+- **feat(cartorio): criar pagina de cadastro de tarefas** `[7f2d37b5]`
 
