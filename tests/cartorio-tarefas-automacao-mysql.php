@@ -98,6 +98,10 @@ for ($dv = 0; $dv < 100; $dv++) {
 }
 $tarefas = new CartorioTarefasRepository($db);
 $manual = $tarefas->cadastrar('expedicao', 'Ofício', 'Cartório', 'USR-1', $cnj);
+$comprovante = $tarefas->cadastrar('envio', 'Comprovante de envio', 'Cartório', 'USR-1', $cnj);
+$st = $db->prepare('SELECT tipo_documento FROM cartorio_tarefas WHERE id = ?');
+$st->execute([$comprovante]);
+if ($st->fetchColumn() !== 'Comprovante de envio') throw new RuntimeException('O comprovante de envio não foi cadastrado.');
 $st = $db->prepare('SELECT evento FROM cartorio_tarefas_automacao_eventos WHERE tarefa_id = ? ORDER BY id');
 $st->execute([$manual]);
 if ($st->fetchAll(PDO::FETCH_COLUMN) !== ['criacao', 'alocacao']) throw new RuntimeException('O cadastro manual não registrou os eventos.');
@@ -173,6 +177,12 @@ $st->execute([$prazoTask]);
 if ($st->fetchColumn() !== '2024-01-02 23:59:00') throw new RuntimeException('Prazo da regra desativada impediu nova regra válida.');
 $db->exec("UPDATE usuarios SET cadastro_ativo = 0 WHERE id_usuario = 'USR-1'");
 if ($servico->sugerirAlocacao(['tipo' => 'expedicao', 'tipo_documento' => 'Ofício', 'local_tarefa' => 'Cartório']) !== null) throw new RuntimeException('Usuário inativo foi sugerido.');
+$db->exec("INSERT INTO usuarios VALUES ('USR-2', 'Bruno', 'Teste', 1)");
+$db->exec("INSERT INTO usuario_perfil VALUES ('USR-2', 'SERVIDOR')");
+$manualAlternativa = $tarefas->cadastrar('expedicao', 'Ofício', 'Cartório', 'USR-2', $cnj);
+$st = $db->prepare('SELECT COUNT(*) FROM cartorio_tarefas_automacao_falhas WHERE tarefa_id = ? AND regra_id IS NOT NULL');
+$st->execute([$manualAlternativa]);
+if ((int) $st->fetchColumn() !== 1) throw new RuntimeException('A alocação inválida no cadastro manual não foi registrada.');
 try {
     $tarefas->cadastrar('expedicao', 'Ofício', 'Cartório', 'USR-1', $cnj);
     throw new RuntimeException('Usuário inativo foi aceito no cadastro.');

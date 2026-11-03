@@ -7,7 +7,7 @@ require_once __DIR__ . '/../helpers/CnjValidator.php';
 final class CartorioTarefasRepository
 {
     public const TIPOS = ['expedicao' => 'Expedir', 'assinatura' => 'Assinar', 'envio' => 'Enviar', 'juntada' => 'Juntar', 'arquivar' => 'Arquivar', 'desentranhar' => 'Desentranhar'];
-    public const DOCUMENTOS = ['Certidão', 'Ofício', 'Mandado', 'Carta Precatória', 'Guia', 'Edital', 'Ato Ordinatório', 'Petição', 'Resumo', 'Peças processuais', 'Laudo', 'Inquérito Policial', 'Medidas Protetivas'];
+    public const DOCUMENTOS = ['Certidão', 'Ofício', 'Mandado', 'Carta Precatória', 'Guia', 'Edital', 'Ato Ordinatório', 'Petição', 'Resumo', 'Peças processuais', 'Laudo', 'Inquérito Policial', 'Medidas Protetivas', 'Comprovante de envio'];
     public const ESPECIFICACOES = ['Informando Baixa', 'Informando Condenação', 'Para intimação da Sentença', 'Para intimação da Decisão Interlocutória', 'Para intimação da Decisão de Medida Protetiva', 'Para Defesa Preliminar', 'Para comparecimento em Audiência'];
     public const LOCAIS = ['Cartório', 'Gabinete', 'Sala de Audiências'];
     public const STATUS = ['a_fazer' => 'A fazer', 'em_andamento' => 'Em andamento', 'com_pendencias' => 'Pendente', 'finalizada' => 'Finalizada'];
@@ -34,10 +34,12 @@ final class CartorioTarefasRepository
         $this->db->beginTransaction();
         try {
             $automacao->bloquearAutomacao();
+            if (!$automacao->usuarioInternoAtivo($usuario, true)) throw new InvalidArgumentException('Selecione um usuário interno ativo.');
             $task = $this->db->prepare('INSERT INTO cartorio_tarefas (id, titulo, numero_processo, tipo, tipo_documento, especificacao_documento, local_tarefa, status, alocado_em) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)');
             $task->execute([$id, self::TIPOS[$tipo] . ' ' . $documento, $numeroProcesso, $tipo, $documento, $especificacao !== '' ? $especificacao : null, $local, 'a_fazer']);
             $allocation = $this->db->prepare('INSERT INTO cartorio_tarefas_servidores (tarefa_id, usuario_id) VALUES (?, ?)');
             $allocation->execute([$id, $usuario]);
+            $automacao->registrarFalhaAlocacaoInvalida($id, ['tipo' => $tipo, 'tipo_documento' => $documento, 'especificacao_documento' => $especificacao, 'local_tarefa' => $local]);
             $automacao->registrarEvento($id, 'criacao');
             $automacao->registrarEvento($id, 'alocacao');
             $this->db->commit();

@@ -49,9 +49,7 @@ final class CartorioTarefasAutomacaoService
 
     public function sugerirAlocacao(array $tarefa): ?string
     {
-        $tarefa['especificacao_documento'] = $tarefa['especificacao_documento'] ?? '';
-        $regras = array_values(array_filter($this->regras->listar(true), static fn(array $regra): bool => $regra['evento'] === 'criacao'));
-        $vencedora = CartorioTarefasRegras::vencedora($regras, $tarefa, 'alocar');
+        $vencedora = $this->regraAlocacaoCriacao($tarefa);
         if (!$vencedora) return null;
         foreach ($vencedora['acoes'] as $acao) {
             if ($acao['tipo'] !== 'alocar' || ($acao['alvo'] ?? 'original') !== 'original') continue;
@@ -59,6 +57,37 @@ final class CartorioTarefasAutomacaoService
             return in_array($usuario, array_column((new CartorioTarefasRepository($this->db))->listarUsuariosInternos(), 'id'), true) ? $usuario : null;
         }
         return null;
+    }
+
+    /** Registra a regra inválida mesmo quando o cadastro manual escolhe outro usuário. */
+    public function registrarFalhaAlocacaoInvalida(string $tarefaId, array $tarefa): void
+    {
+        $vencedora = $this->regraAlocacaoCriacao($tarefa);
+        if (!$vencedora) return;
+        $usuarios = array_column((new CartorioTarefasRepository($this->db))->listarUsuariosInternos(), 'id');
+        foreach ($vencedora['acoes'] as $acao) {
+            if ($acao['tipo'] !== 'alocar' || ($acao['alvo'] ?? 'original') !== 'original') continue;
+            if (!in_array($acao['usuario_id'], $usuarios, true)) {
+                $this->registrarFalha((int) $vencedora['id'], $tarefaId, 'criacao', 'O usuário configurado está inativo ou não pertence à equipe interna.', false);
+            }
+            return;
+        }
+    }
+
+    private function regraAlocacaoCriacao(array $tarefa): ?array
+    {
+        $tarefa['especificacao_documento'] = $tarefa['especificacao_documento'] ?? '';
+        $regras = array_values(array_filter($this->regras->listar(true), static fn(array $regra): bool => $regra['evento'] === 'criacao'));
+        return CartorioTarefasRegras::vencedora($regras, $tarefa, 'alocar');
+    }
+
+    public function usuarioInternoAtivo(string $usuarioId, bool $bloquear = false): bool
+    {
+        $sql = "SELECT u.id_usuario FROM usuarios u JOIN usuario_perfil p ON p.usuario = u.id_usuario WHERE u.id_usuario = ? AND COALESCE(u.cadastro_ativo, 1) = 1 AND UPPER(TRIM(p.perfil)) IN ('ADMIN','CHEFIA','DIRETORA','MAGISTRADA','SERVIDOR','ESTAGIARIO','CARTORIO','GABINETE','AUDIENCIA','SERVIDOR-CARTORIO','SERVIDOR-GABINETE','SERVIDOR-AUDIENCIAS','ESTAGIARIO-CARTORIO','ESTAGIARIO-GABINETE','ESTAGIARIO-AUDIENCIAS') LIMIT 1";
+        if ($bloquear && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $sql .= ' FOR UPDATE';
+        $st = $this->db->prepare($sql);
+        $st->execute([$usuarioId]);
+        return $st->fetchColumn() !== false;
     }
 
     public function atribuirManual(string $id, string $usuarioId): void
@@ -69,6 +98,7 @@ final class CartorioTarefasAutomacaoService
         $this->db->beginTransaction();
         try {
             $this->bloquearAutomacao();
+            if (!$this->usuarioInternoAtivo($usuarioId, true)) throw new InvalidArgumentException('Selecione um usuário interno ativo.');
             $sql = 'SELECT id FROM cartorio_tarefas WHERE id = ?';
             if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $sql .= ' FOR UPDATE';
             $st = $this->db->prepare($sql);
@@ -371,9 +401,7 @@ final class CartorioTarefasAutomacaoService
         $st = $this->db->prepare('SELECT 1 FROM cartorio_tarefas_servidores WHERE tarefa_id = ?');
         $st->execute([$tarefaId]);
         if ($st->fetchColumn()) return;
-        $st = $this->db->prepare("SELECT 1 FROM usuarios u JOIN usuario_perfil p ON p.usuario = u.id_usuario WHERE u.id_usuario = ? AND COALESCE(u.cadastro_ativo, 1) = 1 AND UPPER(TRIM(p.perfil)) IN ('ADMIN','CHEFIA','DIRETORA','MAGISTRADA','SERVIDOR','ESTAGIARIO','CARTORIO','GABINETE','AUDIENCIA','SERVIDOR-CARTORIO','SERVIDOR-GABINETE','SERVIDOR-AUDIENCIAS','ESTAGIARIO-CARTORIO','ESTAGIARIO-GABINETE','ESTAGIARIO-AUDIENCIAS') LIMIT 1");
-        $st->execute([$usuarioId]);
-        if (!$st->fetchColumn()) {
+        if (!$this->usuarioInternoAtivo($usuarioId, true)) {
             $this->registrarFalha((int) $regra['id'], $tarefaId, (string) $evento['evento'], 'O usuário configurado está inativo ou não pertence à equipe interna.', false);
             return;
         }

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0095
+
+**Data:** 2026-11-03 20:44:06 | **Commit:** `8bd425fb` | **Tipo:** `patch`
+
+- feat(tarefas): incluir comprovante de envio
+
 ## V. 1.87.0094
 
 **Data:** 2026-11-03 20:41:18 | **Commit:** `80bac740` | **Tipo:** `patch`
@@ -5991,6 +5997,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
