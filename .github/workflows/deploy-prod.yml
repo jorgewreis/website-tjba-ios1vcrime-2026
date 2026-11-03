@@ -114,6 +114,14 @@ jobs:
               bash scripts/install-cron-cartorio-tarefas-automacao.sh
             fi
 
+            if [ -f scripts/check-cartorio-tarefas-automacao.php ]; then
+              for tentativa in $(seq 1 18); do
+                if php scripts/check-cartorio-tarefas-automacao.php; then break; fi
+                if [ "$tentativa" -eq 18 ]; then exit 1; fi
+                sleep 5
+              done
+            fi
+
             if [ -f scripts/migrate-gabinete-reu-preso-controle-tipo.php ]; then
               php scripts/migrate-gabinete-reu-preso-controle-tipo.php
             fi

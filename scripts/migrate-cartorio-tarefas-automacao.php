@@ -11,6 +11,13 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_lock (
     id TINYINT NOT NULL PRIMARY KEY
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 $db->exec('INSERT IGNORE INTO cartorio_tarefas_automacao_lock (id) VALUES (1)');
+$db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_monitor (
+    id TINYINT NOT NULL PRIMARY KEY,
+    ultimo_sucesso_em DATETIME DEFAULT NULL,
+    ultima_falha_em DATETIME DEFAULT NULL,
+    ultima_falha TEXT DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$db->exec('INSERT IGNORE INTO cartorio_tarefas_automacao_monitor (id) VALUES (1)');
 $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_regras (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(200) NOT NULL,

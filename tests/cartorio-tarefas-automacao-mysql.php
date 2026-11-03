@@ -204,3 +204,7 @@ foreach ([$antigaRaiz, $antigaFilha, $isolada] as $id) {
     if ((int) $st->fetchColumn() !== 0) throw new RuntimeException('Uma sequência elegível não foi excluída.');
 }
 echo "Retenção por sequência verificada.\n";
+require __DIR__ . '/../scripts/processar-cartorio-tarefas-automacao.php';
+if (!$db->query('SELECT ultimo_sucesso_em FROM cartorio_tarefas_automacao_monitor WHERE id = 1')->fetchColumn()) throw new RuntimeException('O processamento não registrou a confirmação de funcionamento.');
+require __DIR__ . '/../scripts/check-cartorio-tarefas-automacao.php';
+echo "Confirmação do processamento verificada.\n";
