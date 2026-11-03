@@ -84,4 +84,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(tarefas): preparar eventos prazos e vinculos de sequencia** `[f71df1f9]`
 - **feat(tarefas): processar eventos de automacao transacionais** `[2795ec54]`
 - **feat(tarefas): processar fila e reavaliacao em lotes** `[d6253d8a]`
+- **chore(deploy): preparar banco para automacao de tarefas** `[6b0c22f7]`
 
