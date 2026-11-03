@@ -328,6 +328,20 @@ final class CartorioTarefasAutomacaoService
                     return;
                 }
             }
+            $estadoAtual = $this->tarefa((string) $evento['tarefa_id']);
+            if (!$estadoAtual) throw new RuntimeException('Tarefa não encontrada.');
+            $semMudanca = $regra['acoes'] !== [];
+            foreach ($regra['acoes'] as $acao) {
+                if ($acao['tipo'] !== 'alterar_status' || ($acao['alvo'] ?? 'original') !== 'original' || $acao['status'] !== $estadoAtual['status']) {
+                    $semMudanca = false;
+                    break;
+                }
+            }
+            if ($semMudanca) {
+                $this->marcarEventoRegra((int) $evento['id'], (int) $regra['id']);
+                $this->db->commit();
+                return;
+            }
             $caminho = json_decode((string) ($evento['caminho'] ?: '[]'), true, 512, JSON_THROW_ON_ERROR);
             $chave = $evento['tarefa_id'] . ':' . $evento['evento'] . ':' . $regra['id'];
             if (count($caminho) >= 32 || in_array($chave, $caminho, true)) throw new RuntimeException('Ciclo de automação interrompido.');

@@ -64,9 +64,6 @@ final class CartorioTarefasRegras
                 if (!is_string($acao['usuario_id'] ?? null) || !preg_match('/^[A-Za-z0-9_-]{1,80}$/D', $acao['usuario_id'])) throw new InvalidArgumentException('Selecione um usuário válido.');
             } elseif ($tipo === 'alterar_status') {
                 if (!in_array($acao['status'] ?? null, self::STATUS, true)) throw new InvalidArgumentException('Selecione um status válido.');
-                if ($regra['evento'] === 'status_vinculada' && $alvo === 'original' && $acao['status'] === ($regra['evento_status'] ?? null)) {
-                    throw new InvalidArgumentException('A regra pode formar um ciclo de status entre tarefas vinculadas.');
-                }
             } else {
                 if (!in_array($acao['inicio'] ?? null, self::INICIOS_PRAZO, true) || !is_int($acao['dias'] ?? null) || $acao['dias'] < 1 || $acao['dias'] > 36500 || !is_int($acao['alerta_dias'] ?? null) || $acao['alerta_dias'] < 0 || $acao['alerta_dias'] > 36500) {
                     throw new InvalidArgumentException('Informe o início, o prazo e a antecedência do alerta.');
@@ -104,7 +101,7 @@ final class CartorioTarefasRegras
         foreach ($regras as $regra) {
             if ($regra['evento'] !== 'status_vinculada') continue;
             foreach ($regra['acoes'] as $acao) {
-                if ($acao['tipo'] === 'alterar_status' && ($acao['alvo'] ?? 'original') === 'original') {
+                if ($acao['tipo'] === 'alterar_status' && ($acao['alvo'] ?? 'original') === 'original' && $acao['status'] !== $regra['evento_status']) {
                     $statusGraph[$regra['evento_status']][] = $acao['status'];
                 }
             }

@@ -223,6 +223,26 @@ foreach ([$antigaRaiz, $antigaFilha, $isolada] as $id) {
     if ((int) $st->fetchColumn() !== 0) throw new RuntimeException('Uma sequência elegível não foi excluída.');
 }
 echo "Retenção por sequência verificada.\n";
+$propagar = ['nome' => 'Finalizar vinculadas', 'evento' => 'status_vinculada', 'evento_status' => 'finalizada', 'prioridade' => 10, 'condicoes' => [['tipo' => 'desentranhar']], 'acoes' => [['id' => 'status', 'tipo' => 'alterar_status', 'status' => 'finalizada']], 'ativa' => true];
+$propagarId = $repositorio->salvar($propagar);
+$grupo = ['TAR-33333333333333333333333331', 'TAR-33333333333333333333333332', 'TAR-33333333333333333333333333'];
+$insert = $db->prepare("INSERT INTO cartorio_tarefas (id, titulo, tipo, status, sequencia_id) VALUES (?, 'Teste', 'desentranhar', 'a_fazer', ?)");
+foreach ($grupo as $i => $id) $insert->execute([$id, $i === 0 ? null : $grupo[0]]);
+$tarefas->alterarStatus($grupo[0], 'finalizada');
+for ($i = 0; $i < 30; $i++) {
+    $buscar = $db->prepare('SELECT id FROM cartorio_tarefas_automacao_eventos WHERE tarefa_id IN (?, ?, ?) ORDER BY id LIMIT 1');
+    $buscar->execute($grupo);
+    $idEvento = $buscar->fetchColumn();
+    if (!$idEvento) break;
+    $servico->processarEvento((int) $idEvento);
+}
+$buscar = $db->prepare("SELECT COUNT(*) FROM cartorio_tarefas WHERE id IN (?, ?, ?) AND status = 'finalizada'");
+$buscar->execute($grupo);
+if ((int) $buscar->fetchColumn() !== 3) throw new RuntimeException('A conclusão não foi propagada às tarefas vinculadas.');
+$buscar = $db->prepare('SELECT COUNT(*) FROM cartorio_tarefas_automacao_falhas WHERE regra_id = ?');
+$buscar->execute([$propagarId]);
+if ((int) $buscar->fetchColumn() !== 0) throw new RuntimeException('Uma propagação já estabilizada foi registrada como ciclo.');
+echo "Propagação idempotente de status verificada.\n";
 require __DIR__ . '/../scripts/processar-cartorio-tarefas-automacao.php';
 if (!$db->query('SELECT ultimo_sucesso_em FROM cartorio_tarefas_automacao_monitor WHERE id = 1')->fetchColumn()) throw new RuntimeException('O processamento não registrou a confirmação de funcionamento.');
 require __DIR__ . '/../scripts/check-cartorio-tarefas-automacao.php';

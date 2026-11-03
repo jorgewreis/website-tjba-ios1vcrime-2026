@@ -67,6 +67,10 @@ try {
     throw new RuntimeException('Um ciclo de status foi aceito.');
 } catch (InvalidArgumentException $e) {}
 CartorioTarefasRegras::validarCiclos([$statusA]);
+$mesmoStatus = $statusA;
+$mesmoStatus['acoes'][0]['status'] = 'a_fazer';
+CartorioTarefasRegras::validar($mesmoStatus);
+CartorioTarefasRegras::validarCiclos([$mesmoStatus]);
 $seqA = ['nome' => 'A para B', 'evento' => 'finalizacao', 'prioridade' => 0, 'condicoes' => [['tipo' => 'expedicao']], 'acoes' => [
     ['id' => 'filha', 'tipo' => 'criar_tarefa', 'tipo_tarefa' => 'assinatura', 'tipo_documento' => 'Ofício', 'local_tarefa' => 'Cartório'],
     ['id' => 'final', 'tipo' => 'alterar_status', 'alvo' => 'filha', 'status' => 'finalizada']
