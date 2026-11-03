@@ -101,4 +101,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(tarefas): incluir comprovante de envio** `[8bd425fb]`
 - **fix(tarefas): reaplicar status sem recriar sequencia** `[d5c637f7]`
 - **fix(tarefas): verificar versao ativa do agendador** `[62b3d65e]`
+- **fix(tarefas): permitir propagacao estavel de status** `[1eaee5e3]`
 
