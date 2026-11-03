@@ -99,7 +99,14 @@ if ($atual['status'] !== 'finalizada' || !$atual['finalizado_em'] || !$atual['pr
 $st = $db->prepare("SELECT COUNT(*) FROM cartorio_tarefas_automacao_eventos WHERE tarefa_id = ? AND evento = 'finalizacao'");
 $st->execute([$manual]);
 if ((int) $st->fetchColumn() !== 1) throw new RuntimeException('Finalização manual não registrou o evento.');
+$sugestao = $servico->sugerirAlocacao(['tipo' => 'expedicao', 'tipo_documento' => 'Ofício', 'local_tarefa' => 'Cartório']);
+if ($sugestao !== 'USR-1') throw new RuntimeException('A regra específica não sugeriu o responsável.');
+$servico->atribuirManual($nova, 'USR-1');
+$st = $db->prepare('SELECT usuario_id FROM cartorio_tarefas_servidores WHERE tarefa_id = ?');
+$st->execute([$nova]);
+if ($st->fetchColumn() !== 'USR-1') throw new RuntimeException('A alocação manual não foi gravada.');
 $db->exec("UPDATE usuarios SET cadastro_ativo = 0 WHERE id_usuario = 'USR-1'");
+if ($servico->sugerirAlocacao(['tipo' => 'expedicao', 'tipo_documento' => 'Ofício', 'local_tarefa' => 'Cartório']) !== null) throw new RuntimeException('Usuário inativo foi sugerido.');
 try {
     $tarefas->cadastrar('expedicao', 'Ofício', 'Cartório', 'USR-1', $cnj);
     throw new RuntimeException('Usuário inativo foi aceito no cadastro.');

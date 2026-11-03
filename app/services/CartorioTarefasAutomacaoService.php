@@ -32,6 +32,52 @@ final class CartorioTarefasAutomacaoService
         }
     }
 
+    public function sugerirAlocacao(array $tarefa): ?string
+    {
+        $tarefa['especificacao_documento'] = $tarefa['especificacao_documento'] ?? '';
+        $regras = array_values(array_filter($this->regras->listar(true), static fn(array $regra): bool => $regra['evento'] === 'criacao'));
+        $vencedora = CartorioTarefasRegras::vencedora($regras, $tarefa, 'alocar');
+        if (!$vencedora) return null;
+        foreach ($vencedora['acoes'] as $acao) {
+            if ($acao['tipo'] !== 'alocar' || ($acao['alvo'] ?? 'original') !== 'original') continue;
+            $usuario = $acao['usuario_id'];
+            return in_array($usuario, array_column((new CartorioTarefasRepository($this->db))->listarUsuariosInternos(), 'id'), true) ? $usuario : null;
+        }
+        return null;
+    }
+
+    public function atribuirManual(string $id, string $usuarioId): void
+    {
+        if (!preg_match('/^TAR-[A-F0-9]{26}$/D', $id) || !in_array($usuarioId, array_column((new CartorioTarefasRepository($this->db))->listarUsuariosInternos(), 'id'), true)) {
+            throw new InvalidArgumentException('Selecione uma tarefa e um usuário interno ativo.');
+        }
+        $this->db->beginTransaction();
+        try {
+            $sql = 'SELECT id FROM cartorio_tarefas WHERE id = ?';
+            if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $sql .= ' FOR UPDATE';
+            $st = $this->db->prepare($sql);
+            $st->execute([$id]);
+            if (!$st->fetchColumn()) throw new InvalidArgumentException('Tarefa não encontrada.');
+            $st = $this->db->prepare('SELECT usuario_id FROM cartorio_tarefas_servidores WHERE tarefa_id = ?');
+            $st->execute([$id]);
+            $atual = $st->fetchAll(PDO::FETCH_COLUMN);
+            if ($atual !== [$usuarioId]) {
+                $st = $this->db->prepare('DELETE FROM cartorio_tarefas_servidores WHERE tarefa_id = ?');
+                $st->execute([$id]);
+                $st = $this->db->prepare('INSERT INTO cartorio_tarefas_servidores (tarefa_id, usuario_id) VALUES (?, ?)');
+                $st->execute([$id, $usuarioId]);
+                $st = $this->db->prepare('UPDATE cartorio_tarefas SET alocado_em = CURRENT_TIMESTAMP WHERE id = ?');
+                $st->execute([$id]);
+                $this->registrarEvento($id, 'alocacao');
+                $this->recalcularPrazo($id);
+            }
+            $this->db->commit();
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $e;
+        }
+    }
+
     public function registrarEvento(string $tarefaId, string $evento, ?string $origemId = null, ?string $status = null, array $caminho = [], ?int $regraAlvo = null, ?int $versao = null): void
     {
         if (!in_array($evento, CartorioTarefasRegras::EVENTOS, true)) throw new InvalidArgumentException('Evento inválido.');
@@ -264,6 +310,11 @@ final class CartorioTarefasAutomacaoService
 
     private function alocar(string $tarefaId, string $usuarioId, array $regra, array $evento, array $caminho): void
     {
+        $sql = 'SELECT id FROM cartorio_tarefas WHERE id = ?';
+        if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $sql .= ' FOR UPDATE';
+        $st = $this->db->prepare($sql);
+        $st->execute([$tarefaId]);
+        if (!$st->fetchColumn()) throw new RuntimeException('Tarefa não encontrada.');
         $st = $this->db->prepare('SELECT 1 FROM cartorio_tarefas_servidores WHERE tarefa_id = ?');
         $st->execute([$tarefaId]);
         if ($st->fetchColumn()) return;

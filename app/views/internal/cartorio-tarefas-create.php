@@ -21,6 +21,25 @@ try {
     error_log('Falha ao carregar usuários para cadastro de tarefa: ' . $e->getMessage());
     $usersError = true;
 }
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && ($_GET['sugerir_alocacao'] ?? '') === '1') {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    try {
+        if ($usersError) throw new RuntimeException('Usuários indisponíveis.');
+        require_once __DIR__ . '/../../services/CartorioTarefasAutomacaoService.php';
+        $criterios = [];
+        foreach (['tipo', 'tipo_documento', 'especificacao_documento', 'local_tarefa'] as $campo) {
+            $criterios[$campo] = is_string($_GET[$campo] ?? null) ? trim($_GET[$campo]) : '';
+        }
+        $usuarioSugerido = (new CartorioTarefasAutomacaoService($connection))->sugerirAlocacao($criterios);
+        echo json_encode(['usuario' => $usuarioSugerido], JSON_THROW_ON_ERROR);
+    } catch (Throwable $e) {
+        error_log('Falha ao sugerir alocação de tarefa: ' . $e->getMessage());
+        http_response_code(503);
+        echo '{"usuario":null}';
+    }
+    exit;
+}
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
     foreach ($form as $field => $unused) {
         $form[$field] = is_string($_POST[$field] ?? null) ? trim($_POST[$field]) : '';
@@ -141,6 +160,31 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
     const feedback = document.getElementById('processo-tarefa-feedback');
     const submit = document.getElementById('cadastrar-tarefa');
     const usersAvailable = <?= $usersError ? 'false' : 'true' ?>;
+    const usuario = document.getElementById('usuario-tarefa');
+    let escolhaManual = usuario.value !== '';
+    let sugestaoAtual = 0;
+    usuario.addEventListener('change', function () { escolhaManual = this.value !== ''; });
+    async function sugerirResponsavel() {
+        const numero = ++sugestaoAtual;
+        if (escolhaManual) return;
+        const params = new URLSearchParams({
+            page: 'tarefascreate', sugerir_alocacao: '1',
+            tipo: document.getElementById('tipo-tarefa').value,
+            tipo_documento: document.getElementById('tipo-documento').value,
+            especificacao_documento: document.getElementById('especificacao-documento').value,
+            local_tarefa: document.getElementById('local-tarefa').value
+        });
+        try {
+            const resposta = await fetch('/frame.php?' + params.toString(), { credentials: 'same-origin' });
+            if (!resposta.ok) return;
+            const dados = await resposta.json();
+            if (numero === sugestaoAtual && !escolhaManual) usuario.value = dados.usuario || '';
+        } catch (_) { /* O cadastro continua exigindo seleção manual. */ }
+    }
+    ['tipo-tarefa', 'tipo-documento', 'especificacao-documento', 'local-tarefa'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', sugerirResponsavel);
+    });
+    sugerirResponsavel();
     function validate(showIncomplete) {
         const value = input.value.trim();
         if (value === '' && showIncomplete && feedback.classList.contains('invalid')) return;

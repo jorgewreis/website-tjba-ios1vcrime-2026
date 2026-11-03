@@ -12,6 +12,8 @@ $registrationSuccess = !empty($_SESSION['cartorio_tarefa_cadastrada']);
 unset($_SESSION['cartorio_tarefa_cadastrada']);
 $statusSuccess = !empty($_SESSION['cartorio_tarefa_status_atualizado']);
 unset($_SESSION['cartorio_tarefa_status_atualizado']);
+$allocationSuccess = !empty($_SESSION['cartorio_tarefa_alocacao_atualizada']);
+unset($_SESSION['cartorio_tarefa_alocacao_atualizada']);
 $statusError = '';
 $status = is_string($_GET['status'] ?? null) ? $_GET['status'] : 'todos_ativos';
 $status = $status === '' || isset($statuses[$status]) ? $status : 'todos_ativos';
@@ -31,12 +33,23 @@ try {
         $csrf = is_string($_POST['csrf_token'] ?? null) ? $_POST['csrf_token'] : null;
         $taskId = is_string($_POST['tarefa_id'] ?? null) ? trim($_POST['tarefa_id']) : '';
         $newStatus = is_string($_POST['novo_status'] ?? null) ? $_POST['novo_status'] : '';
+        $action = is_string($_POST['acao'] ?? null) ? $_POST['acao'] : 'status';
         if (!Security::verifyCSRFToken($csrf)) {
             $statusError = 'Não foi possível validar a sessão. Atualize a página e tente novamente.';
         } else {
             try {
-                $repository->alterarStatus($taskId, $newStatus);
-                $_SESSION['cartorio_tarefa_status_atualizado'] = true;
+                if ($action === 'alocar') {
+                    if (!$canManageAutomationRules) throw new InvalidArgumentException('Apenas a chefia pode alterar a alocação.');
+                    $usuario = is_string($_POST['usuario_id'] ?? null) ? trim($_POST['usuario_id']) : '';
+                    require_once __DIR__ . '/../../services/CartorioTarefasAutomacaoService.php';
+                    (new CartorioTarefasAutomacaoService($connection))->atribuirManual($taskId, $usuario);
+                    $_SESSION['cartorio_tarefa_alocacao_atualizada'] = true;
+                } elseif ($action === 'status') {
+                    $repository->alterarStatus($taskId, $newStatus);
+                    $_SESSION['cartorio_tarefa_status_atualizado'] = true;
+                } else {
+                    throw new InvalidArgumentException('Ação inválida.');
+                }
                 header('Location: /frame.php?' . http_build_query(['page' => 'tarefas', 'status' => $status, 'servidor' => $server, 'tipo' => $type, 'pagina' => $pageNumber]), true, 303);
                 exit;
             } catch (InvalidArgumentException $e) {
@@ -137,6 +150,7 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
 <div class="container-full card-page">
     <?php if ($registrationSuccess): ?><div class="card-line-info" role="status">Tarefa cadastrada com sucesso.</div><?php endif; ?>
     <?php if ($statusSuccess): ?><div class="card-line-info" role="status">Status atualizado com sucesso.</div><?php endif; ?>
+    <?php if ($allocationSuccess): ?><div class="card-line-info" role="status">Alocação atualizada com sucesso.</div><?php endif; ?>
     <?php if ($statusError !== ''): ?><div class="card-line-info" role="alert"><?= $escape($statusError) ?></div><?php endif; ?>
     <div class="display-flex row row-full justify-end align-center gap-y-md padding-x-lg padding-y-md border-bottom">
         <button type="button" class="btn btn-secondary" <?= $canManageAutomationRules ? "onclick=\"location.href='/frame.php?page=tarefasrules'\"" : 'disabled' ?>>Regras de automação</button>
@@ -204,7 +218,21 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
                 <div class="register-col col-processo"><?= $escape(trim((string) ($row['numero_processo'] ?? '')) ?: '—') ?></div>
                 <div class="register-col"><?= $escape($taskLabel ?: '—') ?></div>
                 <div class="register-col"><?= $escape(trim((string) ($row['local_tarefa'] ?? '')) ?: '—') ?></div>
-                <div class="register-col"><?= $escape(implode(', ', $row['alocados'] ?? []) ?: '—') ?></div>
+                <div class="register-col">
+                    <?php if ($canManageAutomationRules): $alocadoId = $row['alocados_ids'][0] ?? ''; ?>
+                    <form class="tarefa-alocacao-form" method="post" action="<?= $escape($url($pageNumber)) ?>">
+                        <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
+                        <input type="hidden" name="acao" value="alocar">
+                        <input type="hidden" name="tarefa_id" value="<?= $escape((string) $row['id']) ?>">
+                        <select name="usuario_id" class="height-sm" aria-label="Alterar responsável pela tarefa <?= $escape($taskLabel) ?>" required>
+                            <option value="">Sem responsável</option>
+                            <?php if ($alocadoId !== '' && !in_array($alocadoId, array_column($users, 'id'), true)): ?><option value="" selected><?= $escape(implode(', ', $row['alocados']) . ' (inativo)') ?></option><?php endif; ?>
+                            <?php foreach ($users as $user): ?><option value="<?= $escape($user['id']) ?>" <?= $alocadoId === $user['id'] ? 'selected' : '' ?>><?= $escape($user['name']) ?></option><?php endforeach; ?>
+                        </select>
+                        <noscript><button type="submit" class="btn btn-secondary">Atribuir</button></noscript>
+                    </form>
+                    <?php else: ?><?= $escape(implode(', ', $row['alocados'] ?? []) ?: 'Sem responsável') ?><?php endif; ?>
+                </div>
                 <div class="register-col">
                     <form class="tarefa-status-form" method="post" action="<?= $escape($url($pageNumber)) ?>">
                         <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
@@ -241,5 +269,6 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
 
 <script>document.querySelectorAll('#tarefas-filtros select').forEach(function (select) { select.addEventListener('change', function () { document.getElementById('tarefas-filtros').requestSubmit(); }); });</script>
 <script>document.querySelectorAll('.tarefa-status-form select').forEach(function (select) { select.addEventListener('change', function () { this.dataset.status = this.value; this.form.requestSubmit(); }); });</script>
+<script>document.querySelectorAll('.tarefa-alocacao-form select').forEach(function (select) { select.addEventListener('change', function () { if (this.value) this.form.requestSubmit(); }); });</script>
 </body>
 </html>

@@ -116,14 +116,19 @@ final class CartorioTarefasRepository
         if ($rows) {
             $ids = array_column($rows, 'id');
             $marks = implode(',', array_fill(0, count($ids), '?'));
-            $allocated = $this->db->prepare("SELECT ts.tarefa_id, u.nome, u.sobrenome FROM cartorio_tarefas_servidores ts JOIN usuarios u ON u.id_usuario = ts.usuario_id WHERE ts.tarefa_id IN ($marks) ORDER BY u.nome, u.sobrenome");
+            $allocated = $this->db->prepare("SELECT ts.tarefa_id, ts.usuario_id, u.nome, u.sobrenome FROM cartorio_tarefas_servidores ts JOIN usuarios u ON u.id_usuario = ts.usuario_id WHERE ts.tarefa_id IN ($marks) ORDER BY u.nome, u.sobrenome");
             $allocated->execute($ids);
             $names = [];
+            $userIds = [];
             foreach ($allocated->fetchAll(PDO::FETCH_ASSOC) as $user) {
                 $parts = preg_split('/\s+/u', trim((string) $user['nome'] . ' ' . (string) $user['sobrenome']), -1, PREG_SPLIT_NO_EMPTY) ?: [];
                 if ($parts) $names[$user['tarefa_id']][] = count($parts) > 1 ? $parts[0] . ' ' . end($parts) : $parts[0];
+                $userIds[$user['tarefa_id']][] = (string) $user['usuario_id'];
             }
-            foreach ($rows as &$row) $row['alocados'] = $names[$row['id']] ?? [];
+            foreach ($rows as &$row) {
+                $row['alocados'] = $names[$row['id']] ?? [];
+                $row['alocados_ids'] = $userIds[$row['id']] ?? [];
+            }
             unset($row);
         }
         return ['rows' => $rows, 'total' => $total, 'offset' => $offset];

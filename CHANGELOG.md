@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0084
+
+**Data:** 2026-11-03 20:14:00 | **Commit:** `18bf7f5b` | **Tipo:** `patch`
+
+- feat(tarefas): sugerir e alterar responsavel pela tarefa
+
 ## V. 1.87.0083
 
 **Data:** 2026-11-03 20:11:24 | **Commit:** `15fc1b21` | **Tipo:** `patch`
@@ -5925,6 +5931,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
