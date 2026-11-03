@@ -48,9 +48,9 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
     <?php endforeach; ?>
     <style>
         .card-line-info { width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center; box-sizing: border-box; padding: 5px 15px; background-color: #47196f; color: #ffffffbb; font-size: 12px; }
-        .register-line { display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: flex-start; }
-        .register-line-header { width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center; box-sizing: border-box; padding: 10px 15px; background-color: #20202040; color: #202020; gap: 10px; }
-        .register-line-content { width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center; box-sizing: border-box; padding: 10px 15px; background-color: #20202010; color: #202020; gap: 10px; }
+        .register-line { display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: flex-start; padding: 0; height: fit-content;}
+        .register-line-header { width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center; box-sizing: border-box; padding: 10px 15px; background-color: #20202040; color: #202020; gap: 10px; font-size: 12px;}
+        .register-line-content { width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center; box-sizing: border-box; padding: 10px 15px; background-color: #20202010; color: #202020; gap: 10px; font-size: 12px;}
         .register-col { display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: flex-start; box-sizing: border-box; }
         .col-processo { width: 200px; }
         .col-header-icons { width: 50px; display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: center; align-items: center; box-sizing: border-box; gap: 2px; border-right: solid 1px #20202040; cursor: pointer; }
@@ -97,11 +97,28 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
             <noscript><button type="submit" class="btn btn-primary">Filtrar</button></noscript>
         </div>
     </form>
-    <?php if ($selectedFilters): ?><div class="card-line-info"><div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis">Lista com os seguintes filtros: <?= $escape(implode(' + ', $selectedFilters)) ?></span></div></div><?php endif; ?>
-    <div class="card-subtitle"><div class="display-flex row row-full justify-start"><h2>Lista de Tarefas</h2></div></div>
+
+    <?php if ($selectedFilters): ?>
+        <div class="card-line-info">
+            <div class="display-flex row row-fit justify-start align-center padding-x-sm">
+                <span class="text text-ellipsis">Lista com os seguintes filtros: <?= $escape(implode(' + ', $selectedFilters)) ?></span>
+            </div>
+        </div>
+    <?php endif; ?>
+    
+    <div class="card-subtitle">
+        <div class="display-flex row row-full justify-start">
+            <h2>Lista de Tarefas</h2>
+        </div>
+    </div>
+    
     <div class="display-flex col col-full register">
         <div class="card-line-info" role="status">
-            <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm"><span class="text" style="font-weight: 500; color: var(--color-border-accent-disabled); font-size: 12px;"><?= $error ? 'Não foi possível carregar as tarefas. Tente novamente.' : ($total === 0 ? 'Nenhuma tarefa encontrada.' : $total . ($total === 1 ? ' registro encontrado.' : ' registros encontrados.')) ?></span></div>
+            <div class="display-flex col col-fit align-center justify-start padding-x-sm">
+                <span class="text text-ellipsis">
+                    <?= $error ? 'Não foi possível carregar as tarefas. Tente novamente.' : ($total === 0 ? 'Nenhuma tarefa encontrada.' : $total . ($total === 1 ? ' registro encontrado.' : ' registros encontrados.')) ?>
+                </span>
+            </div>
         </div>
         <div class="register-line">
             <div class="register-line-header"><div class="register-col col-processo">Processo</div><div class="col-header-icons" aria-hidden="true"><img src="/assets/icons/Arrow-Button-Up-1--Streamline-Ultimate.png" alt=""><img src="/assets/icons/Arrow-Button-Down-2--Streamline-Ultimate.png" class="active" alt=""></div></div>
