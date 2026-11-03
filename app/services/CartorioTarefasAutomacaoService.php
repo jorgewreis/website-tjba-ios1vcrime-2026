@@ -14,11 +14,122 @@ final class CartorioTarefasAutomacaoService
         $this->regras = new CartorioTarefasRegrasRepository($db);
     }
 
-    public function registrarEvento(string $tarefaId, string $evento, ?string $origemId = null, ?string $status = null, array $caminho = []): void
+    public function registrarEvento(string $tarefaId, string $evento, ?string $origemId = null, ?string $status = null, array $caminho = [], ?int $regraAlvo = null, ?int $versao = null): void
     {
         if (!in_array($evento, CartorioTarefasRegras::EVENTOS, true)) throw new InvalidArgumentException('Evento inválido.');
-        $st = $this->db->prepare('INSERT INTO cartorio_tarefas_automacao_eventos (tarefa_id, evento, origem_id, status_evento, caminho) VALUES (?, ?, ?, ?, ?)');
-        $st->execute([$tarefaId, $evento, $origemId, $status, json_encode($caminho, JSON_THROW_ON_ERROR)]);
+        if ($this->db->inTransaction() && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $this->db->query('SELECT id FROM cartorio_tarefas_automacao_lock WHERE id = 1 FOR UPDATE')->fetchColumn();
+        $st = $this->db->prepare('INSERT INTO cartorio_tarefas_automacao_eventos (tarefa_id, evento, origem_id, status_evento, caminho, regra_alvo_id, regra_versao, retroativo) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+        $st->execute([$tarefaId, $evento, $origemId, $status, json_encode($caminho, JSON_THROW_ON_ERROR), $regraAlvo, $versao, $regraAlvo === null ? 0 : 1]);
+    }
+
+    /** Executado pelo agendador: um único processo consome a fila por vez. */
+    public function executarFila(int $limite = 100): array
+    {
+        $mysql = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite';
+        if ($mysql && (int) $this->db->query("SELECT GET_LOCK('cartorio_tarefas_automacao', 0)")->fetchColumn() !== 1) return ['eventos' => 0, 'tarefas_lote' => 0, 'ocupado' => true];
+        try {
+            $this->enfileirarPrazos();
+            $st = $this->db->prepare('SELECT id FROM cartorio_tarefas_automacao_eventos ORDER BY id LIMIT ?');
+            $st->bindValue(1, max(1, min(1000, $limite)), PDO::PARAM_INT);
+            $st->execute();
+            $ids = $st->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($ids as $id) $this->processarEvento((int) $id);
+            return ['eventos' => count($ids), 'tarefas_lote' => $this->processarLote(25), 'ocupado' => false];
+        } finally {
+            if ($mysql) $this->db->query("SELECT RELEASE_LOCK('cartorio_tarefas_automacao')")->fetchColumn();
+        }
+    }
+
+    private function enfileirarPrazos(): void
+    {
+        $agora = (new DateTimeImmutable('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
+        $st = $this->db->prepare("SELECT id FROM cartorio_tarefas WHERE status <> 'finalizada' AND prazo_em IS NOT NULL AND prazo_em <= ? AND (prazo_evento_em IS NULL OR prazo_evento_em <> prazo_em) ORDER BY prazo_em LIMIT 200");
+        $st->execute([$agora]);
+        foreach ($st->fetchAll(PDO::FETCH_COLUMN) as $id) {
+            $this->db->beginTransaction();
+            try {
+                $atualizar = $this->db->prepare("UPDATE cartorio_tarefas SET prazo_evento_em = prazo_em WHERE id = ? AND status <> 'finalizada' AND prazo_em <= ? AND (prazo_evento_em IS NULL OR prazo_evento_em <> prazo_em)");
+                $atualizar->execute([$id, $agora]);
+                if ($atualizar->rowCount()) $this->registrarEvento((string) $id, 'prazo');
+                $this->db->commit();
+            } catch (Throwable $e) {
+                if ($this->db->inTransaction()) $this->db->rollBack();
+                throw $e;
+            }
+        }
+    }
+
+    /** Reavalia a versão atual em lotes limitados, sem criação retroativa. */
+    private function processarLote(int $limite): int
+    {
+        $lote = $this->db->query("SELECT * FROM cartorio_tarefas_regra_lotes WHERE estado IN ('pendente', 'processando') ORDER BY id LIMIT 1")->fetch(PDO::FETCH_ASSOC);
+        if (!$lote) return 0;
+        $regra = $this->regras->obter((int) $lote['regra_id']);
+        if (!$regra || !$regra['ativa'] || $regra['versao'] !== (int) $lote['versao']) {
+            $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET estado = 'cancelado', atualizado_em = CURRENT_TIMESTAMP WHERE id = ?");
+            $st->execute([$lote['id']]);
+            return 0;
+        }
+        $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET estado = 'processando', atualizado_em = CURRENT_TIMESTAMP WHERE id = ? AND estado = 'pendente'");
+        $st->execute([$lote['id']]);
+        $st = $this->db->prepare('SELECT t.*, i.tarefa_id AS item_tarefa_id FROM cartorio_tarefas_regra_lote_itens i LEFT JOIN cartorio_tarefas t ON t.id = i.tarefa_id WHERE i.lote_id = ? AND i.tarefa_id > ? ORDER BY i.tarefa_id LIMIT ?');
+        $st->bindValue(1, (int) $lote['id'], PDO::PARAM_INT);
+        $st->bindValue(2, $lote['cursor_tarefa'] ?? '');
+        $st->bindValue(3, $limite, PDO::PARAM_INT);
+        $st->execute();
+        $tarefas = $st->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($tarefas as $tarefa) {
+            $atual = $this->regras->obter((int) $regra['id']);
+            if (!$atual || !$atual['ativa'] || $atual['versao'] !== $regra['versao']) break;
+            $origemId = null;
+            $status = null;
+            $aplicavel = $tarefa['id'] !== null;
+            if (!$aplicavel) {
+                $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET cursor_tarefa = ?, processadas = processadas + 1, atualizado_em = CURRENT_TIMESTAMP WHERE id = ? AND estado = 'processando'");
+                $st->execute([$tarefa['item_tarefa_id'], $lote['id']]);
+                continue;
+            }
+            if ($regra['evento'] === 'finalizacao') $aplicavel = $tarefa['status'] === 'finalizada';
+            if ($regra['evento'] === 'alocacao') {
+                $busca = $this->db->prepare('SELECT 1 FROM cartorio_tarefas_servidores WHERE tarefa_id = ? LIMIT 1');
+                $busca->execute([$tarefa['id']]);
+                $aplicavel = (bool) $busca->fetchColumn();
+            }
+            if ($regra['evento'] === 'prazo') $aplicavel = $tarefa['status'] !== 'finalizada' && $tarefa['prazo_em'] && $tarefa['prazo_em'] <= (new DateTimeImmutable('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
+            if ($regra['evento'] === 'status_vinculada') {
+                $raiz = $tarefa['sequencia_id'] ?: $tarefa['id'];
+                $busca = $this->db->prepare('SELECT id FROM cartorio_tarefas WHERE (sequencia_id = ? OR id = ?) AND id <> ? AND status = ? LIMIT 1');
+                $busca->execute([$raiz, $raiz, $tarefa['id'], $regra['evento_status']]);
+                $origemId = $busca->fetchColumn() ?: null;
+                $status = $regra['evento_status'];
+                $aplicavel = $origemId !== null;
+            }
+            $falha = 0;
+            if ($aplicavel) {
+                $antes = $this->contarFalhas((int) $regra['id'], (string) $tarefa['id']);
+                try {
+                    $this->registrarEvento((string) $tarefa['id'], $regra['evento'], $origemId, $status, [], (int) $regra['id'], (int) $regra['versao']);
+                    $this->processarEvento((int) $this->db->lastInsertId());
+                } catch (Throwable $e) {
+                    $this->registrarFalha((int) $regra['id'], (string) $tarefa['id'], $regra['evento'], $e->getMessage(), false);
+                }
+                $falha = $this->contarFalhas((int) $regra['id'], (string) $tarefa['id']) > $antes ? 1 : 0;
+            }
+            $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET cursor_tarefa = ?, processadas = processadas + 1, falhas = falhas + ?, atualizado_em = CURRENT_TIMESTAMP WHERE id = ? AND estado = 'processando'");
+            $st->execute([$tarefa['id'], $falha, $lote['id']]);
+        }
+        if (count($tarefas) < $limite) {
+            $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET estado = 'concluido', atualizado_em = CURRENT_TIMESTAMP WHERE id = ? AND estado = 'processando'");
+            $st->execute([$lote['id']]);
+        }
+        return count($tarefas);
+    }
+
+    private function contarFalhas(int $regraId, string $tarefaId): int
+    {
+        $st = $this->db->prepare('SELECT COUNT(*) FROM cartorio_tarefas_automacao_falhas WHERE regra_id = ? AND tarefa_id = ?');
+        $st->execute([$regraId, $tarefaId]);
+        return (int) $st->fetchColumn();
     }
 
     /** Processa um evento existente e registra falhas sem desfazer a ação do usuário. */
@@ -35,6 +146,7 @@ final class CartorioTarefasAutomacaoService
         }
         $regras = array_values(array_filter($this->regras->listar(true), static function (array $regra) use ($evento, $tarefa): bool {
             return $regra['evento'] === $evento['evento']
+                && ((bool) $evento['retroativo'] || (int) $evento['id'] > (int) $regra['evento_apos_id'])
                 && ($regra['evento'] !== 'status_vinculada' || $regra['evento_status'] === $evento['status_evento'])
                 && CartorioTarefasCondicoes::corresponde($regra['condicoes'], $tarefa);
         }));
@@ -42,7 +154,10 @@ final class CartorioTarefasAutomacaoService
         foreach (['alocar', 'alterar_status', 'definir_prazo'] as $tipo) {
             $vencedoras[$tipo] = CartorioTarefasRegras::vencedora($regras, $tarefa, $tipo)['id'] ?? null;
         }
-        foreach ($regras as $regra) $this->executarRegra($evento, $regra, $vencedoras);
+        foreach ($regras as $regra) {
+            if ($evento['regra_alvo_id'] !== null && ((int) $evento['regra_alvo_id'] !== $regra['id'] || (int) $evento['regra_versao'] !== $regra['versao'])) continue;
+            $this->executarRegra($evento, $regra, $vencedoras);
+        }
         $this->apagarEvento($eventoId);
     }
 
@@ -75,6 +190,7 @@ final class CartorioTarefasAutomacaoService
             foreach ($regra['acoes'] as $acao) {
                 $tipo = $acao['tipo'];
                 $alvo = $acao['alvo'] ?? 'original';
+                if ((bool) $evento['retroativo'] && ($tipo === 'criar_tarefa' || $alvo !== 'original')) continue;
                 if ($alvo === 'original' && $tipo !== 'criar_tarefa' && ($vencedoras[$tipo] ?? null) !== $regra['id']) continue;
                 $tarefaId = $alvo === 'original' ? (string) $evento['tarefa_id'] : ($criadas[$alvo] ?? null);
                 if (!$tarefaId) throw new RuntimeException('A tarefa criada para esta ação não está disponível.');

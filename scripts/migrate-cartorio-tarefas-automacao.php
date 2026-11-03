@@ -21,10 +21,14 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_regras (
     acoes LONGTEXT NOT NULL,
     ativa TINYINT(1) NOT NULL DEFAULT 0,
     versao INT UNSIGNED NOT NULL DEFAULT 1,
+    evento_apos_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_tarefas_regras_evento (ativa, evento)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$st = $db->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+$st->execute(['cartorio_tarefas_regras', 'evento_apos_id']);
+if (!(int) $st->fetchColumn()) $db->exec('ALTER TABLE cartorio_tarefas_regras ADD COLUMN evento_apos_id BIGINT UNSIGNED NOT NULL DEFAULT 0');
 $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_regra_lotes (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     regra_id BIGINT UNSIGNED NOT NULL,
@@ -38,6 +42,12 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_regra_lotes (
     atualizado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_tarefas_lote_fila (estado, id),
     CONSTRAINT fk_tarefas_lote_regra FOREIGN KEY (regra_id) REFERENCES cartorio_tarefas_regras(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_regra_lote_itens (
+    lote_id BIGINT UNSIGNED NOT NULL,
+    tarefa_id CHAR(30) NOT NULL,
+    PRIMARY KEY (lote_id, tarefa_id),
+    CONSTRAINT fk_tarefas_lote_item_lote FOREIGN KEY (lote_id) REFERENCES cartorio_tarefas_regra_lotes(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_falhas (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -78,11 +88,19 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_eventos (
     evento VARCHAR(30) NOT NULL,
     origem_id CHAR(30) DEFAULT NULL,
     status_evento VARCHAR(30) DEFAULT NULL,
+    regra_alvo_id BIGINT UNSIGNED DEFAULT NULL,
+    regra_versao INT UNSIGNED DEFAULT NULL,
+    retroativo TINYINT(1) NOT NULL DEFAULT 0,
     caminho LONGTEXT DEFAULT NULL,
     criado_em DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     KEY idx_tarefas_eventos_fila (id),
     KEY idx_tarefas_eventos_tarefa (tarefa_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+foreach (['regra_alvo_id' => 'BIGINT UNSIGNED DEFAULT NULL', 'regra_versao' => 'INT UNSIGNED DEFAULT NULL', 'retroativo' => 'TINYINT(1) NOT NULL DEFAULT 0'] as $nome => $definicao) {
+    $st = $db->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+    $st->execute(['cartorio_tarefas_automacao_eventos', $nome]);
+    if (!(int) $st->fetchColumn()) $db->exec("ALTER TABLE cartorio_tarefas_automacao_eventos ADD COLUMN `$nome` $definicao");
+}
 $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_criacoes (
     tarefa_origem_id CHAR(30) NOT NULL,
     regra_id BIGINT UNSIGNED NOT NULL,

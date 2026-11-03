@@ -41,23 +41,29 @@ final class CartorioTarefasRegrasRepository
                     }
                 }
             }
+            $ultimoEvento = (int) $this->db->query('SELECT COALESCE(MAX(id), 0) FROM cartorio_tarefas_automacao_eventos')->fetchColumn();
             $params = [trim($regra['nome']), $regra['evento'], $regra['evento_status'] ?? null, $regra['prioridade'], json_encode($regra['condicoes'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), json_encode($regra['acoes'], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE), $ativa ? 1 : 0];
             if ($id === null) {
-                $st = $this->db->prepare('INSERT INTO cartorio_tarefas_regras (nome, evento, evento_status, prioridade, condicoes, acoes, ativa, versao) VALUES (?, ?, ?, ?, ?, ?, ?, 1)');
-                $st->execute($params);
+                $st = $this->db->prepare('INSERT INTO cartorio_tarefas_regras (nome, evento, evento_status, prioridade, condicoes, acoes, ativa, versao, evento_apos_id) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)');
+                $st->execute([...$params, $ultimoEvento]);
                 $id = (int) $this->db->lastInsertId();
                 $versao = 1;
             } else {
                 $versao = (int) $anterior['versao'] + 1;
-                $st = $this->db->prepare('UPDATE cartorio_tarefas_regras SET nome = ?, evento = ?, evento_status = ?, prioridade = ?, condicoes = ?, acoes = ?, ativa = ?, versao = ?, atualizado_em = CURRENT_TIMESTAMP WHERE id = ?');
-                $st->execute([...$params, $versao, $id]);
+                $st = $this->db->prepare('UPDATE cartorio_tarefas_regras SET nome = ?, evento = ?, evento_status = ?, prioridade = ?, condicoes = ?, acoes = ?, ativa = ?, versao = ?, evento_apos_id = ?, atualizado_em = CURRENT_TIMESTAMP WHERE id = ?');
+                $st->execute([...$params, $versao, $ultimoEvento, $id]);
                 $st = $this->db->prepare("UPDATE cartorio_tarefas_regra_lotes SET estado = 'cancelado', atualizado_em = CURRENT_TIMESTAMP WHERE regra_id = ? AND estado IN ('pendente', 'processando')");
                 $st->execute([$id]);
             }
             if ($ativa) {
-                $total = (int) $this->db->query('SELECT COUNT(*) FROM cartorio_tarefas')->fetchColumn();
-                $st = $this->db->prepare('INSERT INTO cartorio_tarefas_regra_lotes (regra_id, versao, total) VALUES (?, ?, ?)');
-                $st->execute([$id, $versao, $total]);
+                $st = $this->db->prepare('INSERT INTO cartorio_tarefas_regra_lotes (regra_id, versao, total) VALUES (?, ?, 0)');
+                $st->execute([$id, $versao]);
+                $loteId = (int) $this->db->lastInsertId();
+                $st = $this->db->prepare('INSERT INTO cartorio_tarefas_regra_lote_itens (lote_id, tarefa_id) SELECT ?, id FROM cartorio_tarefas');
+                $st->execute([$loteId]);
+                $total = $st->rowCount();
+                $st = $this->db->prepare('UPDATE cartorio_tarefas_regra_lotes SET total = ? WHERE id = ?');
+                $st->execute([$total, $loteId]);
             }
             $this->db->commit();
             return $id;

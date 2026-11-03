@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0080
+
+**Data:** 2026-11-03 20:07:13 | **Commit:** `d6253d8a` | **Tipo:** `patch`
+
+- feat(tarefas): processar fila e reavaliacao em lotes
+
 ## V. 1.87.0079
 
 **Data:** 2026-11-03 20:02:58 | **Commit:** `2795ec54` | **Tipo:** `patch`
@@ -5901,6 +5907,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
