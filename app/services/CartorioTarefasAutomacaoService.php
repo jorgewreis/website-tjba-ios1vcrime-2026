@@ -319,7 +319,7 @@ final class CartorioTarefasAutomacaoService
             $st = $this->db->prepare('SELECT 1 FROM cartorio_tarefas_automacao_eventos_regras WHERE evento_id = ? AND regra_id = ?');
             $st->execute([$evento['id'], $regra['id']]);
             if ($st->fetchColumn()) { $this->db->rollBack(); return; }
-            if ($evento['evento'] === 'finalizacao' && in_array('criar_tarefa', array_column($regra['acoes'], 'tipo'), true)) {
+            if (!(bool) $evento['retroativo'] && $evento['evento'] === 'finalizacao' && in_array('criar_tarefa', array_column($regra['acoes'], 'tipo'), true)) {
                 $st = $this->db->prepare('SELECT 1 FROM cartorio_tarefas_automacao_criacoes WHERE tarefa_origem_id = ? AND regra_id = ? LIMIT 1');
                 $st->execute([$evento['tarefa_id'], $regra['id']]);
                 if ($st->fetchColumn()) {
