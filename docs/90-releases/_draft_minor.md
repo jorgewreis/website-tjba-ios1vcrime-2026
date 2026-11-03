@@ -100,4 +100,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(tarefas): alinhar botoes e largura das regras** `[80bac740]`
 - **feat(tarefas): incluir comprovante de envio** `[8bd425fb]`
 - **fix(tarefas): reaplicar status sem recriar sequencia** `[d5c637f7]`
+- **fix(tarefas): verificar versao ativa do agendador** `[62b3d65e]`
 
