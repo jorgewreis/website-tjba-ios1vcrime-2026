@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0087
+
+**Data:** 2026-11-03 20:21:15 | **Commit:** `a76b9eeb` | **Tipo:** `patch`
+
+- feat(tarefas): agendar automacao e usar horario da bahia
+
 ## V. 1.87.0086
 
 **Data:** 2026-11-03 20:19:51 | **Commit:** `45efa807` | **Tipo:** `patch`
@@ -5943,6 +5949,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

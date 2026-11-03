@@ -11,6 +11,7 @@ final class CartorioTarefasAutomacaoService
     private CartorioTarefasRegrasRepository $regras;
     public function __construct(private PDO $db)
     {
+        if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') $db->exec("SET time_zone = '-03:00'");
         $this->regras = new CartorioTarefasRegrasRepository($db);
     }
 

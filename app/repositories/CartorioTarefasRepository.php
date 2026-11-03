@@ -12,7 +12,10 @@ final class CartorioTarefasRepository
     public const LOCAIS = ['Cartório', 'Gabinete', 'Sala de Audiências'];
     public const STATUS = ['a_fazer' => 'A fazer', 'em_andamento' => 'Em andamento', 'com_pendencias' => 'Pendente', 'finalizada' => 'Finalizada'];
 
-    public function __construct(private PDO $db) {}
+    public function __construct(private PDO $db)
+    {
+        if ($db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') $db->exec("SET time_zone = '-03:00'");
+    }
 
     public function cadastrar(string $tipo, string $documento, string $local, string $usuario, string $numeroProcesso, string $especificacao = ''): string
     {

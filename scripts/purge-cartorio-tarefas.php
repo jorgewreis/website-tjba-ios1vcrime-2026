@@ -5,6 +5,7 @@ if (!isset($db) || !$db instanceof PDO) {
     require_once __DIR__ . '/../app/helpers/Conection.php';
     $db = Conection::getInstance()->getConnection();
 }
+$db->exec("SET time_zone = '-03:00'");
 
 // Bloqueia a fotografia da sequência durante a seleção e a exclusão, inclusive
 // contra reaberturas simultâneas. A execução é diária e fora do horário comercial.

@@ -110,6 +110,10 @@ jobs:
               php scripts/migrate-cartorio-tarefas-automacao.php
             fi
 
+            if [ -f scripts/install-cron-cartorio-tarefas-automacao.sh ]; then
+              bash scripts/install-cron-cartorio-tarefas-automacao.sh
+            fi
+
             if [ -f scripts/migrate-gabinete-reu-preso-controle-tipo.php ]; then
               php scripts/migrate-gabinete-reu-preso-controle-tipo.php
             fi
