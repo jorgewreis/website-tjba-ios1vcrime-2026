@@ -15,9 +15,13 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_automacao_monitor (
     id TINYINT NOT NULL PRIMARY KEY,
     ultimo_sucesso_em DATETIME DEFAULT NULL,
     ultima_falha_em DATETIME DEFAULT NULL,
-    ultima_falha TEXT DEFAULT NULL
+    ultima_falha TEXT DEFAULT NULL,
+    codigo_hash CHAR(64) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 $db->exec('INSERT IGNORE INTO cartorio_tarefas_automacao_monitor (id) VALUES (1)');
+$st = $db->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+$st->execute(['cartorio_tarefas_automacao_monitor', 'codigo_hash']);
+if (!(int) $st->fetchColumn()) $db->exec('ALTER TABLE cartorio_tarefas_automacao_monitor ADD COLUMN codigo_hash CHAR(64) DEFAULT NULL');
 $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_regras (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(200) NOT NULL,

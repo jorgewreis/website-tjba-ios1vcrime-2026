@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0097
+
+**Data:** 2026-11-03 20:47:30 | **Commit:** `62b3d65e` | **Tipo:** `patch`
+
+- fix(tarefas): verificar versao ativa do agendador
+
 ## V. 1.87.0096
 
 **Data:** 2026-11-03 20:46:04 | **Commit:** `d5c637f7` | **Tipo:** `patch`
@@ -6003,6 +6009,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

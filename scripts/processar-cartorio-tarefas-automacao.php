@@ -10,7 +10,11 @@ try {
         $db = Conection::getInstance()->getConnection();
     }
     $resultado = (new CartorioTarefasAutomacaoService($db))->executarFila();
-    if (empty($resultado['ocupado'])) $db->exec('UPDATE cartorio_tarefas_automacao_monitor SET ultimo_sucesso_em = CURRENT_TIMESTAMP, ultima_falha = NULL WHERE id = 1');
+    if (empty($resultado['ocupado'])) {
+        $codigoHash = hash('sha256', hash_file('sha256', __FILE__) . hash_file('sha256', __DIR__ . '/../app/services/CartorioTarefasAutomacaoService.php'));
+        $st = $db->prepare('UPDATE cartorio_tarefas_automacao_monitor SET ultimo_sucesso_em = CURRENT_TIMESTAMP, ultima_falha = NULL, codigo_hash = ? WHERE id = 1');
+        $st->execute([$codigoHash]);
+    }
     fwrite(STDOUT, json_encode($resultado, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE) . "\n");
 } catch (Throwable $e) {
     if ($db instanceof PDO) {
