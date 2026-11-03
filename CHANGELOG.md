@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0071
+
+**Data:** 2026-11-03 19:04:48 | **Commit:** `98b1c0d8` | **Tipo:** `patch`
+
+- style(cartorio): separar linhas das tarefas
+
 ## V. 1.87.0070
 
 **Data:** 2026-11-03 18:46:05 | **Commit:** `266443b1` | **Tipo:** `patch`
@@ -5847,6 +5853,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

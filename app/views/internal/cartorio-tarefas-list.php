@@ -96,11 +96,12 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
     <?php endforeach; ?>
     <style>
         .card-line-info { width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center; box-sizing: border-box; padding: 5px 15px; background-color: #47196f; color: #ffffffbb; font-size: 12px; }
-        .register-line { display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: flex-start; padding: 0; height: fit-content;}
+        .register-line { display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: flex-start; padding: 0; height: fit-content; border-bottom: 0; }
         .tarefas-table-scroll { width: 100%; overflow-x: auto; }
         .register-line-header, .register-line-content { width: 100%; min-width: 910px; display: grid; grid-template-columns: minmax(200px, 1.4fr) minmax(230px, 2fr) minmax(110px, 1fr) minmax(130px, 1fr) minmax(140px, 1fr) 55px; align-items: center; box-sizing: border-box; padding: 10px 15px; color: #202020; gap: 10px; font-size: 12px; }
         .register-line-header { background-color: #20202040; }
         .register-line-content { background-color: #20202010; }
+        .register-line-content:not(:last-child) { border-bottom: 1px solid lightgray; }
         .register-col { display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: flex-start; box-sizing: border-box; }
         .col-processo { display: flex; flex-direction: row; align-items: center; gap: 10px; }
         .col-content-icon { width: 50px; display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: center; align-items: center; box-sizing: border-box; border-right: solid 1px #20202040; cursor: pointer; }
