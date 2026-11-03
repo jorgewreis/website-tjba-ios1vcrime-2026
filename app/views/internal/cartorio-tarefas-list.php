@@ -81,7 +81,7 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
 <div class="container-full card-page">
     <div class="display-flex row row-full justify-end align-center gap-y-md padding-x-lg padding-y-md border-bottom">
         <button type="button" class="btn btn-secondary">Regras de automação</button>
-        <button type="button" class="btn btn-primary">Cadastrar tarefa</button>
+        <button type="button" class="btn btn-primary" onclick="location.href='/frame.php?page=tarefascreate'">Cadastrar tarefa</button>
     </div>
     <form action="/frame.php" method="get" id="tarefas-filtros" class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
         <input type="hidden" name="page" value="tarefas">

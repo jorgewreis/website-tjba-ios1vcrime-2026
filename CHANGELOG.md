@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0060
+
+**Data:** 2026-11-03 17:59:20 | **Commit:** `7f2d37b5` | **Tipo:** `patch`
+
+- feat(cartorio): criar pagina de cadastro de tarefas
+
 ## V. 1.87.0059
 
 **Data:** 2026-11-03 17:47:00 | **Commit:** `b83eb846` | **Tipo:** `patch`
@@ -5781,6 +5787,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

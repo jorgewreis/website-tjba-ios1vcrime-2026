@@ -6,5 +6,5 @@ declare(strict_types=1);
  */
 final class AccessPolicyVersion
 {
-    public const VERSION = 2;
+    public const VERSION = 3;
 }

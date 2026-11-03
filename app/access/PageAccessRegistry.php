@@ -43,6 +43,7 @@ final class PageAccessRegistry
             'dashboard' => ['kind' => 'all_internal'],
             'dashboardexterno' => ['kind' => 'externo_only'],
             'tarefas' => $areaCartorio,
+            'tarefascreate' => $areaCartorio,
             'cejusc' => $areaCartorio,
             'cejusccreate' => $areaCartorio,
             'cejuscedit' => $areaCartorio,
