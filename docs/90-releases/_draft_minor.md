@@ -79,4 +79,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): destacar e limpar cnj invalido** `[97ca88ec]`
 - **feat(cartorio): preparar regras e local padrao de tarefas** `[c3698f57]`
 - **feat(tarefas): comparar condicoes de regras de automacao** `[425237e6]`
+- **feat(tarefas): validar regras e resolver precedencia** `[dca8c332]`
 
