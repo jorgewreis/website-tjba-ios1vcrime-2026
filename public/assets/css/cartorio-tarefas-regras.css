@@ -1,13 +1,20 @@
 .automacao-pagina { box-sizing:border-box; }
+.automacao-pagina > .automacao-controles,
+.automacao-secao { width:100%; box-sizing:border-box; }
 .automacao-secao { padding:20px; border-bottom:1px solid lightgray; }
+.automacao-pagina .btn { display:inline-flex; align-items:center; justify-content:center; box-sizing:border-box; text-align:center; text-decoration:none; line-height:normal; }
+.automacao-pagina .btn > span { display:inline-flex; align-items:center; justify-content:center; }
+.automacao-pagina #regra-form { width:100%; box-sizing:border-box; }
 .automacao-secao h2 { margin:0 0 15px; font-size:18px; }
 .automacao-secao h3 { margin:22px 0 8px; font-size:15px; }
 .automacao-secao p { margin:8px 0 12px; }
-.automacao-campos, .automacao-controles { display:flex; flex-wrap:wrap; align-items:end; gap:12px; }
+.automacao-campos, .automacao-controles { display:flex; flex-wrap:wrap; gap:12px; }
+.automacao-campos { align-items:end; }
+.automacao-controles { align-items:center; }
 .automacao-campo { display:flex; flex-direction:column; gap:5px; min-width:180px; max-width:100%; }
 .automacao-campo select, .automacao-campo input { width:240px; max-width:100%; }
 .automacao-checkbox { display:flex; align-items:center; gap:8px; padding:10px 0; }
-.automacao-bloco { border:1px solid lightgray; border-radius:6px; padding:12px; margin:10px 0; }
+.automacao-bloco { width:100%; min-width:0; box-sizing:border-box; border:1px solid lightgray; border-radius:6px; padding:12px; margin:10px 0; }
 .automacao-bloco legend { padding:0 5px; font-weight:600; }
 .automacao-bloco .automacao-controles { margin-top:12px; }
 .automacao-ajuda, .automacao-linha small { color:#555; font-size:12px; }

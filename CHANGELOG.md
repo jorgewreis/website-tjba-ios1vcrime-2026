@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0094
+
+**Data:** 2026-11-03 20:41:18 | **Commit:** `80bac740` | **Tipo:** `patch`
+
+- fix(tarefas): alinhar botoes e largura das regras
+
 ## V. 1.87.0093
 
 **Data:** 2026-11-03 20:39:58 | **Commit:** `d6695038` | **Tipo:** `patch`
@@ -5985,6 +5991,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
