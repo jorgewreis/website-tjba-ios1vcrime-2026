@@ -60,4 +60,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): filtrar tarefas por status servidor e tipo** `[ea965899]`
 - **style(cartorio): atualizar modelo visual de tarefas** `[f9f9d1ed]`
 - **style(cartorio): reproduzir visual da lista de tarefas** `[7cdf2d84]`
+- **style(cartorio): ajustar lista de tarefas** `[63c5aacc]`
 
