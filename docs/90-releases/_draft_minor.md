@@ -74,4 +74,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): exibir tempo curto das tarefas** `[2a4fab85]`
 - **feat(cartorio): colorir status e congelar tempo finalizado** `[fc824324]`
 - **feat(cartorio): ordenar tarefas por usuario e prioridade** `[266443b1]`
+- **style(cartorio): separar linhas das tarefas** `[98b1c0d8]`
 
