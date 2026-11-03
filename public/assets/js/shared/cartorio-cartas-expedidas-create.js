@@ -35,7 +35,7 @@
         function confirmCcm(city) {
             const key = normalizeCidadeForCompare(city);
             if (ccmConfirmed.has(key)) return true;
-            const accepted = global.confirm('A comarca de ' + city + ' já possui Central de Mandados (CCM). Em regra, deve ser expedido Mandado em vez de Carta Precatória. Deseja cadastrar a carta mesmo assim?');
+            const accepted = global.confirm('A comarca de ' + city + ' j\u00e1 possui Central de Mandados (CCM). Em regra, deve ser expedido Mandado em vez de Carta Precat\u00f3ria. Deseja cadastrar a carta mesmo assim?');
             if (accepted) ccmConfirmed.add(key);
             return accepted;
         }
