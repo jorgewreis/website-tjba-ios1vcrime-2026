@@ -15,6 +15,10 @@ try {
 } catch (Throwable $e) {
     error_log('Falha ao carregar prazos de tarefas no dashboard: ' . $e->getMessage());
 }
+$corContagemPrazo = static function (?int $valor): string {
+    if ($valor === null) return '';
+    return $valor < 4 ? 'dash-count-mint' : ($valor <= 7 ? 'dash-count-purple' : ($valor <= 10 ? 'dash-count-warning' : 'dash-count-danger'));
+};
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -76,9 +80,9 @@ try {
         </section>
         <section class="dashboard-column dashboard-agenda" aria-labelledby="dash-agenda-title">
           <header><span class="column-kicker">AGENDA</span><h2 id="dash-agenda-title">Agenda e alertas</h2></header>
-          <div class="dash-task-deadlines" aria-label="Prazos de tarefas">
-            <a class="dash-card dash-task-deadline" href="/frame.php?page=tarefas&amp;prazo=proximo"><span>Tarefas com prazo próximo</span><strong><?= $tarefasPrazos['proximo'] === null ? '—' : (int) $tarefasPrazos['proximo'] ?></strong></a>
-            <a class="dash-card dash-task-deadline" href="/frame.php?page=tarefas&amp;prazo=vencido"><span>Tarefas com prazo vencido</span><strong><?= $tarefasPrazos['vencido'] === null ? '—' : (int) $tarefasPrazos['vencido'] ?></strong></a>
+          <div class="dash-alert-list" aria-label="Prazos de tarefas">
+            <a class="dash-card dash-alert-card dash-task-deadline" href="/frame.php?page=tarefas&amp;prazo=proximo"><span class="dash-alert-copy"><strong>Tarefas</strong><span>com prazo próximo</span></span><span class="dash-alert-number <?= $corContagemPrazo($tarefasPrazos['proximo']) ?>"><?= $tarefasPrazos['proximo'] === null ? '—' : (int) $tarefasPrazos['proximo'] ?></span></a>
+            <a class="dash-card dash-alert-card dash-task-deadline" href="/frame.php?page=tarefas&amp;prazo=vencido"><span class="dash-alert-copy"><strong>Tarefas</strong><span>com prazo vencido</span></span><span class="dash-alert-number <?= $corContagemPrazo($tarefasPrazos['vencido']) ?>"><?= $tarefasPrazos['vencido'] === null ? '—' : (int) $tarefasPrazos['vencido'] ?></span></a>
           </div>
           <div id="dash-alerts" class="dash-alert-list"></div>
         </section>
