@@ -4,7 +4,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../repositories/CartorioTarefasRepository.php';
 
 $statuses = ['todos_ativos' => 'Todos exceto finalizadas', 'a_fazer' => 'A fazer', 'em_andamento' => 'Em andamento', 'com_pendencias' => 'Com pendências', 'finalizada' => 'Finalizada'];
-$types = ['assinatura' => 'Assinatura', 'expedicao' => 'Expedição', 'envio' => 'Envio', 'juntada' => 'Juntada'];
+$types = CartorioTarefasRepository::TIPOS;
+$registrationSuccess = !empty($_SESSION['cartorio_tarefa_cadastrada']);
+unset($_SESSION['cartorio_tarefa_cadastrada']);
 $status = is_string($_GET['status'] ?? null) ? $_GET['status'] : 'todos_ativos';
 $status = $status === '' || isset($statuses[$status]) ? $status : 'todos_ativos';
 $type = is_string($_GET['tipo'] ?? null) ? $_GET['tipo'] : '';
@@ -79,6 +81,7 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
 </div>
 
 <div class="container-full card-page">
+    <?php if ($registrationSuccess): ?><div class="card-line-info" role="status">Tarefa cadastrada com sucesso.</div><?php endif; ?>
     <div class="display-flex row row-full justify-end align-center gap-y-md padding-x-lg padding-y-md border-bottom">
         <button type="button" class="btn btn-secondary">Regras de automação</button>
         <button type="button" class="btn btn-primary" onclick="location.href='/frame.php?page=tarefascreate'">Cadastrar tarefa</button>

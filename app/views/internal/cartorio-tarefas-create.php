@@ -5,16 +5,43 @@ require_once __DIR__ . '/../../repositories/CartorioTarefasRepository.php';
 
 $users = [];
 $usersError = false;
+$error = '';
+$form = ['tipo_tarefa' => '', 'tipo_documento' => '', 'local' => '', 'usuario' => ''];
 try {
-    $users = (new CartorioTarefasRepository($connection))->listarUsuariosInternos();
+    $repository = new CartorioTarefasRepository($connection);
+    $users = $repository->listarUsuariosInternos();
 } catch (Throwable $e) {
     error_log('Falha ao carregar usuários para cadastro de tarefa: ' . $e->getMessage());
     $usersError = true;
 }
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    foreach ($form as $field => $unused) {
+        $form[$field] = is_string($_POST[$field] ?? null) ? trim($_POST[$field]) : '';
+    }
+    $csrf = is_string($_POST['csrf_token'] ?? null) ? $_POST['csrf_token'] : null;
+    if (!Security::verifyCSRFToken($csrf)) {
+        $error = 'Sua sessão expirou. Atualize a página e tente novamente.';
+    } elseif ($usersError) {
+        $error = 'Não foi possível carregar os usuários. Tente novamente.';
+    } else {
+        try {
+            $repository->cadastrar($form['tipo_tarefa'], $form['tipo_documento'], $form['local'], $form['usuario']);
+            $_SESSION['cartorio_tarefa_cadastrada'] = true;
+            header('Location: /frame.php?page=tarefas', true, 303);
+            exit;
+        } catch (InvalidArgumentException $e) {
+            $error = $e->getMessage();
+        } catch (Throwable $e) {
+            error_log('Falha ao cadastrar tarefa do Cartório: ' . $e->getMessage());
+            $error = 'Não foi possível cadastrar a tarefa. Tente novamente.';
+        }
+    }
+}
 $escape = static fn(string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-$taskTypes = ['Expedir', 'Assinar', 'Enviar', 'Juntar', 'Arquivar', 'Desentranhar'];
-$documentTypes = ['Certidão', 'Ofício', 'Mandado', 'Carta Precatória', 'Guia', 'Edital', 'Ato Ordinatório', 'Petição', 'Resumo', 'Peças processuais', 'Laudo', 'Inquérito Policial', 'Medidas Protetivas'];
-$locations = ['Cartório', 'Gabinete', 'Sala de Audiências'];
+$taskTypes = CartorioTarefasRepository::TIPOS;
+$documentTypes = CartorioTarefasRepository::DOCUMENTOS;
+$locations = CartorioTarefasRepository::LOCAIS;
+$csrfToken = Security::generateCSRFToken();
 $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
 ?>
 <!DOCTYPE html>
@@ -40,41 +67,43 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
 </div>
 <main class="container-full card-page">
     <div class="card-subtitle"><div class="display-flex row row-full justify-start"><h2>Informações da tarefa</h2></div></div>
-    <form id="tarefa-cadastro" onsubmit="return false;">
+    <?php if ($error !== ''): ?><div role="alert" class="padding-x-lg padding-y-md"><?= $escape($error) ?></div><?php endif; ?>
+    <form id="tarefa-cadastro" method="post" action="/frame.php?page=tarefascreate">
+        <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
         <div class="tarefas-form-fields padding-x-lg padding-y-md border-bottom">
             <div class="tarefas-form-field">
                 <label for="tipo-tarefa">Tipo de tarefa</label>
                 <select id="tipo-tarefa" name="tipo_tarefa" class="height-md" required>
                     <option value="">Selecione</option>
-                    <?php foreach ($taskTypes as $type): ?><option value="<?= $escape($type) ?>"><?= $escape($type) ?></option><?php endforeach; ?>
+                    <?php foreach ($taskTypes as $value => $type): ?><option value="<?= $escape($value) ?>" <?= $form['tipo_tarefa'] === $value ? 'selected' : '' ?>><?= $escape($type) ?></option><?php endforeach; ?>
                 </select>
             </div>
             <div class="tarefas-form-field">
                 <label for="tipo-documento">Tipo de documento</label>
                 <select id="tipo-documento" name="tipo_documento" class="height-md" required>
                     <option value="">Selecione</option>
-                    <?php foreach ($documentTypes as $type): ?><option value="<?= $escape($type) ?>"><?= $escape($type) ?></option><?php endforeach; ?>
+                    <?php foreach ($documentTypes as $type): ?><option value="<?= $escape($type) ?>" <?= $form['tipo_documento'] === $type ? 'selected' : '' ?>><?= $escape($type) ?></option><?php endforeach; ?>
                 </select>
             </div>
             <div class="tarefas-form-field">
                 <label for="local-tarefa">Local</label>
                 <select id="local-tarefa" name="local" class="height-md" required>
                     <option value="">Selecione</option>
-                    <?php foreach ($locations as $location): ?><option value="<?= $escape($location) ?>"><?= $escape($location) ?></option><?php endforeach; ?>
+                    <?php foreach ($locations as $location): ?><option value="<?= $escape($location) ?>" <?= $form['local'] === $location ? 'selected' : '' ?>><?= $escape($location) ?></option><?php endforeach; ?>
                 </select>
             </div>
             <div class="tarefas-form-field">
                 <label for="usuario-tarefa">Alocação de usuário</label>
                 <select id="usuario-tarefa" name="usuario" class="height-md" required>
                     <option value="">Selecione</option>
-                    <?php foreach ($users as $user): ?><option value="<?= $escape($user['id']) ?>"><?= $escape($user['name']) ?></option><?php endforeach; ?>
+                    <?php foreach ($users as $user): ?><option value="<?= $escape($user['id']) ?>" <?= $form['usuario'] === $user['id'] ? 'selected' : '' ?>><?= $escape($user['name']) ?></option><?php endforeach; ?>
                 </select>
                 <?php if ($usersError): ?><span role="alert">Não foi possível carregar os usuários.</span><?php endif; ?>
             </div>
         </div>
         <div class="display-flex row row-full justify-start align-center gap-y-md padding-x-lg padding-y-md">
             <button type="button" class="btn btn-secondary" onclick="location.href='/frame.php?page=tarefas'">Cancelar</button>
-            <button type="button" class="btn btn-primary">Cadastrar</button>
+            <button type="submit" class="btn btn-primary" <?= $usersError ? 'disabled' : '' ?>>Cadastrar</button>
         </div>
     </form>
 </main>
