@@ -82,4 +82,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(tarefas): validar regras e resolver precedencia** `[dca8c332]`
 - **feat(tarefas): persistir regras e lotes de reprocessamento** `[e405bb25]`
 - **feat(tarefas): preparar eventos prazos e vinculos de sequencia** `[f71df1f9]`
+- **feat(tarefas): processar eventos de automacao transacionais** `[2795ec54]`
 
