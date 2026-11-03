@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/CnjValidator.php';
 
 final class CartorioTarefasRepository
 {
@@ -12,16 +13,22 @@ final class CartorioTarefasRepository
 
     public function __construct(private PDO $db) {}
 
-    public function cadastrar(string $tipo, string $documento, string $local, string $usuario, string $especificacao = ''): string
+    public function cadastrar(string $tipo, string $documento, string $local, string $usuario, string $numeroProcesso, string $especificacao = ''): string
     {
+        $numeroProcesso = trim($numeroProcesso);
+        if (!CnjValidator::isFormatted($numeroProcesso) && !preg_match('/^\d{20}$/', $numeroProcesso)) {
+            throw new InvalidArgumentException('Informe o número do processo completo no formato CNJ.');
+        }
+        $digits = CnjValidator::digits20OrThrow($numeroProcesso);
+        $numeroProcesso = substr($digits, 0, 7) . '-' . substr($digits, 7, 2) . '.' . substr($digits, 9, 4) . '.' . substr($digits, 13, 1) . '.' . substr($digits, 14, 2) . '.' . substr($digits, 16, 4);
         if (!isset(self::TIPOS[$tipo]) || !in_array($documento, self::DOCUMENTOS, true) || ($especificacao !== '' && !in_array($especificacao, self::ESPECIFICACOES, true)) || !in_array($local, self::LOCAIS, true) || !in_array($usuario, array_column($this->listarUsuariosInternos(), 'id'), true)) {
             throw new InvalidArgumentException('Selecione um valor válido em cada campo.');
         }
         $id = IdGenerator::generateUniquePrefixedId($this->db, 'cartorio_tarefas', 'id', 'TAR');
         $this->db->beginTransaction();
         try {
-            $task = $this->db->prepare('INSERT INTO cartorio_tarefas (id, titulo, tipo, tipo_documento, especificacao_documento, local_tarefa, status) VALUES (?, ?, ?, ?, ?, ?, ?)');
-            $task->execute([$id, self::TIPOS[$tipo] . ' ' . $documento, $tipo, $documento, $especificacao !== '' ? $especificacao : null, $local, 'a_fazer']);
+            $task = $this->db->prepare('INSERT INTO cartorio_tarefas (id, titulo, numero_processo, tipo, tipo_documento, especificacao_documento, local_tarefa, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+            $task->execute([$id, self::TIPOS[$tipo] . ' ' . $documento, $numeroProcesso, $tipo, $documento, $especificacao !== '' ? $especificacao : null, $local, 'a_fazer']);
             $allocation = $this->db->prepare('INSERT INTO cartorio_tarefas_servidores (tarefa_id, usuario_id) VALUES (?, ?)');
             $allocation->execute([$id, $usuario]);
             $this->db->commit();

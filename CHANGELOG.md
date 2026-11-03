@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0066
+
+**Data:** 2026-11-03 18:17:47 | **Commit:** `2f28b2b0` | **Tipo:** `patch`
+
+- feat(cartorio): validar processo no cadastro de tarefas
+
 ## V. 1.87.0065
 
 **Data:** 2026-11-03 18:13:41 | **Commit:** `7a89d2e3` | **Tipo:** `patch`
@@ -5817,6 +5823,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

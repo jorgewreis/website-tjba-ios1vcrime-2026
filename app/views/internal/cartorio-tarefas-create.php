@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../repositories/CartorioTarefasRepository.php';
 $users = [];
 $usersError = false;
 $error = '';
-$form = ['tipo_tarefa' => '', 'tipo_documento' => '', 'especificacao_documento' => '', 'local' => '', 'usuario' => ''];
+$form = ['numero_processo' => '', 'tipo_tarefa' => '', 'tipo_documento' => '', 'especificacao_documento' => '', 'local' => '', 'usuario' => ''];
 try {
     $repository = new CartorioTarefasRepository($connection);
     $users = $repository->listarUsuariosInternos();
@@ -25,7 +25,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         $error = 'Não foi possível carregar os usuários. Tente novamente.';
     } else {
         try {
-            $repository->cadastrar($form['tipo_tarefa'], $form['tipo_documento'], $form['local'], $form['usuario'], $form['especificacao_documento']);
+            $repository->cadastrar($form['tipo_tarefa'], $form['tipo_documento'], $form['local'], $form['usuario'], $form['numero_processo'], $form['especificacao_documento']);
             $_SESSION['cartorio_tarefa_cadastrada'] = true;
             header('Location: /frame.php?page=tarefas', true, 303);
             exit;
@@ -60,6 +60,8 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
         .tarefas-form-field { display: flex; flex-direction: column; flex: 0 1 auto; min-width: 0; gap: 5px; }
         .tarefas-form-field select { width: 240px; max-width: calc(100vw - 60px); }
         .tarefas-form-field select#especificacao-documento { width: 360px; }
+        .tarefas-form-field input { width: 280px; max-width: calc(100vw - 60px); }
+        .cnj-feedback { font-size: 12px; }
     </style>
 </head>
 <body class="page-internal">
@@ -73,6 +75,13 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
     <?php if ($error !== ''): ?><div role="alert" class="padding-x-lg padding-y-md"><?= $escape($error) ?></div><?php endif; ?>
     <form id="tarefa-cadastro" method="post" action="/frame.php?page=tarefascreate">
         <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>">
+        <div class="tarefas-form-fields padding-x-lg padding-y-md border-bottom">
+            <div class="tarefas-form-field">
+                <label for="processo-tarefa">Número do processo</label>
+                <input id="processo-tarefa" name="numero_processo" type="text" class="height-md" value="<?= $escape($form['numero_processo']) ?>" placeholder="0000000-00.0000.0.00.0000" inputmode="numeric" maxlength="25" autocomplete="off" aria-describedby="processo-tarefa-feedback" required>
+                <span id="processo-tarefa-feedback" class="cnj-feedback" role="status" aria-live="polite"></span>
+            </div>
+        </div>
         <div class="tarefas-form-fields padding-x-lg padding-y-md border-bottom">
             <div class="tarefas-form-field">
                 <label for="tipo-tarefa">Tipo de tarefa</label>
@@ -113,9 +122,41 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
         </div>
         <div class="display-flex row row-full justify-start align-center gap-y-md padding-x-lg padding-y-md">
             <button type="button" class="btn btn-secondary" onclick="location.href='/frame.php?page=tarefas'">Cancelar</button>
-            <button type="submit" class="btn btn-primary" <?= $usersError ? 'disabled' : '' ?>>Cadastrar</button>
+            <button type="submit" class="btn btn-primary" id="cadastrar-tarefa" disabled>Cadastrar</button>
         </div>
     </form>
 </main>
+<script src="/assets/js/modules/datajud/cnj.js?v=<?= $escape((string) (@hash_file('sha256', dirname(__DIR__, 3) . '/public/assets/js/modules/datajud/cnj.js') ?: '1')) ?>"></script>
+<script>
+(function () {
+    const input = document.getElementById('processo-tarefa');
+    const feedback = document.getElementById('processo-tarefa-feedback');
+    const submit = document.getElementById('cadastrar-tarefa');
+    const usersAvailable = <?= $usersError ? 'false' : 'true' ?>;
+    function validate(showIncomplete) {
+        const value = input.value.trim();
+        const formatOk = /^\d{20}$/.test(value) || /^\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}$/.test(value);
+        const valid = formatOk && typeof window.validarCNJ === 'function' && window.validarCNJ(value);
+        submit.disabled = !valid || !usersAvailable;
+        input.setCustomValidity(valid ? '' : 'Informe um número de processo CNJ válido.');
+        input.setAttribute('aria-invalid', value !== '' && !valid && (showIncomplete || value.replace(/\D/g, '').length >= 20) ? 'true' : 'false');
+        if (valid) {
+            input.value = window.formatarCNJ(value);
+            feedback.textContent = 'Número CNJ válido.';
+        } else if (value !== '' && (showIncomplete || value.replace(/\D/g, '').length >= 20)) {
+            feedback.textContent = 'Número CNJ incompleto ou inválido.';
+        } else {
+            feedback.textContent = '';
+        }
+    }
+    input.addEventListener('input', function () { validate(false); });
+    input.addEventListener('blur', function () { validate(true); });
+    document.getElementById('tarefa-cadastro').addEventListener('submit', function (event) {
+        validate(true);
+        if (submit.disabled) { event.preventDefault(); input.reportValidity(); }
+    });
+    validate(false);
+}());
+</script>
 </body>
 </html>
