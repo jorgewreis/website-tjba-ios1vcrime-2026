@@ -58,4 +58,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **style(menu): finalizar estilos dos icones de lista** `[7688cad2]`
 - **feat(cartorio): add tasks list page** `[e5e8dea9]`
 - **feat(cartorio): filtrar tarefas por status servidor e tipo** `[ea965899]`
+- **style(cartorio): atualizar modelo visual de tarefas** `[f9f9d1ed]`
 
