@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0055
+
+**Data:** 2026-11-03 17:18:41 | **Commit:** `f9f9d1ed` | **Tipo:** `patch`
+
+- style(cartorio): atualizar modelo visual de tarefas
+
 ## V. 1.87.0054
 
 **Data:** 2026-11-03 16:16:17 | **Commit:** `ea965899` | **Tipo:** `patch`
@@ -5751,6 +5757,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
