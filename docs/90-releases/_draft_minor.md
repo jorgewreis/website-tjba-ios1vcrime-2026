@@ -80,4 +80,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): preparar regras e local padrao de tarefas** `[c3698f57]`
 - **feat(tarefas): comparar condicoes de regras de automacao** `[425237e6]`
 - **feat(tarefas): validar regras e resolver precedencia** `[dca8c332]`
+- **feat(tarefas): persistir regras e lotes de reprocessamento** `[e405bb25]`
 
