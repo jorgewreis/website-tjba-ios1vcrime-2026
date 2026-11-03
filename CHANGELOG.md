@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0056
+
+**Data:** 2026-11-03 17:25:35 | **Commit:** `7cdf2d84` | **Tipo:** `patch`
+
+- style(cartorio): reproduzir visual da lista de tarefas
+
 ## V. 1.87.0055
 
 **Data:** 2026-11-03 17:18:41 | **Commit:** `f9f9d1ed` | **Tipo:** `patch`
@@ -5757,6 +5763,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

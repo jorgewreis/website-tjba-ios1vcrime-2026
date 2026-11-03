@@ -46,15 +46,41 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
     <?php foreach (['reset', 'color', 'layout', 'page', 'form', 'table', 'toast'] as $css): ?>
     <link rel="stylesheet" href="/assets/css/shared/<?= $css ?>.css?v=<?= $escape((string) (@hash_file('sha256', $assetRoot . $css . '.css') ?: '1')) ?>">
     <?php endforeach; ?>
+    <style>
+        .card-line-info { width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center; box-sizing: border-box; padding: 5px 15px; background-color: #47196f; color: #ffffffbb; font-size: 12px; }
+        .register-line { display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: flex-start; }
+        .register-line-header { width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center; box-sizing: border-box; padding: 10px 15px; background-color: #20202040; color: #202020; gap: 10px; }
+        .register-line-content { width: 100%; display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center; box-sizing: border-box; padding: 10px 15px; background-color: #20202010; color: #202020; gap: 10px; }
+        .register-col { display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: flex-start; box-sizing: border-box; }
+        .col-processo { width: 200px; }
+        .col-header-icons { width: 50px; display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: center; align-items: center; box-sizing: border-box; gap: 2px; border-right: solid 1px #20202040; cursor: pointer; }
+        .col-content-icon { width: 50px; display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: center; align-items: center; box-sizing: border-box; border-right: solid 1px #20202040; cursor: pointer; }
+        .col-header-icons img { width: 10px; height: 10px; opacity: 0.3; }
+        .col-content-icon img { width: 20px; height: 20px; opacity: 0.3; }
+        .col-header-icons img.active, .col-content-icon:hover img { opacity: 1; }
+    </style>
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
 </head>
 <body class="page-internal">
+
 <div class="spacing-top-page"></div>
-<div class="header-page"><div class="location"><span class="all">Interno - Cartório - Tarefas -</span><span class="specific">Lista</span></div></div>
+
+<div class="header-page">
+    <div class="location">
+        <span class="all">FokusLaw - Tarefas -</span>
+        <span class="specific">Lista</span>
+    </div>
+    <div class="card-title">
+        <div class="display-flex col col-full justify-start">
+            <h1 class="title-page" style="color: var(--color-primary-active);">Tarefas</h1>
+        </div>
+    </div>
+</div>
+
 <div class="container-full card-page">
-    <div class="card-title"><div class="display-flex col col-full justify-start"><h1 class="title-page" style="color: var(--color-primary-active);">Tarefas</h1></div></div>
     <form action="/frame.php" method="get" id="tarefas-filtros" class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom">
         <input type="hidden" name="page" value="tarefas">
-        <span class="text" style="font-weight: 600;">Filtros</span>
+        <div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis" style="font-weight: 600; color: var(--color-gray-900); font-size: 13px;">Filtros</span></div>
         <div class="display-flex row row-fit justify-end gap-y-md align-center">
             <select class="width-400 height-md" name="status" aria-label="Filtrar por status">
                 <option value="">Todos os status</option>
@@ -71,17 +97,20 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/css/shared/';
             <noscript><button type="submit" class="btn btn-primary">Filtrar</button></noscript>
         </div>
     </form>
-    <?php if ($selectedFilters): ?><div class="display-flex row row-full padding-x-lg padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);"><span class="text" style="color: var(--color-primary-active); font-size: 12px;">Lista com os seguintes filtros: <?= $escape(implode(' + ', $selectedFilters)) ?></span></div><?php endif; ?>
-    <div class="card-title" style="padding-top: 40px;"><h2>Lista de Tarefas</h2></div>
+    <?php if ($selectedFilters): ?><div class="card-line-info"><div class="display-flex row row-fit justify-start align-center padding-x-sm"><span class="text text-ellipsis">Lista com os seguintes filtros: <?= $escape(implode(' + ', $selectedFilters)) ?></span></div></div><?php endif; ?>
+    <div class="card-subtitle"><div class="display-flex row row-full justify-start"><h2>Lista de Tarefas</h2></div></div>
     <div class="display-flex col col-full register">
-        <div class="display-flex row row-full padding-x-lg padding-y-md border-bottom" role="status" style="background-color: var(--color-primary-bg-light);">
-            <?= $error ? 'Não foi possível carregar as tarefas. Tente novamente.' : ($total === 0 ? 'Nenhuma tarefa encontrada.' : $total . ($total === 1 ? ' registro encontrado.' : ' registros encontrados.')) ?>
+        <div class="card-line-info" role="status">
+            <div class="display-flex col col-fit align-center justify-start padding-x-lg padding-y-sm"><span class="text" style="font-weight: 500; color: var(--color-border-accent-disabled); font-size: 12px;"><?= $error ? 'Não foi possível carregar as tarefas. Tente novamente.' : ($total === 0 ? 'Nenhuma tarefa encontrada.' : $total . ($total === 1 ? ' registro encontrado.' : ' registros encontrados.')) ?></span></div>
         </div>
-        <?php foreach ($result['rows'] as $row): ?>
-        <div class="register-line"><div class="display-flex col col-full padding-x-lg padding-y-md"><strong><?= $escape((string) $row['titulo']) ?></strong><span><?= $escape($types[$row['tipo']] ?? (string) $row['tipo']) ?> · <?= $escape($statuses[$row['status']] ?? (string) $row['status']) ?></span></div></div>
-        <?php endforeach; ?>
+        <div class="register-line">
+            <div class="register-line-header"><div class="register-col col-processo">Processo</div><div class="col-header-icons" aria-hidden="true"><img src="/assets/icons/Arrow-Button-Up-1--Streamline-Ultimate.png" alt=""><img src="/assets/icons/Arrow-Button-Down-2--Streamline-Ultimate.png" class="active" alt=""></div></div>
+            <?php foreach ($result['rows'] as $row): ?>
+            <div class="register-line-content"><div class="register-col col-processo">—</div><div class="col-content-icon" aria-hidden="true"><img src="/assets/icons/Folder-File--Streamline-Ultimate.png" alt=""></div><div class="register-col"><strong><?= $escape((string) $row['titulo']) ?></strong><span><?= $escape($types[$row['tipo']] ?? (string) $row['tipo']) ?> · <?= $escape($statuses[$row['status']] ?? (string) $row['status']) ?></span></div></div>
+            <?php endforeach; ?>
+        </div>
     </div>
-    <?php if (!$error && $total > 0): ?><div class="display-flex row row-full justify-between padding-x-md padding-y-md"><span class="pagination-info">Mostrando <?= $result['offset'] + 1 ?>–<?= min($result['offset'] + $perPage, $total) ?> de <?= $total ?> tarefas</span><div class="pagination-controls"><?php if ($pageNumber > 1): ?><a class="pagination-symbol" href="<?= $escape($url($pageNumber - 1)) ?>" aria-label="Página anterior">‹</a><?php endif; ?><span class="pagination-number active" aria-current="page"><?= $pageNumber ?></span><?php if ($pageNumber < $pages): ?><a class="pagination-symbol" href="<?= $escape($url($pageNumber + 1)) ?>" aria-label="Próxima página">›</a><?php endif; ?></div></div><?php endif; ?>
+    <?php if (!$error): ?><div class="display-flex row row-full justify-between padding-x-md padding-y-md"><span class="pagination-info">Mostrando <?= $total > 0 ? $result['offset'] + 1 : 0 ?>–<?= min($result['offset'] + $perPage, $total) ?> de <?= $total ?> tarefas</span><div class="pagination-controls"><?php if ($pageNumber > 1): ?><a class="pagination-symbol" href="<?= $escape($url($pageNumber - 1)) ?>" aria-label="Página anterior">‹</a><?php else: ?><span class="pagination-symbol disabled" aria-disabled="true">‹</span><?php endif; ?><span class="pagination-number active" aria-current="page"><?= $pageNumber ?></span><?php if ($pageNumber < $pages): ?><a class="pagination-symbol" href="<?= $escape($url($pageNumber + 1)) ?>" aria-label="Próxima página">›</a><?php else: ?><span class="pagination-symbol disabled" aria-disabled="true">›</span><?php endif; ?></div></div><?php endif; ?>
 </div>
 <script>document.querySelectorAll('#tarefas-filtros select').forEach(function (select) { select.addEventListener('change', function () { document.getElementById('tarefas-filtros').requestSubmit(); }); });</script>
 </body>
