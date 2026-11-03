@@ -96,4 +96,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(tarefas): disponibilizar administracao de automacoes** `[c6cd2421]`
 - **fix(tarefas): sincronizar regras e preservar prazos desativados** `[2cf61fb7]`
 - **fix(tarefas): respeitar precedencia de prazos entre eventos** `[36177e9e]`
+- **feat(tarefas): monitorar execucao automatica no deploy** `[d6695038]`
 
