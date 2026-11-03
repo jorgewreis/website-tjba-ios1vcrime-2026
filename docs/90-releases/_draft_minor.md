@@ -67,4 +67,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(cartorio): salvar cadastro de tarefas** `[d6a27466]`
 - **style(cartorio): exibir somente seta ativa** `[efde0afa]`
 - **style(cartorio): usar imagens na paginacao** `[d9f91630]`
+- **feat(cartorio): adicionar especificacao do documento** `[9557353e]`
 
