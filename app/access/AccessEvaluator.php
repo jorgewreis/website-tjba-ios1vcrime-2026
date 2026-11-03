@@ -35,6 +35,13 @@ final class AccessEvaluator
             return true;
         }
 
+        // A lista de tarefas e seus alertas também atendem usuários internos
+        // que ainda não possuem um perfil composto de setor.
+        if (in_array($page, ['dashboard', 'tarefas'], true)
+            && array_intersect($norm, ['SERVIDOR', 'ESTAGIARIO', 'CARTORIO', 'GABINETE', 'AUDIENCIA'])) {
+            return true;
+        }
+
         return self::evaluateRuleForInternal($rule, $norm);
     }
 

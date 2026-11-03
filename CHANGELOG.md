@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0100
+
+**Data:** 2026-11-03 20:52:07 | **Commit:** `e3d2036e` | **Tipo:** `patch`
+
+- fix(tarefas): permitir alertas a toda equipe interna
+
 ## V. 1.87.0099
 
 **Data:** 2026-11-03 20:50:32 | **Commit:** `edb4006a` | **Tipo:** `patch`
@@ -6021,6 +6027,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

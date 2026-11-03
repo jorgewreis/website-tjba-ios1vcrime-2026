@@ -9,6 +9,7 @@ require_once dirname(__DIR__, 3) . '/app/helpers/UserAccessHelper.php';
 require_once dirname(__DIR__, 3) . '/app/models/Usuario.php';
 require_once dirname(__DIR__, 3) . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once dirname(__DIR__, 3) . '/app/services/DashboardResumoService.php';
+require_once dirname(__DIR__, 3) . '/app/access/AccessEvaluator.php';
 
 header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -20,7 +21,7 @@ try {
     $profiles=UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
     if (!is_array($profiles) || UserAccessHelper::isUsuarioExterno($profiles)) { http_response_code(403); echo json_encode(['error'=>'Acesso restrito ao dashboard interno.'],JSON_UNESCAPED_UNICODE); exit; }
     $areas=DashboardResumoService::areasAutorizadas($profiles);
-    if (!$areas) { http_response_code(403); echo json_encode(['error'=>'Perfil sem setor operacional autorizado.'],JSON_UNESCAPED_UNICODE); exit; }
+    if (!AccessEvaluator::canAccessPage('dashboard', $profiles)) { http_response_code(403); echo json_encode(['error'=>'Perfil sem acesso ao dashboard interno.'],JSON_UNESCAPED_UNICODE); exit; }
     $selected=isset($_GET['setor']) ? strtoupper(trim((string)$_GET['setor'])) : null;
     $result=(new DashboardResumoService(Conection::getInstance()->getConnection()))->resumo($userId,$areas,$selected);
     echo json_encode($result,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE);
