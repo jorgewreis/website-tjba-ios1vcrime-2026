@@ -87,4 +87,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **chore(deploy): preparar banco para automacao de tarefas** `[6b0c22f7]`
 - **fix(tarefas): preservar sequencias na retencao** `[66f1eb49]`
 - **feat(tarefas): registrar eventos nas alteracoes manuais** `[15fc1b21]`
+- **feat(tarefas): sugerir e alterar responsavel pela tarefa** `[18bf7f5b]`
 
