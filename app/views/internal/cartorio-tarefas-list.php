@@ -231,7 +231,7 @@ $elapsedSinceRegistration = static function (string $value, ?string $end = null)
                         <select name="usuario_id" class="height-sm" aria-label="Alterar responsável pela tarefa <?= $escape($taskLabel) ?>" required>
                             <option value="">Sem responsável</option>
                             <?php if ($alocadoId !== '' && !in_array($alocadoId, array_column($users, 'id'), true)): ?><option value="" selected><?= $escape(implode(', ', $row['alocados']) . ' (inativo)') ?></option><?php endif; ?>
-                            <?php foreach ($users as $user): ?><option value="<?= $escape($user['id']) ?>" <?= $alocadoId === $user['id'] ? 'selected' : '' ?>><?= $escape($user['name']) ?></option><?php endforeach; ?>
+                            <?php foreach ($users as $user): $partesNome = preg_split('/\s+/u', trim($user['name']), -1, PREG_SPLIT_NO_EMPTY) ?: []; $nomeCurto = count($partesNome) > 1 ? $partesNome[0] . ' ' . end($partesNome) : ($partesNome[0] ?? ''); ?><option value="<?= $escape($user['id']) ?>" <?= $alocadoId === $user['id'] ? 'selected' : '' ?>><?= $escape($nomeCurto) ?></option><?php endforeach; ?>
                         </select>
                         <noscript><button type="submit" class="btn btn-secondary">Atribuir</button></noscript>
                     </form>
