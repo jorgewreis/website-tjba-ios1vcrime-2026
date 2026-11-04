@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0108
+
+**Data:** 2026-11-03 21:09:21 | **Commit:** `95165080` | **Tipo:** `patch`
+
+- feat(tarefas): ajustar frequencia da automacao por horario
+
 ## V. 1.87.0107
 
 **Data:** 2026-11-03 21:03:16 | **Commit:** `59a46387` | **Tipo:** `patch`
@@ -6069,6 +6075,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

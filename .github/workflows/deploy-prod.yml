@@ -116,6 +116,7 @@ jobs:
 
             if [ -f scripts/check-cartorio-tarefas-automacao.php ]; then
               for tentativa in $(seq 1 18); do
+                php scripts/processar-cartorio-tarefas-automacao.php || true
                 if php scripts/check-cartorio-tarefas-automacao.php; then break; fi
                 if [ "$tentativa" -eq 18 ]; then exit 1; fi
                 sleep 5

@@ -109,7 +109,7 @@ unset($_SESSION['tarefas_regra_mensagem']);
 $monitorAtrasado = true;
 if ($monitor && $monitor['ultimo_sucesso_em']) {
     $ultimaExecucao = new DateTimeImmutable((string) $monitor['ultimo_sucesso_em'], new DateTimeZone('America/Bahia'));
-    $monitorAtrasado = (new DateTimeImmutable('now', new DateTimeZone('America/Bahia')))->getTimestamp() - $ultimaExecucao->getTimestamp() > 180;
+    $monitorAtrasado = (new DateTimeImmutable('now', new DateTimeZone('America/Bahia')))->getTimestamp() - $ultimaExecucao->getTimestamp() > 420;
 }
 $csrfToken = Security::generateCSRFToken();
 $usuarioOpcoes = [];
@@ -170,7 +170,7 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/';
     </section>
     <section class="automacao-secao"><h2>Aplicação às tarefas existentes</h2>
         <?php if ($monitor && $monitor['ultimo_sucesso_em']): ?>
-        <p class="automacao-ajuda" <?= $monitorAtrasado || $monitor['ultima_falha'] ? 'role="alert"' : '' ?>>Última execução do processamento: <?= $escape((string) $monitor['ultimo_sucesso_em']) ?><?= $monitorAtrasado ? ' · Sem confirmação há mais de três minutos.' : '' ?><?= $monitor['ultima_falha'] ? ' · Última tentativa falhou: ' . $escape((string) $monitor['ultima_falha']) : '' ?></p>
+        <p class="automacao-ajuda" <?= $monitorAtrasado || $monitor['ultima_falha'] ? 'role="alert"' : '' ?>>Última execução do processamento: <?= $escape((string) $monitor['ultimo_sucesso_em']) ?><?= $monitorAtrasado ? ' · Sem confirmação há mais de sete minutos.' : '' ?><?= $monitor['ultima_falha'] ? ' · Última tentativa falhou: ' . $escape((string) $monitor['ultima_falha']) : '' ?></p>
         <?php else: ?><p class="automacao-ajuda">O processamento automático ainda não confirmou uma execução.</p><?php endif; ?>
         <?php if (!$lotes): ?><p>Nenhum processamento solicitado.</p><?php endif; ?>
         <?php foreach ($lotes as $lote): ?><div class="automacao-linha"><span><?= $escape((string) $lote['nome']) ?> · <?= $escape((string) $lote['estado']) ?></span><span><?= (int) $lote['processadas'] ?>/<?= (int) $lote['total'] ?> · <?= (int) $lote['falhas'] ?> falha(s)</span></div><?php endforeach; ?>
