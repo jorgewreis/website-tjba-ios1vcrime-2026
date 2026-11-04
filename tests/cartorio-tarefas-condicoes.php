@@ -21,6 +21,9 @@ conferir(!$relacao['sobrepoem'], 'Regras disjuntas foram consideradas sobreposta
 $relacao = CartorioTarefasCondicoes::comparar($restrita, $restrita);
 conferir($relacao['sobrepoem'] && !$relacao['primeiro_mais_especifico'] && !$relacao['segundo_mais_especifico'], 'Regras iguais foram consideradas mais específicas.');
 conferir(CartorioTarefasCondicoes::corresponde([[]], []), 'Grupo vazio deve corresponder a todas as tarefas.');
+conferir(CartorioTarefasCondicoes::corresponde([['especificacao_documento' => 'Informando Baixa']], ['especificacao_documento' => 'informando Baixa']), 'Especificação antiga deve corresponder à grafia atual.');
+$relacao = CartorioTarefasCondicoes::comparar([['especificacao_documento' => 'Informando Condenação']], [['especificacao_documento' => 'informando Condenação']]);
+conferir($relacao['sobrepoem'] && !$relacao['primeiro_mais_especifico'] && !$relacao['segundo_mais_especifico'], 'Grafias equivalentes devem gerar conflito, sem alterar a especificidade.');
 conferir(CartorioTarefasCondicoes::comparar([['tipo' => '1']], [['tipo' => '1']])['sobrepoem'], 'Valores numéricos textuais não foram preservados.');
 try {
     CartorioTarefasCondicoes::validar([['status' => 'finalizada']]);

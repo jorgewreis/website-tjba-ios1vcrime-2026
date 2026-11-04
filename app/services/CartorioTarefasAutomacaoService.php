@@ -406,7 +406,7 @@ final class CartorioTarefasAutomacaoService
         if (!$origem) throw new RuntimeException('Tarefa de origem não encontrada.');
         $tipo = $acao['tipo_tarefa'];
         $documento = $acao['tipo_documento'];
-        $especificacao = $acao['especificacao_documento'] ?? '';
+        $especificacao = CartorioTarefasRepository::normalizarEspecificacao($acao['especificacao_documento'] ?? '');
         $local = $acao['local_tarefa'];
         if (!isset(CartorioTarefasRepository::TIPOS[$tipo]) || !in_array($documento, CartorioTarefasRepository::DOCUMENTOS, true) || ($especificacao !== '' && !in_array($especificacao, CartorioTarefasRepository::ESPECIFICACOES, true)) || !in_array($local, CartorioTarefasRepository::LOCAIS, true)) {
             throw new RuntimeException('Os dados configurados para a tarefa criada não são válidos.');

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0110
+
+**Data:** 2026-11-03 21:25:34 | **Commit:** `e383383d` | **Tipo:** `patch`
+
+- fix(tarefas): preservar regras com especificacoes anteriores
+
 ## V. 1.87.0109
 
 **Data:** 2026-11-03 21:13:06 | **Commit:** `fbfadbcf` | **Tipo:** `patch`
@@ -6081,6 +6087,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

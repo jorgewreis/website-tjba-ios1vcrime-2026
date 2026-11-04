@@ -23,9 +23,17 @@ $editando = null;
 $pronta = true;
 
 /** Valida também os valores de domínio, no servidor, antes da gravação. */
-$validarConteudo = static function (array $regra, array $usuarios): void {
+$validarConteudo = static function (array &$regra, array $usuarios): void {
     CartorioTarefasRegras::validar($regra);
     if (empty($regra['ativa'])) return;
+    foreach ($regra['condicoes'] as &$grupo) {
+        if (isset($grupo['especificacao_documento'])) $grupo['especificacao_documento'] = CartorioTarefasRepository::normalizarEspecificacao($grupo['especificacao_documento']);
+    }
+    unset($grupo);
+    foreach ($regra['acoes'] as &$acao) {
+        if (isset($acao['especificacao_documento'])) $acao['especificacao_documento'] = CartorioTarefasRepository::normalizarEspecificacao($acao['especificacao_documento']);
+    }
+    unset($acao);
     $dominios = [
         'tipo' => array_keys(CartorioTarefasRepository::TIPOS),
         'tipo_documento' => CartorioTarefasRepository::DOCUMENTOS,

@@ -80,7 +80,12 @@ final class CartorioTarefasCondicoes
         foreach ($grupos as $grupo) {
             $corresponde = true;
             foreach ($grupo as $campo => $valor) {
-                if (($tarefa[$campo] ?? null) !== $valor) {
+                $atual = $tarefa[$campo] ?? null;
+                if ($campo === 'especificacao_documento' && is_string($atual)) {
+                    $atual = mb_strtolower($atual, 'UTF-8');
+                    $valor = mb_strtolower($valor, 'UTF-8');
+                }
+                if ($atual !== $valor) {
                     $corresponde = false;
                     break;
                 }

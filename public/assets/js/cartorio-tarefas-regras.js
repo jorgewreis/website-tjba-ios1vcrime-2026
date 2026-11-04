@@ -9,6 +9,16 @@
         ? estado.condicoes.map(grupo => Array.isArray(grupo) ? Object.assign({}, grupo) : grupo)
         : [{}];
     estado.acoes = Array.isArray(estado.acoes) ? estado.acoes : [];
+    function normalizarEspecificacao(valor) {
+        if (typeof valor !== 'string') return valor;
+        return Object.keys(dados.especificacoes).find(opcao => opcao.toLocaleLowerCase('pt-BR') === valor.toLocaleLowerCase('pt-BR')) || valor;
+    }
+    estado.condicoes.forEach(grupo => {
+        if (grupo.especificacao_documento) grupo.especificacao_documento = normalizarEspecificacao(grupo.especificacao_documento);
+    });
+    estado.acoes.forEach(acao => {
+        if (acao.especificacao_documento) acao.especificacao_documento = normalizarEspecificacao(acao.especificacao_documento);
+    });
     const campos = [
         ['tipo', 'Tipo de tarefa', dados.tipos],
         ['tipo_documento', 'Tipo de documento', dados.documentos],
