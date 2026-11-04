@@ -26,6 +26,8 @@ $ERRORS = $PAGES . '/errors';
 // Lista de páginas permitidas e seus caminhos.
 $allowed_pages = [
     'dashboard'             => $PAGES . '/dashboard.php',
+    'fokustarefas'          => $PAGES . '/fokuslaw-tarefas.php',
+    'fokusexpedicoes'       => $PAGES . '/fokuslaw-expedicoes.php',
     'dashboardexterno'      => $PAGES . '/dashboard-externo.php',
     'tarefas'               => $PAGES . '/cartorio-tarefas-list.php',
     'tarefascreate'         => $PAGES . '/cartorio-tarefas-create.php',

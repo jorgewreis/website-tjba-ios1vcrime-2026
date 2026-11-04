@@ -613,6 +613,13 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 ]
             },
             {
+                section: 'FokusLaw',
+                items: [
+                    { iconImage: '/assets/icons/Task-Checklist--Streamline-Ultimate.png', label: 'Tarefas', target: 'fokustarefas' },
+                    { iconImage: '/assets/icons/Email-Action-Send-2--Streamline-Ultimate.png', label: 'Expedições', target: 'fokusexpedicoes' }
+                ]
+            },
+            {
                 section: 'Gabinete',
                 items: [
                     { icon: 'fi fi-rs-license', label: 'Ofícios', target: 'oficiosgabinete' },
@@ -775,7 +782,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 return ['Consultas'];
             }
             if (norm.includes('ADMIN') || norm.includes('CHEFIA')) {
-                const comAcessoAmplo = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Consultas', 'Ferramentas'];
+                const comAcessoAmplo = ['Cartório', 'Gabinete', 'Sala de Audiências', 'FokusLaw', 'Consultas', 'Ferramentas'];
                 if (norm.includes('ADMIN')) {
                     comAcessoAmplo.push('Estudantes');
                 }
@@ -805,9 +812,10 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             });
             if (hasComposite) {
                 sections.push('Consultas');
+                sections.push('FokusLaw');
             }
             sections.push('Ferramentas');
-            const order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Ferramentas', 'Admin'];
+            const order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'FokusLaw', 'Estudantes', 'Consultas', 'Ferramentas', 'Admin'];
             const uniq = [...new Set(sections)];
             const ordered = [];
             order.forEach((label) => {

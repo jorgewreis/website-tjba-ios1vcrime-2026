@@ -126,7 +126,7 @@ final class AccessEvaluator
         }
 
         if (ProfileNormalizer::isElevated($norm)) {
-            $com = ['Cartório', 'Gabinete', 'Sala de Audiências'];
+            $com = ['Cartório', 'Gabinete', 'Sala de Audiências', 'FokusLaw'];
             if (in_array('ADMIN', $norm, true)) {
                 $com[] = 'Estudantes';
             }
@@ -150,11 +150,15 @@ final class AccessEvaluator
         }
 
         if (ProfileNormalizer::hasAnyCargoAreaComposite($norm)) {
+            $sections[] = 'FokusLaw';
+        }
+
+        if (ProfileNormalizer::hasAnyCargoAreaComposite($norm)) {
             $sections[] = 'Consultas';
         }
 
         $unique = array_values(array_unique($sections));
-        $order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Admin'];
+        $order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'FokusLaw', 'Estudantes', 'Consultas', 'Admin'];
         $ordered = [];
         foreach ($order as $label) {
             if (in_array($label, $unique, true)) {
