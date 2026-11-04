@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0106
+
+**Data:** 2026-11-03 21:01:49 | **Commit:** `e69ef7a0` | **Tipo:** `patch`
+
+- test(tarefas): verificar marcos de inicio dos prazos
+
 ## V. 1.87.0105
 
 **Data:** 2026-11-03 21:00:08 | **Commit:** `31ea9a48` | **Tipo:** `patch`
@@ -6057,6 +6063,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
