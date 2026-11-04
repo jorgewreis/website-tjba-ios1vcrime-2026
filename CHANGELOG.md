@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0107
+
+**Data:** 2026-11-03 21:03:16 | **Commit:** `59a46387` | **Tipo:** `patch`
+
+- fix(tarefas): confirmar dependencias do agendador
+
 ## V. 1.87.0106
 
 **Data:** 2026-11-03 21:01:49 | **Commit:** `e69ef7a0` | **Tipo:** `patch`
@@ -6063,6 +6069,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

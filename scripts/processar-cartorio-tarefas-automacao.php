@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') { http_response_code(403); exit; }
 require_once __DIR__ . '/../app/services/CartorioTarefasAutomacaoService.php';
+require_once __DIR__ . '/../app/helpers/CartorioTarefasAutomacaoVersao.php';
 $db = isset($db) && $db instanceof PDO ? $db : null;
 try {
     if ($db === null) {
@@ -11,7 +12,7 @@ try {
     }
     $resultado = (new CartorioTarefasAutomacaoService($db))->executarFila();
     if (empty($resultado['ocupado'])) {
-        $codigoHash = hash('sha256', hash_file('sha256', __FILE__) . hash_file('sha256', __DIR__ . '/../app/services/CartorioTarefasAutomacaoService.php'));
+        $codigoHash = CartorioTarefasAutomacaoVersao::hash();
         $st = $db->prepare('UPDATE cartorio_tarefas_automacao_monitor SET ultimo_sucesso_em = CURRENT_TIMESTAMP, ultima_falha = NULL, codigo_hash = ? WHERE id = 1');
         $st->execute([$codigoHash]);
     }
