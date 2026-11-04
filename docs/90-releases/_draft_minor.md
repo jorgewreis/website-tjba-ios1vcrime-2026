@@ -109,4 +109,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(tarefas): ocultar campo de status quando nao aplicavel** `[71674dfe]`
 - **fix(tarefas): remover itens temporarios apos processamento** `[4beab6de]`
 - **test(tarefas): verificar sequencia apos conclusao automatica** `[31ea9a48]`
+- **test(tarefas): verificar marcos de inicio dos prazos** `[e69ef7a0]`
 
