@@ -113,4 +113,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(tarefas): confirmar dependencias do agendador** `[59a46387]`
 - **feat(tarefas): ajustar frequencia da automacao por horario** `[95165080]`
 - **feat(tarefas): atualizar especificacoes de documentos** `[fbfadbcf]`
+- **fix(tarefas): preservar regras com especificacoes anteriores** `[e383383d]`
 
