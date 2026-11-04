@@ -8,7 +8,7 @@ final class CartorioTarefasRepository
 {
     public const TIPOS = ['expedicao' => 'Expedir', 'assinatura' => 'Assinar', 'envio' => 'Enviar', 'juntada' => 'Juntar', 'arquivar' => 'Arquivar', 'desentranhar' => 'Desentranhar'];
     public const DOCUMENTOS = ['Certidão', 'Ofício', 'Mandado', 'Carta Precatória', 'Guia', 'Edital', 'Ato Ordinatório', 'Petição', 'Resumo', 'Peças processuais', 'Laudo', 'Inquérito Policial', 'Medidas Protetivas', 'Comprovante de envio'];
-    public const ESPECIFICACOES = ['Informando Baixa', 'Informando Condenação', 'Para intimação da Sentença', 'Para intimação da Decisão Interlocutória', 'Para intimação da Decisão de Medida Protetiva', 'Para Defesa Preliminar', 'Para comparecimento em Audiência'];
+    public const ESPECIFICACOES = ['informando Baixa', 'informando Condenação', 'para intimação da Sentença', 'para intimação da Decisão Interlocutória', 'para intimação da Decisão de Medida Protetiva', 'de Citação para apresentar Defesa Preliminar', 'de intimação para comparecimento em Audiência', 'de citação e intimação para comparecimento em Audiência', 'de notificação para apresentar Defesa Preliminar', 'de Intimação para apresentar Alegações Finais'];
     public const LOCAIS = ['Cartório', 'Gabinete', 'Sala de Audiências'];
     public const STATUS = ['a_fazer' => 'A fazer', 'em_andamento' => 'Em andamento', 'com_pendencias' => 'Pendente', 'finalizada' => 'Finalizada'];
 
