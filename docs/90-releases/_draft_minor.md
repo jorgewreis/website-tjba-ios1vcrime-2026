@@ -111,4 +111,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(tarefas): verificar sequencia apos conclusao automatica** `[31ea9a48]`
 - **test(tarefas): verificar marcos de inicio dos prazos** `[e69ef7a0]`
 - **fix(tarefas): confirmar dependencias do agendador** `[59a46387]`
+- **feat(tarefas): ajustar frequencia da automacao por horario** `[95165080]`
 
