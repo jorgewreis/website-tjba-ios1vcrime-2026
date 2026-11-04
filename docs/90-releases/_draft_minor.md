@@ -108,4 +108,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(tarefas): verificar atribuicao apos usuario inativo** `[e1a74460]`
 - **fix(tarefas): ocultar campo de status quando nao aplicavel** `[71674dfe]`
 - **fix(tarefas): remover itens temporarios apos processamento** `[4beab6de]`
+- **test(tarefas): verificar sequencia apos conclusao automatica** `[31ea9a48]`
 
