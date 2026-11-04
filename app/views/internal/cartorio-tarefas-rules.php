@@ -79,6 +79,11 @@ try {
             $validarConteudo($regra, $usuarios);
             $repo->salvar($regra, (int) $id);
             $_SESSION['tarefas_regra_mensagem'] = $regra['ativa'] ? 'Regra ativada e enviada para processamento.' : 'Regra desativada.';
+        } elseif ($acao === 'excluir') {
+            $id = filter_var($_POST['regra_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if (!$id) throw new InvalidArgumentException('Regra não encontrada.');
+            $repo->excluirInativa((int) $id);
+            $_SESSION['tarefas_regra_mensagem'] = 'Regra inativa excluída.';
         } elseif ($acao === 'tentar') {
             $id = filter_var($_POST['falha_id'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
             if (!$id) throw new InvalidArgumentException('Falha não encontrada.');
@@ -104,7 +109,7 @@ try {
 }
 try {
     $regras = $repo->listar();
-    $lotes = $repo->lotesRecentes();
+    $lotes = $repo->lotesAtivos();
     $falhas = $repo->falhasRecentes();
     $monitor = $connection->query('SELECT ultimo_sucesso_em, ultima_falha_em, ultima_falha FROM cartorio_tarefas_automacao_monitor WHERE id = 1')->fetch(PDO::FETCH_ASSOC) ?: null;
 } catch (Throwable $e) {
@@ -132,6 +137,9 @@ $dados = [
     'status' => (object) CartorioTarefasRepository::STATUS,
 ];
 $assetRoot = dirname(__DIR__, 3) . '/public/assets/';
+$lotesEmAndamento = array_values(array_filter($lotes, static fn(array $lote): bool => in_array($lote['estado'], ['pendente', 'processando'], true)));
+$mostrarFormulario = $editando !== null || isset($_GET['form']) || (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST' && ($_POST['acao'] ?? '') === 'salvar' && $erro !== '');
+$tituloFormulario = !empty($editando['id']) ? 'Editar regra' : 'Nova regra';
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -149,18 +157,23 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/';
 <main class="container-full card-page automacao-pagina">
     <?php if ($erro !== ''): ?><p class="automacao-mensagem erro" role="alert"><?= $escape($erro) ?></p><?php endif; ?>
     <?php if ($mensagem !== ''): ?><p class="automacao-mensagem" role="status"><?= $escape($mensagem) ?></p><?php endif; ?>
-    <div class="card-subtitle"><h2>Configuração de regras</h2></div>
-    <div class="automacao-controles padding-x-lg padding-y-md border-bottom"><a class="btn btn-secondary" href="/frame.php?page=tarefas">Voltar às tarefas</a><a class="btn btn-primary" href="/frame.php?page=tarefasrules#editar-regra">Nova regra</a></div>
+    <div class="card-subtitle"><h2><?= $mostrarFormulario ? $tituloFormulario : 'Configuração de regras' ?></h2></div>
+    <div class="automacao-controles padding-x-lg padding-y-md border-bottom"><?php if ($mostrarFormulario): ?><a class="btn btn-secondary" href="/frame.php?page=tarefasrules">Voltar às regras</a><?php else: ?><a class="btn btn-secondary" href="/frame.php?page=tarefas">Voltar às tarefas</a><a class="btn btn-primary" href="/frame.php?page=tarefasrules&amp;form=1">Nova regra</a><?php endif; ?></div>
     <?php if ($pronta): ?>
-    <section class="automacao-secao" aria-labelledby="regras-existentes"><h2 id="regras-existentes">Regras cadastradas</h2>
+    <?php if (!$mostrarFormulario): ?>
+    <section class="automacao-secao" aria-labelledby="regras-existentes"><div class="automacao-secao-cabecalho"><div><h2 id="regras-existentes">Regras cadastradas</h2><p class="automacao-ajuda">Consulte e administre as regras de automação das tarefas.</p></div><span class="automacao-contagem"><?= count($regras) ?> <?= count($regras) === 1 ? 'regra' : 'regras' ?></span></div>
         <?php if (!$regras): ?><p>Nenhuma regra cadastrada.</p><?php endif; ?>
+        <div class="automacao-tabela-scroll"><table class="automacao-tabela"><thead><tr><th scope="col">Regra</th><th scope="col">Evento</th><th scope="col">Prioridade</th><th scope="col">Status</th><th scope="col">Ações</th></tr></thead><tbody>
         <?php foreach ($regras as $regra): ?>
-        <div class="automacao-linha"><div><strong><?= $escape($regra['nome']) ?></strong><br><small><?= $escape($eventos[$regra['evento']] ?? $regra['evento']) ?> · Prioridade <?= (int) $regra['prioridade'] ?> · <?= $regra['ativa'] ? 'Ativa' : 'Inativa' ?></small></div>
-            <div class="automacao-controles"><a class="btn btn-secondary" href="/frame.php?page=tarefasrules&amp;editar=<?= (int) $regra['id'] ?>#editar-regra">Editar</a>
-            <form method="post"><input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>"><input type="hidden" name="acao" value="alternar"><input type="hidden" name="regra_id" value="<?= (int) $regra['id'] ?>"><button class="btn btn-secondary" type="submit"><?= $regra['ativa'] ? 'Desativar' : 'Ativar' ?></button></form></div></div>
+        <tr><td><strong><?= $escape($regra['nome']) ?></strong></td><td><?= $escape($eventos[$regra['evento']] ?? $regra['evento']) ?></td><td><?= (int) $regra['prioridade'] ?></td><td><span class="automacao-estado <?= $regra['ativa'] ? 'ativa' : 'inativa' ?>"><?= $regra['ativa'] ? 'Ativa' : 'Inativa' ?></span></td><td>
+            <div class="automacao-controles automacao-regra-acoes"><a class="btn btn-secondary" href="/frame.php?page=tarefasrules&amp;editar=<?= (int) $regra['id'] ?>#editar-regra">Editar</a>
+            <form method="post"><input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>"><input type="hidden" name="acao" value="alternar"><input type="hidden" name="regra_id" value="<?= (int) $regra['id'] ?>"><button class="btn btn-secondary" type="submit"><?= $regra['ativa'] ? 'Desativar' : 'Ativar' ?></button></form>
+            <?php if (!$regra['ativa']): ?><form method="post" onsubmit="return confirm('Excluir esta regra inativa? As tarefas e o histórico serão preservados.')"><input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>"><input type="hidden" name="acao" value="excluir"><input type="hidden" name="regra_id" value="<?= (int) $regra['id'] ?>"><button class="btn btn-secondary automacao-excluir" type="submit">Excluir</button></form><?php endif; ?></div></td></tr>
         <?php endforeach; ?>
+        </tbody></table></div>
     </section>
-    <section class="automacao-secao" id="editar-regra"><h2><?= $editando ? 'Editar regra' : 'Nova regra' ?></h2>
+    <?php else: ?>
+    <section class="automacao-secao" id="editar-regra"><h2><?= $tituloFormulario ?></h2>
         <noscript><p role="alert">Ative o JavaScript para configurar as condições e ações.</p></noscript>
         <form id="regra-form" method="post" action="/frame.php?page=tarefasrules">
             <input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>"><input type="hidden" name="acao" value="salvar"><input type="hidden" name="regra_id" value="<?= (int) ($editando['id'] ?? 0) ?>"><input type="hidden" id="regra-json" name="regra_json">
@@ -176,20 +189,25 @@ $assetRoot = dirname(__DIR__, 3) . '/public/assets/';
             <div class="automacao-controles automacao-salvar"><a class="btn btn-secondary" href="/frame.php?page=tarefasrules">Cancelar</a><button class="btn btn-primary" type="submit">Salvar regra</button></div>
         </form>
     </section>
+    <?php endif; ?>
+    <?php if (!$mostrarFormulario): ?>
     <section class="automacao-secao"><h2>Aplicação às tarefas existentes</h2>
         <?php if ($monitor && $monitor['ultimo_sucesso_em']): ?>
         <p class="automacao-ajuda" <?= $monitorAtrasado || $monitor['ultima_falha'] ? 'role="alert"' : '' ?>>Última execução do processamento: <?= $escape((string) $monitor['ultimo_sucesso_em']) ?><?= $monitorAtrasado ? ' · Sem confirmação há mais de sete minutos.' : '' ?><?= $monitor['ultima_falha'] ? ' · Última tentativa falhou: ' . $escape((string) $monitor['ultima_falha']) : '' ?></p>
         <?php else: ?><p class="automacao-ajuda">O processamento automático ainda não confirmou uma execução.</p><?php endif; ?>
-        <?php if (!$lotes): ?><p>Nenhum processamento solicitado.</p><?php endif; ?>
-        <?php foreach ($lotes as $lote): ?><div class="automacao-linha"><span><?= $escape((string) $lote['nome']) ?> · <?= $escape((string) $lote['estado']) ?></span><span><?= (int) $lote['processadas'] ?>/<?= (int) $lote['total'] ?> · <?= (int) $lote['falhas'] ?> falha(s)</span></div><?php endforeach; ?>
+        <?php if (!$lotesEmAndamento): ?><p>Nenhum processamento em andamento.</p><?php endif; ?>
+        <?php foreach ($lotesEmAndamento as $lote): ?><div class="automacao-linha"><span><?= $escape((string) $lote['nome']) ?> · <?= $lote['estado'] === 'pendente' ? 'Pendente' : 'Em andamento' ?></span><span><?= (int) $lote['processadas'] ?>/<?= (int) $lote['total'] ?> · <?= (int) $lote['falhas'] ?> falha(s)</span></div><?php endforeach; ?>
     </section>
     <section class="automacao-secao"><h2>Falhas de execução</h2>
         <?php if (!$falhas): ?><p>Nenhuma falha registrada.</p><?php endif; ?>
         <?php foreach ($falhas as $falha): ?><div class="automacao-linha"><div><strong><?= $escape((string) ($falha['nome'] ?? 'Regra indisponível')) ?></strong> · <?= $escape((string) ($falha['tarefa_id'] ?? 'Sem tarefa')) ?><br><small><?= $escape((string) $falha['criado_em']) ?> · <?= $escape((string) $falha['detalhes']) ?><?= $falha['resolvida_em'] ? ' · Nova tentativa solicitada' : '' ?></small></div>
             <?php if ($falha['pode_tentar'] && !$falha['resolvida_em']): ?><form method="post"><input type="hidden" name="csrf_token" value="<?= $escape($csrfToken) ?>"><input type="hidden" name="acao" value="tentar"><input type="hidden" name="falha_id" value="<?= (int) $falha['id'] ?>"><button class="btn btn-secondary" type="submit">Tentar novamente</button></form><?php endif; ?></div><?php endforeach; ?>
     </section>
+    <?php endif; ?>
+    <?php if ($mostrarFormulario): ?>
     <script type="application/json" id="tarefas-regras-dados"><?= json_encode($dados, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
     <script src="/assets/js/cartorio-tarefas-regras.js?v=<?= $escape((string) (@hash_file('sha256', $assetRoot . 'js/cartorio-tarefas-regras.js') ?: '1')) ?>"></script>
+    <?php endif; ?>
     <?php endif; ?>
 </main>
 </body>

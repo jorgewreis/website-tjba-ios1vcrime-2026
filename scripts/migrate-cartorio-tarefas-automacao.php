@@ -40,6 +40,8 @@ $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_regras (
 $st = $db->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
 $st->execute(['cartorio_tarefas_regras', 'evento_apos_id']);
 if (!(int) $st->fetchColumn()) $db->exec('ALTER TABLE cartorio_tarefas_regras ADD COLUMN evento_apos_id BIGINT UNSIGNED NOT NULL DEFAULT 0');
+$st->execute(['cartorio_tarefas_regras', 'excluida_em']);
+if (!(int) $st->fetchColumn()) $db->exec('ALTER TABLE cartorio_tarefas_regras ADD COLUMN excluida_em DATETIME DEFAULT NULL');
 $db->exec("CREATE TABLE IF NOT EXISTS cartorio_tarefas_regra_lotes (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     regra_id BIGINT UNSIGNED NOT NULL,

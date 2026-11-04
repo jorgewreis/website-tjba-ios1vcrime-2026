@@ -9,16 +9,34 @@ final class CartorioTarefasRegrasRepository
 
     public function listar(bool $somenteAtivas = false): array
     {
-        $sql = 'SELECT * FROM cartorio_tarefas_regras' . ($somenteAtivas ? ' WHERE ativa = 1' : '') . ' ORDER BY prioridade DESC, id ASC';
+        $sql = 'SELECT * FROM cartorio_tarefas_regras WHERE excluida_em IS NULL' . ($somenteAtivas ? ' AND ativa = 1' : '') . ' ORDER BY prioridade DESC, id ASC';
         return array_map([$this, 'decodificar'], $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC));
     }
 
     public function obter(int $id): ?array
     {
-        $st = $this->db->prepare('SELECT * FROM cartorio_tarefas_regras WHERE id = ?');
+        $st = $this->db->prepare('SELECT * FROM cartorio_tarefas_regras WHERE id = ? AND excluida_em IS NULL');
         $st->execute([$id]);
         $row = $st->fetch(PDO::FETCH_ASSOC);
         return $row === false ? null : $this->decodificar($row);
+    }
+
+    /** Oculta uma regra inativa mantendo seus vínculos e histórico. */
+    public function excluirInativa(int $id): void
+    {
+        $this->db->beginTransaction();
+        try {
+            $lock = 'SELECT id FROM cartorio_tarefas_automacao_lock WHERE id = 1';
+            if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'sqlite') $lock .= ' FOR UPDATE';
+            if ($this->db->query($lock)->fetchColumn() === false) throw new RuntimeException('A migração de automação não foi concluída.');
+            $st = $this->db->prepare('UPDATE cartorio_tarefas_regras SET excluida_em = CURRENT_TIMESTAMP WHERE id = ? AND ativa = 0 AND excluida_em IS NULL');
+            $st->execute([$id]);
+            if ($st->rowCount() !== 1) throw new InvalidArgumentException('Somente uma regra inativa pode ser excluída.');
+            $this->db->commit();
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $e;
+        }
     }
 
     /** Salva uma versão e agenda a análise das tarefas existentes. */
@@ -82,6 +100,11 @@ final class CartorioTarefasRegrasRepository
     public function lotesRecentes(): array
     {
         return $this->db->query('SELECT l.*, r.nome FROM cartorio_tarefas_regra_lotes l JOIN cartorio_tarefas_regras r ON r.id = l.regra_id ORDER BY l.id DESC LIMIT 50')->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function lotesAtivos(): array
+    {
+        return $this->db->query("SELECT l.*, r.nome FROM cartorio_tarefas_regra_lotes l JOIN cartorio_tarefas_regras r ON r.id = l.regra_id WHERE l.estado IN ('pendente', 'processando') ORDER BY l.id")->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function falhasRecentes(): array
