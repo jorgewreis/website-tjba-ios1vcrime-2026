@@ -242,6 +242,8 @@ foreach ([$antigaRaiz, $antigaFilha, $isolada] as $id) {
 echo "Retenção por sequência verificada.\n";
 $propagar = ['nome' => 'Finalizar vinculadas', 'evento' => 'status_vinculada', 'evento_status' => 'finalizada', 'prioridade' => 10, 'condicoes' => [['tipo' => 'desentranhar']], 'acoes' => [['id' => 'status', 'tipo' => 'alterar_status', 'status' => 'finalizada']], 'ativa' => true];
 $propagarId = $repositorio->salvar($propagar);
+$aposConclusao = ['nome' => 'Criar após conclusão', 'evento' => 'finalizacao', 'prioridade' => 0, 'condicoes' => [['tipo' => 'desentranhar']], 'acoes' => [['id' => 'gerar', 'tipo' => 'criar_tarefa', 'tipo_tarefa' => 'envio', 'tipo_documento' => 'Ofício', 'local_tarefa' => 'Cartório']], 'ativa' => true];
+$repositorio->salvar($aposConclusao);
 $grupo = ['TAR-33333333333333333333333331', 'TAR-33333333333333333333333332', 'TAR-33333333333333333333333333'];
 $insert = $db->prepare("INSERT INTO cartorio_tarefas (id, titulo, tipo, status, sequencia_id) VALUES (?, 'Teste', 'desentranhar', 'a_fazer', ?)");
 foreach ($grupo as $i => $id) $insert->execute([$id, $i === 0 ? null : $grupo[0]]);
@@ -256,6 +258,9 @@ for ($i = 0; $i < 30; $i++) {
 $buscar = $db->prepare("SELECT COUNT(*) FROM cartorio_tarefas WHERE id IN (?, ?, ?) AND status = 'finalizada'");
 $buscar->execute($grupo);
 if ((int) $buscar->fetchColumn() !== 3) throw new RuntimeException('A conclusão não foi propagada às tarefas vinculadas.');
+$buscar = $db->prepare('SELECT COUNT(*) FROM cartorio_tarefas WHERE origem_id IN (?, ?, ?)');
+$buscar->execute($grupo);
+if ((int) $buscar->fetchColumn() !== 3) throw new RuntimeException('Finalizações automáticas não acionaram as regras de sequência.');
 $buscar = $db->prepare('SELECT COUNT(*) FROM cartorio_tarefas_automacao_falhas WHERE regra_id = ?');
 $buscar->execute([$propagarId]);
 if ((int) $buscar->fetchColumn() !== 0) throw new RuntimeException('Uma propagação já estabilizada foi registrada como ciclo.');

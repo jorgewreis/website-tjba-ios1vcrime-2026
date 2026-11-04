@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0105
+
+**Data:** 2026-11-03 21:00:08 | **Commit:** `31ea9a48` | **Tipo:** `patch`
+
+- test(tarefas): verificar sequencia apos conclusao automatica
+
 ## V. 1.87.0104
 
 **Data:** 2026-11-03 20:58:27 | **Commit:** `4beab6de` | **Tipo:** `patch`
@@ -6051,6 +6057,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
