@@ -5,7 +5,6 @@ Todas as rotas abaixo usam **modo A** (`area_a` + `CARTORIO`), salvo entrada exp
 | page (frame.php) | Modo | Perfis |
 |------------------|------|--------|
 | editais, editaisedit, editaiscreate, editaisrules | A | `*-CARTORIO` |
-| tarefas, tarefascreate | A | `*-CARTORIO` |
 | guias, guiasedit, guiascreate, guiasrules | A | `*-CARTORIO` |
 | oficioscartorio, oficioscartorioedit | A | `*-CARTORIO` |
 | cartasexpedidas, cartasexpedidasedit, cartasexpedidascreate | A | `*-CARTORIO` |
@@ -16,5 +15,3 @@ Todas as rotas abaixo usam **modo A** (`area_a` + `CARTORIO`), salvo entrada exp
 | partesinstituicoescreate, partesinstituicoesedit | A | `*-CARTORIO` |
 
 **Bypass:** `ADMIN`, `CHEFIA` (e equivalentes).
-
-`tarefasrules` é restrita a `ADMIN` e `CHEFIA` (incluindo equivalentes).

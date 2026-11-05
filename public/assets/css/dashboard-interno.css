@@ -97,7 +97,6 @@
 .dash-filter { display:block; margin:0 0 5px; color:var(--dash-muted); font-size:11px; }
 .dashboard-error { margin:0 0 12px; padding:12px; border-radius:10px; color:#8c1d27; background:#fff0f0; }
 .dashboard-interno .footer-page { display:none; }
-.dashboard-interno .dash-task-deadline { color:inherit; text-decoration:none; }
 
 /* Compact KPI cards inspired by the supplied reference. */
 .dash-kpi-grid { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; margin:10px 0; }

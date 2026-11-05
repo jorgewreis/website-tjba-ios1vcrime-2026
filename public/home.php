@@ -603,20 +603,12 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             {
                 section: 'Cartório',
                 items: [
-                    { iconImage: '/assets/icons/Task-Checklist--Streamline-Ultimate.png', label: 'Tarefas', target: 'tarefas' },
                     { iconImage: '/assets/icons/Email-Action-Send-2--Streamline-Ultimate.png', label: 'Cartas Expedidas', target: 'cartasexpedidas' },
                     { iconImage: '/assets/icons/Email-Action-Read-Document--Streamline-Ultimate.png', label: 'Cartas Recebidas', target: 'cartasrecebidas' },
                     { iconImage: '/assets/icons/Newspaper-Fold--Streamline-Ultimate.png', label: 'Editais', target: 'editais' },
                     { iconImage: '/assets/icons/Certified-Diploma-2--Streamline-Ultimate.png', label: 'Cejusc', target: 'cejusc' },
                     { iconImage: '/assets/icons/Office-Business-Card--Streamline-Ultimate.png', label: 'Guias', target: 'guias' },
                     { iconImage: '/assets/icons/Business-Contract-Give--Streamline-Ultimate.png', label: 'Ofícios', target: 'oficioscartorio' }
-                ]
-            },
-            {
-                section: 'FokusLaw',
-                items: [
-                    { iconImage: '/assets/icons/Task-Checklist--Streamline-Ultimate.png', label: 'Tarefas', target: 'fokustarefas' },
-                    { iconImage: '/assets/icons/Email-Action-Send-2--Streamline-Ultimate.png', label: 'Expedições', target: 'fokusexpedicoes' }
                 ]
             },
             {
@@ -782,7 +774,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 return ['Consultas'];
             }
             if (norm.includes('ADMIN') || norm.includes('CHEFIA')) {
-                const comAcessoAmplo = ['Cartório', 'Gabinete', 'Sala de Audiências', 'FokusLaw', 'Consultas', 'Ferramentas'];
+                const comAcessoAmplo = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Consultas', 'Ferramentas'];
                 if (norm.includes('ADMIN')) {
                     comAcessoAmplo.push('Estudantes');
                 }
@@ -812,10 +804,9 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             });
             if (hasComposite) {
                 sections.push('Consultas');
-                sections.push('FokusLaw');
             }
             sections.push('Ferramentas');
-            const order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'FokusLaw', 'Estudantes', 'Consultas', 'Ferramentas', 'Admin'];
+            const order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Ferramentas', 'Admin'];
             const uniq = [...new Set(sections)];
             const ordered = [];
             order.forEach((label) => {

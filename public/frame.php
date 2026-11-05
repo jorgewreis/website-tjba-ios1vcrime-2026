@@ -26,12 +26,7 @@ $ERRORS = $PAGES . '/errors';
 // Lista de páginas permitidas e seus caminhos.
 $allowed_pages = [
     'dashboard'             => $PAGES . '/dashboard.php',
-    'fokustarefas'          => $PAGES . '/fokuslaw-tarefas.php',
-    'fokusexpedicoes'       => $PAGES . '/fokuslaw-expedicoes.php',
     'dashboardexterno'      => $PAGES . '/dashboard-externo.php',
-    'tarefas'               => $PAGES . '/cartorio-tarefas-list.php',
-    'tarefascreate'         => $PAGES . '/cartorio-tarefas-create.php',
-    'tarefasrules'          => $PAGES . '/cartorio-tarefas-rules.php',
     'cejusc'                => $PAGES . '/cartorio-cejusc-list.php',
     'cejusccreate'          => $PAGES . '/cartorio-cejusc-create.php',
     'cejuscedit'            => $PAGES . '/cartorio-cejusc-edit.php',

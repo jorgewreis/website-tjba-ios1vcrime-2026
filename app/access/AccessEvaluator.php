@@ -35,9 +35,8 @@ final class AccessEvaluator
             return true;
         }
 
-        // A lista de tarefas e seus alertas também atendem usuários internos
-        // que ainda não possuem um perfil composto de setor.
-        if (in_array($page, ['dashboard', 'tarefas'], true)
+        // O dashboard também atende usuários internos sem perfil composto de setor.
+        if ($page === 'dashboard'
             && array_intersect($norm, ['SERVIDOR', 'ESTAGIARIO', 'CARTORIO', 'GABINETE', 'AUDIENCIA'])) {
             return true;
         }
@@ -126,7 +125,7 @@ final class AccessEvaluator
         }
 
         if (ProfileNormalizer::isElevated($norm)) {
-            $com = ['Cartório', 'Gabinete', 'Sala de Audiências', 'FokusLaw'];
+            $com = ['Cartório', 'Gabinete', 'Sala de Audiências'];
             if (in_array('ADMIN', $norm, true)) {
                 $com[] = 'Estudantes';
             }
@@ -150,15 +149,11 @@ final class AccessEvaluator
         }
 
         if (ProfileNormalizer::hasAnyCargoAreaComposite($norm)) {
-            $sections[] = 'FokusLaw';
-        }
-
-        if (ProfileNormalizer::hasAnyCargoAreaComposite($norm)) {
             $sections[] = 'Consultas';
         }
 
         $unique = array_values(array_unique($sections));
-        $order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'FokusLaw', 'Estudantes', 'Consultas', 'Admin'];
+        $order = ['Cartório', 'Gabinete', 'Sala de Audiências', 'Estudantes', 'Consultas', 'Admin'];
         $ordered = [];
         foreach ($order as $label) {
             if (in_array($label, $unique, true)) {
