@@ -4,6 +4,8 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['consultaprocessos'], false);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/ConsultaProcessosService.php';
@@ -44,6 +46,7 @@ try {
 
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    error_log('API error (public/api/consulta-processos/list.php): ' . $exception->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao listar processos: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao listar processos.'], JSON_UNESCAPED_UNICODE);
 }

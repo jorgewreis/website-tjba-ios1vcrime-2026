@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['editais'], false);
+
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -50,6 +53,6 @@ try {
 } catch (\Throwable $exception) {
     http_response_code(500);
     echo json_encode([
-        'error' => 'Erro ao buscar editais: ' . $exception->getMessage(),
+        'error' => 'Erro ao buscar editais.',
     ], JSON_UNESCAPED_UNICODE);
 }

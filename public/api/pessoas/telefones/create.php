@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+require_once dirname(__DIR__, 4) . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['consultapartesedit', 'partesinstituicoesedit', 'partesinstituicoescreate'], true);
+
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -49,6 +52,6 @@ try {
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
-    $msg = 'Erro ao adicionar telefone: ' . $exception->getMessage();
+    $msg = 'Erro ao adicionar telefone.';
     echo json_encode(['error' => $msg], JSON_UNESCAPED_UNICODE);
 }

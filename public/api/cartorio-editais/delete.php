@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['editaisedit'], true);
+
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
@@ -40,5 +43,5 @@ try {
 } catch (\InvalidArgumentException $exception) {
     ApiJsonResponse::send(['error' => $exception->getMessage()], 400);
 } catch (\Throwable $exception) {
-    ApiJsonResponse::send(['error' => 'Erro ao excluir edital: ' . $exception->getMessage()], 500);
+    ApiJsonResponse::send(['error' => 'Erro ao excluir edital.'], 500);
 }

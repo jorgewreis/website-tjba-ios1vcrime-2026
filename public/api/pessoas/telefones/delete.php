@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+require_once dirname(__DIR__, 4) . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['consultapartesedit', 'partesinstituicoesedit', 'partesinstituicoescreate'], true);
+
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -34,5 +37,5 @@ try {
     echo json_encode(['deleted' => $removed], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao excluir telefone: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao excluir telefone.'], JSON_UNESCAPED_UNICODE);
 }

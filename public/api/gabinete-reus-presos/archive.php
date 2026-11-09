@@ -4,6 +4,8 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['reuspresosedit'], true);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/GabineteReusPresosService.php';
@@ -32,6 +34,7 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    error_log('API error (public/api/gabinete-reus-presos/archive.php): ' . $exception->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao arquivar: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao arquivar.'], JSON_UNESCAPED_UNICODE);
 }
