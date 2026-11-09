@@ -37,6 +37,7 @@ $hasSexoColumn = ((int) $stHasSexo->fetchColumn()) > 0;
 
 $mensagemErro = '';
 $mensagemSucesso = '';
+$usuarioExistenteId = '';
 $formValues = [
     'nome'    => '',
     'sobrenome' => '',
@@ -137,10 +138,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $connection->beginTransaction();
 
-                $stmt = $connection->prepare("SELECT id_usuario FROM usuarios WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? LIMIT 1");
+                $stmt = $connection->prepare("SELECT id_usuario, COALESCE(cadastro_ativo, 1) AS cadastro_ativo FROM usuarios WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? LIMIT 2");
                 $stmt->execute([$cpf]);
-                if ($stmt->fetch()) {
-                    $mensagemErro = 'Já existe um cadastro com este CPF.';
+                $usuariosExistentes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                if ($usuariosExistentes !== []) {
+                    if (count($usuariosExistentes) === 1) {
+                        $usuarioExistenteId = (string) $usuariosExistentes[0]['id_usuario'];
+                        $mensagemErro = 'Já existe um cadastro com este CPF.';
+                        if ((int) $usuariosExistentes[0]['cadastro_ativo'] === 0) {
+                            $mensagemErro .= ' Ele está pendente ou desativado.';
+                        }
+                    } else {
+                        $mensagemErro = 'Há mais de um cadastro com este CPF. Consulte a administração para verificar os registros.';
+                    }
                     $connection->rollBack();
                 } else {
                     $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
@@ -276,6 +286,9 @@ $csrfToken = Security::generateCSRFToken();
         <?php if ($mensagemErro !== ''): ?>
             <div role="alert" class="padding-x-md padding-y-md" style="color: #a12622;">
                 <?php echo htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8'); ?>
+                <?php if ($usuarioExistenteId !== ''): ?>
+                    <a href="/frame.php?page=usuariosedit&amp;id=<?php echo rawurlencode($usuarioExistenteId); ?>">Consultar cadastro existente</a>
+                <?php endif; ?>
             </div>
             <script>
                 if (typeof showToast === 'function') {
