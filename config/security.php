@@ -29,6 +29,21 @@ final class Security
             return false;
         }
 
+        try {
+            require_once __DIR__ . '/../app/helpers/Conection.php';
+            $pdo = Conection::getInstance()->getConnection();
+            $stmt = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ? AND (token_acesso = ? OR token_acesso = ?) AND token_expira > NOW() AND COALESCE(cadastro_ativo, 1) = 1 LIMIT 1');
+            $token = (string) $_SESSION[self::SESSION_TOKEN_KEY];
+            $stmt->execute([(string) $_SESSION[self::SESSION_USER_ID], self::hashAccessToken($token), $token]);
+            if ($stmt->fetchColumn() === false) {
+                self::clearAuthenticatedSession();
+                return false;
+            }
+        } catch (Throwable $exception) {
+            error_log('Falha ao validar sessão autenticada: ' . $exception->getMessage());
+            return false;
+        }
+
         // Mantém a janela de inatividade alinhada também para endpoints
         // que validam sessão via isAuthenticated() (ex.: APIs JSON).
         $_SESSION[self::SESSION_LAST_ACTIVITY] = time();
@@ -367,26 +382,29 @@ final class Security
 
     public static function getClientIp(): string
     {
-        $candidates = [
-            $_SERVER['HTTP_CF_CONNECTING_IP'] ?? null,
-            $_SERVER['HTTP_X_FORWARDED_FOR'] ?? null,
-            $_SERVER['REMOTE_ADDR'] ?? null,
-        ];
-
-        foreach ($candidates as $candidate) {
-            if (!is_string($candidate) || trim($candidate) === '') {
-                continue;
-            }
-
-            $parts = array_map('trim', explode(',', $candidate));
-            foreach ($parts as $part) {
-                if ($part !== '' && filter_var($part, FILTER_VALIDATE_IP)) {
-                    return $part;
-                }
-            }
+        $remote = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+        if (!filter_var($remote, FILTER_VALIDATE_IP)) {
+            return '0.0.0.0';
         }
 
-        return '0.0.0.0';
+        // Apenas endereços explícitos de proxies sob administração local.
+        $trusted = array_filter(array_map('trim', explode(',', (string) getenv('TRUSTED_PROXIES'))));
+        if (!in_array($remote, $trusted, true)) {
+            return $remote;
+        }
+
+        $chain = array_map('trim', explode(',', (string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? '')));
+        $chain[] = $remote;
+        for ($i = count($chain) - 1; $i >= 0; $i--) {
+            $ip = $chain[$i];
+            if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+                return $remote;
+            }
+            if (!in_array($ip, $trusted, true)) {
+                return $ip;
+            }
+        }
+        return $remote;
     }
 
     public static function getUserName(): ?string

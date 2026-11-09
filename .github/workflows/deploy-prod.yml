@@ -43,6 +43,16 @@ jobs:
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
         run: bash .github/scripts/deploy-ssh-check.sh
 
+      - name: Verificar armazenamento do limite de login
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          PROD_PATH: ${{ secrets.PROD_PATH }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "cd \"${PROD_PATH}\" && php -r 'require \"app/helpers/Conection.php\"; Conection::getInstance()->getConnection()->query(\"SELECT scope_type, scope_value, attempt_count, lock_level, window_started_at, last_attempt_at, locked_until FROM login_rate_limits LIMIT 0\");'"
+
       - name: Garantir diretório destino (PROD)
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}

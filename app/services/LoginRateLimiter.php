@@ -4,7 +4,6 @@ declare(strict_types=1);
 final class LoginRateLimiter
 {
     private const TABLE = 'login_rate_limits';
-    private const FALLBACK_SESSION_KEY = 'login_rate_limits_fallback';
 
     private PDO $pdo;
     private bool $storageChecked = false;
@@ -21,7 +20,7 @@ final class LoginRateLimiter
     public function canAttempt(string $cpf, string $ip): array
     {
         if (!$this->ensureStorage()) {
-            return $this->canAttemptFallback($cpf, $ip);
+            return $this->storageUnavailable();
         }
 
         $lockedUntil = $this->getMaximumLockedUntil($this->buildScopes($cpf, $ip));
@@ -43,7 +42,7 @@ final class LoginRateLimiter
     public function registerFailure(string $cpf, string $ip): array
     {
         if (!$this->ensureStorage()) {
-            return $this->registerFailureFallback($cpf, $ip);
+            return $this->storageUnavailable();
         }
 
         $scopes = $this->buildScopes($cpf, $ip);
@@ -67,7 +66,6 @@ final class LoginRateLimiter
     public function clear(string $cpf, string $ip): void
     {
         if (!$this->ensureStorage()) {
-            $this->clearFallback($cpf, $ip);
             return;
         }
 
@@ -88,26 +86,11 @@ final class LoginRateLimiter
         $this->storageChecked = true;
 
         try {
-            $this->pdo->exec(
-                "CREATE TABLE IF NOT EXISTS " . self::TABLE . " (
-                    id_rate_limit CHAR(30) NOT NULL PRIMARY KEY,
-                    scope_type VARCHAR(20) NOT NULL,
-                    scope_value VARCHAR(191) NOT NULL,
-                    attempt_count INT NOT NULL DEFAULT 0,
-                    lock_level INT NOT NULL DEFAULT 0,
-                    window_started_at DATETIME NOT NULL,
-                    last_attempt_at DATETIME NOT NULL,
-                    locked_until DATETIME DEFAULT NULL,
-                    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE KEY uq_scope (scope_type, scope_value),
-                    KEY idx_locked_until (locked_until)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
-            );
+            $this->pdo->query('SELECT scope_type, scope_value, attempt_count, lock_level, window_started_at, last_attempt_at, locked_until FROM ' . self::TABLE . ' LIMIT 0');
 
             $this->storageReady = true;
         } catch (Throwable $e) {
-            error_log('LoginRateLimiter: fallback de armazenamento ativado: ' . $e->getMessage());
+            error_log('LoginRateLimiter: armazenamento indisponivel; login bloqueado: ' . $e->getMessage());
             $this->storageReady = false;
         }
 
@@ -260,103 +243,13 @@ final class LoginRateLimiter
         return 'Muitas tentativas de login. Tente novamente em ' . $minutes . ' minuto(s).';
     }
 
-    /**
-     * @return array{allowed:bool,message:?string,retryAfter:int}
-     */
-    private function canAttemptFallback(string $cpf, string $ip): array
+    /** @return array{allowed:bool,message:?string,retryAfter:int} */
+    private function storageUnavailable(): array
     {
-        $store = $_SESSION[self::FALLBACK_SESSION_KEY] ?? [];
-        $retryAfter = 0;
-
-        foreach ($this->buildScopes($cpf, $ip) as $scope) {
-            $key = $scope['type'] . ':' . $scope['value'];
-            $entry = $store[$key] ?? null;
-            if (!is_array($entry)) {
-                continue;
-            }
-
-            $lockedUntil = (int) ($entry['locked_until'] ?? 0);
-            if ($lockedUntil > time()) {
-                $retryAfter = max($retryAfter, $lockedUntil - time());
-            }
-        }
-
-        if ($retryAfter > 0) {
-            return ['allowed' => false, 'message' => $this->buildLockedMessage($retryAfter), 'retryAfter' => $retryAfter];
-        }
-
-        return ['allowed' => true, 'message' => null, 'retryAfter' => 0];
-    }
-
-    /**
-     * @return array{allowed:bool,message:?string,retryAfter:int}
-     */
-    private function registerFailureFallback(string $cpf, string $ip): array
-    {
-        $store = $_SESSION[self::FALLBACK_SESSION_KEY] ?? [];
-        $now = time();
-        $retryAfter = 0;
-
-        foreach ($this->buildScopes($cpf, $ip) as $scope) {
-            $key = $scope['type'] . ':' . $scope['value'];
-            $entry = $store[$key] ?? [
-                'attempt_count' => 0,
-                'lock_level' => 0,
-                'window_started_at' => $now,
-                'locked_until' => 0,
-                'last_attempt_at' => $now,
-            ];
-
-            if (($now - (int) ($entry['last_attempt_at'] ?? $now)) > 86400) {
-                $entry['lock_level'] = 0;
-            }
-
-            if ((int) ($entry['locked_until'] ?? 0) > $now) {
-                $retryAfter = max($retryAfter, (int) $entry['locked_until'] - $now);
-                $store[$key] = $entry;
-                continue;
-            }
-
-            if (($now - (int) ($entry['window_started_at'] ?? $now)) > LOGIN_RATE_LIMIT_WINDOW_SECONDS) {
-                $entry['attempt_count'] = 0;
-                $entry['window_started_at'] = $now;
-            }
-
-            $entry['attempt_count'] = (int) ($entry['attempt_count'] ?? 0) + 1;
-            $entry['last_attempt_at'] = $now;
-
-            if ($entry['attempt_count'] >= LOGIN_RATE_LIMIT_MAX_ATTEMPTS) {
-                $entry['lock_level'] = (int) ($entry['lock_level'] ?? 0) + 1;
-                $lockSeconds = min(
-                    LOGIN_RATE_LIMIT_BASE_LOCK_SECONDS * (2 ** max(0, $entry['lock_level'] - 1)),
-                    LOGIN_RATE_LIMIT_MAX_LOCK_SECONDS
-                );
-                $entry['attempt_count'] = 0;
-                $entry['window_started_at'] = $now;
-                $entry['locked_until'] = $now + $lockSeconds;
-                $retryAfter = max($retryAfter, $lockSeconds);
-            } else {
-                $entry['locked_until'] = 0;
-            }
-
-            $store[$key] = $entry;
-        }
-
-        $_SESSION[self::FALLBACK_SESSION_KEY] = $store;
-
-        if ($retryAfter > 0) {
-            return ['allowed' => false, 'message' => $this->buildLockedMessage($retryAfter), 'retryAfter' => $retryAfter];
-        }
-
-        return ['allowed' => true, 'message' => null, 'retryAfter' => 0];
-    }
-
-    private function clearFallback(string $cpf, string $ip): void
-    {
-        $store = $_SESSION[self::FALLBACK_SESSION_KEY] ?? [];
-        foreach ($this->buildScopes($cpf, $ip) as $scope) {
-            unset($store[$scope['type'] . ':' . $scope['value']]);
-        }
-        $_SESSION[self::FALLBACK_SESSION_KEY] = $store;
+        return [
+            'allowed' => false,
+            'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.',
+            'retryAfter' => 0,
+        ];
     }
 }

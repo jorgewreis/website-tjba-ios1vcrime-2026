@@ -47,7 +47,14 @@ $clientIp = Security::getClientIp();
 
 $pdo = Conection::getInstance()->getConnection();
 $rateLimiter = new LoginRateLimiter($pdo);
-$limitStatus = $rateLimiter->canAttempt($normalizedCpf, $clientIp);
+try {
+    $limitStatus = $rateLimiter->canAttempt($normalizedCpf, $clientIp);
+} catch (Throwable $exception) {
+    error_log('LoginRateLimiter: falha ao consultar armazenamento: ' . $exception->getMessage());
+    http_response_code(503);
+    echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
+    exit;
+}
 
 if (($limitStatus['allowed'] ?? false) !== true) {
     echo json_encode([
@@ -61,7 +68,14 @@ $usuario = new Usuario();
 $resultado = $usuario->autenticar($cpf, $senha);
 
 if (($resultado['success'] ?? false) !== true) {
-    $limitStatus = $rateLimiter->registerFailure($normalizedCpf, $clientIp);
+    try {
+        $limitStatus = $rateLimiter->registerFailure($normalizedCpf, $clientIp);
+    } catch (Throwable $exception) {
+        error_log('LoginRateLimiter: falha ao registrar tentativa: ' . $exception->getMessage());
+        http_response_code(503);
+        echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
+        exit;
+    }
 
     $message = !empty($resultado['inactive']) && !empty($resultado['message'])
         ? $resultado['message']
@@ -75,6 +89,15 @@ if (($resultado['success'] ?? false) !== true) {
         'success' => false,
         'message' => $message
     ]);
+    exit;
+}
+
+try {
+    $rateLimiter->clear($normalizedCpf, $clientIp);
+} catch (Throwable $exception) {
+    error_log('LoginRateLimiter: falha ao limpar tentativas: ' . $exception->getMessage());
+    http_response_code(503);
+    echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
     exit;
 }
 
@@ -104,8 +127,6 @@ $usuario->atualizarToken(
 );
 $usuario->registrarUltimoAcesso($resultado['id_usuario']);
 
-
-$rateLimiter->clear($normalizedCpf, $clientIp);
 
 echo json_encode(['success' => true]);
 exit;
