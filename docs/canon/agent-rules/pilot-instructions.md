@@ -11,8 +11,8 @@ Objetivo: executar CodeReviewer + php-linter em um conjunto de arquivos represen
 
 Passos:
 
-1. Selecionar 2-3 arquivos PHP do `src/` ou `app/` como amostra.
-2. Rodar `phpcs --standard=PSR12` e `phpstan analyse` localmente.
+1. Selecionar 2-3 arquivos PHP relevantes de `app/`, `config/` ou `public/` como amostra.
+2. Quando solicitado, usar `php -l` se PHP estiver disponível; PHPCS e PHPStan são opcionais e só devem ser usados se configurados e disponíveis.
 3. Executar CodeReviewer.agent.md (manual): aplicar validações listadas.
 4. Registrar diffs e observações em `pilot-results.md`.
 

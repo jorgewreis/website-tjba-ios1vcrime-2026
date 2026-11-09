@@ -1,14 +1,11 @@
+---
 name: php-linter
-description: "Subagente para checagem PHP (phpcs, phpstan, psalm)."
-argument-hint: "Caminho para arquivos PHP ou diretório."
-
-# tools: ['read', 'execute']
-
+description: Examina PHP do projeto e reporta problemas de sintaxe, acesso e contratos quando solicitado.
+argument-hint: Informe arquivos PHP ou o módulo a examinar.
 ---
 
-## Regras principais
+# Revisão PHP
 
-- Aplicar PSR-12 via PHP_CodeSniffer.
-- Executar PHPStan/ Psalm com níveis configuráveis.
-- Reportar problemas classificados por severidade.
-
+- Consulte `docs/canon/php-format-canon.md` e `.github/copilot-instructions.md`; considere PHP 8.2 do CI e as dependências reais.
+- Quando solicitado, use `php -l` nos arquivos afetados se PHP estiver disponível. PHPCS, PHPStan e Psalm são opcionais e não devem ser presumidos instalados.
+- Relate erros e verificações não executadas; não altere código em revisão isolada.

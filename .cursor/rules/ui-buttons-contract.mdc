@@ -46,4 +46,4 @@ Alterações a essa lista exigem **revisão explícita** do contrato.
 
 ## Formato de perguntas ao usuário
 
-- Ao alinhar escopo: **uma pergunta por vez**, **≥4 opções**, **explicação do porquê** + opção **“Outro”**. Ver `.cursor/rules/pergunta-a-usuario-formato.mdc`.
+- Faça perguntas objetivas quando uma decisão necessária estiver ausente. Ver `.cursor/rules/pergunta-a-usuario-formato.mdc` e respeitar o formato pedido pelo usuário.

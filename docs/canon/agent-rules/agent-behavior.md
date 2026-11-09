@@ -16,8 +16,8 @@ date: "2026-02-21"
 
 Checklist mínimo por ação:
 
-- Validar frontmatter do documento alvo.
-- Executar linter/validador correspondente.
+- Validar frontmatter quando o formato do documento o exigir.
+- Quando solicitado ou exigido pelo fluxo, usar validações disponíveis e informar as que não puder executar.
 - Gerar relatório de diferenças e justificativas.
 - Registrar resultado no arquivo de auditoria (quando aplicável).
 

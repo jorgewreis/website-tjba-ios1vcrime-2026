@@ -59,11 +59,11 @@ Ao configurar regras ou skills personalizadas no editor (por exemplo, `.cursor/r
    - canônico de formatação da linguagem (PHP/JS/CSS/HTML)
    - `editor-agents-canon`
    - `*-editor-agent` correspondente
-2. **Definir claramente o modo consultivo**:
-   - Instruir o agente a não aplicar mudanças destrutivas automaticamente.
-   - Incentivar a classificação de achados por severidade.
+2. **Definir o modo de trabalho**:
+   - Em revisão isolada, relatar achados sem editar; em implementação solicitada, executar o trabalho autorizado.
+   - Classificar os achados por severidade quando isso ajudar a priorizar correções.
 3. **Restringir o escopo**:
-   - Skills devem atuar preferencialmente no arquivo ou trecho atual.
+   - Skills devem seguir o escopo pedido e consultar arquivos relacionados quando necessário.
 
 ## 5. Fluxo recomendado de uso diário
 

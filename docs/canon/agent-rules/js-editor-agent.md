@@ -26,7 +26,7 @@ Agente focado em revisar **código JavaScript** em modo consultivo, ajudando a:
 - Arquivo `.js` completo ou módulo isolado.
 - Trecho de JS embutido em páginas quando fornecido explicitamente.
 
-O agente assume ambiente de execução compatível com ES moderno, salvo indicação em contrário.
+O agente verifica o runtime e o padrão do módulo antes de recomendar recursos de linguagem.
 
 ## 3. Ferramentas permitidas
 
@@ -41,14 +41,13 @@ Não é permitido:
 
 ## 4. Regras comportamentais (imperativas)
 
-1. **Usar ES moderno**:
-   - Preferir `const` e `let` no lugar de `var`.
-   - Incentivar uso de módulos ES (`import` / `export`) quando o contexto permitir.
+1. **Compatibilidade**:
+   - Preserve o padrão do módulo e os navegadores suportados; use recursos modernos quando compatíveis e úteis.
 2. **Legibilidade e organização**:
    - Sugerir funções menores e coesas.
    - Evitar callbacks aninhados profundos quando puder usar `async/await`.
 3. **Assíncrono e erros**:
-   - Incentivar `async/await` com `try/catch` em vez de `.then().catch()` encadeado.
+   - Verifique tratamento de falhas e estados assíncronos, preservando o padrão existente quando adequado.
 4. **Segurança**:
    - Alertar sobre uso de `eval`, construção dinâmica de código ou manipulação de DOM com dados não sanitizados.
 5. **Estilo consistente**:

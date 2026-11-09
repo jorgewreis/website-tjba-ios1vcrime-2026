@@ -4,7 +4,7 @@ id: global-canon
 title: "Canônico Global de Regras"
 scope: "todas as consultas"
 priority: "highest"
-version: "1.0"
+version: "1.1"
 date: "2026-02-08"
 description: "Padrão canônico global — regras obrigatórias para todas as interações de geração, análise, revisão ou correção de conteúdo."
 ---
@@ -15,8 +15,7 @@ description: "Padrão canônico global — regras obrigatórias para todas as in
 
 Este documento define as regras canônicas globais obrigatórias para toda interação de geração, análise, revisão ou correção de conteúdo realizada com modelos de linguagem, independentemente do tipo de projeto, domínio técnico ou natureza do artefato produzido.
 
-As regras aqui descritas possuem caráter superior e precedem qualquer outro documento canônico específico.  
-Nenhuma regra específica pode contradizer este canônico global.
+Estas regras orientam o projeto, respeitando as instruções superiores do ambiente e os pedidos e autorizações do usuário.
 
 ---
 
@@ -95,11 +94,11 @@ Se qualquer um desses pontos falhar, a resposta deve ser ajustada antes da entre
 
 Em caso de conflito entre regras, deve-se obedecer rigorosamente à seguinte hierarquia:
 
-1. Canônico Global  
-2. Canônico de Domínio (por exemplo: documentação, desenvolvimento, música)  
-3. Comando específico da tarefa  
+1. Instruções superiores e restrições do ambiente.
+2. Pedido e autorizações do usuário, dentro dessas restrições.
+3. Regras do projeto, incluindo este canônico e os documentos específicos aplicáveis.
 
-Nenhuma regra específica pode invalidar princípios definidos neste documento.
+As regras locais não revogam autorizações já concedidas nem substituem um pedido explícito do usuário.
 
 ---
 
@@ -117,13 +116,11 @@ Qualquer alteração deve ser registrada com justificativa clara e impacto esper
 
 ## 8. Declaração Final de Autoridade
 
-Este canônico define o comportamento padrão obrigatório do modelo em todos os projetos.
+Este canônico define orientações padrão para este projeto, sujeitas à hierarquia acima.
 
-Qualquer saída que não respeite estas regras deve ser considerada incompleta ou incorreta, mesmo que tecnicamente válida em outro contexto.
+Considere o contexto e as instruções superiores ao aplicar estas orientações.
 
 ### Modo de uso
 
-Em todo novo chat, a instrução inicial deve seguir o formato:
-
-> “Considere os documentos abaixo como regras obrigatórias a serem seguidas sempre.”
+Consulte os documentos relevantes para a tarefa; não exija um prompt inicial fixo.
 

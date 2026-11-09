@@ -44,8 +44,8 @@ O agente deve sempre tentar entender:
 
 Não é permitido:
 
-- Executar comandos de shell.
-- Alterar arquivos diretamente sem confirmação do usuário.
+- Executar comandos destrutivos fora do escopo ou sem a autorização necessária.
+- Alterar arquivos quando o pedido for apenas revisão; uma solicitação de correção autoriza as edições necessárias ao escopo.
 - Propor migrações de infraestrutura ou dependências sem contexto.
 
 ## 4. Regras comportamentais (imperativas)

@@ -1,24 +1,11 @@
 ---
-description: Exigir alinhamento com o usuário (perguntas) antes de implementar ou alterar código.
+description: Alinhar requisitos relevantes e avançar com o trabalho autorizado.
 alwaysApply: true
 ---
 
-# Alinhamento antes de implementar
+# Alinhamento e execução
 
-Antes de **editar arquivos**, **criar páginas**, **refatorar** ou **executar planos** que alterem o repositório:
-
-1. **Não começar a codificar de imediato** quando o pedido envolver implementação, correção, migração ou mudança de comportamento — salvo se o usuário disser explicitamente para implementar já (ex.: “pode codar”, “execute o plano”, “ship it”).
-2. **Fazer perguntas de alinhamento** para complementar escopo, regras de negócio, UX, permissões, dados e critérios de aceite.
-3. Seguir o formato em `.cursor/rules/pergunta-a-usuario-formato.mdc`: **uma pergunta por vez**, **≥4 opções** com breve *porquê*, e opção **“Outro”**; aguardar resposta antes da próxima pergunta.
-4. Priorizar perguntas que mudem o desenho (evitar retrabalho): quem usa, o que muda na tela/API/banco, exceções, compatibilidade com registros antigos, testes manuais esperados.
-5. Depois das respostas essenciais, resumir o entendimento em 2–4 frases e só então implementar (ou atualizar o plano, se estiver em modo plano).
-
-## Exceções (pode implementar sem nova rodada de perguntas)
-
-- Correção óbvia e local pedida com trecho exato (typo, sintaxe, link quebrado) sem impacto de produto.
-- O usuário respondeu todas as perguntas da thread e pediu execução.
-- Apenas leitura, revisão ou explicação (sem diff).
-
-## Ao retomar trabalho já feito
-
-Se o usuário pedir perguntas **sobre alterações recentes**, use o mesmo formato de perguntas para validar se o que foi entregue atende ao produto e se falta ajuste (menu, permissões, QA, documentação).
+- Considere o pedido, as decisões e autorizações anteriores e o contexto do repositório. Execute o trabalho autorizado sem exigir nova confirmação para escolhas rotineiras.
+- Pergunte quando faltar uma decisão que realmente impeça a parte dependente; explique o que falta e avance nas atividades independentes. Não trate o tempo decorrido como autorização.
+- Respeite pedidos explícitos de planejamento, inspeção, revisão sem edição ou limites de publicação. Para ações externas ou destrutivas, observe a autorização e os controles aplicáveis.
+- Ao retomar trabalho, verifique o estado real antes de repetir alterações. Para perguntas, siga `.cursor/rules/pergunta-a-usuario-formato.mdc`.

@@ -1,36 +1,11 @@
 ---
 name: ui-inconsistency-fixer
-description: Detecta e corrige inconsistencias globais em telas create/edit com base no contrato do projeto. Use antes de finalizar tarefas para aplicar correcoes padrao em placeholders, toasts, atributos e estados de botoes.
+description: Corrige inconsistências de formulários create/edit quando o usuário solicita ajustes em telas do sistema PHP, preservando os contratos e regras de negócio.
 ---
 
-# UI Inconsistency Fixer
+# Correção de formulários
 
-## Objetivo
-
-Caçar inconsistencias de implementacao em `*-create.php` e `*-edit.php` e aplicar correcoes antes da entrega.
-
-## Workflow
-
-1. Ler contrato:
-   - `docs/create-edit-ui-contract.md`
-   - `.cursor/rules/create-edit-ui-contract.mdc`
-2. Executar auditoria rapida com `rg`:
-   - placeholders fora do padrao
-   - feedback inline (`cadastro-feedback`, `alert-heading`, status inline)
-   - divergencia create/edit para mesmo tipo de campo
-3. Aplicar patches de correcao:
-   - placeholders padrao por tipo
-   - remocao de fallback inline de feedback
-   - ajuste de estado de botoes e atributos principais quando houver divergencia clara
-4. Reexecutar auditoria e somente finalizar com status `OK`.
-
-## Regras de correcao
-
-- Nao criar classes CSS novas.
-- Nao alterar contrato funcional do modulo sem necessidade.
-- Priorizar correcoes seguras e repetiveis.
-
-## Saida esperada
-
-- `Correcoes aplicadas` (arquivos + tipo de ajuste).
-- `Pendencias` (se algo exigir decisao humana).
+1. Identifique as telas solicitadas, as telas relacionadas e o comportamento atual. Consulte `docs/create-edit-ui-contract.md` e as regras aplicáveis em `.cursor/rules/`.
+2. Corrija as inconsistências pertinentes ao pedido em placeholders, feedback, atributos, validação e estados de botões. Reutilize componentes e estilos existentes.
+3. Preserve exceções funcionais e permissões; não remova feedback acessível ou altere regras de negócio apenas para uniformizar aparência. Não amplie o diff a todos os formulários.
+4. Verifique os fluxos afetados quando solicitado e possível; relate alterações, riscos e verificações não executadas. Não declare resultado validado sem evidência.

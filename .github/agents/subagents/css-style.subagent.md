@@ -1,14 +1,11 @@
+---
 name: css-style
-description: "Subagente para verificação de estilo CSS (stylelint) e performance de CSS."
-argument-hint: "Arquivos ou diretório CSS/SCSS."
-
-# tools: ['read', 'execute']
-
+description: Examina CSS das telas afetadas, reutilização de estilos, responsividade e acessibilidade.
+argument-hint: Informe a tela e os arquivos CSS relacionados.
 ---
 
-## Regras principais
+# Revisão CSS
 
-- Aplicar Stylelint com regras definidas pelo canônico CSS.
-- Identificar regras duplicadas e selectors custosos.
-- Sugerir simplificações e modularização.
-
+- Limite a inspeção ao fluxo solicitado e aos estilos que o afetam. Consulte `docs/canon/css-format-canon.md` e os contratos relevantes.
+- Verifique seletores, cascata, estados, contraste e responsividade; diferencie problema observado de hipótese.
+- Use Stylelint apenas se estiver configurado e disponível; registre verificações não executadas. Não altere código em revisão isolada.

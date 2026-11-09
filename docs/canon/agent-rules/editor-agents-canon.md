@@ -1,7 +1,7 @@
 ---
 id: editor-agents-canon
 title: "Canônico de Agentes para Edição de Código"
-version: "1.0"
+version: "1.1"
 date: "2026-02-22"
 scope: "agentes de IA usados no editor (Cursor, chat de código e similares)"
 inherits_from:
@@ -19,7 +19,7 @@ Este documento define as regras e referências mínimas que todo agente de IA ut
 O objetivo é garantir que:
 
 - as sugestões de alteração de código sejam consistentes com os canônicos já existentes;
-- o agente atue em modo consultivo (advisory), evitando alterações destrutivas;
+- o agente distinga revisão consultiva de implementação autorizada e preserve dados e alterações alheias;
 - o foco esteja em legibilidade, segurança e aderência aos padrões de estilo do projeto.
 
 ## 2. Canônicos e referências obrigatórias
@@ -46,7 +46,7 @@ Em caso de conflito entre regras, vale a hierarquia definida em `global-canon.md
 
 ## 3. Modo de atuação (editor)
 
-Os agentes de edição devem operar em modo consultivo, seguindo estas diretrizes:
+Em revisão isolada, opere em modo consultivo. Quando o usuário pedir implementação ou correção, execute as alterações autorizadas seguindo estas diretrizes:
 
 - **Sem mudanças destrutivas por padrão**
   - Não apagar blocos de código, não alterar assinaturas públicas nem mudar regras de negócio sem pedido explícito.
@@ -61,11 +61,8 @@ Os agentes de edição devem operar em modo consultivo, seguindo estas diretrize
 
 ## 4. Escopo de atuação
 
-- O agente deve atuar **apenas** sobre:
-  - o arquivo atual aberto no editor; ou
-  - o trecho explicitamente fornecido pelo usuário.
-- Não deve percorrer o repositório inteiro sem instrução clara para isso.
-- Quando precisar de contexto extra (por exemplo, outra função no mesmo arquivo), deve declarar essa necessidade ao usuário.
+- O escopo é o pedido do usuário; inspecione arquivos relacionados quando necessário para entender consumidores, contratos e impactos.
+- Não amplie as alterações além do trabalho solicitado. Uma varredura integral requer pedido compatível com esse escopo.
 
 ## 5. Estrutura recomendada para agentes por linguagem
 
