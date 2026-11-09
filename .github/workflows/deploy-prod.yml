@@ -35,6 +35,7 @@ jobs:
         env:
           DEPLOY_KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          DEPLOY_HOST_KEY_SHA256: ${{ secrets.DEPLOY_HOST_KEY_SHA256 }}
         run: bash .github/scripts/deploy-ssh-setup.sh
 
       - name: SSH sanity check

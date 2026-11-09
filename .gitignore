@@ -10,6 +10,7 @@ docs/90-releases/_draft_major.md
 .env
 .env.*
 !.env.example
+/gha_deploy_ed25519
 
 # Personal/virtual envs
 .venv/

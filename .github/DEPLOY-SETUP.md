@@ -1,5 +1,18 @@
 # Configuração do servidor para deploy (DEV e PROD)
 
+## Proteção da conexão SSH
+
+O deploy aceita o secret `DEPLOY_HOST_KEY_SHA256` com a impressão digital
+SHA256 da chave de host do servidor, obtida por um console administrativo
+confiável. Quando configurado, somente a chave correspondente é aceita.
+Enquanto o secret estiver ausente, o workflow mantém a conexão anterior e
+emite um aviso: a identidade do servidor ainda não está fixada.
+
+A chave privada antiga foi retirada da versão atual do repositório, mas sua
+retirada não revoga acessos nem apaga o histórico. É necessário substituir a
+chave autorizada no servidor, atualizar `DEPLOY_KEY_B64` e só então revogar a
+chave anterior, após confirmar que o novo acesso funciona.
+
 Se o workflow **Sync files to server** falhar com `rsync: [receiver] open "..." failed: Permission denied (13)`, o usuário de deploy não tem permissão de escrita no diretório do site no servidor.
 
 Os **secrets** (`DEPLOY_USER`, `DEV_PATH`, `PROD_PATH`) não podem ser lidos no GitHub depois de salvos. Use as dicas abaixo para saber qual usuário e caminho usar.

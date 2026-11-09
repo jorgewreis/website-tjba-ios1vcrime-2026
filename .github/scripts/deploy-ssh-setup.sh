@@ -35,14 +35,29 @@ run_keyscan() {
   ssh-keyscan "${extra[@]}" -H -T 20 "${DEPLOY_HOST}" >"$KS_OUT" 2>/tmp/gha_keyscan.err
 }
 
-if run_keyscan; then
-  cat "$KS_OUT" >> ~/.ssh/known_hosts
-  echo "ssh-keyscan: host registrado em known_hosts."
-elif run_keyscan -4; then
-  cat "$KS_OUT" >> ~/.ssh/known_hosts
-  echo "ssh-keyscan: host registrado em known_hosts (IPv4)."
-else
+if ! run_keyscan && ! run_keyscan -4; then
   echo "::error::ssh-keyscan falhou — porta 22 inacessível, timeout de rede ou firewall a bloquear o runner do GitHub."
   [ -s /tmp/gha_keyscan.err ] && cat /tmp/gha_keyscan.err
   exit 1
+fi
+
+expected="$(printf '%s' "${DEPLOY_HOST_KEY_SHA256:-}" | tr -d '\r\n' | xargs)"
+if [ -z "$expected" ]; then
+  echo "::warning::DEPLOY_HOST_KEY_SHA256 não configurado; a identidade SSH ainda não está fixada."
+  cat "$KS_OUT" >> ~/.ssh/known_hosts
+else
+  matched=0
+  while IFS= read -r host_key; do
+    [ -n "$host_key" ] || continue
+    fingerprint="$(printf '%s\n' "$host_key" | ssh-keygen -lf - -E sha256 2>/dev/null | awk '{print $2}')" || continue
+    if [ "$fingerprint" = "$expected" ]; then
+      printf '%s\n' "$host_key" >> ~/.ssh/known_hosts
+      matched=1
+    fi
+  done < "$KS_OUT"
+  if [ "$matched" -ne 1 ]; then
+    echo "::error::A chave SSH do servidor não corresponde à impressão digital configurada."
+    exit 1
+  fi
+  echo "Identidade SSH validada pela impressão digital configurada."
 fi
