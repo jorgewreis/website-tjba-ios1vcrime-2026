@@ -5,6 +5,10 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
+concurrency:
+  group: ios1vcrime-production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -16,6 +20,11 @@ jobs:
 
       - name: Validar sintaxe PHP antes do deploy
         run: git ls-files -z '*.php' | xargs -0 -r -n1 php -l
+
+      - name: Verificar dependências antes do deploy
+        run: |
+          composer audit --locked --no-dev --no-interaction
+          npm audit --omit=dev --audit-level=moderate
 
       - name: Preparar alvo SSH (host + usuário, trim + DNS)
         env:
@@ -109,8 +118,23 @@ jobs:
             fi
 
             if [ -f composer.json ]; then
-              rm -rf vendor 2>/dev/null || true
-              composer install --no-dev --optimize-autoloader
+              vendor_stage=$(mktemp -d "${PWD}/.vendor-next.XXXXXXXX")
+              vendor_backup="${vendor_stage}.previous"
+              if ! COMPOSER_VENDOR_DIR="$vendor_stage" composer install --no-dev --optimize-autoloader --no-interaction; then
+                rm -rf -- "$vendor_stage"
+                echo "Falha ao preparar dependências; vendor atual preservado." >&2
+                exit 1
+              fi
+              if [ -e vendor ]; then
+                mv -- vendor "$vendor_backup"
+              fi
+              if ! mv -- "$vendor_stage" vendor; then
+                if [ -e "$vendor_backup" ]; then mv -- "$vendor_backup" vendor; fi
+                rm -rf -- "$vendor_stage"
+                echo "Falha ao ativar dependências; restauração do vendor tentada." >&2
+                exit 1
+              fi
+              rm -rf -- "$vendor_backup"
             fi
 
             if [ -f scripts/migrate-cejusc.php ]; then

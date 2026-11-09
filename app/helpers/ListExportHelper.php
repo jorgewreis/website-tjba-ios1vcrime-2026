@@ -78,7 +78,7 @@ final class ListExportHelper
         PdfStreamHelper::streamHtml($filenameBase, $html, [
             'paper' => 'A4',
             'orientation' => 'landscape',
-            'isRemoteEnabled' => true,
+            'isRemoteEnabled' => false,
         ]);
     }
 }
