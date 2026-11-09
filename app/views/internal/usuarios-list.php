@@ -25,6 +25,9 @@ $showRowAction = count(array_intersect($userPerfis, $perfisComAcessoRowAction)) 
 $routePage = trim((string) ($_GET['page'] ?? 'usuarioslist'));
 $tipoFilter = trim((string) ($_GET['tipo'] ?? 'interno'));
 $perfilFilter = trim((string) ($_GET['perfil'] ?? ''));
+if ($tipoFilter === 'sem_perfil') {
+    $perfilFilter = '';
+}
 $allowedPerPage = [15];
 $itemsPerPage = 15;
 if (!in_array($itemsPerPage, $allowedPerPage, true)) {
@@ -207,6 +210,9 @@ $formatUltimoAcesso = static function (?string $raw): string {
                         <option value="externo"<?php echo $tipoFilter === 'externo' ? ' selected' : ''; ?>>
                             Externo (<?php echo (int) ($tipoCounts['externo'] ?? 0); ?>)
                         </option>
+                        <option value="sem_perfil"<?php echo $tipoFilter === 'sem_perfil' ? ' selected' : ''; ?>>
+                            Sem perfil (<?php echo (int) ($tipoCounts['sem_perfil'] ?? 0); ?>)
+                        </option>
                     </select>
                     <select class="width-500 height-md" id="filter-perfil" name="perfil">
                         <option value=""<?php echo $perfilFilter === '' ? ' selected' : ''; ?>>Todos</option>
@@ -236,7 +242,7 @@ $formatUltimoAcesso = static function (?string $raw): string {
         </form>
 
         <?php
-        $tipoLabelUi = ['interno' => 'Interno', 'externo' => 'Externo'];
+        $tipoLabelUi = ['interno' => 'Interno', 'externo' => 'Externo', 'sem_perfil' => 'Sem perfil'];
         $perfilLabelUi = [
             'estagiario' => 'Estagiário',
             'servidor' => 'Servidor',
@@ -268,7 +274,7 @@ $formatUltimoAcesso = static function (?string $raw): string {
                     $status = $row['status'] ?? 'ativo';
                     $statusLabel = $statusLabels[$status] ?? $status;
                     $statusClass = $statusClasses[$status] ?? 'status-current';
-                    $tipoLabel = ($row['tipo'] ?? 'interno') === 'externo' ? 'Externo' : 'Interno';
+                    $tipoLabel = $tipoLabelUi[$row['tipo'] ?? 'interno'] ?? 'Interno';
                     $setores = trim($row['setores'] ?? '');
                     $setoresDisplay = str_replace('AUDIENCIA', 'Sala de Audiências', $setores);
                     $cargo = trim($row['cargo'] ?? '');

@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/Conection.php';
 require_once __DIR__ . '/../../config/security.php';
-require_once __DIR__ . '/../services/ExternalUsersCleanupService.php';
 
 final class Usuario
 {
@@ -23,8 +22,6 @@ final class Usuario
 
     public function autenticar(string $cpf, string $senha): array
     {
-        $cleanupService = new ExternalUsersCleanupService($this->pdo);
-        $cleanupService->purgeInactiveStudents();
 
         $cpfNumerico = Security::normalizeCPF($cpf);
 

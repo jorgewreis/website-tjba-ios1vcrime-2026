@@ -179,6 +179,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($nome === '' || $sobrenome === '') {
                 $mensagemErro = 'Nome e sobrenome são obrigatórios.';
+            } elseif (!$isUsuarioExterno && $perfisPost === []) {
+                $mensagemErro = 'Selecione ao menos um perfil para o usuário.';
             } elseif ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $mensagemErro = 'E-mail obrigatório e válido.';
             } elseif (!SexoHelper::isValid($sexo)) {

@@ -2,7 +2,6 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/UsuariosListRepository.php';
-require_once __DIR__ . '/ExternalUsersCleanupService.php';
 
 final class UsuariosService
 {
@@ -31,11 +30,15 @@ final class UsuariosService
      */
     public function list(array $filters, int $limit, int $offset): array
     {
-        $cleanupService = new ExternalUsersCleanupService($this->connection);
-        $cleanupService->purgeInactiveStudents();
-
         $tipoFilter = trim((string) ($filters['tipo'] ?? ''));
         $perfilFilter = trim((string) ($filters['perfil'] ?? ''));
+
+        if ($tipoFilter === 'sem_perfil') {
+            $repo = new UsuariosListRepository($this->connection);
+            $unassigned = $perfilFilter === '' ? $repo->listSemPerfil() : [];
+            $this->sortUnified($unassigned);
+            return ['rows' => array_slice($unassigned, $offset, $limit), 'total' => count($unassigned)];
+        }
 
         $servidores = [];
         $externos = [];
@@ -55,7 +58,11 @@ final class UsuariosService
             }
         }
 
-        $merged = array_merge($servidores, $externos);
+        $semPerfil = [];
+        if ($tipoFilter === '' && $perfilFilter === '') {
+            $semPerfil = (new UsuariosListRepository($this->connection))->listSemPerfil();
+        }
+        $merged = array_merge($servidores, $externos, $semPerfil);
         $this->sortUnified($merged);
         $total = count($merged);
         $rows = array_slice($merged, $offset, $limit);
@@ -131,7 +138,8 @@ final class UsuariosService
             }
         }
 
-        return ['interno' => $interno, 'externo' => $externo];
+        $semPerfil = $perfilFilter === '' ? $repoServidores->countSemPerfil() : 0;
+        return ['interno' => $interno, 'externo' => $externo, 'sem_perfil' => $semPerfil];
     }
 
     /**
@@ -148,13 +156,13 @@ final class UsuariosService
         $perfilOptions = ['estagiario', 'servidor', 'diretora', 'magistrada', 'admin', 'estudante'];
         $counts = array_fill_keys($perfilOptions, 0);
 
-        if ($tipoFilter !== 'externo') {
+        if ($tipoFilter !== 'externo' && $tipoFilter !== 'sem_perfil') {
             $byPerfil = $repoServidores->countServidoresByPerfil();
             foreach ($byPerfil as $key => $n) {
                 $counts[$key] = $n;
             }
         }
-        if ($tipoFilter !== 'interno') {
+        if ($tipoFilter !== 'interno' && $tipoFilter !== 'sem_perfil') {
             $counts['estudante'] = $repoServidores->countExternosEstudantes();
         }
 

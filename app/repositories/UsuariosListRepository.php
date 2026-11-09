@@ -111,6 +111,33 @@ final class UsuariosListRepository
         return (int) $statement->fetchColumn();
     }
 
+    /** @return array<int, array<string, mixed>> */
+    public function listSemPerfil(): array
+    {
+        $sql = "SELECT u.id_usuario, u.nome, u.sobrenome,
+                       TRIM(CONCAT_WS(' ', u.nome, u.sobrenome)) AS nome_completo,
+                       u.cpf, u.email, u.cargo, u.instituicao, u.telefone, u.ultimo_acesso,
+                       u.instituicao AS setores, COALESCE(u.cadastro_ativo, 1) AS cadastro_ativo,
+                       EXISTS(SELECT 1 FROM tentativas_login tl WHERE tl.cpf = u.cpf AND tl.bloqueado = 1) AS bloqueado_login
+                  FROM usuarios u
+                 WHERE NOT EXISTS (SELECT 1 FROM usuario_perfil up WHERE up.usuario = u.id_usuario AND up.perfil IS NOT NULL AND TRIM(up.perfil) <> '')
+                 ORDER BY u.nome, u.sobrenome";
+        $rows = $this->connection->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($rows as &$row) {
+            $row['status'] = $this->deriveStatus($row);
+            $row['tipo'] = 'sem_perfil';
+            $row['origem'] = 'usuarios';
+        }
+        unset($row);
+        return $rows;
+    }
+
+    public function countSemPerfil(): int
+    {
+        $sql = "SELECT COUNT(*) FROM usuarios u WHERE NOT EXISTS (SELECT 1 FROM usuario_perfil up WHERE up.usuario = u.id_usuario AND up.perfil IS NOT NULL AND TRIM(up.perfil) <> '')";
+        return (int) $this->connection->query($sql)->fetchColumn();
+    }
+
     /**
      * Contagem de servidores por perfil (para exibir nos filtros).
      * Chaves: estagiario, servidor, diretora, magistrada, admin.
