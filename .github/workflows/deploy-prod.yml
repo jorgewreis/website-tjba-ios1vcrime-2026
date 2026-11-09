@@ -125,6 +125,14 @@ jobs:
                 echo "Falha ao preparar dependências; vendor atual preservado." >&2
                 exit 1
               fi
+              # mktemp cria o diretório com modo 700; o PHP do servidor web
+              # precisa atravessá-lo e ler as bibliotecas após a troca.
+              chmod -R a+rX -- "$vendor_stage"
+              if ! php -r 'require $argv[1] . "/autoload.php"; if (!class_exists("Dompdf\\Dompdf")) { fwrite(STDERR, "Dompdf indisponivel no autoload.\n"); exit(1); }' "$vendor_stage"; then
+                rm -rf -- "$vendor_stage"
+                echo "Falha ao validar Dompdf; vendor atual preservado." >&2
+                exit 1
+              fi
               if [ -e vendor ]; then
                 mv -- vendor "$vendor_backup"
               fi
