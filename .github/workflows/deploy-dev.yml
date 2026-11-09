@@ -68,6 +68,9 @@ jobs:
             --mkpath \
             --exclude ".git/" \
             --exclude ".github/" \
+            --exclude ".agents/" \
+            --exclude ".cursor/" \
+            --exclude "AGENTS.md" \
             --exclude ".env" \
             --exclude "gha_deploy_ed25519*" \
             --exclude "storage/" \
