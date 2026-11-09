@@ -161,6 +161,8 @@ jobs:
               php scripts/migrate-dashboard-conclusoes.php
             fi
 
+            bash scripts/install-cron-inactive-external-users.sh
+
             sudo systemctl reload nginx 2>/dev/null || true
             sudo systemctl reload php8.2-fpm 2>/dev/null || true
             sudo systemctl reload php8.1-fpm 2>/dev/null || true
