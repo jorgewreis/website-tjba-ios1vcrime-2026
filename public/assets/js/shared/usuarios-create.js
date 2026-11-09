@@ -129,17 +129,14 @@
             return ok;
         }
 
-        function validarSenhaInput() {
+        function validarSenhaInput(exibirErro) {
             if (!senha) return true;
             const v = senha.value;
-            if (!v) { showFieldError('senha', ''); return false; }
-            if (v.length < 10) { showFieldError('senha', 'Mínimo 10 caracteres.'); return false; }
+            const notificar = exibirErro !== false;
+            if (!v) { if (notificar) showFieldError('senha', ''); return false; }
+            if (v.length < 10) { if (notificar) showFieldError('senha', 'Mínimo 10 caracteres.'); return false; }
             const ok = validarSenha(v);
-            showFieldError('senha', ok ? '' : 'Use 1 maiúscula, 1 minúscula, 1 número e 1 símbolo.');
-            if (senhaConfirm) {
-                const conf = senhaConfirm.value;
-                showFieldError('senha-confirm', conf ? (conf === v ? '' : 'As senhas não coincidem.') : '');
-            }
+            if (notificar) showFieldError('senha', ok ? '' : 'Use 1 maiúscula, 1 minúscula, 1 número e 1 símbolo.');
             return ok;
         }
 
@@ -154,7 +151,7 @@
             if (!validarCPFInput()) return false;
             if (!emailVal || !validarEmail(emailVal)) return false;
             if (!['Feminino', 'Masculino', 'Outro'].includes(sexoVal)) return false;
-            if (!validarSenhaInput()) return false;
+            if (!validarSenhaInput(false)) return false;
             if (senhaConfirm && senha.value !== senhaConfirm.value) return false;
             if (!isExterno()) {
                 const cargoVal = cargo?.value.trim() || '';

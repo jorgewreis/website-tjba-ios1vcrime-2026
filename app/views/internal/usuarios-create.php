@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
                 $connection->beginTransaction();
 
-                $stmt = $connection->prepare('SELECT id_usuario FROM usuarios WHERE cpf = ? LIMIT 1');
+                $stmt = $connection->prepare("SELECT id_usuario FROM usuarios WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? LIMIT 1");
                 $stmt->execute([$cpf]);
                 if ($stmt->fetch()) {
                     $mensagemErro = 'Já existe um cadastro com este CPF.';
@@ -274,6 +274,9 @@ $csrfToken = Security::generateCSRFToken();
 
     <div class="container-full card-page">
         <?php if ($mensagemErro !== ''): ?>
+            <div role="alert" class="padding-x-md padding-y-md" style="color: #a12622;">
+                <?php echo htmlspecialchars($mensagemErro, ENT_QUOTES, 'UTF-8'); ?>
+            </div>
             <script>
                 if (typeof showToast === 'function') {
                     showToast({

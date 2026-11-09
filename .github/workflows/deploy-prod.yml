@@ -102,26 +102,42 @@ jobs:
               php scripts/migrate-cejusc.php
             fi
 
-            if [ -f scripts/migrate-cartorio-tarefas.php ]; then
-              php scripts/migrate-cartorio-tarefas.php
+            # O rsync preserva arquivos removidos do repositório; retire apenas
+            # os scripts e o agendamento da antiga automação de Tarefas.
+            if command -v crontab >/dev/null 2>&1; then
+              cron_atual=$(mktemp)
+              if crontab -l > "$cron_atual" 2>/dev/null && grep -Fq '# ios1vcrime-cartorio-tarefas-automacao' "$cron_atual"; then
+                sed '/# ios1vcrime-cartorio-tarefas-automacao/d' "$cron_atual" | crontab -
+              fi
+              rm -f "$cron_atual"
             fi
-
-            if [ -f scripts/migrate-cartorio-tarefas-automacao.php ]; then
-              php scripts/migrate-cartorio-tarefas-automacao.php
-            fi
-
-            if [ -f scripts/install-cron-cartorio-tarefas-automacao.sh ]; then
-              bash scripts/install-cron-cartorio-tarefas-automacao.sh
-            fi
-
-            if [ -f scripts/check-cartorio-tarefas-automacao.php ]; then
-              for tentativa in $(seq 1 18); do
-                php scripts/processar-cartorio-tarefas-automacao.php || true
-                if php scripts/check-cartorio-tarefas-automacao.php; then break; fi
-                if [ "$tentativa" -eq 18 ]; then exit 1; fi
-                sleep 5
-              done
-            fi
+            rm -f scripts/migrate-cartorio-tarefas.php \
+              scripts/migrate-cartorio-tarefas-automacao.php \
+              scripts/install-cron-cartorio-tarefas-automacao.sh \
+              scripts/agendar-cartorio-tarefas-automacao.sh \
+              scripts/processar-cartorio-tarefas-automacao.php \
+              scripts/check-cartorio-tarefas-automacao.php \
+              scripts/purge-cartorio-tarefas.php
+            rm -f app/views/internal/_fokuslaw-module-shell.php \
+              app/views/internal/fokuslaw-tarefas.php \
+              app/views/internal/fokuslaw-expedicoes.php \
+              app/views/internal/cartorio-tarefas-list.php \
+              app/views/internal/cartorio-tarefas-create.php \
+              app/views/internal/cartorio-tarefas-rules.php \
+              app/repositories/CartorioTarefasRepository.php \
+              app/repositories/CartorioTarefasRegrasRepository.php \
+              app/services/CartorioTarefasAutomacaoService.php \
+              app/helpers/CartorioTarefasAutomacaoVersao.php \
+              app/helpers/CartorioTarefasCondicoes.php \
+              app/helpers/CartorioTarefasRegras.php \
+              app/helpers/TarefasLocalHelper.php \
+              database/migrations/20261104_create_fokuslaw_modules.sql \
+              public/api/fokuslaw/expedicoes.php \
+              public/assets/css/modules/fokuslaw/fokuslaw-module.css \
+              public/assets/js/modules/fokuslaw/expedicoes.js \
+              public/templates/fokuslaw-tarefas-lista.html \
+              public/assets/css/cartorio-tarefas-regras.css \
+              public/assets/js/cartorio-tarefas-regras.js
 
             if [ -f scripts/migrate-gabinete-reu-preso-controle-tipo.php ]; then
               php scripts/migrate-gabinete-reu-preso-controle-tipo.php
