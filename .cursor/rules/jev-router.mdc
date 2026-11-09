@@ -1,0 +1,8 @@
+---
+description: Selecionar instruções e recursos pertinentes à tarefa no sistema da vara.
+alwaysApply: true
+---
+
+# Roteamento de tarefas
+
+Consulte `.agents/skills/jev-router/SKILL.md` para selecionar os agentes e as skills pertinentes. Verifique disponibilidade real e permissões do ambiente antes de invocar ou delegar; quando necessário, siga as instruções relevantes diretamente.

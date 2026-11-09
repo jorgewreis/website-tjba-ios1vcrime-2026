@@ -2,6 +2,8 @@
 
 Sistema PHP da 1ª Vara Crime de Ilhéus. Comunique-se em português e observe a solicitação atual, as decisões anteriores e as instruções do ambiente. Confira o estado do repositório e preserve alterações alheias.
 
+Para selecionar agentes e skills adequados à tarefa, consulte `.agents/skills/jev-router/SKILL.md`; a invocação e a delegação dependem dos recursos e permissões do ambiente.
+
 ## Arquitetura
 
 - `public/`: entradas HTTP; `public/api/`: APIs atuais; `public/assets/`: CSS e JS. `public/home.php` e `public/frame.php` compõem o shell e o roteamento.
