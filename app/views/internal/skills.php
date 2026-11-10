@@ -42,6 +42,13 @@ Security::requireAuthentication();
                 Abrir
             </button>
         </div>
+        <div class="skills-item">
+            <div class="skills-item-content">
+                <h2 class="skills-item-title">Dividir PDF por tamanho</h2>
+                <p class="skills-item-description">Divide um PDF em partes de até o tamanho escolhido, diretamente no navegador.</p>
+            </div>
+            <button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=skillspdfsplit" aria-label="Abrir ferramenta Dividir PDF por tamanho">Abrir</button>
+        </div>
     </div>
 </div>
 </body>

@@ -7,7 +7,7 @@
 | alterardados | `all_internal` | Idem dashboard |
 | notificacoes, configuracoes, documentos | `all_internal` | Idem |
 | feriadoslist | `all_internal` | Idem |
-| skills, skillspdfmarkdown | `all_internal` | Qualquer utilizador interno (perfil composto ou elevado); menu na seção **Ferramentas** |
+| skills, skillspdfmarkdown, skillspdfsplit | `all_internal` | Qualquer utilizador interno (perfil composto ou elevado); menu na seção **Ferramentas** |
 | monitoramentogabinete, monitoramentogabinetecreate, monitoramentogabineteedit | `all_internal` | Qualquer interno com `ESTAGIARIO-*` ou `SERVIDOR-*` (cartório, gabinete ou audiências); menu **somente** em **Consultas**; cadastro/conclusão/cancelamento permitidos a todos os internos com acesso (decisão produto 2026-05) |
 
 **Monitoramento — decisões de produto (implementado 2026-05):**

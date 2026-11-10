@@ -74,6 +74,7 @@ $allowed_pages = [
     'configuracoes'         => $PAGES . '/configuracoes.php',
     'skills'                => $PAGES . '/skills.php',
     'skillspdfmarkdown'     => $PAGES . '/skills-pdf-markdown.php',
+    'skillspdfsplit'        => $PAGES . '/skills-pdf-split.php',
     'documentos'            => $PAGES . '/documentos.php',
     'alterardados'          => $PAGES . '/alterar-dados-pessoais.php',
     'consultapartes'        => $PAGES . '/consulta-partes-list.php',
