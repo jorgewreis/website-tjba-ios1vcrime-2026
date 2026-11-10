@@ -2,8 +2,11 @@
     'use strict';
 
     var filesState = [];
+    var processing = false;
 
     function notify(type, title, message) {
+        var announcement = getById('skills-pdf-announcement');
+        if (announcement) announcement.textContent = title + ': ' + message;
         if (typeof showToast === 'function') {
             showToast({ type: type, title: title, message: message });
             return;
@@ -40,27 +43,45 @@
         var counter = getById('skills-pdf-counter');
         if (!list || !counter) return;
 
-        counter.textContent = filesState.length + ' arquivo(s)';
+        counter.textContent = filesState.length + (filesState.length === 1 ? ' arquivo' : ' arquivos');
+        var zipButton = getById('btn-skills-pdf-zip');
+        if (zipButton) zipButton.disabled = !filesState.some(function (item) { return !!item.markdownBlob; });
         if (filesState.length === 0) {
-            list.innerHTML = '';
+            var hadFocus = list.contains(document.activeElement);
+            list.innerHTML = '<p class="skills-pdf-empty">Os arquivos adicionados aparecerão aqui.</p>';
+            if (hadFocus) getById('skills-pdf-dropzone').focus();
             return;
         }
 
+        var focused = document.activeElement;
+        var focusedRow = focused && focused.closest('.skills-pdf-item');
+        var focusedKey = focusedRow && focusedRow.getAttribute('data-key');
+        var focusedClass = focused && focused.classList.contains('btn-file-download') ? 'btn-file-download' : 'btn-file-remove';
         list.innerHTML = filesState.map(function (item) {
             var downloadDisabled = item.markdownBlob ? '' : ' disabled';
             return (
-                '<div class="skills-pdf-item" data-key="' + item.key + '">' +
+                '<div class="skills-pdf-item" data-key="' + escapeHtml(item.key) + '">' +
                     '<div class="skills-pdf-meta">' +
                         '<div class="skills-pdf-name">' + escapeHtml(item.file.name) + '</div>' +
-                        '<div class="skills-pdf-status">' + escapeHtml(item.statusText) + ' - ' + escapeHtml(formatBytes(item.file.size)) + '</div>' +
+                        '<div class="skills-pdf-status">' + escapeHtml(item.statusText) + ' · ' + escapeHtml(formatBytes(item.file.size)) + '</div>' +
+                        (item.converting ? '<div class="skills-progress"><progress max="100"' + (item.progress === null ? '' : ' value="' + item.progress + '"') + ' aria-label="Progresso da conversão de ' + escapeHtml(item.file.name) + '"></progress><span>' + (item.progress === null ? 'Preparando…' : item.progress + '%') + '</span></div>' : '') +
                     '</div>' +
                     '<div class="skills-pdf-actions">' +
-                        '<button type="button" class="btn btn-secondary-outline height-sm btn-file-download"' + downloadDisabled + '>Baixar .md</button>' +
-                        '<button type="button" class="btn btn-danger-outline height-sm btn-file-remove">Remover</button>' +
+                        '<button type="button" class="btn btn-secondary-outline height-sm btn-file-download" aria-label="Baixar ' + escapeHtml(item.file.name) + ' em Markdown"' + downloadDisabled + '>Baixar .md</button>' +
+                        '<button type="button" class="btn btn-danger-outline height-sm btn-file-remove" aria-label="Remover ' + escapeHtml(item.file.name) + '">Remover</button>' +
                     '</div>' +
                 '</div>'
             );
         }).join('');
+        if (focusedKey) {
+            var replacement = Array.prototype.find.call(list.children, function (row) { return row.getAttribute('data-key') === focusedKey; });
+            if (replacement) {
+                var button = replacement.querySelector('.' + focusedClass);
+                if (button && !button.disabled) button.focus();
+            } else {
+                getById('skills-pdf-dropzone').focus();
+            }
+        }
     }
 
     function escapeHtml(text) {
@@ -81,7 +102,7 @@
 
         var added = 0;
         incoming.forEach(function (file) {
-            if (!file || String(file.type || '').toLowerCase() !== 'application/pdf') return;
+            if (!file || String(file.type || '').toLowerCase() !== 'application/pdf' && !/\.pdf$/i.test(file.name)) return;
             var key = buildFileKey(file);
             if (existingKeys[key]) return;
             existingKeys[key] = true;
@@ -89,14 +110,17 @@
                 key: key,
                 file: file,
                 statusText: 'Aguardando conversão',
-                markdownBlob: null
+                markdownBlob: null,
+                converting: false,
+                progress: null
             });
             added += 1;
         });
 
         if (added > 0) {
-            notify('success', 'Arquivos adicionados', added + ' PDF(s) pronto(s) para conversão.');
+            processAll();
         }
+        if (added === 0 && incoming.length) notify('info', 'Nenhum arquivo adicionado', 'Selecione PDFs que ainda não estejam na lista.');
         renderList();
     }
 
@@ -110,7 +134,7 @@
         renderList();
     }
 
-    async function extractMarkdownFromPdf(file) {
+    async function extractMarkdownFromPdf(file, onProgress) {
         if (!window.pdfjsLib) {
             throw new Error('Biblioteca de PDF indisponível.');
         }
@@ -129,6 +153,7 @@
             output.push('## Página ' + pageNum);
             output.push(lines.join(' '));
             output.push('');
+            onProgress(pageNum, pdf.numPages);
         }
 
         return output.join('\n').trim() + '\n';
@@ -142,30 +167,42 @@
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
     }
 
     async function processAll() {
-        if (filesState.length === 0) {
-            notify('info', 'Sem arquivos', 'Adicione pelo menos um PDF para converter.');
-            return;
-        }
-
-        for (var i = 0; i < filesState.length; i += 1) {
-            var entry = filesState[i];
+        if (processing) return;
+        processing = true;
+        var entry;
+        while ((entry = filesState.find(function (item) { return item.statusText === 'Aguardando conversão'; }))) {
             try {
-                updateStatus(entry.key, 'Convertendo...');
-                var markdown = await extractMarkdownFromPdf(entry.file);
+                entry.converting = true;
+                entry.progress = null;
+                updateStatus(entry.key, 'Convertendo…');
+                getById('skills-pdf-announcement').textContent = 'Convertendo ' + entry.file.name + '.';
+                var markdown = await extractMarkdownFromPdf(entry.file, function (page, total) {
+                    if (filesState.indexOf(entry) === -1) return;
+                    entry.progress = Math.round(page * 100 / total);
+                    var row = Array.prototype.find.call(getById('skills-pdf-list').children, function (element) { return element.getAttribute('data-key') === entry.key; });
+                    if (row) {
+                        row.querySelector('progress').value = entry.progress;
+                        row.querySelector('.skills-progress span').textContent = entry.progress + '%';
+                    }
+                });
+                if (filesState.indexOf(entry) === -1) continue;
                 entry.markdownBlob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
-                entry.statusText = 'Convertido com sucesso';
+                entry.statusText = 'Convertido · download iniciado';
+                getById('skills-pdf-announcement').textContent = entry.file.name + ' convertido. Download iniciado.';
+                downloadBlob(normalizeFileName(entry.file.name) + '.md', entry.markdownBlob);
             } catch (error) {
                 entry.markdownBlob = null;
-                entry.statusText = 'Falha na conversão';
+                entry.statusText = 'Falha na conversão. Verifique o PDF e tente adicioná-lo novamente.';
+                notify('error', 'Falha na conversão', 'Não foi possível converter ' + entry.file.name + '.');
             }
+            entry.converting = false;
             renderList();
         }
-
-        notify('success', 'Conversão finalizada', 'Processamento concluído.');
+        processing = false;
     }
 
     async function downloadZip() {
@@ -192,14 +229,11 @@
     function bindDropzone() {
         var input = getById('skills-pdf-input');
         var dropzone = getById('skills-pdf-dropzone');
-        var btnAdd = getById('btn-skills-pdf-add');
-        var btnProcess = getById('btn-skills-pdf-process');
         var btnZip = getById('btn-skills-pdf-zip');
         var list = getById('skills-pdf-list');
 
-        if (!input || !dropzone || !btnAdd || !btnProcess || !btnZip || !list) return;
+        if (!input || !dropzone || !btnZip || !list) return;
 
-        btnAdd.addEventListener('click', function () { input.click(); });
         dropzone.addEventListener('click', function () { input.click(); });
         input.addEventListener('change', function (e) {
             addFiles(e.target.files);
@@ -222,7 +256,6 @@
             addFiles(e.dataTransfer ? e.dataTransfer.files : []);
         });
 
-        btnProcess.addEventListener('click', processAll);
         btnZip.addEventListener('click', function () {
             downloadZip().catch(function () {
                 notify('error', 'Erro', 'Falha ao gerar ZIP.');

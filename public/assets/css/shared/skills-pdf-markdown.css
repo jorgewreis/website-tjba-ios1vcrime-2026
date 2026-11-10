@@ -1,93 +1,31 @@
-.skills-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    padding: 16px;
-}
+.skills-converter { padding: 24px; }
+.skills-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.skills-intro { margin: 32px 0 20px; }
+.skills-intro h2, .skills-pdf-list-head h2 { margin: 0 0 6px; color: #172b4d; }
+.skills-intro h2 { font-size: 22px; }
+.skills-intro p, .skills-pdf-list-head p { margin: 0; color: #52627a; line-height: 1.5; }
+.skills-dropzone { display: flex; width: 100%; flex-direction: column; align-items: center; gap: 8px; border: 2px dashed #a4b4c7; border-radius: 12px; background: #f7faff; padding: 34px 20px; text-align: center; cursor: pointer; color: #172b4d; }
+.skills-dropzone:hover, .skills-dropzone.is-drag-over { border-color: #285aa8; background: #edf4ff; }
+.skills-dropzone:focus-visible { outline: 3px solid #285aa8; outline-offset: 3px; }
+.skills-dropzone-icon { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 4px; border-radius: 10px; background: #e0ebfb; color: #204c90; font-size: 12px; font-weight: 700; }
+.skills-dropzone-title { font-size: 17px; font-weight: 700; }
+.skills-dropzone-subtitle, .skills-privacy { color: #52627a; font-size: 14px; }
+.skills-privacy { margin: 12px 0 30px; line-height: 1.5; }
+.skills-pdf-list-wrap { border-top: 1px solid #dce3ec; padding-top: 24px; }
+.skills-pdf-list-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.skills-pdf-list-head h2 { font-size: 18px; }
+.skills-pdf-list-head p { font-size: 14px; }
+#skills-pdf-counter { flex-shrink: 0; color: #52627a; font-size: 14px; }
+.skills-pdf-list { display: flex; flex-direction: column; gap: 10px; }
+.skills-pdf-empty { margin: 0; padding: 24px; border: 1px solid #e1e7ee; border-radius: 10px; color: #52627a; text-align: center; }
+.skills-pdf-item { display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid #dce3ec; border-radius: 10px; background: #fff; padding: 14px 16px; }
+.skills-pdf-meta { min-width: 0; }
+.skills-pdf-name { font-weight: 600; margin-bottom: 4px; overflow-wrap: anywhere; }
+.skills-pdf-status { color: #52627a; font-size: 13px; line-height: 1.4; }
+.skills-pdf-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 768px) { .skills-converter { padding: 16px; } .skills-intro { margin-top: 24px; } .skills-pdf-item { flex-direction: column; align-items: stretch; } .skills-pdf-list-head { align-items: flex-start; } }
 
-.skills-dropzone {
-    width: calc(100% - 32px);
-    margin: 0 16px 16px;
-    border: 2px dashed rgba(0, 0, 0, 0.18);
-    border-radius: 12px;
-    background: #f8fafc;
-    padding: 26px 16px;
-    text-align: center;
-    cursor: pointer;
-}
-
-.skills-dropzone-title {
-    display: block;
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 6px;
-}
-
-.skills-dropzone-subtitle {
-    display: block;
-    color: #4a5568;
-    font-size: 13px;
-}
-
-.skills-dropzone.is-drag-over {
-    border-color: var(--color-primary, #5e50ee);
-    background: #f1f3ff;
-}
-
-.skills-pdf-list-wrap {
-    padding: 0 16px 16px;
-}
-
-.skills-pdf-list-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 8px;
-}
-
-.skills-pdf-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.skills-pdf-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    background: #fff;
-    padding: 10px 12px;
-}
-
-.skills-pdf-meta {
-    min-width: 0;
-}
-
-.skills-pdf-name {
-    font-weight: 600;
-    margin-bottom: 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.skills-pdf-status {
-    color: #4a5568;
-    font-size: 13px;
-}
-
-.skills-pdf-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-@media (max-width: 768px) {
-    .skills-pdf-item {
-        flex-direction: column;
-        align-items: stretch;
-    }
-}
+.skills-progress { display: flex; align-items: center; gap: 10px; margin-top: 10px; color: #43546b; font-size: 13px; }
+.skills-progress progress { width: min(260px, 100%); height: 10px; accent-color: #285aa8; }
+.skills-progress span { white-space: nowrap; }
+.skills-announcement:not(:empty) { margin: 0 0 12px; color: #334d6d; font-size: 14px; }

@@ -26,29 +26,33 @@ Security::requireAuthentication();
     <h1 class="title-page">PDF para Markdown</h1>
 </div>
 
-<div class="container-full card-page">
+<main class="container-full card-page skills-converter">
     <div class="skills-toolbar">
         <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=skills">Voltar para Skills</button>
-        <button type="button" class="btn btn-primary-outline height-md" id="btn-skills-pdf-add">Adicionar PDFs</button>
-        <button type="button" class="btn btn-primary height-md" id="btn-skills-pdf-process">Converter para Markdown</button>
-        <button type="button" class="btn btn-secondary height-md" id="btn-skills-pdf-zip">Baixar todos (ZIP)</button>
+        <button type="button" class="btn btn-secondary-outline height-md" id="btn-skills-pdf-zip" disabled>Baixar todos (ZIP)</button>
     </div>
 
-    <input id="skills-pdf-input" type="file" accept="application/pdf" multiple hidden>
-
-    <button type="button" class="skills-dropzone" id="skills-pdf-dropzone" title="Clique ou arraste arquivos PDF">
-        <span class="skills-dropzone-title">Clique ou arraste PDFs aqui</span>
-        <span class="skills-dropzone-subtitle">Os arquivos ficam no navegador; não há envio para o servidor.</span>
+    <div class="skills-intro">
+        <h2>Converta seus PDFs em Markdown</h2>
+        <p>Selecione um ou mais arquivos. A conversão e o download começam automaticamente.</p>
+    </div>
+    <input id="skills-pdf-input" type="file" accept="application/pdf,.pdf" multiple hidden>
+    <button type="button" class="skills-dropzone" id="skills-pdf-dropzone" aria-describedby="skills-pdf-help">
+        <span class="skills-dropzone-icon" aria-hidden="true">PDF</span>
+        <span class="skills-dropzone-title">Selecione ou arraste seus PDFs</span>
+        <span class="skills-dropzone-subtitle">Clique para escolher arquivos no seu dispositivo</span>
     </button>
+    <p id="skills-pdf-help" class="skills-privacy">Os arquivos são processados no navegador e não são enviados ao servidor. PDFs digitalizados sem texto podem não produzir conteúdo útil.</p>
 
-    <div class="skills-pdf-list-wrap">
+    <section class="skills-pdf-list-wrap" aria-labelledby="skills-pdf-list-title">
         <div class="skills-pdf-list-head">
-            <strong>Arquivos</strong>
-            <span id="skills-pdf-counter">0 arquivo(s)</span>
+            <div><h2 id="skills-pdf-list-title">Seus arquivos</h2><p>Acompanhe a conversão e baixe novamente quando precisar.</p></div>
+            <span id="skills-pdf-counter">0 arquivos</span>
         </div>
+        <div id="skills-pdf-announcement" class="skills-announcement" role="status" aria-live="polite"></div>
         <div id="skills-pdf-list" class="skills-pdf-list"></div>
-    </div>
-</div>
+    </section>
+</main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" defer></script>
