@@ -118,4 +118,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(skills): limitar PDFs a 20 MB** `[04abf0e4]`
 - **fix(oficios): ocultar mensagem de consulta DataJud** `[afc674f4]`
 - **feat(skills): dividir PDF por tamanho** `[63831f6b]`
+- **feat(skills): melhorar apresentacao e orientacoes** `[996d1af4]`
 
