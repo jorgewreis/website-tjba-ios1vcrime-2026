@@ -15,7 +15,7 @@ Security::requireAuthentication();
     <?php include __DIR__ . '/_toast_script.php'; ?>
     <link rel="stylesheet" href="/assets/css/shared/skills-pdf-markdown.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/skills-pdf-markdown.css') ?: time(); ?>">
 </head>
-<body class="page-internal">
+<body class="page-internal skills-tool-page">
 <div class="spacing-top-page"></div>
 
 <div class="header-page">

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0116
+
+**Data:** 2026-11-10 12:25:55 | **Commit:** `f13b6367` | **Tipo:** `patch`
+
+- style(skills): alinhar visual das ferramentas de PDF
+
 ## V. 1.87.0115
 
 **Data:** 2026-11-10 12:19:07 | **Commit:** `996d1af4` | **Tipo:** `patch`
@@ -6117,6 +6123,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

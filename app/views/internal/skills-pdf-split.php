@@ -12,7 +12,7 @@ Security::requireAuthentication();
     <?php include __DIR__ . '/_internal_head_styles.php'; ?>
     <link rel="stylesheet" href="/assets/css/shared/skills-pdf-markdown.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/skills-pdf-markdown.css') ?: time(); ?>">
 </head>
-<body class="page-internal">
+<body class="page-internal skills-tool-page">
 <div class="spacing-top-page"></div>
 <div class="header-page">
     <div class="location"><span class="all">Interno - Ferramentas - Skills -</span> <span class="specific">Dividir PDF por tamanho</span></div>
