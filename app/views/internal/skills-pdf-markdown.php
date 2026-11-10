@@ -40,7 +40,7 @@ Security::requireAuthentication();
     <button type="button" class="skills-dropzone" id="skills-pdf-dropzone" aria-describedby="skills-pdf-help">
         <span class="skills-dropzone-icon" aria-hidden="true">PDF</span>
         <span class="skills-dropzone-title">Selecione ou arraste seus PDFs</span>
-        <span class="skills-dropzone-subtitle">Clique para escolher arquivos no seu dispositivo</span>
+        <span class="skills-dropzone-subtitle">Clique para escolher arquivos de até 20 MB cada</span>
     </button>
     <p id="skills-pdf-help" class="skills-privacy">Os arquivos são processados no navegador e não são enviados ao servidor. PDFs digitalizados sem texto podem não produzir conteúdo útil.</p>
 

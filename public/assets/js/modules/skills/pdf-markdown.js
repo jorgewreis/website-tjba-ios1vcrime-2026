@@ -3,6 +3,7 @@
 
     var filesState = [];
     var processing = false;
+    var maxPdfBytes = 20 * 1024 * 1024;
 
     function notify(type, title, message) {
         var announcement = getById('skills-pdf-announcement');
@@ -101,8 +102,13 @@
         });
 
         var added = 0;
+        var oversized = [];
         incoming.forEach(function (file) {
             if (!file || String(file.type || '').toLowerCase() !== 'application/pdf' && !/\.pdf$/i.test(file.name)) return;
+            if (file.size > maxPdfBytes) {
+                oversized.push(file.name);
+                return;
+            }
             var key = buildFileKey(file);
             if (existingKeys[key]) return;
             existingKeys[key] = true;
@@ -120,7 +126,11 @@
         if (added > 0) {
             processAll();
         }
-        if (added === 0 && incoming.length) notify('info', 'Nenhum arquivo adicionado', 'Selecione PDFs que ainda não estejam na lista.');
+        if (oversized.length) {
+            notify('error', 'PDF acima do limite', 'Cada PDF pode ter no máximo 20 MB. Não adicionado(s): ' + oversized.join(', ') + '.');
+        } else if (added === 0 && incoming.length) {
+            notify('info', 'Nenhum arquivo adicionado', 'Selecione PDFs que ainda não estejam na lista.');
+        }
         renderList();
     }
 

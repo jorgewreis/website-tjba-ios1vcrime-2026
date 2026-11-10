@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0112
+
+**Data:** 2026-11-10 11:13:39 | **Commit:** `04abf0e4` | **Tipo:** `patch`
+
+- fix(skills): limitar PDFs a 20 MB
+
 ## V. 1.87.0111
 
 **Data:** 2026-11-03 21:30:36 | **Commit:** `1c45e534` | **Tipo:** `patch`
@@ -6093,6 +6099,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
