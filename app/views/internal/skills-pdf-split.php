@@ -22,18 +22,23 @@ Security::requireAuthentication();
     <div class="skills-toolbar"><button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=skills">Voltar para Skills</button></div>
     <div class="skills-intro">
         <h2>Divida um PDF em partes menores</h2>
-        <p>Escolha o arquivo e o tamanho máximo de cada parte. A divisão acontece entre páginas.</p>
+        <p>Escolha o arquivo e divida por tamanho, quantidade de páginas ou intervalos.</p>
     </div>
     <form id="split-form">
         <div class="skills-split-fields">
             <div><label for="split-file">Arquivo PDF</label><input id="split-file" type="file" accept="application/pdf,.pdf" required aria-describedby="split-help"></div>
-            <div><label for="split-size">Tamanho máximo por parte (MB)</label><input id="split-size" type="number" min="0.1" max="500" step="0.1" value="20" required aria-describedby="split-help"></div>
+            <div><label for="split-mode">Forma de divisão</label><select id="split-mode"><option value="size">Tamanho máximo</option><option value="count">Quantidade de páginas</option><option value="ranges">Intervalos de páginas</option></select></div>
+            <div id="split-size-wrap"><label for="split-size">Tamanho máximo por parte (MB)</label><input id="split-size" type="number" min="0.1" max="500" step="0.1" value="20" required aria-describedby="split-help"></div>
+            <div id="split-count-wrap" hidden><label for="split-count">Páginas por parte</label><input id="split-count" type="number" min="1" step="1" value="10" disabled></div>
+            <div id="split-ranges-wrap" hidden><label for="split-ranges">Intervalos de páginas</label><input id="split-ranges" type="text" placeholder="Ex.: 1-10, 11-20" aria-describedby="split-ranges-help" disabled><small id="split-ranges-help">Informe intervalos ou páginas, separados por vírgula. Ex.: 1-10, 11-20, 25.</small></div>
         </div>
         <p id="split-help" class="skills-privacy">O PDF é processado no seu navegador, sem envio ao servidor. Se uma página sozinha exceder o limite, aumente o tamanho máximo. PDFs protegidos por senha não são compatíveis. Formulários interativos e assinaturas digitais podem não ser preservados nas partes.</p>
         <button class="btn btn-primary height-md" id="split-submit" type="submit">Dividir PDF</button>
+        <button class="btn btn-danger-outline height-md" id="split-cancel" type="button" hidden>Cancelar divisão</button>
     </form>
     <section class="skills-pdf-list-wrap skills-split-results" aria-labelledby="split-result-title">
         <div class="skills-pdf-list-head"><h2 id="split-result-title">Resultado</h2><button type="button" id="split-download-all" class="btn btn-secondary-outline height-md" disabled>Baixar todas as partes (ZIP)</button></div>
+        <p id="split-summary" class="skills-announcement" hidden></p>
         <p id="split-status" class="skills-announcement" role="status" aria-live="polite">Selecione um PDF para começar.</p>
         <div id="split-progress-wrap" class="skills-progress" hidden><progress id="split-progress" max="100" aria-label="Progresso da divisão"></progress><span id="split-progress-text">Preparando…</span></div>
         <div id="split-results" class="skills-pdf-list"></div>

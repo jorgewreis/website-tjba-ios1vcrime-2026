@@ -48,3 +48,8 @@
 .skills-split-results .skills-progress { margin-bottom: 16px; }
 @media (max-width: 850px) { .skills-tool-page .header-page { margin-left: 20px; margin-right: 20px; } .skills-tool-page .skills-converter { margin-left: 20px; margin-right: 20px; } }
 @media (max-width: 600px) { .skills-tool-page .header-page { margin-left: 12px; margin-right: 12px; } .skills-tool-page .skills-converter { margin: 4px 12px 24px; padding: 18px; } .skills-intro { padding: 18px; } .skills-pdf-item { flex-direction: column; align-items: stretch; } .skills-pdf-actions > .btn { flex: 1 1 auto; } .skills-pdf-list-head { align-items: flex-start; } }
+
+.skills-split-fields [hidden], .skills-tool-page [hidden] { display: none !important; }
+.skills-tool-page .skills-split-fields select { width: 100%; min-height: 44px; padding: 9px 12px; border: 1px solid #d8d0e0; border-radius: 6px; background: #fff; color: #302a39; font: inherit; font-size: 14px; }
+.skills-tool-page .skills-converter select:focus-visible { outline: 3px solid #7950ad; outline-offset: 3px; }
+.skills-split-fields small { color: #5f5869; line-height: 1.5; }

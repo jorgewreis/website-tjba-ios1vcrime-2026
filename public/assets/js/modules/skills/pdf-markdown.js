@@ -3,6 +3,8 @@
 
     var filesState = [];
     var processing = false;
+    var cancelRequested = false;
+    var activeTask = null;
     var maxPdfBytes = 20 * 1024 * 1024;
 
     function notify(type, title, message) {
@@ -144,29 +146,58 @@
         renderList();
     }
 
+    function cancelled() { if (cancelRequested) { var e = new Error('cancelado'); e.name = 'CancelledError'; throw e; } }
+    function yieldUi() { return new Promise(function (resolve) { setTimeout(resolve, 0); }); }
+    function pageText(items) {
+        var lines = [], current = '', lastY = null, lastHeight = 0;
+        items.forEach(function (item) {
+            var text = String(item.str || '');
+            var y = item.transform ? item.transform[5] : null;
+            var h = Math.abs(item.height || (item.transform && item.transform[3]) || 10);
+            if (!current && lines.length && y !== null && lastY !== null && Math.abs(y - lastY) > Math.max(lastHeight, h) * 1.7 && lines[lines.length - 1] !== '') lines.push('');
+            if (current && y !== null && lastY !== null && Math.abs(y - lastY) > Math.max(2, h * 0.5)) {
+                lines.push(current.trim());
+                if (Math.abs(y - lastY) > Math.max(lastHeight, h) * 1.7) lines.push('');
+                current = '';
+            }
+            if (text) {
+                if (current && !/\s$/.test(current) && !/^\s/.test(text)) current += ' ';
+                current += text;
+            }
+            if (item.hasEOL && current) { lines.push(current.trim()); current = ''; }
+            if (y !== null) lastY = y;
+            lastHeight = h;
+        });
+        if (current.trim()) lines.push(current.trim());
+        return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+    }
     async function extractMarkdownFromPdf(file, onProgress) {
-        if (!window.pdfjsLib) {
-            throw new Error('Biblioteca de PDF indisponível.');
-        }
+        if (!window.pdfjsLib) throw new Error('A biblioteca de PDF não carregou. Verifique sua conexão e atualize a página.');
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-        var data = await file.arrayBuffer();
-        var pdf = await window.pdfjsLib.getDocument({ data: data }).promise;
-        var output = ['# ' + file.name, ''];
-
-        for (var pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
-            var page = await pdf.getPage(pageNum);
-            var content = await page.getTextContent();
-            var lines = content.items.map(function (it) {
-                return String(it.str || '').trim();
-            }).filter(Boolean);
-            output.push('## Página ' + pageNum);
-            output.push(lines.join(' '));
-            output.push('');
-            onProgress(pageNum, pdf.numPages);
-        }
-
-        return output.join('\n').trim() + '\n';
+        var data = await file.arrayBuffer(); cancelled();
+        activeTask = window.pdfjsLib.getDocument({ data: data });
+        var pdf = await activeTask.promise; cancelled();
+        var output = ['# ' + file.name, ''], emptyPages = [];
+        try {
+            for (var pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
+                cancelled();
+                var page = await pdf.getPage(pageNum);
+                var content = await page.getTextContent(); cancelled();
+                var text = pageText(content.items);
+                if (!text) emptyPages.push(pageNum);
+                output.push('## Página ' + pageNum, '', text, '');
+                onProgress(pageNum, pdf.numPages);
+                await yieldUi();
+            }
+        } finally { await pdf.destroy(); activeTask = null; }
+        return { text: output.join('\n').trim() + '\n', emptyPages: emptyPages };
+    }
+    function errorMessage(error) {
+        if (!error) return 'Não foi possível ler o PDF.';
+        if (error.name === 'PasswordException') return 'PDF protegido por senha; a conversão não é compatível com arquivos protegidos.';
+        if (error.name === 'InvalidPDFException' || error.name === 'MissingPDFException') return 'O arquivo PDF está inválido ou incompleto.';
+        if (/biblioteca de PDF/i.test(error.message || '')) return error.message;
+        return 'Não foi possível ler o PDF. Verifique se o arquivo está íntegro e tente novamente.';
     }
 
     function downloadBlob(filename, blob) {
@@ -183,6 +214,8 @@
     async function processAll() {
         if (processing) return;
         processing = true;
+        cancelRequested = false;
+        getById('btn-skills-pdf-cancel').hidden = false;
         var entry;
         while ((entry = filesState.find(function (item) { return item.statusText === 'Aguardando conversão'; }))) {
             try {
@@ -199,20 +232,32 @@
                         row.querySelector('.skills-progress span').textContent = entry.progress + '%';
                     }
                 });
+                cancelled();
                 if (filesState.indexOf(entry) === -1) continue;
-                entry.markdownBlob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
-                entry.statusText = 'Convertido · download iniciado';
-                getById('skills-pdf-announcement').textContent = entry.file.name + ' convertido. Download iniciado.';
+                entry.markdownBlob = new Blob([markdown.text], { type: 'text/markdown;charset=utf-8' });
+                entry.statusText = markdown.emptyPages.length ? 'Convertido · sem texto nas páginas ' + markdown.emptyPages.join(', ') + ' · download solicitado' : 'Convertido · download solicitado';
+                getById('skills-pdf-announcement').textContent = entry.file.name + ': ' + entry.statusText + '.';
                 downloadBlob(normalizeFileName(entry.file.name) + '.md', entry.markdownBlob);
             } catch (error) {
                 entry.markdownBlob = null;
-                entry.statusText = 'Falha na conversão. Verifique o PDF e tente adicioná-lo novamente.';
-                notify('error', 'Falha na conversão', 'Não foi possível converter ' + entry.file.name + '.');
+                entry.statusText = cancelRequested || error.name === 'CancelledError' ? 'Conversão cancelada' : errorMessage(error);
+                if (cancelRequested) getById('skills-pdf-announcement').textContent = 'Conversões canceladas.';
+                else notify('error', 'Falha na conversão de ' + entry.file.name, entry.statusText);
             }
             entry.converting = false;
             renderList();
+            if (cancelRequested) {
+                filesState.forEach(function (item) { if (item.statusText === 'Aguardando conversão') item.statusText = 'Conversão cancelada'; });
+                renderList();
+                break;
+            }
         }
+        activeTask = null;
         processing = false;
+        var cancelButton = getById('btn-skills-pdf-cancel');
+        var restoreFocus = document.activeElement === cancelButton;
+        cancelButton.hidden = true;
+        if (restoreFocus) getById('skills-pdf-dropzone').focus();
     }
 
     async function downloadZip() {
@@ -229,8 +274,12 @@
         }
 
         var zip = new window.JSZip();
+        var names = new Set();
         ready.forEach(function (entry) {
-            zip.file(normalizeFileName(entry.file.name) + '.md', entry.markdownBlob);
+            var base = normalizeFileName(entry.file.name), candidate = base + '.md', suffix = 2;
+            while (names.has(candidate.toLowerCase())) { candidate = base + '-' + suffix++ + '.md'; }
+            names.add(candidate.toLowerCase());
+            zip.file(candidate, entry.markdownBlob);
         });
         var blob = await zip.generateAsync({ type: 'blob' });
         downloadBlob('pdf-markdown.zip', blob);
@@ -264,6 +313,12 @@
         });
         dropzone.addEventListener('drop', function (e) {
             addFiles(e.dataTransfer ? e.dataTransfer.files : []);
+        });
+
+        getById('btn-skills-pdf-cancel').addEventListener('click', function () {
+            cancelRequested = true;
+            getById('skills-pdf-announcement').textContent = 'Cancelando conversões…';
+            if (activeTask) activeTask.destroy().catch(function () {});
         });
 
         btnZip.addEventListener('click', function () {

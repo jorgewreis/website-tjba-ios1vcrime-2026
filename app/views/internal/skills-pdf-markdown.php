@@ -29,6 +29,7 @@ Security::requireAuthentication();
 <main class="container-full card-page skills-converter">
     <div class="skills-toolbar">
         <button type="button" class="btn btn-secondary-outline height-md" data-nav-href="/frame.php?page=skills">Voltar para Skills</button>
+        <button type="button" class="btn btn-danger-outline height-md" id="btn-skills-pdf-cancel" hidden>Cancelar conversões</button>
         <button type="button" class="btn btn-secondary-outline height-md" id="btn-skills-pdf-zip" disabled>Baixar todos (ZIP)</button>
     </div>
 
@@ -42,7 +43,7 @@ Security::requireAuthentication();
         <span class="skills-dropzone-title">Selecione ou arraste seus PDFs</span>
         <span class="skills-dropzone-subtitle">Clique para escolher arquivos de até 20 MB cada</span>
     </button>
-    <p id="skills-pdf-help" class="skills-privacy">Os arquivos são processados no navegador e não são enviados ao servidor. PDFs digitalizados sem texto podem não produzir conteúdo útil.</p>
+    <p id="skills-pdf-help" class="skills-privacy">Os arquivos são processados no navegador e não são enviados ao servidor. PDFs digitalizados sem texto podem não produzir conteúdo útil. Se o download automático não iniciar, use “Baixar .md” ou permita downloads automáticos no navegador.</p>
 
     <section class="skills-pdf-list-wrap" aria-labelledby="skills-pdf-list-title">
         <div class="skills-pdf-list-head">

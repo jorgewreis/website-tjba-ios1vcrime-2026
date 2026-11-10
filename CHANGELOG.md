@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0117
+
+**Data:** 2026-11-10 12:58:11 | **Commit:** `9b49d3f0` | **Tipo:** `patch`
+
+- feat(skills): aprimorar conversao e divisao de PDF
+
 ## V. 1.87.0116
 
 **Data:** 2026-11-10 12:25:55 | **Commit:** `f13b6367` | **Tipo:** `patch`
@@ -6123,6 +6129,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

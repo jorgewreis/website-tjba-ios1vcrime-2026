@@ -59,13 +59,13 @@ Security::requireAuthentication();
             <article class="skills-item" aria-labelledby="skills-split-title">
                 <div class="skills-item-heading">
                     <span class="skills-icon skills-icon-split" aria-hidden="true">PDF</span>
-                    <div><h3 id="skills-split-title">Dividir PDF por tamanho</h3><p>Separe um PDF em partes menores de acordo com o tamanho escolhido.</p></div>
+                    <div><h3 id="skills-split-title">Dividir PDF por tamanho</h3><p>Separe um PDF por tamanho, quantidade de páginas ou intervalos.</p></div>
                 </div>
                 <div class="skills-instructions">
                     <h4>Como usar</h4>
                     <ol>
                         <li>Abra a ferramenta e selecione um PDF.</li>
-                        <li>Informe o tamanho máximo por parte e inicie a divisão.</li>
+                        <li>Escolha a forma de divisão e inicie o processamento.</li>
                         <li>Baixe as partes individualmente ou em um ZIP.</li>
                     </ol>
                 </div>
