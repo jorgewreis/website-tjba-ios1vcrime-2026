@@ -116,4 +116,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(tarefas): preservar regras com especificacoes anteriores** `[e383383d]`
 - **feat(tarefas): organizar regras e permitir exclusao inativa** `[1c45e534]`
 - **fix(skills): limitar PDFs a 20 MB** `[04abf0e4]`
+- **fix(oficios): ocultar mensagem de consulta DataJud** `[afc674f4]`
 
