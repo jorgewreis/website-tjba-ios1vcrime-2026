@@ -170,13 +170,12 @@ if ($totalPages > 0) {
                 <div class="col">
                     <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
                         <span>Número do processo <span id="gab-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></span>
-                        <span id="processo-ap-info" class="minor-info" aria-live="polite"></span>
                     </label>
                     <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
                 <div class="col">
                     <label for="filter-classe">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
+                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
                 </div>
                 <div class="col">
                     <label for="gab-oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>

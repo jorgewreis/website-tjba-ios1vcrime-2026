@@ -153,7 +153,9 @@
         if (!preserve && !keepInitial) {
             classeInput.value = '';
         }
-        classeInput.placeholder = getClasseLoadingPlaceholder(attemptIndex || 1);
+        if (classeInput.getAttribute('data-datajud-silent-loading') !== 'true') {
+            classeInput.placeholder = getClasseLoadingPlaceholder(attemptIndex || 1);
+        }
     }
 
     function setSelectLoadingState(selectEl) {
@@ -204,7 +206,9 @@
             if (!classeInput || bancoPrefilled) {
                 return;
             }
+            if (classeInput.getAttribute('data-datajud-silent-loading') !== 'true') {
             classeInput.placeholder = getClasseLoadingPlaceholder(attemptIndex || 1);
+        }
         },
 
         /** Atualiza texto auxiliar ao lado do rótulo (mesmo padrão do fluxo de classe processual). */

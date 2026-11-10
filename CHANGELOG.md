@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0113
+
+**Data:** 2026-11-10 11:32:22 | **Commit:** `afc674f4` | **Tipo:** `patch`
+
+- fix(oficios): ocultar mensagem de consulta DataJud
+
 ## V. 1.87.0112
 
 **Data:** 2026-11-10 11:13:39 | **Commit:** `04abf0e4` | **Tipo:** `patch`
@@ -6099,6 +6105,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

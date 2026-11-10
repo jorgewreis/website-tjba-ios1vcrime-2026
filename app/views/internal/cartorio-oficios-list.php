@@ -244,7 +244,6 @@ function cartorio_oficios_label_cumprimento(array $row): string
                 <div class="col">
                     <label for="filter-processo" class="display-flex col gap-y-sm" style="align-items: flex-start;">
                         <span>Número do processo <span id="cartorio-processo-hint" class="label-hint-obrigatorio">*obrigatório</span></span>
-                        <span id="processo-ap-info" class="minor-info" aria-live="polite"></span>
                     </label>
                     <input type="text" class="width-400 height-md" id="filter-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
@@ -291,7 +290,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
                     </select>
                 </div>
 
-                <input type="hidden" id="filter-classe" data-datajud-related="true" value="" autocomplete="off">
+                <input type="hidden" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true" value="" autocomplete="off">
                 <div class="col" id="oficio-meio-envio-row">
                     <label for="oficio-meio-envio">Meio de envio</label>
                     <select class="width-400 height-md" id="oficio-meio-envio" name="meio_envio">
