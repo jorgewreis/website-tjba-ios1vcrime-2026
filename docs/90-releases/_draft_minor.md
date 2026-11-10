@@ -119,4 +119,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(oficios): ocultar mensagem de consulta DataJud** `[afc674f4]`
 - **feat(skills): dividir PDF por tamanho** `[63831f6b]`
 - **feat(skills): melhorar apresentacao e orientacoes** `[996d1af4]`
+- **style(skills): alinhar visual das ferramentas de PDF** `[f13b6367]`
 
