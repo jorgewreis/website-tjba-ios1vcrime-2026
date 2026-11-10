@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0115
+
+**Data:** 2026-11-10 12:19:07 | **Commit:** `996d1af4` | **Tipo:** `patch`
+
+- feat(skills): melhorar apresentacao e orientacoes
+
 ## V. 1.87.0114
 
 **Data:** 2026-11-10 12:09:52 | **Commit:** `63831f6b` | **Tipo:** `patch`
@@ -6111,6 +6117,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
