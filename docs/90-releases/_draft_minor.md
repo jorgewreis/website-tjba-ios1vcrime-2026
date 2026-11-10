@@ -115,4 +115,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(tarefas): atualizar especificacoes de documentos** `[fbfadbcf]`
 - **fix(tarefas): preservar regras com especificacoes anteriores** `[e383383d]`
 - **feat(tarefas): organizar regras e permitir exclusao inativa** `[1c45e534]`
+- **fix(skills): limitar PDFs a 20 MB** `[04abf0e4]`
 
