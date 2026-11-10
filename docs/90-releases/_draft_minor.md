@@ -120,4 +120,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(skills): dividir PDF por tamanho** `[63831f6b]`
 - **feat(skills): melhorar apresentacao e orientacoes** `[996d1af4]`
 - **style(skills): alinhar visual das ferramentas de PDF** `[f13b6367]`
+- **feat(skills): aprimorar conversao e divisao de PDF** `[9b49d3f0]`
 
