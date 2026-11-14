@@ -123,4 +123,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **feat(skills): aprimorar conversao e divisao de PDF** `[9b49d3f0]`
 - **docs: adicionar prompts para Archify** `[f1e66a8a]`
 - **fix(security): proteger APIs operacionais** `[8bfc5ba7]`
+- **fix(security): endurecer login e recuperação de senha** `[c76bb0b6]`
 
