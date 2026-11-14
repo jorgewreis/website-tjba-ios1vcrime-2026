@@ -124,4 +124,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs: adicionar prompts para Archify** `[f1e66a8a]`
 - **fix(security): proteger APIs operacionais** `[8bfc5ba7]`
 - **fix(security): endurecer login e recuperação de senha** `[c76bb0b6]`
+- **fix(deploy): preservar dono do arquivo .env** `[2240560e]`
 
