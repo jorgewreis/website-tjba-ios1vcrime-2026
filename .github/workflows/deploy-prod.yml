@@ -121,7 +121,16 @@ jobs:
               echo "Arquivo .env ausente no destino de produção." >&2
               exit 1
             fi
-            find /etc/php -type f -name '*ios1vcrime*' -printf 'Configuração de pool PHP: %p\n' 2>/dev/null
+            pool_config="$(find /etc/php -type f -name 'ios1vcrime.com.br.conf' -print -quit 2>/dev/null)"
+            web_user="$(awk -F= '/^[[:space:]]*user[[:space:]]*=/ { gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); print $2; exit }' "$pool_config")"
+            if [ -z "$web_user" ]; then
+              echo "Usuário do pool PHP de ios1vcrime.com.br não encontrado." >&2
+              exit 1
+            fi
+            if [ "$(stat -c '%u' .env)" != "$(id -u "$web_user")" ]; then
+              sudo -n chown "$web_user" .env
+            fi
+            chmod 600 .env
             php -r '
               $path = ".env";
               $content = file_get_contents($path);
