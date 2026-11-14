@@ -121,6 +121,10 @@ jobs:
               echo "Arquivo .env ausente no destino de produção." >&2
               exit 1
             fi
+            printf 'Diagnóstico de acesso: .env=%s; diretório=%s\n' \
+              "$(stat -c '%U:%G %a' .env)" \
+              "$(stat -c '%U:%G %a' .)"
+            ps -eo user=,group=,comm= | awk '$3 ~ /^php-fpm/ { print "Processo PHP-FPM: " $1 ":" $2 }' | sort -u
             php -r '
               $path = ".env";
               $content = file_get_contents($path);
