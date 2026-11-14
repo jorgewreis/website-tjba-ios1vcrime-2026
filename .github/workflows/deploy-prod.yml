@@ -121,15 +121,22 @@ jobs:
               echo "Arquivo .env ausente no destino de produção." >&2
               exit 1
             fi
-            app_url_tmp=$(mktemp "${PWD}/.env.next.XXXXXXXX")
-            if grep -q '^APP_URL=' .env; then
-              sed 's|^APP_URL=.*|APP_URL=https://ios1vcrime.com.br|' .env > "$app_url_tmp"
-            else
-              cat .env > "$app_url_tmp"
-              printf '\nAPP_URL=https://ios1vcrime.com.br\n' >> "$app_url_tmp"
-            fi
-            chmod --reference=.env "$app_url_tmp"
-            mv -- "$app_url_tmp" .env
+            php -r '
+              $path = ".env";
+              $content = file_get_contents($path);
+              if ($content === false) {
+                fwrite(STDERR, "Não foi possível ler o .env de produção.\n");
+                exit(1);
+              }
+              $line = "APP_URL=https://ios1vcrime.com.br";
+              $updated = preg_match("/^APP_URL=.*/m", $content) === 1
+                ? preg_replace("/^APP_URL=.*/m", $line, $content, 1)
+                : rtrim($content, "\\r\\n") . PHP_EOL . $line . PHP_EOL;
+              if ($updated === null || file_put_contents($path, $updated, LOCK_EX) === false) {
+                fwrite(STDERR, "Não foi possível atualizar APP_URL no .env de produção.\n");
+                exit(1);
+              }
+            '
 
             if [ -f package.json ]; then
               npm ci

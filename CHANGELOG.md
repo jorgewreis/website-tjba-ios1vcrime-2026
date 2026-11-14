@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0121
+
+**Data:** 2026-11-14 12:44:54 | **Commit:** `2240560e` | **Tipo:** `patch`
+
+- fix(deploy): preservar dono do arquivo .env
+
 ## V. 1.87.0120
 
 **Data:** 2026-11-14 12:37:24 | **Commit:** `c76bb0b6` | **Tipo:** `patch`
@@ -6147,6 +6153,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
