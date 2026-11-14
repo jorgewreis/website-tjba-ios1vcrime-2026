@@ -582,7 +582,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
     <script src="/assets/js/shared/toast.js" defer></script>
     <script src="/assets/js/shared/navigate-buttons.js" defer></script>
     <script src="/assets/js/shared/user-context.js" defer></script>
-    <script src="/assets/js/shared/common.js" defer></script>
+    <script src="/assets/js/shared/common.js?v=logout-csrf-20261114" defer></script>
     <script src="/assets/js/shared/menu.js" defer></script>
 
     <script>
