@@ -121,7 +121,7 @@ jobs:
               echo "Arquivo .env ausente no destino de produção." >&2
               exit 1
             fi
-            ps -eo uid=,comm= | awk 'tolower($2) ~ /(php|lsphp)/ { print "Processo PHP: uid=" $1 "; nome=" $2 }' | sort -u
+            find /etc/php -type f -name '*ios1vcrime*' -printf 'Configuração de pool PHP: %p\n' 2>/dev/null
             php -r '
               $path = ".env";
               $content = file_get_contents($path);
