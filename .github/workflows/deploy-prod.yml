@@ -121,10 +121,15 @@ jobs:
               echo "Arquivo .env ausente no destino de produção." >&2
               exit 1
             fi
-            printf 'Diagnóstico de acesso: .env=%s; diretório=%s\n' \
-              "$(stat -c '%U:%G %a' .env)" \
-              "$(stat -c '%U:%G %a' .)"
-            ps -eo user=,group=,comm= | awk '$3 ~ /^php-fpm/ { print "Processo PHP-FPM: " $1 ":" $2 }' | sort -u
+            web_user="$(ps -eo user=,args= | awk '$1 != "root" && /php-fpm: pool ios1vcrime\.com\.br/ { print $1; exit }')"
+            if [ -z "$web_user" ]; then
+              echo "Usuário do pool PHP-FPM de ios1vcrime.com.br não encontrado." >&2
+              exit 1
+            fi
+            if [ "$(stat -c '%u' .env)" != "$(id -u "$web_user")" ]; then
+              sudo -n chown "$web_user" .env
+            fi
+            chmod 600 .env
             php -r '
               $path = ".env";
               $content = file_get_contents($path);

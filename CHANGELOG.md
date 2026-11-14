@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0122
+
+**Data:** 2026-11-14 12:52:41 | **Commit:** `bf8c16f1` | **Tipo:** `patch`
+
+- fix(deploy): restaurar acesso do PHP ao ambiente
+
 ## V. 1.87.0121
 
 **Data:** 2026-11-14 12:44:54 | **Commit:** `2240560e` | **Tipo:** `patch`
@@ -6153,6 +6159,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
