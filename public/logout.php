@@ -12,6 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+$csrf = $_POST['csrf_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? null);
+if (!Security::verifyCSRFToken(is_string($csrf) ? $csrf : null)) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=UTF-8');
+    exit('Requisição inválida.');
+}
+
 try {
     if (Security::isAuthenticated()) {
         $idUsuario = Security::getUserId();

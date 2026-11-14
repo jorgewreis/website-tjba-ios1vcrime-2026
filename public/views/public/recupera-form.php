@@ -73,10 +73,6 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
             </div>
         </div>
 
-        <div class="display-flex row row-full justify-start align-center padding-x-md padding-y-md" id="emailHintLine" style="display: none;">
-            <span class="status status-pending padding-x-md row-full" id="emailHint" style="margin-bottom: 15px; color: var(--color-gray-600);"></span>
-        </div>
-
         <div class="display-flex row row-full justify-start align-center padding-x-sm padding-y-md border-bottom">
             <button class="btn btn-primary" type="submit">Recuperar senha</button>
         </div>
@@ -107,8 +103,6 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
             await App.CPF.init('#cpf');
 
             const cpfInput      = document.querySelector('#cpf');
-            const emailHintLine = document.getElementById('emailHintLine');
-            const emailHint     = document.getElementById('emailHint');
             const emailInput    = document.querySelector('#email');
             const form          = document.querySelector('#resetForm');
             const csrfInput     = form.querySelector('input[name="csrf_token"]');
@@ -128,28 +122,6 @@ if (isset($_COOKIE['tjba_1vcrime_remember_cpf'])) {
                 if (alertBox) alertBox.style.display = 'none';
                 if (erroField) erroField.textContent = '';
             }
-
-            async function fetchEmailHint() {
-                const digits = onlyDigits(cpfInput.value);
-                if (digits.length !== 11) {
-                    emailHintLine.style.display = 'none';
-                    return;
-                }
-                try {
-                    const r = await fetch('/api/email_hint.php?cpf=' + encodeURIComponent(digits));
-                    const data = await r.json();
-                    if (data && data.hint) {
-                        emailHint.textContent = 'E-mail cadastrado: ' + data.hint;
-                        emailHintLine.style.display = 'flex';
-                    } else {
-                        emailHintLine.style.display = 'none';
-                    }
-                } catch (e) {
-                    emailHintLine.style.display = 'none';
-                }
-            }
-
-            cpfInput.addEventListener('blur', fetchEmailHint);
 
             form.addEventListener('submit', async function (e) {
                 e.preventDefault();

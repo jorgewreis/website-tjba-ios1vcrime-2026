@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0120
+
+**Data:** 2026-11-14 12:37:24 | **Commit:** `c76bb0b6` | **Tipo:** `patch`
+
+- fix(security): endurecer login e recuperação de senha
+
 ## V. 1.87.0119
 
 **Data:** 2026-11-14 10:58:28 | **Commit:** `8bfc5ba7` | **Tipo:** `patch`
@@ -6141,6 +6147,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -8,10 +8,16 @@ final class LoginRateLimiter
     private PDO $pdo;
     private bool $storageChecked = false;
     private bool $storageReady = false;
+    private string $scopePrefix;
 
-    public function __construct(PDO $pdo)
+    public function __construct(PDO $pdo, string $scopePrefix = '')
     {
         $this->pdo = $pdo;
+        $scopePrefix = strtolower(trim($scopePrefix));
+        if ($scopePrefix !== '' && !preg_match('/^[a-z][a-z0-9_]{0,15}$/', $scopePrefix)) {
+            throw new InvalidArgumentException('Prefixo de escopo de rate limit inválido.');
+        }
+        $this->scopePrefix = $scopePrefix;
     }
 
     /**
@@ -74,7 +80,7 @@ final class LoginRateLimiter
         );
 
         $normalizedCpf = $this->normalizeCpfScope($cpf);
-        $stmt->execute(['ip', $ip, 'cpf', $normalizedCpf]);
+        $stmt->execute([$this->scopeType('ip'), $ip, $this->scopeType('cpf'), $normalizedCpf]);
     }
 
     private function ensureStorage(): bool
@@ -125,89 +131,109 @@ final class LoginRateLimiter
 
     private function registerFailureForScope(string $type, string $value): int
     {
-        $now = new DateTimeImmutable('now');
-        $row = $this->findScope($type, $value);
+        $this->pdo->beginTransaction();
 
-        if ($row === null) {
-            $stmt = $this->pdo->prepare(
-                'INSERT INTO ' . self::TABLE . ' (
+        try {
+            // O índice único resolve criações concorrentes. O lock explícito que
+            // segue serializa todas as leituras e atualizações do mesmo escopo.
+            $createStmt = $this->pdo->prepare(
+                'INSERT IGNORE INTO ' . self::TABLE . ' (
                     id_rate_limit, scope_type, scope_value, attempt_count, lock_level,
                     window_started_at, last_attempt_at, locked_until, created_at, updated_at
                  ) VALUES (?, ?, ?, 1, 0, NOW(), NOW(), NULL, NOW(), NOW())'
             );
-            $stmt->execute([$this->generateId('RLT'), $type, $value]);
-            return 0;
-        }
+            $createStmt->execute([$this->generateId('RLT'), $type, $value]);
+            $created = $createStmt->rowCount() === 1;
 
-        $windowStartedAt = (string) ($row['window_started_at'] ?? '');
-        $lastAttemptAt = (string) ($row['last_attempt_at'] ?? '');
-        $lockedUntil = (string) ($row['locked_until'] ?? '');
-        $attemptCount = (int) ($row['attempt_count'] ?? 0);
-        $lockLevel = (int) ($row['lock_level'] ?? 0);
+            $row = $this->findScope($type, $value, true);
+            if ($row === null) {
+                throw new RuntimeException('Não foi possível obter o escopo do rate limit.');
+            }
 
-        if ($lastAttemptAt !== '' && strtotime($lastAttemptAt) !== false && (time() - strtotime($lastAttemptAt)) > 86400) {
-            $lockLevel = 0;
-        }
+            if ($created) {
+                $this->pdo->commit();
+                return 0;
+            }
 
-        if ($lockedUntil !== '' && strtotime($lockedUntil) !== false && strtotime($lockedUntil) > time()) {
-            return max(1, strtotime($lockedUntil) - time());
-        }
+            $now = new DateTimeImmutable('now');
+            $windowStartedAt = (string) ($row['window_started_at'] ?? '');
+            $lastAttemptAt = (string) ($row['last_attempt_at'] ?? '');
+            $lockedUntil = (string) ($row['locked_until'] ?? '');
+            $attemptCount = (int) ($row['attempt_count'] ?? 0);
+            $lockLevel = (int) ($row['lock_level'] ?? 0);
 
-        if ($windowStartedAt === '' || strtotime($windowStartedAt) === false || (time() - strtotime($windowStartedAt)) > LOGIN_RATE_LIMIT_WINDOW_SECONDS) {
-            $attemptCount = 0;
-            $windowStartedAt = $now->format('Y-m-d H:i:s');
-        }
+            if ($lastAttemptAt !== '' && strtotime($lastAttemptAt) !== false && (time() - strtotime($lastAttemptAt)) > 86400) {
+                $lockLevel = 0;
+            }
 
-        $attemptCount++;
+            if ($lockedUntil !== '' && strtotime($lockedUntil) !== false && strtotime($lockedUntil) > time()) {
+                $this->pdo->commit();
+                return max(1, strtotime($lockedUntil) - time());
+            }
 
-        if ($attemptCount >= LOGIN_RATE_LIMIT_MAX_ATTEMPTS) {
-            $lockLevel++;
-            $lockSeconds = min(
-                LOGIN_RATE_LIMIT_BASE_LOCK_SECONDS * (2 ** max(0, $lockLevel - 1)),
-                LOGIN_RATE_LIMIT_MAX_LOCK_SECONDS
-            );
-            $lockedUntil = $now->modify('+' . $lockSeconds . ' seconds')->format('Y-m-d H:i:s');
+            if ($windowStartedAt === '' || strtotime($windowStartedAt) === false || (time() - strtotime($windowStartedAt)) > LOGIN_RATE_LIMIT_WINDOW_SECONDS) {
+                $attemptCount = 0;
+                $windowStartedAt = $now->format('Y-m-d H:i:s');
+            }
+
+            $attemptCount++;
+
+            if ($attemptCount >= LOGIN_RATE_LIMIT_MAX_ATTEMPTS) {
+                $lockLevel++;
+                $lockSeconds = min(
+                    LOGIN_RATE_LIMIT_BASE_LOCK_SECONDS * (2 ** max(0, $lockLevel - 1)),
+                    LOGIN_RATE_LIMIT_MAX_LOCK_SECONDS
+                );
+                $lockedUntil = $now->modify('+' . $lockSeconds . ' seconds')->format('Y-m-d H:i:s');
+
+                $stmt = $this->pdo->prepare(
+                    'UPDATE ' . self::TABLE . '
+                        SET attempt_count = 0,
+                            lock_level = ?,
+                            window_started_at = NOW(),
+                            last_attempt_at = NOW(),
+                            locked_until = ?,
+                            updated_at = NOW()
+                      WHERE scope_type = ? AND scope_value = ?'
+                );
+                $stmt->execute([$lockLevel, $lockedUntil, $type, $value]);
+
+                $this->pdo->commit();
+                return $lockSeconds;
+            }
 
             $stmt = $this->pdo->prepare(
                 'UPDATE ' . self::TABLE . '
-                    SET attempt_count = 0,
+                    SET attempt_count = ?,
                         lock_level = ?,
-                        window_started_at = NOW(),
+                        window_started_at = ?,
                         last_attempt_at = NOW(),
-                        locked_until = ?,
+                        locked_until = NULL,
                         updated_at = NOW()
                   WHERE scope_type = ? AND scope_value = ?'
             );
-            $stmt->execute([$lockLevel, $lockedUntil, $type, $value]);
+            $stmt->execute([$attemptCount, $lockLevel, $windowStartedAt, $type, $value]);
 
-            return $lockSeconds;
+            $this->pdo->commit();
+            return 0;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
         }
-
-        $stmt = $this->pdo->prepare(
-            'UPDATE ' . self::TABLE . '
-                SET attempt_count = ?,
-                    lock_level = ?,
-                    window_started_at = ?,
-                    last_attempt_at = NOW(),
-                    locked_until = NULL,
-                    updated_at = NOW()
-              WHERE scope_type = ? AND scope_value = ?'
-        );
-        $stmt->execute([$attemptCount, $lockLevel, $windowStartedAt, $type, $value]);
-
-        return 0;
     }
 
     /**
      * @return array<string,mixed>|null
      */
-    private function findScope(string $type, string $value): ?array
+    private function findScope(string $type, string $value, bool $forUpdate = false): ?array
     {
         $stmt = $this->pdo->prepare(
             'SELECT scope_type, scope_value, attempt_count, lock_level, window_started_at, last_attempt_at, locked_until
                FROM ' . self::TABLE . '
               WHERE scope_type = ? AND scope_value = ?
-              LIMIT 1'
+              LIMIT 1' . ($forUpdate ? ' FOR UPDATE' : '')
         );
         $stmt->execute([$type, $value]);
 
@@ -221,9 +247,14 @@ final class LoginRateLimiter
     private function buildScopes(string $cpf, string $ip): array
     {
         return [
-            ['type' => 'ip', 'value' => trim($ip) !== '' ? trim($ip) : '0.0.0.0'],
-            ['type' => 'cpf', 'value' => $this->normalizeCpfScope($cpf)],
+            ['type' => $this->scopeType('ip'), 'value' => trim($ip) !== '' ? trim($ip) : '0.0.0.0'],
+            ['type' => $this->scopeType('cpf'), 'value' => $this->normalizeCpfScope($cpf)],
         ];
+    }
+
+    private function scopeType(string $type): string
+    {
+        return $this->scopePrefix === '' ? $type : $this->scopePrefix . '_' . $type;
     }
 
     private function normalizeCpfScope(string $cpf): string

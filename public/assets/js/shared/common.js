@@ -25,15 +25,19 @@
    */
   async function performLogout(endpoint = "/logout.php", redirectOnly = true) {
     const goLogin = () => window.location.replace("/index.php?nocache=" + Date.now());
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
     try {
       const response = await fetch(endpoint, {
         method: "POST",
+        headers: { "X-CSRF-Token": csrfToken },
         credentials: "same-origin",
-        cache: "no-store",
-        redirect: "manual"
+        cache: "no-store"
       });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
       if (redirectOnly) {
-        // Força nova página sem cache (token CSRF no formulário deve bater com a sessão nova).
+        // A sessão só é descartada na interface depois que o servidor confirma o logout.
         goLogin();
         return;
       }

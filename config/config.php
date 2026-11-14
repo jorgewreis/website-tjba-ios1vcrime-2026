@@ -143,12 +143,60 @@ date_default_timezone_set(envValue('APP_TIMEZONE', 'America/Bahia'));
 
 function appIsHttpsRequest(): bool
 {
-    return (
+    if (
         (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || (!empty($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
-        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+    ) {
+        return true;
+    }
+
+    if (!appIsTrustedProxyRequest()) {
+        return false;
+    }
+
+    return (
+        (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower((string) $_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
         || (!empty($_SERVER['HTTP_CF_VISITOR']) && str_contains((string) $_SERVER['HTTP_CF_VISITOR'], 'https'))
     );
+}
+
+function appIsTrustedProxyRequest(): bool
+{
+    $remote = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+    if (!filter_var($remote, FILTER_VALIDATE_IP)) {
+        return false;
+    }
+
+    $trusted = array_filter(array_map('trim', explode(',', (string) envValue('TRUSTED_PROXIES', ''))));
+    return in_array($remote, $trusted, true);
+}
+
+/**
+ * Retorna a origem pública canônica usada em links sensíveis enviados por e-mail.
+ * Nunca derive esta origem de headers recebidos na requisição.
+ */
+function appCanonicalPublicUrl(): ?string
+{
+    $url = trim((string) envValue('APP_URL', ''));
+    if ($url === '') {
+        return null;
+    }
+
+    $parts = parse_url($url);
+    $host = is_array($parts) ? (string) ($parts['host'] ?? '') : '';
+    if (
+        $parts === false
+        || strtolower((string) ($parts['scheme'] ?? '')) !== 'https'
+        || $host === ''
+        || (!filter_var($host, FILTER_VALIDATE_IP) && !filter_var($host, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME))
+        || isset($parts['user'])
+        || isset($parts['pass'])
+        || isset($parts['query'], $parts['fragment'])
+    ) {
+        return null;
+    }
+
+    return rtrim($url, '/');
 }
 
 /**
@@ -160,7 +208,11 @@ function appSessionCookieParams(): array
         'lifetime' => SESSION_LIFETIME,
         'path' => '/',
         'domain' => '',
-        'secure' => appIsHttpsRequest(),
+        // Em produção, o cookie nunca pode ser reenviado por HTTP, mesmo atrás
+        // de um proxy cuja cadeia ainda não tenha sido declarada como confiável.
+        'secure' => strtolower((string) envValue('APP_ENV', 'production')) === 'production'
+            ? true
+            : appIsHttpsRequest(),
         'httponly' => true,
         'samesite' => 'Lax',
     ];

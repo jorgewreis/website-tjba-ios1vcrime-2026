@@ -170,27 +170,16 @@ final class Usuario
         $stmt = $this->pdo->prepare("
             SELECT id_usuario, nome, token_acesso
             FROM usuarios
-            WHERE (token_acesso = ? OR token_acesso = ?)
+            WHERE token_acesso = ?
               AND token_expira > NOW()
               AND COALESCE(cadastro_ativo, 1) = 1
             LIMIT 1
         ");
-        $stmt->execute([$tokenHash, $token]);
+        $stmt->execute([$tokenHash]);
 
         $usuario = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
         if ($usuario !== null) {
             $idUsuario = trim((string) ($usuario['id_usuario'] ?? ''));
-            $storedToken = (string) ($usuario['token_acesso'] ?? '');
-
-            if ($storedToken === $token) {
-                $upgradeStmt = $this->pdo->prepare("
-                    UPDATE usuarios
-                    SET token_acesso = ?
-                    WHERE id_usuario = ?
-                      AND token_acesso = ?
-                ");
-                $upgradeStmt->execute([$tokenHash, $idUsuario, $token]);
-            }
 
             if ($idUsuario !== '' && $this->shouldRefreshLastAccess($idUsuario)) {
                 $this->registrarUltimoAcesso($idUsuario);

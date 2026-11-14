@@ -209,6 +209,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 <head>  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo htmlspecialchars(Security::generateCSRFToken(), ENT_QUOTES, 'UTF-8'); ?>">
     <title>Primeira Vara Crime de Ilhéus - Sistema de Gestão</title>
 
     <link rel="stylesheet" href="/assets/css/shared/reset.css">

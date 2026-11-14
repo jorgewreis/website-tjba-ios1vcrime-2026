@@ -115,6 +115,22 @@ jobs:
             set -e
             cd "${{ secrets.PROD_PATH }}"
 
+            # `.env` é deliberadamente excluído do rsync. Garanta a origem pública
+            # canônica para links de recuperação sem tocar nas demais variáveis.
+            if [ ! -f .env ]; then
+              echo "Arquivo .env ausente no destino de produção." >&2
+              exit 1
+            fi
+            app_url_tmp=$(mktemp "${PWD}/.env.next.XXXXXXXX")
+            if grep -q '^APP_URL=' .env; then
+              sed 's|^APP_URL=.*|APP_URL=https://ios1vcrime.com.br|' .env > "$app_url_tmp"
+            else
+              cat .env > "$app_url_tmp"
+              printf '\nAPP_URL=https://ios1vcrime.com.br\n' >> "$app_url_tmp"
+            fi
+            chmod --reference=.env "$app_url_tmp"
+            mv -- "$app_url_tmp" .env
+
             if [ -f package.json ]; then
               npm ci
               npm run build --if-present

@@ -5,7 +5,7 @@ final class SmtpTransactionalMailer
 {
     /**
      * @param list<array{email:string,name?:string}> $to
-     * @param array{bcc?:list<string|array{email:string,name?:string}>,log_context?:string,log_message?:string} $options
+     * @param array{bcc?:list<string|array{email:string,name?:string}>,log_context?:string,log_message?:string,require_delivery?:bool} $options
      * @return array{ok:bool,sent:bool}
      */
     public function sendHtml(array $to, string $subject, string $htmlBody, string $altBody, array $options = []): array
@@ -25,19 +25,16 @@ final class SmtpTransactionalMailer
 
         $logContext = trim((string) ($options['log_context'] ?? 'MAIL'));
         if ($driver !== 'smtp') {
-            $toEmails = implode(',', array_map(static function (array $item): string {
-                return (string) $item['email'];
-            }, $recipients));
             $extra = trim((string) ($options['log_message'] ?? ''));
-            error_log('[' . $logContext . '] TO=' . $toEmails . ($extra !== '' ? ' | ' . $extra : ''));
-            return ['ok' => true, 'sent' => false];
+            error_log('[' . $logContext . '] Entrega SMTP indisponível' . ($extra !== '' ? ': ' . $extra : '.'));
+            return ['ok' => !($options['require_delivery'] ?? false), 'sent' => false];
         }
 
         $host = (string) envValue('MAIL_HOST', '');
         $user = (string) (envValue('MAIL_USERNAME') ?? envValue('MAIL_USER') ?? '');
         if ($host === '' || $user === '') {
             error_log('[' . $logContext . '] SMTP não configurado: MAIL_HOST ou MAIL_USER vazio.');
-            return ['ok' => true, 'sent' => false];
+            return ['ok' => !($options['require_delivery'] ?? false), 'sent' => false];
         }
 
         $autoloads = [
@@ -53,13 +50,13 @@ final class SmtpTransactionalMailer
         }
         if ($autoload === null) {
             error_log('[' . $logContext . '] PHPMailer não encontrado. Execute: composer require phpmailer/phpmailer');
-            return ['ok' => true, 'sent' => false];
+            return ['ok' => !($options['require_delivery'] ?? false), 'sent' => false];
         }
         require_once $autoload;
 
         if (!class_exists(\PHPMailer\PHPMailer\PHPMailer::class)) {
             error_log('[' . $logContext . '] Pacote phpmailer/phpmailer ausente no vendor. Execute: composer install (ou composer require phpmailer/phpmailer).');
-            return ['ok' => true, 'sent' => false];
+            return ['ok' => !($options['require_delivery'] ?? false), 'sent' => false];
         }
 
         $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
@@ -82,14 +79,6 @@ final class SmtpTransactionalMailer
                 : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
 
             $mail->CharSet = 'UTF-8';
-            $mail->SMTPOptions = [
-                'ssl' => [
-                    'verify_peer' => false,
-                    'verify_peer_name' => false,
-                    'allow_self_signed' => true,
-                ],
-            ];
-
             $fromAddress = (string) (envValue('MAIL_FROM_ADDRESS') ?? $user);
             $fromName = (string) (envValue('MAIL_FROM_NAME') ?: 'Sistema');
 

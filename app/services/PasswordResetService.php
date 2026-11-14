@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../helpers/Conection.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/SmtpTransactionalMailer.php';
+require_once __DIR__ . '/LoginRateLimiter.php';
 
 final class PasswordResetService
 {
@@ -38,19 +39,27 @@ final class PasswordResetService
         $email = strtolower(trim($email));
 
         if (!Security::validarCPF($cpf) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return [
-                'success' => false,
-                'emailSent' => false,
-                'message' => 'Não foi possível processar. Verifique CPF e e-mail e tente novamente.',
-            ];
+            return $this->acceptedResetResponse();
         }
 
         if (!$this->ensureStorage()) {
-            return [
-                'success' => false,
-                'emailSent' => false,
-                'message' => 'Fluxo de recuperação indisponível nesta instalação. Contate o suporte.',
-            ];
+            return $this->acceptedResetResponse();
+        }
+
+        try {
+            $rateLimiter = new LoginRateLimiter($this->pdo, 'reset');
+            if (($rateLimiter->canAttempt($cpf, Security::getClientIp())['allowed'] ?? false) !== true) {
+                return $this->acceptedResetResponse();
+            }
+
+            // Cada solicitação consome uma tentativa, inclusive as válidas. Isso
+            // evita que respostas ou efeitos laterais revelem a existência da conta.
+            if (($rateLimiter->registerFailure($cpf, Security::getClientIp())['allowed'] ?? false) !== true) {
+                return $this->acceptedResetResponse();
+            }
+        } catch (Throwable $e) {
+            error_log('PasswordResetService: rate limit indisponível: ' . $e->getMessage());
+            return $this->acceptedResetResponse();
         }
 
         $cpfFormatado = Security::formatCPF($cpf);
@@ -65,11 +74,7 @@ final class PasswordResetService
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user) {
-            return [
-                'success' => false,
-                'emailSent' => false,
-                'message' => 'CPF e e-mail não conferem. Verifique os dados e tente novamente.',
-            ];
+            return $this->acceptedResetResponse();
         }
 
         $plainToken = Security::generateSecureToken(32);
@@ -79,9 +84,8 @@ final class PasswordResetService
         $expiresAt = date('Y-m-d H:i:s', time() + PASSWORD_RESET_TOKEN_TTL_SECONDS);
         $ip = Security::getClientIp();
 
-        $this->pdo->beginTransaction();
-
         try {
+            $this->pdo->beginTransaction();
             $invalidateStmt = $this->pdo->prepare("
                 UPDATE " . self::TABLE . "
                    SET usado = 1
@@ -98,37 +102,21 @@ final class PasswordResetService
                 )
             ");
             $insertStmt->execute([$resetId, $user['id_usuario'], $tokenHash, $expiresAt, $ip]);
+            $this->pdo->commit();
 
             $sendResult = $this->sendEmail((string) $user['email'], (string) $user['nome'], $resetUrl);
             if (!$sendResult['ok']) {
-                $this->pdo->rollBack();
-                return [
-                    'success' => false,
-                    'emailSent' => false,
-                    'message' => 'Não foi possível enviar a recuperação de senha. Tente novamente mais tarde.',
-                ];
+                $this->invalidateResetToken($tokenHash);
             }
 
-            $this->pdo->commit();
-
-            return [
-                'success' => true,
-                'emailSent' => $sendResult['sent'],
-                'message' => $sendResult['sent']
-                    ? 'Enviamos um link de redefinição para o e-mail informado. Verifique sua caixa de entrada.'
-                    : 'A solicitação foi registrada, mas o envio de e-mail não está ativo neste ambiente. Contate o suporte.',
-            ];
+            return $this->acceptedResetResponse();
         } catch (Throwable $e) {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
 
             error_log('PasswordResetService::requestReset: ' . $e->getMessage());
-            return [
-                'success' => false,
-                'emailSent' => false,
-                'message' => 'Não foi possível processar a recuperação de senha. Tente novamente mais tarde.',
-            ];
+            return $this->acceptedResetResponse();
         }
     }
 
@@ -163,23 +151,9 @@ final class PasswordResetService
      */
     public function resetPassword(string $plainToken, string $novaSenha): array
     {
-        $resetRequest = $this->validateResetToken($plainToken);
-        if ($resetRequest === null) {
-            return ['success' => false, 'message' => 'O link de redefinição é inválido ou expirou.'];
-        }
-
         $policy = Security::validatePasswordPolicy($novaSenha);
         if (($policy['valid'] ?? false) !== true) {
             return ['success' => false, 'message' => $policy['message'] ?? 'Senha inválida.'];
-        }
-
-        $userId = trim((string) ($resetRequest['usuario'] ?? ''));
-        if ($userId === '') {
-            return ['success' => false, 'message' => 'Usuário da redefinição não encontrado.'];
-        }
-
-        if ($this->hasRecentPasswordReuse($userId, $novaSenha)) {
-            return ['success' => false, 'message' => 'A nova senha não pode repetir nenhuma das últimas senhas utilizadas.'];
         }
 
         $tokenHash = Security::hashAccessToken($plainToken);
@@ -188,7 +162,24 @@ final class PasswordResetService
         $this->pdo->beginTransaction();
 
         try {
-            $this->updateUserPassword($userId, $passwordHash, true);
+            // A linha é travada antes de qualquer efeito. Uma segunda requisição
+            // concorrente só a verá depois do commit, já marcada como utilizada.
+            $resetRequest = $this->lockValidResetRequest($tokenHash);
+            if ($resetRequest === null) {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => 'O link de redefinição é inválido ou expirou.'];
+            }
+
+            $userId = trim((string) ($resetRequest['usuario'] ?? ''));
+            if ($userId === '') {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => 'Usuário da redefinição não encontrado.'];
+            }
+
+            if ($this->hasRecentPasswordReuse($userId, $novaSenha)) {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => 'A nova senha não pode repetir nenhuma das últimas senhas utilizadas.'];
+            }
 
             $markUsedStmt = $this->pdo->prepare("
                 UPDATE " . self::TABLE . "
@@ -198,6 +189,11 @@ final class PasswordResetService
                  LIMIT 1
             ");
             $markUsedStmt->execute([$tokenHash]);
+            if ($markUsedStmt->rowCount() !== 1) {
+                throw new RuntimeException('Token de redefinição não pôde ser consumido.');
+            }
+
+            $this->updateUserPassword($userId, $passwordHash, true);
 
             $this->pdo->commit();
 
@@ -209,6 +205,46 @@ final class PasswordResetService
 
             error_log('PasswordResetService::resetPassword: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Não foi possível redefinir a senha. Tente novamente.'];
+        }
+    }
+
+    /** @return array<string,mixed>|null */
+    private function lockValidResetRequest(string $tokenHash): ?array
+    {
+        $stmt = $this->pdo->prepare("
+            SELECT id_recuperacao, usuario
+              FROM " . self::TABLE . "
+             WHERE token = ?
+               AND usado = 0
+               AND expira_em > NOW()
+             LIMIT 1
+             FOR UPDATE
+        ");
+        $stmt->execute([$tokenHash]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
+    /** @return array{success:bool,emailSent:bool,message:string} */
+    private function acceptedResetResponse(): array
+    {
+        return [
+            'success' => true,
+            'emailSent' => true,
+            'message' => 'Se os dados corresponderem a uma conta ativa, enviaremos instruções para redefinir a senha.',
+        ];
+    }
+
+    private function invalidateResetToken(string $tokenHash): void
+    {
+        try {
+            $stmt = $this->pdo->prepare(
+                'UPDATE ' . self::TABLE . ' SET usado = 1 WHERE token = ? AND usado = 0'
+            );
+            $stmt->execute([$tokenHash]);
+        } catch (Throwable $e) {
+            error_log('PasswordResetService: falha ao invalidar reset sem entrega: ' . $e->getMessage());
         }
     }
 
@@ -322,14 +358,12 @@ final class PasswordResetService
 
     private function buildResetUrl(string $plainToken): string
     {
-        $appUrl = trim((string) envValue('APP_URL', ''));
-        if ($appUrl !== '') {
-            return rtrim($appUrl, '/') . '/redefinir_senha.php?token=' . urlencode($plainToken);
+        $appUrl = appCanonicalPublicUrl();
+        if ($appUrl === null) {
+            throw new RuntimeException('APP_URL HTTPS canônica é obrigatória para recuperação de senha.');
         }
 
-        $scheme = appIsHttpsRequest() ? 'https' : 'http';
-        $host = trim((string) ($_SERVER['HTTP_HOST'] ?? 'localhost'));
-        return $scheme . '://' . $host . '/redefinir_senha.php?token=' . urlencode($plainToken);
+        return $appUrl . '/redefinir_senha.php?token=' . urlencode($plainToken);
     }
 
     /**
@@ -397,7 +431,7 @@ final class PasswordResetService
             $altBody,
             [
                 'log_context' => 'RESET SENHA',
-                'log_message' => $to . ' | link: ' . $resetUrl,
+                'require_delivery' => true,
             ]
         );
     }

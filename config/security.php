@@ -32,9 +32,9 @@ final class Security
         try {
             require_once __DIR__ . '/../app/helpers/Conection.php';
             $pdo = Conection::getInstance()->getConnection();
-            $stmt = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ? AND (token_acesso = ? OR token_acesso = ?) AND token_expira > NOW() AND COALESCE(cadastro_ativo, 1) = 1 LIMIT 1');
+            $stmt = $pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ? AND token_acesso = ? AND token_expira > NOW() AND COALESCE(cadastro_ativo, 1) = 1 LIMIT 1');
             $token = (string) $_SESSION[self::SESSION_TOKEN_KEY];
-            $stmt->execute([(string) $_SESSION[self::SESSION_USER_ID], self::hashAccessToken($token), $token]);
+            $stmt->execute([(string) $_SESSION[self::SESSION_USER_ID], self::hashAccessToken($token)]);
             if ($stmt->fetchColumn() === false) {
                 self::clearAuthenticatedSession();
                 return false;
