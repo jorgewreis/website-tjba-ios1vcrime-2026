@@ -23,34 +23,45 @@
    * @param {string} [endpoint] - URL do logout. Use "/logout.php" para a área pública.
    * @param {boolean} [redirectOnly] - Se true, após a requisição redireciona sem esperar JSON (ex.: logout.php que retorna 302).
    */
-  async function performLogout(endpoint = "/logout.php", redirectOnly = true) {
-    const goLogin = () => window.location.replace("/index.php?nocache=" + Date.now());
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
-    try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "X-CSRF-Token": csrfToken },
-        credentials: "same-origin",
-        cache: "no-store"
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+  function performLogout(endpoint = "/logout.php") {
+    const ownToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || "";
+    let csrfToken = ownToken;
+
+    // A ação pode ser chamada de um iframe da mesma origem; nesse caso,
+    // o token pertence ao documento principal que contém a navegação.
+    if (!csrfToken) {
+      try {
+        csrfToken = global.top?.document
+          ?.querySelector('meta[name="csrf-token"]')
+          ?.getAttribute("content") || "";
+      } catch (_) {
+        csrfToken = "";
       }
-      if (redirectOnly) {
-        // A sessão só é descartada na interface depois que o servidor confirma o logout.
-        goLogin();
-        return;
-      }
-      const result = await response.json();
-      if (result && result.success) {
-        goLogin();
-      } else {
-        goLogin();
-      }
-    } catch (error) {
-      console.error("Erro ao fazer logout:", error);
-      goLogin();
     }
+
+    if (!csrfToken) {
+      console.error("Não foi possível localizar o token CSRF do logout.");
+      showNotification("Não foi possível encerrar a sessão. Atualize a página e tente novamente.", "error");
+      return;
+    }
+
+    // Use uma submissão de formulário no topo da janela. Ao contrário de
+    // fetch + redirect, isso preserva o fluxo normal de cookies e navegação
+    // mesmo quando o botão é acionado dentro de uma moldura.
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = endpoint;
+    form.target = "_top";
+    form.style.display = "none";
+
+    const tokenInput = document.createElement("input");
+    tokenInput.type = "hidden";
+    tokenInput.name = "csrf_token";
+    tokenInput.value = csrfToken;
+    form.appendChild(tokenInput);
+
+    document.body.appendChild(form);
+    form.submit();
   }
 
   function showNotification(message, type = "info", duration = 3000) {
