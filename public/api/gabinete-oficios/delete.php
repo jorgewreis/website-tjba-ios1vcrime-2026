@@ -6,8 +6,11 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/services/OficiosGabineteService.php';
 require_once $basePath . '/app/helpers/DeleteAuthorization.php';
+
+ApiAccessGuard::requireAccess(['oficiosgabineteedit'], true);
 
 if (!bootstrapRequireTrustedPostRequest()) {
     http_response_code(403);

@@ -1,5 +1,7 @@
 <?php
 declare(strict_types=1);
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['cartasrecebidasedit'], true);
 
 header('Content-Type: application/json; charset=UTF-8');
 

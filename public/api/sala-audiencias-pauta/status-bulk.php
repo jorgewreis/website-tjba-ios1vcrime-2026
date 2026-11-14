@@ -6,6 +6,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/config/security.php';
 require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/models/Usuario.php';
 require_once $basePath . '/app/access/AccessEvaluator.php';
@@ -18,6 +19,18 @@ require_once $basePath . '/app/helpers/SalaAudienciasAtaSigiloHelper.php';
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(['success' => false, 'error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (!Security::isAuthenticated()) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (!bootstrapRequireTrustedPostRequest()) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
