@@ -130,4 +130,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test: cover isolated login and password reset flows** `[eeada51f]`
 - **fix: remove residual auth test networks** `[f37f0361]`
 - **fix: preserve prior ata on replacement failure** `[bc57c55c]`
+- **fix: handle PDF tool cancellation safely** `[2cfddb29]`
 
