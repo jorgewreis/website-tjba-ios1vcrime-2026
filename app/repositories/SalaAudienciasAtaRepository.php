@@ -42,6 +42,24 @@ final class SalaAudienciasAtaRepository
     }
 
     /**
+     * Obtém a única ata da pauta com bloqueio de escrita. Deve ser chamado
+     * dentro de uma transação InnoDB pelo fluxo que substitui o arquivo.
+     */
+    public function findByPautaForUpdate(string $idPauta): ?array
+    {
+        if (!$this->connection->inTransaction()) {
+            throw new LogicException('findByPautaForUpdate requer transação ativa.');
+        }
+
+        $st = $this->connection->prepare(sprintf('SELECT * FROM `%s` WHERE `pauta` = :p LIMIT 1 FOR UPDATE', $this->table));
+        $st->bindValue(':p', $idPauta);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function fetchExpiredBeforeNow(): array
@@ -93,9 +111,12 @@ final class SalaAudienciasAtaRepository
      *
      * @param array{id_ata?: string, pauta: string, arquivo_relativo: string, nome_original: string, mime: string, tamanho_bytes: int, uploaded_by: ?string, uploaded_at: string, expires_at: string, identificador_arquivo?: string} $row
      */
-    public function upsertForPauta(array $row): string
+    public function upsertForPauta(array $row, ?array $lockedExisting = null): string
     {
-        $existing = $this->findByPauta(trim((string) $row['pauta']));
+        if ($lockedExisting !== null && !$this->connection->inTransaction()) {
+            throw new LogicException('Uma ata bloqueada só pode ser atualizada em transação ativa.');
+        }
+        $existing = $lockedExisting ?? $this->findByPauta(trim((string) $row['pauta']));
         if ($existing !== null) {
             $updateSql = $this->hasIdentificadorArquivo
                 ? 'UPDATE `%s` SET `arquivo_relativo`=:rel,`nome_original`=:nome,`mime`=:mime,`tamanho_bytes`=:tam,`uploaded_at`=:up,`uploaded_by`=:upby,`expires_at`=:ex,`identificador_arquivo`=:ident WHERE `id_ata`=:id LIMIT 1'

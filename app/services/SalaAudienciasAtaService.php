@@ -8,6 +8,7 @@ require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
 require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../helpers/SalaAudienciasAtaSigiloHelper.php';
+require_once __DIR__ . '/SalaAudienciasAtaStorage.php';
 
 final class SalaAudienciasAtaService
 {
@@ -27,13 +28,15 @@ final class SalaAudienciasAtaService
     private SalaAudienciasPautaRepository $pautaRepository;
     private SalaAudienciasAtaRepository $ataRepository;
     private SalaAudienciasEstudanteInscricaoRepository $inscricaoRepository;
+    private SalaAudienciasAtaStorage $ataStorage;
 
-    public function __construct(PDO $connection)
+    public function __construct(PDO $connection, ?SalaAudienciasAtaStorage $ataStorage = null)
     {
         $this->connection = $connection;
         $this->pautaRepository = new SalaAudienciasPautaRepository($connection);
         $this->ataRepository = new SalaAudienciasAtaRepository($connection);
         $this->inscricaoRepository = new SalaAudienciasEstudanteInscricaoRepository($connection);
+        $this->ataStorage = $ataStorage ?? new NativeSalaAudienciasAtaStorage(dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'storage');
     }
 
     /**
@@ -136,11 +139,6 @@ final class SalaAudienciasAtaService
 
         $this->purgeAtasExpiradas();
 
-        $existingAtaRow = $this->ataRepository->findByPauta($idPauta);
-        if ($existingAtaRow !== null && trim((string) ($existingAtaRow['arquivo_relativo'] ?? '')) === '') {
-            throw new InvalidArgumentException('O prazo de disponibilidade do PDF desta ata encerrou. Novo envio não é permitido.');
-        }
-
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
             throw new InvalidArgumentException('Falha no envio do arquivo.');
         }
@@ -150,7 +148,7 @@ final class SalaAudienciasAtaService
         }
 
         $tmp = (string) ($file['tmp_name'] ?? '');
-        if ($tmp === '' || !is_uploaded_file($tmp)) {
+        if ($tmp === '' || !$this->ataStorage->isUploadedFile($tmp)) {
             throw new InvalidArgumentException('Upload inválido.');
         }
 
@@ -158,8 +156,8 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Envie apenas arquivo PDF.');
         }
 
-        $basePath = dirname(__DIR__, 2);
-        $dir = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . 'sala-audiencias-atas';
+        $basePath = $this->ataStorage->rootPath();
+        $dir = $basePath . DIRECTORY_SEPARATOR . 'sala-audiencias-atas';
         if (!is_dir($dir)) {
             error_log('[SalaAudienciasAtaService::uploadPdf] Diretório ausente: ' . $dir);
             throw new RuntimeException('Diretório de armazenamento de atas indisponível no servidor. Contate o administrador.');
@@ -167,13 +165,6 @@ final class SalaAudienciasAtaService
         if (!is_writable($dir)) {
             error_log('[SalaAudienciasAtaService::uploadPdf] Diretório sem permissão de escrita: ' . $dir);
             throw new RuntimeException('Diretório de armazenamento de atas sem permissão de escrita. Contate o administrador.');
-        }
-
-        if ($existingAtaRow !== null && !empty($existingAtaRow['arquivo_relativo'])) {
-            $oldFull = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, (string) $existingAtaRow['arquivo_relativo']);
-            if (is_file($oldFull)) {
-                @unlink($oldFull);
-            }
         }
 
         $pautaIdSafe = preg_replace('/[^A-Za-z0-9_-]/', '', $idPauta) ?: 'pauta';
@@ -184,7 +175,7 @@ final class SalaAudienciasAtaService
         $basename = 'ata_' . $pautaIdSafe . '_' . $auditDateSafe . '_' . date('YmdHis') . '_' . $uniqueToken . '.pdf';
         $relative = 'sala-audiencias-atas/' . $basename;
         $dest = $dir . DIRECTORY_SEPARATOR . $basename;
-        if (!move_uploaded_file($tmp, $dest)) {
+        if (!$this->ataStorage->moveUploadedFile($tmp, $dest)) {
             throw new RuntimeException('Falha ao salvar o PDF.');
         }
 
@@ -199,17 +190,44 @@ final class SalaAudienciasAtaService
         $now = date('Y-m-d H:i:s');
         $expires = date('Y-m-d H:i:s', strtotime('+' . self::DIAS_VALIDADE_ATA . ' days'));
 
-        $this->ataRepository->upsertForPauta([
-            'pauta' => $idPauta,
-            'arquivo_relativo' => $relative,
-            'nome_original' => $nomeOriginal,
-            'mime' => 'application/pdf',
-            'tamanho_bytes' => $size,
-            'uploaded_by' => $usuarioId,
-            'uploaded_at' => $now,
-            'expires_at' => $expires,
-            'identificador_arquivo' => $identificadorArquivo,
-        ]);
+        $oldFull = null;
+        try {
+            $this->connection->beginTransaction();
+            $existingAtaRow = $this->ataRepository->findByPautaForUpdate($idPauta);
+            if ($existingAtaRow !== null && trim((string) ($existingAtaRow['arquivo_relativo'] ?? '')) === '') {
+                throw new InvalidArgumentException('O prazo de disponibilidade do PDF desta ata encerrou. Novo envio não é permitido.');
+            }
+
+            $oldRelative = trim((string) ($existingAtaRow['arquivo_relativo'] ?? ''));
+            if ($oldRelative !== '') {
+                $oldFull = $basePath . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $oldRelative);
+            }
+
+            $this->ataRepository->upsertForPauta([
+                'pauta' => $idPauta,
+                'arquivo_relativo' => $relative,
+                'nome_original' => $nomeOriginal,
+                'mime' => 'application/pdf',
+                'tamanho_bytes' => $size,
+                'uploaded_by' => $usuarioId,
+                'uploaded_at' => $now,
+                'expires_at' => $expires,
+                'identificador_arquivo' => $identificadorArquivo,
+            ], $existingAtaRow);
+            $this->connection->commit();
+        } catch (Throwable $e) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            if (!$this->ataStorage->deleteFile($dest)) {
+                error_log('[SalaAudienciasAtaService::uploadPdf] Não foi possível remover PDF novo após falha: ' . $dest);
+            }
+            throw $e;
+        }
+
+        if ($oldFull !== null && $oldFull !== $dest && !$this->ataStorage->deleteFile($oldFull)) {
+            error_log('[SalaAudienciasAtaService::uploadPdf] Não foi possível remover PDF anterior após substituição: ' . $oldFull);
+        }
     }
 
     /**

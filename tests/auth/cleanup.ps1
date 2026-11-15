@@ -41,4 +41,19 @@ if (Test-Path -LiteralPath $runtimePath) {
     }
 }
 
+foreach ($ataRuntimePath in @(
+    (Join-Path $projectRoot 'tests/ata/.runtime-storage'),
+    (Join-Path $projectRoot 'tests/ata/.runtime-storage-concurrency')
+)) {
+    if (Test-Path -LiteralPath $ataRuntimePath) {
+        Remove-Item -LiteralPath $ataRuntimePath -Recurse -Force
+    }
+}
+foreach ($ataBarrierPath in @(
+    (Join-Path $projectRoot 'tests/ata/.ata-replacement-start.runtime'),
+    (Join-Path $projectRoot 'tests/ata/.ata-replacement-continue.runtime')
+)) {
+    Remove-Item -LiteralPath $ataBarrierPath -Force -ErrorAction SilentlyContinue
+}
+
 Write-Output 'Sandbox de autenticação removido.'
