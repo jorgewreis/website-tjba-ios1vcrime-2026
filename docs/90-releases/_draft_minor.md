@@ -128,4 +128,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(deploy): restaurar acesso do PHP ao ambiente** `[bf8c16f1]`
 - **docs(deploy): esclarecer efeitos condicionais** `[0ce844e1]`
 - **test: cover isolated login and password reset flows** `[eeada51f]`
+- **fix: remove residual auth test networks** `[f37f0361]`
 
