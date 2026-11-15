@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0127
+
+**Data:** 2026-11-15 11:21:09 | **Commit:** `2cfddb29` | **Tipo:** `patch`
+
+- fix: handle PDF tool cancellation safely
+
 ## V. 1.87.0126
 
 **Data:** 2026-11-15 10:51:04 | **Commit:** `bc57c55c` | **Tipo:** `patch`
@@ -6183,6 +6189,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
