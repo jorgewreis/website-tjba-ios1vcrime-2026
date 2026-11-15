@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0124
+
+**Data:** 2026-11-15 09:43:52 | **Commit:** `eeada51f` | **Tipo:** `patch`
+
+- test: cover isolated login and password reset flows
+
 ## V. 1.87.0123
 
 **Data:** 2026-11-14 22:36:40 | **Commit:** `0ce844e1` | **Tipo:** `patch`
@@ -6165,6 +6171,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

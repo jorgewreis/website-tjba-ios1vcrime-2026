@@ -1,0 +1,47 @@
+name: ios1vcrime-auth-test
+
+services:
+  mysql:
+    image: mysql:8.4.7
+    environment:
+      MYSQL_DATABASE: ${AUTH_TEST_DB_NAME:?defina AUTH_TEST_DB_NAME no arquivo de runtime}
+      MYSQL_USER: ${AUTH_TEST_DB_USER:?defina AUTH_TEST_DB_USER no arquivo de runtime}
+      MYSQL_PASSWORD: ${AUTH_TEST_DB_PASSWORD:?defina AUTH_TEST_DB_PASSWORD no arquivo de runtime}
+      MYSQL_ROOT_PASSWORD: ${AUTH_TEST_ROOT_PASSWORD:?defina AUTH_TEST_ROOT_PASSWORD no arquivo de runtime}
+    ports:
+      - "127.0.0.1:${AUTH_TEST_DB_PORT:-33306}:3306"
+    volumes:
+      - auth-test-mysql:/var/lib/mysql
+    networks:
+      - auth-test
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+      MP_SMTP_ALLOWED_RECIPIENTS: '@auth-test\.invalid$$'
+      MP_SMTP_DISABLE_RDNS: "true"
+      MP_DISABLE_VERSION_CHECK: "true"
+    ports:
+      - "127.0.0.1:${AUTH_TEST_SMTP_PORT:-31025}:1025"
+      - "127.0.0.1:${AUTH_TEST_MAILPIT_HTTP_PORT:-38025}:8025"
+    networks:
+      - auth-test
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8025/"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+networks:
+  auth-test:
+
+volumes:
+  auth-test-mysql:

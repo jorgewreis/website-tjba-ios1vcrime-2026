@@ -88,8 +88,53 @@ function failConfiguration(array $missingKeys): never
     exit('Erro interno de configuracao. Contate o suporte.');
 }
 
-$envPath = __DIR__ . '/../.env';
-loadProjectEnv($envPath);
+/**
+ * Retorna o ambiente solicitado pelo processo antes de qualquer arquivo local
+ * ser carregado. Isso impede que o .env de desenvolvimento reconfigure um
+ * processo de teste já iniciado com APP_ENV=testing.
+ */
+function requestedAppEnvironment(): string
+{
+    $value = getenv('APP_ENV');
+    if ($value === false || trim((string) $value) === '') {
+        $value = $_ENV['APP_ENV'] ?? 'production';
+    }
+
+    return strtolower(trim((string) $value));
+}
+
+/**
+ * Resolve o arquivo de ambiente de testes sem permitir caminhos arbitrários.
+ */
+function authTestEnvironmentPath(): string
+{
+    $configuredPath = trim((string) (getenv('AUTH_TEST_ENV_FILE') ?: ($_ENV['AUTH_TEST_ENV_FILE'] ?? '')));
+    if ($configuredPath === '') {
+        failConfiguration(['AUTH_TEST_ENV_FILE']);
+    }
+
+    $projectRoot = realpath(__DIR__ . '/..');
+    $allowedDirectory = $projectRoot === false ? false : realpath($projectRoot . '/tests/auth');
+    $resolvedPath = realpath($configuredPath);
+
+    if ($projectRoot === false || $allowedDirectory === false || $resolvedPath === false) {
+        failConfiguration(['AUTH_TEST_ENV_FILE']);
+    }
+
+    $allowedPrefix = rtrim($allowedDirectory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    if (!str_starts_with($resolvedPath, $allowedPrefix) || !is_file($resolvedPath)) {
+        failConfiguration(['AUTH_TEST_ENV_FILE']);
+    }
+
+    return $resolvedPath;
+}
+
+$requestedEnvironment = requestedAppEnvironment();
+if ($requestedEnvironment === 'testing') {
+    loadProjectEnv(authTestEnvironmentPath());
+} else {
+    loadProjectEnv(__DIR__ . '/../.env');
+}
 
 // Configurações do banco de dados (obrigatórias via ambiente ou .env local)
 $dbHost = envValue('DB_HOST');
@@ -113,6 +158,43 @@ foreach ([
 
 if ($missingDbConfig !== []) {
     failConfiguration($missingDbConfig);
+}
+
+if ($requestedEnvironment === 'testing') {
+    $requiredTestConfig = [
+        'AUTH_TEST_ISOLATION' => envValue('AUTH_TEST_ISOLATION'),
+        'MAIL_DRIVER' => envValue('MAIL_DRIVER'),
+        'MAIL_HOST' => envValue('MAIL_HOST'),
+        'MAIL_USER' => envValue('MAIL_USER') ?? envValue('MAIL_USERNAME'),
+    ];
+    $missingTestConfig = [];
+    foreach ($requiredTestConfig as $key => $value) {
+        if ($value === null || $value === '') {
+            $missingTestConfig[] = $key;
+        }
+    }
+    if ($missingTestConfig !== []) {
+        failConfiguration($missingTestConfig);
+    }
+
+    $allowedTestDatabaseHosts = ['mysql', '127.0.0.1', 'localhost'];
+    $allowedTestMailHosts = ['mailpit', '127.0.0.1', 'localhost'];
+    $testDatabaseName = (string) envValue('DB_NAME', '');
+    $testMailHost = strtolower((string) envValue('MAIL_HOST', ''));
+    $testFromAddress = strtolower((string) envValue('MAIL_FROM_ADDRESS', ''));
+    $testAppUrl = (string) envValue('APP_URL', '');
+    if (
+        envValue('AUTH_TEST_ISOLATION') !== 'isolated-auth-test'
+        || !in_array(strtolower($dbHost), $allowedTestDatabaseHosts, true)
+        || !in_array($testMailHost, $allowedTestMailHosts, true)
+        || !str_starts_with($testDatabaseName, 'auth_test_')
+        || strtolower((string) envValue('MAIL_DRIVER')) !== 'smtp'
+        || strtolower((string) envValue('MAIL_ENCRYPTION')) !== 'none'
+        || !str_ends_with($testFromAddress, '@auth-test.invalid')
+        || !str_ends_with(strtolower($testAppUrl), '.invalid')
+    ) {
+        failConfiguration(['AUTH_TEST_ISOLATION']);
+    }
 }
 
 define('DB_HOST', $dbHost);

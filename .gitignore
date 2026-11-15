@@ -10,6 +10,11 @@ docs/90-releases/_draft_major.md
 .env
 .env.*
 !.env.example
+!tests/auth/.env.example
+tests/auth/.env.test.runtime
+tests/auth/.env.config-fixture.runtime
+tests/auth/.reset-concurrency-barrier.runtime
+tests/auth/.http-server.runtime.log
 /gha_deploy_ed25519
 
 # Personal/virtual envs
@@ -99,6 +104,7 @@ temp/
 !docs/schema/*.sql
 !database/migrations/20260807_create_cejusc_registros.sql
 !database/migrations/20260807_add_cejusc_classe_processual.sql
+!tests/auth/fixtures/*.sql
 *.sqlite
 *.sqlite3
 *.db

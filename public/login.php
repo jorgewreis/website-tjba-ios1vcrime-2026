@@ -57,6 +57,12 @@ try {
 }
 
 if (($limitStatus['allowed'] ?? false) !== true) {
+    if (!$rateLimiter->isStorageAvailable()) {
+        http_response_code(503);
+        echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
+        exit;
+    }
+
     echo json_encode([
         'success' => false,
         'message' => $limitStatus['message'] ?? 'Muitas tentativas de login. Tente novamente mais tarde.'
@@ -72,6 +78,12 @@ if (($resultado['success'] ?? false) !== true) {
         $limitStatus = $rateLimiter->registerFailure($normalizedCpf, $clientIp);
     } catch (Throwable $exception) {
         error_log('LoginRateLimiter: falha ao registrar tentativa: ' . $exception->getMessage());
+        http_response_code(503);
+        echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
+        exit;
+    }
+
+    if (!$rateLimiter->isStorageAvailable()) {
         http_response_code(503);
         echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
         exit;
@@ -96,6 +108,12 @@ try {
     $rateLimiter->clear($normalizedCpf, $clientIp);
 } catch (Throwable $exception) {
     error_log('LoginRateLimiter: falha ao limpar tentativas: ' . $exception->getMessage());
+    http_response_code(503);
+    echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
+    exit;
+}
+
+if (!$rateLimiter->isStorageAvailable()) {
     http_response_code(503);
     echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
     exit;

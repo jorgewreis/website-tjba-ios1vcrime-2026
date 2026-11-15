@@ -83,6 +83,11 @@ final class LoginRateLimiter
         $stmt->execute([$this->scopeType('ip'), $ip, $this->scopeType('cpf'), $normalizedCpf]);
     }
 
+    public function isStorageAvailable(): bool
+    {
+        return $this->ensureStorage();
+    }
+
     private function ensureStorage(): bool
     {
         if ($this->storageChecked) {

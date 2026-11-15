@@ -74,9 +74,18 @@ final class SmtpTransactionalMailer
                 $encryption = 'ssl';
             }
 
-            $mail->SMTPSecure = $encryption === 'ssl'
-                ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
-                : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+            $isIsolatedAuthTest = strtolower((string) envValue('APP_ENV', '')) === 'testing'
+                && envValue('AUTH_TEST_ISOLATION') === 'isolated-auth-test';
+            if ($encryption === 'none' && !$isIsolatedAuthTest) {
+                error_log('[' . $logContext . '] SMTP sem criptografia é permitido somente no ambiente isolado de testes.');
+                return ['ok' => false, 'sent' => false];
+            }
+
+            $mail->SMTPSecure = match ($encryption) {
+                'none' => false,
+                'ssl' => \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS,
+                default => \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS,
+            };
 
             $mail->CharSet = 'UTF-8';
             $fromAddress = (string) (envValue('MAIL_FROM_ADDRESS') ?? $user);

@@ -23,5 +23,25 @@ Testes automatizados (sugestão):
 - PHPStan: análise estática para `app/` (nível 7 recomendado).  
 - lint CSS/JS: usar stylelint / ESLint conforme necessidade.
 
+## Sandbox isolado de autenticação
+
+Os testes de login e recuperação usam somente o sandbox local em `tests/auth/`.
+Eles nunca leem o `.env` raiz, usam contas `@auth-test.invalid` e capturam e-mail
+no Mailpit local. Para iniciar, executar, e remover o ambiente:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/bootstrap.ps1 -Start
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/run-auth-tests.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/cleanup.ps1
+```
+
+MySQL, SMTP e a interface Mailpit são publicados somente em loopback. A rede
+Docker é bridge para permitir que o PHP local alcance os serviços; ela não prova
+isolamento de egress e não deve receber relay SMTP. Mailpit aceita apenas
+destinatários sintéticos `@auth-test.invalid`.
+
+O fluxo HTTP local prova CSRF, sessão, reset e logout, mas não é evidência de
+cookie `Secure` em HTTPS, comportamento em iframe ou paridade com produção.
+
 Relatar falhas em issue com passos para reproduzir, logs e URL do ambiente dev.
 
