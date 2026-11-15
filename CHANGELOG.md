@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0126
+
+**Data:** 2026-11-15 10:51:04 | **Commit:** `bc57c55c` | **Tipo:** `patch`
+
+- fix: preserve prior ata on replacement failure
+
 ## V. 1.87.0125
 
 **Data:** 2026-11-15 10:23:23 | **Commit:** `f37f0361` | **Tipo:** `patch`
@@ -6177,6 +6183,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
