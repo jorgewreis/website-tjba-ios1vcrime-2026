@@ -31,6 +31,14 @@ if (Test-Path -LiteralPath $runtimePath) {
             throw 'Não foi possível remover os volumes residuais do sandbox de autenticação.'
         }
     }
+
+    $networks = @(& docker network ls -q --filter "label=com.docker.compose.project=$composeProject") | Where-Object { $_ -ne '' }
+    if ($networks.Count -gt 0) {
+        & docker network rm $networks
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Não foi possível remover as redes residuais do sandbox de autenticação.'
+        }
+    }
 }
 
 Write-Output 'Sandbox de autenticação removido.'
