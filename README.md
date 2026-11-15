@@ -358,7 +358,9 @@ Após clonar o repositório, configure os hooks:
 
 ## Operação e pós-deploy
 
-O workflow de deploy do ambiente oficial sincroniza arquivos e recarrega serviços, mas **não executa migrações SQL automaticamente**.
+O workflow de deploy do ambiente oficial sincroniza arquivos, atualiza dependências e recarrega serviços. Ele também executa, **somente quando os arquivos correspondentes estão presentes no destino**, os scripts PHP `scripts/migrate-cejusc.php`, `scripts/migrate-gabinete-reu-preso-controle-tipo.php` e `scripts/migrate-dashboard-conclusoes.php`, além de instalar o cron de usuários externos inativos. O workflow não descobre nem executa automaticamente as demais migrações versionadas em `database/migrations/`; elas continuam exigindo planejamento, backup restaurável, homologação e execução autorizada.
+
+O pós-deploy ainda remove artefatos e um agendamento legados de Cartório/Tarefas quando aplicáveis. A configuração acima descreve o que o workflow pode executar: não comprova que uma etapa condicional tenha sido executada em uma publicação específica. Consulte os logs do run correspondente antes de concluir a operação.
 
 Antes de considerar uma implantação concluída, valide:
 

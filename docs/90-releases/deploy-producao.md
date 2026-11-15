@@ -10,6 +10,25 @@ workflow tenta restaurar o diretório anterior. Essas medidas não tornam a
 publicação atômica: a sincronização do código e as migrações ainda ocorrem no
 ambiente ativo.
 
+## Efeitos condicionais do workflow atual
+
+Após a sincronização, `.github/workflows/deploy-prod.yml` atualiza `APP_URL` no
+`.env` existente, executa `npm ci` e o build quando há `package.json`, e prepara
+as dependências PHP quando há `composer.json`. Também executa os scripts
+`scripts/migrate-cejusc.php`, `scripts/migrate-gabinete-reu-preso-controle-tipo.php`
+e `scripts/migrate-dashboard-conclusoes.php` **somente se cada arquivo existir**
+no servidor após o `rsync`. A instalação do cron de usuários externos inativos
+é chamada pelo workflow; a limpeza do cron e dos artefatos legados de
+Cartório/Tarefas é condicionada às ferramentas e arquivos existentes.
+
+Esses predicados não formam um executor geral de `database/migrations/`: outras
+migrações continuam fora do fluxo automático. Além disso, a presença de uma
+etapa no YAML não prova sua execução em um deploy específico; confirme o log do
+run, o SHA publicado e, quando aplicável, o estado do ambiente. A configuração
+do environment `production` é controlada no GitHub e deve ser verificada no
+momento da publicação; a leitura em 14/11/2026 encontrou o environment sem
+regras de aprovação ou espera e com bypass administrativo permitido.
+
 ## Antes de alterar migrações
 
 Documente as tabelas afetadas, a compatibilidade com as versões anterior e
