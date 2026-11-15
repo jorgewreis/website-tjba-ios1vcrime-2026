@@ -126,4 +126,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(security): endurecer login e recuperação de senha** `[c76bb0b6]`
 - **fix(deploy): preservar dono do arquivo .env** `[2240560e]`
 - **fix(deploy): restaurar acesso do PHP ao ambiente** `[bf8c16f1]`
+- **docs(deploy): esclarecer efeitos condicionais** `[0ce844e1]`
 
