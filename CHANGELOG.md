@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0175
+
+**Data:** 2026-11-16 19:58:57 | **Commit:** `4e6a43a1` | **Tipo:** `patch`
+
+- build(REI-125): declare PHP platform requirements
+
 ## V. 1.87.0174
 
 **Data:** 2026-11-16 19:33:56 | **Commit:** `3e478b30` | **Tipo:** `patch`
@@ -6473,6 +6479,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
