@@ -23,7 +23,7 @@ const document = { getElementById: id => el[id] || null, createElement: () => ne
 const window = { document, App: { Page: { notify: (...args) => notices.push(args) } }, location: {},
   addEventListener(name, fn) { events[name] = fn; } };
 const fetch = () => delayed ? new Promise((resolve, reject) => pending.push({ resolve, reject })) : Promise.resolve({ ok: true, json: async () => payload });
-vm.runInNewContext(fs.readFileSync('public/assets/js/shared/gme-create.js', 'utf8'), { window, fetch, console });
+vm.runInNewContext(fs.readFileSync('public/assets/js/shared/gme-create.js', 'utf8'), { window, fetch, console, AbortController, setTimeout, clearTimeout });
 window.App.GmeCreate.initialize({ reusEndpoint: '/synthetic', searchPeopleEndpoint: '/people' });
 async function run() {
   events.datajudClasseResolved({ detail: { processoInputId: 'filter-processo' } });
@@ -39,6 +39,8 @@ async function run() {
   assert.equal(el['gab-mon-reu-select'].style.display, '');
   assert.equal(el['gab-mon-reu-nome'].style.display, 'none');
   assert.ok(el['gab-mon-reu-select'].children.some(option => option.value === 'processo_parte:R'));
+  assert.equal(el['gab-mon-reu-select'].value, '', 'réu vinculado também exige escolha');
+  assert.equal(el['btn-gab-mon-registrar'].disabled, true, 'não enviar vínculo implícito');
   delayed = true;
   el['filter-processo'].value = '00000016920208050001';
   events.cnjValidated({ detail: { inputId: 'filter-processo', digits: el['filter-processo'].value } });
@@ -72,9 +74,18 @@ async function run() {
   el['gab-mon-reu-nome'].value = 'Nome Segundo';
   el['gab-mon-reu-nome'].handlers.input();
   el['gab-mon-reu-nome'].handlers.blur();
-  pending[5].resolve({ json: async () => ({ pessoas: [{ id: 'SECOND', nome_completo: 'Nome Segundo' }] }) });
+  pending[5].resolve({ ok: true, json: async () => ({ pessoas: [
+    { id: 'SECOND', nome_completo: 'Nome Segundo', cpf: '12345678901' },
+    { id: 'HOMONIMO', nome_completo: 'Nome Segundo', cpf: '98765432100' },
+    { id: 'SEMCPF', nome_completo: 'Nome Segundo', cpf: '', profissao_exibicao: 'Profissão' }
+  ] }) });
   await new Promise(resolve => setImmediate(resolve));
-  pending[4].resolve({ json: async () => ({ pessoas: [{ id: 'FIRST', nome_completo: 'Nome Primeiro' }] }) });
+  assert.equal(el['gab-mon-reu-select'].value, '', 'lista não deve selecionar pessoa implicitamente');
+  assert.equal(el['btn-gab-mon-registrar'].disabled, true, 'exigir escolha explícita');
+  assert.ok(el['gab-mon-reu-select'].children.some(option => option.textContent.includes('123.456.789-01')));
+  assert.ok(el['gab-mon-reu-select'].children.some(option => option.textContent.includes('987.654.321-00')));
+  assert.ok(el['gab-mon-reu-select'].children.some(option => option.textContent.includes('CPF não informado')));
+  pending[4].resolve({ ok: true, json: async () => ({ pessoas: [{ id: 'FIRST', nome_completo: 'Nome Primeiro' }] }) });
   await new Promise(resolve => setImmediate(resolve));
   assert.ok(el['gab-mon-reu-select'].children.some(option => option.value === 'parte:SECOND'));
   assert.ok(!el['gab-mon-reu-select'].children.some(option => option.value === 'parte:FIRST'), 'sugestão antiga foi aplicada');
@@ -85,10 +96,18 @@ async function run() {
   el['gab-mon-reu-nome'].handlers.blur();
   el['filter-processo'].value = '00000036920208050001';
   el['filter-processo'].handlers.input();
-  pending[6].resolve({ json: async () => ({ pessoas: [{ id: 'THIRD', nome_completo: 'Terceiro Nome' }] }) });
+  pending[6].resolve({ ok: true, json: async () => ({ pessoas: [{ id: 'THIRD', nome_completo: 'Terceiro Nome' }] }) });
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(el['gab-mon-reu-select'].style.display, 'none', 'sugestão do processo anterior reabriu seleção');
   assert.ok(!el['gab-mon-reu-select'].children.some(option => option.value === 'parte:THIRD'));
+  el['gab-mon-reu-nome'].value = 'Quarto Nome';
+  el['gab-mon-reu-nome'].handlers.input();
+  el['gab-mon-reu-nome'].handlers.blur();
+  assert.equal(el['btn-gab-mon-registrar'].disabled, true, 'consulta pendente deve bloquear cadastro');
+  pending[7].reject(new Error('falha sintética'));
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(el['btn-gab-mon-registrar'].disabled, false, 'falha deve permitir entrada manual');
+  assert.ok(notices.some(args => args[1] === 'Consulta de pessoas'), 'falha deve ser informada');
   console.log('PASS orientação manual e seleção existente (DOM/fetch simulados)');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });

@@ -110,6 +110,7 @@
         let isSubmitting = false;
         let reusRequestVersion = 0;
         let suggestionRequestVersion = 0;
+        let suggestionPending = false;
         let activeProcessDigits = onlyDigits(processoInput?.value || '');
 
         const applyButtonState = function (label, disabled) {
@@ -146,7 +147,7 @@
                 applyButtonState('Novo cadastro', true);
                 return;
             }
-            if (!hasReuFilled()) {
+            if (suggestionPending || !hasReuFilled()) {
                 applyButtonState('Novo cadastro', true);
                 return;
             }
@@ -158,6 +159,7 @@
         function showReuInput() {
             if (reuSelect) {
                 reuSelect.style.display = 'none';
+                reuSelect.required = false;
                 reuSelect.innerHTML = '';
                 reuSelect.value = '';
             }
@@ -168,11 +170,21 @@
             syncRegisterButtonState();
         }
 
+        function addEscolhaInicial(select) {
+            const placeholder = global.document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Selecione uma pessoa';
+            placeholder.disabled = true;
+            placeholder.selected = true;
+            select.appendChild(placeholder);
+        }
+
         function showReuSelect(reus) {
             if (!reuSelect || !reuNome) {
                 return;
             }
             reuSelect.innerHTML = '';
+            addEscolhaInicial(reuSelect);
             reus.forEach(function (reu) {
                 const option = global.document.createElement('option');
                 option.value = reu.id ? ('processo_parte:' + reu.id) : '';
@@ -183,6 +195,8 @@
             outro.value = 'outro';
             outro.textContent = 'Outro';
             reuSelect.appendChild(outro);
+            reuSelect.value = '';
+            reuSelect.required = true;
             reuSelect.style.display = '';
             reuNome.style.display = 'none';
             reuNome.required = false;
@@ -195,13 +209,20 @@
                 return;
             }
             reuSelect.innerHTML = '';
+            addEscolhaInicial(reuSelect);
             pessoas.forEach(function (pessoa) {
                 const option = global.document.createElement('option');
                 option.value = pessoa.id ? ('parte:' + pessoa.id) : '';
                 let label = (pessoa.nome_completo || '').trim();
                 if ((pessoa.cpf || '').replace(/\D/g, '').length === 11) {
-                    label += ' - ' + formatCpfDisplay(pessoa.cpf);
+                    label += ' - CPF: ' + formatCpfDisplay(pessoa.cpf);
+                } else {
+                    label += ' - CPF não informado';
                 }
+                const profissao = String(pessoa.profissao_exibicao || '').trim();
+                const lotacao = String(pessoa.lotacao_exibicao || '').trim();
+                if (profissao) label += ' - ' + profissao;
+                if (lotacao) label += ' - ' + lotacao;
                 option.textContent = label || pessoa.id;
                 reuSelect.appendChild(option);
             });
@@ -210,6 +231,8 @@
             novo.textContent = 'Cadastrar novo: ' + (nomeDigitado || '');
             reuSelect.appendChild(novo);
             lastSuggestionNome = nomeDigitado || '';
+            reuSelect.value = '';
+            reuSelect.required = true;
             reuSelect.style.display = '';
             reuNome.style.display = 'none';
             reuNome.required = false;
@@ -241,6 +264,7 @@
             if (requestedDigits.length !== 20 || requestedDigits !== onlyDigits(processoInput?.value || '')) return;
             const requestVersion = ++reusRequestVersion;
             suggestionRequestVersion++;
+            suggestionPending = false;
             const requestIsCurrent = function () {
                 return requestVersion === reusRequestVersion && requestedDigits === onlyDigits(processoInput?.value || '');
             };
@@ -321,8 +345,10 @@
         if (reuSelect) {
             reuSelect.addEventListener('change', function () {
                 suggestionRequestVersion++;
+                suggestionPending = false;
                 if (this.value === 'outro' || this.value === '__novo__') {
                     reuSelect.style.display = 'none';
+                    reuSelect.required = false;
                     if (reuNome) {
                         if (this.value === '__novo__') {
                             reuNome.value = lastSuggestionNome;
@@ -342,6 +368,7 @@
         if (reuNome) {
             reuNome.addEventListener('input', function () {
                 suggestionRequestVersion++;
+                suggestionPending = false;
                 syncRegisterButtonState();
             });
             reuNome.addEventListener('blur', function () {
@@ -361,22 +388,44 @@
                     return;
                 }
                 const suggestionVersion = ++suggestionRequestVersion;
+                suggestionPending = true;
+                syncRegisterButtonState();
                 const requestedProcess = onlyDigits(processoInput?.value || '');
-                fetch(settings.searchPeopleEndpoint + '?nome=' + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin' })
-                    .then(function (response) { return response.json(); })
+                const suggestionController = new AbortController();
+                let suggestionTimer;
+                Promise.race([
+                    fetch(settings.searchPeopleEndpoint + '?nome=' + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin', signal: suggestionController.signal })
+                        .then(function (response) {
+                            if (!response.ok) throw new Error('Não foi possível consultar as pessoas.');
+                            return response.json();
+                        }),
+                    new Promise(function (_, reject) {
+                        suggestionTimer = setTimeout(function () {
+                            suggestionController.abort();
+                            reject(new Error('Tempo limite da consulta de pessoas.'));
+                        }, 10000);
+                    })
+                ])
                     .then(function (data) {
                         if (suggestionVersion !== suggestionRequestVersion
                             || nome !== (reuNome.value || '').trim()
                             || requestedProcess !== onlyDigits(processoInput?.value || '')
                             || reuNome.disabled || reuNome.style.display === 'none') return;
+                        suggestionPending = false;
                         const pessoas = (data && data.pessoas) ? data.pessoas : [];
                         if (pessoas.length > 0) {
                             showReuSelectSugestoes(pessoas, nome);
+                        } else {
+                            syncRegisterButtonState();
                         }
                     })
                     .catch(function () {
-                        // noop
-                    });
+                        if (suggestionVersion !== suggestionRequestVersion) return;
+                        suggestionPending = false;
+                        notify('error', 'Consulta de pessoas', 'Não foi possível consultar sugestões. Confira o nome antes de continuar.');
+                        syncRegisterButtonState();
+                    })
+                    .finally(function () { clearTimeout(suggestionTimer); });
             });
         }
 
@@ -387,6 +436,7 @@
                     activeProcessDigits = digits;
                     reusRequestVersion++;
                     suggestionRequestVersion++;
+                    suggestionPending = false;
                     showReuInput();
                     if (reuNome) {
                         reuNome.value = '';
@@ -407,6 +457,7 @@
             if (!id || id === 'filter-processo' || id === 'gab-mon-processo') {
                 reusRequestVersion++;
                 suggestionRequestVersion++;
+                suggestionPending = false;
                 showReuInput();
                 if (reuNome) {
                     reuNome.disabled = false;
