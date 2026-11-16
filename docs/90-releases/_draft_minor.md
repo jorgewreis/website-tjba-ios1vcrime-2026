@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: track reviewed SQL migrations** `[4159489f]`
+- **fix: require explicit monitoring person selection** `[db9327cb]`
 
