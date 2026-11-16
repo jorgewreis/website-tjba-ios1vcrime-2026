@@ -292,7 +292,7 @@
         return JSON.stringify({
             tipo: String(document.getElementById('audiencia-edit-tipo')?.value || '').trim(),
             data: String(document.getElementById('audiencia-edit-data')?.value || '').trim(),
-            hora: String(document.getElementById('audiencia-edit-hora')?.value || '').trim(),
+            hora: String(document.getElementById('audiencia-edit-hora')?.value || ((horariosEditUnresolved && String(document.getElementById('audiencia-edit-data')?.value || '').trim() === horariosEditPendingDate) ? horariosEditPendingHour : '') || '').trim(),
             localizacao: String(document.getElementById('audiencia-edit-sala')?.value || '').trim(),
             classe: String(document.getElementById('audiencia-edit-classe')?.value || '').trim(),
             status: String(document.getElementById('audiencia-edit-status')?.value || '').trim(),
@@ -787,7 +787,7 @@
         return Array.isArray(g) ? g : [];
     }
 
-    function fillHoraSelectEdit(available) {
+    function fillHoraSelectEdit(available, includeExtra) {
         var sel = document.getElementById('audiencia-edit-hora');
         if (!sel) return;
         var preserved = String(sel.value || '').trim();
@@ -805,7 +805,7 @@
             o.textContent = hm;
             sel.appendChild(o);
         });
-        if (extra && (available || []).indexOf(extra) < 0) {
+        if (includeExtra !== false && extra && (available || []).indexOf(extra) < 0) {
             var ox = document.createElement('option');
             ox.value = extra;
             ox.textContent = extra + ' (registro atual)';
@@ -815,7 +815,7 @@
         if (preserved) {
             if ((available || []).indexOf(preserved) >= 0) {
                 canKeep = true;
-            } else if (extra && preserved === extra) {
+            } else if (includeExtra !== false && extra && preserved === extra) {
                 canKeep = true;
             }
         }
@@ -833,7 +833,13 @@
         return '/api/sala-audiencias-pauta/occupied-slots.php' + q;
     }
 
+    var dataOriginalPauta = String(document.getElementById('audiencia-edit-data')?.value || '').trim();
+    var horariosEditRequest = 0;
+    var horariosEditPendingDate = '';
+    var horariosEditPendingHour = '';
+    var horariosEditUnresolved = false;
     function refreshHoraEditDisponiveis(done) {
+        var request = ++horariosEditRequest;
         var dataEl = document.getElementById('audiencia-edit-data');
         var sel = document.getElementById('audiencia-edit-hora');
         if (!dataEl || !sel) {
@@ -845,28 +851,41 @@
         var d = String(dataEl.value || '').trim();
         var grade = readGradeEdit();
         if (!d) {
-            fillHoraSelectEdit(grade);
+            horariosEditPendingDate = '';
+            horariosEditPendingHour = '';
+            horariosEditUnresolved = false;
+            fillHoraSelectEdit(grade, false);
             if (typeof done === 'function') {
                 done();
             }
             return;
         }
+        var previousHour = String(sel.value || '').trim();
+        if (!previousHour && horariosEditPendingDate === d) previousHour = horariosEditPendingHour;
+        horariosEditPendingDate = d;
+        horariosEditPendingHour = previousHour;
+        horariosEditUnresolved = true;
+        fillHoraSelectEdit([], false);
         fetch(buildUrlOccupiedSlots(d), { credentials: 'same-origin' })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
+                if (request !== horariosEditRequest || String(dataEl.value || '').trim() !== d) return;
                 if (!res.ok || !res.j || !Array.isArray(res.j.available)) {
                     notifyByKey('audiencias.schedule.load.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao carregar horários.');
-                    fillHoraSelectEdit(grade);
+                    fillHoraSelectEdit([], false);
                     if (typeof done === 'function') {
                         done();
                     }
                     return;
                 }
-                fillHoraSelectEdit(res.j.available);
+                horariosEditUnresolved = false;
+                var allowOriginalHour = d === dataOriginalPauta;
+                fillHoraSelectEdit(res.j.available, allowOriginalHour);
+                if (res.j.available.indexOf(previousHour) >= 0 || (allowOriginalHour && previousHour === String(window.PAUTA_HORA_FORA_GRADE || '').trim())) sel.value = previousHour;
                 if (res.j.available.length === 0) {
                     var extra = String(window.PAUTA_HORA_FORA_GRADE || '').trim();
                     var cur = String(sel.value || '').trim();
-                    if (!(extra && cur === extra)) {
+                    if (!(allowOriginalHour && extra && cur === extra)) {
                         notifyByKey('audiencias.schedule.unavailable.info', {}, 'info', 'Horários', 'Não há horários livres nesta data.');
                     }
                 }
@@ -875,8 +894,9 @@
                 }
             })
             .catch(function () {
+                if (request !== horariosEditRequest || String(dataEl.value || '').trim() !== d) return;
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
-                fillHoraSelectEdit(grade);
+                fillHoraSelectEdit([], false);
                 if (typeof done === 'function') {
                     done();
                 }
@@ -955,8 +975,7 @@
     updateParteAddButtonState();
     updateAlocarButtonState();
 
-    refreshHoraEditDisponiveis(function () {
-        syncDateMinForStatusPauta();
-        initialAudienciaSnapshot = currentAudienciaSnapshot();
-    });
+    syncDateMinForStatusPauta();
+    initialAudienciaSnapshot = currentAudienciaSnapshot();
+    refreshHoraEditDisponiveis();
 })();
