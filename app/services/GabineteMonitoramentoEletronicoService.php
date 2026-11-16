@@ -280,8 +280,17 @@ final class GabineteMonitoramentoEletronicoService
             if ($di === '') {
                 throw new InvalidArgumentException('O monitoramento ainda não foi iniciado.');
             }
+            $inicio = DateTimeImmutable::createFromFormat('!Y-m-d', $di);
+            $erros = DateTimeImmutable::getLastErrors();
+            if ($inicio === false || $inicio->format('Y-m-d') !== $di
+                || ($erros !== false && ($erros['warning_count'] > 0 || $erros['error_count'] > 0))) {
+                throw new InvalidArgumentException('Data de início do monitoramento inválida.');
+            }
+            // Encerramento antecipado permanece permitido; a data operacional
+            // final não pode ser anterior ao início informado.
+            $dataFinal = max($di, $hoje);
             $this->subtarefasRepository->marcarConcluida($subtarefaId);
-            $this->repository->updateDatas($monId, $di, $hoje, $usuarioMovimentacaoId);
+            $this->repository->updateDatas($monId, $di, $dataFinal, $usuarioMovimentacaoId);
             $this->repository->updateStatus($monId, 'finalizada', $usuarioMovimentacaoId);
 
             return ['tarefa_principal_concluida' => true];
