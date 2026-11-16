@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **docs: suspender instrucoes de sandbox nao verificado** `[809460ab]`
+- **test: cobrir persistência da comarca-sede (REI-130)** `[734a503b]`
 
