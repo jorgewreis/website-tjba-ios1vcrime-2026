@@ -478,7 +478,9 @@ final class EditaisService
         $ownsTransaction = !$this->connection->inTransaction();
         $savepoint = $ownsTransaction ? null : 'edital_reconciliar_' . bin2hex(random_bytes(8));
         if ($ownsTransaction) {
-            $this->connection->beginTransaction();
+            if (!$this->connection->beginTransaction()) {
+                throw new RuntimeException('Não foi possível iniciar a transação de reconciliação do edital.');
+            }
         } else {
             $this->connection->exec('SAVEPOINT ' . $savepoint);
         }
@@ -497,7 +499,9 @@ final class EditaisService
             }
             $result = $operation();
             if ($ownsTransaction) {
-                $this->connection->commit();
+                if (!$this->connection->commit()) {
+                    throw new RuntimeException('Não foi possível confirmar a transação de reconciliação do edital.');
+                }
             } else {
                 $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
             }
@@ -554,7 +558,9 @@ final class EditaisService
             $ownsTransaction = !$this->connection->inTransaction();
             $savepoint = $ownsTransaction ? null : 'edital_lote_reconciliar_' . bin2hex(random_bytes(8));
             if ($ownsTransaction) {
-                $this->connection->beginTransaction();
+                if (!$this->connection->beginTransaction()) {
+                    throw new RuntimeException('Não foi possível iniciar a transação de reconciliação dos editais.');
+                }
             } else {
                 $this->connection->exec('SAVEPOINT ' . $savepoint);
             }
@@ -618,7 +624,9 @@ final class EditaisService
                     }
                 }
                 if ($ownsTransaction) {
-                    $this->connection->commit();
+                    if (!$this->connection->commit()) {
+                        throw new RuntimeException('Não foi possível confirmar a transação de reconciliação dos editais.');
+                    }
                 } else {
                     $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
                 }

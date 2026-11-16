@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0170
+
+**Data:** 2026-11-16 18:11:55 | **Commit:** `e3736b2d` | **Tipo:** `patch`
+
+- fix(REI-114): assert calendar lock wait and release
+
 ## V. 1.87.0169
 
 **Data:** 2026-11-16 18:09:19 | **Commit:** `b88609a1` | **Tipo:** `patch`
@@ -6443,6 +6449,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

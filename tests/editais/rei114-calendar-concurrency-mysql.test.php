@@ -71,9 +71,18 @@ try {
         usleep(10000);
     }
     expectConcurrency(is_file($readyPath), 'O worker não sinalizou início dentro do limite.');
-    usleep(500000);
-    $status = proc_get_status($worker);
-    expectConcurrency($status['running'], 'Reconciliação deve aguardar o mutex mantido pela mutação do calendário.');
+    $workerInfo = json_decode((string) file_get_contents($readyPath), true, 512, JSON_THROW_ON_ERROR);
+    $pendingLock = $pdo->prepare("SELECT COUNT(*) FROM performance_schema.metadata_locks AS ml JOIN performance_schema.threads AS th ON th.THREAD_ID = ml.OWNER_THREAD_ID WHERE ml.OBJECT_TYPE = 'USER LEVEL LOCK' AND ml.OBJECT_NAME = ? AND ml.LOCK_STATUS = 'PENDING' AND th.PROCESSLIST_ID = ?");
+    $waitingDeadline = microtime(true) + 5.0;
+    $isWaiting = false;
+    do {
+        $pendingLock->execute([$lockName, (int) ($workerInfo['connection_id'] ?? 0)]);
+        $isWaiting = (int) $pendingLock->fetchColumn() > 0;
+        if (!$isWaiting) {
+            usleep(20000);
+        }
+    } while (!$isWaiting && microtime(true) < $waitingDeadline);
+    expectConcurrency($isWaiting, 'MySQL não mostrou a conexão do worker aguardando o named lock do calendário.');
 
     $pdo->beginTransaction();
     $holiday = $pdo->prepare('INSERT INTO feriados VALUES (?, ?, ?, ?, ?, ?, 1, NOW(), NOW())');
@@ -94,10 +103,12 @@ fclose($pipes[2]);
 $exitCode = proc_close($worker);
 @unlink($readyPath);
 expectConcurrency($exitCode === 0, 'Worker falhou: ' . trim((string) $stderr));
-$result = json_decode(trim((string) $stdout), true, 512, JSON_THROW_ON_ERROR);
+$workerResult = json_decode(trim((string) $stdout), true, 512, JSON_THROW_ON_ERROR);
+$result = $workerResult['result'] ?? [];
 $row = $pdo->query("SELECT status, data_decurso_prazo FROM editais WHERE id = 'REI114-RACE'")->fetch(PDO::FETCH_ASSOC);
 $deadline = DateTimeImmutable::createFromFormat('!Y-m-d', (string) ($row['data_decurso_prazo'] ?? ''));
 expectConcurrency(($result['finalizados'] ?? null) === 0, 'Reconciliação não pode finalizar com o calendário atualizado.');
 expectConcurrency(($row['status'] ?? null) === 'pendente' && $deadline instanceof DateTimeImmutable && $deadline > $today, 'Edital deve refletir o feriado e permanecer pendente.');
+expectConcurrency(array_key_exists('lock_owner_after', $workerResult) && $workerResult['lock_owner_after'] === null, 'A conexão de reconciliação deve liberar o mutex ao retornar.');
 
 echo "PASS REI-114: reconciliação aguardou mutação concorrente do calendário e leu o prazo recalculado em MySQL/InnoDB.\n";
