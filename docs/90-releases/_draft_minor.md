@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **docs: reconciliar comportamento de autenticacao** `[6fcc7d42]`
+- **docs: reconciliar escopo de tarefas e subtarefas** `[69d0c4e0]`
 
