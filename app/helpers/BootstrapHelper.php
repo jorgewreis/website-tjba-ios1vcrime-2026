@@ -31,28 +31,32 @@ function bootstrapRequireTrustedPostRequest(): bool
         return false;
     }
 
-    $host = strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? '')));
-    if ($host === '') {
+    $host = trim((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    $scheme = appIsHttpsRequest() ? 'https' : 'http';
+    $request = $host === '' ? false : parse_url($scheme . '://' . $host);
+    if (!is_array($request) || empty($request['host'])
+        || isset($request['user']) || isset($request['pass'])
+        || isset($request['path']) || isset($request['query']) || isset($request['fragment'])) {
         return false;
     }
 
     $origin = trim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''));
-    if ($origin !== '') {
-        $originHost = strtolower(trim((string) parse_url($origin, PHP_URL_HOST)));
-        $originPort = (string) parse_url($origin, PHP_URL_PORT);
-        $requestPort = (string) parse_url('http://' . $host, PHP_URL_PORT);
-        if ($originPort !== '' || $requestPort !== '') {
-            $originHost .= ':' . ($originPort !== '' ? $originPort : '80');
-            $host .= ':' . ($requestPort !== '' ? $requestPort : '80');
-        }
-        return hash_equals($host, $originHost);
+    $source = $origin !== '' ? $origin : trim((string) ($_SERVER['HTTP_REFERER'] ?? ''));
+    $parts = $source === '' ? false : parse_url($source);
+    if (!is_array($parts) || empty($parts['host']) || empty($parts['scheme'])
+        || isset($parts['user']) || isset($parts['pass'])) {
+        return false;
     }
 
-    $referer = trim((string) ($_SERVER['HTTP_REFERER'] ?? ''));
-    if ($referer !== '') {
-        $refererHost = strtolower(trim((string) parse_url($referer, PHP_URL_HOST)));
-        return $refererHost !== '' && hash_equals(strtolower(trim((string) parse_url('http://' . $host, PHP_URL_HOST))), $refererHost);
+    // Origin contém somente a origem; Referer pode incluir caminho e consulta.
+    if ($origin !== '' && (isset($parts['path']) || isset($parts['query']) || isset($parts['fragment']))) {
+        return false;
     }
-
-    return false;
+    $sourceScheme = strtolower((string) $parts['scheme']);
+    if (!in_array($sourceScheme, ['http', 'https'], true) || $sourceScheme !== $scheme) {
+        return false;
+    }
+    $defaultPort = $scheme === 'https' ? 443 : 80;
+    return hash_equals(strtolower((string) $request['host']), strtolower((string) $parts['host']))
+        && (int) ($request['port'] ?? $defaultPort) === (int) ($parts['port'] ?? $defaultPort);
 }

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0129
+
+**Data:** 2026-11-15 21:33:21 | **Commit:** `ffebadd1` | **Tipo:** `patch`
+
+- fix: validar origem completa em requisicoes POST
+
 ## V. 1.87.0128
 
 **Data:** 2026-11-15 21:28:46 | **Commit:** `7dfe4acd` | **Tipo:** `patch`
@@ -6195,6 +6201,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
