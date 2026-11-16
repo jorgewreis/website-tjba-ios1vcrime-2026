@@ -64,6 +64,11 @@ final class PartesRepository {
   public function syncProfissaoFromTipoProcessoParte(string $parteId, string $tipoParte): void {
     $stmt = $this->db->prepare('INSERT INTO sync_log (parte_id, tipo_parte) VALUES (?, ?)');
     $stmt->execute([$parteId, $tipoParte]);
+    $profession = match (strtolower($tipoParte)) { 'advogado' => 'Advogado', 'defensor' => 'Defensor Público', 'defensor_publico' => 'Defensor Público', default => null };
+    if ($profession !== null) {
+      $stmt = $this->db->prepare('UPDATE partes SET profissao = ? WHERE id = ?');
+      $stmt->execute([$profession, $parteId]);
+    }
   }
 }''')
 
@@ -73,7 +78,7 @@ final class PartesRepository {
       CREATE TABLE setores(id_setor TEXT PRIMARY KEY, ativo INTEGER NOT NULL);
       CREATE TABLE usuario_setor(usuario TEXT NOT NULL, setor TEXT NOT NULL);
       CREATE TABLE processos(id TEXT PRIMARY KEY, numero_processo TEXT, id_setor_responsavel TEXT NULL);
-      CREATE TABLE partes(id TEXT PRIMARY KEY, nome_completo TEXT, cpf TEXT, sexo TEXT, data_nascimento TEXT);
+      CREATE TABLE partes(id TEXT PRIMARY KEY, nome_completo TEXT, cpf TEXT, sexo TEXT, data_nascimento TEXT, profissao TEXT);
       CREATE TABLE sync_log(parte_id TEXT, tipo_parte TEXT);
       CREATE TABLE processos_partes(id TEXT PRIMARY KEY, processo_id TEXT, parte_id TEXT, tipo_parte TEXT, polo TEXT,
         prioridade_mulher INTEGER, prioridade_crianca_adolescente INTEGER, prioridade_idoso INTEGER,
@@ -81,7 +86,7 @@ final class PartesRepository {
       INSERT INTO setores VALUES ('S1',1),('S2',1),('S3',0);
       INSERT INTO usuario_setor VALUES ('U1','S1'),('U2','S2'),('U4','S3');
       INSERT INTO processos VALUES ('P1','001','S1'),('P2','002','S2'),('P3','003',NULL),('P4','004','S3');
-      INSERT INTO partes VALUES ('A','Pessoa A','000','X','2000-01-01'),('B','Pessoa B','111','X','2000-01-01');
+      INSERT INTO partes VALUES ('A','Pessoa A','000','X','2000-01-01','Réu'),('B','Pessoa B','111','X','2000-01-01','Advogada anterior');
       INSERT INTO processos_partes VALUES ('L1','P1','A','reu','passivo',0,0,0,0,'2026','2026'),
         ('L2','P2','B','vitima','ativo',0,0,0,0,'2026','2026');
     ''')
@@ -115,13 +120,17 @@ require getenv('TEST_ENDPOINT');'''
         return (
             list(db.execute('SELECT id, processo_id, parte_id, tipo_parte, polo FROM processos_partes ORDER BY id')),
             list(db.execute('SELECT parte_id, tipo_parte FROM sync_log ORDER BY parte_id, tipo_parte')),
+            list(db.execute('SELECT id, profissao FROM partes ORDER BY id')),
         )
 
     before = snapshot()
-    assert invoke('create.php', 'U1', 'SERVIDOR-CARTORIO',
-                  {'processo_id': 'P1', 'parte_id': 'B', 'tipo_parte': 'reu', 'polo': 'passivo'})[0] == 201
+    shared_profession = db.execute("SELECT profissao FROM partes WHERE id='B'").fetchone()[0]
+    create_status, created_body = invoke('create.php', 'U1', 'SERVIDOR-CARTORIO',
+                  {'processo_id': 'P1', 'parte_id': 'B', 'tipo_parte': 'advogado', 'polo': 'passivo'})
+    assert create_status == 201
     after_create = snapshot()
-    assert len(after_create[0]) == len(before[0]) + 1 and len(after_create[1]) == 1
+    assert len(after_create[0]) == len(before[0]) + 1 and after_create[1] == before[1]
+    assert db.execute("SELECT profissao FROM partes WHERE id='B'").fetchone()[0] == shared_profession
 
     # Other unit, no unit assignment, process without assignment, inactive unit.
     for user, process in [('U2', 'P1'), ('U3', 'P1'), ('U1', 'P3'), ('U4', 'P4')]:
@@ -139,6 +148,7 @@ require getenv('TEST_ENDPOINT');'''
     status, unauthorized_update = invoke('update.php', 'U2', 'SERVIDOR-CARTORIO', {'id': 'L1', 'tipo_parte': 'vitima'})
     assert status == 404
     assert snapshot() == after_create
+
     status, unauthorized_delete = invoke('delete.php', 'U2', 'SERVIDOR-CARTORIO', {'id': 'L1'})
     assert status == 404
     assert snapshot() == after_create
@@ -155,6 +165,14 @@ require getenv('TEST_ENDPOINT');'''
     assert status == missing_process_create_status == 403
     assert cross_process_create == missing_process_create
     assert snapshot() == after_create
+
+    update_status, update_body = invoke('update.php', 'U1', 'SERVIDOR-CARTORIO',
+                                        {'id': created_body['id'], 'tipo_parte': 'defensor_publico'})
+    assert update_status == 200, (update_status, update_body)
+    assert db.execute("SELECT profissao FROM partes WHERE id='B'").fetchone()[0] == shared_profession
+    assert snapshot()[1] == after_create[1]
+    delete_created_status, _ = invoke('delete.php', 'U1', 'SERVIDOR-CARTORIO', {'id': created_body['id']})
+    assert delete_created_status == 200
 
     status, _ = invoke('update.php', 'U1', 'SERVIDOR-CARTORIO', {'id': 'L1', 'tipo_parte': 'vitima'})
     assert status == 200

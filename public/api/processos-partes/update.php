@@ -9,7 +9,6 @@ ApiAccessGuard::requireAccess(['processospartesedit'], true);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/repositories/ProcessosPartesRepository.php';
-require_once $basePath . '/app/repositories/PartesRepository.php';
 require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 
 try {
@@ -67,20 +66,13 @@ try {
         echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
-    $vinculo = $repository->findById($id);
-    if ($vinculo === null) {
+    if ($repository->findById($id) === null) {
         $connection->rollBack();
         http_response_code(404);
         echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
     $repository->update($id, $data);
-    $tipoAtual = trim((string) (array_key_exists('tipo_parte', $data) ? $data['tipo_parte'] : ($vinculo['tipo_parte'] ?? '')));
-    $parteIdVinculo = trim((string) ($vinculo['parte_id'] ?? ''));
-    if ($parteIdVinculo !== '') {
-        $partesRepo = new PartesRepository($connection);
-        $partesRepo->syncProfissaoFromTipoProcessoParte($parteIdVinculo, $tipoAtual);
-    }
     $connection->commit();
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {

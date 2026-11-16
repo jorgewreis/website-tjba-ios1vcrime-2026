@@ -86,7 +86,7 @@ foreach ($ddl as $sql) {
 $pdo->exec("INSERT INTO setores (id_setor,ativo) VALUES ('SET-CARTORIO',1),('SET-GABINETE',1),('SET-INATIVO',0)");
 $pdo->exec("INSERT INTO usuario_setor (usuario,setor) VALUES ('USR-1','SET-CARTORIO'),('USR-2','SET-GABINETE'),('USR-4','SET-INATIVO')");
 $pdo->exec("INSERT INTO processos (id,numero_processo,id_setor_responsavel) VALUES ('PRC-1','CNJ-SINTETICO-1','SET-CARTORIO'),('PRC-2','CNJ-SINTETICO-2','SET-GABINETE'),('PRC-3','CNJ-SINTETICO-3',NULL),('PRC-4','CNJ-SINTETICO-4','SET-INATIVO')");
-$pdo->exec("INSERT INTO partes (id,nome_completo,cpf,sexo,data_nascimento,created_at,updated_at) VALUES ('PAR-1','Pessoa Sintética 1','00000000000','X','2000-01-01',NOW(),NOW()),('PAR-2','Pessoa Sintética 2','00000000001','X','2000-01-01',NOW(),NOW())");
+$pdo->exec("INSERT INTO partes (id,nome_completo,cpf,sexo,data_nascimento,profissao,created_at,updated_at) VALUES ('PAR-1','Pessoa Sintética 1','00000000000','X','2000-01-01','Réu','2026-01-01 00:00:00','2026-01-01 00:00:00'),('PAR-2','Pessoa Sintética 2','00000000001','X','2000-01-01','Advogada anterior','2026-01-01 00:00:00','2026-01-01 00:00:00')");
 $pdo->exec("INSERT INTO processos_partes (id,processo_id,parte_id,tipo_parte,polo,created_at,updated_at) VALUES ('VNC-1','PRC-1','PAR-1','reu','passivo',NOW(),NOW()),('VNC-2','PRC-2','PAR-2','vitima','ativo',NOW(),NOW())");
 
 // Copia só as dependências estritamente necessárias para uma fixture local em /tmp.
@@ -171,6 +171,16 @@ final class PartesRepository {
     public function syncProfissaoFromTipoProcessoParte(string $parteId, string $tipoParte): void {
         $statement = $this->connection->prepare('INSERT INTO sync_log (parte_id,tipo_parte) VALUES (:parte_id,:tipo_parte)');
         $statement->execute([':parte_id' => $parteId, ':tipo_parte' => $tipoParte]);
+        $profissao = match (strtolower($tipoParte)) {
+            'advogado' => 'Advogado',
+            'defensor' => 'Defensor Público',
+            'defensor_publico' => 'Defensor Público',
+            default => null,
+        };
+        if ($profissao !== null) {
+            $update = $this->connection->prepare('UPDATE partes SET profissao = :profissao WHERE id = :parte_id');
+            $update->execute([':profissao' => $profissao, ':parte_id' => $parteId]);
+        }
     }
 }
 PHP);
@@ -227,12 +237,14 @@ PHP;
 
 try {
     $before = $snapshot($pdo);
-    $createPayload = ['processo_id' => 'PRC-1', 'parte_id' => 'PAR-2', 'tipo_parte' => 'reu', 'polo' => 'passivo'];
+    $sharedPartProfession = $pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn();
+    $createPayload = ['processo_id' => 'PRC-1', 'parte_id' => 'PAR-2', 'tipo_parte' => 'advogado', 'polo' => 'passivo'];
     [$status, $body] = $invoke('create.php', 'USR-1', 'SERVIDOR-CARTORIO', $createPayload);
     $assert($status === 201 && isset($body['id']), 'Mesmo setor com permissão não criou o vínculo.');
     $afterCreate = $snapshot($pdo);
     $assert(count($afterCreate['processos_partes']) === count($before['processos_partes']) + 1, 'Create autorizado não persistiu exatamente um vínculo.');
-    $assert(count($afterCreate['sync_log']) === 1, 'Create autorizado não executou a sincronização prevista.');
+    $assert($afterCreate['sync_log'] === $before['sync_log'] && $afterCreate['partes'] === $before['partes'], 'Create alterou profissão global de pessoa compartilhada com outro setor.');
+    $assert($pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn() === $sharedPartProfession, 'Create alterou profissão global da pessoa vinculada a outro processo/setor.');
 
     foreach ([
         ['USR-2', 'PRC-1', 'setor diferente'],
@@ -293,8 +305,9 @@ try {
     $holder->rollBack();
     $assert($snapshot($pdo) === $afterCreate, 'Delete durante lock deixou alteração parcial.');
 
-    [$updateStatus] = $invoke('update.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => 'VNC-1', 'tipo_parte' => 'vitima']);
-    $assert($updateStatus === 200 && $pdo->query("SELECT tipo_parte FROM processos_partes WHERE id='VNC-1'")->fetchColumn() === 'vitima', 'Update autorizado no mesmo setor não persistiu.');
+    [$updateStatus] = $invoke('update.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => $body['id'], 'tipo_parte' => 'defensor_publico']);
+    $assert($updateStatus === 200 && $pdo->query('SELECT tipo_parte FROM processos_partes WHERE id=' . $pdo->quote($body['id']))->fetchColumn() === 'defensor_publico', 'Update autorizado no mesmo setor não persistiu.');
+    $assert($pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn() === $sharedPartProfession && $snapshot($pdo)['sync_log'] === $afterCreate['sync_log'], 'Update alterou profissão global da pessoa vinculada a outro processo/setor.');
     [$deleteStatus, $deleteBody] = $invoke('delete.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => 'VNC-1']);
     $assert($deleteStatus === 200 && ($deleteBody['deleted'] ?? false) === true, 'Delete autorizado no mesmo setor não persistiu.');
 
