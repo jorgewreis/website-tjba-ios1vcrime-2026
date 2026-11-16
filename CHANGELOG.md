@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0132
+
+**Data:** 2026-11-15 21:48:59 | **Commit:** `9a811fc2` | **Tipo:** `patch`
+
+- fix: respeitar precedencia de etag no catalogo de mensagens
+
 ## V. 1.87.0131
 
 **Data:** 2026-11-15 21:46:40 | **Commit:** `e0e91e01` | **Tipo:** `patch`
@@ -6213,6 +6219,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

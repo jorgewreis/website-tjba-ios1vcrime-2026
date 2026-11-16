@@ -3,6 +3,14 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=UTF-8');
 
+$method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''));
+if (!in_array($method, ['GET', 'HEAD'], true)) {
+    header('Allow: GET, HEAD');
+    http_response_code(405);
+    echo json_encode(['error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 $catalogPath = dirname(__DIR__, 3) . '/config/toast_messages.php';
 if (!is_file($catalogPath)) {
     http_response_code(500);
@@ -72,12 +80,27 @@ header('ETag: ' . $etag);
 header('Last-Modified: ' . $lastModified);
 header('Cache-Control: private, max-age=60, must-revalidate');
 
-$ifNoneMatch = isset($_SERVER['HTTP_IF_NONE_MATCH']) ? trim((string) $_SERVER['HTTP_IF_NONE_MATCH']) : '';
+$hasIfNoneMatch = array_key_exists('HTTP_IF_NONE_MATCH', $_SERVER);
+$ifNoneMatch = $hasIfNoneMatch ? trim((string) $_SERVER['HTTP_IF_NONE_MATCH']) : '';
 $ifModifiedSince = isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) ? trim((string) $_SERVER['HTTP_IF_MODIFIED_SINCE']) : '';
 
-$notModifiedByEtag = ($ifNoneMatch !== '' && $ifNoneMatch === $etag);
+$notModifiedByEtag = false;
+if ($hasIfNoneMatch) {
+    if ($ifNoneMatch === '*') {
+        $notModifiedByEtag = true;
+    } elseif (preg_match('/\A\s*(?:W\/)?"[\x21\x23-\x7E\x80-\xFF]*"(?:\s*,\s*(?:W\/)?"[\x21\x23-\x7E\x80-\xFF]*")*\s*\z/', $ifNoneMatch)) {
+        preg_match_all('/(?:W\/)?"[\x21\x23-\x7E\x80-\xFF]*"/', $ifNoneMatch, $candidates);
+        foreach ($candidates[0] as $candidate) {
+            if ($candidate === $etag || $candidate === 'W/' . $etag) {
+                $notModifiedByEtag = true;
+                break;
+            }
+        }
+    }
+}
 $notModifiedByDate = false;
-if ($ifModifiedSince !== '') {
+// If-None-Match takes precedence even when it does not match.
+if (!$hasIfNoneMatch && $ifModifiedSince !== '') {
     $ifModifiedSinceTs = strtotime($ifModifiedSince);
     if ($ifModifiedSinceTs !== false && $ifModifiedSinceTs >= $lastModifiedTs) {
         $notModifiedByDate = true;
