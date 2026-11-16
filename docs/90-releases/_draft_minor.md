@@ -4,6 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: proteger contas existentes no cadastro de estudante** `[90924a55]`
+- **fix: proteger APIs de vinculos de processos** `[ba25143b]`
 
-- **fix: preservar sigilo e transacoes de processo** `[97da36df]`
