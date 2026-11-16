@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: preservar cronologia de monitoramento** `[2acdbc0d]`
+- **docs: separar raiz publica do destino de deploy** `[956c61fb]`
 
