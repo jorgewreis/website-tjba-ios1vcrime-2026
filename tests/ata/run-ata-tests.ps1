@@ -1,6 +1,9 @@
 [CmdletBinding()]
 param()
 
+# Contenção anterior à leitura de configuração ou execução de testes.
+throw 'Testes de atas suspensos: sandbox descartável não comprovado.'
+
 $ErrorActionPreference = 'Stop'
 $runtimePath = Join-Path $PSScriptRoot '../auth/.env.test.runtime'
 if (-not (Test-Path -LiteralPath $runtimePath)) {
