@@ -2,7 +2,7 @@
 
 ## V. 1.87.0169
 
-**Data:** 2026-11-16 18:09:19 | **Commit:** `1c836ab4` | **Tipo:** `patch`
+**Data:** 2026-11-16 18:09:19 | **Commit:** `b88609a1` | **Tipo:** `patch`
 
 - fix(REI-114): serialize reconciliation with calendar updates
 
