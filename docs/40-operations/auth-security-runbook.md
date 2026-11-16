@@ -8,8 +8,9 @@ Este runbook consolida os passos operacionais mínimos para deploy, validação 
 
 - o workflow [`deploy-prod.yml`](../../.github/workflows/deploy-prod.yml) sincroniza arquivos e recarrega serviços em produção;
 - o workflow [`deploy-dev.yml`](../../.github/workflows/deploy-dev.yml) permanece disponível apenas para disparo manual no ambiente de desenvolvimento;
-- o deploy automatizado **não executa migrações SQL automaticamente**;
-- portanto, qualquer mudança de banco exigida pela release precisa ser aplicada manualmente no ambiente.
+- o deploy de produção executa, se presentes após a sincronização, os scripts PHP `scripts/migrate-cejusc.php`, `scripts/migrate-gabinete-reu-preso-controle-tipo.php` e `scripts/migrate-dashboard-conclusoes.php`;
+- esse comportamento não constitui um executor geral de `database/migrations/`. Identifique as alterações de banco exigidas pela release e planeje separadamente as que não forem cobertas pelos scripts, conforme [`database/README-migracoes.md`](../../database/README-migracoes.md) e o [guia de deploy](../90-releases/deploy-producao.md);
+- a configuração do workflow não comprova que uma migração foi executada: confira a revisão, os logs do run e a estrutura efetiva do ambiente antes de declarar o resultado.
 
 ## 3. Checklist de pós-deploy
 
