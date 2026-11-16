@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0145
+
+**Data:** 2026-11-15 22:51:18 | **Commit:** `d16a4e89` | **Tipo:** `patch`
+
+- fix: validar data de movimentacao no servidor
+
 ## V. 1.87.0144
 
 **Data:** 2026-11-15 22:46:37 | **Commit:** `e869cd5b` | **Tipo:** `patch`
@@ -6291,6 +6297,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
