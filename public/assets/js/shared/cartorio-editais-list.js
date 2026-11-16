@@ -179,7 +179,7 @@
                         throw new Error('Não foi possível atualizar os editais. Verifique a listagem antes de tentar novamente.');
                     }
                     const result = data.resultado;
-                    const integerFields = ['solicitados', 'editais_alterados', 'editais_com_etapas_criadas', 'etapas_criadas', 'inalterados', 'nao_encontrados', 'finalizados', 'falhas'];
+                    const integerFields = ['solicitados', 'editais_alterados', 'editais_com_etapas_criadas', 'etapas_criadas', 'editais_com_datas_calculadas', 'inalterados', 'nao_encontrados', 'finalizados', 'falhas'];
                     const validResult = result && integerFields.every(function (field) {
                         return Number.isInteger(result[field]) && result[field] >= 0;
                     });
@@ -193,15 +193,16 @@
                     }
                     const etapas = result.etapas_criadas;
                     const editais = result.editais_com_etapas_criadas;
+                    const editaisComDatas = result.editais_com_datas_calculadas;
                     const inalterados = result.inalterados;
                     const finalizados = result.finalizados;
                     const ausentes = result.nao_encontrados;
-                    ctx.notify(
+                    ctx.queuePostReloadToast(
                         'success',
                         'Atualização concluída',
-                        editais + ' editais receberam ' + etapas + ' etapas; ' +
-                            inalterados + ' permaneceram inalterados; ' + finalizados +
-                            ' foram finalizados; ' + ausentes + ' não foram encontrados. Recarregando a listagem.'
+                        editais + ' editais receberam ' + etapas + ' etapas; ' + editaisComDatas +
+                            ' tiveram as datas calculadas; ' + inalterados + ' permaneceram inalterados; ' +
+                            finalizados + ' foram finalizados; ' + ausentes + ' não foram encontrados.'
                     );
                     global.location.reload();
                 });

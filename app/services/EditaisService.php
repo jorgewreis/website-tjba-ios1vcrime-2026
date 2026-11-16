@@ -570,6 +570,7 @@ final class EditaisService
                 'editais_alterados' => 0,
                 'editais_com_etapas_criadas' => 0,
                 'etapas_criadas' => 0,
+                'editais_com_datas_calculadas' => 0,
                 'inalterados' => 0,
                 'nao_encontrados' => 0,
                 'finalizados' => 0,
@@ -594,10 +595,23 @@ final class EditaisService
                         $subtarefasAntes = count($this->subtarefasRepository->findByEditalId($id));
                         $this->subtarefasRepository->ensureSubtarefasAtivas($id);
                         $subtarefasDepois = count($this->subtarefasRepository->findByEditalId($id));
+                        $datasAntes = [
+                            trim((string) ($edital['data_inicio_contagem'] ?? '')),
+                            trim((string) ($edital['data_decurso_prazo'] ?? '')),
+                        ];
+                        $finalizado = $this->tentarFinalizacaoAutomaticaPorDecurso($id);
+                        $editalAtualizado = $this->repository->findById($id);
+                        $datasDepois = [
+                            trim((string) ($editalAtualizado['data_inicio_contagem'] ?? '')),
+                            trim((string) ($editalAtualizado['data_decurso_prazo'] ?? '')),
+                        ];
                         return [
                             'encontrado' => true,
                             'etapas_criadas' => max(0, $subtarefasDepois - $subtarefasAntes),
-                            'finalizado' => $this->tentarFinalizacaoAutomaticaPorDecurso($id),
+                            'datas_calculadas' => $datasDepois !== $datasAntes
+                                && $datasDepois[0] !== ''
+                                && $datasDepois[1] !== '',
+                            'finalizado' => $finalizado,
                         ];
                     });
                     if (!is_array($outcome)) {
@@ -616,10 +630,13 @@ final class EditaisService
                     if (!empty($outcome['finalizado'])) {
                         $result['finalizados']++;
                     }
-                    if ($created > 0 || !empty($outcome['finalizado'])) {
+                    if (!empty($outcome['datas_calculadas'])) {
+                        $result['editais_com_datas_calculadas']++;
+                    }
+                    if ($created > 0 || !empty($outcome['datas_calculadas']) || !empty($outcome['finalizado'])) {
                         $result['editais_alterados']++;
                     }
-                    if ($created === 0 && empty($outcome['finalizado'])) {
+                    if ($created === 0 && empty($outcome['datas_calculadas']) && empty($outcome['finalizado'])) {
                         $result['inalterados']++;
                     }
                 }
