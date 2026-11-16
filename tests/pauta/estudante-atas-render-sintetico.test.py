@@ -1,5 +1,5 @@
 """Renderiza view copiada com serviço fake, sem abrir banco ou executar serviço de atas."""
-import os, pathlib, shutil, subprocess, tempfile
+import os, pathlib, re, shutil, subprocess, tempfile
 root=pathlib.Path(__file__).resolve().parents[2]
 with tempfile.TemporaryDirectory(prefix='pauta-render-') as tmp:
     base=pathlib.Path(tmp)
@@ -25,6 +25,7 @@ with tempfile.TemporaryDirectory(prefix='pauta-render-') as tmp:
     env={k:os.environ[k] for k in ('PATH','SystemRoot','WINDIR','TEMP','TMP') if k in os.environ}
     result=subprocess.run(['php',str(base/'render.php')],capture_output=True,env=env,check=True)
     html=result.stdout.decode('utf-8')
-    assert html.count('Audiência indisponível.')==3
+    rendered_html=html.split('<script>',1)[0]
+    assert len(re.findall(r'<p class="padding-x-lg padding-y-md">Audiência indisponível\.</p>', rendered_html))==3
     for secret in ('SEGREDO','2034','15:47','segredo.invalid','download.php','BLOQUEADA-'): assert secret not in html, secret
     print('PASS: view sintética de atas não expõe dados nem links bloqueados')
