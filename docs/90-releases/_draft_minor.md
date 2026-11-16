@@ -4,5 +4,7 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-115): make edital conclusion atomic** `[3e478b30]`
+- **fix(REI-85): make institution profession sync atomic** `[c5d213d3]`
+- **fix(REI-85): serialize profession reconciliation** `[717fda5e]`
+- **chore(REI-85): sync with current main** `[d269e165]`
 
