@@ -1,40 +1,72 @@
 # Changelog
 
+## V. 1.87.0175
+
+**Data:** 2026-11-16 20:43:55 | **Commit:** `4a420af5` | **Tipo:** `patch`
+
+- chore(REI-78): sync with current main
+
+## V. 1.87.0174
+
+**Data:** 2026-11-16 19:33:56 | **Commit:** `3e478b30` | **Tipo:** `patch`
+
+- fix(REI-115): make edital conclusion atomic
+
+## V. 1.87.0173
+
+**Data:** 2026-11-16 18:33:09 | **Commit:** `04896097` | **Tipo:** `patch`
+
+- fix(REI-114): use current reads after row locks
+
+## V. 1.87.0172
+
+**Data:** 2026-11-16 18:26:18 | **Commit:** `653273be` | **Tipo:** `patch`
+
+- test(REI-114): validate calculated date reconciliation totals
+
+## V. 1.87.0171
+
+**Data:** 2026-11-16 18:23:46 | **Commit:** `9dfe8966` | **Tipo:** `patch`
+
+- fix(REI-114): report date writes and keep reconciliation summary
+
 ## V. 1.87.0170
 
-**Data:** 2026-11-16 16:44:37 | **Commit:** `10beeba0` | **Tipo:** `patch`
+**Data:** 2026-11-16 18:11:55 | **Commit:** `1df186d6` | **Tipo:** `patch`
 
-- test(REI-78): cover concurrent idempotent retries
+- fix(REI-114): assert calendar lock wait and release
 
 ## V. 1.87.0169
 
-**Data:** 2026-11-16 16:38:37 | **Commit:** `2a30b969` | **Tipo:** `patch`
+**Data:** 2026-11-16 18:09:19 | **Commit:** `b88609a1` | **Tipo:** `patch`
 
-- fix(REI-78): make carta creation idempotent
+- fix(REI-114): serialize reconciliation with calendar updates
 
 ## V. 1.87.0168
 
-**Data:** 2026-11-16 16:14:52 | **Commit:** `c7de2cb2` | **Tipo:** `patch`
+**Data:** 2026-11-16 16:04:19 | **Commit:** `a9dc0a91` | **Tipo:** `patch`
 
-- fix(REI-78): block duplicate carta submissions
+- test(REI-114): verify side-effect-free edital list
 
 ## V. 1.87.0167
 
-**Data:** 2026-11-16 15:43:02 | **Commit:** `ae959e86` | **Tipo:** `patch`
+**Data:** 2026-11-16 15:58:21 | **Commit:** `c40f24f2` | **Tipo:** `patch`
 
-- test: cover pauta rollback on isolated MySQL REI-88
+- test(REI-114): exercise edital reconciliation over HTTP
 
 ## V. 1.87.0166
 
-**Data:** 2026-11-16 15:18:32 | **Commit:** `3b01d3e9` | **Tipo:** `patch`
+**Data:** 2026-11-16 15:51:35 | **Commit:** `d24c40c7` | **Tipo:** `patch`
 
-- test(REI-88): verify nested transaction rollback
+- fix(REI-114): validate reconciliation totals
+- fix(REI-122,REI-135): reconcile calendar atomically
 
 ## V. 1.87.0165
 
-**Data:** 2026-11-16 15:15:43 | **Commit:** `cc3b6220` | **Tipo:** `patch`
+**Data:** 2026-11-16 15:48:28 | **Commit:** `1b27c384` | **Tipo:** `patch`
 
-- fix(REI-88): make carta creation atomic
+- fix(REI-114): report reconciliation outcomes
+- fix(REI-161): ocultar metadados de pautas inelegiveis
 
 ## V. 1.87.0164
 
@@ -6447,6 +6479,9 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
+
+
 
 
 
