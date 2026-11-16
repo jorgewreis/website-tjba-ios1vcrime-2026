@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **docs: separar raiz publica do destino de deploy** `[956c61fb]`
+- **fix: reconciliar agendamento de limpeza de usuarios** `[51eccc0f]`
 
