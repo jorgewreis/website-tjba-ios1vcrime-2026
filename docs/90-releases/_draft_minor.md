@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: informar falhas na edicao de instituicoes** `[02d2b100]`
+- **docs: reconciliar comportamento de autenticacao** `[6fcc7d42]`
 
