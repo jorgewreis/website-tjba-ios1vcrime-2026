@@ -35,6 +35,7 @@ if [ "$1" = -l ]; then
     existing|existing_nolf|collision|managed_inactive) cat "$CRON_EXISTING"; exit 0 ;;
     missing) echo "no crontab for fixture" >&2; exit 1 ;;
     partial) echo "5 4 * * * /existing"; echo "no crontab for fixture" >&2; exit 1 ;;
+    wrongstatus) echo "no crontab for fixture" >&2; exit 2 ;;
     error) echo "permission denied" >&2; exit 1 ;;
     misleading) echo "no crontab for fixture" >&2; echo "permission denied" >&2; exit 1 ;;
   esac
@@ -52,6 +53,7 @@ if "%CRON_MODE%"=="collision" (type "%CRON_EXISTING%" & exit /b 0)
 if "%CRON_MODE%"=="managed_inactive" (type "%CRON_EXISTING%" & exit /b 0)
 if "%CRON_MODE%"=="missing" (echo no crontab for fixture 1>&2 & exit /b 1)
 if "%CRON_MODE%"=="partial" (echo 5 4 * * * /existing & echo no crontab for fixture 1>&2 & exit /b 1)
+if "%CRON_MODE%"=="wrongstatus" (echo no crontab for fixture 1>&2 & exit /b 2)
 if "%CRON_MODE%"=="misleading" (echo no crontab for fixture 1>&2 & echo permission denied 1>&2 & exit /b 1)
 echo permission denied 1>&2
 exit /b 1
@@ -66,9 +68,9 @@ exit /b %errorlevel%
     collision = base / 'collision.txt'
     collision.write_text('5 4 * * * /existing #tjba-reus-presos-revisao-email\n6 4 * * * /other # ios1vcrime-inactive-external-users\n', encoding='utf-8')
     managed_inactive = base / 'managed-inactive.txt'
-    managed_inactive.write_text('0 3 * * * cd "/old" && "/php" "/old/scripts/purge-inactive-external-users.php" >> "/old/log" 2>&1 # ios1vcrime-inactive-external-users\n', encoding='utf-8')
+    managed_inactive.write_text('0 3 * * * cd "/old" && "/php" "/old/scripts/purge-inactive-external-users.php" >> "/old/storage/logs/inactive-external-users.log" 2>&1 # ios1vcrime-inactive-external-users\n', encoding='utf-8')
     for kind in ('shell', 'php', 'inactive'):
-        for mode in ('existing', 'existing_nolf', 'collision', 'missing', 'error', 'misleading', 'partial'):
+        for mode in ('existing', 'existing_nolf', 'collision', 'missing', 'error', 'misleading', 'partial', 'wrongstatus'):
             written = base / (kind + '-' + mode + '.txt')
             env = os.environ.copy()
             command_path = (str(Path(BASH).parent.parent / 'usr' / 'bin') + os.pathsep + os.environ.get('SystemRoot', r'C:\Windows') + r'\System32') if WINDOWS else '/usr/bin:/bin'
@@ -86,7 +88,7 @@ exit /b %errorlevel%
             else:
                 command = [PHP, str(scripts / 'install-cron-gabinete-reus-presos-revisao-email.php')]
             result = subprocess.run(command, env=env, capture_output=True, text=True)
-            if mode in ('error', 'misleading', 'partial'):
+            if mode in ('error', 'misleading', 'partial', 'wrongstatus') or (mode == 'collision' and kind == 'inactive'):
                 assert result.returncode != 0 and not written.exists(), (kind, mode, result.stdout, result.stderr)
             else:
                 assert result.returncode == 0 and written.exists(), (kind, mode, result.stdout, result.stderr)
@@ -108,5 +110,6 @@ exit /b %errorlevel%
         env['CRON_EXISTING'] = subprocess.check_output([BASH, '-c', 'cygpath -u "$1"', '_', env['CRON_EXISTING']], text=True).strip()
         env['CRON_WRITTEN'] = subprocess.check_output([BASH, '-c', 'cygpath -u "$1"', '_', env['CRON_WRITTEN']], text=True).strip()
     result = subprocess.run([BASH, str(scripts / 'install-cron-inactive-external-users.sh')], env=env, capture_output=True, text=True)
-    assert result.returncode == 0 and not (base / 'unexpected.txt').exists(), (result.stdout, result.stderr)
-    print('PASS inactive managed idempotence')
+    assert result.returncode == 0 and (base / 'unexpected.txt').exists(), (result.stdout, result.stderr)
+    assert '/old/scripts/purge-inactive-external-users.php' not in (base / 'unexpected.txt').read_text(encoding='utf-8')
+    print('PASS inactive managed reconciliation')
