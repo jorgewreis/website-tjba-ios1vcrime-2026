@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
 require_once __DIR__ . '/../../models/Usuario.php';
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
+require_once __DIR__ . '/../../helpers/SalaAudienciasEstudantePrivacidade.php';
 
 $userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
 $usuarioModel = new Usuario();
@@ -337,6 +338,9 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         <?php foreach ($hojePageRows as $row):
             $idPautaRaw = trim((string) ($row['id_pauta'] ?? ''));
             $idPauta = htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8');
+            if (SalaAudienciasEstudantePrivacidade::indisponivel($row)): ?>
+        <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo $idPauta; ?>" data-indisponivel="1"><p class="padding-x-lg padding-y-md">Audiência indisponível.</p></div>
+        <?php continue; endif;
             $pode = !empty($row['pode_inscrever']);
             $ja = !empty($row['ja_inscrito']);
             $lotado = !empty($row['vagas_esgotadas']);
@@ -495,6 +499,9 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         <?php $processo_bloco_model = 'full'; ?>
         <?php foreach ($minhasPageRows as $m):
             $idPautaMinhasRaw = trim((string) ($m['pauta'] ?? ''));
+            if (SalaAudienciasEstudantePrivacidade::indisponivel($m)): ?>
+        <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>" data-indisponivel="1"><p class="padding-x-lg padding-y-md">Audiência indisponível.</p></div>
+        <?php continue; endif;
             $stRow = (string) ($m['status'] ?? '');
             $stRow = painelEstudanteStatusExibicao($m);
             $inicioEfetivoRaw = trim((string) ($m['data_hora_inicio_efetivo'] ?? ''));
@@ -885,7 +892,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         }
         function collectPautas() {
             var ids = {};
-            document.querySelectorAll('.js-time-block[data-pauta]').forEach(function (el) {
+            document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (el) {
                 var id = String(el.getAttribute('data-pauta') || '').trim();
                 if (id) ids[id] = true;
             });
@@ -903,6 +910,19 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             });
         }
         function applyUpdates(items) {
+            Object.keys(items).forEach(function (id) {
+                if (!items[id] || !items[id].indisponivel) return;
+                document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (register) {
+                    if (String(register.getAttribute('data-pauta') || '').trim() !== id) return;
+                    if (register.contains(document.activeElement)) {
+                        var section = register.closest('.card-page');
+                        var destination = section && section.querySelector('h2');
+                        if (destination) destination.focus();
+                    }
+                    register.innerHTML = '<p class="padding-x-lg padding-y-md">Audiência indisponível.</p>';
+                    register.setAttribute('data-indisponivel', '1');
+                });
+            });
             renderVisibleTimeBlocks(latestItemsById);
             document.querySelectorAll('[data-status-label-pauta]').forEach(function (labelEl) {
                 var id = String(labelEl.getAttribute('data-status-label-pauta') || '').trim();
@@ -1072,8 +1092,19 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                         if (empty) empty.hidden = !!section.querySelector('.register.register-painel-estudante[data-pauta]');
                     });
                     Object.keys(res.body.items).forEach(function (id) {
-                        latestItemsById[id] = Object.assign({}, latestItemsById[id] || {}, res.body.items[id]);
+                        var item = res.body.items[id];
+                        if (item.indisponivel) {
+                            latestItemsById[id] = {id_pauta: id, indisponivel: true};
+                        } else {
+                            latestItemsById[id] = Object.assign({}, latestItemsById[id] || {}, item);
+                        }
                     });
+                    var precisaRecarregar = false;
+                    document.querySelectorAll('.register.register-painel-estudante[data-pauta][data-indisponivel="1"]').forEach(function (row) {
+                        var id = String(row.getAttribute('data-pauta') || '').trim();
+                        if (res.body.items[id] && !res.body.items[id].indisponivel) precisaRecarregar = true;
+                    });
+                    if (precisaRecarregar) { window.location.reload(); return; }
                     applyUpdates(res.body.items);
                 })
                 .catch(function () { /* erro silencioso de polling */ })
