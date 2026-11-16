@@ -3,6 +3,7 @@
 
 The connection/config adapters are test-only; no .env, network, Docker or real DB.
 PHP CLI supplies a synthetic session and request, not an HTTP login flow.
+Fixtures are inactive; active holidays and edital recalculation are not covered.
 """
 import hashlib
 from contextlib import ExitStack
@@ -76,7 +77,7 @@ $_SESSION = getenv('REI91_USER') === 'anonymous' ? [] : ['id_usuario'=>getenv('R
 $_SERVER['REQUEST_METHOD']=getenv('REI91_METHOD'); $_SERVER['HTTP_HOST']='example.test';
 $_SERVER['HTTP_ORIGIN']=getenv('REI91_ORIGIN'); $_SERVER['HTTPS']='on';
 $_POST=json_decode(getenv('REI91_PAYLOAD'), true);
-register_shutdown_function(function(){fwrite(STDERR, "STATUS:" . http_response_code());});
+register_shutdown_function(function(){fwrite(STDERR, "\nSTATUS:" . (http_response_code() ?: 200) . "\n");});
 require getenv('REI91_ENDPOINT');'''
         env = {'PATH': os.environ.get('PATH', ''), 'SystemRoot': os.environ.get('SystemRoot', ''),
                'REI91_DB': str(dbpath), 'REI91_USER': uid, 'REI91_TOKEN': TOKEN,
@@ -86,26 +87,40 @@ require getenv('REI91_ENDPOINT');'''
         result = subprocess.run(['php', '-r', code], env=env, capture_output=True, text=True, timeout=10)
         assert result.returncode == 0, (endpoint, uid, result.stderr)
         data = json.loads(result.stdout)
-        return result.stderr, data
+        lines = [line for line in result.stderr.splitlines() if line.startswith('STATUS:')]
+        assert len(lines) == 1 and lines[0][7:].isdigit(), (endpoint, result.stderr)
+        return int(lines[0][7:]), data
+
+    def check_allowed(endpoint, uid):
+        reset()
+        status, response = call(endpoint, uid)
+        rows, editais = snapshot()
+        assert editais == [('synthetic', 'unchanged')], (endpoint, response)
+        if endpoint == 'create':
+            assert status == 201 and isinstance(response.get('id'), str), (status, response)
+            assert response.get('editais_decurso_recalculados') == 0, response
+            new = [row for row in rows if row[0] == response['id']]
+            assert len(rows) == 2 and len(new) == 1 and new[0][1:7] == ('federal', '2030-01-01', '2030-01-01', 'unica', 'alterado', 0), rows
+            assert any(row[0] == ID and row[5] == 'original' for row in rows), rows
+        elif endpoint == 'update':
+            assert status == 200 and response.get('success') is True and response.get('editais_decurso_recalculados') == 0, (status, response)
+            assert len(rows) == 1 and rows[0][0] == ID and rows[0][5] == 'alterado' and rows[0][6] == 0, rows
+        else:
+            assert status == 200 and response.get('success') is True and response.get('editais_decurso_recalculados') == 0, (status, response)
+            assert rows == [], rows
 
     for endpoint in ('create', 'update', 'delete'):
-        for uid, method, origin, status in [('anonymous', 'POST', 'https://example.test', '401'),
-                                            ('servidor', 'POST', 'https://example.test', '403'),
-                                            ('admin', 'GET', 'https://example.test', '403'),
-                                            ('admin', 'POST', 'https://evil.test', '403'),
-                                            ('admin', 'POST', '', '403')]:
+        for uid, method, origin, status in [('anonymous', 'POST', 'https://example.test', 401),
+                                            ('servidor', 'POST', 'https://example.test', 403),
+                                            ('admin', 'GET', 'https://example.test', 403),
+                                            ('admin', 'POST', 'https://evil.test', 403),
+                                            ('admin', 'POST', '', 403)]:
             reset(); before = snapshot()
-            stderr, _ = call(endpoint, uid, method, origin)
-            assert 'STATUS:' + status in stderr, (endpoint, uid, stderr)
+            actual, response = call(endpoint, uid, method, origin)
+            assert actual == status and response.get('error'), (endpoint, uid, actual, response)
             assert snapshot() == before, (endpoint, uid, method, origin)
-        reset(); before = snapshot()
-        stderr, response = call(endpoint, 'admin')
-        assert ('STATUS:201' if endpoint == 'create' else 'STATUS:200') in stderr or (endpoint != 'create' and stderr.endswith('STATUS:')), (endpoint, stderr, response)
-        assert snapshot() != before, (endpoint, response)
-        reset(); before = snapshot()
+        check_allowed(endpoint, 'admin')
         second_allowed = 'chefia' if endpoint == 'delete' else 'diretora'
-        stderr, response = call(endpoint, second_allowed)
-        assert 'STATUS:201' in stderr or stderr.endswith('STATUS:') or 'STATUS:200' in stderr, (endpoint, stderr, response)
-        assert snapshot() != before, (endpoint, response)
+        check_allowed(endpoint, second_allowed)
     db.close()
 print('PASS: perfis, métodos e origens; guardas reais e SQLite temporário')
