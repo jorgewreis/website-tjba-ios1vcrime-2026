@@ -137,7 +137,7 @@ $beforeFailureProcess = (new ProcessosRepository($pdo))->findByNumero($existingC
 $beforeFailureLetters = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
 $beforeFailureSubtasks = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn();
 $beforeFailureClasses = (int) $pdo->query('SELECT COUNT(*) FROM classes')->fetchColumn();
-$pdo->exec("CREATE TRIGGER rei88_fail_subtask BEFORE INSERT ON cartas_expedidas_subtarefas FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'rei88 falha induzida na subtarefa'");
+$pdo->exec("CREATE TRIGGER rei88_fail_subtask BEFORE INSERT ON cartas_expedidas_subtarefas FOR EACH ROW BEGIN IF NEW.tipo = 'aguardando_devolucao' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'rei88 falha induzida na segunda subtarefa'; END IF; END");
 $failurePayload = array_merge($base, [
     'classe_codigo' => 'REI88-ROLLBACK-CLASS',
     'classe_descricao' => 'Classe sintética para rollback',
@@ -146,7 +146,7 @@ try {
     $service->create($failurePayload);
     throw new RuntimeException('Falha induzida na subtarefa não ocorreu.');
 } catch (PDOException $exception) {
-    if (!str_contains($exception->getMessage(), 'rei88 falha induzida na subtarefa')) {
+    if (!str_contains($exception->getMessage(), 'rei88 falha induzida na segunda subtarefa')) {
         throw $exception;
     }
 }
@@ -162,4 +162,4 @@ if ($beforeFailureProcess === null || $afterFailureProcess === null
 }
 
 echo 'PASS CartasExpedidasService completo em MySQL/InnoDB ' . $version
-    . ': sigilo e classe existentes preservados (' . count($inputs) . ' entradas), criação completa, processo novo/classe ausente e rollback após falha em subtarefa verificados.' . PHP_EOL;
+    . ': sigilo e classe existentes preservados (' . count($inputs) . ' entradas), criação completa, processo novo/classe ausente e rollback após falha na segunda subtarefa verificados.' . PHP_EOL;

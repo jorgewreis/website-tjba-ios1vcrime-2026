@@ -243,7 +243,7 @@ final class CartasExpedidasService
     private function withAtomicCreate(callable $operation): string
     {
         $ownsTransaction = !$this->connection->inTransaction();
-        $savepoint = 'cartas_expedidas_create';
+        $savepoint = 'cartas_expedidas_create_' . bin2hex(random_bytes(8));
         if ($ownsTransaction) {
             $this->connection->beginTransaction();
         } else {

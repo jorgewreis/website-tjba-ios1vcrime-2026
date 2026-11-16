@@ -53,4 +53,27 @@ foreach ([false, true] as $value) {
     $new = $repo->findByNumero($newCnj);
     if ($new !== null || $db->inTransaction()) { throw new RuntimeException('Falha na carta deixou processo novo parcial ou transação aberta.'); }
 }
+
+$db = new ProcessosSqlite();
+$repo = new ProcessosRepository($db);
+$existingId = $repo->ensureProcess($existingCnj, null, null, true);
+$db->beginTransaction();
+$db->exec('SAVEPOINT cartas_expedidas_create');
+$repo->ensureProcess($existingCnj, 'OUTER-CLASS', null, null);
+try {
+    (new CartasExpedidasService($db))->create($base);
+    throw new RuntimeException('Não atingiu a sentinela na transação externa.');
+} catch (RuntimeException $e) {
+    if ($e->getMessage() !== 'STOP_AFTER_PROCESS') { throw $e; }
+}
+$outerState = $repo->findById($existingId);
+if (!$db->inTransaction() || $outerState === null || $outerState['classe_id'] !== 'OUTER-CLASS') {
+    throw new RuntimeException('A falha da carta desfez alterações externas ou encerrou a transação do chamador.');
+}
+$db->exec('ROLLBACK TO SAVEPOINT cartas_expedidas_create');
+$afterOuterRollback = $repo->findById($existingId);
+if ($afterOuterRollback === null || $afterOuterRollback['classe_id'] !== null || !$db->inTransaction()) {
+    throw new RuntimeException('O savepoint anterior do chamador foi substituído pela criação da carta.');
+}
+$db->rollBack();
 echo "PASS create de carta e sigilo (SQLite em memória; periféricos simulados)\n";
