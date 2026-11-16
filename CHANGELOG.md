@@ -6,6 +6,12 @@
 
 - fix(REI-161): ocultar metadados de pautas inelegiveis
 
+## V. 1.87.0166
+
+**Data:** 2026-11-16 17:44:44 | **Commit:** `597f7ab6` | **Tipo:** `patch`
+
+- fix(REI-122,REI-135): reconcile calendar atomically
+
 ## V. 1.87.0164
 
 **Data:** 2026-11-16 06:16:54 | **Commit:** `2aec3c3b` | **Tipo:** `patch`

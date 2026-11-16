@@ -500,7 +500,7 @@ final class EditaisService
      */
     public function recalcularDecursosPorIntervalosFeriado(array $intervalos): int
     {
-        $unicos = [];
+        $intervalosValidos = [];
         foreach ($intervalos as $par) {
             if (!is_array($par) || count($par) < 2) {
                 continue;
@@ -510,11 +510,18 @@ final class EditaisService
             if ($ini === '' || $fim === '' || $fim < $ini) {
                 continue;
             }
-            foreach ($this->repository->findIdsComDecursoPorSobreposicaoFeriado($ini, $fim) as $id) {
-                $id = trim((string) $id);
-                if ($id !== '') {
-                    $unicos[$id] = true;
-                }
+            $intervalosValidos[$ini . '/' . $fim] = [$ini, $fim];
+        }
+        if ($intervalosValidos === []) {
+            return 0;
+        }
+
+        $ids = $this->repository->findIdsComDecursoPorIntervalosFeriado(array_values($intervalosValidos));
+        $unicos = [];
+        foreach ($ids as $id) {
+            $id = trim((string) $id);
+            if ($id !== '') {
+                $unicos[$id] = true;
             }
         }
 

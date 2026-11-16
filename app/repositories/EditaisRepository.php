@@ -156,7 +156,8 @@ final class EditaisRepository
         }
         $set[] = '`updated_at` = NOW()';
 
-        $sql = sprintf('UPDATE `%s` SET %s WHERE `id` = :id LIMIT 1', $this->table, implode(', ', $set));
+        $limit = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' LIMIT 1' : '';
+        $sql = sprintf('UPDATE `%s` SET %s WHERE `id` = :id%s', $this->table, implode(', ', $set), $limit);
         $statement = $this->connection->prepare($sql);
         foreach ($params as $k => $v) {
             $statement->bindValue($k, $v);
@@ -260,29 +261,64 @@ final class EditaisRepository
      */
     public function findIdsComDecursoPorSobreposicaoFeriado(string $ferIni, string $ferFim): array
     {
-        $ferIni = trim($ferIni);
-        $ferFim = trim($ferFim);
-        if ($ferIni === '' || $ferFim === '' || $ferFim < $ferIni) {
+        return $this->findIdsComDecursoPorIntervalosFeriado([[$ferIni, $ferFim]]);
+    }
+
+    /**
+     * Seleciona editais cujo vencimento armazenado pode mudar quando algum feriado
+     * no intervalo informado é criado, alterado, desativado ou removido.
+     * A data inicial armazenada já exclui dias não úteis; a publicação original
+     * é a referência necessária para mudanças ocorridas antes desse início.
+     *
+     * @param list<array{0:string,1:string}> $intervalos
+     * @return list<string>
+     */
+    public function findIdsComDecursoPorIntervalosFeriado(array $intervalos): array
+    {
+        $conditions = [];
+        $params = [];
+        foreach ($intervalos as $intervalo) {
+            if (!is_array($intervalo) || count($intervalo) < 2) {
+                continue;
+            }
+            $inicio = trim((string) ($intervalo[0] ?? ''));
+            $fim = trim((string) ($intervalo[1] ?? ''));
+            if ($inicio === '' || $fim === '' || $fim < $inicio) {
+                continue;
+            }
+            $index = count($conditions);
+            $conditions[] = sprintf(
+                '( (e.`data_publicacao` IS NULL OR e.`data_publicacao` < :fer_fim_%1$d) AND e.`data_decurso_prazo` >= :fer_ini_%1$d )',
+                $index
+            );
+            $params[':fer_ini_' . $index] = $inicio;
+            $params[':fer_fim_' . $index] = $fim;
+        }
+        if ($conditions === []) {
             return [];
         }
 
         $sql = sprintf(
             'SELECT e.`id` FROM `%s` e WHERE e.`status` COLLATE %s NOT IN (\'concluída\', \'cancelada\')
                 AND e.`prazo_dias` >= 1
-                AND e.`data_inicio_contagem` IS NOT NULL
                 AND e.`data_decurso_prazo` IS NOT NULL
-                AND e.`data_inicio_contagem` <= :fer_fim
-                AND e.`data_decurso_prazo` >= :fer_ini',
+                AND (%s)
+                ORDER BY e.`id`',
             $this->table,
-            self::COLLATION
+            self::COLLATION,
+            implode(' OR ', $conditions)
         );
+        if ($this->connection->inTransaction()
+            && $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+            $sql .= ' FOR UPDATE';
+        }
 
         $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':fer_ini', $ferIni);
-        $statement->bindValue(':fer_fim', $ferFim);
+        foreach ($params as $name => $value) {
+            $statement->bindValue($name, $value);
+        }
         $statement->execute();
         $rows = $statement->fetchAll(PDO::FETCH_COLUMN, 0);
-
         if (!is_array($rows)) {
             return [];
         }
