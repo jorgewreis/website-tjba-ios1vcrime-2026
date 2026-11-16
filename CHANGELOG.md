@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0165
+
+**Data:** 2026-11-16 17:34:46 | **Commit:** `74a134a7` | **Tipo:** `patch`
+
+- fix(REI-161): ocultar metadados de pautas inelegiveis
+
 ## V. 1.87.0164
 
 **Data:** 2026-11-16 06:16:54 | **Commit:** `2aec3c3b` | **Tipo:** `patch`
