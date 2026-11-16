@@ -350,6 +350,8 @@
             return Promise.resolve(false);
         }
         syncHiddenPautaEditId();
+        var savedDate = String(document.getElementById('audiencia-edit-data')?.value || '').trim();
+        var savedHour = String(document.getElementById('audiencia-edit-hora')?.value || '').trim();
         return fetch('/api/sala-audiencias-pauta/update.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -370,6 +372,8 @@
                 var body = res.j && typeof res.j === 'object' ? res.j : {};
                 var saved = res.ok && (body.success === true || body.success === 1 || body.success === '1');
                 if (saved) {
+                    if (savedDate !== dataOriginalPauta || savedHour !== String(window.PAUTA_HORA_FORA_GRADE || '').trim()) window.PAUTA_HORA_FORA_GRADE = '';
+                    dataOriginalPauta = savedDate;
                     initialAudienciaSnapshot = currentAudienciaSnapshot();
                     if (autoMessage) {
                         notifyByKey(

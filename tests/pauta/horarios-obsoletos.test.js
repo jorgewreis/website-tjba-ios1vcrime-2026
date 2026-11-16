@@ -44,4 +44,15 @@ function testDirtyDuringLookup() {
  elements['audiencia-edit-data'].value='2099-01-02';assert.notEqual(context.currentAudienciaSnapshot(),baseline,'mudança real de data continua detectada');
  elements['audiencia-edit-data'].value='2099-01-01';context.horariosEditUnresolved=false;assert.notEqual(context.currentAudienciaSnapshot(),baseline,'resultado final sem hora continua detectado');
 }
-(async()=>{await run('create');await run('edit');testDirtyDuringLookup();console.log('PASS horários obsoletos: criação e edição (fetch/DOM simulados)')})().catch(e=>{console.error(e);process.exitCode=1});
+async function testSavedDateUpdatesException() {
+ const source=fs.readFileSync('public/assets/js/modules/audiencias/pauta-edit.js','utf8');
+ const elements={'audiencia-edit-data':{value:'2099-01-02'},'audiencia-edit-hora':{value:'10:00'}};
+ const context={document:{getElementById:id=>elements[id]||null},window:{PAUTA_HORA_FORA_GRADE:'08:13'},String,Promise,JSON,dataOriginalPauta:'2099-01-01',initialAudienciaSnapshot:'',resolvePautaEditId:()=> '1',syncHiddenPautaEditId(){},currentAudienciaSnapshot:()=> 'saved',notifyByKey(){},fetch:async()=>({ok:true,json:async()=>({success:true})})};
+ vm.createContext(context);vm.runInContext(extract(source,'saveAudiencia'),context);
+ assert.equal(await context.saveAudiencia(false),true);assert.equal(context.dataOriginalPauta,'2099-01-02');assert.equal(context.window.PAUTA_HORA_FORA_GRADE,'','salvar nova data remove exceção anterior');
+ context.dataOriginalPauta='2099-01-01';context.window.PAUTA_HORA_FORA_GRADE='08:13';elements['audiencia-edit-data'].value='2099-01-01';elements['audiencia-edit-hora'].value='08:13';
+ assert.equal(await context.saveAudiencia(false),true);assert.equal(context.dataOriginalPauta,'2099-01-01');assert.equal(context.window.PAUTA_HORA_FORA_GRADE,'08:13','salvar mesma data e hora preserva exceção');
+ elements['audiencia-edit-data'].value='2099-01-03';elements['audiencia-edit-hora'].value='11:00';context.fetch=async()=>({ok:false,json:async()=>({error:'falhou'})});
+ assert.equal(await context.saveAudiencia(false),false);assert.equal(context.dataOriginalPauta,'2099-01-01');assert.equal(context.window.PAUTA_HORA_FORA_GRADE,'08:13','falha preserva referência anterior');
+}
+(async()=>{await run('create');await run('edit');testDirtyDuringLookup();await testSavedDateUpdatesException();console.log('PASS horários obsoletos: criação e edição (fetch/DOM simulados)')})().catch(e=>{console.error(e);process.exitCode=1});

@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: versionar changelog no fluxo develop** `[83657a18]`
+- **fix: descartar horarios obsoletos da pauta** `[47c670a2]`
 
