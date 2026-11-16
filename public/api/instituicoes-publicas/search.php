@@ -4,10 +4,26 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['instituicoespublicas']);
+if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
+    http_response_code(405);
+    header('Allow: GET');
+    echo json_encode(['error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/repositories/InstituicoesPublicasRepository.php';
 
-$connection = Conection::getInstance()->getConnection();
+try {
+    $connection = Conection::getInstance()->getConnection();
+} catch (Throwable $exception) {
+    error_log('instituicoes-publicas/search.php: falha de conexão.');
+    http_response_code(500);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $nome = trim((string) ($_GET['nome'] ?? ''));
 $limit = isset($_GET['limit']) ? min(50, max(1, (int) $_GET['limit'])) : 20;

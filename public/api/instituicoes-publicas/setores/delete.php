@@ -7,6 +7,8 @@ $basePath = dirname(__DIR__, 3);
 if (!is_file($basePath . '/app/helpers/Conection.php')) {
     $basePath = dirname(__DIR__, 4);
 }
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['instituicoespublicasedit'], true);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/InstituicoesPublicasService.php';
@@ -17,7 +19,15 @@ if (!bootstrapRequireTrustedPostRequest()) {
     exit;
 }
 
-$connection = Conection::getInstance()->getConnection();
+try {
+    $connection = Conection::getInstance()->getConnection();
+} catch (Throwable $exception) {
+    error_log('instituicoes-publicas/setores/delete.php: falha de conexão.');
+    http_response_code(500);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $payload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($payload, true);
