@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0174
+
+**Data:** 2026-11-16 22:00:53 | **Commit:** `b17833d0` | **Tipo:** `patch`
+
+- fix(REI-161): poll enrolled ata availability
+
 ## V. 1.87.0173
 
 **Data:** 2026-11-16 18:33:09 | **Commit:** `04896097` | **Tipo:** `patch`
