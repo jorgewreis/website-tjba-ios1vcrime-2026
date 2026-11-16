@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0130
+
+**Data:** 2026-11-15 21:38:41 | **Commit:** `88cd7a33` | **Tipo:** `patch`
+
+- fix: preservar feriados historicos na listagem de editais
+
 ## V. 1.87.0129
 
 **Data:** 2026-11-15 21:33:21 | **Commit:** `ffebadd1` | **Tipo:** `patch`
@@ -6201,6 +6207,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -36,8 +36,6 @@ final class EditaisService
 
     public function listEditais(array $filters, int $limit, int $offset): array
     {
-        // Remove eventos de data única/móvel já vencidos para manter base de feriados enxuta.
-        $this->feriadosRepository->purgeExpiradosUnicosOuMoveis(new \DateTimeImmutable('today'));
         $rows = $this->repository->fetchList($filters, $limit, $offset);
         foreach ($rows as $i => $row) {
             $idEdital = (string) ($row['IdEdital'] ?? '');
