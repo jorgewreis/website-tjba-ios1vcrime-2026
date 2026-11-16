@@ -4,6 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: proteger APIs de vinculos de processos** `[ba25143b]`
-- **fix: proteger APIs de instituicoes publicas** `[e6c3d93e]`
-- **fix: proteger operacoes de monitoramento** `[9e9a4062]`
+- **fix: proteger autoria e atomicidade cejusc** `[e6a5eb5d]`
+
