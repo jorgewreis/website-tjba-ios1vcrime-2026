@@ -109,4 +109,4 @@ class SalaAudienciasAtaService {
         if not expected_side_effect:
             assert isinstance(body.get("error"), str) and body["error"], (name, body)
 
-print("PASS 6 synthetic upload requests; untrusted/session/profile rejects caused no service write")
+print("PASS 7 synthetic upload requests; untrusted/session/profile rejects caused no service write")
