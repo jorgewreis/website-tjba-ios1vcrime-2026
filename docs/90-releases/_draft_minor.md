@@ -4,6 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: rejeitar payloads incompletos de assuntos (REI-153)** `[d439a112]`
-- **fix(REI-153): preserve manual subject provenance** `[a379993b]`
+- **fix(REI-72,REI-153): guard subject links and verify DataJud source** `[0f6d89bc]`
 
