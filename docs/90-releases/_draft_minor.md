@@ -4,5 +4,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: proteger celulas textuais na exportacao CSV** `[da0f8b34]`
+- **fix: recuperar cadastro de audiencia apos validacao** `[353adb7a]`
+- **fix: recuperar cadastro de audiencia apos validacao** `[43f1b313]`
 
