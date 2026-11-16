@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0153
+
+**Data:** 2026-11-16 11:16:53 | **Commit:** `734a503b` | **Tipo:** `patch`
+
+- test: cobrir persistência da comarca-sede (REI-130)
+
 ## V. 1.87.0152
 
 **Data:** 2026-11-16 00:29:30 | **Commit:** `809460ab` | **Tipo:** `patch`
@@ -6339,6 +6345,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
