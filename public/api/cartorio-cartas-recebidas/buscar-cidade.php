@@ -26,7 +26,23 @@ if ($uf !== '' && !preg_match('/^[A-Z]{2}$/', $uf)) {
     echo json_encode(['error' => 'UF inválida.'], JSON_UNESCAPED_UNICODE);
     return;
 }
-$row = $repo->findFirstByNomeOuCidade($cidade, $uf);
+try {
+    if (($_GET['resolver_sede'] ?? '') === '1') {
+        if ($uf === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Informe a UF para identificar a comarca-sede.'], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+        $row = $repo->resolveSedePorCidadeUf($cidade, $uf);
+    } else {
+        // Mantém o contrato do cadastro, que também consome esta consulta.
+        $row = $repo->findFirstByNomeOuCidade($cidade, $uf);
+    }
+} catch (InvalidArgumentException $exception) {
+    http_response_code(409);
+    echo json_encode(['error' => 'Não foi possível identificar uma comarca-sede única.'], JSON_UNESCAPED_UNICODE);
+    return;
+}
 
 if ($row === null) {
     echo json_encode(['found' => false], JSON_UNESCAPED_UNICODE);

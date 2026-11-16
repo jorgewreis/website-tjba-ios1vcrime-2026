@@ -313,8 +313,22 @@ final class CartasRecebidasService
                     throw new InvalidArgumentException('Informe comarca, cidade e UF correspondentes.');
                 }
             }
-            if (!$this->comarcasRepository->correspondeIdCidadeUf($payload['comarca_origem_id'], $payload['cidade_origem'], $payload['uf_origem'])) {
-                throw new InvalidArgumentException('A comarca não corresponde à cidade e UF informadas.');
+            $ownsTransaction = !$this->connection->inTransaction();
+            if ($ownsTransaction) $this->connection->beginTransaction();
+            try {
+                $sede = $this->comarcasRepository->resolveSedePorIdCidadeUf($payload['comarca_origem_id'], $payload['cidade_origem'], $payload['uf_origem']);
+                if ($sede === null) {
+                    throw new InvalidArgumentException('A comarca não corresponde à cidade e UF informadas.');
+                }
+                $payload['comarca_origem_id'] = (string) $sede['id'];
+                $payload['cidade_origem'] = (string) $sede['nome'];
+                $payload['uf_origem'] = (string) $sede['uf'];
+                $updated = $this->repository->update($id, $payload);
+                if ($ownsTransaction) $this->connection->commit();
+                return $updated;
+            } catch (Throwable $error) {
+                if ($ownsTransaction && $this->connection->inTransaction()) $this->connection->rollBack();
+                throw $error;
             }
         }
 
