@@ -1,10 +1,18 @@
 # Changelog
 
-## V. 1.87.0174
+## V. 1.87.0175
 
-**Data:** 2026-11-16 22:00:53 | **Commit:** `b17833d0` | **Tipo:** `patch`
+**Data:** 2026-11-16 23:39:11 | **Commit:** `b17833d0` | **Tipo:** `patch`
 
 - fix(REI-161): poll enrolled ata availability
+
+# Changelog
+
+## V. 1.87.0174
+
+**Data:** 2026-11-16 19:33:56 | **Commit:** `3e478b30` | **Tipo:** `patch`
+
+- fix(REI-115): make edital conclusion atomic
 
 ## V. 1.87.0173
 
