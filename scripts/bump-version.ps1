@@ -81,9 +81,6 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# Versão padrão se arquivo não existir
-$DEFAULT_VERSION = "V. 1.0"
-
 # Limites para inferência de bump
 $MINOR_THRESHOLD = 10
 $MAJOR_THRESHOLD = 100
@@ -167,35 +164,23 @@ function Backup-File {
 .SYNOPSIS
     Lê conteúdo do arquivo VERSION
 .DESCRIPTION
-    Retorna a versão atual ou versão padrão se arquivo não existir
+    Retorna a versão atual; ausência ou falha de leitura interrompe a operação.
 #>
 function Read-Version {
     param([string]$Path)
 
-    Write-Debug-Message "Lendo versão de: $Path"
-
-    # Se arquivo não existe, retorna versão padrão
-    if (!(Test-Path -LiteralPath $Path)) {
-        Write-Debug-Message "Arquivo não existe, usando versão padrão: $DEFAULT_VERSION"
-        return $DEFAULT_VERSION
+    if (!(Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "Arquivo de versão inexistente ou inválido: $Path"
     }
-
     try {
         $content = Get-Content -Raw -LiteralPath $Path -ErrorAction Stop
-        $version = $content.Trim()
-
-        # Se vazio, retorna versão padrão
-        if ([string]::IsNullOrWhiteSpace($version)) {
-            Write-Debug-Message "Arquivo vazio, usando versão padrão: $DEFAULT_VERSION"
-            return $DEFAULT_VERSION
+        if ([string]::IsNullOrWhiteSpace($content)) {
+            throw 'Arquivo de versão vazio.'
         }
-
-        Write-Debug-Message "Versão lida: $version"
-        return $version
+        return $content.Trim()
     }
     catch {
-        Write-Warning-Message "Erro ao ler $Path, usando versão padrão: $_"
-        return $DEFAULT_VERSION
+        throw "Não foi possível ler uma versão válida de ${Path}: $($_.Exception.Message)"
     }
 }
 
@@ -244,31 +229,22 @@ function Parse-Version {
     param([string]$VersionString)
 
     if ([string]::IsNullOrWhiteSpace($VersionString)) {
-        Write-Debug-Message "String de versão vazia, usando padrão"
-        return @{ maj = 1; min = 0; pat = 0 }
+        throw 'Versão vazia; versionamento interrompido.'
     }
 
     $normalized = $VersionString.Trim()
-    Write-Debug-Message "Fazendo parse da versão: $normalized"
-
-    # Regex flexível que aceita múltiplos formatos:
-    # - V. 1.0 | V. 1.02 | V. 1.02.0003 (formato preferido)
-    # - v1.0.0 | V1.0.0 (sem espaço)
-    # - 1.0.0 (sem prefixo)
-    $pattern = '^(?:[Vv]\.?\s*)?(?<maj>\d+)\.(?<min>\d{1,2})(?:\.(?<pat>\d{1,4}))?$'
-
+    $pattern = '^(?:[Vv]\.?\s*)?(?<maj>[0-9]+)\.(?<min>[0-9]+)(?:\.(?<pat>[0-9]+))?$'
     if ($normalized -notmatch $pattern) {
-        Write-Warning-Message "Formato de versão não reconhecido: '$normalized' - usando padrão"
-        return @{ maj = 1; min = 0; pat = 0 }
+        throw "Formato de versão não reconhecido: '$normalized'"
     }
 
-    # Extrai componentes
-    $major = [int]$Matches['maj']
-    $minor = [int]$Matches['min']
+    $major = 0
+    $minor = 0
     $patch = 0
-
-    if ($Matches.ContainsKey('pat') -and ![string]::IsNullOrEmpty($Matches['pat'])) {
-        $patch = [int]$Matches['pat']
+    if (![int]::TryParse($Matches['maj'], [ref]$major) -or
+        ![int]::TryParse($Matches['min'], [ref]$minor) -or
+        ($Matches.ContainsKey('pat') -and ![int]::TryParse($Matches['pat'], [ref]$patch))) {
+        throw 'Componente da versão excede o intervalo suportado.'
     }
 
     Write-Debug-Message "Parse resultado: major=$major, minor=$minor, patch=$patch"
@@ -452,6 +428,7 @@ function Get-NextVersionParts {
     switch ($BumpKind) {
         "major" {
             # Major: incrementa major, zera minor e patch
+            if ($major -eq [int]::MaxValue) { throw 'Componente major excede o intervalo suportado.' }
             $major += 1
             $minor = 0
             $patch = 0
@@ -459,12 +436,14 @@ function Get-NextVersionParts {
         }
         "minor" {
             # Minor: incrementa minor, zera patch
+            if ($minor -eq [int]::MaxValue) { throw 'Componente minor excede o intervalo suportado.' }
             $minor += 1
             $patch = 0
             Write-Debug-Message "  → MINOR bump: $major.$minor.0"
         }
         default {
             # Patch: incrementa patch
+            if ($patch -eq [int]::MaxValue) { throw 'Componente patch excede o intervalo suportado.' }
             $patch += 1
             Write-Debug-Message "  → PATCH bump: $major.$minor.$patch"
         }
@@ -642,14 +621,6 @@ try {
     Write-Debug-Message "========================================="
 
     # -----------------------------------------------------------------------------
-    # ETAPA 1: Criar backups
-    # -----------------------------------------------------------------------------
-
-    Write-Debug-Message "Criando backups..."
-    Backup-File -Path $VersionFile
-    Backup-File -Path $ChangelogPath
-
-    # -----------------------------------------------------------------------------
     # ETAPA 2: Ler versão atual
     # -----------------------------------------------------------------------------
 
@@ -691,6 +662,10 @@ try {
 
     $nextVersion = Format-Version -Major $nextParts.maj -Minor $nextParts.min -Patch $nextParts.pat -BumpKind $Bump
     Write-Info-Message "Nova versão: $nextVersion"
+
+    # Somente após validar e calcular a versão, preservar cópias dos arquivos.
+    Backup-File -Path $VersionFile
+    Backup-File -Path $ChangelogPath
 
     # -----------------------------------------------------------------------------
     # ETAPA 7: Escrever nova versão no arquivo
