@@ -524,12 +524,13 @@ final class EditaisService
         $ids = [];
         foreach ($editalIds as $value) {
             if (!is_string($value) && !is_int($value)) {
-                continue;
+                throw new InvalidArgumentException('A lista contém um identificador inválido.');
             }
             $id = trim((string) $value);
-            if ($id !== '' && strlen($id) <= 128) {
-                $ids[$id] = true;
+            if ($id === '' || strlen($id) > 128) {
+                throw new InvalidArgumentException('A lista contém um identificador inválido.');
             }
+            $ids[$id] = true;
         }
         if (count($ids) > 15) {
             throw new InvalidArgumentException('A atualização aceita no máximo 15 editais por vez.');
@@ -545,9 +546,11 @@ final class EditaisService
 
         $result = [
             'solicitados' => count($ids),
+            'editais_alterados' => 0,
             'editais_com_etapas_criadas' => 0,
             'etapas_criadas' => 0,
             'inalterados' => 0,
+            'nao_encontrados' => 0,
             'finalizados' => 0,
             'falhas' => 0,
         ];
@@ -558,25 +561,30 @@ final class EditaisService
                 $outcome = $this->reconciliarComEditalBloqueado($id, function () use ($id): array {
                     $edital = $this->repository->findById($id);
                     if ($edital === null) {
-                        return ['etapas_criadas' => 0, 'finalizado' => false];
+                        return ['encontrado' => false, 'etapas_criadas' => 0, 'finalizado' => false];
                     }
                     $status = strtolower(trim((string) ($edital['status'] ?? '')));
                     if ($status === 'concluída') {
                         $status = 'concluida';
                     }
                     if (in_array($status, ['concluida', 'cancelada'], true)) {
-                        return ['etapas_criadas' => 0, 'finalizado' => false];
+                        return ['encontrado' => true, 'etapas_criadas' => 0, 'finalizado' => false];
                     }
                     $subtarefasAntes = count($this->subtarefasRepository->findByEditalId($id));
                     $this->subtarefasRepository->ensureSubtarefasAtivas($id);
                     $subtarefasDepois = count($this->subtarefasRepository->findByEditalId($id));
                     return [
+                        'encontrado' => true,
                         'etapas_criadas' => max(0, $subtarefasDepois - $subtarefasAntes),
                         'finalizado' => $this->tentarFinalizacaoAutomaticaPorDecurso($id),
                     ];
                 });
                 if (!is_array($outcome)) {
-                    $result['inalterados']++;
+                    $result['nao_encontrados']++;
+                    continue;
+                }
+                if (empty($outcome['encontrado'])) {
+                    $result['nao_encontrados']++;
                     continue;
                 }
                 $created = max(0, (int) ($outcome['etapas_criadas'] ?? 0));
@@ -586,6 +594,9 @@ final class EditaisService
                 }
                 if (!empty($outcome['finalizado'])) {
                     $result['finalizados']++;
+                }
+                if ($created > 0 || !empty($outcome['finalizado'])) {
+                    $result['editais_alterados']++;
                 }
                 if ($created === 0 && empty($outcome['finalizado'])) {
                     $result['inalterados']++;

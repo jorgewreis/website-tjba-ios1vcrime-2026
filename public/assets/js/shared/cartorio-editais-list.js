@@ -176,30 +176,37 @@
             }).then(function (response) {
                 return response.json().then(function (data) {
                     if (!response.ok || !data.success) {
-                        const error = new Error(data.lote_revertido
-                            ? 'Não foi possível atualizar os editais. Nenhuma alteração do lote foi mantida.'
-                            : 'Não foi possível atualizar os editais.');
-                        error.loteRevertido = Boolean(data.lote_revertido);
-                        throw error;
+                        throw new Error('Não foi possível atualizar os editais. Verifique a listagem antes de tentar novamente.');
                     }
-                    const result = data.resultado || {};
-                    const etapas = Number(result.etapas_criadas) || 0;
-                    const editais = Number(result.editais_com_etapas_criadas) || 0;
-                    const inalterados = Number(result.inalterados) || 0;
-                    const finalizados = Number(result.finalizados) || 0;
+                    const result = data.resultado;
+                    const integerFields = ['solicitados', 'editais_alterados', 'editais_com_etapas_criadas', 'etapas_criadas', 'inalterados', 'nao_encontrados', 'finalizados', 'falhas'];
+                    const validResult = result && integerFields.every(function (field) {
+                        return Number.isInteger(result[field]) && result[field] >= 0;
+                    });
+                    if (!validResult || result.falhas !== 0 ||
+                        result.solicitados !== settings.editalIds.length ||
+                        result.editais_alterados + result.inalterados + result.nao_encontrados !== result.solicitados ||
+                        result.editais_com_etapas_criadas > result.editais_alterados ||
+                        result.etapas_criadas < result.editais_com_etapas_criadas ||
+                        result.finalizados > result.editais_alterados) {
+                        throw new Error('A resposta da atualização está incompleta. Atualize a listagem antes de continuar.');
+                    }
+                    const etapas = result.etapas_criadas;
+                    const editais = result.editais_com_etapas_criadas;
+                    const inalterados = result.inalterados;
+                    const finalizados = result.finalizados;
+                    const ausentes = result.nao_encontrados;
                     ctx.notify(
                         'success',
                         'Atualização concluída',
                         editais + ' editais receberam ' + etapas + ' etapas; ' +
                             inalterados + ' permaneceram inalterados; ' + finalizados +
-                            ' foram finalizados. Recarregando a listagem.'
+                            ' foram finalizados; ' + ausentes + ' não foram encontrados. Recarregando a listagem.'
                     );
                     global.location.reload();
                 });
             }).catch(function (error) {
-                ctx.notify('error', 'Erro', error.loteRevertido
-                    ? 'Nenhuma alteração foi aplicada; o lote foi revertido.'
-                    : 'Não foi possível atualizar os editais.');
+                ctx.notify('error', 'Erro', error.message || 'Não foi possível atualizar os editais.');
                 button.disabled = false;
             });
         });

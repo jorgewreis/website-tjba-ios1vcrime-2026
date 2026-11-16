@@ -28,15 +28,6 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'lote_revertido' => true,
-        'error' => 'Não foi possível atualizar os editais. Nenhuma alteração do lote foi mantida.',
-        'resultado' => [
-            'solicitados' => count(array_unique(array_filter($payload['edital_ids'], 'is_string'))),
-            'editais_com_etapas_criadas' => 0,
-            'etapas_criadas' => 0,
-            'inalterados' => 0,
-            'finalizados' => 0,
-            'falhas' => 1,
-        ],
+        'error' => 'Não foi possível atualizar os editais. Verifique a listagem antes de tentar novamente.',
     ], JSON_UNESCAPED_UNICODE);
 }
