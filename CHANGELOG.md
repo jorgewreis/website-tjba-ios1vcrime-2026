@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0155
+
+**Data:** 2026-11-16 02:19:18 | **Commit:** `02d2b100` | **Tipo:** `patch`
+
+- fix: informar falhas na edicao de instituicoes
+
 ## V. 1.87.0154
 
 **Data:** 2026-11-16 02:08:54 | **Commit:** `47c670a2` | **Tipo:** `patch`
@@ -6351,6 +6357,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

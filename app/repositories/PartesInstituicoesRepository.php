@@ -188,7 +188,7 @@ final class PartesInstituicoesRepository
         }
 
         if (empty($set)) {
-            return false;
+            return $this->findById($id) !== null;
         }
 
         $set[] = '`updated_at` = NOW()';
@@ -200,7 +200,7 @@ final class PartesInstituicoesRepository
         }
         $statement->execute();
 
-        return $statement->rowCount() > 0;
+        return $statement->rowCount() > 0 || $this->findById($id) !== null;
     }
 
     /** Cargo/função: trim, maiúsculas (qualquer caractere), limite 120 — ex.: SD/PM. */

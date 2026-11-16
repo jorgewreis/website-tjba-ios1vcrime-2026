@@ -167,6 +167,9 @@ final class InstituicoesPublicasRepository
             $value = $payload[$column];
             if ($column === 'nome') {
                 $value = $this->normalizeNomeInstituicao((string) $value);
+                if ($value === '') {
+                    throw new InvalidArgumentException('Nome da instituição é obrigatório.');
+                }
                 if ($value !== '') {
                     $existente = $this->findByNome($value);
                     if ($existente !== null && (string) $existente['id'] !== $id) {
@@ -211,7 +214,7 @@ final class InstituicoesPublicasRepository
         }
         $statement->execute();
 
-        return $statement->rowCount() > 0;
+        return $statement->rowCount() > 0 || $this->findById($id) !== null;
     }
 
     /** Nome da instituição: trim, normaliza espaços, limita 255. Permite números e símbolos (hífen, ª, º, etc.). */

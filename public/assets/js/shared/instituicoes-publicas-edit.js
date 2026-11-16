@@ -48,6 +48,11 @@
 
         global.document.getElementById('salvar-btn')?.addEventListener('click', function () {
             const saveButton = this;
+            if (!String(nomeEl?.value || '').trim()) {
+                common.notify('error', 'Erro', 'Informe o nome da instituição.');
+                nomeEl?.focus();
+                return;
+            }
             const cnpjRaw = String(global.document.getElementById('cnpj')?.value || '').replace(/\D/g, '');
             if (cnpjRaw && cnpjRaw.length === 14 && App.CNPJ && !App.CNPJ.validar(cnpjRaw)) {
                 if (typeof common.notifyByKey === 'function') {
@@ -66,7 +71,7 @@
             };
             saveButton.disabled = true;
             common.postJson('/api/instituicoes-publicas/update.php', payload).then(function (result) {
-                if (result.data && result.data.success) {
+                if (result.ok && result.data && result.data.success) {
                     if (typeof common.notifyByKey === 'function') {
                         common.notifyByKey('generic.record.save.success', {}, 'success', 'Sucesso', 'Salvo.');
                     } else {
@@ -77,6 +82,7 @@
                 }
                 saveButton.disabled = false;
             }).catch(function () {
+                common.notify('error', 'Erro', 'Erro de conexão. Tente novamente.');
                 saveButton.disabled = false;
             });
         });
@@ -98,7 +104,7 @@
                 ramal: String(global.document.getElementById('new-tel-ramal')?.value || '').trim() || null,
                 principal: global.document.getElementById('new-tel-principal')?.checked ? 1 : 0
             }).then(function (result) {
-                if (result.data && result.data.id) {
+                if (result.ok && result.data && result.data.id) {
                     if (typeof common.queuePostReloadToastByKey === 'function') {
                         common.queuePostReloadToastByKey(
                             'generic.phone.add.success',
@@ -116,7 +122,9 @@
                     global.location.reload();
                     return;
                 }
-                common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Erro.');
+                common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível concluir a operação.');
+            }).catch(function () {
+                common.notify('error', 'Erro', 'Erro de conexão. Tente novamente.');
             });
         });
 
@@ -124,7 +132,7 @@
             button.addEventListener('click', function () {
                 const id = button.getAttribute('data-id');
                 common.postJson('/api/instituicoes-publicas/telefones/delete.php', { id: id }).then(function (result) {
-                    if (result.data && result.data.deleted) {
+                    if (result.ok && result.data && result.data.deleted) {
                         if (typeof common.queuePostReloadToastByKey === 'function') {
                             common.queuePostReloadToastByKey(
                                 'generic.phone.remove.success',
@@ -140,7 +148,11 @@
                         }
                         common.queuePostReloadToast('success', 'Sucesso', 'Telefone removido com sucesso.', storageKey);
                         global.location.reload();
+                    } else {
+                        common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível concluir a operação.');
                     }
+                }).catch(function () {
+                    common.notify('error', 'Erro', 'Erro de conexão. Tente novamente.');
                 });
             });
         });
@@ -160,7 +172,7 @@
                 nome_setor: nomeSetor,
                 sigla: String(global.document.getElementById('new-setor-sigla')?.value || '').trim() || null
             }).then(function (result) {
-                if (result.data && result.data.id) {
+                if (result.ok && result.data && result.data.id) {
                     if (typeof common.queuePostReloadToastByKey === 'function') {
                         common.queuePostReloadToastByKey(
                             'generic.department.add.success',
@@ -178,7 +190,9 @@
                     global.location.reload();
                     return;
                 }
-                common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Erro.');
+                common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível concluir a operação.');
+            }).catch(function () {
+                common.notify('error', 'Erro', 'Erro de conexão. Tente novamente.');
             });
         });
 
@@ -186,7 +200,7 @@
             button.addEventListener('click', function () {
                 const id = button.getAttribute('data-id');
                 common.postJson('/api/instituicoes-publicas/setores/delete.php', { id: id }).then(function (result) {
-                    if (result.data && result.data.deleted) {
+                    if (result.ok && result.data && result.data.deleted) {
                         if (typeof common.queuePostReloadToastByKey === 'function') {
                             common.queuePostReloadToastByKey(
                                 'generic.department.remove.success',
@@ -202,7 +216,11 @@
                         }
                         common.queuePostReloadToast('success', 'Sucesso', 'Setor removido com sucesso.', storageKey);
                         global.location.reload();
+                    } else {
+                        common.notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Não foi possível concluir a operação.');
                     }
+                }).catch(function () {
+                    common.notify('error', 'Erro', 'Erro de conexão. Tente novamente.');
                 });
             });
         });

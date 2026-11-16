@@ -1,0 +1,8 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const notes=[];let response;
+const element=(value='')=>({value,checked:false,disabled:false,handlers:{},addEventListener(e,fn){this.handlers[e]=fn}});
+const els={}; for(const [id,v] of Object.entries({'salvar-btn':'','vinculo-id':'v1','profissao':'Oficio','cargo_funcao':'Cargo','data_inclusao':'2026-01-01','data_inicio':'','data_fim':'','setor_id':'','ativo':'','observacoes':'preservar'}))els[id]=element(v);
+const win={App:{RecordEditCommon:{notify:(...a)=>notes.push(a),postJson:()=>response}},document:{getElementById:id=>els[id]||null},location:{href:''}};
+vm.runInNewContext(fs.readFileSync('public/assets/js/shared/partes-instituicoes-edit.js','utf8'),{window:win});win.App.PartesInstituicoesEdit.initialize({backHref:'/voltar'});
+const click=async()=>{els['salvar-btn'].handlers.click.call(els['salvar-btn']);await new Promise(resolve=>setImmediate(resolve));};
+(async()=>{response=Promise.resolve({ok:false,data:{error:'Vínculo não encontrado.'}});await click();assert.equal(notes.pop()[2],'Vínculo não encontrado.');assert.equal(els.observacoes.value,'preservar');assert.equal(els['salvar-btn'].disabled,false);assert.equal(win.location.href,'');response=Promise.reject(new Error('offline'));await click();assert.match(notes.pop()[2],/conexão/i);assert.equal(els.observacoes.value,'preservar');assert.equal(els['salvar-btn'].disabled,false);response=Promise.resolve({ok:true,data:{success:true}});await click();assert.equal(notes.pop()[0],'success');assert.equal(win.location.href,'/voltar');console.log('REI-149 vínculo UI tests passed');})().catch(e=>{console.error(e);process.exitCode=1});
