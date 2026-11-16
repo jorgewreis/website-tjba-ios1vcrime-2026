@@ -15,9 +15,16 @@ if (!is_array($payload)) {
 }
 
 $numero = isset($payload['numero']) ? (string) $payload['numero'] : '';
-$assuntos = $payload['assuntos'] ?? [];
-if (!is_array($assuntos)) {
-    $assuntos = [];
+if (!array_key_exists('assuntos', $payload)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Informe a lista assuntos; use [] para remover explicitamente os vínculos DataJud.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+$assuntos = $payload['assuntos'];
+if (!is_array($assuntos) || !array_is_list($assuntos)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'A lista assuntos é inválida.'], JSON_UNESCAPED_UNICODE);
+    exit;
 }
 
 try {

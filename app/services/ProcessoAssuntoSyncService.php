@@ -12,12 +12,14 @@ require_once __DIR__ . '/../repositories/ProcessosRepository.php';
  */
 final class ProcessoAssuntoSyncService
 {
+    private PDO $connection;
     private ProcessosRepository $processosRepository;
     private AssuntosRepository $assuntosRepository;
     private ProcessoAssuntosRepository $processoAssuntosRepository;
 
     public function __construct(PDO $connection)
     {
+        $this->connection = $connection;
         $this->processosRepository = new ProcessosRepository($connection);
         $this->assuntosRepository = new AssuntosRepository($connection);
         $this->processoAssuntosRepository = new ProcessoAssuntosRepository($connection);
@@ -66,43 +68,59 @@ final class ProcessoAssuntoSyncService
     {
         $digits20 = CnjValidator::digits20OrThrow($digits20);
 
+        // Validate the complete payload before the first write. An explicit [] is valid
+        // and means that DataJud currently reports no subjects; malformed entries fail closed.
         $assuntosNormalizados = $this->normalizeAssuntosPayload($assuntosPayload);
-        $assuntoIds = [];
-        foreach ($assuntosNormalizados as $item) {
-            $assuntoIds[] = $this->assuntosRepository->ensureAssunto($item['codigo'], $item['descricao']);
+        $ownsTransaction = !$this->connection->inTransaction();
+        if ($ownsTransaction) {
+            $this->connection->beginTransaction();
         }
-        $assuntoIds = array_values(array_unique($assuntoIds));
+        try {
+            $assuntoIds = [];
+            foreach ($assuntosNormalizados as $item) {
+                $assuntoIds[] = $this->assuntosRepository->ensureAssunto($item['codigo'], $item['descricao']);
+            }
+            $assuntoIds = array_values(array_unique($assuntoIds));
 
-        $processo = $this->processosRepository->findByNumero($digits20);
-        $foiCriado = false;
-        if ($processo === null) {
-            $processoId = $this->processosRepository->ensureProcess($this->formatarCnj20($digits20), null, null, null);
-            $foiCriado = true;
-        } else {
-            $processoId = trim((string) ($processo['id'] ?? ''));
+            $processo = $this->processosRepository->findByNumero($digits20);
+            $foiCriado = false;
+            if ($processo === null) {
+                $processoId = $this->processosRepository->ensureProcess($this->formatarCnj20($digits20), null, null, null);
+                $foiCriado = true;
+            } else {
+                $processoId = trim((string) ($processo['id'] ?? ''));
+            }
+
+            if ($processoId === '') {
+                throw new RuntimeException('Não foi possível resolver o processo para sincronizar assuntos.');
+            }
+
+            $stats = $this->processoAssuntosRepository->syncDataJudAssuntos($processoId, $assuntoIds);
+            $rows = $this->processoAssuntosRepository->findByProcessoId($processoId);
+            $assuntos = $this->mapRowsToAssuntos($rows);
+            if ($ownsTransaction) {
+                $this->connection->commit();
+            }
+
+            $action = 'noop';
+            if ($foiCriado) {
+                $action = 'created';
+            } elseif ($stats['inserted'] > 0 || $stats['removed'] > 0) {
+                $action = 'updated';
+            }
+
+            return [
+                'action' => $action,
+                'processo_id' => $processoId,
+                'assuntos' => $assuntos,
+                'stats' => $stats,
+            ];
+        } catch (Throwable $error) {
+            if ($ownsTransaction && $this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            throw $error;
         }
-
-        if ($processoId === '') {
-            throw new RuntimeException('Não foi possível resolver o processo para sincronizar assuntos.');
-        }
-
-        $stats = $this->processoAssuntosRepository->syncDataJudAssuntos($processoId, $assuntoIds);
-        $rows = $this->processoAssuntosRepository->findByProcessoId($processoId);
-        $assuntos = $this->mapRowsToAssuntos($rows);
-
-        $action = 'noop';
-        if ($foiCriado) {
-            $action = 'created';
-        } elseif ($stats['inserted'] > 0 || $stats['removed'] > 0) {
-            $action = 'updated';
-        }
-
-        return [
-            'action' => $action,
-            'processo_id' => $processoId,
-            'assuntos' => $assuntos,
-            'stats' => $stats,
-        ];
     }
 
     /**
@@ -141,22 +159,25 @@ final class ProcessoAssuntoSyncService
     {
         $out = [];
         foreach ($payload as $item) {
-            $codigoRaw = '';
-            $descricao = '';
-
-            if (is_string($item)) {
-                $descricao = trim($item);
-            } elseif (is_array($item)) {
-                $codigoRaw = (string) ($item['codigo'] ?? $item['codigoAssunto'] ?? $item['numAssunto'] ?? '');
-                $descricao = (string) ($item['descricao'] ?? $item['descricaoAssunto'] ?? $item['nome'] ?? '');
-            } else {
-                continue;
+            if (!is_array($item)) {
+                throw new InvalidArgumentException('Cada assunto precisa ser um objeto com código válido.');
             }
+
+            $codigoRaw = $item['codigo'] ?? $item['codigoAssunto'] ?? $item['numAssunto'] ?? '';
+            $descricaoRaw = $item['descricao'] ?? $item['descricaoAssunto'] ?? $item['nome'] ?? '';
+            if (!is_string($codigoRaw) && !is_int($codigoRaw)) {
+                throw new InvalidArgumentException('O código do assunto é inválido.');
+            }
+            if (!is_string($descricaoRaw) && !is_int($descricaoRaw)) {
+                throw new InvalidArgumentException('A descrição do assunto é inválida.');
+            }
+            $codigoRaw = (string) $codigoRaw;
+            $descricao = (string) $descricaoRaw;
 
             $codigo = AssuntosRepository::normalizeCodigo($codigoRaw);
             $descricao = trim((string) $descricao);
             if ($codigo === '') {
-                continue;
+                throw new InvalidArgumentException('O assunto precisa ter código válido.');
             }
             if ($descricao === '') {
                 $descricao = $codigo;
