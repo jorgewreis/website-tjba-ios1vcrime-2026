@@ -25,23 +25,28 @@ Testes automatizados (sugestão):
 
 ## Sandbox isolado de autenticação
 
-Os testes de login e recuperação usam somente o sandbox local em `tests/auth/`.
-Eles nunca leem o `.env` raiz, usam contas `@auth-test.invalid` e capturam e-mail
-no Mailpit local. Para iniciar, executar, e remover o ambiente:
+**Execução suspensa:** a REI-93 mantém barreiras provisórias que recusam a
+inicialização, a execução e a limpeza dos testes de autenticação. Não remova ou
+contorne essas barreiras: o isolamento do sandbox descartável ainda não foi
+comprovado. Cópias antigas do repositório podem não conter a mesma proteção.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/bootstrap.ps1 -Start
-powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/run-auth-tests.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/cleanup.ps1
-```
+Antes de habilitar um novo executor, é necessário comprovar para cada execução:
 
-MySQL, SMTP e a interface Mailpit são publicados somente em loopback. A rede
-Docker é bridge para permitir que o PHP local alcance os serviços; ela não prova
-isolamento de egress e não deve receber relay SMTP. Mailpit aceita apenas
-destinatários sintéticos `@auth-test.invalid`.
+- a identidade e a procedência do daemon e das imagens utilizadas;
+- uma rede sem acesso indevido a serviços externos e sem relay SMTP para fora;
+- cópia e montagem de arquivos confinadas, sem `.env` ou dados reais;
+- identidade do banco descartável e da captura SMTP, vinculadas aos recursos
+  inspecionados e a desafios novos, com destinatários sintéticos;
+- limpeza restrita aos recursos criados pela execução, com confirmação do
+  resultado e respeito às proteções existentes.
 
-O fluxo HTTP local prova CSRF, sessão, reset e logout, mas não é evidência de
-cookie `Secure` em HTTPS, comportamento em iframe ou paridade com produção.
+Endereço local, nome de banco, variáveis de ambiente, uma rede bridge ou um
+marcador isolado não demonstram, por si só, essas propriedades. Os comandos
+históricos não constituem um procedimento validado de execução ou limpeza.
+Registre na REI-93 as evidências, lacunas e resultado antes de alterar a barreira.
+
+Mesmo após validação futura do fluxo HTTP local, evidência de cookies `Secure`
+em HTTPS, comportamento em iframe e paridade com produção exige testes próprios.
 
 Relatar falhas em issue com passos para reproduzir, logs e URL do ambiente dev.
 
