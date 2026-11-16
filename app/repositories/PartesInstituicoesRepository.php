@@ -36,7 +36,7 @@ final class PartesInstituicoesRepository
     }
 
     /** @return list<array<string, mixed>> */
-    public function findByParteId(string $parteId, ?bool $ativo = null): array
+    public function findByParteId(string $parteId, ?bool $ativo = null, bool $onlyActiveInstitutions = false): array
     {
         $parteId = trim($parteId);
         if ($parteId === '') {
@@ -52,6 +52,9 @@ final class PartesInstituicoesRepository
             $sql .= ' AND pi.`ativo` = :ativo';
             $params[':ativo'] = $ativo ? 1 : 0;
         }
+        if ($onlyActiveInstitutions) {
+            $sql .= ' AND pi.`ativo` = 1 AND i.`ativo` = 1 AND (pi.`setor_id` IS NULL OR EXISTS (SELECT 1 FROM `instituicoes_setores` setor WHERE setor.`id` = pi.`setor_id` AND setor.`instituicao_id` = i.`id` AND setor.`ativo` = 1))';
+        }
         $sql .= ' ORDER BY pi.`data_inclusao` DESC, pi.`created_at` DESC';
 
         $statement = $this->connection->prepare($sql);
@@ -64,7 +67,7 @@ final class PartesInstituicoesRepository
     }
 
     /** @return list<array<string, mixed>> */
-    public function findByInstituicaoId(string $instituicaoId, ?bool $ativo = null): array
+    public function findByInstituicaoId(string $instituicaoId, ?bool $ativo = null, bool $onlyActiveInstitutions = false): array
     {
         $instituicaoId = trim($instituicaoId);
         if ($instituicaoId === '') {
@@ -79,6 +82,9 @@ final class PartesInstituicoesRepository
         if ($ativo !== null) {
             $sql .= ' AND pi.`ativo` = :ativo';
             $params[':ativo'] = $ativo ? 1 : 0;
+        }
+        if ($onlyActiveInstitutions) {
+            $sql .= ' AND pi.`ativo` = 1 AND EXISTS (SELECT 1 FROM `instituicoes_publicas` inst WHERE inst.`id` = pi.`instituicao_id` AND inst.`ativo` = 1) AND (pi.`setor_id` IS NULL OR EXISTS (SELECT 1 FROM `instituicoes_setores` setor WHERE setor.`id` = pi.`setor_id` AND setor.`instituicao_id` = pi.`instituicao_id` AND setor.`ativo` = 1))';
         }
         $sql .= ' ORDER BY pi.`data_inclusao` DESC, p.`nome_completo` ASC';
 
