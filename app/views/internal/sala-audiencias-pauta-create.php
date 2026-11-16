@@ -67,7 +67,7 @@ $horariosGrade = SalaAudienciasPautaService::horariosGradeCadastroAudiencia();
                     <input type="text" class="width-400 height-md" id="audiencia-processo" data-cnj-input="true" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
                 <div class="col filter">
-                    <label for="audiencia-classe" id="processo-ap-info" aria-live="polite">Classe processual <span class="label-hint-automatizado">*automatizado</span></label>
+                    <label for="audiencia-classe">Classe processual <span class="label-hint-automatizado">*automatizado</span> <span class="label-hint-consulta-datajud" id="processo-ap-info" aria-live="polite"></span></label>
                     <input type="text" class="width-600 height-md" id="audiencia-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly autocomplete="off">
                 </div>
             </div>
