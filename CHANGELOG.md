@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0173
+
+**Data:** 2026-11-16 18:33:09 | **Commit:** `04896097` | **Tipo:** `patch`
+
+- fix(REI-114): use current reads after row locks
+
 ## V. 1.87.0172
 
 **Data:** 2026-11-16 18:26:18 | **Commit:** `653273be` | **Tipo:** `patch`
@@ -6461,6 +6467,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

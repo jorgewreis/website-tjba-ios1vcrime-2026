@@ -111,4 +111,61 @@ expectConcurrency(($result['finalizados'] ?? null) === 0, 'Reconciliação não 
 expectConcurrency(($row['status'] ?? null) === 'pendente' && $deadline instanceof DateTimeImmutable && $deadline > $today, 'Edital deve refletir o feriado e permanecer pendente.');
 expectConcurrency(array_key_exists('lock_owner_after', $workerResult) && $workerResult['lock_owner_after'] === null, 'A conexão de reconciliação deve liberar o mutex ao retornar.');
 
+$pdo->prepare('INSERT INTO editais VALUES (?, NULL, ?, ?, 1, ?, NULL, NULL, NULL, NULL)')->execute([
+    'REI114-AAA-TRIGGER', 'aguardando decurso', 'comum', $today->modify('-10 days')->format('Y-m-d'),
+]);
+$pdo->prepare('INSERT INTO editais VALUES (?, NULL, ?, ?, 1, ?, NULL, NULL, NULL, NULL)')->execute([
+    'REI114-ZZZ-CANCEL', 'pendente', 'comum', $today->modify('-10 days')->format('Y-m-d'),
+]);
+$insertSubtask->execute(['CANCEL-PUB', 'REI114-ZZZ-CANCEL', 'certificacao_publicacao', 1, 'concluida', $publication]);
+$pdo->exec("CREATE TRIGGER rei114_pause_first_reconcile AFTER INSERT ON editais_subtarefas FOR EACH ROW BEGIN IF NEW.edital_id = 'REI114-AAA-TRIGGER' THEN DO SLEEP(3); END IF; END");
+$snapshotPath = sys_get_temp_dir() . '/rei114-current-read-worker-' . bin2hex(random_bytes(8));
+$worker = proc_open(
+    [PHP_BINARY, __DIR__ . '/rei114-calendar-reconcile-worker.php', $snapshotPath, 'REI114-AAA-TRIGGER', 'REI114-ZZZ-CANCEL'],
+    [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+    $pipes,
+    null,
+    [
+        'FERIADOS_TEST_ISOLATION' => 'isolated-feriados-test',
+        'FERIADOS_TEST_DSN' => $dsn,
+        'FERIADOS_TEST_USER' => (string) getenv('FERIADOS_TEST_USER'),
+        'FERIADOS_TEST_PASSWORD' => (string) getenv('FERIADOS_TEST_PASSWORD'),
+    ]
+);
+if (!is_resource($worker)) {
+    throw new RuntimeException('Não foi possível iniciar a reconciliação para testar leitura atual.');
+}
+fclose($pipes[0]);
+try {
+    $deadline = microtime(true) + 5.0;
+    while (!is_file($snapshotPath) && microtime(true) < $deadline) {
+        usleep(10000);
+    }
+    expectConcurrency(is_file($snapshotPath), 'Worker de leitura atual não sinalizou início.');
+    $snapshotWorker = json_decode((string) file_get_contents($snapshotPath), true, 512, JSON_THROW_ON_ERROR);
+    $sleepDeadline = microtime(true) + 5.0;
+    $insideTrigger = false;
+    do {
+        $process = $pdo->prepare('SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE ID = ? AND INFO LIKE \'%SLEEP%\'');
+        $process->execute([(int) ($snapshotWorker['connection_id'] ?? 0)]);
+        $insideTrigger = (int) $process->fetchColumn() > 0;
+        if (!$insideTrigger) {
+            usleep(10000);
+        }
+    } while (!$insideTrigger && microtime(true) < $sleepDeadline);
+    expectConcurrency($insideTrigger, 'Não foi possível observar o worker pausado após estabelecer o snapshot inicial.');
+    $pdo->exec("UPDATE editais SET status = 'cancelada' WHERE id = 'REI114-ZZZ-CANCEL'");
+} finally {
+    $stdout = stream_get_contents($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $exitCode = proc_close($worker);
+    @unlink($snapshotPath);
+    $pdo->exec('DROP TRIGGER IF EXISTS rei114_pause_first_reconcile');
+}
+expectConcurrency($exitCode === 0, 'Worker de leitura atual falhou: ' . trim((string) $stderr));
+$cancelledStatus = $pdo->query("SELECT status FROM editais WHERE id = 'REI114-ZZZ-CANCEL'")->fetchColumn();
+expectConcurrency($cancelledStatus === 'cancelada', 'Reconciliação não pode sobrescrever cancelamento concorrente com estado antigo do snapshot.');
+
 echo "PASS REI-114: reconciliação aguardou mutação concorrente do calendário e leu o prazo recalculado em MySQL/InnoDB.\n";

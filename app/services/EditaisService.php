@@ -276,14 +276,16 @@ final class EditaisService
     /**
      * Conclui automaticamente decurso e tarefa principal quando o prazo já encerrou (dia após data de decurso).
      */
-    public function tentarFinalizacaoAutomaticaPorDecurso(string $editalId): bool
+    public function tentarFinalizacaoAutomaticaPorDecurso(string $editalId, bool $usarLeituraAtual = false): bool
     {
         $editalId = trim($editalId);
         if ($editalId === '') {
             return false;
         }
 
-        $edital = $this->repository->findById($editalId);
+        $edital = $usarLeituraAtual
+            ? $this->repository->findByIdForUpdate($editalId)
+            : $this->repository->findById($editalId);
         if ($edital === null) {
             return false;
         }
@@ -296,7 +298,7 @@ final class EditaisService
             return false;
         }
 
-        $decurso = $this->getDecursoInfo($editalId, true);
+        $decurso = $this->getDecursoInfo($editalId, true, $usarLeituraAtual);
         if (empty($decurso['libera_conclusao'])) {
             return false;
         }
@@ -408,9 +410,11 @@ final class EditaisService
      * Retorna informações para exibição do decurso do prazo (data limite e se já pode certificar).
      * data_publicacao (Y-m-d), data_limite_decurso (Y-m-d), data_limite_formatada (d/m/Y), prazo_cumprido (bool).
      */
-    public function getDecursoInfo(string $editalId, bool $persistirCalculo = false): array
+    public function getDecursoInfo(string $editalId, bool $persistirCalculo = false, bool $usarLeituraAtual = false): array
     {
-        $edital = $this->repository->findById($editalId);
+        $edital = $usarLeituraAtual
+            ? $this->repository->findByIdForUpdate($editalId)
+            : $this->repository->findById($editalId);
         if ($edital === null) {
             return [
                 'data_publicacao' => '',
@@ -581,7 +585,7 @@ final class EditaisService
                 sort($orderedIds, SORT_STRING);
                 foreach ($orderedIds as $id) {
                     $outcome = $this->reconciliarComEditalBloqueado($id, function () use ($id): array {
-                        $edital = $this->repository->findById($id);
+                        $edital = $this->repository->findByIdForUpdate($id);
                         if ($edital === null) {
                             return ['encontrado' => false, 'etapas_criadas' => 0, 'finalizado' => false];
                         }
@@ -599,8 +603,8 @@ final class EditaisService
                             trim((string) ($edital['data_inicio_contagem'] ?? '')),
                             trim((string) ($edital['data_decurso_prazo'] ?? '')),
                         ];
-                        $finalizado = $this->tentarFinalizacaoAutomaticaPorDecurso($id);
-                        $editalAtualizado = $this->repository->findById($id);
+                        $finalizado = $this->tentarFinalizacaoAutomaticaPorDecurso($id, true);
+                        $editalAtualizado = $this->repository->findByIdForUpdate($id);
                         $datasDepois = [
                             trim((string) ($editalAtualizado['data_inicio_contagem'] ?? '')),
                             trim((string) ($editalAtualizado['data_decurso_prazo'] ?? '')),
