@@ -9,4 +9,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test: cover pauta rollback on isolated MySQL REI-88** `[ae959e86]`
 - **fix(REI-78): block duplicate carta submissions** `[c7de2cb2]`
 - **fix(REI-78): make carta creation idempotent** `[2a30b969]`
+- **test(REI-78): cover concurrent idempotent retries** `[10beeba0]`
 
