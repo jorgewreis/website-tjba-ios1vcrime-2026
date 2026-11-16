@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-115): make edital conclusion atomic** `[3e478b30]`
+- **chore(REI-78): sync with current main** `[4a420af5]`
 
