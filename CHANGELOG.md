@@ -23,12 +23,14 @@
 **Data:** 2026-11-16 16:35:40 | **Commit:** `48d0d5cc` | **Tipo:** `patch`
 
 - fix(REI-69): prevent global party side effects
+- fix(REI-122,REI-135): reconcile calendar atomically
 
 ## V. 1.87.0165
 
 **Data:** 2026-11-16 16:22:46 | **Commit:** `f7831c57` | **Tipo:** `patch`
 
 - fix(processos): restrict part mutations by responsible sector
+- fix(REI-161): ocultar metadados de pautas inelegiveis
 
 ## V. 1.87.0164
 
