@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **docs: inventariar migracoes e limites conhecidos** `[4d2e5898]`
+- **fix: normalizar data de decurso na exportacao** `[a5109794]`
 
