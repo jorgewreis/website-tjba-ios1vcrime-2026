@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0164
+
+**Data:** 2026-11-16 06:16:54 | **Commit:** `2aec3c3b` | **Tipo:** `patch`
+
+- fix: restore verified auth sandbox entrypoints
+
 ## V. 1.87.0163
 
 **Data:** 2026-11-16 05:24:56 | **Commit:** `db9327cb` | **Tipo:** `patch`
@@ -6405,6 +6411,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

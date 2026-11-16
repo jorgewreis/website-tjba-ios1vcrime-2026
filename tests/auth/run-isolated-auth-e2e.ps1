@@ -8,6 +8,7 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $runId = [Guid]::NewGuid().ToString('N')
 $label = 'fokus.auth-e2e'
 $network = "fokus-auth-e2e-$runId"
+$qaImage = 'fokus-law-linux-qa@sha256:459cc8bd25b38009a8cf9a0ef5399d131f4f2001a1376d89389f673a92de430b'
 $mysql = $mailpit = $app = $client = $null; $cleanupFailed = $false; $executionFailure = $null; $guardToken = $null
 function D([string[]]$a) { $o = & docker @a 2>&1; if ($LASTEXITCODE -ne 0) { throw "Docker falhou: $($o -join ' ')" }; return $o }
 function Id([string]$v, [string]$what) { if ($v -notmatch '^[a-f0-9]{64}$') { throw "ID inválido: $what" }; $v }
@@ -64,7 +65,7 @@ try {
     $required=@('app','config','public','vendor','services','tests/auth')
     foreach($item in $required) { if(-not(Test-Path -LiteralPath (Join-Path $root $item))) { throw "Fonte exigida ausente: $item" } }
     if(-not(Test-Path -LiteralPath (Join-Path $root 'vendor/autoload.php'))) { throw 'Dependências PHP ausentes: execute composer install a partir do composer.lock antes da suíte E2E.' }
-    $my=@((D @('image','inspect','mysql:8.4.7'))|ConvertFrom-Json)[0]; $qa=@((D @('image','inspect','fokus-law-linux-qa:20261107-php857-node2413'))|ConvertFrom-Json)[0]; $mp=@((D @('image','inspect','axllent/mailpit:v1.27.4'))|ConvertFrom-Json)[0]
+    $my=@((D @('image','inspect','mysql:8.4.7'))|ConvertFrom-Json)[0]; $qa=@((D @('image','inspect',$qaImage))|ConvertFrom-Json)[0]; $mp=@((D @('image','inspect','axllent/mailpit:v1.27.4'))|ConvertFrom-Json)[0]
     if(-not $my.Id -or -not $qa.Id -or -not $mp.Id) { throw 'Imagens locais exigidas não estão disponíveis.' }
     D @('network','create','--internal','--label',"$label=$runId",$network)|Out-Null
     $n=@((D @('network','inspect',$network))|ConvertFrom-Json)[0]; if(-not $n.Internal -or (Label-Value $n.Labels $label) -ne $runId) { throw 'Rede interna recusada.' }

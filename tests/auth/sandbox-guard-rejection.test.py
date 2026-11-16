@@ -16,7 +16,6 @@ PHP_FILES = (
     'smtp-capture.test.php', 'trusted-post-origin.test.php',
 )
 PS_FILES = (
-    'bootstrap.ps1', 'cleanup.ps1', 'run-auth-tests.ps1',
     'http-auth-flow.test.ps1', 'run-isolated-mysql-php.ps1',
 )
 MESSAGE = 'comprovado'
