@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: descartar horarios obsoletos da pauta** `[47c670a2]`
+- **fix: informar falhas na edicao de instituicoes** `[02d2b100]`
 
