@@ -2,15 +2,15 @@
 
 ## V. 1.87.0175
 
-**Data:** 2026-11-16 18:56:32 | **Commit:** `717fda5e` | **Tipo:** `patch`
+**Data:** 2026-11-16 20:38:23 | **Commit:** `d269e165` | **Tipo:** `patch`
 
-- fix(REI-85): serialize profession reconciliation
+- chore(REI-85): sync with current main
 
 ## V. 1.87.0174
 
-**Data:** 2026-11-16 18:48:09 | **Commit:** `c5d213d3` | **Tipo:** `patch`
+**Data:** 2026-11-16 19:33:56 | **Commit:** `3e478b30` | **Tipo:** `patch`
 
-- fix(REI-85): make institution profession sync atomic
+- fix(REI-115): make edital conclusion atomic
 
 ## V. 1.87.0173
 

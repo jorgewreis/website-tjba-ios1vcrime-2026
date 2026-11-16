@@ -16,11 +16,13 @@ try {
         (string) getenv('FERIADOS_TEST_PASSWORD'),
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
+    $pdo->exec('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ');
     $connectionId = (int) $pdo->query('SELECT CONNECTION_ID()')->fetchColumn();
     file_put_contents($readyPath, json_encode(['connection_id' => $connectionId], JSON_THROW_ON_ERROR), LOCK_EX);
     $result = (new EditaisService($pdo))->reconciliarEditais($editalIds);
     $lockOwnerAfter = $pdo->query("SELECT IS_USED_LOCK('fokus-law-feriados-recalc')")->fetchColumn();
-    fwrite(STDOUT, json_encode(['result' => $result, 'lock_owner_after' => $lockOwnerAfter], JSON_THROW_ON_ERROR) . "\n");
+    $isolationAfter = (string) $pdo->query('SELECT @@transaction_isolation')->fetchColumn();
+    fwrite(STDOUT, json_encode(['result' => $result, 'lock_owner_after' => $lockOwnerAfter, 'isolation_after' => $isolationAfter], JSON_THROW_ON_ERROR) . "\n");
 } catch (Throwable $error) {
     fwrite(STDERR, get_class($error) . ': ' . $error->getMessage() . "\n");
     exit(1);
