@@ -33,7 +33,7 @@ try {
         Start-Sleep -Seconds 1
     }
     if (-not $tcpReady) { throw 'MySQL efêmero não ficou pronto em TCP para o executor PHP.' }
-    docker exec $phpId mkdir -p /work/app /work/tests/feriados
+    docker exec $phpId mkdir -p /work/app /work/tests/feriados /work/tests/editais
     if ($LASTEXITCODE -ne 0) { throw 'Falha preparando executor.' }
     foreach ($dir in @('helpers','repositories','services')) {
         docker cp (Join-Path $repo "app/$dir") "${phpId}:/work/app/"
@@ -41,9 +41,15 @@ try {
     }
     docker cp (Join-Path $PSScriptRoot 'rei122-135-atomicidade.test.php') "${phpId}:/work/tests/feriados/"
     if ($LASTEXITCODE -ne 0) { throw 'Falha copiando teste.' }
+    foreach ($test in @('rei114-calendar-concurrency-mysql.test.php', 'rei114-calendar-reconcile-worker.php')) {
+        docker cp (Join-Path $repo "tests/editais/$test") "${phpId}:/work/tests/editais/"
+        if ($LASTEXITCODE -ne 0) { throw "Falha copiando $test." }
+    }
     $dsn = "mysql:host=127.0.0.1;dbname=$database;charset=utf8mb4"
     docker exec -e FERIADOS_TEST_ISOLATION=isolated-feriados-test -e "FERIADOS_TEST_DSN=$dsn" -e FERIADOS_TEST_USER=root -e "FERIADOS_TEST_PASSWORD=$password" $phpId php /work/tests/feriados/rei122-135-atomicidade.test.php
     if ($LASTEXITCODE -ne 0) { throw 'Teste MySQL/InnoDB falhou.' }
+    docker exec -e FERIADOS_TEST_ISOLATION=isolated-feriados-test -e "FERIADOS_TEST_DSN=$dsn" -e FERIADOS_TEST_USER=root -e "FERIADOS_TEST_PASSWORD=$password" $phpId php /work/tests/editais/rei114-calendar-concurrency-mysql.test.php
+    if ($LASTEXITCODE -ne 0) { throw 'Teste concorrente REI-114 MySQL/InnoDB falhou.' }
 } finally {
     foreach ($resource in @($phpId, $dbId)) {
         if ($resource) {

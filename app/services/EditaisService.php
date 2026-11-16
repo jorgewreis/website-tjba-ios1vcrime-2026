@@ -40,14 +40,8 @@ final class EditaisService
         foreach ($rows as $i => $row) {
             $idEdital = (string) ($row['IdEdital'] ?? '');
             if ($idEdital !== '') {
-                $this->subtarefasRepository->ensureSubtarefasAtivas($idEdital);
-                $this->tentarFinalizacaoAutomaticaPorDecurso($idEdital);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByEditalId($idEdital);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByEditalId($idEdital);
-                $editalAtualizado = $this->repository->findById($idEdital);
-                if ($editalAtualizado !== null) {
-                    $rows[$i]['Status'] = (string) ($editalAtualizado['status'] ?? $rows[$i]['Status'] ?? '');
-                }
                 $rows[$i]['DecursoInfo'] = $this->getDecursoInfo($idEdital);
             } else {
                 $rows[$i]['Subtarefas'] = [];
@@ -200,10 +194,6 @@ final class EditaisService
             throw new InvalidArgumentException('Edital da subtarefa não identificado.');
         }
 
-        if ($dadosJson !== null && $dadosJson !== '') {
-            $this->subtarefasRepository->atualizarDadosEspecificos($subtarefaId, $dadosJson);
-        }
-
         if ($ordem === EditaisSubtarefasRepository::ORDEM_PUBLICACAO) {
             $dadosArray = [];
             if ($dadosJson !== null && $dadosJson !== '') {
@@ -238,6 +228,12 @@ final class EditaisService
 
         if ($ordem === EditaisSubtarefasRepository::ORDEM_DECURSO) {
             $this->validarDecursoParaCertificacao($editalId);
+        }
+
+        // Persist submitted metadata only after all business validation has passed.
+        // The API wraps this transition and dashboard registration in one transaction.
+        if ($dadosJson !== null && $dadosJson !== '') {
+            $this->subtarefasRepository->atualizarDadosEspecificos($subtarefaId, $dadosJson);
         }
 
         $this->subtarefasRepository->atualizarStatus($subtarefaId, 'concluida');
@@ -282,14 +278,16 @@ final class EditaisService
     /**
      * Conclui automaticamente decurso e tarefa principal quando o prazo já encerrou (dia após data de decurso).
      */
-    public function tentarFinalizacaoAutomaticaPorDecurso(string $editalId): bool
+    public function tentarFinalizacaoAutomaticaPorDecurso(string $editalId, bool $usarLeituraAtual = false): bool
     {
         $editalId = trim($editalId);
         if ($editalId === '') {
             return false;
         }
 
-        $edital = $this->repository->findById($editalId);
+        $edital = $usarLeituraAtual
+            ? $this->repository->findByIdForUpdate($editalId)
+            : $this->repository->findById($editalId);
         if ($edital === null) {
             return false;
         }
@@ -302,7 +300,7 @@ final class EditaisService
             return false;
         }
 
-        $decurso = $this->getDecursoInfo($editalId);
+        $decurso = $this->getDecursoInfo($editalId, true, $usarLeituraAtual);
         if (empty($decurso['libera_conclusao'])) {
             return false;
         }
@@ -414,9 +412,11 @@ final class EditaisService
      * Retorna informações para exibição do decurso do prazo (data limite e se já pode certificar).
      * data_publicacao (Y-m-d), data_limite_decurso (Y-m-d), data_limite_formatada (d/m/Y), prazo_cumprido (bool).
      */
-    public function getDecursoInfo(string $editalId): array
+    public function getDecursoInfo(string $editalId, bool $persistirCalculo = false, bool $usarLeituraAtual = false): array
     {
-        $edital = $this->repository->findById($editalId);
+        $edital = $usarLeituraAtual
+            ? $this->repository->findByIdForUpdate($editalId)
+            : $this->repository->findById($editalId);
         if ($edital === null) {
             return [
                 'data_publicacao' => '',
@@ -446,10 +446,12 @@ final class EditaisService
 
         if ($dataInicioContagem === '' || $dataDecurso === '') {
             [$dataInicioContagem, $dataDecurso] = $this->calcularInicioEDataDecurso($dataPublicacao, $prazoDias);
-            $this->repository->update($editalId, [
-                'data_inicio_contagem' => $dataInicioContagem,
-                'data_decurso_prazo' => $dataDecurso,
-            ]);
+            if ($persistirCalculo) {
+                $this->repository->update($editalId, [
+                    'data_inicio_contagem' => $dataInicioContagem,
+                    'data_decurso_prazo' => $dataDecurso,
+                ]);
+            }
         }
         $dtDecurso = \DateTime::createFromFormat('!Y-m-d', $dataDecurso);
         if ($dtDecurso === false || $dtDecurso->format('Y-m-d') !== $dataDecurso) {
@@ -474,6 +476,208 @@ final class EditaisService
             'libera_conclusao' => $liberaConclusao,
             'dias_restantes' => $diasRestantes,
         ];
+    }
+
+    /** Executa alteração sob transação e lock do edital pai antes de tocar as etapas. */
+    private function reconciliarComEditalBloqueado(string $editalId, callable $operation): mixed
+    {
+        $ownsTransaction = !$this->connection->inTransaction();
+        $savepoint = $ownsTransaction ? null : 'edital_reconciliar_' . bin2hex(random_bytes(8));
+        if ($ownsTransaction) {
+            if (!$this->connection->beginTransaction()) {
+                throw new RuntimeException('Não foi possível iniciar a transação de reconciliação do edital.');
+            }
+        } else {
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
+        }
+        try {
+            $statement = $this->connection->prepare('SELECT `id` FROM `editais` WHERE `id` = :id FOR UPDATE');
+            $statement->execute([':id' => $editalId]);
+            $exists = $statement->fetchColumn() !== false;
+            $statement->closeCursor();
+            if (!$exists) {
+                if ($ownsTransaction) {
+                    $this->connection->commit();
+                } else {
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                }
+                return false;
+            }
+            $result = $operation();
+            if ($ownsTransaction) {
+                if (!$this->connection->commit()) {
+                    throw new RuntimeException('Não foi possível confirmar a transação de reconciliação do edital.');
+                }
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            return $result;
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                if ($ownsTransaction) {
+                    $this->connection->rollBack();
+                } else {
+                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                }
+            }
+            throw $exception;
+        }
+    }
+
+    /** Executa manutenção legada apenas após ação explícita e autorizada do Cartório. */
+    public function reconciliarEditais(array $editalIds): array
+    {
+        if (count($editalIds) > 15) {
+            throw new InvalidArgumentException('A atualização aceita no máximo 15 editais por vez.');
+        }
+        $ids = [];
+        foreach ($editalIds as $value) {
+            if (!is_string($value) && !is_int($value)) {
+                throw new InvalidArgumentException('A lista contém um identificador inválido.');
+            }
+            $id = trim((string) $value);
+            if ($id === '' || strlen($id) > 128) {
+                throw new InvalidArgumentException('A lista contém um identificador inválido.');
+            }
+            $ids[$id] = true;
+        }
+        if (count($ids) > 15) {
+            throw new InvalidArgumentException('A atualização aceita no máximo 15 editais por vez.');
+        }
+
+        $mysql = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
+        if ($mysql && $this->connection->inTransaction()) {
+            throw new LogicException('A reconciliação de editais não pode herdar uma transação externa no MySQL.');
+        }
+        $lockAcquired = false;
+        if ($mysql) {
+            $lock = $this->connection->prepare('SELECT GET_LOCK(?, 15)');
+            $lock->execute(['fokus-law-feriados-recalc']);
+            $lockAcquired = (int) $lock->fetchColumn() === 1;
+            if (!$lockAcquired) {
+                throw new RuntimeException('Não foi possível obter o bloqueio do calendário para reconciliar editais.');
+            }
+        }
+
+        try {
+            $ownsTransaction = !$this->connection->inTransaction();
+            $savepoint = $ownsTransaction ? null : 'edital_lote_reconciliar_' . bin2hex(random_bytes(8));
+            if ($ownsTransaction) {
+                if (!$this->connection->beginTransaction()) {
+                    throw new RuntimeException('Não foi possível iniciar a transação de reconciliação dos editais.');
+                }
+            } else {
+                $this->connection->exec('SAVEPOINT ' . $savepoint);
+            }
+
+            $result = [
+                'solicitados' => count($ids),
+                'editais_alterados' => 0,
+                'editais_com_etapas_criadas' => 0,
+                'etapas_criadas' => 0,
+                'editais_com_datas_calculadas' => 0,
+                'inalterados' => 0,
+                'nao_encontrados' => 0,
+                'finalizados' => 0,
+                'falhas' => 0,
+            ];
+            try {
+                $orderedIds = array_keys($ids);
+                sort($orderedIds, SORT_STRING);
+                foreach ($orderedIds as $id) {
+                    $outcome = $this->reconciliarComEditalBloqueado($id, function () use ($id): array {
+                        $edital = $this->repository->findByIdForUpdate($id);
+                        if ($edital === null) {
+                            return ['encontrado' => false, 'etapas_criadas' => 0, 'finalizado' => false];
+                        }
+                        $status = strtolower(trim((string) ($edital['status'] ?? '')));
+                        if ($status === 'concluída') {
+                            $status = 'concluida';
+                        }
+                        if (in_array($status, ['concluida', 'cancelada'], true)) {
+                            return ['encontrado' => true, 'etapas_criadas' => 0, 'finalizado' => false];
+                        }
+                        $subtarefasAntes = count($this->subtarefasRepository->findByEditalId($id));
+                        $this->subtarefasRepository->ensureSubtarefasAtivas($id);
+                        $subtarefasDepois = count($this->subtarefasRepository->findByEditalId($id));
+                        $datasAntes = [
+                            trim((string) ($edital['data_inicio_contagem'] ?? '')),
+                            trim((string) ($edital['data_decurso_prazo'] ?? '')),
+                        ];
+                        $finalizado = $this->tentarFinalizacaoAutomaticaPorDecurso($id, true);
+                        $editalAtualizado = $this->repository->findByIdForUpdate($id);
+                        $datasDepois = [
+                            trim((string) ($editalAtualizado['data_inicio_contagem'] ?? '')),
+                            trim((string) ($editalAtualizado['data_decurso_prazo'] ?? '')),
+                        ];
+                        return [
+                            'encontrado' => true,
+                            'etapas_criadas' => max(0, $subtarefasDepois - $subtarefasAntes),
+                            'datas_calculadas' => $datasDepois !== $datasAntes
+                                && $datasDepois[0] !== ''
+                                && $datasDepois[1] !== '',
+                            'finalizado' => $finalizado,
+                        ];
+                    });
+                    if (!is_array($outcome)) {
+                        $result['nao_encontrados']++;
+                        continue;
+                    }
+                    if (empty($outcome['encontrado'])) {
+                        $result['nao_encontrados']++;
+                        continue;
+                    }
+                    $created = max(0, (int) ($outcome['etapas_criadas'] ?? 0));
+                    if ($created > 0) {
+                        $result['editais_com_etapas_criadas']++;
+                        $result['etapas_criadas'] += $created;
+                    }
+                    if (!empty($outcome['finalizado'])) {
+                        $result['finalizados']++;
+                    }
+                    if (!empty($outcome['datas_calculadas'])) {
+                        $result['editais_com_datas_calculadas']++;
+                    }
+                    if ($created > 0 || !empty($outcome['datas_calculadas']) || !empty($outcome['finalizado'])) {
+                        $result['editais_alterados']++;
+                    }
+                    if ($created === 0 && empty($outcome['datas_calculadas']) && empty($outcome['finalizado'])) {
+                        $result['inalterados']++;
+                    }
+                }
+                if ($ownsTransaction) {
+                    if (!$this->connection->commit()) {
+                        throw new RuntimeException('Não foi possível confirmar a transação de reconciliação dos editais.');
+                    }
+                } else {
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                }
+            } catch (Throwable $exception) {
+                if ($this->connection->inTransaction()) {
+                    if ($ownsTransaction) {
+                        $this->connection->rollBack();
+                    } else {
+                        $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                        $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                    }
+                }
+                throw $exception;
+            }
+            return $result;
+        } finally {
+            if ($lockAcquired) {
+                try {
+                    $release = $this->connection->prepare('SELECT RELEASE_LOCK(?)');
+                    $release->execute(['fokus-law-feriados-recalc']);
+                    if ((int) $release->fetchColumn() !== 1) {
+                        error_log('Falha ao liberar mutex do calendário após reconciliação de editais.');
+                    }
+                } catch (Throwable $releaseError) {
+                    error_log('Falha ao liberar mutex do calendário após reconciliação de editais: ' . $releaseError->getMessage());
+                }
+            }
+        }
     }
 
     /** Compara dias civis no fuso configurado, sem antecipar a certificação. */
