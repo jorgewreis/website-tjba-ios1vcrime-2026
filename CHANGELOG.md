@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0146
+
+**Data:** 2026-11-15 22:56:17 | **Commit:** `97e8c4f1` | **Tipo:** `patch`
+
+- fix: consultar reus do monitoramento sem escrita
+
 ## V. 1.87.0145
 
 **Data:** 2026-11-15 22:51:18 | **Commit:** `d16a4e89` | **Tipo:** `patch`
@@ -6297,6 +6303,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

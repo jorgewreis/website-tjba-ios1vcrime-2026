@@ -108,6 +108,9 @@
         const classeInput = global.document.getElementById(settings.classInputId || 'filter-classe');
         let lastSuggestionNome = '';
         let isSubmitting = false;
+        let reusRequestVersion = 0;
+        let suggestionRequestVersion = 0;
+        let activeProcessDigits = onlyDigits(processoInput?.value || '');
 
         const applyButtonState = function (label, disabled) {
             if (!registerButton) {
@@ -234,6 +237,13 @@
             if (!reuSelect) {
                 return;
             }
+            const requestedDigits = onlyDigits(numeroFormatado);
+            if (requestedDigits.length !== 20 || requestedDigits !== onlyDigits(processoInput?.value || '')) return;
+            const requestVersion = ++reusRequestVersion;
+            suggestionRequestVersion++;
+            const requestIsCurrent = function () {
+                return requestVersion === reusRequestVersion && requestedDigits === onlyDigits(processoInput?.value || '');
+            };
             showReuInput();
             if (reuNome) {
                 reuNome.placeholder = 'Carregando réus…';
@@ -265,6 +275,7 @@
                     });
                 })
                 .then(function (data) {
+                    if (!requestIsCurrent()) return;
                     if (reuNome) {
                         reuNome.placeholder = 'Digite o nome completo';
                         reuNome.disabled = false;
@@ -274,9 +285,13 @@
                         showReuSelect(reus);
                     } else {
                         showReuInput();
+                        if (data && typeof data.mensagem === 'string' && data.mensagem.trim()) {
+                            notify('info', 'Réus', data.mensagem);
+                        }
                     }
                 })
                 .catch(function (error) {
+                    if (!requestIsCurrent()) return;
                     if (reuNome) {
                         reuNome.placeholder = 'Digite o nome completo';
                         reuNome.disabled = false;
@@ -305,6 +320,7 @@
 
         if (reuSelect) {
             reuSelect.addEventListener('change', function () {
+                suggestionRequestVersion++;
                 if (this.value === 'outro' || this.value === '__novo__') {
                     reuSelect.style.display = 'none';
                     if (reuNome) {
@@ -324,7 +340,10 @@
         }
 
         if (reuNome) {
-            reuNome.addEventListener('input', syncRegisterButtonState);
+            reuNome.addEventListener('input', function () {
+                suggestionRequestVersion++;
+                syncRegisterButtonState();
+            });
             reuNome.addEventListener('blur', function () {
                 let nome = (reuNome.value || '').trim();
                 if (App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
@@ -341,10 +360,15 @@
                 if (reuSelect && reuSelect.style.display !== 'none' && reuSelect.value && reuSelect.value !== 'outro' && reuSelect.value !== '__novo__') {
                     return;
                 }
-
+                const suggestionVersion = ++suggestionRequestVersion;
+                const requestedProcess = onlyDigits(processoInput?.value || '');
                 fetch(settings.searchPeopleEndpoint + '?nome=' + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin' })
                     .then(function (response) { return response.json(); })
                     .then(function (data) {
+                        if (suggestionVersion !== suggestionRequestVersion
+                            || nome !== (reuNome.value || '').trim()
+                            || requestedProcess !== onlyDigits(processoInput?.value || '')
+                            || reuNome.disabled || reuNome.style.display === 'none') return;
                         const pessoas = (data && data.pessoas) ? data.pessoas : [];
                         if (pessoas.length > 0) {
                             showReuSelectSugestoes(pessoas, nome);
@@ -359,6 +383,17 @@
         if (processoInput) {
             processoInput.addEventListener('input', function () {
                 const digits = onlyDigits(processoInput.value || '');
+                if (digits !== activeProcessDigits) {
+                    activeProcessDigits = digits;
+                    reusRequestVersion++;
+                    suggestionRequestVersion++;
+                    showReuInput();
+                    if (reuNome) {
+                        reuNome.value = '';
+                        reuNome.disabled = false;
+                        reuNome.placeholder = 'Digite o nome completo';
+                    }
+                }
                 if (digits.length !== 20) {
                     resetClasseSeProcessoIncompleto();
                     return;
@@ -370,16 +405,22 @@
         global.addEventListener('cnjInvalid', function (event) {
             const id = event && event.detail ? event.detail.inputId : '';
             if (!id || id === 'filter-processo' || id === 'gab-mon-processo') {
+                reusRequestVersion++;
+                suggestionRequestVersion++;
+                showReuInput();
+                if (reuNome) {
+                    reuNome.disabled = false;
+                    reuNome.placeholder = 'Digite o nome completo';
+                }
                 syncRegisterButtonState();
             }
         });
 
         global.addEventListener('cnjValidated', function (event) {
+            const id = event && event.detail ? event.detail.inputId : '';
+            if (id && id !== (settings.processInputId || 'filter-processo') && id !== 'gab-mon-processo') return;
             const digits = (event.detail && event.detail.digits) ? String(event.detail.digits).replace(/\D/g, '') : '';
-            if (digits.length !== 20) {
-                showReuInput();
-                return;
-            }
+            if (digits.length !== 20 || digits !== onlyDigits(processoInput?.value || '')) return;
             carregarReus(formatCnjFromDigits(digits));
             syncRegisterButtonState();
         });

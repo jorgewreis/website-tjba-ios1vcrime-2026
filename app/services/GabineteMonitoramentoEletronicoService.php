@@ -9,7 +9,6 @@ require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
-require_once __DIR__ . '/DataJudService.php';
 
 final class GabineteMonitoramentoEletronicoService
 {
@@ -94,9 +93,8 @@ final class GabineteMonitoramentoEletronicoService
     }
 
     /**
-     * Garante o processo na base (sem apagar classe existente quando não há classe nova),
-     * lista réus vinculados e, se vazio, tenta sincronizar nomes do polo passivo do DataJud
-     * (partes + processos_partes), alinhado ao fluxo de cadastro do monitoramento.
+     * Consulta réus já vinculados. Nome ou polo extraídos do DataJud não comprovam
+     * identidade nem condição de réu; quando ausentes, o usuário informa manualmente.
      *
      * @return array{processo_id: string, reus: list<array{id: string, nome: string, tipo_parte: string}>}
      */
@@ -109,74 +107,16 @@ final class GabineteMonitoramentoEletronicoService
         }
         $numeroFormatado = $this->formatarCNJ($digits);
 
-        $classeIdResolved = null;
-        if ($classeCodigo !== '') {
-            $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
-            $classeIdResolved = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
-        }
-
         $existing = $this->processosRepository->findByNumero($numeroFormatado);
         if ($existing === null) {
-            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, null);
-        } else {
-            $processoId = trim((string) ($existing['id'] ?? ''));
-            if ($processoId === '') {
-                throw new RuntimeException('Processo não encontrado após consolidação.');
-            }
-            if ($classeIdResolved !== null && $classeIdResolved !== '') {
-                $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, null);
-            }
+            return ['processo_id' => '', 'reus' => [], 'mensagem' => 'Nenhum réu vinculado encontrado. Informe o nome manualmente.'];
         }
-
+        $processoId = trim((string) ($existing['id'] ?? ''));
+        if ($processoId === '') throw new RuntimeException('Processo encontrado sem identificador.');
         $reus = $this->listarReusDoProcesso($processoId);
-        if ($reus !== []) {
-            return ['processo_id' => $processoId, 'reus' => $reus];
-        }
-
-        $this->sincronizarReusPoloPassivoDataJud($processoId, $digits);
-        $reus = $this->listarReusDoProcesso($processoId);
-
-        return ['processo_id' => $processoId, 'reus' => $reus];
-    }
-
-    private function sincronizarReusPoloPassivoDataJud(string $processoId, string $digits): void
-    {
-        $basePath = dirname(__DIR__, 2);
-        $configPath = $basePath . '/public/api/datajud/config.php';
-        if (!is_file($configPath)) {
-            return;
-        }
-        $config = require $configPath;
-        $dataJud = new DataJudService($config);
-        try {
-            $data = $dataJud->searchProcesso($digits);
-        } catch (Throwable $e) {
-            return;
-        }
-        $nomes = $data['polo_passivo'] ?? [];
-        if (!is_array($nomes) || $nomes === []) {
-            return;
-        }
-        $partesRepo = new PartesRepository($this->connection);
-        $unicos = array_unique(array_map(static function ($n) {
-            return trim((string) $n);
-        }, $nomes));
-        foreach ($unicos as $nome) {
-            if ($nome === '') {
-                continue;
-            }
-            try {
-                $parteId = $partesRepo->ensureParteByNomeOuCpf($nome, null);
-                $this->processosPartesRepository->addParte(
-                    $processoId,
-                    $parteId,
-                    ProcessosPartesRepository::TIPO_REU,
-                    ProcessosPartesRepository::POLO_PASSIVO
-                );
-            } catch (Throwable $e) {
-                // Vínculo duplicado ou inconsistência: tenta as demais partes
-            }
-        }
+        $result = ['processo_id' => $processoId, 'reus' => $reus];
+        if ($reus === []) $result['mensagem'] = 'Nenhum réu vinculado encontrado. Informe o nome manualmente.';
+        return $result;
     }
 
     public function create(array $payload): string
