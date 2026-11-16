@@ -136,6 +136,67 @@ if ((int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !=
     throw new RuntimeException('Payload divergente com a mesma chave alterou registros.');
 }
 
+$concurrentKey = str_repeat('c', 64);
+$concurrentPayload = array_merge($base, [
+    'usuario_cadastro_id' => 'USER-REI78-TEST',
+    'idempotency_key' => $concurrentKey,
+]);
+$raceLetterCount = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
+$raceSubtaskCount = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn();
+$pdo->exec("CREATE TRIGGER rei78_delay_idempotent BEFORE INSERT ON cartas_expedidas FOR EACH ROW BEGIN IF NEW.idempotency_key = '" . $concurrentKey . "' THEN DO GET_LOCK('rei78-idempotency-race', 10); DO SLEEP(1); DO RELEASE_LOCK('rei78-idempotency-race'); END IF; END");
+$childCode = <<<'PHP'
+require getenv('REI88_TEST_REPO_ROOT') . '/app/services/CartasExpedidasService.php';
+$db = new PDO(getenv('REI88_MYSQL_DSN'), getenv('REI88_MYSQL_USER'), getenv('REI88_MYSQL_PASSWORD'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
+$payload = json_decode(base64_decode(getenv('REI78_RACE_PAYLOAD'), true), true, 512, JSON_THROW_ON_ERROR);
+echo (new CartasExpedidasService($db))->create($payload);
+PHP;
+$childEnvironment = [
+    'REI88_TEST_REPO_ROOT' => $repoRoot,
+    'REI88_MYSQL_DSN' => $dsn,
+    'REI88_MYSQL_USER' => $user,
+    'REI88_MYSQL_PASSWORD' => $password,
+    'REI78_RACE_PAYLOAD' => base64_encode(json_encode($concurrentPayload, JSON_THROW_ON_ERROR)),
+];
+$childPipes = [];
+$child = proc_open([PHP_BINARY, '-r', $childCode], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $childPipes, null, $childEnvironment);
+if (!is_resource($child)) {
+    $pdo->exec('DROP TRIGGER rei78_delay_idempotent');
+    throw new RuntimeException('Não foi possível iniciar a requisição concorrente sintética.');
+}
+fclose($childPipes[0]);
+$lockObserved = false;
+for ($attempt = 0; $attempt < 100; $attempt++) {
+    $lockOwner = $pdo->query("SELECT IS_USED_LOCK('rei78-idempotency-race')")->fetchColumn();
+    if ($lockOwner !== false && $lockOwner !== null) {
+        $lockObserved = true;
+        break;
+    }
+    usleep(20000);
+}
+if (!$lockObserved) {
+    proc_terminate($child);
+    stream_get_contents($childPipes[1]);
+    stream_get_contents($childPipes[2]);
+    fclose($childPipes[1]);
+    fclose($childPipes[2]);
+    proc_close($child);
+    $pdo->exec('DROP TRIGGER rei78_delay_idempotent');
+    throw new RuntimeException('A fixture não observou a primeira inserção dentro da janela de sincronização.');
+}
+$concurrentId = $service->create($concurrentPayload);
+$childId = stream_get_contents($childPipes[1]);
+$childError = stream_get_contents($childPipes[2]);
+fclose($childPipes[1]);
+fclose($childPipes[2]);
+$childExit = proc_close($child);
+$pdo->exec('DROP TRIGGER rei78_delay_idempotent');
+if ($childExit !== 0 || trim($childId) !== $concurrentId || $childError !== ''
+    || (int) $pdo->query("SELECT COUNT(*) FROM cartas_expedidas WHERE idempotency_key = '" . $concurrentKey . "'")->fetchColumn() !== 1
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $raceLetterCount + 1
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $raceSubtaskCount + 2) {
+    throw new RuntimeException('Duas requisições simultâneas com a mesma chave não retornaram uma única carta: ' . trim($childError));
+}
+
 $newCnj = '0000002-54.2020.8.05.0001';
 $service->create(array_merge($base, ['numero_processo' => $newCnj]));
 $newProcess = (new ProcessosRepository($pdo))->findByNumero($newCnj);
@@ -202,4 +263,4 @@ if ($service->create($failurePayload) !== $retryAfterRollbackId
 }
 
 echo 'PASS CartasExpedidasService completo em MySQL/InnoDB ' . $version
-    . ': migração e retry idempotente (incluindo payload conflitante e retry após rollback), sigilo e classe existentes preservados (' . count($inputs) . ' entradas), criação completa, processo novo/classe ausente e rollback após falha na segunda subtarefa verificados.' . PHP_EOL;
+    . ': migração e retry idempotente (concorrência simultânea, payload conflitante e retry após rollback), sigilo e classe existentes preservados (' . count($inputs) . ' entradas), criação completa, processo novo/classe ausente e rollback após falha na segunda subtarefa verificados.' . PHP_EOL;

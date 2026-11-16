@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0170
+
+**Data:** 2026-11-16 16:44:37 | **Commit:** `10beeba0` | **Tipo:** `patch`
+
+- test(REI-78): cover concurrent idempotent retries
+
 ## V. 1.87.0169
 
 **Data:** 2026-11-16 16:38:37 | **Commit:** `2a30b969` | **Tipo:** `patch`
@@ -6441,6 +6447,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
