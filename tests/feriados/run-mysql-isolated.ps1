@@ -41,6 +41,8 @@ try {
     }
     docker cp (Join-Path $PSScriptRoot 'rei122-135-atomicidade.test.php') "${phpId}:/work/tests/feriados/"
     if ($LASTEXITCODE -ne 0) { throw 'Falha copiando teste.' }
+    docker cp (Join-Path $PSScriptRoot 'rei114-lock-holder.php') "${phpId}:/work/tests/feriados/"
+    if ($LASTEXITCODE -ne 0) { throw 'Falha copiando worker de contenção REI-114.' }
     $dsn = "mysql:host=127.0.0.1;dbname=$database;charset=utf8mb4"
     docker exec -e FERIADOS_TEST_ISOLATION=isolated-feriados-test -e "FERIADOS_TEST_DSN=$dsn" -e FERIADOS_TEST_USER=root -e "FERIADOS_TEST_PASSWORD=$password" $phpId php /work/tests/feriados/rei122-135-atomicidade.test.php
     if ($LASTEXITCODE -ne 0) { throw 'Teste MySQL/InnoDB falhou.' }

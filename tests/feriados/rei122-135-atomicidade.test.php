@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../app/services/FeriadosService.php';
+require_once __DIR__ . '/../../app/services/EditaisService.php';
 
 function expect(bool $ok, string $message): void
 {
@@ -120,6 +121,48 @@ if ($mysql) {
     expect((int) $pdo->query("SELECT GET_LOCK('fokus-law-feriados-recalc', 0)")->fetchColumn() === 1, 'primeira conexão deve obter o mutex global');
     expect((int) $secondConnection->query("SELECT GET_LOCK('fokus-law-feriados-recalc', 1)")->fetchColumn() === 0, 'segunda conexão deve aguardar o mutex já mantido');
     expect((int) $pdo->query("SELECT RELEASE_LOCK('fokus-law-feriados-recalc')")->fetchColumn() === 1, 'mutex global deve ser liberado pela conexão proprietária');
+
+    $secondConnection->beginTransaction();
+    try {
+        (new EditaisService($secondConnection))->reconciliarEditais(['MISSING-OUTER-TX']);
+        throw new RuntimeException('A reconciliação aceitou transação externa que liberaria o mutex antes do commit real');
+    } catch (LogicException $expected) {
+        expect($secondConnection->inTransaction(), 'a transação externa deve permanecer sob controle de quem a iniciou');
+        $secondConnection->rollBack();
+    }
+
+    $marker = sys_get_temp_dir() . '/rei114-calendar-lock-' . bin2hex(random_bytes(8));
+    $pipes = [];
+    $worker = proc_open([PHP_BINARY, __DIR__ . '/rei114-lock-holder.php', $marker], [
+        0 => ['pipe', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ], $pipes);
+    expect(is_resource($worker), 'worker de contenção deve iniciar');
+    fclose($pipes[0]);
+    try {
+        $readyDeadline = microtime(true) + 5;
+        while (!is_file($marker) && microtime(true) < $readyDeadline) {
+            usleep(10000);
+        }
+        expect(is_file($marker), 'worker deve obter o mutex antes da chamada do serviço');
+        $startedAt = microtime(true);
+        $result = (new EditaisService($secondConnection))->reconciliarEditais(['MISSING-CONTENTION']);
+        $waitedSeconds = microtime(true) - $startedAt;
+        expect($waitedSeconds >= 0.4, 'reconciliação deve esperar o mutex compartilhado com mutações de feriados');
+        expect($result['nao_encontrados'] === 1, 'reconciliação liberada deve concluir o caminho sintético sem gravação');
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $workerExit = proc_close($worker);
+        $worker = null;
+        expect($workerExit === 0, 'worker deve liberar o mutex sem falha');
+    } finally {
+        if (is_resource($worker)) {
+            proc_terminate($worker);
+            proc_close($worker);
+        }
+        @unlink($marker);
+    }
 }
 
-echo 'REI-122/135: criação, atualização, exclusão, publicação legada, feriados consecutivos, não afetados, rollback atômico e mutex ' . ($mysql ? 'verificados em MySQL/InnoDB' : 'não aplicável') . " isolado.\n";
+echo 'REI-122/135/114: criação, atualização, exclusão, publicação legada, feriados consecutivos, não afetados, rollback atômico e mutex compartilhado ' . ($mysql ? 'verificados em MySQL/InnoDB' : 'não aplicável') . " isolado.\n";

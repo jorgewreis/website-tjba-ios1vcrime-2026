@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0167
+
+**Data:** 2026-11-16 18:14:26 | **Commit:** `9dfbbe4c` | **Tipo:** `patch`
+
+- fix(REI-114): serialize edital calendar reconciliation
+
 ## V. 1.87.0165
 
 **Data:** 2026-11-16 17:34:46 | **Commit:** `74a134a7` | **Tipo:** `patch`
@@ -6423,6 +6429,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

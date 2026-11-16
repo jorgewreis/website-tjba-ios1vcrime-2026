@@ -516,7 +516,7 @@ final class EditaisService
     }
 
     /** Executa manutenção legada apenas após ação explícita e autorizada do Cartório. */
-    public function reconciliarEditais(array $editalIds): int
+    public function reconciliarEditais(array $editalIds): array
     {
         if (count($editalIds) > 15) {
             throw new InvalidArgumentException('A atualização aceita no máximo 15 editais por vez.');
@@ -524,66 +524,131 @@ final class EditaisService
         $ids = [];
         foreach ($editalIds as $value) {
             if (!is_string($value) && !is_int($value)) {
-                continue;
+                throw new InvalidArgumentException('A lista contém um identificador inválido.');
             }
             $id = trim((string) $value);
-            if ($id !== '' && strlen($id) <= 128) {
-                $ids[$id] = true;
+            if ($id === '' || strlen($id) > 128) {
+                throw new InvalidArgumentException('A lista contém um identificador inválido.');
             }
+            $ids[$id] = true;
         }
         if (count($ids) > 15) {
             throw new InvalidArgumentException('A atualização aceita no máximo 15 editais por vez.');
         }
 
-        $ownsTransaction = !$this->connection->inTransaction();
-        $savepoint = $ownsTransaction ? null : 'edital_lote_reconciliar_' . bin2hex(random_bytes(8));
-        if ($ownsTransaction) {
-            $this->connection->beginTransaction();
-        } else {
-            $this->connection->exec('SAVEPOINT ' . $savepoint);
+        $mysql = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
+        if ($mysql && $this->connection->inTransaction()) {
+            throw new LogicException('A reconciliação não pode herdar uma transação externa ao bloqueio do calendário.');
+        }
+        $calendarLockAcquired = false;
+        if ($mysql) {
+            $lock = $this->connection->query("SELECT GET_LOCK('fokus-law-feriados-recalc', 15)");
+            $calendarLockAcquired = $lock !== false && (int) $lock->fetchColumn() === 1;
+            if (!$calendarLockAcquired) {
+                throw new RuntimeException('Não foi possível obter o bloqueio do calendário.');
+            }
         }
 
-        $updated = 0;
         try {
-            $orderedIds = array_keys($ids);
-            sort($orderedIds, SORT_STRING);
-            foreach ($orderedIds as $id) {
-                $finalized = $this->reconciliarComEditalBloqueado($id, function () use ($id): bool {
-                    $edital = $this->repository->findById($id);
-                    if ($edital === null) {
-                        return false;
-                    }
-                    $status = strtolower(trim((string) ($edital['status'] ?? '')));
-                    if ($status === 'concluída') {
-                        $status = 'concluida';
-                    }
-                    if (in_array($status, ['concluida', 'cancelada'], true)) {
-                        return false;
-                    }
-                    $this->subtarefasRepository->ensureSubtarefasAtivas($id);
-                    return $this->tentarFinalizacaoAutomaticaPorDecurso($id);
-                });
-                if ($finalized) {
-                    $updated++;
-                }
-            }
+            $ownsTransaction = !$this->connection->inTransaction();
+            $savepoint = $ownsTransaction ? null : 'edital_lote_reconciliar_' . bin2hex(random_bytes(8));
             if ($ownsTransaction) {
-                $this->connection->commit();
+                if (!$this->connection->beginTransaction()) {
+                    throw new RuntimeException('Não foi possível iniciar a transação da reconciliação.');
+                }
             } else {
-                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                $this->connection->exec('SAVEPOINT ' . $savepoint);
             }
-        } catch (Throwable $exception) {
-            if ($this->connection->inTransaction()) {
+
+            $result = [
+                'solicitados' => count($ids),
+                'editais_alterados' => 0,
+                'editais_com_etapas_criadas' => 0,
+                'etapas_criadas' => 0,
+                'inalterados' => 0,
+                'nao_encontrados' => 0,
+                'finalizados' => 0,
+                'falhas' => 0,
+            ];
+            try {
+                $orderedIds = array_keys($ids);
+                sort($orderedIds, SORT_STRING);
+                foreach ($orderedIds as $id) {
+                    $outcome = $this->reconciliarComEditalBloqueado($id, function () use ($id): array {
+                        $edital = $this->repository->findById($id);
+                        if ($edital === null) {
+                            return ['encontrado' => false, 'etapas_criadas' => 0, 'finalizado' => false];
+                        }
+                        $status = strtolower(trim((string) ($edital['status'] ?? '')));
+                        if ($status === 'concluída') {
+                            $status = 'concluida';
+                        }
+                        if (in_array($status, ['concluida', 'cancelada'], true)) {
+                            return ['encontrado' => true, 'etapas_criadas' => 0, 'finalizado' => false];
+                        }
+                        $subtarefasAntes = count($this->subtarefasRepository->findByEditalId($id));
+                        $this->subtarefasRepository->ensureSubtarefasAtivas($id);
+                        $subtarefasDepois = count($this->subtarefasRepository->findByEditalId($id));
+                        return [
+                            'encontrado' => true,
+                            'etapas_criadas' => max(0, $subtarefasDepois - $subtarefasAntes),
+                            'finalizado' => $this->tentarFinalizacaoAutomaticaPorDecurso($id),
+                        ];
+                    });
+                    if (!is_array($outcome)) {
+                        $result['nao_encontrados']++;
+                        continue;
+                    }
+                    if (empty($outcome['encontrado'])) {
+                        $result['nao_encontrados']++;
+                        continue;
+                    }
+                    $created = max(0, (int) ($outcome['etapas_criadas'] ?? 0));
+                    if ($created > 0) {
+                        $result['editais_com_etapas_criadas']++;
+                        $result['etapas_criadas'] += $created;
+                    }
+                    if (!empty($outcome['finalizado'])) {
+                        $result['finalizados']++;
+                    }
+                    if ($created > 0 || !empty($outcome['finalizado'])) {
+                        $result['editais_alterados']++;
+                    }
+                    if ($created === 0 && empty($outcome['finalizado'])) {
+                        $result['inalterados']++;
+                    }
+                }
                 if ($ownsTransaction) {
-                    $this->connection->rollBack();
+                    if (!$this->connection->commit()) {
+                        throw new RuntimeException('Não foi possível confirmar a transação da reconciliação.');
+                    }
                 } else {
-                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
                     $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
                 }
+            } catch (Throwable $exception) {
+                if ($this->connection->inTransaction()) {
+                    if ($ownsTransaction) {
+                        $this->connection->rollBack();
+                    } else {
+                        $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                        $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                    }
+                }
+                throw $exception;
             }
-            throw $exception;
+            return $result;
+        } finally {
+            if ($calendarLockAcquired) {
+                try {
+                    $release = $this->connection->query("SELECT RELEASE_LOCK('fokus-law-feriados-recalc')");
+                    if ($release === false || (int) $release->fetchColumn() !== 1) {
+                        error_log('Falha ao liberar bloqueio serial do calendário após reconciliação de editais.');
+                    }
+                } catch (Throwable $releaseError) {
+                    error_log('Falha ao liberar bloqueio serial do calendário após reconciliação de editais.');
+                }
+            }
         }
-        return $updated;
     }
 
     /** Compara dias civis no fuso configurado, sem antecipar a certificação. */

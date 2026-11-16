@@ -175,12 +175,38 @@
                 credentials: 'same-origin'
             }).then(function (response) {
                 return response.json().then(function (data) {
-                    if (!response.ok || !data.success) throw new Error(data.error || 'Falha ao atualizar etapas.');
-                    ctx.notify('success', 'Atualização concluída', 'Etapas atualizadas. Recarregando a página.');
+                    if (!response.ok || !data.success) {
+                        throw new Error('Não foi possível atualizar os editais. Verifique a listagem antes de tentar novamente.');
+                    }
+                    const result = data.resultado;
+                    const integerFields = ['solicitados', 'editais_alterados', 'editais_com_etapas_criadas', 'etapas_criadas', 'inalterados', 'nao_encontrados', 'finalizados', 'falhas'];
+                    const validResult = result && integerFields.every(function (field) {
+                        return Number.isInteger(result[field]) && result[field] >= 0;
+                    });
+                    if (!validResult || result.falhas !== 0 ||
+                        result.solicitados !== settings.editalIds.length ||
+                        result.editais_alterados + result.inalterados + result.nao_encontrados !== result.solicitados ||
+                        result.editais_com_etapas_criadas > result.editais_alterados ||
+                        result.etapas_criadas < result.editais_com_etapas_criadas ||
+                        result.finalizados > result.editais_alterados) {
+                        throw new Error('A resposta da atualização está incompleta. Atualize a listagem antes de continuar.');
+                    }
+                    const etapas = result.etapas_criadas;
+                    const editais = result.editais_com_etapas_criadas;
+                    const inalterados = result.inalterados;
+                    const finalizados = result.finalizados;
+                    const ausentes = result.nao_encontrados;
+                    ctx.notify(
+                        'success',
+                        'Atualização concluída',
+                        editais + ' editais receberam ' + etapas + ' etapas; ' +
+                            inalterados + ' permaneceram inalterados; ' + finalizados +
+                            ' foram finalizados; ' + ausentes + ' não foram encontrados. Recarregando a listagem.'
+                    );
                     global.location.reload();
                 });
             }).catch(function (error) {
-                ctx.notify('error', 'Erro', error.message || 'Não foi possível atualizar as etapas.');
+                ctx.notify('error', 'Erro', error.message || 'Não foi possível atualizar os editais.');
                 button.disabled = false;
             });
         });
