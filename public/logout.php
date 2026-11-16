@@ -22,8 +22,11 @@ if (!Security::verifyCSRFToken(is_string($csrf) ? $csrf : null)) {
 try {
     if (Security::isAuthenticated()) {
         $idUsuario = Security::getUserId();
+        $token = $_SESSION['token'] ?? null;
         $usuario = new Usuario();
-        $usuario->logoutLocal((string) $idUsuario);
+        if (is_string($token) && $token !== '') {
+            $usuario->logoutLocal((string) $idUsuario, $token);
+        }
     }
 } catch (Throwable $e) {
     error_log('Erro no logout: ' . $e->getMessage());

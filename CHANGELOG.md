@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0133
+
+**Data:** 2026-11-15 21:54:05 | **Commit:** `aac487e3` | **Tipo:** `patch`
+
+- fix: revogar apenas token da sessao no logout
+
 ## V. 1.87.0132
 
 **Data:** 2026-11-15 21:47:43 | **Commit:** `c468b838` | **Tipo:** `patch`
@@ -6219,6 +6225,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -67,16 +67,19 @@ final class Usuario
     /**
      * Logout apenas do usuário atual: remove o token persistido do usuário.
      */
-    public function logoutLocal(string $idUsuario): array
+    public function logoutLocal(string $idUsuario, string $token): array
     {
         try {
+            if ($token === '') {
+                return ['success' => false, 'message' => 'Erro ao realizar logout local.'];
+            }
             $stmt = $this->pdo->prepare("
                 UPDATE usuarios
                 SET token_acesso = NULL,
                     token_expira = NULL
-                WHERE id_usuario = ?
+                WHERE id_usuario = ? AND token_acesso = ?
             ");
-            $stmt->execute([$idUsuario]);
+            $stmt->execute([$idUsuario, Security::hashAccessToken($token)]);
 
             return [
                 'success' => true,
