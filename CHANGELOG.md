@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0175
+
+**Data:** 2026-11-16 19:45:05 | **Commit:** `e7c839ea` | **Tipo:** `patch`
+
+- fix(REI-76): protect DataJud synchronization
+
 ## V. 1.87.0174
 
 **Data:** 2026-11-16 19:33:56 | **Commit:** `3e478b30` | **Tipo:** `patch`
@@ -6473,6 +6479,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -24,6 +24,8 @@
 
         : '/api/processos/assunto-sync.php';
 
+    var DATAJUD_SYNC_URL = '/api/processos/datajud-sync.php';
+
     var classeInputListenerBound = false;
 
 
@@ -373,16 +375,18 @@
 
     }
 
-    function postSyncAssuntos(digits, assuntos) {
+    function postSyncAssuntos(digits, assuntos, classe) {
 
         var normalized = normalizeAssuntosForSync(assuntos);
-        if (normalized.length === 0) {
+        var skipClasse = window.DATAJUD_SKIP_CLASSE_SYNC === true;
+        if (normalized.length === 0 && (!hasClasseUtil(classe) || skipClasse)) {
 
             return;
 
         }
 
-        var payloadJson = JSON.stringify({ numero: digits, assuntos: normalized });
+        var endpoint = skipClasse ? ASSUNTO_SYNC_URL : DATAJUD_SYNC_URL;
+        var payloadJson = JSON.stringify({ numero: digits });
 
         function delay(ms) {
 
@@ -412,7 +416,7 @@
 
         function attempt(tryNum) {
 
-            return fetch(ASSUNTO_SYNC_URL, {
+            return fetch(endpoint, {
 
                 method: 'POST',
 
@@ -862,13 +866,11 @@
 
                             }
 
-                            postSyncAssuntos(rawDigits, assuntos);
+                            postSyncAssuntos(rawDigits, assuntos, classe);
 
                             if (hasClasseUtil(classe)) {
 
                                 DC.finishSuccess(session, domLatest, classe);
-
-                                postSyncClasse(rawDigits, classe);
 
                             } else if (body && body.sigilo_restrito) {
 

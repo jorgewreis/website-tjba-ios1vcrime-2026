@@ -62,9 +62,14 @@ final class ProcessoAssuntoSyncService
      *   stats:array{inserted:int,removed:int,unchanged:int}
      * }
      */
-    public function syncFromDataJud(string $digits20, array $assuntosPayload): array
+    public function syncFromDataJud(string $digits20, array $assuntosPayload, bool $requireExistingProcess = false): array
     {
         $digits20 = CnjValidator::digits20OrThrow($digits20);
+
+        $processo = $this->processosRepository->findByNumero($digits20);
+        if ($requireExistingProcess && $processo === null) {
+            throw new InvalidArgumentException('Processo não encontrado no cadastro local.');
+        }
 
         $assuntosNormalizados = $this->normalizeAssuntosPayload($assuntosPayload);
         $assuntoIds = [];
@@ -73,7 +78,6 @@ final class ProcessoAssuntoSyncService
         }
         $assuntoIds = array_values(array_unique($assuntoIds));
 
-        $processo = $this->processosRepository->findByNumero($digits20);
         $foiCriado = false;
         if ($processo === null) {
             $processoId = $this->processosRepository->ensureProcess($this->formatarCnj20($digits20), null, null, null);

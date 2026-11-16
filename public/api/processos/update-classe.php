@@ -7,6 +7,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/repositories/ProcessosRepository.php';
 require_once $basePath . '/app/services/ProcessoClasseSyncService.php';
 
 ApiAccessGuard::requireAccess(['consultaprocessosedit'], true);
@@ -27,7 +28,13 @@ try {
         exit;
     }
 
-    $service = new ProcessoClasseSyncService(Conection::getInstance()->getConnection());
+    $connection = Conection::getInstance()->getConnection();
+    if ((new ProcessosRepository($connection))->findById($processoId) === null) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Processo não encontrado no cadastro local.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $service = new ProcessoClasseSyncService($connection);
     $result = $service->updateClasseManual($processoId, $codigo, $nome);
 
     echo json_encode(array_merge(['success' => true], $result), JSON_UNESCAPED_UNICODE);
@@ -36,5 +43,5 @@ try {
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao atualizar classe do processo: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Não foi possível atualizar a classe do processo.'], JSON_UNESCAPED_UNICODE);
 }

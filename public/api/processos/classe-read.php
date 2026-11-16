@@ -4,18 +4,22 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CnjValidator.php';
+require_once $basePath . '/app/repositories/ProcessosRepository.php';
 require_once $basePath . '/app/services/ProcessoClasseSyncService.php';
 
-$rawNumero = $_GET['numero'] ?? '';
-if ($rawNumero === '' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
-    if (is_array($payload)) {
-        $rawNumero = $payload['numero'] ?? '';
-    }
+ApiAccessGuard::requireAccess(['consultaprocessos'], false);
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'GET') {
+    http_response_code(405);
+    header('Allow: GET');
+    echo json_encode(['error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
+    exit;
 }
+
+$rawNumero = $_GET['numero'] ?? '';
 
 try {
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
@@ -33,7 +37,13 @@ try {
         exit;
     }
 
-    $service = new ProcessoClasseSyncService(Conection::getInstance()->getConnection());
+    $connection = Conection::getInstance()->getConnection();
+    if ((new ProcessosRepository($connection))->findByNumero($digits) === null) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Processo não encontrado no cadastro local.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $service = new ProcessoClasseSyncService($connection);
     $data = $service->readByNumero20($digits);
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
@@ -41,5 +51,5 @@ try {
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao consultar processo: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Não foi possível consultar o processo.'], JSON_UNESCAPED_UNICODE);
 }
