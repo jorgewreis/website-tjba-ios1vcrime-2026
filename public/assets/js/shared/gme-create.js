@@ -244,15 +244,18 @@
 
             const classCode = global.document.getElementById(settings.classCodeInputId || 'hidden-classe-codigo')?.value || '';
             const classDescription = global.document.getElementById(settings.classDescriptionInputId || 'hidden-classe-descricao')?.value || '';
-            let queryString = 'numero_processo=' + encodeURIComponent(numeroFormatado);
-            if (classCode !== '') {
-                queryString += '&classe_codigo=' + encodeURIComponent(classCode);
-            }
-            if (classDescription !== '') {
-                queryString += '&classe_descricao=' + encodeURIComponent(classDescription);
-            }
+            const payload = {
+                numero_processo: numeroFormatado,
+                classe_codigo: classCode,
+                classe_descricao: classDescription
+            };
 
-            fetch(settings.reusEndpoint + '?' + queryString, { credentials: 'same-origin' })
+            fetch(settings.reusEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                credentials: 'same-origin'
+            })
                 .then(function (response) {
                     return response.json().then(function (body) {
                         if (!response.ok) {

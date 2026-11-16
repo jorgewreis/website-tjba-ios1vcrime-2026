@@ -6,28 +6,18 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/services/GabineteMonitoramentoEletronicoService.php';
 
-if (!bootstrapRequireTrustedPostRequest()) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
+ApiAccessGuard::requireAccess(['monitoramentogabineteedit'], true);
 
-$connection = Conection::getInstance()->getConnection();
-
-$perfisPermitidosCancelar = ['ESTAGIARIO', 'SERVIDOR', 'ADMIN', 'CHEFIA'];
-require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
-$userPerfis = [];
-$userId = $_SESSION['id_usuario'] ?? null;
-if ($userId !== null && trim((string) $userId) !== '') {
-    $userPerfis = UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) $userId));
-}
-$podeCancelar = count(array_intersect($userPerfis, $perfisPermitidosCancelar)) > 0;
-
-if (!$podeCancelar) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Seu perfil não tem permissão para cancelar.'], JSON_UNESCAPED_UNICODE);
+try {
+    $connection = Conection::getInstance()->getConnection();
+} catch (Throwable $exception) {
+    error_log('gabinete-monitoramento-eletronico/cancel.php: falha de conexão.');
+    http_response_code(500);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -53,5 +43,6 @@ try {
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao cancelar: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    error_log('Monitoramento eletrônico: ' . get_class($exception));
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
 }
