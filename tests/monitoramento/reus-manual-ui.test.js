@@ -18,11 +18,12 @@ const el = {
 const events = {}, notices = [];
 let payload = { processo_id: '', reus: [], mensagem: 'Nenhum réu vinculado encontrado. Informe o nome manualmente.' };
 let delayed = false;
+let fetchCount = 0;
 const pending = [];
 const document = { getElementById: id => el[id] || null, createElement: () => new Element() };
 const window = { document, App: { Page: { notify: (...args) => notices.push(args) } }, location: {},
   addEventListener(name, fn) { events[name] = fn; } };
-const fetch = (url, options) => delayed ? new Promise((resolve, reject) => pending.push({ url, options, resolve, reject })) : Promise.resolve({ ok: true, json: async () => payload });
+const fetch = (url, options) => { fetchCount++; return delayed ? new Promise((resolve, reject) => pending.push({ url, options, resolve, reject })) : Promise.resolve({ ok: true, json: async () => payload }); };
 vm.runInNewContext(fs.readFileSync('public/assets/js/shared/gme-create.js', 'utf8'), { window, fetch, console, AbortController, setTimeout, clearTimeout });
 window.App.GmeCreate.initialize({ reusEndpoint: '/synthetic', searchPeopleEndpoint: '/people', createEndpoint: '/create' });
 async function run() {
@@ -33,14 +34,25 @@ async function run() {
   assert.equal(el['gab-mon-reu-nome'].required, true);
   assert.equal(el['gab-mon-reu-nome'].disabled, false);
   assert.ok(notices.some(args => args[2] === payload.mensagem), 'mensagem de entrada manual não exibida');
-  payload = { processo_id: 'P', reus: [{ id: 'R', nome: 'Réu sintético', tipo_parte: 'reu' }] };
+  el['gab-mon-reu-nome'].value = 'Nome em edição';
+  const chamadasAnteriores = fetchCount;
   events.datajudClasseResolved({ detail: { processoInputId: 'filter-processo' } });
+  assert.equal(fetchCount, chamadasAnteriores, 'DataJud tardio não recarrega réus para o mesmo CNJ');
+  assert.equal(el['gab-mon-reu-nome'].value, 'Nome em edição', 'DataJud tardio preserva edição');
+  payload = { processo_id: 'P', reus: [{ id: 'R', nome: 'Réu sintético', tipo_parte: 'reu' }] };
+  events.cnjValidated({ detail: { inputId: 'filter-processo', digits: el['filter-processo'].value } });
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(el['gab-mon-reu-select'].style.display, '');
   assert.equal(el['gab-mon-reu-nome'].style.display, 'none');
   assert.ok(el['gab-mon-reu-select'].children.some(option => option.value === 'processo_parte:R'));
   assert.equal(el['gab-mon-reu-select'].value, '', 'réu vinculado também exige escolha');
   assert.equal(el['btn-gab-mon-registrar'].disabled, true, 'não enviar vínculo implícito');
+  el['gab-mon-reu-select'].value = 'processo_parte:R';
+  el['gab-mon-reu-select'].handlers.change.call(el['gab-mon-reu-select']);
+  const antesResolucaoTardia = fetchCount;
+  events.datajudClasseResolved({ detail: { processoInputId: 'filter-processo' } });
+  assert.equal(fetchCount, antesResolucaoTardia);
+  assert.equal(el['gab-mon-reu-select'].value, 'processo_parte:R', 'DataJud tardio preserva seleção');
   delayed = true;
   el['filter-processo'].value = '00000016920208050001';
   events.cnjValidated({ detail: { inputId: 'filter-processo', digits: el['filter-processo'].value } });
@@ -131,6 +143,17 @@ async function run() {
   el['gab-mon-reu-nome'].handlers.blur();
   assert.equal(pending[10].url.includes('/people'), true, 'editar invalida escolha anterior');
   pending[10].resolve({ ok: true, json: async () => ({ pessoas: [] }) });
+  await new Promise(resolve => setImmediate(resolve));
+  el['gab-mon-reu-nome'].value = 'Nome sem blur';
+  el['gab-mon-reu-nome'].handlers.input();
+  el['btn-gab-mon-registrar'].handlers.click();
+  assert.equal(pending[11].url.includes('/people'), true, 'submit sem blur deve consultar antes');
+  pending[11].resolve({ ok: true, json: async () => ({ pessoas: [] }) });
+  await new Promise(resolve => setImmediate(resolve));
+  el['btn-gab-mon-registrar'].handlers.click();
+  assert.equal(pending[12].url, '/create', 'lista vazia validada permite enviar');
+  assert.equal(JSON.parse(pending[12].options.body).reu_complemento, 'Nome sem blur');
+  pending[12].resolve({ ok: false, json: async () => ({ error: 'simulado' }) });
   await new Promise(resolve => setImmediate(resolve));
   console.log('PASS orientação manual e seleção existente (DOM/fetch simulados)');
 }

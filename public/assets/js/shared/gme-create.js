@@ -108,6 +108,8 @@
         const classeInput = global.document.getElementById(settings.classInputId || 'filter-classe');
         let lastSuggestionNome = '';
         let escolhaNovo = null;
+        let nomeConsultado = null;
+        let reusProcessoConsultado = '';
         let isSubmitting = false;
         let reusRequestVersion = 0;
         let suggestionRequestVersion = 0;
@@ -284,6 +286,7 @@
             }
             const requestedDigits = onlyDigits(numeroFormatado);
             if (requestedDigits.length !== 20 || requestedDigits !== onlyDigits(processoInput?.value || '')) return;
+            reusProcessoConsultado = requestedDigits;
             const requestVersion = ++reusRequestVersion;
             suggestionRequestVersion++;
             suggestionPending = false;
@@ -354,7 +357,7 @@
                 return;
             }
             const processo = processoInput?.value?.trim() || '';
-            if (processo) {
+            if (processo && onlyDigits(processo) !== reusProcessoConsultado) {
                 carregarReus(processo);
             }
             syncRegisterButtonState();
@@ -392,6 +395,7 @@
         if (reuNome) {
             reuNome.addEventListener('input', function () {
                 if (escolhaNovo && (reuNome.value || '').trim() !== escolhaNovo.nome) escolhaNovo = null;
+                if (nomeConsultado && (reuNome.value || '').trim() !== nomeConsultado.nome) nomeConsultado = null;
                 suggestionRequestVersion++;
                 suggestionPending = false;
                 syncRegisterButtonState();
@@ -412,6 +416,7 @@
                     return;
                 }
                 if (escolhaNovo && escolhaNovo.nome === nome && escolhaNovo.processo === onlyDigits(processoInput?.value || '')) return;
+                if (nomeConsultado && nomeConsultado.nome === nome && nomeConsultado.processo === onlyDigits(processoInput?.value || '')) return;
                 if (reuSelect && reuSelect.style.display !== 'none' && reuSelect.value && reuSelect.value !== 'outro' && reuSelect.value !== '__novo__') {
                     return;
                 }
@@ -444,6 +449,7 @@
                         if (pessoas.length > 0) {
                             showReuSelectSugestoes(pessoas, nome);
                         } else {
+                            nomeConsultado = { nome: nome, processo: requestedProcess };
                             syncRegisterButtonState();
                         }
                     })
@@ -463,6 +469,8 @@
                 if (digits !== activeProcessDigits) {
                     activeProcessDigits = digits;
                     escolhaNovo = null;
+                    nomeConsultado = null;
+                    reusProcessoConsultado = '';
                     reusRequestVersion++;
                     suggestionRequestVersion++;
                     suggestionPending = false;
@@ -484,6 +492,9 @@
         global.addEventListener('cnjInvalid', function (event) {
             const id = event && event.detail ? event.detail.inputId : '';
             if (!id || id === 'filter-processo' || id === 'gab-mon-processo') {
+                reusProcessoConsultado = '';
+                nomeConsultado = null;
+                escolhaNovo = null;
                 reusRequestVersion++;
                 suggestionRequestVersion++;
                 suggestionPending = false;
@@ -540,6 +551,15 @@
             const reuInputEl = reuNome;
             const reuSelecionado = reuSelectEl && reuSelectEl.style.display !== 'none' ? ((reuSelectEl.value || '').trim()) : '';
             const nomeLivre = reuInputEl?.value?.trim() || '';
+
+            const processoAtual = onlyDigits(processo);
+            const nomeConfirmado = [escolhaNovo, nomeConsultado].some(function (item) {
+                return item && item.nome === nomeLivre && item.processo === processoAtual;
+            });
+            if (!reuSelecionado && nomeLivre.length >= 2 && !nomeConfirmado) {
+                buscarSugestoes();
+                return;
+            }
 
             if (!hasReuFilled()) {
                 notifyByKey('gme.monitoring.validation.reu.required', {}, 'error', 'Validação', 'Informe o nome completo do réu.');
