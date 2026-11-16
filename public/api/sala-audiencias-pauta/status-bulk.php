@@ -35,37 +35,8 @@ if (!bootstrapRequireTrustedPostRequest()) {
 }
 
 try {
-    // #region agent log
-    $debugRunId = 'map-prioridades-status-bulk-pre';
-    $debugLogPath = dirname(__DIR__, 4) . '/debug-07d2e0.log';
-    $debugLog = static function (string $hypothesisId, string $location, string $message, array $data = []) use ($debugLogPath, $debugRunId): void {
-        $payload = [
-            'sessionId' => '07d2e0',
-            'runId' => $debugRunId,
-            'hypothesisId' => $hypothesisId,
-            'location' => $location,
-            'message' => $message,
-            'data' => $data,
-            'timestamp' => (int) floor(microtime(true) * 1000),
-        ];
-        @file_put_contents($debugLogPath, json_encode($payload, JSON_UNESCAPED_UNICODE) . PHP_EOL, FILE_APPEND);
-    };
-    $debugLog(
-        'H0',
-        'public/api/sala-audiencias-pauta/status-bulk.php:23',
-        'Entrada no endpoint status-bulk',
-        [
-            'method' => (string) ($_SERVER['REQUEST_METHOD'] ?? ''),
-            'tem_sessao_usuario' => isset($_SESSION['id_usuario']),
-        ]
-    );
-    // #endregion
-
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
     if ($usuarioId === '') {
-        // #region agent log
-        $debugLog('H0', 'public/api/sala-audiencias-pauta/status-bulk.php:41', 'Saida por sessao expirada', []);
-        // #endregion
         http_response_code(401);
         echo json_encode(['success' => false, 'error' => 'Sessão expirada.'], JSON_UNESCAPED_UNICODE);
         exit;
@@ -73,9 +44,6 @@ try {
 
     $perfilsEfetivos = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
     if (!AccessEvaluator::canAccessPage('estudapainel', $perfilsEfetivos)) {
-        // #region agent log
-        $debugLog('H0', 'public/api/sala-audiencias-pauta/status-bulk.php:54', 'Saida por acesso negado na pagina estudapainel', []);
-        // #endregion
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);
         exit;
@@ -87,9 +55,6 @@ try {
     }
     $norm = ProfileNormalizer::normalize($perfilsCadastro);
     if (!UserAccessHelper::isUsuarioExterno($perfilsCadastro) || !ProfileNormalizer::hasEstudante($norm)) {
-        // #region agent log
-        $debugLog('H0', 'public/api/sala-audiencias-pauta/status-bulk.php:74', 'Saida por perfil nao estudante externo', ['perfis_total' => count($perfilsCadastro)]);
-        // #endregion
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'Acesso restrito ao perfil estudante.'], JSON_UNESCAPED_UNICODE);
         exit;
@@ -112,25 +77,6 @@ try {
 
     $pdo = Conection::getInstance()->getConnection();
     $marks = implode(',', array_fill(0, count($ids), '?'));
-    // #region agent log
-    $hardcodedBloqueios = ['sigiloso', 'crianca_adolescente', 'violencia_domestica'];
-    $catalogoBloqueios = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
-    $faltandoNoHardcoded = array_values(array_diff($catalogoBloqueios, $hardcodedBloqueios));
-    $extraNoHardcoded = array_values(array_diff($hardcodedBloqueios, $catalogoBloqueios));
-    $debugLog(
-        'H1',
-        'public/api/sala-audiencias-pauta/status-bulk.php:66',
-        'Comparacao lista bloqueante hardcoded vs catalogo',
-        [
-            'hardcoded' => $hardcodedBloqueios,
-            'catalogo' => $catalogoBloqueios,
-            'faltando_no_hardcoded' => $faltandoNoHardcoded,
-            'extra_no_hardcoded' => $extraNoHardcoded,
-            'divergiu' => ($faltandoNoHardcoded !== [] || $extraNoHardcoded !== []),
-            'total_pautas_consulta' => count($ids),
-        ]
-    );
-    // #endregion
     /*
      * Os códigos bloqueantes devem espelhar
      * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
@@ -156,17 +102,6 @@ try {
     }
     $st->execute();
     $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
-    // #region agent log
-    $debugLog(
-        'H2',
-        'public/api/sala-audiencias-pauta/status-bulk.php:89',
-        'Resultado da query status-bulk',
-        [
-            'rows_total' => count($rows),
-            'amostra_pautas' => array_slice(array_values(array_map(static fn (array $r): string => (string) ($r['id_pauta'] ?? ''), $rows)), 0, 5),
-        ]
-    );
-    // #endregion
 
     $items = [];
     $agoraStatusTs = time();
@@ -215,46 +150,8 @@ try {
             'pode_inscrever' => $podeInscrever,
         ];
     }
-    // #region agent log
-    $totalComBloqueio = 0;
-    $totalPodeInscrever = 0;
-    foreach ($items as $it) {
-        if (!empty($it['tem_prioridade_bloqueio'])) {
-            $totalComBloqueio++;
-        }
-        if (!empty($it['pode_inscrever'])) {
-            $totalPodeInscrever++;
-        }
-    }
-    $debugLog(
-        'H3',
-        'public/api/sala-audiencias-pauta/status-bulk.php:132',
-        'Impacto de prioridade bloqueante no payload final',
-        [
-            'items_total' => count($items),
-            'items_com_prioridade_bloqueio' => $totalComBloqueio,
-            'items_pode_inscrever' => $totalPodeInscrever,
-        ]
-    );
-    // #endregion
-
     echo json_encode(['success' => true, 'items' => $items], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
-    // #region agent log
-    @file_put_contents(
-        dirname(__DIR__, 4) . '/debug-07d2e0.log',
-        json_encode([
-            'sessionId' => '07d2e0',
-            'runId' => 'map-prioridades-status-bulk-pre',
-            'hypothesisId' => 'H4',
-            'location' => 'public/api/sala-audiencias-pauta/status-bulk.php:catch',
-            'message' => 'Excecao no endpoint status-bulk',
-            'data' => ['erro' => $e->getMessage()],
-            'timestamp' => (int) floor(microtime(true) * 1000),
-        ], JSON_UNESCAPED_UNICODE) . PHP_EOL,
-        FILE_APPEND
-    );
-    // #endregion
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Erro ao consultar status.'], JSON_UNESCAPED_UNICODE);
 }
