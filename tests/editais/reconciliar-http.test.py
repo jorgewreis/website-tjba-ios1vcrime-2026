@@ -34,12 +34,8 @@ with tempfile.TemporaryDirectory(prefix="rei114-http-") as temp_name:
     shutil.copytree(ROOT / "config", temp / "config")
     api_dir = temp / "public" / "api" / "cartorio-editais"
     api_dir.mkdir(parents=True)
-    endpoint = (ROOT / "public/api/cartorio-editais/reconciliar.php").read_text(encoding="utf-8")
-    endpoint = endpoint.replace(
-        "} catch (Throwable $exception) {",
-        "} catch (Throwable $exception) { error_log('REI114 synthetic failure: ' . get_class($exception) . ': ' . $exception->getMessage());",
-    )
-    (api_dir / "reconciliar.php").write_text(endpoint, encoding="utf-8")
+    for name in ("list.php", "reconciliar.php"):
+        shutil.copy2(ROOT / "public/api/cartorio-editais" / name, api_dir / name)
 
     db_path = temp / "synthetic.sqlite"
     connection_stub = '''<?php
@@ -111,6 +107,8 @@ return true;
             );
             INSERT INTO editais (id, prazo_dias, data_publicacao, status)
             VALUES ('E-HTTP', 1, '2026-01-01', 'pendente');
+            INSERT INTO feriados (ativo, data_inicio, data_fim, regra_data)
+            VALUES (1, '2026-02-16', '2026-02-16', 'unica');
         """)
         for profile in ("SERVIDOR-CARTORIO", "AUDIENCIA"):
             user = "synthetic-" + profile.lower()
@@ -150,10 +148,10 @@ return true;
                 opener.open(origin + "/seed-session?profile=" + profile, timeout=3).close()
             return opener
 
-        def request(opener, method: str, body=None, request_origin=origin):
+        def request(opener, endpoint: str, method: str, body=None, request_origin=origin):
             data = None if body is None else json.dumps(body).encode()
             req = urllib.request.Request(
-                origin + "/api/cartorio-editais/reconciliar.php", data=data,
+                origin + "/api/cartorio-editais/" + endpoint, data=data,
                 method=method, headers={"Content-Type": "application/json"},
             )
             if request_origin is not None:
@@ -164,24 +162,39 @@ return true;
             except urllib.error.HTTPError as error:
                 return error.code, error.read()
 
+        def snapshot():
+            with closing(sqlite3.connect(db_path)) as db:
+                return {
+                    table: db.execute(f"SELECT * FROM {table} ORDER BY rowid").fetchall()
+                    for table in ("feriados", "editais", "editais_subtarefas")
+                }
+
+        initial = snapshot()
         anonymous = client()
-        assert request(anonymous, "POST", {"edital_ids": ["E-HTTP"]})[0] == 401
+        assert request(anonymous, "reconciliar.php", "POST", {"edital_ids": ["E-HTTP"]})[0] == 401
+        assert snapshot() == initial
         unauthorized = client("AUDIENCIA")
-        status, body = request(unauthorized, "POST", {"edital_ids": ["E-HTTP"]})
+        status, body = request(unauthorized, "reconciliar.php", "POST", {"edital_ids": ["E-HTTP"]})
         assert status == 403, (status, body.decode(errors="replace"))
+        assert snapshot() == initial
         cartorio = client("SERVIDOR-CARTORIO")
-        assert request(cartorio, "GET")[0] == 403
-        assert request(cartorio, "POST", {"edital_ids": ["E-HTTP"]}, None)[0] == 403
-        assert request(cartorio, "POST", {"edital_ids": ["E-HTTP"]}, "http://evil.invalid")[0] == 403
-        with closing(sqlite3.connect(db_path)) as db:
-            assert db.execute("SELECT COUNT(*) FROM editais_subtarefas").fetchone()[0] == 0
-        status, payload = request(cartorio, "POST", {"edital_ids": ["E-HTTP"]})
+        status, payload = request(cartorio, "list.php", "GET")
+        assert status == 200, (status, payload.decode(errors="replace"))
+        assert isinstance(json.loads(payload).get("data"), list)
+        assert snapshot() == initial, "GET list alterou feriados, editais ou subtarefas"
+        assert request(cartorio, "reconciliar.php", "GET")[0] == 403
+        assert snapshot() == initial
+        assert request(cartorio, "reconciliar.php", "POST", {"edital_ids": ["E-HTTP"]}, None)[0] == 403
+        assert snapshot() == initial
+        assert request(cartorio, "reconciliar.php", "POST", {"edital_ids": ["E-HTTP"]}, "http://evil.invalid")[0] == 403
+        assert snapshot() == initial
+        status, payload = request(cartorio, "reconciliar.php", "POST", {"edital_ids": ["E-HTTP"]})
         assert status == 200, (status, payload.decode(errors="replace"))
         parsed = json.loads(payload)
         assert parsed.get("success") is True, parsed
         with closing(sqlite3.connect(db_path)) as db:
             assert db.execute("SELECT COUNT(*) FROM editais_subtarefas WHERE edital_id='E-HTTP'").fetchone()[0] == 2
-        print("PASS REI-114 HTTP: sessão/guard, método, origem, recusa sem escrita e reconciliação autorizada (SQLite sintético)")
+        print("PASS REI-114 HTTP: listagem GET sem efeitos, guards/método/origem, recusas sem alteração e reconciliação autorizada (SQLite sintético)")
     finally:
         server.terminate()
         try:
@@ -193,6 +206,6 @@ return true;
             server.stdout.close()
         if server.stderr:
             log = server.stderr.read().decode(errors="replace")
-            if "Fatal error" in log or "REI114 synthetic failure:" in log:
+            if "Fatal error" in log:
                 print("PHP server log:\n" + log)
             server.stderr.close()
