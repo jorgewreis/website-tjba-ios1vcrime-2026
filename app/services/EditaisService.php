@@ -194,10 +194,6 @@ final class EditaisService
             throw new InvalidArgumentException('Edital da subtarefa não identificado.');
         }
 
-        if ($dadosJson !== null && $dadosJson !== '') {
-            $this->subtarefasRepository->atualizarDadosEspecificos($subtarefaId, $dadosJson);
-        }
-
         if ($ordem === EditaisSubtarefasRepository::ORDEM_PUBLICACAO) {
             $dadosArray = [];
             if ($dadosJson !== null && $dadosJson !== '') {
@@ -232,6 +228,12 @@ final class EditaisService
 
         if ($ordem === EditaisSubtarefasRepository::ORDEM_DECURSO) {
             $this->validarDecursoParaCertificacao($editalId);
+        }
+
+        // Persist submitted metadata only after all business validation has passed.
+        // The API wraps this transition and dashboard registration in one transaction.
+        if ($dadosJson !== null && $dadosJson !== '') {
+            $this->subtarefasRepository->atualizarDadosEspecificos($subtarefaId, $dadosJson);
         }
 
         $this->subtarefasRepository->atualizarStatus($subtarefaId, 'concluida');
