@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0162
+
+**Data:** 2026-11-16 05:11:34 | **Commit:** `4159489f` | **Tipo:** `patch`
+
+- fix: track reviewed SQL migrations
+
 ## V. 1.87.0161
 
 **Data:** 2026-11-16 03:17:38 | **Commit:** `1c469531` | **Tipo:** `patch`
@@ -6393,6 +6399,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
