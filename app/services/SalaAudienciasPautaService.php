@@ -195,6 +195,10 @@ final class SalaAudienciasPautaService
             $classeId = null;
             $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
             $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+            // O texto de fallback do DataJud representa ausência, não uma classe.
+            if (preg_match('/^classe\s+n[aã]o\s+informada$/iu', $classeDescricao) === 1) {
+                $classeDescricao = '';
+            }
             if ($classeDescricao !== '' || $classeCodigo !== '') {
                 if ($classeCodigo === '') {
                     $classeCodigo = strtoupper(substr(md5($classeDescricao), 0, 10));

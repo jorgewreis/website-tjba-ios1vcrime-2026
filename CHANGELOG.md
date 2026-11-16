@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0139
+
+**Data:** 2026-11-15 22:21:10 | **Commit:** `353adb7a` | **Tipo:** `patch`
+
+- fix: recuperar cadastro de audiencia apos validacao
+
 ## V. 1.87.0138
 
 **Data:** 2026-11-15 22:11:40 | **Commit:** `1789df7d` | **Tipo:** `patch`
@@ -6255,6 +6261,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

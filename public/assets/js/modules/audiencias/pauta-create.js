@@ -127,28 +127,47 @@
     setupDataMinimaAudiencia();
     setupLocalizacaoAudiencia();
     var btnCadastrar = document.getElementById('btn-audiencia-cadastrar');
+    var cadastrando = false;
+    var consultaClassePendente = false;
     function setCadastrarState(label, disabled) {
         if (!btnCadastrar) return;
         btnCadastrar.textContent = label;
         btnCadastrar.disabled = disabled === true;
     }
+    // O ciclo DataJud não deve restaurar um snapshot sobre uma submissão em curso.
+    // A disponibilidade da classe é verificada ao tentar cadastrar.
+    if (btnCadastrar) btnCadastrar.setAttribute('data-allow-during-loading', 'true');
     setCadastrarState('Novo cadastro', false);
-    document.getElementById('audiencia-processo')?.addEventListener('input', function () {
-        setCadastrarState('Aguarde...', true);
-    });
-    document.getElementById('audiencia-sala')?.addEventListener('input', function () {
-        setCadastrarState('Aguarde...', true);
-    });
-    window.addEventListener('cnjInvalid', function (event) {
-        var id = event && event.detail ? event.detail.inputId : '';
-        if (!id || id === 'audiencia-processo') {
-            setCadastrarState('Erro', true);
+    var processoCadastro = document.getElementById('audiencia-processo');
+    var processoAnterior = onlyDigits(processoCadastro && processoCadastro.value);
+    processoCadastro?.addEventListener('input', function () {
+        var atual = onlyDigits(processoCadastro.value);
+        if (atual === processoAnterior) return;
+        processoAnterior = atual;
+        consultaClassePendente = false;
+        // Invalida a consulta anterior antes de o validador CNJ iniciar outra.
+        if (window.DataJudCycle && typeof window.DataJudCycle.cancelPrevious === 'function') {
+            window.DataJudCycle.cancelPrevious({
+                processoInput: processoCadastro,
+                classeInput: document.getElementById('audiencia-classe'),
+                statusElement: document.getElementById('audiencia-classe-status') || document.getElementById('processo-ap-info')
+            });
+        }
+        ['audiencia-classe', 'hidden-classe-codigo', 'hidden-classe-descricao'].forEach(function (id) {
+            var campo = document.getElementById(id);
+            if (campo) campo.value = '';
+        });
+    }, true);
+    window.addEventListener('cnjValidated', function (event) {
+        var detail = event && event.detail ? event.detail : {};
+        if (!detail.inputId || detail.inputId === 'audiencia-processo') {
+            consultaClassePendente = true;
         }
     });
     window.addEventListener('datajudClasseResolved', function (event) {
         var detail = event && event.detail ? event.detail : {};
         if (!detail.processoInputId || detail.processoInputId === 'audiencia-processo') {
-            setCadastrarState('Cadastrar', false);
+            consultaClassePendente = false;
         }
     });
 
@@ -217,50 +236,53 @@
     });
 
     document.getElementById('btn-audiencia-cadastrar')?.addEventListener('click', function () {
-        setCadastrarState('Aguarde...', true);
+        if (cadastrando) return;
         var processo = requiredValue('audiencia-processo', 'Numero do processo');
-        if (!processo) { setCadastrarState('Erro', true); return; }
+        if (!processo) return;
         var cnjResult = typeof window.normalizeAndValidateCNJValue === 'function'
             ? window.normalizeAndValidateCNJValue(processo, { toastOnInvalid: true })
             : { ok: onlyDigits(processo).length === 20, formatted: processo };
         if (!cnjResult.ok) {
             notifyByKey('audiencias.validation.process.invalid', {}, 'error', 'Validacao', 'Número do processo inválido. Informe no padrão CNJ.');
-            setCadastrarState('Erro', true);
             return;
         }
         processo = String(cnjResult.formatted || processo).trim();
         var processoInput = document.getElementById('audiencia-processo');
         if (processoInput) processoInput.value = processo;
         var tipoRaw = requiredValue('audiencia-tipo', 'Tipo de audiencia');
-        if (!tipoRaw) { setCadastrarState('Erro', true); return; }
+        if (!tipoRaw) return;
         var tipoSelect = document.getElementById('audiencia-tipo');
         var tipo = tipoSelect && tipoSelect.options && tipoSelect.selectedIndex >= 0
             ? String(tipoSelect.options[tipoSelect.selectedIndex].text || '').trim()
             : tipoRaw;
-        if (!tipo) { setCadastrarState('Erro', true); return; }
+        if (!tipo) return;
         var data = requiredValue('audiencia-data', 'Data');
-        if (!data) { setCadastrarState('Erro', true); return; }
+        if (!data) return;
         var minData = String(document.getElementById('audiencia-data')?.getAttribute('min') || '').trim();
         if (minData && data < minData) {
             notifyByKey('audiencias.validation.date.before.today', {}, 'error', 'Validacao', 'A data da audiência não pode ser anterior a hoje.');
-            setCadastrarState('Erro', true);
             return;
         }
         var hora = requiredValue('audiencia-hora', 'Hora');
-        if (!hora) { setCadastrarState('Erro', true); return; }
+        if (!hora) return;
         var sala = requiredValue('audiencia-sala', 'Localizacao');
-        if (!sala) { setCadastrarState('Erro', true); return; }
+        if (!sala) return;
         var status = String(document.getElementById('audiencia-status')?.value || 'designada').trim();
         var classeCodigo = String(document.getElementById('hidden-classe-codigo')?.value || '').trim();
         var classeDescricaoHidden = String(document.getElementById('hidden-classe-descricao')?.value || '').trim();
         var classeDescricaoCampo = String(document.getElementById('audiencia-classe')?.value || '').trim();
         var classeDescricao = classeDescricaoHidden || classeDescricaoCampo;
-        if (!classeDescricao) {
+        if (/^classe\s+n[aã]o\s+informada$/iu.test(classeDescricao)) {
+            classeDescricao = '';
+        }
+        var classeInput = document.getElementById('audiencia-classe');
+        if (consultaClassePendente || (classeInput && classeInput.getAttribute('aria-busy') === 'true')) {
             notifyByKey('audiencias.validation.class.required', {}, 'error', 'Validacao', 'Informe: Classe (aguarde o DataJud finalizar o preenchimento automático).');
-            setCadastrarState('Erro', true);
             return;
         }
 
+        cadastrando = true;
+        setCadastrarState('Aguarde...', true);
         fetch('/api/sala-audiencias-pauta/create.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -291,11 +313,13 @@
                     window.location.href = '/frame.php?page=salapauta';
                 } else {
                     notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao cadastrar audiência.');
+                    cadastrando = false;
                     setCadastrarState('Novo cadastro', false);
                 }
             })
             .catch(function () {
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
+                cadastrando = false;
                 setCadastrarState('Novo cadastro', false);
             });
     });
