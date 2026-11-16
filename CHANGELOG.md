@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0167
+
+**Data:** 2026-11-16 15:43:02 | **Commit:** `ae959e86` | **Tipo:** `patch`
+
+- test: cover pauta rollback on isolated MySQL REI-88
+
 ## V. 1.87.0166
 
 **Data:** 2026-11-16 15:18:32 | **Commit:** `3b01d3e9` | **Tipo:** `patch`
@@ -6423,6 +6429,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
