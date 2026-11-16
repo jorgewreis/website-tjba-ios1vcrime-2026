@@ -51,8 +51,7 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "mkdir -p \"${DEV_PATH}\" && echo \"Diretório OK: ${DEV_PATH}\""
 
-      # Se composer falhar com "Permission denied" em vendor: no servidor, rode uma vez:
-      #   sudo chown -R DEPLOY_USER: DEV_PATH
+      # Em caso de permissão negada, siga o diagnóstico pontual em DEPLOY-SETUP.md.
       - name: Sync files to server (DEV)
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}

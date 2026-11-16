@@ -26,11 +26,26 @@ Os **secrets** (`DEPLOY_USER`, `DEV_PATH`, `PROD_PATH`) não podem ser lidos no 
    - No **CloudPanel**: é o usuário do site (ex.: `clp_abc123`), que aparece em Sites → seu site → usuário/detalhes.  
    - Ou conecte por SSH com a chave do deploy e rode `whoami` — o resultado é o `DEPLOY_USER`.
 
-2. **Caminho do site (`DEV_PATH` e `PROD_PATH`)**  
-   São os diretórios no servidor onde o código de cada ambiente deve ficar.  
-   - No **CloudPanel**: Sites → seu site → **Document Root** ou caminho do site (ex.: `/home/clp_abc123/htdocs/ios1vcrime`).  
-   - Para `DEV_PATH`, use o document root do `dev.ios1vcrime.com.br`.
-   - Para `PROD_PATH`, use o document root do `ios1vcrime.com.br`.
+2. **Diretório da aplicação (`DEV_PATH` e `PROD_PATH`)**
+   Os dois workflows sincronizam a raiz do repositório nesses destinos, cada
+   ambiente no seu diretório. Esses valores são a raiz da aplicação, **não**
+   necessariamente o Document Root. Por exemplo, se `PROD_PATH` for
+   `/srv/ios1vcrime`, a raiz pública planejada é `/srv/ios1vcrime/public`.
+   Aplique a mesma relação ao ambiente DEV, com caminhos separados.
+
+   No painel e na configuração efetiva do servidor web, verifique que o
+   Document Root aponta para o subdiretório `public/` da aplicação correspondente.
+   Arquivos como `.env`, `config/`, `app/`, `database/`, `scripts/` e `vendor/`
+   devem ficar fora da raiz pública. Confirme regras de roteamento, aliases,
+   links simbólicos, acesso a arquivos ocultos e permissões do processo PHP;
+   mudar apenas o painel ou o secret não comprova essa separação.
+
+   **Não altere caminhos ou configuração de produção apenas com base neste
+   exemplo.** Antes de qualquer mudança, identifique destino e Document Root
+   efetivos por ambiente, revise efeitos em sessão, assets, uploads e rollback,
+   teste com arquivos sintéticos em ambiente isolado e use o procedimento de
+   implantação autorizado. Se estiverem apontando ao mesmo diretório, trate como
+   risco a investigar, não como prova de exposição ou de correção automática.
 
 ---
 

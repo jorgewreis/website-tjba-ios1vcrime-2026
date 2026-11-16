@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0149
+
+**Data:** 2026-11-15 23:51:30 | **Commit:** `956c61fb` | **Tipo:** `patch`
+
+- docs: separar raiz publica do destino de deploy
+
 ## V. 1.87.0148
 
 **Data:** 2026-11-15 23:19:51 | **Commit:** `2acdbc0d` | **Tipo:** `patch`
@@ -6315,6 +6321,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
