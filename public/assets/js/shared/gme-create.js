@@ -107,9 +107,13 @@
         const processoInput = global.document.getElementById(settings.processInputId || 'filter-processo');
         const classeInput = global.document.getElementById(settings.classInputId || 'filter-classe');
         let lastSuggestionNome = '';
+        let escolhaNovo = null;
+        let nomeConsultado = null;
+        let reusProcessoConsultado = '';
         let isSubmitting = false;
         let reusRequestVersion = 0;
         let suggestionRequestVersion = 0;
+        let suggestionPending = false;
         let activeProcessDigits = onlyDigits(processoInput?.value || '');
 
         const applyButtonState = function (label, disabled) {
@@ -146,7 +150,7 @@
                 applyButtonState('Novo cadastro', true);
                 return;
             }
-            if (!hasReuFilled()) {
+            if (suggestionPending || !hasReuFilled()) {
                 applyButtonState('Novo cadastro', true);
                 return;
             }
@@ -158,6 +162,7 @@
         function showReuInput() {
             if (reuSelect) {
                 reuSelect.style.display = 'none';
+                reuSelect.required = false;
                 reuSelect.innerHTML = '';
                 reuSelect.value = '';
             }
@@ -168,11 +173,21 @@
             syncRegisterButtonState();
         }
 
+        function addEscolhaInicial(select) {
+            const placeholder = global.document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Selecione uma pessoa';
+            placeholder.disabled = true;
+            placeholder.selected = true;
+            select.appendChild(placeholder);
+        }
+
         function showReuSelect(reus) {
             if (!reuSelect || !reuNome) {
                 return;
             }
             reuSelect.innerHTML = '';
+            addEscolhaInicial(reuSelect);
             reus.forEach(function (reu) {
                 const option = global.document.createElement('option');
                 option.value = reu.id ? ('processo_parte:' + reu.id) : '';
@@ -183,6 +198,8 @@
             outro.value = 'outro';
             outro.textContent = 'Outro';
             reuSelect.appendChild(outro);
+            reuSelect.value = '';
+            reuSelect.required = true;
             reuSelect.style.display = '';
             reuNome.style.display = 'none';
             reuNome.required = false;
@@ -195,21 +212,51 @@
                 return;
             }
             reuSelect.innerHTML = '';
+            addEscolhaInicial(reuSelect);
             pessoas.forEach(function (pessoa) {
                 const option = global.document.createElement('option');
                 option.value = pessoa.id ? ('parte:' + pessoa.id) : '';
                 let label = (pessoa.nome_completo || '').trim();
                 if ((pessoa.cpf || '').replace(/\D/g, '').length === 11) {
-                    label += ' - ' + formatCpfDisplay(pessoa.cpf);
+                    label += ' - CPF: ' + formatCpfDisplay(pessoa.cpf);
+                } else {
+                    label += ' - CPF não informado';
                 }
+                const profissao = String(pessoa.profissao_exibicao || '').trim();
+                const lotacao = String(pessoa.lotacao_exibicao || '').trim();
+                if (profissao) label += ' - ' + profissao;
+                if (lotacao) label += ' - ' + lotacao;
                 option.textContent = label || pessoa.id;
                 reuSelect.appendChild(option);
             });
             const novo = global.document.createElement('option');
             novo.value = '__novo__';
-            novo.textContent = 'Cadastrar novo: ' + (nomeDigitado || '');
+            novo.textContent = 'Usar nome informado: ' + (nomeDigitado || '');
             reuSelect.appendChild(novo);
             lastSuggestionNome = nomeDigitado || '';
+            reuSelect.value = '';
+            reuSelect.required = true;
+            reuSelect.style.display = '';
+            reuNome.style.display = 'none';
+            reuNome.required = false;
+            syncRegisterButtonState();
+        }
+
+        function mostrarEscolhaAposFalha(nome) {
+            if (!reuSelect || !reuNome) return;
+            reuSelect.innerHTML = '';
+            addEscolhaInicial(reuSelect);
+            const repetir = global.document.createElement('option');
+            repetir.value = '__repetir__';
+            repetir.textContent = 'Tentar consulta novamente';
+            reuSelect.appendChild(repetir);
+            const usarNome = global.document.createElement('option');
+            usarNome.value = '__novo__';
+            usarNome.textContent = 'Usar nome informado: ' + nome;
+            reuSelect.appendChild(usarNome);
+            lastSuggestionNome = nome;
+            reuSelect.value = '';
+            reuSelect.required = true;
             reuSelect.style.display = '';
             reuNome.style.display = 'none';
             reuNome.required = false;
@@ -239,8 +286,10 @@
             }
             const requestedDigits = onlyDigits(numeroFormatado);
             if (requestedDigits.length !== 20 || requestedDigits !== onlyDigits(processoInput?.value || '')) return;
+            reusProcessoConsultado = requestedDigits;
             const requestVersion = ++reusRequestVersion;
             suggestionRequestVersion++;
+            suggestionPending = false;
             const requestIsCurrent = function () {
                 return requestVersion === reusRequestVersion && requestedDigits === onlyDigits(processoInput?.value || '');
             };
@@ -276,11 +325,12 @@
                 })
                 .then(function (data) {
                     if (!requestIsCurrent()) return;
+                    if (!data || !Array.isArray(data.reus)) throw new Error('Resposta inválida ao carregar réus.');
                     if (reuNome) {
                         reuNome.placeholder = 'Digite o nome completo';
                         reuNome.disabled = false;
                     }
-                    const reus = (data && data.reus) ? data.reus : [];
+                    const reus = data.reus;
                     if (reus.length > 0) {
                         showReuSelect(reus);
                     } else {
@@ -292,6 +342,7 @@
                 })
                 .catch(function (error) {
                     if (!requestIsCurrent()) return;
+                    reusProcessoConsultado = '';
                     if (reuNome) {
                         reuNome.placeholder = 'Digite o nome completo';
                         reuNome.disabled = false;
@@ -308,7 +359,7 @@
                 return;
             }
             const processo = processoInput?.value?.trim() || '';
-            if (processo) {
+            if (processo && onlyDigits(processo) !== reusProcessoConsultado) {
                 carregarReus(processo);
             }
             syncRegisterButtonState();
@@ -321,15 +372,19 @@
         if (reuSelect) {
             reuSelect.addEventListener('change', function () {
                 suggestionRequestVersion++;
-                if (this.value === 'outro' || this.value === '__novo__') {
+                suggestionPending = false;
+                escolhaNovo = this.value === '__novo__' ? { nome: lastSuggestionNome, processo: onlyDigits(processoInput?.value || '') } : null;
+                if (this.value === 'outro' || this.value === '__novo__' || this.value === '__repetir__') {
                     reuSelect.style.display = 'none';
+                    reuSelect.required = false;
                     if (reuNome) {
-                        if (this.value === '__novo__') {
+                        if (this.value === '__novo__' || this.value === '__repetir__') {
                             reuNome.value = lastSuggestionNome;
                         }
                         reuNome.style.display = '';
                         reuNome.required = true;
                         reuNome.focus();
+                        if (this.value === '__repetir__') buscarSugestoes();
                     }
                 } else if (this.value !== '' && reuNome) {
                     reuNome.style.display = 'none';
@@ -341,10 +396,15 @@
 
         if (reuNome) {
             reuNome.addEventListener('input', function () {
+                if (escolhaNovo && (reuNome.value || '').trim() !== escolhaNovo.nome) escolhaNovo = null;
+                if (nomeConsultado && (reuNome.value || '').trim() !== nomeConsultado.nome) nomeConsultado = null;
                 suggestionRequestVersion++;
+                suggestionPending = false;
                 syncRegisterButtonState();
             });
-            reuNome.addEventListener('blur', function () {
+        }
+
+        function buscarSugestoes() {
                 let nome = (reuNome.value || '').trim();
                 if (App.ProperNameHelper && typeof App.ProperNameHelper.formatProper === 'function') {
                     nome = App.ProperNameHelper.formatProper(nome, 255);
@@ -357,36 +417,66 @@
                 if (nome.length < 2) {
                     return;
                 }
+                if (escolhaNovo && escolhaNovo.nome === nome && escolhaNovo.processo === onlyDigits(processoInput?.value || '')) return;
+                if (nomeConsultado && nomeConsultado.nome === nome && nomeConsultado.processo === onlyDigits(processoInput?.value || '')) return;
                 if (reuSelect && reuSelect.style.display !== 'none' && reuSelect.value && reuSelect.value !== 'outro' && reuSelect.value !== '__novo__') {
                     return;
                 }
                 const suggestionVersion = ++suggestionRequestVersion;
+                suggestionPending = true;
+                syncRegisterButtonState();
                 const requestedProcess = onlyDigits(processoInput?.value || '');
-                fetch(settings.searchPeopleEndpoint + '?nome=' + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin' })
-                    .then(function (response) { return response.json(); })
+                const suggestionController = new AbortController();
+                let suggestionTimer;
+                Promise.race([
+                    fetch(settings.searchPeopleEndpoint + '?nome=' + encodeURIComponent(nome) + '&limit=20', { credentials: 'same-origin', signal: suggestionController.signal })
+                        .then(function (response) {
+                            if (!response.ok) throw new Error('Não foi possível consultar as pessoas.');
+                            return response.json();
+                        }),
+                    new Promise(function (_, reject) {
+                        suggestionTimer = setTimeout(function () {
+                            suggestionController.abort();
+                            reject(new Error('Tempo limite da consulta de pessoas.'));
+                        }, 10000);
+                    })
+                ])
                     .then(function (data) {
                         if (suggestionVersion !== suggestionRequestVersion
                             || nome !== (reuNome.value || '').trim()
                             || requestedProcess !== onlyDigits(processoInput?.value || '')
                             || reuNome.disabled || reuNome.style.display === 'none') return;
-                        const pessoas = (data && data.pessoas) ? data.pessoas : [];
+                        suggestionPending = false;
+                        if (!data || !Array.isArray(data.pessoas)) throw new Error('Resposta inválida ao buscar pessoas.');
+                        const pessoas = data.pessoas;
                         if (pessoas.length > 0) {
                             showReuSelectSugestoes(pessoas, nome);
+                        } else {
+                            nomeConsultado = { nome: nome, processo: requestedProcess };
+                            syncRegisterButtonState();
                         }
                     })
                     .catch(function () {
-                        // noop
-                    });
-            });
+                        if (suggestionVersion !== suggestionRequestVersion) return;
+                        suggestionPending = false;
+                        notify('error', 'Consulta de pessoas', 'Não foi possível consultar sugestões. Tente novamente ou confirme o nome informado.');
+                        mostrarEscolhaAposFalha(nome);
+                    })
+                    .finally(function () { clearTimeout(suggestionTimer); });
         }
+        if (reuNome) reuNome.addEventListener('blur', buscarSugestoes);
 
         if (processoInput) {
             processoInput.addEventListener('input', function () {
                 const digits = onlyDigits(processoInput.value || '');
                 if (digits !== activeProcessDigits) {
                     activeProcessDigits = digits;
+                    escolhaNovo = null;
+                    nomeConsultado = null;
+                    reusProcessoConsultado = '';
                     reusRequestVersion++;
                     suggestionRequestVersion++;
+                    suggestionPending = false;
                     showReuInput();
                     if (reuNome) {
                         reuNome.value = '';
@@ -405,8 +495,12 @@
         global.addEventListener('cnjInvalid', function (event) {
             const id = event && event.detail ? event.detail.inputId : '';
             if (!id || id === 'filter-processo' || id === 'gab-mon-processo') {
+                reusProcessoConsultado = '';
+                nomeConsultado = null;
+                escolhaNovo = null;
                 reusRequestVersion++;
                 suggestionRequestVersion++;
+                suggestionPending = false;
                 showReuInput();
                 if (reuNome) {
                     reuNome.disabled = false;
@@ -460,6 +554,15 @@
             const reuInputEl = reuNome;
             const reuSelecionado = reuSelectEl && reuSelectEl.style.display !== 'none' ? ((reuSelectEl.value || '').trim()) : '';
             const nomeLivre = reuInputEl?.value?.trim() || '';
+
+            const processoAtual = onlyDigits(processo);
+            const nomeConfirmado = [escolhaNovo, nomeConsultado].some(function (item) {
+                return item && item.nome === nomeLivre && item.processo === processoAtual;
+            });
+            if (!reuSelecionado && nomeLivre.length >= 2 && !nomeConfirmado) {
+                buscarSugestoes();
+                return;
+            }
 
             if (!hasReuFilled()) {
                 notifyByKey('gme.monitoring.validation.reu.required', {}, 'error', 'Validação', 'Informe o nome completo do réu.');

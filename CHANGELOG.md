@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0163
+
+**Data:** 2026-11-16 05:24:56 | **Commit:** `db9327cb` | **Tipo:** `patch`
+
+- fix: require explicit monitoring person selection
+
 ## V. 1.87.0162
 
 **Data:** 2026-11-16 05:11:34 | **Commit:** `4159489f` | **Tipo:** `patch`
@@ -6399,6 +6405,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
