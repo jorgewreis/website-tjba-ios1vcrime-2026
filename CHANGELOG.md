@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0166
+
+**Data:** 2026-11-16 13:32:36 | **Commit:** `5f59cc3c` | **Tipo:** `patch`
+
+- test(auth): cover revoked session on priorities API
+
 ## V. 1.87.0165
 
 **Data:** 2026-11-16 12:39:09 | **Commit:** `58c2d681` | **Tipo:** `patch`
@@ -6417,6 +6423,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -37,7 +37,7 @@ final class Conection {
     }
 }
 PHP);
-    $put('config/security.php', '<?php final class Security { public static function isAuthenticated(): bool { return getenv("TEST_AUTH") === "1"; } }');
+    $put('config/security.php', '<?php final class Security { public static function isAuthenticated(): bool { return getenv("TEST_AUTH") === "1" && getenv("TEST_SESSION_TOKEN_ACTIVE") === "1"; } }');
     $put('app/helpers/UsuarioPerfisAutorizacao.php', '<?php final class UsuarioPerfisAutorizacao { public static function perfisDoUsuario(string $id): array { return [getenv("TEST_PROFILE")]; } }');
     $put('app/repositories/SalaAudienciasPautaParteRepository.php', <<<'PHP'
 <?php
@@ -68,6 +68,8 @@ PHP);
     $cases = [
         // Listagem de edição: somente usuários com salapautaedit.
         ['prioridades-list.php', '0', 'SERVIDOR-AUDIENCIAS', 'GET', 'http://example.invalid', ['processo_id' => 'P1'], 401, false, false],
+        // Token presente na sessão, mas já revogado no verificador sintético.
+        ['prioridades-list.php', '1', 'SERVIDOR-AUDIENCIAS', 'GET', 'http://example.invalid', ['processo_id' => 'P1'], 401, false, false, true, false],
         ['prioridades-list.php', '1', 'CONSULTOR', 'GET', 'http://example.invalid', ['processo_id' => 'P1'], 403, false, false],
         ['prioridades-list.php', '1', 'SERVIDOR-CARTORIO', 'GET', 'http://example.invalid', ['processo_id' => 'P1'], 403, false, false],
         ['prioridades-list.php', '1', 'SERVIDOR-AUDIENCIAS', 'POST', 'http://example.invalid', ['processo_id' => 'P1'], 405, false, false],
@@ -92,12 +94,13 @@ PHP);
     foreach ($cases as $case) {
         [$endpoint, $auth, $profile, $method, $origin, $query, $expected, $connectionExpected, $dispatchExpected] = array_slice($case, 0, 9);
         $processExists = $case[9] ?? true;
+        $sessionTokenActive = $case[10] ?? true;
         $dbMarker = $root . '/db-marker';
         $dispatchMarker = $root . '/dispatch-marker';
         foreach ([$dbMarker, $dispatchMarker] as $marker) if (is_file($marker)) unlink($marker);
         $path = $root . '/public/api/processos/' . $endpoint;
         $payload = $endpoint === 'prioridades-remove.php' ? $query : [];
-        $code = 'putenv(' . var_export('TEST_AUTH=' . $auth, true) . '); putenv(' . var_export('TEST_PROFILE=' . $profile, true) . '); putenv(' . var_export('TEST_PROCESS_EXISTS=' . ($processExists ? '1' : '0'), true) . '); putenv(' . var_export('TEST_DB_MARKER=' . $dbMarker, true) . '); putenv(' . var_export('TEST_DISPATCH_MARKER=' . $dispatchMarker, true) . '); $_SESSION=["id_usuario"=>"synthetic"]; $_SERVER["REQUEST_METHOD"]=' . var_export($method, true) . '; $_SERVER["HTTP_HOST"]="example.invalid"; $_SERVER["HTTP_ORIGIN"]=' . var_export($origin, true) . '; $_GET=' . var_export($query, true) . '; $_POST=' . var_export($payload, true) . '; http_response_code(200); register_shutdown_function(function(){fwrite(STDERR,"HTTP:".http_response_code());}); require ' . var_export($path, true) . ';';
+        $code = 'putenv(' . var_export('TEST_AUTH=' . $auth, true) . '); putenv(' . var_export('TEST_SESSION_TOKEN_ACTIVE=' . ($sessionTokenActive ? '1' : '0'), true) . '); putenv(' . var_export('TEST_PROFILE=' . $profile, true) . '); putenv(' . var_export('TEST_PROCESS_EXISTS=' . ($processExists ? '1' : '0'), true) . '); putenv(' . var_export('TEST_DB_MARKER=' . $dbMarker, true) . '); putenv(' . var_export('TEST_DISPATCH_MARKER=' . $dispatchMarker, true) . '); $_SESSION=["id_usuario"=>"synthetic","token"=>"synthetic-revocable-token"]; $_SERVER["REQUEST_METHOD"]=' . var_export($method, true) . '; $_SERVER["HTTP_HOST"]="example.invalid"; $_SERVER["HTTP_ORIGIN"]=' . var_export($origin, true) . '; $_GET=' . var_export($query, true) . '; $_POST=' . var_export($payload, true) . '; http_response_code(200); register_shutdown_function(function(){fwrite(STDERR,"HTTP:".http_response_code());}); require ' . var_export($path, true) . ';';
         $proc = proc_open([PHP_BINARY, '-r', $code], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (!is_resource($proc)) throw new RuntimeException('Falha ao iniciar PHP.');
         fclose($pipes[0]); $out = stream_get_contents($pipes[1]); $err = stream_get_contents($pipes[2]); fclose($pipes[1]); fclose($pipes[2]); $status = proc_close($proc);
