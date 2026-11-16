@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0128
+
+**Data:** 2026-11-15 21:28:46 | **Commit:** `7dfe4acd` | **Tipo:** `patch`
+
+- docs: corrigir orientacao de permissoes de deploy
+
 ## V. 1.87.0127
 
 **Data:** 2026-11-15 11:21:09 | **Commit:** `2cfddb29` | **Tipo:** `patch`
@@ -6189,6 +6195,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

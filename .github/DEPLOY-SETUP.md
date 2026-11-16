@@ -13,7 +13,7 @@ retirada não revoga acessos nem apaga o histórico. É necessário substituir a
 chave autorizada no servidor, atualizar `DEPLOY_KEY_B64` e só então revogar a
 chave anterior, após confirmar que o novo acesso funciona.
 
-Se o workflow **Sync files to server** falhar com `rsync: [receiver] open "..." failed: Permission denied (13)`, o usuário de deploy não tem permissão de escrita no diretório do site no servidor.
+Se o workflow **Sync files to server** falhar com `rsync: [receiver] open "..." failed: Permission denied (13)`, investigue o acesso do usuário de deploy ao caminho indicado no erro e aos seus diretórios ancestrais.
 
 Os **secrets** (`DEPLOY_USER`, `DEV_PATH`, `PROD_PATH`) não podem ser lidos no GitHub depois de salvos. Use as dicas abaixo para saber qual usuário e caminho usar.
 
@@ -34,27 +34,41 @@ Os **secrets** (`DEPLOY_USER`, `DEV_PATH`, `PROD_PATH`) não podem ser lidos no 
 
 ---
 
-## Correção (uma vez no servidor)
+## Diagnóstico e correção pontual de permissões
 
-Conecte-se ao servidor por **SSH como root** (ou com um usuário que possa usar `chown`) e rode:
+Confirme o ambiente, o caminho efetivo do deploy e o arquivo indicado no log.
+O document root informado pelo painel pode não ser o diretório usado no secret.
+Identifique também o usuário do pool PHP e as permissões necessárias à aplicação.
+Não altere recursivamente a propriedade do site: `.env`, `storage/` e outros
+dados persistentes podem ter proprietários e necessidades diferentes do código.
 
-```bash
-chown -R USUARIO_DE_DEPLOY: CAMINHO_DO_SITE
-```
-
-- **USUARIO_DE_DEPLOY**: o usuário que você identificou acima (ex.: `clp_abc123`).  
-- **CAMINHO_DO_SITE**: o caminho completo do site (ex.: `/home/clp_abc123/htdocs/ios1vcrime`).  
-- O `:` após o usuário usa o grupo padrão desse usuário (geralmente o mesmo nome).
-
-### Exemplo (CloudPanel)
-
-Usuário do site: `clp_abc123`  
-Document root do site: `/home/clp_abc123/htdocs/ios1vcrime`
-
-Como **root** no servidor:
+Em uma sessão administrativa autorizada, use consultas somente de leitura nos
+caminhos efetivamente identificados (substitua os exemplos; não imprima `.env`):
 
 ```bash
-chown -R clp_abc123: /home/clp_abc123/htdocs/ios1vcrime
+id USUARIO_DE_DEPLOY
+namei -l -- /caminho/absoluto/do/arquivo-do-log
+stat -c '%U:%G %a %n' -- /caminho/absoluto/do/arquivo-do-log
+getfacl -p -- /caminho/absoluto/do/arquivo-do-log  # se disponível
 ```
 
-Depois disso, rode o workflow de deploy correspondente de novo; o rsync deve concluir sem "Permission denied".
+Verifique também o diretório pai: o rsync precisa atravessar os diretórios e,
+conforme a operação, escrever no arquivo e no diretório. Confira ACLs, montagem
+somente leitura e espaço disponível antes de concluir que o proprietário deve
+mudar. Para um arquivo inexistente, examine o diretório pai existente.
+
+Defina a menor correção necessária para **esse caminho**, com proprietário,
+grupo e permissões adequados à aplicação e à política do servidor. Por exemplo,
+apenas se o diagnóstico comprovar que um arquivo de código específico deve ser
+do usuário de deploy, um administrador pode ajustar aquele arquivo com
+`chown USUARIO_DE_DEPLOY -- /caminho/absoluto/do/arquivo`; isso não é uma
+correção genérica e não se aplica a `.env` ou `storage/`. Não use `-R`, não
+altere o grupo sem necessidade e registre a condição anterior para recuperação.
+
+No workflow de produção atual, `.env` é excluído do rsync e o pós-deploy ajusta
+seu proprietário para o usuário do pool PHP e o modo para `600`. Preserve esse
+contrato e o acesso do pool; não revele o conteúdo do arquivo. `storage/` também
+é excluído do rsync e deve manter sua propriedade e permissões próprias.
+Após a correção autorizada, confira novamente o caminho e o acesso necessário,
+execute o workflow correspondente e acompanhe o resultado. A execução bem-sucedida
+não substitui a verificação do funcionamento da aplicação.
