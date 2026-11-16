@@ -1,17 +1,18 @@
 <?php
 declare(strict_types=1);
-require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
-ApiAccessGuard::requireAccess(['cartasexpedidasedit'], true);
 
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CnjValidator.php';
+require_once $basePath . '/app/repositories/ProcessosRepository.php';
 require_once $basePath . '/app/services/DataJudService.php';
-require_once $basePath . '/app/services/ProcessoClasseSyncService.php';
-require_once $basePath . '/app/services/ProcessoAssuntoSyncService.php';
+require_once $basePath . '/app/services/ProcessoDataJudSyncService.php';
+
+ApiAccessGuard::requireAccess(['consultaprocessos'], true);
 
 $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
 if (!is_array($payload)) {
@@ -19,6 +20,7 @@ if (!is_array($payload)) {
 }
 
 $numero = isset($payload['numero']) ? (string) $payload['numero'] : '';
+$escritaIniciada = false;
 
 try {
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
@@ -34,56 +36,75 @@ try {
         throw new RuntimeException('Integração DataJud não configurada.');
     }
 
-    $dataJud = new DataJudService($config);
-    $classeSync = new ProcessoClasseSyncService(Conection::getInstance()->getConnection());
-    $assuntoSync = new ProcessoAssuntoSyncService(Conection::getInstance()->getConnection());
-
-    $resultadoBusca = $dataJud->searchProcesso($digits);
-    $classe = is_array($resultadoBusca['classe'] ?? null) ? $resultadoBusca['classe'] : [];
-    $assuntos = is_array($resultadoBusca['assuntos'] ?? null) ? $resultadoBusca['assuntos'] : [];
-    $classeCodigo = trim((string) ($classe['codigo'] ?? ''));
-    $classeDescricao = trim((string) ($classe['descricao'] ?? ''));
-    $classeResultado = null;
-    $assuntosResultado = null;
-
-    if ($classeCodigo !== '') {
-        $classeResultado = $classeSync->syncFromDataJud($digits, $classeCodigo, $classeDescricao);
-    }
-
-    if ($assuntos !== []) {
-        $assuntosResultado = $assuntoSync->syncFromDataJud($digits, $assuntos);
-    }
-
-    if ($classeResultado === null && $assuntosResultado === null) {
-        http_response_code(422);
-        echo json_encode([
-            'error' => 'O DataJud não retornou classe nem assuntos sincronizáveis para este processo.',
-            'sigilo_restrito' => !empty($resultadoBusca['sigilo_restrito']),
-            'indisponivel_na_base_publica' => !empty($resultadoBusca['indisponivel_na_base_publica']),
-        ], JSON_UNESCAPED_UNICODE);
+    $connection = Conection::getInstance()->getConnection();
+    if ((new ProcessosRepository($connection))->findByNumero($digits) === null) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Processo não encontrado no cadastro local.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
+
+    $resultadoBusca = (new DataJudService($config))->searchProcesso($digits);
+    if (($resultadoBusca['resultado_unico_verificado'] ?? null) !== true
+        || ($resultadoBusca['sigilo_ausencia_verificada'] ?? null) !== true) {
+        http_response_code(422);
+        echo json_encode(['error' => 'O DataJud não retornou resultado único e verificável para sincronização.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if (!empty($resultadoBusca['sigilo_restrito'])) {
+        http_response_code(422);
+        echo json_encode(['error' => 'O DataJud indica sigilo incompatível com esta sincronização.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $estadoAssuntos = $resultadoBusca['assuntos_estado'] ?? null;
+    $assuntos = $resultadoBusca['assuntos'] ?? null;
+    if (!in_array($estadoAssuntos, ['vazio', 'presente'], true)
+        || !is_array($assuntos)
+        || !array_is_list($assuntos)
+        || ($estadoAssuntos === 'vazio' && $assuntos !== [])
+        || ($estadoAssuntos === 'presente' && $assuntos === [])) {
+        http_response_code(422);
+        echo json_encode(['error' => 'O DataJud não retornou assuntos completos e verificáveis para sincronização.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $classe = is_array($resultadoBusca['classe'] ?? null) ? $resultadoBusca['classe'] : [];
+    $codigo = $classe['codigo'] ?? null;
+    $descricao = $classe['descricao'] ?? null;
+    if ($classe !== [] && (!(is_int($codigo) || is_string($codigo))
+        || !preg_match('/^[0-9]+$/D', (string) $codigo)
+        || (int) $codigo <= 0 || !is_string($descricao) || trim($descricao) === '')) {
+        http_response_code(422);
+        echo json_encode(['error' => 'O DataJud retornou classe inválida para sincronização.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($classe === [] && $assuntos === []) {
+        http_response_code(422);
+        echo json_encode(['error' => 'O DataJud não retornou classe nem assuntos sincronizáveis para este processo.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    $escritaIniciada = true;
+    $resultadoSync = (new ProcessoDataJudSyncService($connection))->sync(
+        $digits,
+        $classe === [] ? null : ['codigo' => (string) $codigo, 'descricao' => trim($descricao)],
+        $assuntos
+    );
+    $classeResultado = $resultadoSync['classe'];
+    $assuntosResultado = $resultadoSync['assuntos'];
 
     $mensagens = [];
     if ($classeResultado !== null) {
         $acaoClasse = trim((string) ($classeResultado['action'] ?? ''));
-        if ($acaoClasse === 'created') {
-            $mensagens[] = 'Classe do processo cadastrada a partir do DataJud.';
-        } elseif ($acaoClasse === 'updated') {
-            $mensagens[] = 'Classe do processo atualizada a partir do DataJud.';
-        } elseif ($acaoClasse === 'noop') {
-            $mensagens[] = 'Classe do processo já estava sincronizada.';
-        }
+        if ($acaoClasse === 'created') $mensagens[] = 'Classe do processo cadastrada a partir do DataJud.';
+        elseif ($acaoClasse === 'updated') $mensagens[] = 'Classe do processo atualizada a partir do DataJud.';
+        elseif ($acaoClasse === 'noop') $mensagens[] = 'Classe do processo já estava sincronizada.';
     }
     if ($assuntosResultado !== null) {
         $acaoAssuntos = trim((string) ($assuntosResultado['action'] ?? ''));
-        if ($acaoAssuntos === 'created') {
-            $mensagens[] = 'Assuntos do processo cadastrados a partir do DataJud.';
-        } elseif ($acaoAssuntos === 'updated') {
-            $mensagens[] = 'Assuntos do processo atualizados a partir do DataJud.';
-        } elseif ($acaoAssuntos === 'noop') {
-            $mensagens[] = 'Assuntos do processo já estavam sincronizados.';
-        }
+        if ($acaoAssuntos === 'created') $mensagens[] = 'Assuntos do processo cadastrados a partir do DataJud.';
+        elseif ($acaoAssuntos === 'updated') $mensagens[] = 'Assuntos do processo atualizados a partir do DataJud.';
+        elseif ($acaoAssuntos === 'noop') $mensagens[] = 'Assuntos do processo já estavam sincronizados.';
     }
 
     echo json_encode([
@@ -93,12 +114,27 @@ try {
         'assuntos' => $assuntosResultado,
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
+    if ($escritaIniciada) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Não foi possível confirmar a sincronização.', 'code' => 'sincronizacao_resultado_indeterminado'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (RuntimeException $e) {
+    if ($escritaIniciada) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Não foi possível confirmar a sincronização.', 'code' => 'sincronizacao_resultado_indeterminado'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     http_response_code(502);
-    echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Não foi possível consultar o DataJud.'], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    if ($escritaIniciada) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Não foi possível confirmar a sincronização.', 'code' => 'sincronizacao_resultado_indeterminado'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao sincronizar dados do processo: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Não foi possível sincronizar os dados do processo.'], JSON_UNESCAPED_UNICODE);
 }

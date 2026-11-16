@@ -245,13 +245,17 @@ final class ProcessoAssuntosRepository
             $existingRows = [];
         }
 
+        $existingAll = [];
         $existingDataJud = [];
         foreach ($existingRows as $row) {
+            $aid = trim((string) ($row['assunto_id'] ?? ''));
+            if ($aid !== '') {
+                $existingAll[$aid] = true;
+            }
             $origem = trim((string) ($row['origem'] ?? ''));
             if ($origem !== ProcessoAssuntoOrigem::DATAJUD) {
                 continue;
             }
-            $aid = trim((string) ($row['assunto_id'] ?? ''));
             if ($aid !== '') {
                 $existingDataJud[$aid] = true;
             }
@@ -262,7 +266,9 @@ final class ProcessoAssuntosRepository
             $novosMap[$id] = true;
         }
 
-        $toInsert = array_values(array_diff($novosIds, array_keys($existingDataJud)));
+        // Vínculo manual existente satisfaz a presença do assunto, mas mantém
+        // sua origem. upsert() alteraria essa origem para datajud.
+        $toInsert = array_values(array_diff($novosIds, array_keys($existingAll)));
         $toRemove = array_values(array_diff(array_keys($existingDataJud), $novosIds));
 
         $inserted = 0;

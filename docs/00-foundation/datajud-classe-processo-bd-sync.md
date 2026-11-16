@@ -24,7 +24,7 @@ Documento **canônico** do fluxo: decisões de produto, implementação, APIs, U
 
 ## Objetivo
 
-Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud-api.js`, após **20 dígitos CNJ válidos**, o sistema: lê a **classe já vinculada** em `processos`/`classes`; consulta o **DataJud**; e **sincroniza** o cadastro local quando a API externa devolve classe utilizável — **sem** depender do envio do formulário do módulo para essa gravação.
+Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud-api.js`, após **20 dígitos CNJ válidos**, o sistema lê a classe local, consulta o DataJud e sincroniza dados somente quando o processo já existe localmente e a resposta comprova CNJ exato, unicidade, metadados completos e ausência explícita de sigilo.
 
 ---
 
@@ -32,13 +32,14 @@ Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud
 
 | Tópico | Definição |
 |--------|-----------|
-| **Ordem** | CNJ válido → `classe-read` (BD) → DataJud → `classe-sync` (só se DataJud trouxe classe). |
+| **Ordem** | CNJ válido → `classe-read` local → DataJud → sincronização agregada e atômica de classe + assuntos. |
 | **Igualdade** | Comparação por **código** normalizado (`ClassesRepository::normalizeCodigo`); resposta `noop` sem toast de sucesso. |
-| **Processo novo** | `classe-sync` pode **criar** linha em `processos` com número + classe. |
+| **Processo inexistente** | A sincronização é recusada; o DataJud não cria processo. |
 | **DataJud falha** | Não chama sync; UI pode manter classe só do BD (*Classe do cadastro local*). Com classe já vinda do BD: **sem** toast de erro; só mensagem de contexto no rótulo/auxiliar. |
 | **BD com classe** | Enquanto o DataJud carrega: input em **`status-finished`**, botões **desbloqueados** (`startLoading` com `bancoPrefilled`). |
 | **BD com placeholder** | Se `classe-read` trouxer texto equivalente a **`Classe não informada`** (`DataJudCycle.FALLBACK_CLASSE`), **sem diferenciar maiúsculas/minúsculas** (ex.: “Classe Não Informada”), trata-se como **sem classe**: não preenche o input, usa placeholder de consulta ao DataJud e **`status-warning`**. |
-| **Retries** | `postSyncClasse` em `datajud-api.js`: até **3** tentativas com atraso em **rede** ou **HTTP 5xx**. O corpo da resposta é lido como **texto** e parseado com `JSON.parse` seguro; corpo inválido ou vazio **não** dispara retry (evita confundir HTML/erro de proxy com falha de rede). |
+| **Sigilo** | Gravação exige marcador explícito público (`nivelSigilo=0` ou “sem sigilo”); campo ausente ou ambíguo bloqueia a sincronização. |
+| **Retries** | Até **3** tentativas com atraso em **rede** ou **HTTP 5xx**. As escritas combinadas compartilham uma única transação no servidor. |
 | **Reconsulta** | Sem botão dedicado; novo ciclo ao **revalidar o CNJ** (`cnjValidated`). |
 | **Botão de cadastro** | Contrato único: inicia `Aguarde...` (disabled), vira `Erro` em CNJ inválido, consulta DataJud quando válido e volta para `Cadastrar` habilitado quando o DataJud finaliza (sucesso ou falha). |
 
@@ -49,7 +50,7 @@ Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud
 1. **Validação CNJ** — `cnj.js` dispara `cnjValidated` com 20 dígitos (não a cada tecla; validação estável / blur).
 2. **Leitura local** — `GET` `/api/processos/classe-read.php?numero=` (20 dígitos). Se existir classe, preenche o input (`data-preserve-banco="1"`).
 3. **Consulta DataJud** — `POST` `/api/datajud/search-processo.php`. Até **3 tentativas** em caso de timeout por tentativa, com limite **10s / 15s / 20s** (`DataJudCycle.getFetchTimeoutMs`).
-4. **Sincronização** — se a resposta DataJud tiver classe utilizável, `POST` `/api/processos/classe-sync.php`. Respostas: `noop` | `updated` | `created`.
+4. **Sincronização** — se houver classe ou assuntos utilizáveis, `POST` `/api/processos/datajud-sync.php`. O servidor reconsulta o DataJud, revalida as evidências e grava ambos na mesma transação. O endpoint `assunto-sync.php` faz sincronização somente de assuntos nas telas com classe travada.
 
 ---
 
@@ -62,9 +63,11 @@ Em telas internas com o trio `cnj.js` → `datajud-cycle-helper.js` → `datajud
 | [`app/repositories/ProcessosRepository.php`](../../app/repositories/ProcessosRepository.php) | `updateClasseForProcesso`, `ensureProcess`, `findByNumero`. |
 | [`public/api/processos/classe-read.php`](../../public/api/processos/classe-read.php) | API GET/POST leitura. |
 | [`public/api/processos/classe-sync.php`](../../public/api/processos/classe-sync.php) | API POST sync. |
+| [`public/api/processos/datajud-sync.php`](../../public/api/processos/datajud-sync.php) | Revalidação e sync atômico de classe + assuntos. |
+| [`public/api/processos/assunto-sync.php`](../../public/api/processos/assunto-sync.php) | Revalidação e sync de assuntos quando classe está travada. |
 | [`public/assets/js/modules/datajud/cnj.js`](../../public/assets/js/modules/datajud/cnj.js) | Validação CNJ e `cnjValidated`. |
 | [`public/assets/js/modules/datajud/datajud-cycle-helper.js`](../../public/assets/js/modules/datajud/datajud-cycle-helper.js) | Lock de UI, `finishSuccess` / `finishFailure`, preservação BD/`data-datajud-initial`. |
-| [`public/assets/js/modules/datajud/datajud-api.js`](../../public/assets/js/modules/datajud/datajud-api.js) | Orquestra BD → DataJud → `postSyncClasse` (retries). |
+| [`public/assets/js/modules/datajud/datajud-api.js`](../../public/assets/js/modules/datajud/datajud-api.js) | Orquestra BD → DataJud → endpoint agregado (retries). |
 Documentação de apoio: [`public/assets/js/modules/datajud/README.md`](../../public/assets/js/modules/datajud/README.md), [`docs/create-processo-classe-reu-standard.md`](../create-processo-classe-reu-standard.md).
 
 ---
@@ -73,10 +76,12 @@ Documentação de apoio: [`public/assets/js/modules/datajud/README.md`](../../pu
 
 | Endpoint | Método | Autenticação |
 |----------|--------|--------------|
-| `/api/processos/classe-read.php` | GET (`?numero=`) ou POST JSON | Sessão (`id_usuario`) |
-| `/api/processos/classe-sync.php` | POST JSON | Sessão |
+| `/api/processos/classe-read.php` | GET (`?numero=`) | Perfil `consultaprocessos`, sessão e processo local |
+| `/api/processos/classe-sync.php` | POST JSON | Perfil `consultaprocessos`, origem confiável, sessão e processo local |
+| `/api/processos/datajud-sync.php` | POST JSON | Perfil `consultaprocessos`, origem confiável, sessão e processo local |
+| `/api/processos/assunto-sync.php` | POST JSON | Perfil `consultaprocessos`, origem confiável, sessão e processo local |
 
-**Segurança (10A):** cookie de sessão + `fetch` same-origin; sem token CSRF extra neste fluxo. Reavaliar se houver falha em iframe ou política nova.
+Gravações exigem `ApiAccessGuard`, POST de origem confiável e perfil interno autorizado. O servidor ignora os valores de classe/assuntos enviados pelo navegador e valida a resposta fonte antes de persistir.
 
 ---
 
@@ -107,15 +112,15 @@ Usado quando a **classe vem do PHP** no primeiro render. O helper **não zera** 
 | # | Decisão |
 |---|---------|
 | 1 | **Escopo A:** todas as telas com trio completo (inventário canônico). |
-| 2 | **Processo inexistente A:** sync pode criar linha mínima em `processos` quando o DataJud trouxer classe. |
+| 2 | **Regra de segurança atual (REI-76):** exige processo local existente; sincronização não cria processos. |
 | 3 | **Diferença A:** comparar pelo **código** normalizado; igual → `noop`. |
 | 4 | **Bloqueio C:** trava sobretudo em **edição** quando o produto exigir (`DATAJUD_SKIP_CLASSE_SYNC`); **create** com sync normal. |
 | 5 | **Sem classe no DataJud A:** manter cadastro local quando o índice não trouxer classe. |
 | 6 | **Auditoria B:** sem log dedicado por sync. |
-| 7 | **Falha sync C:** retries automáticos limitados — **implementado** em `postSyncClasse` (`SYNC_MAX_ATTEMPTS`, rede e 5xx). |
+| 7 | **Falha sync C:** retries automáticos limitados a rede e 5xx; gravação classe + assuntos usa transação agregada. |
 | 8 | **Performance C:** disparo alinhado a `cnjValidated` (não a cada tecla). |
 | 9 | **Ambiente D:** DataJud falhou → **não** chamar sync. |
-| 10 | **Segurança A:** sessão + same-origin; sem CSRF extra até haver motivo. |
+| 10 | **Segurança atualizada (REI-76):** perfil `consultaprocessos` para sincronização DataJud; `consultaprocessosedit` para alteração manual; processo local obrigatório e ausência de sigilo explícita. |
 
 ---
 
@@ -131,7 +136,7 @@ Usado quando a **classe vem do PHP** no primeiro render. O helper **não zera** 
 
 ## Exceções de produto
 
-- Telas com `window.DATAJUD_SKIP_CLASSE_SYNC = true`: consulta DataJud e UI seguem; **POST** `classe-sync` não é enviado.
+- Telas com `window.DATAJUD_SKIP_CLASSE_SYNC = true`: consulta DataJud e UI seguem; classe é preservada e assuntos são sincronizados pelo endpoint verificado de assuntos.
 
 ---
 
