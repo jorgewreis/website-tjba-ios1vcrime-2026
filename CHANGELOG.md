@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0151
+
+**Data:** 2026-11-16 00:23:53 | **Commit:** `36c0b036` | **Tipo:** `patch`
+
+- fix: validar comarca de cartas recebidas
+
 ## V. 1.87.0150
 
 **Data:** 2026-11-16 00:09:24 | **Commit:** `51eccc0f` | **Tipo:** `patch`
@@ -6327,6 +6333,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

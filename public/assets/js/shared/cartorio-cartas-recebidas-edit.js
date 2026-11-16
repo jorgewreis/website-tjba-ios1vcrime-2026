@@ -100,6 +100,8 @@
         const statusSelect = global.document.getElementById('filter-status');
         const observacoesInput = global.document.getElementById('filter-observacoes');
         const hiddenComarcaInput = global.document.getElementById('hidden-comarca-id');
+        const lookupStatus = global.document.getElementById('comarca-lookup-status');
+        const lookupRetry = global.document.getElementById('comarca-lookup-retry');
         const voltarBtn = global.document.getElementById('voltar-btn');
         const btnCancelarTarefa = global.document.getElementById('cancelar-tarefa-btn');
         const btnExcluirTarefa = global.document.getElementById('excluir-tarefa-btn');
@@ -138,8 +140,31 @@
             return false;
         }
 
+        let lookupVersion = 0;
+        let lookupPending = false;
+        let submitting = false;
+        let validatedCity = normalizeCidade(cidadeInput.value);
+        let validatedUf = (estadoSelect.value || '').trim().toUpperCase();
+
+        function validComarca() {
+            return !!hiddenComarcaInput && !!hiddenComarcaInput.value.trim() && !lookupPending &&
+                validatedCity === normalizeCidade(cidadeInput.value) && validatedUf === (estadoSelect.value || '').trim().toUpperCase();
+        }
         function updateSalvarButton() {
-            salvarBtn.disabled = !hasChanges();
+            salvarBtn.disabled = submitting || !hasChanges() || !validComarca();
+        }
+        function showLookupStatus(message, retry) {
+            if (lookupStatus) lookupStatus.textContent = message;
+            if (lookupRetry) lookupRetry.hidden = !retry;
+        }
+        function invalidateComarca() {
+            lookupVersion++;
+            lookupPending = false;
+            validatedCity = '';
+            validatedUf = '';
+            if (hiddenComarcaInput) hiddenComarcaInput.value = '';
+            showLookupStatus('Informe a cidade e o estado e saia do campo para consultar.', false);
+            updateSalvarButton();
         }
 
         function applyCidadeFormatting() {
@@ -148,26 +173,42 @@
 
         function fetchCidadeInfo() {
             const cidade = cidadeInput.value.trim();
-            if (cidade.length < 2) return;
-            fetch(endpoints.lookupCidade || '/api/cartorio-cartas-recebidas/buscar-cidade.php?cidade=' + encodeURIComponent(cidade))
-                .then((response) => response.json())
+            const uf = (estadoSelect.value || '').trim().toUpperCase();
+            const version = ++lookupVersion;
+            if (hiddenComarcaInput) hiddenComarcaInput.value = '';
+            validatedCity = '';
+            validatedUf = '';
+            if (cidade.length < 2 || !uf) { lookupPending = false; showLookupStatus('Informe uma cidade com ao menos dois caracteres e selecione o estado.', false); updateSalvarButton(); return; }
+            lookupPending = true;
+            showLookupStatus('Consultando comarca...', false);
+            updateSalvarButton();
+            const endpoint = endpoints.lookupCidade || '/api/cartorio-cartas-recebidas/buscar-cidade.php?cidade=';
+            fetch(endpoint + encodeURIComponent(cidade) + '&uf=' + encodeURIComponent(uf))
+                .then((response) => { if (!response.ok) throw new Error('Consulta indisponível'); return response.json(); })
                 .then((data) => {
-                    if (!data || !data.found) return;
-                    if (data.uf && estadoSelect) {
-                        estadoSelect.value = data.uf;
+                    if (version !== lookupVersion || normalizeCidade(cidadeInput.value) !== normalizeCidade(cidade) || (estadoSelect.value || '').trim().toUpperCase() !== uf) return;
+                    if (!data || !data.found || !data.id || String(data.uf || '').toUpperCase() !== uf) {
+                        showLookupStatus('Cidade não encontrada neste estado. Confira os dados e consulte novamente.', true);
+                        return;
                     }
-                    const status = String(data.status_cidade || '').trim();
-                    if (status.toLowerCase() === 'agregada' && data.nome) {
+                    if (String(data.status_cidade || '').trim().toLowerCase() === 'agregada' && data.nome) {
                         cidadeInput.value = formatCidade(data.nome);
                     }
-                    if (data.id && hiddenComarcaInput) hiddenComarcaInput.value = data.id;
+                    if (hiddenComarcaInput) hiddenComarcaInput.value = data.id;
+                    validatedCity = normalizeCidade(cidadeInput.value);
+                    validatedUf = uf;
+                    showLookupStatus('Comarca identificada.', false);
                 })
-                .catch(() => {});
+                .catch(() => { if (version === lookupVersion) showLookupStatus('Não foi possível consultar a cidade. Tente novamente.', true); })
+                .finally(() => { if (version === lookupVersion) { lookupPending = false; updateSalvarButton(); } });
         }
 
+        if (lookupRetry) lookupRetry.addEventListener('click', fetchCidadeInfo);
+        cidadeInput.addEventListener('input', invalidateComarca);
+        estadoSelect.addEventListener('change', function () { invalidateComarca(); fetchCidadeInfo(); });
         cidadeInput.addEventListener('blur', function () {
             applyCidadeFormatting();
-            fetchCidadeInfo();
+            if (!validComarca()) fetchCidadeInfo();
         });
         if (App.ProperNameHelper) {
             App.ProperNameHelper.applyOnBlur(cidadeInput, 120);
@@ -204,7 +245,8 @@
             if (statusSelect) payload.status = payloadState.status || '';
             if (observacoesInput) payload.observacoes = payloadState.observacoes || '';
 
-            salvarBtn.disabled = true;
+            submitting = true;
+            updateSalvarButton();
             notifyByKey('cartorio.cartas.update.progress.info', {}, 'info', 'Informação', 'Atualizando dados...');
 
             fetch(endpoints.update || '/api/cartorio-cartas-recebidas/update.php', {
@@ -223,7 +265,8 @@
                 })
                 .catch(function (error) {
                     notify('error', 'Erro', error.message || 'Erro ao salvar.');
-                    salvarBtn.disabled = false;
+                    submitting = false;
+                    updateSalvarButton();
                 });
         });
 

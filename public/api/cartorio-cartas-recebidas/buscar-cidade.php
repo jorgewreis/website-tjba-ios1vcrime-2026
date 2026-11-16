@@ -20,7 +20,13 @@ if ($cidade === '') {
     return;
 }
 
-$row = $repo->findFirstByNomeOuCidade($cidade);
+$uf = strtoupper(trim((string) ($_GET['uf'] ?? '')));
+if ($uf !== '' && !preg_match('/^[A-Z]{2}$/', $uf)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'UF inválida.'], JSON_UNESCAPED_UNICODE);
+    return;
+}
+$row = $repo->findFirstByNomeOuCidade($cidade, $uf);
 
 if ($row === null) {
     echo json_encode(['found' => false], JSON_UNESCAPED_UNICODE);

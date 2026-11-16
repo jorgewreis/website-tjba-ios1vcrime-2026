@@ -41,19 +41,21 @@ final class ComarcasRepository
      * Busca a primeira comarca cujo nome ou cidade coincida com o termo (normalizado, sem acento).
      * Retorna ['id', 'uf', 'nome', 'cidade'] ou null.
      */
-    public function findFirstByNomeOuCidade(string $nomeOuCidade): ?array
+    public function findFirstByNomeOuCidade(string $nomeOuCidade, string $uf = ''): ?array
     {
         $term = $this->normalizeNomeCidade($nomeOuCidade);
         if ($term === '') {
             return null;
         }
 
+        $uf = strtoupper(trim($uf));
         $statement = $this->connection->prepare(
             sprintf(
-                'SELECT `id`, `tribunal_id`, `uf`, `nome`, `cidade`, `status_cidade`, `created_at`, `updated_at` FROM `%s`',
+                'SELECT `id`, `tribunal_id`, `uf`, `nome`, `cidade`, `status_cidade`, `created_at`, `updated_at` FROM `%s`' . ($uf !== '' ? ' WHERE `uf` = :uf' : ''),
                 $this->table
             )
         );
+        if ($uf !== '') { $statement->bindValue(':uf', $uf); }
         $statement->execute();
 
         while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
@@ -64,6 +66,18 @@ final class ComarcasRepository
             }
         }
         return null;
+    }
+
+    public function correspondeIdCidadeUf(string $id, string $cidade, string $uf): bool
+    {
+        if (trim($id) === '' || trim($cidade) === '' || strlen(trim($uf)) !== 2) return false;
+        $statement = $this->connection->prepare(sprintf('SELECT `uf`, `nome`, `cidade` FROM `%s` WHERE `id` = :id', $this->table));
+        $statement->bindValue(':id', trim($id));
+        $statement->execute();
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ($row === false || strtoupper(trim((string) $row['uf'])) !== strtoupper(trim($uf))) return false;
+        $term = $this->normalizeNomeCidade($cidade);
+        return $term === $this->normalizeNomeCidade((string) $row['nome']) || $term === $this->normalizeNomeCidade((string) ($row['cidade'] ?? ''));
     }
 
     private function normalizeNomeCidade(string $s): string

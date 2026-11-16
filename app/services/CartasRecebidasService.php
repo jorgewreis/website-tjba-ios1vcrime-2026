@@ -306,6 +306,18 @@ final class CartasRecebidasService
         }
         unset($payload['usuario_id'], $payload['alocar_usuario_ids']);
 
+        $camposComarca = ['comarca_origem_id', 'cidade_origem', 'uf_origem'];
+        if (array_intersect($camposComarca, array_keys($payload))) {
+            foreach ($camposComarca as $campo) {
+                if (!isset($payload[$campo]) || !is_string($payload[$campo]) || trim($payload[$campo]) === '') {
+                    throw new InvalidArgumentException('Informe comarca, cidade e UF correspondentes.');
+                }
+            }
+            if (!$this->comarcasRepository->correspondeIdCidadeUf($payload['comarca_origem_id'], $payload['cidade_origem'], $payload['uf_origem'])) {
+                throw new InvalidArgumentException('A comarca não corresponde à cidade e UF informadas.');
+            }
+        }
+
         return $this->repository->update($id, $payload);
     }
 
