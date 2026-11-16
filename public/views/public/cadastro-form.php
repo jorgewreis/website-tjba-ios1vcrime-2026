@@ -267,8 +267,8 @@ $faculdades = [
                         };
                         showToast({
                             type: 'success',
-                            title: 'Sucesso',
-                            message: data.message || 'Cadastro realizado com sucesso.'
+                            title: 'Solicitação recebida',
+                            message: data.message || 'Se os dados puderem ser processados, utilize a área de acesso ou recuperação de senha.'
                         });
                         form.reset();
                         window.setTimeout(redirectToLogin, 1800);

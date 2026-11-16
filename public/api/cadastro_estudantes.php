@@ -95,103 +95,67 @@ if (($policy = Security::validatePasswordPolicy($senha))['valid'] !== true) {
     exit;
 }
 
+// A resposta pública não confirma se o CPF já possui conta.
+$respostaCadastro = [
+    'success' => true,
+    'message' => 'Se os dados puderem ser processados, utilize a área de acesso ou recuperação de senha.',
+];
+$lockCadastroObtido = false;
+$lockCadastroNome = 'cadest:' . substr(hash('sha256', $cpfNumerico), 0, 48);
 try {
     $pdo = Conection::getInstance()->getConnection();
 
-    // Fonte única: usuários. Compara CPF ignorando máscara para evitar falso negativo por formato.
-    $stmt = $pdo->prepare("SELECT id_usuario, cadastro_ativo FROM usuarios WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? LIMIT 1");
-    $stmt->execute([$cpfNumerico]);
-    $usuarioRow = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-    $existsUsuarioCpf = $usuarioRow !== null;
-    $usuarioExistenteId = $existsUsuarioCpf ? trim((string) ($usuarioRow['id_usuario'] ?? '')) : '';
-
-    if ($existsUsuarioCpf) {
-        $stPerfis = $pdo->prepare("SELECT perfil FROM usuario_perfil WHERE usuario = ?");
-        $stPerfis->execute([$usuarioExistenteId]);
-        $perfisExistentes = array_map(
-            static fn ($p): string => strtoupper(trim((string) $p)),
-            $stPerfis->fetchAll(PDO::FETCH_COLUMN) ?: []
-        );
-
-        $isSomenteEstudante = !empty($perfisExistentes)
-            && count(array_diff($perfisExistentes, ['ESTUDANTE'])) === 0;
-        $semPerfil = empty($perfisExistentes);
-
-        if (!$isSomenteEstudante && !$semPerfil) {
-            echo json_encode([
-                'success' => false,
-                'error_code' => 'STUDENT_DUPLICATE_USUARIOS_INTERNAL',
-                'message' => 'Este CPF já está vinculado a um usuário com perfil interno/administrativo. Contate o suporte para vincular como estudante sem sobrescrever o cadastro atual.',
-            ]);
-            exit;
-        }
-
-        if ($isSomenteEstudante) {
-            echo json_encode([
-                'success' => false,
-                'error_code' => 'STUDENT_DUPLICATE_USUARIOS',
-                'message' => 'Já existe um usuário com este CPF no sistema. Utilize a área de login ou recuperação de senha.',
-            ]);
-            exit;
-        }
+    // Serializa este cadastro e a criação administrativa para o mesmo CPF.
+    $lock = $pdo->prepare('SELECT GET_LOCK(?, 5)');
+    $lock->execute([$lockCadastroNome]);
+    if ((int) $lock->fetchColumn() !== 1) {
+        throw new RuntimeException('Não foi possível iniciar o cadastro.');
     }
-
+    $lockCadastroObtido = true;
+    // Executar também para contas existentes reduz uma diferença óbvia de tempo.
+    // Isto não constitui garantia de tempo constante entre os caminhos.
+    $senhaHash = Security::hashPassword($senha);
     $pdo->beginTransaction();
 
-    $idUsuario = $usuarioExistenteId !== '' ? $usuarioExistenteId : ('USR-' . strtoupper(bin2hex(random_bytes(13))));
-    $senhaHash = Security::hashPassword($senha);
+    // Jamais altera conta existente sem um fluxo de comprovação de titularidade.
+    $stmt = $pdo->prepare("SELECT id_usuario FROM usuarios WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? LIMIT 1 FOR UPDATE");
+    $stmt->execute([$cpfNumerico]);
+    if ($stmt->fetch(PDO::FETCH_ASSOC) !== false) {
+        $pdo->rollBack();
+        echo json_encode($respostaCadastro);
+        return;
+    }
 
+    $idUsuario = 'USR-' . strtoupper(bin2hex(random_bytes(13)));
     $stHasSexo = $pdo->prepare(
         "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'sexo'"
     );
     $stHasSexo->execute();
     $hasSexoColumn = ((int) $stHasSexo->fetchColumn()) > 0;
 
-    // Fonte única em usuarios: estudante externo com instituição = faculdade informada.
-    if ($usuarioExistenteId !== '') {
-        if ($hasSexoColumn) {
-            $stmt = $pdo->prepare("
-                UPDATE usuarios
-                   SET nome = ?, sobrenome = ?, sexo = ?, data_nascimento = '-', cargo = 'Estudante', instituicao = ?,
-                       cpf = ?, telefone = ?, email = ?, senha_hash = ?, cadastro_ativo = 1, updated_at = NOW()
-                 WHERE id_usuario = ?
-                 LIMIT 1
-            ");
-            $stmt->execute([$nome, $sobrenome, $sexo, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash, $idUsuario]);
-        } else {
-            $stmt = $pdo->prepare("
-                UPDATE usuarios
-                   SET nome = ?, sobrenome = ?, data_nascimento = '-', cargo = 'Estudante', instituicao = ?,
-                       cpf = ?, telefone = ?, email = ?, senha_hash = ?, cadastro_ativo = 1, updated_at = NOW()
-                 WHERE id_usuario = ?
-                 LIMIT 1
-            ");
-            $stmt->execute([$nome, $sobrenome, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash, $idUsuario]);
-        }
+    // Somente uma conta nova é criada por este fluxo público.
+    if ($hasSexoColumn) {
+        $stmt = $pdo->prepare("
+            INSERT INTO usuarios (
+                id_usuario, nome, sobrenome, sexo, data_nascimento, cargo, instituicao, cpf, telefone, email,
+                senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
+            ) VALUES (
+                ?, ?, ?, ?, '-', 'Estudante', ?, ?, ?, ?,
+                ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
+            )
+        ");
+        $stmt->execute([$idUsuario, $nome, $sobrenome, $sexo, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash]);
     } else {
-        if ($hasSexoColumn) {
-            $stmt = $pdo->prepare("
-                INSERT INTO usuarios (
-                    id_usuario, nome, sobrenome, sexo, data_nascimento, cargo, instituicao, cpf, telefone, email,
-                    senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
-                ) VALUES (
-                    ?, ?, ?, ?, '-', 'Estudante', ?, ?, ?, ?,
-                    ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
-                )
-            ");
-            $stmt->execute([$idUsuario, $nome, $sobrenome, $sexo, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash]);
-        } else {
-            $stmt = $pdo->prepare("
-                INSERT INTO usuarios (
-                    id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
-                    senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
-                ) VALUES (
-                    ?, ?, ?, '-', 'Estudante', ?, ?, ?, ?,
-                    ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
-                )
-            ");
-            $stmt->execute([$idUsuario, $nome, $sobrenome, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash]);
-        }
+        $stmt = $pdo->prepare("
+            INSERT INTO usuarios (
+                id_usuario, nome, sobrenome, data_nascimento, cargo, instituicao, cpf, telefone, email,
+                senha_hash, meta, ultimo_acesso, token_acesso, token_expira, cadastro_ativo, created_at, updated_at
+            ) VALUES (
+                ?, ?, ?, '-', 'Estudante', ?, ?, ?, ?,
+                ?, '-', NULL, NULL, NULL, 1, NOW(), NOW()
+            )
+        ");
+        $stmt->execute([$idUsuario, $nome, $sobrenome, $faculdade, $cpfFormatado, $telefone, $email, $senhaHash]);
     }
 
     // Garantir que o perfil ESTUDANTE exista em perfis (evita erro de FK se a tabela tiver restrição)
@@ -230,49 +194,35 @@ try {
 
     $pdo->commit();
 
-    echo json_encode([
-        'success' => true,
-        'message' => $usuarioExistenteId !== ''
-            ? 'Cadastro regularizado com sucesso. Seu acesso de estudante foi ativado neste CPF.'
-            : 'Cadastro realizado com sucesso. Use seu CPF e senha para acessar o sistema (audiências, pautas e atas).',
-    ]);
+    echo json_encode($respostaCadastro);
 } catch (PDOException $e) {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    if ($e->getCode() == '42S02') {
-        error_log('Tabela usuarios não existe. Execute os SQL em docs/sql/ e database/schema.sql');
-        echo json_encode(['success' => false, 'message' => 'Sistema em configuração. Tente novamente mais tarde.']);
-    } elseif ($e->getCode() === '23000') {
-        $detail = $e->getMessage();
-        if (strpos($detail, 'foreign key') !== false || strpos($detail, 'Foreign key') !== false) {
-            $msg = 'Configuração do banco: o perfil ESTUDANTE precisa existir na tabela perfis. Contate o suporte.';
-        } elseif (strpos($detail, 'Duplicate') !== false) {
-            $msg = 'Já existe um cadastro com este CPF. Utilize a área de login ou entre em contato com o setor responsável.';
-        } else {
-            $msg = 'Erro de restrição no banco. Detalhe: ' . $detail;
-        }
-        echo json_encode(['success' => false, 'message' => $msg]);
-    } else {
-        $errMsg = $e->getMessage();
-        error_log('cadastro_estudantes API: ' . $errMsg);
-        $msg = 'Erro ao salvar cadastro. Tente novamente.';
-        if (strpos($errMsg, 'doesn\'t have a default value') !== false) {
-            // MySQL indica a coluna na mensagem; log completo para suporte
-            error_log('Coluna sem valor (usuarios): ' . $errMsg);
-            $msg = 'Erro de configuração do banco: tabela usuarios exige mais campos. Contate o suporte.';
-        } else {
-            $msg .= ' Detalhe: ' . $errMsg;
-        }
-        echo json_encode(['success' => false, 'message' => $msg]);
+    if ((int) ($e->errorInfo[1] ?? 0) === 1062 && $lockCadastroObtido) {
+        // A mesma resposta para conflitos de CPF, e-mail ou outra unicidade
+        // evita distinguir uma conta existente de uma solicitação não criada.
+        echo json_encode($respostaCadastro);
+        return;
     }
+    error_log('cadastro_estudantes: falha de persistência.');
+    echo json_encode(['success' => false, 'message' => 'Não foi possível concluir o cadastro. Tente novamente mais tarde.']);
 } catch (Throwable $e) {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    error_log('cadastro_estudantes API: ' . $e->getMessage());
+    error_log('cadastro_estudantes: falha interna.');
     echo json_encode([
         'success' => false,
-        'message' => 'Erro interno. Detalhe: ' . $e->getMessage(),
+        'message' => 'Não foi possível concluir o cadastro. Tente novamente mais tarde.',
     ]);
+} finally {
+    if ($lockCadastroObtido) {
+        try {
+            $release = $pdo->prepare('SELECT RELEASE_LOCK(?)');
+            $release->execute([$lockCadastroNome]);
+        } catch (Throwable $e) {
+            error_log('cadastro_estudantes: falha ao liberar bloqueio.');
+        }
+    }
 }

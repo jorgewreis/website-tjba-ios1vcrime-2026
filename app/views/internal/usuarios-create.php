@@ -135,7 +135,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($senha !== $senhaConfirm) {
             $mensagemErro = 'As senhas não coincidem.';
         } else {
+            // Mesmo bloqueio do autocadastro: protege a consulta e a criação
+            // concorrente do mesmo CPF entre os dois fluxos cooperantes.
+            $lockCadastroNome = 'cadest:' . substr(hash('sha256', $cpf), 0, 48);
+            $lockCadastroObtido = false;
+            $cadastroCriado = false;
             try {
+                $lock = $connection->prepare('SELECT GET_LOCK(?, 5)');
+                $lock->execute([$lockCadastroNome]);
+                if ((int) $lock->fetchColumn() !== 1) {
+                    throw new RuntimeException('Não foi possível iniciar o cadastro.');
+                }
+                $lockCadastroObtido = true;
                 $connection->beginTransaction();
 
                 $stmt = $connection->prepare("SELECT id_usuario, COALESCE(cadastro_ativo, 1) AS cadastro_ativo FROM usuarios WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? LIMIT 2");
@@ -221,8 +232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $connection->commit();
                     $_SESSION['usuarios_create_success'] = 'Cadastro realizado com sucesso. O usuário ficará com status Pendente até ativação por admin ou diretora.';
-                    header('Location: /frame.php?page=usuarioslist');
-                    exit;
+                    $cadastroCriado = true;
                 }
             } catch (Throwable $e) {
                 if ($connection->inTransaction()) {
@@ -230,6 +240,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 error_log('usuarios-create: ' . $e->getMessage());
                 $mensagemErro = 'Erro ao salvar. Tente novamente ou contate o suporte.';
+            } finally {
+                if ($lockCadastroObtido) {
+                    try {
+                        $release = $connection->prepare('SELECT RELEASE_LOCK(?)');
+                        $release->execute([$lockCadastroNome]);
+                    } catch (Throwable $e) {
+                        error_log('usuarios-create: falha ao liberar bloqueio de cadastro.');
+                    }
+                }
+            }
+            if ($cadastroCriado) {
+                header('Location: /frame.php?page=usuarioslist');
+                exit;
             }
         }
     }
