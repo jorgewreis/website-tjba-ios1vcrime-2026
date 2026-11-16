@@ -22,9 +22,9 @@ const pending = [];
 const document = { getElementById: id => el[id] || null, createElement: () => new Element() };
 const window = { document, App: { Page: { notify: (...args) => notices.push(args) } }, location: {},
   addEventListener(name, fn) { events[name] = fn; } };
-const fetch = () => delayed ? new Promise((resolve, reject) => pending.push({ resolve, reject })) : Promise.resolve({ ok: true, json: async () => payload });
+const fetch = (url, options) => delayed ? new Promise((resolve, reject) => pending.push({ url, options, resolve, reject })) : Promise.resolve({ ok: true, json: async () => payload });
 vm.runInNewContext(fs.readFileSync('public/assets/js/shared/gme-create.js', 'utf8'), { window, fetch, console, AbortController, setTimeout, clearTimeout });
-window.App.GmeCreate.initialize({ reusEndpoint: '/synthetic', searchPeopleEndpoint: '/people' });
+window.App.GmeCreate.initialize({ reusEndpoint: '/synthetic', searchPeopleEndpoint: '/people', createEndpoint: '/create' });
 async function run() {
   events.datajudClasseResolved({ detail: { processoInputId: 'filter-processo' } });
   await new Promise(resolve => setImmediate(resolve));
@@ -106,8 +106,32 @@ async function run() {
   assert.equal(el['btn-gab-mon-registrar'].disabled, true, 'consulta pendente deve bloquear cadastro');
   pending[7].reject(new Error('falha sintética'));
   await new Promise(resolve => setImmediate(resolve));
-  assert.equal(el['btn-gab-mon-registrar'].disabled, false, 'falha deve permitir entrada manual');
+  assert.equal(el['btn-gab-mon-registrar'].disabled, true, 'falha exige confirmação');
   assert.ok(notices.some(args => args[1] === 'Consulta de pessoas'), 'falha deve ser informada');
+  assert.ok(el['gab-mon-reu-select'].children.some(option => option.value === '__repetir__'));
+  el['gab-mon-reu-select'].value = '__repetir__';
+  el['gab-mon-reu-select'].handlers.change.call(el['gab-mon-reu-select']);
+  assert.equal(pending[8].url.includes('/people'), true, 'repetir inicia nova consulta');
+  pending[8].resolve({ ok: true, json: async () => ({ pessoas: [{ id: 'P', nome_completo: 'Quarto Nome', cpf: '' }] }) });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.ok(el['gab-mon-reu-select'].children.some(option => option.textContent === 'Usar nome informado: Quarto Nome'));
+  el['gab-mon-reu-select'].value = '__novo__';
+  el['gab-mon-reu-select'].handlers.change.call(el['gab-mon-reu-select']);
+  const antesBlur = pending.length;
+  el['gab-mon-reu-nome'].handlers.blur();
+  assert.equal(pending.length, antesBlur, 'nome confirmado não é pesquisado novamente');
+  assert.equal(el['btn-gab-mon-registrar'].disabled, false);
+  el['btn-gab-mon-registrar'].handlers.click();
+  assert.equal(pending[9].url, '/create');
+  assert.equal(JSON.parse(pending[9].options.body).reu_complemento, 'Quarto Nome');
+  pending[9].resolve({ ok: false, json: async () => ({ error: 'simulado' }) });
+  await new Promise(resolve => setImmediate(resolve));
+  el['gab-mon-reu-nome'].value = 'Quarto Nome Alterado';
+  el['gab-mon-reu-nome'].handlers.input();
+  el['gab-mon-reu-nome'].handlers.blur();
+  assert.equal(pending[10].url.includes('/people'), true, 'editar invalida escolha anterior');
+  pending[10].resolve({ ok: true, json: async () => ({ pessoas: [] }) });
+  await new Promise(resolve => setImmediate(resolve));
   console.log('PASS orientação manual e seleção existente (DOM/fetch simulados)');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });
