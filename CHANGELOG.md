@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0147
+
+**Data:** 2026-11-15 23:11:42 | **Commit:** `a30e6dc8` | **Tipo:** `patch`
+
+- fix: bloquear testes auth sem sandbox comprovado
+
 ## V. 1.87.0146
 
 **Data:** 2026-11-15 22:56:17 | **Commit:** `97e8c4f1` | **Tipo:** `patch`
@@ -6303,6 +6309,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

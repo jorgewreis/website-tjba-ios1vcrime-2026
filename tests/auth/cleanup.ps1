@@ -1,6 +1,9 @@
 [CmdletBinding()]
 param()
 
+# Contenção provisória: recursos ou variáveis não comprovam sandbox descartável.
+throw 'Testes de autenticação suspensos: sandbox descartável não comprovado.'
+
 $ErrorActionPreference = 'Stop'
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $runtimePath = Join-Path $PSScriptRoot '.env.test.runtime'

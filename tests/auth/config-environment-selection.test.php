@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require __DIR__ . '/sandbox-guard.php';
+
 function assertSameValue(mixed $expected, mixed $actual, string $message): void
 {
     if ($expected !== $actual) {
