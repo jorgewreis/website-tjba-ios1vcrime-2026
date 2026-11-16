@@ -399,7 +399,7 @@ final class EditaisService
         if ($dataDecurso === '') {
             throw new InvalidArgumentException('Data de decurso não calculada. Refaça a certificação da publicação.');
         }
-        $dtPub = \DateTime::createFromFormat('Y-m-d', $dataDecurso);
+        $dtPub = \DateTime::createFromFormat('!Y-m-d', $dataDecurso);
         if ($dtPub === false || $dtPub->format('Y-m-d') !== $dataDecurso) {
             throw new InvalidArgumentException('Data do decurso inválida.');
         }
@@ -451,7 +451,7 @@ final class EditaisService
                 'data_decurso_prazo' => $dataDecurso,
             ]);
         }
-        $dtDecurso = \DateTime::createFromFormat('Y-m-d', $dataDecurso);
+        $dtDecurso = \DateTime::createFromFormat('!Y-m-d', $dataDecurso);
         if ($dtDecurso === false || $dtDecurso->format('Y-m-d') !== $dataDecurso) {
             return [
                 'data_publicacao' => $dataPublicacao,
@@ -463,14 +463,8 @@ final class EditaisService
                 'dias_restantes' => 0,
             ];
         }
-        $hoje = new \DateTimeImmutable('today');
         $dtDecursoImutavel = \DateTimeImmutable::createFromMutable($dtDecurso);
-        $prazoCumprido = $hoje >= $dtDecursoImutavel;
-        $liberaConclusao = $hoje > $dtDecursoImutavel;
-        $diasRestantes = 0;
-        if ($hoje < $dtDecursoImutavel) {
-            $diasRestantes = (int) $hoje->diff($dtDecursoImutavel)->days;
-        }
+        [$prazoCumprido, $liberaConclusao, $diasRestantes] = self::estadoDecurso($dtDecursoImutavel, new \DateTimeImmutable('now'));
         return [
             'data_publicacao' => $dataPublicacao,
             'data_inicio_contagem' => $dataInicioContagem,
@@ -480,6 +474,14 @@ final class EditaisService
             'libera_conclusao' => $liberaConclusao,
             'dias_restantes' => $diasRestantes,
         ];
+    }
+
+    /** Compara dias civis no fuso configurado, sem antecipar a certificação. */
+    private static function estadoDecurso(\DateTimeImmutable $dataLimite, \DateTimeImmutable $agora): array
+    {
+        $hoje = $agora->setTime(0, 0);
+        $limite = $dataLimite->setTime(0, 0);
+        return [$hoje >= $limite, $hoje > $limite, $hoje < $limite ? (int) $hoje->diff($limite)->days : 0];
     }
 
     /**

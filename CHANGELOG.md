@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0159
+
+**Data:** 2026-11-16 03:01:04 | **Commit:** `a5109794` | **Tipo:** `patch`
+
+- fix: normalizar data de decurso na exportacao
+
 ## V. 1.87.0158
 
 **Data:** 2026-11-16 02:54:36 | **Commit:** `4d2e5898` | **Tipo:** `patch`
@@ -6375,6 +6381,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
