@@ -8,4 +8,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(REI-69): prevent global party side effects** `[48d0d5cc]`
 - **test(REI-69): execute migration in disposable mysql** `[43f8c903]`
 - **fix(REI-69): restore atomic profession sync** `[09e322ce]`
+- **test(REI-69,REI-85): exercise real profession repository** `[a2a361d5]`
 
