@@ -2,7 +2,7 @@
 
 ## V. 1.87.0165
 
-**Data:** 2026-11-16 13:28:24 | **Commit:** `49090401` | **Tipo:** `patch`
+**Data:** 2026-11-16 13:28:24 | **Commit:** `7a6f2be1` | **Tipo:** `patch`
 
 - test(auth): guard direct HTTP test entrypoints
 
