@@ -2,7 +2,7 @@
 
 ## V. 1.87.0165
 
-**Data:** 2026-11-16 17:31:15 | **Commit:** `922632c3` | **Tipo:** `patch`
+**Data:** 2026-11-16 17:31:15 | **Commit:** `597f7ab6` | **Tipo:** `patch`
 
 - fix(REI-122,REI-135): reconcile calendar atomically
 
