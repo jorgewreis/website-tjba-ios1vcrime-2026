@@ -12,6 +12,8 @@ final class MysqlLimitSqlitePdo extends PDO
         if (preg_match('/^\\s*UPDATE\\b/i', $query) === 1) {
             $query = preg_replace('/\\s+LIMIT\\s+1\\s*$/i', '', $query) ?? $query;
         }
+        // The repository uses a MySQL row lock; SQLite serializes this in-memory test.
+        $query = preg_replace('/\\s+FOR\\s+UPDATE\\s*$/i', '', $query) ?? $query;
         return parent::prepare($query, $options);
     }
 }
@@ -37,8 +39,8 @@ foreach ([[], ['assuntos' => []]] as $source) {
     if ($snapshot() !== $before) throw new RuntimeException('Ausência alterou vínculos.');
 }
 foreach ([null, [['nome' => 'Sem código']], [['codigo'=>42,'nome'=>'Manual'], ['nome'=>'Sem código']]] as $invalid) {
-    try { $map(['assuntos' => $invalid]); throw new LogicException('Assunto inválido foi aceito.'); }
-    catch (RuntimeException $expected) {}
+    $partial = $map(['assuntos' => $invalid]);
+    if ($partial['assuntos_completos'] !== false) throw new LogicException('Lote parcial marcado como completo.');
     if ($snapshot() !== $before) throw new RuntimeException('Resposta inválida alterou vínculos.');
 }
 $payload = $map(['assuntos'=>[['codigo'=>42,'nome'=>'Manual']]]);

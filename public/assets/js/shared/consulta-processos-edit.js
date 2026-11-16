@@ -58,7 +58,8 @@
             const id = String(item.id || item.assunto_id || '').trim();
             const codigo = String(item.codigo || item.assunto_codigo || '').trim();
             const descricao = String(item.descricao || item.assunto_descricao || '').trim();
-            const origem = String(item.origem || 'manual').trim();
+            const origemInformada = String(item.origem || '').trim();
+            const origem = origemInformada === 'manual' || origemInformada === 'datajud' ? origemInformada : 'unknown';
             if (!id) {
                 return;
             }
@@ -96,12 +97,15 @@
             const texto = item.codigo
                 ? (item.descricao && item.descricao !== item.codigo ? (item.codigo + ' - ' + item.descricao) : item.codigo)
                 : item.descricao;
+            const control = item.origem === 'manual'
+                ? '  <button type="button" class="btn btn-secondary-outline height-sm btn-assunto-desvincular" data-assunto-id="' + item.id + '">Remover</button>'
+                : '  <span class="label label-default">' + escapeHtml(item.origem === 'datajud' ? 'DataJud' : 'Origem não identificada') + '</span>';
             return [
                 '<div class="display-flex row row-full justify-between align-center border-bottom padding-y-sm" data-assunto-id="' + item.id + '">',
                 '  <div class="display-flex col" style="width:auto; flex:1 1 auto;">',
                 '    <span class="major-info">' + escapeHtml(texto) + '</span>',
                 '  </div>',
-                '  <button type="button" class="btn btn-secondary-outline height-sm btn-assunto-desvincular" data-assunto-id="' + item.id + '">Remover</button>',
+                control,
                 '</div>'
             ].join('');
         }).join('');
@@ -683,6 +687,11 @@
                 }).then(function (result) {
                     if (!result.data || result.data.error) {
                         notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Erro ao desvincular assunto.');
+                        target.disabled = false;
+                        return;
+                    }
+                    if (result.data.action !== 'deleted') {
+                        notify('info', 'Assunto não removido', 'O vínculo permaneceu inalterado. Atualize a lista para ver o estado atual.');
                         target.disabled = false;
                         return;
                     }

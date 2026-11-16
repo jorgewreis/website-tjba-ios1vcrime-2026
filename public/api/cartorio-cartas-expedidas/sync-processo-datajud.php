@@ -45,7 +45,8 @@ try {
 
     $resultadoBusca = (new DataJudService($config))->searchProcesso($digits);
     if (($resultadoBusca['resultado_unico_verificado'] ?? null) !== true
-        || ($resultadoBusca['sigilo_ausencia_verificada'] ?? null) !== true) {
+        || ($resultadoBusca['sigilo_ausencia_verificada'] ?? null) !== true
+        || ($resultadoBusca['fonte_confirmada_para_sincronizacao'] ?? null) !== true) {
         http_response_code(422);
         echo json_encode(['error' => 'O DataJud não retornou resultado único e verificável para sincronização.'], JSON_UNESCAPED_UNICODE);
         exit;
@@ -62,7 +63,8 @@ try {
         || !is_array($assuntos)
         || !array_is_list($assuntos)
         || ($estadoAssuntos === 'vazio' && $assuntos !== [])
-        || ($estadoAssuntos === 'presente' && $assuntos === [])) {
+        || ($estadoAssuntos === 'presente' && $assuntos === [])
+        || ($assuntos !== [] && ($resultadoBusca['assuntos_completos'] ?? null) !== true)) {
         http_response_code(422);
         echo json_encode(['error' => 'O DataJud não retornou assuntos completos e verificáveis para sincronização.'], JSON_UNESCAPED_UNICODE);
         exit;

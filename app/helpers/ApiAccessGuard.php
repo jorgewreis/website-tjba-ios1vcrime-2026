@@ -29,7 +29,7 @@ final class ApiAccessGuard
                 }
             }
         } catch (Throwable $exception) {
-            error_log('Falha ao verificar autorização de API: ' . $exception->getMessage());
+            error_log('Falha ao verificar autorização de API: ' . get_class($exception));
             self::reject(500, 'Não foi possível verificar o acesso.');
         }
 

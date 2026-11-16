@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0176
+
+**Data:** 2026-11-16 20:16:28 | **Commit:** `f0aca0f2` | **Tipo:** `patch`
+
+- fix(REI-72,REI-76,REI-153): validate DataJud subject sync
+
 ## V. 1.87.0175
 
 **Data:** 2026-11-16 19:45:05 | **Commit:** `e7c839ea` | **Tipo:** `patch`
@@ -6479,6 +6485,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

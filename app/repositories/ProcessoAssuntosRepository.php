@@ -29,7 +29,7 @@ final class ProcessoAssuntosRepository
      *   assunto_descricao: string
      * }>
      */
-    public function findByProcessoId(string $processoId): array
+    public function findByProcessoId(string $processoId, bool $forUpdate = false): array
     {
         $processoId = trim((string) $processoId);
         if ($processoId === '') {
@@ -42,9 +42,10 @@ final class ProcessoAssuntosRepository
                  FROM `%s` pa
                  INNER JOIN `%s` a ON a.`id` = pa.`assunto_id`
                  WHERE pa.`processo_id` = :processo_id
-                 ORDER BY a.`codigo` ASC, a.`descricao` ASC',
+                 ORDER BY a.`codigo` ASC, a.`descricao` ASC%s',
                 $this->table,
-                $this->assuntosTable
+                $this->assuntosTable,
+                $forUpdate ? ' FOR UPDATE' : ''
             )
         );
         $statement->bindValue(':processo_id', $processoId);
@@ -118,7 +119,7 @@ final class ProcessoAssuntosRepository
      * Cria ou atualiza vínculo idempotente.
      * @return bool true quando inseriu vínculo novo; false quando vínculo já existia
      */
-    public function upsert(string $processoId, string $assuntoId, string $origem = ProcessoAssuntoOrigem::MANUAL): bool
+    public function upsert(string $processoId, string $assuntoId, string $origem = ProcessoAssuntoOrigem::MANUAL, bool $forUpdate = false): bool
     {
         $processoId = trim((string) $processoId);
         $assuntoId = trim((string) $assuntoId);
@@ -130,8 +131,12 @@ final class ProcessoAssuntosRepository
             $origem = ProcessoAssuntoOrigem::MANUAL;
         }
 
-        $existing = $this->findOneByProcessoAndAssunto($processoId, $assuntoId);
+        $existing = $this->findOneByProcessoAndAssunto($processoId, $assuntoId, $forUpdate);
         if ($existing !== null) {
+            if ($origem === ProcessoAssuntoOrigem::DATAJUD
+                && trim((string) ($existing['origem'] ?? '')) !== ProcessoAssuntoOrigem::DATAJUD) {
+                return false;
+            }
             $statement = $this->connection->prepare(
                 sprintf(
                     'UPDATE `%s` SET `origem` = :origem, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
@@ -168,7 +173,7 @@ final class ProcessoAssuntosRepository
         return true;
     }
 
-    public function deleteByProcessoAndAssunto(string $processoId, string $assuntoId): void
+    public function deleteByProcessoAndAssunto(string $processoId, string $assuntoId): bool
     {
         $processoId = trim((string) $processoId);
         $assuntoId = trim((string) $assuntoId);
@@ -178,16 +183,18 @@ final class ProcessoAssuntosRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'DELETE FROM `%s` WHERE `processo_id` = :processo_id AND `assunto_id` = :assunto_id',
+                'DELETE FROM `%s` WHERE `processo_id` = :processo_id AND `assunto_id` = :assunto_id AND `origem` = :origem',
                 $this->table
             )
         );
         $statement->bindValue(':processo_id', $processoId);
         $statement->bindValue(':assunto_id', $assuntoId);
+        $statement->bindValue(':origem', ProcessoAssuntoOrigem::MANUAL);
         $statement->execute();
+        return $statement->rowCount() > 0;
     }
 
-    public function findOneByProcessoAndAssunto(string $processoId, string $assuntoId): ?array
+    public function findOneByProcessoAndAssunto(string $processoId, string $assuntoId, bool $forUpdate = false): ?array
     {
         $processoId = trim((string) $processoId);
         $assuntoId = trim((string) $assuntoId);
@@ -200,8 +207,9 @@ final class ProcessoAssuntosRepository
                 'SELECT `id`, `processo_id`, `assunto_id`, `origem`, `created_at`, `updated_at`
                  FROM `%s`
                  WHERE `processo_id` = :processo_id AND `assunto_id` = :assunto_id
-                 LIMIT 1',
-                $this->table
+                 LIMIT 1%s',
+                $this->table,
+                $forUpdate ? ' FOR UPDATE' : ''
             )
         );
         $statement->bindValue(':processo_id', $processoId);
@@ -221,7 +229,7 @@ final class ProcessoAssuntosRepository
      * @param list<string> $assuntoIdsDataJud
      * @return array{inserted:int, removed:int, unchanged:int}
      */
-    public function syncDataJudAssuntos(string $processoId, array $assuntoIdsDataJud): array
+    public function syncDataJudAssuntos(string $processoId, array $assuntoIdsDataJud, bool $forUpdate = false): array
     {
         $processoId = trim((string) $processoId);
         if ($processoId === '') {
@@ -234,8 +242,9 @@ final class ProcessoAssuntosRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'SELECT `id`, `assunto_id`, `origem` FROM `%s` WHERE `processo_id` = :processo_id',
-                $this->table
+                'SELECT `id`, `assunto_id`, `origem` FROM `%s` WHERE `processo_id` = :processo_id%s',
+                $this->table,
+                $forUpdate ? ' FOR UPDATE' : ''
             )
         );
         $statement->bindValue(':processo_id', $processoId);
@@ -273,8 +282,9 @@ final class ProcessoAssuntosRepository
 
         $inserted = 0;
         foreach ($toInsert as $assuntoId) {
-            $this->upsert($processoId, $assuntoId, ProcessoAssuntoOrigem::DATAJUD);
-            $inserted++;
+            if ($this->upsert($processoId, $assuntoId, ProcessoAssuntoOrigem::DATAJUD, $forUpdate)) {
+                $inserted++;
+            }
         }
 
         $removed = 0;

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../helpers/CnjValidator.php';
+
 /**
  * Formatação única da resposta DataJud (Elasticsearch _source → payload da API interna).
  */
@@ -52,7 +54,17 @@ final class DataJudResponseMapper
         $estadoAssuntos = array_key_exists('assuntos', $source)
             ? (is_array($source['assuntos']) && $source['assuntos'] === [] ? 'vazio' : 'presente')
             : 'ausente';
-        $assuntos = $estadoAssuntos === 'ausente' ? [] : self::formatarAssuntos($source['assuntos']);
+        $assuntosCompletos = self::assuntosSaoCompletos($source['assuntos'] ?? null);
+        if ($estadoAssuntos === 'ausente') {
+            $assuntos = [];
+        } else {
+            try {
+                $assuntos = self::formatarAssuntos($source['assuntos']);
+            } catch (RuntimeException $exception) {
+                // Partial metadata remains readable, but is never eligible for sync.
+                $assuntos = self::formatarAssuntosParciais($source['assuntos']);
+            }
+        }
         $poloPassivo = self::extractPartNamesFromPolos($source);
         $movimentos = self::formatarMovimentos($source['movimentos'] ?? []);
 
@@ -67,6 +79,7 @@ final class DataJudResponseMapper
             'classe' => self::formatarClasse($source),
             'assuntos' => $assuntos,
             'assuntos_estado' => $estadoAssuntos,
+            'assuntos_completos' => $assuntosCompletos,
             'prioridades' => self::formatarPrioridades($source['prioridade'] ?? []),
             'polo_passivo' => $poloPassivo,
             'movimentos' => $movimentos,
@@ -80,6 +93,7 @@ final class DataJudResponseMapper
             'id' => $source['id'] ?? null,
             'sigilo_restrito' => $redactSigilo,
             'sigilo_ausencia_verificada' => self::isAusenciaSigiloExplicitamenteInformada($source['nivelSigilo'] ?? null),
+            'fonte_confirmada_para_sincronizacao' => self::fonteConfirmadaParaSincronizacao($source, $numeroDigitos),
             'sigilo_mensagem' => $redactSigilo ? self::MSG_TOAST_SIGILO_PUBLICO : null,
         ];
     }
@@ -98,6 +112,7 @@ final class DataJudResponseMapper
             'classe' => ['codigo' => null, 'descricao' => null],
             'assuntos' => [],
             'assuntos_estado' => 'indisponivel',
+            'assuntos_completos' => false,
             'prioridades' => [],
             'polo_passivo' => [],
             'movimentos' => [],
@@ -111,6 +126,9 @@ final class DataJudResponseMapper
             'id' => null,
             'indisponivel_na_base_publica' => true,
             'sigilo_restrito' => false,
+            'sigilo_ausencia_verificada' => false,
+            'resultado_unico_verificado' => false,
+            'fonte_confirmada_para_sincronizacao' => false,
             'sigilo_mensagem' => self::MSG_TOAST_SIGILO_PUBLICO,
         ];
     }
@@ -156,6 +174,65 @@ final class DataJudResponseMapper
         }
 
         return array_values($unicos);
+    }
+
+    private static function assuntosSaoCompletos($assuntos): bool
+    {
+        if (!is_array($assuntos) || !array_is_list($assuntos) || $assuntos === []) {
+            return false;
+        }
+        try {
+            return self::formatarAssuntos($assuntos) !== [];
+        } catch (RuntimeException $exception) {
+            return false;
+        }
+    }
+
+    /** @return list<array{codigo: ?string, descricao: string}> */
+    private static function formatarAssuntosParciais($assuntos): array
+    {
+        if (!is_array($assuntos) || !array_is_list($assuntos)) {
+            return [];
+        }
+        $lista = [];
+        foreach ($assuntos as $item) {
+            if (is_string($item)) {
+                $descricao = trim($item);
+                if ($descricao !== '') $lista[] = ['codigo' => null, 'descricao' => $descricao];
+                continue;
+            }
+            if (!is_array($item) || array_is_list($item)) continue;
+            try {
+                $codigo = self::campoAssunto($item, ['codigo', 'codigoAssunto', 'numAssunto']);
+                $descricao = self::campoAssunto($item, ['descricaoAssunto', 'descricao', 'nome']);
+            } catch (RuntimeException $exception) {
+                continue;
+            }
+            if ($descricao !== '') {
+                $lista[] = ['codigo' => $codigo !== '' ? $codigo : null, 'descricao' => $descricao];
+                continue;
+            }
+            foreach (['assunto', 'assuntos'] as $childKey) {
+                if (!array_key_exists($childKey, $item) || !is_array($item[$childKey])) continue;
+                $children = array_is_list($item[$childKey]) ? $item[$childKey] : [$item[$childKey]];
+                $nested = self::formatarAssuntosParciais($children);
+                foreach ($nested as $entry) {
+                    $lista[] = [
+                        'codigo' => $entry['codigo'] ?? ($codigo !== '' ? $codigo : null),
+                        'descricao' => $entry['descricao'],
+                    ];
+                }
+            }
+        }
+        return $lista;
+    }
+
+    private static function fonteConfirmadaParaSincronizacao(array $source, string $numeroDigitos): bool
+    {
+        $numero = $source['numeroProcesso'] ?? null;
+        return is_string($numero)
+            && CnjValidator::onlyDigits($numero) === $numeroDigitos
+            && self::isAusenciaSigiloExplicitamenteInformada($source['nivelSigilo'] ?? null);
     }
 
     /** @param mixed $item @param list<array{codigo: string, descricao: string}> $lista */
