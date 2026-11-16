@@ -30,7 +30,7 @@ O sistema é estruturado em módulos e submódulos, com fluxo híbrido entre pú
   Foco institucional e de atendimento ao público, com recursos informativos, consultas públicas permitidas e fluxos acadêmicos, sempre com regras de mascaramento e bloqueio para casos sigilosos.
 
 - **Área Restrita (Interna):**  
-  Núcleo operacional com módulos de Cartório e Gabinete, cadastro e acompanhamento de audiências, controle de tarefas e sub-tarefas, expedições, produtividade e administração do sistema.
+  Núcleo operacional com módulos de Cartório e Gabinete, cadastro e acompanhamento de audiências, subtarefas das rotinas existentes, produtividade e administração do sistema.
 
 ### 2.2 Regras gerais e configurações globais do sistema
 
@@ -137,12 +137,9 @@ Regra crítica:
 
 ---
 
-### 4.5 Módulo m3 — Tarefas e Fluxos Internos
+### 4.5 Subtarefas das rotinas existentes
 
-- catálogo de tipos de tarefa  
-- sub-tarefas configuráveis  
-- regras de pontuação parametrizadas  
-- exclusão controlada (hard/soft delete)
+As subtarefas permanecem vinculadas aos fluxos de Cartório, Gabinete e Audiências. Os módulos independentes de Tarefas e Expedições pertencem ao FokusCloud, não a esta implantação.
 
 ---
 

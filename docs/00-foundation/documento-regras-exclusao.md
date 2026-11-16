@@ -165,11 +165,9 @@ Cada módulo do sistema pode possuir regras adicionais de exclusão e edição, 
 - **Edição:** permitida até o momento da realização da audiência. Após a realização, apenas campos de observação ou anexos podem ser editados, com justificativa obrigatória.
 - **Log:** toda edição de data, horário, tipo de audiência, partes ou status deve gerar log detalhado.
 
-### 5.2 Módulo de Tarefas e Fluxos Internos (m3)
+### 5.2 Subtarefas de rotinas existentes
 
-- **Exclusão:** soft delete como padrão. Hard delete permitido apenas para rascunhos não iniciados.
-- **Edição:** permitida enquanto a tarefa estiver em andamento. Após conclusão, apenas campos de observação podem ser editados.
-- **Log:** alterações em prazos, responsáveis, status ou pontuação devem gerar log obrigatório.
+As subtarefas pertencem aos respectivos fluxos locais e seguem as regras de exclusão, edição e auditoria aplicáveis a esses fluxos. O módulo independente de Tarefas pertence ao FokusCloud e não integra o escopo deste sistema.
 
 ### 5.3 Módulo de Cartório (m4) e submódulos
 
