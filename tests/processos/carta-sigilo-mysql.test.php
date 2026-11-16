@@ -92,11 +92,12 @@ $inputs = [
     'zero-string' => ['nivel_sigilo' => '0'],
 ];
 $service = new CartasExpedidasService($pdo);
+$expectedClassId = (new ClassesRepository($pdo))->ensureClass('CARTA-TESTE', 'Classe sintética');
 foreach ($inputs as $case => $extra) {
     $service->create($base + $extra);
     $row = $pdo->query("SELECT sigiloso, classe_id FROM processos WHERE id = 'PRC-EXISTING'")->fetch(PDO::FETCH_ASSOC);
-    if ($row === false || (int) $row['sigiloso'] !== 1 || $row['classe_id'] === 'CLA-OLD') {
-        throw new RuntimeException("Processo existente perdeu sigilo ou não recebeu classe no caso: $case");
+    if ($row === false || (int) $row['sigiloso'] !== 1 || $row['classe_id'] !== $expectedClassId) {
+        throw new RuntimeException("Processo existente perdeu sigilo ou não recebeu a classe esperada no caso: $case");
     }
 }
 $letterCount = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
@@ -108,7 +109,7 @@ if ($letterCount !== count($inputs) || $subtaskCount !== count($inputs) * 2) {
 $newCnj = '0000002-54.2020.8.05.0001';
 $service->create(array_merge($base, ['numero_processo' => $newCnj]));
 $newProcess = (new ProcessosRepository($pdo))->findByNumero($newCnj);
-if ($newProcess === null || (int) $newProcess['sigiloso'] !== 0 || $newProcess['classe_id'] === null) {
+if ($newProcess === null || (int) $newProcess['sigiloso'] !== 0 || $newProcess['classe_id'] !== $expectedClassId) {
     throw new RuntimeException('Processo novo com classe conhecida não recebeu estado não sigiloso esperado.');
 }
 
@@ -132,5 +133,33 @@ if ($explicit === null || (int) $explicit['sigiloso'] !== 1) {
     throw new RuntimeException('Nível de sigilo explicitamente restrito não foi aplicado.');
 }
 
+$beforeFailureProcess = (new ProcessosRepository($pdo))->findByNumero($existingCnj);
+$beforeFailureLetters = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
+$beforeFailureSubtasks = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn();
+$beforeFailureClasses = (int) $pdo->query('SELECT COUNT(*) FROM classes')->fetchColumn();
+$pdo->exec("CREATE TRIGGER rei88_fail_subtask BEFORE INSERT ON cartas_expedidas_subtarefas FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'rei88 falha induzida na subtarefa'");
+$failurePayload = array_merge($base, [
+    'classe_codigo' => 'REI88-ROLLBACK-CLASS',
+    'classe_descricao' => 'Classe sintética para rollback',
+]);
+try {
+    $service->create($failurePayload);
+    throw new RuntimeException('Falha induzida na subtarefa não ocorreu.');
+} catch (PDOException $exception) {
+    if (!str_contains($exception->getMessage(), 'rei88 falha induzida na subtarefa')) {
+        throw $exception;
+    }
+}
+$afterFailureProcess = (new ProcessosRepository($pdo))->findByNumero($existingCnj);
+if ($beforeFailureProcess === null || $afterFailureProcess === null
+    || $afterFailureProcess['classe_id'] !== $beforeFailureProcess['classe_id']
+    || (int) $afterFailureProcess['sigiloso'] !== (int) $beforeFailureProcess['sigiloso']
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $beforeFailureLetters
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $beforeFailureSubtasks
+    || (int) $pdo->query('SELECT COUNT(*) FROM classes')->fetchColumn() !== $beforeFailureClasses
+    || $pdo->inTransaction()) {
+    throw new RuntimeException('Falha na criação deixou processo, classe, carta, subtarefas ou transação parcial.');
+}
+
 echo 'PASS CartasExpedidasService completo em MySQL/InnoDB ' . $version
-    . ': sigilo existente preservado (' . count($inputs) . ' entradas), carta/subtarefas persistidas; processo novo e classe ausente verificados.' . PHP_EOL;
+    . ': sigilo e classe existentes preservados (' . count($inputs) . ' entradas), criação completa, processo novo/classe ausente e rollback após falha em subtarefa verificados.' . PHP_EOL;

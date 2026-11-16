@@ -150,6 +150,17 @@ final class CartasExpedidasService
             $sigiloso = true;
         }
 
+        return $this->withAtomicCreate(function () use (
+            $payload,
+            $classeNaoInformada,
+            $classeCodigo,
+            $classeNome,
+            $sigiloso,
+            $numeroFormatado,
+            $ufDestino,
+            $cidadeDestino
+        ): string {
+
         $tribunalSigla = 'TJBA';
         $ufOrigem = 'BA';
         $comarcaOrigemNome = 'Ilhéus';
@@ -226,6 +237,40 @@ final class CartasExpedidasService
         );
 
         return $idCarta;
+        });
+    }
+
+    private function withAtomicCreate(callable $operation): string
+    {
+        $ownsTransaction = !$this->connection->inTransaction();
+        $savepoint = 'cartas_expedidas_create';
+        if ($ownsTransaction) {
+            $this->connection->beginTransaction();
+        } else {
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
+        }
+
+        try {
+            $id = $operation();
+            if ($ownsTransaction) {
+                $this->connection->commit();
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            return $id;
+        } catch (Throwable $exception) {
+            try {
+                if ($ownsTransaction && $this->connection->inTransaction()) {
+                    $this->connection->rollBack();
+                } elseif (!$ownsTransaction && $this->connection->inTransaction()) {
+                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                }
+            } catch (Throwable $rollbackException) {
+                throw new RuntimeException('Falha ao reverter a criação da carta expedida.', 0, $rollbackException);
+            }
+            throw $exception;
+        }
     }
 
     public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array

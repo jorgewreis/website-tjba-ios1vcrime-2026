@@ -51,6 +51,6 @@ foreach ([false, true] as $value) {
     try { (new CartasExpedidasService($db))->create(array_merge($base, ['numero_processo' => $newCnj, 'nivel_sigilo' => $value])); throw new RuntimeException('Não atingiu a sentinela.'); }
     catch (RuntimeException $e) { if ($e->getMessage() !== 'STOP_AFTER_PROCESS') { throw $e; } }
     $new = $repo->findByNumero($newCnj);
-    if ($new === null || (int) $new['sigiloso'] !== (int) $value) { throw new RuntimeException('Sigilo inesperado em processo novo.'); }
+    if ($new !== null || $db->inTransaction()) { throw new RuntimeException('Falha na carta deixou processo novo parcial ou transação aberta.'); }
 }
 echo "PASS create de carta e sigilo (SQLite em memória; periféricos simulados)\n";
