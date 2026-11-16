@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: consultar reus do monitoramento sem escrita** `[97e8c4f1]`
+- **fix: validar data de movimentacao no servidor** `[d16a4e89]`
 
