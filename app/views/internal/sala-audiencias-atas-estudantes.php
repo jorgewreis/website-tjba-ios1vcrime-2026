@@ -103,7 +103,7 @@ if ($totalPages > 0) {
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active);">Atas de Audiências</h1>
+                <h1 class="title-page" tabindex="-1" style="color: var(--color-primary-active);">Atas de Audiências</h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
 
@@ -231,6 +231,91 @@ if ($totalPages > 0) {
         </div>
     </div>
     <?php include __DIR__ . '/_copy_process_script.php'; ?>
+    <script>
+    (function () {
+        var requestInFlight = false;
+        function rows() {
+            return Array.prototype.slice.call(document.querySelectorAll('.register[data-pauta]'));
+        }
+        function pautaIds(registers) {
+            return Array.from(new Set(registers.map(function (row) {
+                return String(row.getAttribute('data-pauta') || '').trim();
+            }).filter(Boolean)));
+        }
+        function renderUnavailable(row) {
+            moveFocusToTitle(row);
+            row.innerHTML = '<p class="padding-x-lg padding-y-md">Audiência indisponível.</p>';
+            row.setAttribute('data-indisponivel', '1');
+        }
+        function renderUnverified(row) {
+            moveFocusToTitle(row);
+            row.innerHTML = '<p class="padding-x-lg padding-y-md">Não foi possível verificar a disponibilidade. Atualize a página.</p>';
+            row.setAttribute('data-indisponivel', 'unknown');
+        }
+        function moveFocusToTitle(row) {
+            if (!row.contains(document.activeElement)) return;
+            var title = document.querySelector('.card-page .card-title h1');
+            if (title) title.focus();
+        }
+        function refreshAvailability() {
+            if (requestInFlight) return;
+            var registers = rows();
+            var ids = pautaIds(registers);
+            if (!ids.length) return;
+            requestInFlight = true;
+            fetch('/api/sala-audiencias-pauta/status-bulk.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ pautas: ids })
+            }).then(function (response) {
+                return response.json().then(function (body) {
+                    return { ok: response.ok, body: body || {} };
+                });
+            }).then(function (result) {
+                var body = result.body;
+                if (!result.ok || body.success !== true || body.completo !== true ||
+                    !Array.isArray(body.consultados) || !body.items || typeof body.items !== 'object' ||
+                    Array.isArray(body.items)) throw new Error('availability snapshot incomplete');
+                var consulted = body.consultados.map(String);
+                if (consulted.length !== ids.length || new Set(consulted).size !== ids.length ||
+                    ids.some(function (id) { return consulted.indexOf(id) === -1; }) ||
+                    Object.keys(body.items).some(function (id) {
+                        return ids.indexOf(id) === -1 || !body.items[id] ||
+                            String(body.items[id].id_pauta || '') !== id;
+                    })) throw new Error('availability snapshot mismatch');
+
+                var reload = false;
+                registers.forEach(function (row) {
+                    var id = String(row.getAttribute('data-pauta') || '').trim();
+                    var item = body.items[id];
+                    if (!item) {
+                        renderUnavailable(row);
+                        return;
+                    }
+                    if (item.indisponivel === true) {
+                        renderUnavailable(row);
+                        return;
+                    }
+                    if (row.hasAttribute('data-indisponivel')) reload = true;
+                });
+                if (reload) window.location.reload();
+            }).catch(function () {
+                registers.forEach(function (row) {
+                    if (row.getAttribute('data-indisponivel') === '1') return;
+                    renderUnverified(row);
+                });
+            }).finally(function () {
+                requestInFlight = false;
+            });
+        }
+        refreshAvailability();
+        window.setInterval(refreshAvailability, 30000);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) refreshAvailability();
+        });
+    })();
+    </script>
 
 </body>
 </html>
