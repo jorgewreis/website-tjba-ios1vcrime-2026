@@ -136,7 +136,7 @@ PHP;
     if (!is_resource($process)) throw new RuntimeException('Não iniciou processo de teste.');
     fclose($pipes[0]); $stdout = stream_get_contents($pipes[1]); fclose($pipes[1]);
     $stderr = stream_get_contents($pipes[2]); fclose($pipes[2]); $exit = proc_close($process);
-    if (!preg_match('/HTTP:(\d+)/', $stderr, $match) || preg_match('/(?:Fatal error|Parse error|Uncaught (?:Error|Exception))/', $stderr)) {
+    if ($exit !== 0 || !preg_match('/HTTP:(\d+)/', $stderr, $match) || preg_match('/(?:Fatal error|Parse error|Uncaught (?:Error|Exception))/', $stderr)) {
         throw new RuntimeException("Falha sintética $endpoint (exit=$exit): $stderr");
     }
     $body = json_decode($stdout, true);

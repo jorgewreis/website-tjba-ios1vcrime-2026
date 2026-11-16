@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0166
+
+**Data:** 2026-11-16 14:58:32 | **Commit:** `74c64778` | **Tipo:** `patch`
+
+- test: fail isolated API checks on subprocess errors
+
 ## V. 1.87.0165
 
 **Data:** 2026-11-16 14:53:04 | **Commit:** `2fb95200` | **Tipo:** `patch`
