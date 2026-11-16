@@ -175,12 +175,31 @@
                 credentials: 'same-origin'
             }).then(function (response) {
                 return response.json().then(function (data) {
-                    if (!response.ok || !data.success) throw new Error(data.error || 'Falha ao atualizar etapas.');
-                    ctx.notify('success', 'Atualização concluída', 'Etapas atualizadas. Recarregando a página.');
+                    if (!response.ok || !data.success) {
+                        const error = new Error(data.lote_revertido
+                            ? 'Não foi possível atualizar os editais. Nenhuma alteração do lote foi mantida.'
+                            : 'Não foi possível atualizar os editais.');
+                        error.loteRevertido = Boolean(data.lote_revertido);
+                        throw error;
+                    }
+                    const result = data.resultado || {};
+                    const etapas = Number(result.etapas_criadas) || 0;
+                    const editais = Number(result.editais_com_etapas_criadas) || 0;
+                    const inalterados = Number(result.inalterados) || 0;
+                    const finalizados = Number(result.finalizados) || 0;
+                    ctx.notify(
+                        'success',
+                        'Atualização concluída',
+                        editais + ' editais receberam ' + etapas + ' etapas; ' +
+                            inalterados + ' permaneceram inalterados; ' + finalizados +
+                            ' foram finalizados. Recarregando a listagem.'
+                    );
                     global.location.reload();
                 });
             }).catch(function (error) {
-                ctx.notify('error', 'Erro', error.message || 'Não foi possível atualizar as etapas.');
+                ctx.notify('error', 'Erro', error.loteRevertido
+                    ? 'Nenhuma alteração foi aplicada; o lote foi revertido.'
+                    : 'Não foi possível atualizar os editais.');
                 button.disabled = false;
             });
         });

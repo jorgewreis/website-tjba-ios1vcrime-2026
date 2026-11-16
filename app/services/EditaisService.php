@@ -516,7 +516,7 @@ final class EditaisService
     }
 
     /** Executa manutenção legada apenas após ação explícita e autorizada do Cartório. */
-    public function reconciliarEditais(array $editalIds): int
+    public function reconciliarEditais(array $editalIds): array
     {
         if (count($editalIds) > 15) {
             throw new InvalidArgumentException('A atualização aceita no máximo 15 editais por vez.');
@@ -543,28 +543,52 @@ final class EditaisService
             $this->connection->exec('SAVEPOINT ' . $savepoint);
         }
 
-        $updated = 0;
+        $result = [
+            'solicitados' => count($ids),
+            'editais_com_etapas_criadas' => 0,
+            'etapas_criadas' => 0,
+            'inalterados' => 0,
+            'finalizados' => 0,
+            'falhas' => 0,
+        ];
         try {
             $orderedIds = array_keys($ids);
             sort($orderedIds, SORT_STRING);
             foreach ($orderedIds as $id) {
-                $finalized = $this->reconciliarComEditalBloqueado($id, function () use ($id): bool {
+                $outcome = $this->reconciliarComEditalBloqueado($id, function () use ($id): array {
                     $edital = $this->repository->findById($id);
                     if ($edital === null) {
-                        return false;
+                        return ['etapas_criadas' => 0, 'finalizado' => false];
                     }
                     $status = strtolower(trim((string) ($edital['status'] ?? '')));
                     if ($status === 'concluída') {
                         $status = 'concluida';
                     }
                     if (in_array($status, ['concluida', 'cancelada'], true)) {
-                        return false;
+                        return ['etapas_criadas' => 0, 'finalizado' => false];
                     }
+                    $subtarefasAntes = count($this->subtarefasRepository->findByEditalId($id));
                     $this->subtarefasRepository->ensureSubtarefasAtivas($id);
-                    return $this->tentarFinalizacaoAutomaticaPorDecurso($id);
+                    $subtarefasDepois = count($this->subtarefasRepository->findByEditalId($id));
+                    return [
+                        'etapas_criadas' => max(0, $subtarefasDepois - $subtarefasAntes),
+                        'finalizado' => $this->tentarFinalizacaoAutomaticaPorDecurso($id),
+                    ];
                 });
-                if ($finalized) {
-                    $updated++;
+                if (!is_array($outcome)) {
+                    $result['inalterados']++;
+                    continue;
+                }
+                $created = max(0, (int) ($outcome['etapas_criadas'] ?? 0));
+                if ($created > 0) {
+                    $result['editais_com_etapas_criadas']++;
+                    $result['etapas_criadas'] += $created;
+                }
+                if (!empty($outcome['finalizado'])) {
+                    $result['finalizados']++;
+                }
+                if ($created === 0 && empty($outcome['finalizado'])) {
+                    $result['inalterados']++;
                 }
             }
             if ($ownsTransaction) {
@@ -583,7 +607,7 @@ final class EditaisService
             }
             throw $exception;
         }
-        return $updated;
+        return $result;
     }
 
     /** Compara dias civis no fuso configurado, sem antecipar a certificação. */

@@ -27,21 +27,28 @@ $info=$result['rows'][0]['DecursoInfo'];
 if ($result['total'] !== 1 || $info['data_inicio_contagem'] !== '2024-01-03' || $info['data_limite_decurso'] !== '2024-01-04') throw new RuntimeException('Feriado histórico ignorado');
 foreach ($before as $table=>$rows) if ($rows !== $db->query("SELECT * FROM $table")->fetchAll(PDO::FETCH_ASSOC)) throw new RuntimeException("Listagem alterou $table");
 $service = new EditaisService($db);
-if ($service->reconciliarEditais(['E']) !== 0) throw new RuntimeException('Reconciliação reportou finalização inesperada');
+$created = $service->reconciliarEditais(['E']);
+if ($created !== ['solicitados'=>1,'editais_com_etapas_criadas'=>1,'etapas_criadas'=>2,'inalterados'=>0,'finalizados'=>0,'falhas'=>0]) throw new RuntimeException('Totais da criação de etapas divergentes');
 if ((int) $db->query("SELECT COUNT(*) FROM editais_subtarefas WHERE edital_id='E'")->fetchColumn() !== 2) throw new RuntimeException('A ação explícita não criou as etapas ausentes');
+$unchanged = $service->reconciliarEditais(['E']);
+if ($unchanged !== ['solicitados'=>1,'editais_com_etapas_criadas'=>0,'etapas_criadas'=>0,'inalterados'=>1,'finalizados'=>0,'falhas'=>0]) throw new RuntimeException('Retry não foi idempotente ou não reportou edital inalterado');
 $db->exec("INSERT INTO editais (id,prazo_dias,data_publicacao,status) VALUES ('DONE',1,'2024-01-01','concluída'),('CANCEL',1,'2024-01-01','cancelada')");
-if ($service->reconciliarEditais(['DONE','CANCEL']) !== 0) throw new RuntimeException('Edital terminal foi reportado como finalizado');
+if ($service->reconciliarEditais(['DONE','CANCEL']) !== ['solicitados'=>2,'editais_com_etapas_criadas'=>0,'etapas_criadas'=>0,'inalterados'=>2,'finalizados'=>0,'falhas'=>0]) throw new RuntimeException('Editais terminais não foram reportados como inalterados');
 if ((int) $db->query("SELECT COUNT(*) FROM editais_subtarefas WHERE edital_id IN ('DONE','CANCEL')")->fetchColumn() !== 0) throw new RuntimeException('Reconciliação recriou etapas em edital terminal');
 $db->exec("INSERT INTO editais (id,prazo_dias,data_publicacao,status) VALUES ('A',1,'2024-01-01','pendente'),('Z',1,'2024-01-01','pendente')");
 $db->exec("CREATE TRIGGER falhar_segundo_edital BEFORE INSERT ON editais_subtarefas WHEN NEW.edital_id='Z' BEGIN SELECT RAISE(ABORT, 'falha sintética'); END");
 try {
  $service->reconciliarEditais(['A','Z']);
  throw new RuntimeException('Falha sintética da segunda linha não foi propagada');
-} catch (PDOException $expected) {
- if (!str_contains($expected->getMessage(), 'falha sintética')) throw $expected;
+} catch (Throwable $expected) {
+ if (!$expected instanceof PDOException) throw $expected;
 }
 if ((int) $db->query("SELECT COUNT(*) FROM editais_subtarefas WHERE edital_id IN ('A','Z')")->fetchColumn() !== 0) throw new RuntimeException('Falha no lote deixou etapas parcialmente criadas');
 $db->exec('DROP TRIGGER falhar_segundo_edital');
+$recovered = $service->reconciliarEditais(['A','Z']);
+if ($recovered !== ['solicitados'=>2,'editais_com_etapas_criadas'=>2,'etapas_criadas'=>4,'inalterados'=>0,'finalizados'=>0,'falhas'=>0]) throw new RuntimeException('Retry após rollback global não reportou a recuperação completa');
+$retry = $service->reconciliarEditais(['A','Z']);
+if ($retry !== ['solicitados'=>2,'editais_com_etapas_criadas'=>0,'etapas_criadas'=>0,'inalterados'=>2,'finalizados'=>0,'falhas'=>0]) throw new RuntimeException('Retry repetido criou duplicatas ou retornou totais incorretos');
 try {
  $service->reconciliarEditais(array_map(static fn($n) => 'E' . $n, range(1, 16)));
  throw new RuntimeException('A reconciliação aceitou mais de 15 editais');
