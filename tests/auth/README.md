@@ -1,20 +1,30 @@
-# Contenção provisória dos testes de autenticação
+# Suíte E2E de autenticação isolada
 
-Os entrypoints de `tests/auth` que poderiam escrever arquivos, consultar ou
-alterar banco, enviar e-mail ou iniciar serviços estão suspensos antes desses
-efeitos. A suspensão inclui os runners, o bootstrap e a limpeza automatizada.
-Variáveis de ambiente, nomes de banco ou endereços locais não liberam a guarda.
+O bloqueio provisório foi substituído pelo runner abaixo, que comprova a
+topologia descartável antes de executar testes que leem ou alteram dados. Os
+testes individuais continuam protegidos por `sandbox-guard.php`; use apenas os
+entrypoints documentados.
 
-Para verificar apenas a recusa em cópias temporárias, sem banco nem Docker:
+## Pré-requisito reproduzível
 
-```text
-python -B tests/auth/sandbox-guard-rejection.test.py
+A árvore de dependências é fixada por `composer.lock`. Em um checkout limpo,
+prepare o autoloader com a imagem PHP de QA já usada pela suíte:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/prepare-dependencies.ps1
 ```
 
-O teste usa sentinelas para a configuração e para o comando Docker. Ele não
-comprova um caminho positivo de execução em sandbox. A suspensão deve ser
-substituída somente após haver evidência técnica do isolamento do destino,
-dos serviços, da cópia usada e do ciclo de vida dos recursos.
+O comando grava apenas `vendor/` no checkout. Ele é uma preparação explícita e
+não faz parte dos contêineres de teste. Não execute a suíte sem esse passo em
+um checkout que ainda não tenha `vendor/autoload.php`.
 
-Os testes de `tests/ata` têm entrypoints próprios e não são protegidos por esta
-contenção. Não os execute sem comprovar isolamento e segurança de limpeza.
+## Execução
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/run-isolated-auth-e2e.ps1
+```
+
+O runner cria uma rede Docker `--internal` descartável, não publica portas,
+não usa bind mounts nos contêineres de teste e usa `tmpfs` para o banco MySQL.
+O sucesso termina com `PASS auth-test-runner`; a limpeza remove todos os
+recursos marcados com `fokus.auth-e2e`.

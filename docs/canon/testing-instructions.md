@@ -25,25 +25,20 @@ Testes automatizados (sugestão):
 
 ## Sandbox isolado de autenticação
 
-**Execução suspensa:** a REI-93 mantém barreiras provisórias que recusam a
-inicialização, a execução e a limpeza dos testes de autenticação. Não remova ou
-contorne essas barreiras: o isolamento do sandbox descartável ainda não foi
-comprovado. Cópias antigas do repositório podem não conter a mesma proteção.
+O procedimento canônico e as evidências REI-93 estão em
+`docs/90-releases/rei-93-auth-sandbox-evidence.md`. A preparação baixa apenas
+dependências fixadas e o runner cria e remove o sandbox a cada execução:
 
-Antes de habilitar um novo executor, é necessário comprovar para cada execução:
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/prepare-dependencies.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/run-isolated-auth-e2e.ps1
+```
 
-- a identidade e a procedência do daemon e das imagens utilizadas;
-- uma rede sem acesso indevido a serviços externos e sem relay SMTP para fora;
-- cópia e montagem de arquivos confinadas, sem `.env` ou dados reais;
-- identidade do banco descartável e da captura SMTP, vinculadas aos recursos
-  inspecionados e a desafios novos, com destinatários sintéticos;
-- limpeza restrita aos recursos criados pela execução, com confirmação do
-  resultado e respeito às proteções existentes.
-
-Endereço local, nome de banco, variáveis de ambiente, uma rede bridge ou um
-marcador isolado não demonstram, por si só, essas propriedades. Os comandos
-históricos não constituem um procedimento validado de execução ou limpeza.
-Registre na REI-93 as evidências, lacunas e resultado antes de alterar a barreira.
+`bootstrap.ps1` e `run-auth-tests.ps1` permanecem aliases compatíveis do
+runner. Em interrupção externa, `cleanup.ps1` recupera somente recursos com o
+rótulo validado do sandbox; não use os entrypoints legados individuais nem o
+Compose histórico. A preparação precisa de egress para o repositório Composer;
+os contêineres de teste não têm egress.
 
 Mesmo após validação futura do fluxo HTTP local, evidência de cookies `Secure`
 em HTTPS, comportamento em iframe e paridade com produção exige testes próprios.
