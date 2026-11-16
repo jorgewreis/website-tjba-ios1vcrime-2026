@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: proteger autoria e atomicidade cejusc** `[e6a5eb5d]`
+- **fix: proteger celulas textuais na exportacao CSV** `[da0f8b34]`
 
