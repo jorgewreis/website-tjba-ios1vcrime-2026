@@ -6,3 +6,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 - **fix: proteger contas existentes no cadastro de estudante** `[90924a55]`
 
+- **fix: preservar sigilo e transacoes de processo** `[97da36df]`
