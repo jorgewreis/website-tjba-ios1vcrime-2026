@@ -325,16 +325,13 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
 
     <div class="container-full card-page" id="card-audiencias-hoje-estudante">
         <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start padding-x-md"><h2>Audiências de hoje</h2></div>
+            <div class="display-flex row row-fit justify-start padding-x-md"><h2 tabindex="-1">Audiências de hoje</h2></div>
         </div>
 
         <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
             <div id="timeline-hoje-painel-estudante" class="timeline-day-ruler row row-full"></div>
         </div>
-        <?php if (count($hojePageRows) === 0): ?>
-        <div class="padding-x-lg padding-y-lg">
-        </div>
-        <?php endif; ?>
+        <p class="padding-x-lg padding-y-lg js-painel-empty"<?php echo count($hojePageRows) ? ' hidden' : ''; ?>>Nenhuma audiência nesta página.</p>
         <?php $processo_bloco_variant = 'estudantes'; ?>
         <?php $processo_bloco_model = 'full'; ?>
         <?php foreach ($hojePageRows as $row):
@@ -488,15 +485,12 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         </div>
     </div>
 
-    <div class="container-full card-page">
+    <div class="container-full card-page" id="card-minhas-inscricoes-estudante">
         <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start padding-x-md"><h2>Minhas inscrições</h2></div>
+            <div class="display-flex row row-fit justify-start padding-x-md"><h2 tabindex="-1">Minhas inscrições</h2></div>
         </div>
 
-        <?php if (count($minhasPageRows) === 0): ?>
-        <div class="padding-x-md padding-y-lg">
-        </div>
-        <?php endif; ?>
+        <p class="padding-x-md padding-y-lg js-painel-empty"<?php echo count($minhasPageRows) ? ' hidden' : ''; ?>>Nenhuma inscrição nesta página.</p>
         <?php $processo_bloco_variant = 'estudantes'; ?>
         <?php $processo_bloco_model = 'full'; ?>
         <?php foreach ($minhasPageRows as $m):
@@ -1029,10 +1023,12 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             if (!root || !window.TimelineDayRuler) return;
             window.TimelineDayRuler.render(root, buildTimelineItems(overrides), { studentPanel: true });
         }
+        var statusRequestInFlight = false;
         function refreshStatusAndTime() {
+            if (statusRequestInFlight) return;
             var pautas = collectPautas();
             if (!pautas.length) return;
-            if (allPautasFinished(latestItemsById)) return;
+            statusRequestInFlight = true;
             fetch('/api/sala-audiencias-pauta/status-bulk.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1045,13 +1041,43 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     });
                 })
                 .then(function (res) {
-                    if (!res.ok || !res.body.success || !res.body.items) return;
+                    if (!res.ok || res.body.success !== true || res.body.completo !== true ||
+                        !Array.isArray(res.body.consultados) || !res.body.items ||
+                        typeof res.body.items !== 'object' || Array.isArray(res.body.items)) return;
+                    var consultados = res.body.consultados.map(String);
+                    if (consultados.length !== pautas.length || new Set(consultados).size !== pautas.length ||
+                        pautas.some(function (id) { return consultados.indexOf(id) === -1; }) ||
+                        Object.keys(res.body.items).some(function (id) {
+                            var item = res.body.items[id];
+                            return pautas.indexOf(id) === -1 || !item || typeof item !== 'object' ||
+                                String(item.id_pauta || '') !== id;
+                        })) return;
+                    pautas.forEach(function (id) {
+                        if (Object.prototype.hasOwnProperty.call(res.body.items, id)) return;
+                        delete latestItemsById[id];
+                        document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (row) {
+                            if (String(row.getAttribute('data-pauta') || '').trim() !== id) return;
+                            if (row.contains(document.activeElement)) {
+                                var section = row.closest('.card-page');
+                                var destination = section && section.querySelector('h2');
+                                if (destination) destination.focus();
+                            }
+                            row.remove();
+                        });
+                    });
+                    ['card-audiencias-hoje-estudante', 'card-minhas-inscricoes-estudante'].forEach(function (sectionId) {
+                        var section = document.getElementById(sectionId);
+                        if (!section) return;
+                        var empty = section.querySelector('.js-painel-empty');
+                        if (empty) empty.hidden = !!section.querySelector('.register.register-painel-estudante[data-pauta]');
+                    });
                     Object.keys(res.body.items).forEach(function (id) {
                         latestItemsById[id] = Object.assign({}, latestItemsById[id] || {}, res.body.items[id]);
                     });
                     applyUpdates(res.body.items);
                 })
-                .catch(function () { /* erro silencioso de polling */ });
+                .catch(function () { /* erro silencioso de polling */ })
+                .finally(function () { statusRequestInFlight = false; });
         }
         var latestItemsById = buildCurrentItemsFromDom();
         var pollTimer = null;
@@ -1059,13 +1085,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             // Atualiza marcador "agora" mesmo sem mudança de dados.
             renderVisibleTimeBlocks(latestItemsById);
             renderTimeline(latestItemsById);
-            if (allPautasFinished(latestItemsById)) {
-                if (pollTimer !== null) {
-                    window.clearInterval(pollTimer);
-                    pollTimer = null;
-                }
-                return;
-            }
             // Atualiza dados reais sem recarregar a página.
             refreshStatusAndTime();
         }

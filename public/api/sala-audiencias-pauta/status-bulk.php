@@ -96,12 +96,20 @@ try {
             LEFT JOIN `sala_audiencias_estudante_inscricao` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = ?
             WHERE a.`ativo` = 1 AND a.`id_pauta` IN ($marks)";
     $st = $pdo->prepare($sql);
+    if ($st === false) {
+        throw new RuntimeException('Falha ao preparar consulta.');
+    }
     $st->bindValue(1, $usuarioId);
     foreach ($ids as $i => $id) {
         $st->bindValue($i + 2, $id);
     }
-    $st->execute();
-    $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    if (!$st->execute()) {
+        throw new RuntimeException('Falha ao executar consulta.');
+    }
+    $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+    if ($rows === false) {
+        throw new RuntimeException('Falha ao consultar pautas.');
+    }
 
     $items = [];
     $agoraStatusTs = time();
@@ -150,7 +158,7 @@ try {
             'pode_inscrever' => $podeInscrever,
         ];
     }
-    echo json_encode(['success' => true, 'items' => $items], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => true, 'items' => (object) $items, 'completo' => true, 'consultados' => $ids], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Erro ao consultar status.'], JSON_UNESCAPED_UNICODE);

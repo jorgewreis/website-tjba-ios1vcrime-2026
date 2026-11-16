@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0160
+
+**Data:** 2026-11-16 03:11:01 | **Commit:** `af020b8f` | **Tipo:** `patch`
+
+- fix: atualizar painel apos pauta indisponivel
+
 ## V. 1.87.0159
 
 **Data:** 2026-11-16 03:01:04 | **Commit:** `a5109794` | **Tipo:** `patch`
@@ -6381,6 +6387,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
