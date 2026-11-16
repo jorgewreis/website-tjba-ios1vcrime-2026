@@ -2,7 +2,7 @@
 
 ## V. 1.87.0165
 
-**Data:** 2026-11-16 17:34:46 | **Commit:** `c5f6839a` | **Tipo:** `patch`
+**Data:** 2026-11-16 17:34:46 | **Commit:** `74a134a7` | **Tipo:** `patch`
 
 - fix(REI-161): ocultar metadados de pautas inelegiveis
 
@@ -6417,7 +6417,6 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
-
 
 
 
