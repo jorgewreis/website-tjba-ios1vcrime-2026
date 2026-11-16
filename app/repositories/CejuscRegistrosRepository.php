@@ -44,6 +44,15 @@ final class CejuscRegistrosRepository
         return $row === false ? null : $row;
     }
 
+    /** Deve ser chamado dentro de uma transação antes de efeitos relacionados. */
+    public function findForUpdate(string $id): ?array
+    {
+        $stmt = $this->connection->prepare("SELECT * FROM `{$this->table}` WHERE `id` = :id LIMIT 1 FOR UPDATE");
+        $stmt->execute([':id' => trim($id)]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row === false ? null : $row;
+    }
+
     public function findDuplicateByProcessoAndParte(string $numeroProcesso, string $nomeParte): ?array
     {
         $numeroProcesso = trim($numeroProcesso);
@@ -94,7 +103,7 @@ final class CejuscRegistrosRepository
             `numero_processo` = :processo, `classe_codigo` = :classe_codigo, `classe_descricao` = :classe_descricao,
             `nome_parte` = :parte, `data_envio_cejusc` = :data,
             `atualizado_por` = :usuario, `updated_at` = NOW() WHERE `id` = :id LIMIT 1");
-        $stmt->execute([
+        return $stmt->execute([
             ':id' => $id,
             ':processo' => $data['numero_processo'],
             ':classe_codigo' => $data['classe_codigo'] ?? null,
@@ -103,7 +112,6 @@ final class CejuscRegistrosRepository
             ':data' => $data['data_envio_cejusc'],
             ':usuario' => $data['usuario_id'] ?? null,
         ]);
-        return $stmt->rowCount() > 0;
     }
 
     public function delete(string $id): bool

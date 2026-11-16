@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0140
+
+**Data:** 2026-11-15 22:21:46 | **Commit:** `e6a5eb5d` | **Tipo:** `patch`
+
+- fix: proteger autoria e atomicidade cejusc
+
 ## V. 1.87.0139
 
 **Data:** 2026-11-15 22:19:32 | **Commit:** `c7555124` | **Tipo:** `patch`
@@ -6261,6 +6267,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
