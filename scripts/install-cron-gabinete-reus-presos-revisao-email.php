@@ -76,15 +76,42 @@ $line = sprintf(
     $marker
 );
 
-$existing = shell_exec('crontab -l 2>/dev/null');
-$existing = is_string($existing) ? $existing : '';
+$previousLocale = getenv('LC_ALL');
+putenv('LC_ALL=C');
+$stdout = tmpfile();
+$stderr = tmpfile();
+if ($stdout === false || $stderr === false) {
+    fwrite(STDERR, "Erro: nao foi possivel criar arquivos temporarios.\n");
+    exit(1);
+}
+$process = proc_open('crontab -l', [0 => ['pipe', 'r'], 1 => $stdout, 2 => $stderr], $pipes);
+if (!is_resource($process)) {
+    fwrite(STDERR, "Erro: nao foi possivel iniciar leitura do crontab.\n");
+    exit(1);
+}
+fclose($pipes[0]);
+$readStatus = proc_close($process);
+rewind($stdout);
+rewind($stderr);
+$existing = stream_get_contents($stdout);
+$readError = stream_get_contents($stderr);
+fclose($stdout);
+fclose($stderr);
+$previousLocale === false ? putenv('LC_ALL') : putenv('LC_ALL=' . $previousLocale);
+if ($existing === false || $readError === false || ($readStatus !== 0 && !(
+    $readStatus === 1 && $existing === '' && preg_match('/\\Ano crontab for [^\\r\\n]+\\r?\\n\\z/', $readError) === 1
+))) {
+    fwrite(STDERR, "Erro: nao foi possivel ler o crontab; nenhuma alteracao foi instalada.\n");
+    exit(1);
+}
+if ($readStatus !== 0) {
+    $existing = '';
+}
 
 $outLines = [];
-foreach (preg_split("/\r\n|\n|\r/", trim($existing)) as $ln) {
-    if ($ln === '') {
-        continue;
-    }
-    if (str_contains($ln, $marker)) {
+foreach (preg_split("/\r\n|\n|\r/", rtrim($existing, "\r\n")) as $ln) {
+    if ($ln === '' && $existing === '') continue;
+    if (preg_match('~^0[\\t ]+18[\\t ]+\\*[\\t ]+\\*[\\t ]+4[\\t ]+cd[\\t ]+[^#]*&&[^#]*send-gabinete-reus-presos-revisao-email\\.php[^#]*>>[^#]*2>&1[\\t ]+#tjba-reus-presos-revisao-email[\\t ]*$~', $ln) === 1) {
         continue;
     }
     $outLines[] = $ln;
@@ -99,6 +126,7 @@ if ($tmp === false) {
 
 $content = implode("\n", $outLines) . "\n";
 if (file_put_contents($tmp, $content) === false) {
+    @unlink($tmp);
     fwrite(STDERR, "Erro: nao foi possivel gravar arquivo temporario.\n");
     exit(1);
 }
