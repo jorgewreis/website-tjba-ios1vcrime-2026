@@ -132,4 +132,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: preserve prior ata on replacement failure** `[bc57c55c]`
 - **fix: handle PDF tool cancellation safely** `[2cfddb29]`
 - **docs: corrigir orientacao de permissoes de deploy** `[7dfe4acd]`
+- **fix: validar origem completa em requisicoes POST** `[ffebadd1]`
 
