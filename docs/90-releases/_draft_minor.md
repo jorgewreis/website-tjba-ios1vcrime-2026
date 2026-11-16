@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: validar data de movimentacao no servidor** `[d16a4e89]`
+- **fix: bloquear testes auth sem sandbox comprovado** `[a30e6dc8]`
 
