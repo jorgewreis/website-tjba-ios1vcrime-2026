@@ -81,6 +81,16 @@ expectRei85($service->updateVinculoInstituicao($linkId, ['cargo_funcao' => 'Peri
 expectRei85($service->deleteVinculoInstituicao($linkId), 'Exclusão válida foi rejeitada.');
 expectRei85(!$service->deleteVinculoInstituicao($linkId), 'Exclusão repetida deveria permanecer idempotente.');
 
+$seedPerson('P-RACE', null);
+$db->beginTransaction();
+expectRei85($db->query("SELECT profissao FROM partes WHERE id='P-RACE'")->fetchColumn() === null, 'Falha ao fixar snapshot de profissão anterior.');
+$other = new PDO($dsn, (string) getenv('REI85_TEST_USER'), (string) getenv('REI85_TEST_PASSWORD'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+(new PessoasService($other))->addVinculoInstituicao('P-RACE', ['instituicao_id' => 'I1', 'profissao' => 'Medico']);
+$service->addVinculoInstituicao('P-RACE', ['instituicao_id' => 'I2', 'profissao' => 'Advogado']);
+$db->commit();
+$race = $db->query("SELECT p.profissao AS pessoa_profissao, GROUP_CONCAT(DISTINCT pi.profissao ORDER BY pi.profissao) AS vinculo_profissoes FROM partes p JOIN partes_instituicoes pi ON pi.parte_id=p.id AND pi.ativo=1 WHERE p.id='P-RACE' GROUP BY p.id")->fetch(PDO::FETCH_ASSOC);
+expectRei85(($race['pessoa_profissao'] ?? null) === 'Medico' && ($race['vinculo_profissoes'] ?? null) === 'Medico', 'Reconciliação concorrente leu snapshot antigo e deixou profissões divergentes.');
+
 $seedPerson('P-OUTER', null);
 $db->exec("CREATE TRIGGER fail_rei85_outer BEFORE UPDATE ON partes FOR EACH ROW BEGIN IF NEW.profissao = 'Medico' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'synthetic outer failure'; END IF; END");
 $db->beginTransaction();

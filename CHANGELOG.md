@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0175
+
+**Data:** 2026-11-16 18:56:32 | **Commit:** `717fda5e` | **Tipo:** `patch`
+
+- fix(REI-85): serialize profession reconciliation
+
 ## V. 1.87.0174
 
 **Data:** 2026-11-16 18:48:09 | **Commit:** `c5d213d3` | **Tipo:** `patch`
@@ -6473,6 +6479,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require __DIR__.'/../app/services/PessoasService.php';
-class ReI85Db extends PDO { public function prepare(string $sql,array $options=[]): PDOStatement|false {return parent::prepare(preg_replace('/ LIMIT 1$/','',str_replace('NOW()',"'2026-01-01'",$sql)),$options);} }
+class ReI85Db extends PDO { public function prepare(string $sql,array $options=[]): PDOStatement|false {$sql=preg_replace('/ FOR UPDATE$/i','',$sql);return parent::prepare(preg_replace('/ LIMIT 1$/','',str_replace('NOW()',"'2026-01-01'",$sql)),$options);} }
 function check85(bool $value,string $message): void { if (!$value) throw new RuntimeException($message); }
 function db85(): PDO { $db=new ReI85Db('sqlite::memory:');$db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
 $db->exec('CREATE TABLE partes (id TEXT PRIMARY KEY,cpf TEXT,nome_completo TEXT,sexo TEXT,data_nascimento TEXT,profissao TEXT,created_at TEXT,updated_at TEXT)');

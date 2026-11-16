@@ -115,7 +115,7 @@ final class PessoasService
     public function update(string $id, array $payload): bool
     {
         return $this->operacaoProfissaoAtomica(function () use ($id, $payload): bool {
-            $existente = $this->partesRepository->findById($id);
+            $existente = $this->partesRepository->findByIdForUpdate($id);
             if ($existente === null) {
                 return false;
             }
@@ -223,6 +223,9 @@ final class PessoasService
             'observacoes' => isset($row['observacoes']) ? (trim((string) $row['observacoes']) ?: null) : null,
         ];
         return $this->operacaoProfissaoAtomica(function () use ($data, $parteId): string {
+            if ($this->partesRepository->findByIdForUpdate($parteId) === null) {
+                throw new InvalidArgumentException('Pessoa não encontrada.');
+            }
             $novoId = $this->partesInstituicoesRepository->insert($data);
             $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
             return $novoId;
@@ -232,13 +235,18 @@ final class PessoasService
     public function updateVinculoInstituicao(string $id, array $payload): bool
     {
         return $this->operacaoProfissaoAtomica(function () use ($id, $payload): bool {
+            $row = $this->partesInstituicoesRepository->findById($id);
+            $parteId = trim((string) ($row['parte_id'] ?? ''));
+            if ($parteId === '' || $this->partesRepository->findByIdForUpdate($parteId) === null) {
+                return false;
+            }
+            $current = $this->partesInstituicoesRepository->findByIdForUpdate($id);
+            if ($current === null || trim((string) ($current['parte_id'] ?? '')) !== $parteId) {
+                return false;
+            }
             $ok = $this->partesInstituicoesRepository->update($id, $payload);
             if ($ok) {
-                $row = $this->partesInstituicoesRepository->findById($id);
-                $parteId = trim((string) ($row['parte_id'] ?? ''));
-                if ($parteId !== '') {
-                    $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
-                }
+                $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
             }
             return $ok;
         });
@@ -249,6 +257,13 @@ final class PessoasService
         return $this->operacaoProfissaoAtomica(function () use ($id): bool {
             $row = $this->partesInstituicoesRepository->findById($id);
             $parteId = $row !== null ? trim((string) ($row['parte_id'] ?? '')) : '';
+            if ($parteId === '' || $this->partesRepository->findByIdForUpdate($parteId) === null) {
+                return false;
+            }
+            $current = $this->partesInstituicoesRepository->findByIdForUpdate($id);
+            if ($current === null || trim((string) ($current['parte_id'] ?? '')) !== $parteId) {
+                return false;
+            }
             $ok = $this->partesInstituicoesRepository->delete($id);
             if ($ok && $parteId !== '') {
                 $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
@@ -269,11 +284,11 @@ final class PessoasService
         if ($parteId === '') {
             return;
         }
-        $parte = $this->partesRepository->findById($parteId);
+        $parte = $this->partesRepository->findByIdForUpdate($parteId);
         if ($parte === null) {
             return;
         }
-        $vinculos = $this->partesInstituicoesRepository->findByParteId($parteId, true);
+        $vinculos = $this->partesInstituicoesRepository->findByParteIdForUpdate($parteId, true);
         if ($vinculos === []) {
             return;
         }
