@@ -266,25 +266,17 @@ O arquivo [`database/schema.sql`](../../database/schema.sql) também versiona ar
 
 Esses artefatos partem da premissa de que tabelas-base como `usuarios`, `perfis`, `usuario_perfil`, `processos` e `classes` já existem no ambiente.
 
-## 8. Migrations atualmente versionadas
+## 8. Migrações versionadas e inventário local
 
-Arquivos presentes hoje em [`database/migrations/`](../../database/migrations):
+Na revisão do Git em `c6b0274a` (16/11/2026), `database/migrations/` contém os seguintes arquivos rastreados:
 
-- `20260322_gabinete_reus_presos.sql`
-- `20260322_oficios_criado_por.sql`
-- `20260322_seed_setores_inicial.sql`
-- `20260322_setores_codigo_area.sql`
-- `20260322_usuario_perfil_composite_limpeza.sql`
-- `20260330_processoPrioridades.sql` (`deprecated`)
-- `20260331_processo_prioridades_unificacao.sql`
-- `20260401_login_rate_limits.sql`
-- `guias.sql`
-- `run_processo_prioridades_unificacao_data.php`
-- `salario_minimo_e_valor_multa_guias.sql`
-- `seed_salario_minimo_1994_2026.sql`
-- `usuarios_created_at_updated_at.sql`
+- `20260807_add_cejusc_classe_processual.sql`;
+- `20260807_create_cejusc_registros.sql`;
+- `20261009_add_gabinete_reu_preso_controle_tipo.sql`;
+- `20261109_create_login_rate_limits.sql`;
+- `run_processo_prioridades_unificacao_data.php`.
 
-O arquivo [`database/README-migracoes.md`](../../database/README-migracoes.md) deve ser consultado para a classificação por módulo, base e scripts legados/deprecados.
+Esta lista é um retrato da revisão, não uma ordem de execução. A inspeção dos arquivos locais não rastreados, suas limitações e riscos está em [Inventário de migrações — REI-97](migracoes-inventario-rei97.md). Nenhuma dessas evidências comprova aplicação em DEV ou PROD. O [README de migrações](../../database/README-migracoes.md) contém referências históricas, não um manifesto executável.
 
 ## 9. Decisões canônicas deste item
 
