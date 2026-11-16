@@ -138,13 +138,15 @@ $copyRelative = static function (string $root, string $relative, string $destina
 $appFiles = [
     'helpers/ApiAccessGuard.php', 'helpers/BootstrapHelper.php', 'helpers/UserAccessHelper.php',
     'helpers/ProcessoSetorAuthorization.php', 'helpers/IdGenerator.php',
+    'helpers/TextFormatter.php', 'helpers/ParteDocumentoHelper.php',
     'access/AccessEvaluator.php', 'access/ProfileNormalizer.php', 'access/PageAccessRegistry.php',
     'access/AccessAreas.php', 'access/AccessPolicyVersion.php',
-    'repositories/ProcessosPartesRepository.php',
+    'repositories/ProcessosPartesRepository.php', 'repositories/PartesDocumentosRepository.php',
 ];
 foreach ($appFiles as $relative) {
     $copyRelative($appRoot, $relative, $lab, 'app/' . $relative);
 }
+$copyRelative($appRoot, 'repositories/PartesRepository.php', $lab, 'app/repositories/PartesRepositoryReal.php');
 foreach (['create.php', 'update.php', 'delete.php'] as $endpoint) {
     $copyRelative($endpointRoot, $endpoint, $lab, 'public/api/processos-partes/' . $endpoint);
 }
@@ -176,6 +178,21 @@ final class Security {
     public static function isAuthenticated(): bool { return getenv('TEST_AUTH') === '1' && getenv('TEST_SESSION') === '1' && !empty($_SESSION['id_usuario']); }
 }
 PHP);
+$pdo->exec("INSERT INTO partes (id,nome_completo,cpf,sexo,data_nascimento,profissao,created_at,updated_at) VALUES ('PAR-REAL','Pessoa Repositório Real','00000000002','X','1990-01-01','Profissão anterior',NOW(),NOW())");
+require_once $lab . '/app/repositories/PartesRepositoryReal.php';
+$realPartesRepository = new PartesRepository($pdo);
+$realPartesRepository->syncProfissaoFromTipoProcessoParte('PAR-REAL', 'advogado');
+if ($pdo->query("SELECT profissao FROM partes WHERE id='PAR-REAL'")->fetchColumn() !== PartesRepository::PROFISSAO_ADVOGADO) {
+    throw new RuntimeException('PartesRepository real não atualizou a profissão global de advogado.');
+}
+$realPartesRepository->syncProfissaoFromTipoProcessoParte('PAR-REAL', 'defensor_publico');
+if ($pdo->query("SELECT profissao FROM partes WHERE id='PAR-REAL'")->fetchColumn() !== PartesRepository::PROFISSAO_DEFENSOR_PUBLICO) {
+    throw new RuntimeException('PartesRepository real não atualizou a profissão global de defensor público.');
+}
+$realPartesRepository->syncProfissaoFromTipoProcessoParte('PAR-REAL', 'reu');
+if ($pdo->query("SELECT profissao FROM partes WHERE id='PAR-REAL'")->fetchColumn() !== PartesRepository::PROFISSAO_DEFENSOR_PUBLICO) {
+    throw new RuntimeException('PartesRepository real alterou profissão em tipo sem sincronização.');
+}
 file_put_contents($lab . '/app/repositories/PartesRepository.php', <<<'PHP'
 <?php
 declare(strict_types=1);
