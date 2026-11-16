@@ -101,6 +101,14 @@ INSERT INTO partes_instituicoes VALUES ('VA','P','A','SA','','','2026-01-01',NUL
     assert run(mode_script, consultant) == 'restricted'
     mode_script = mode_script.replace('["ADMIN","CONSULTOR"]', '["ADMIN","CONSULTOR","SERVIDOR-CARTORIO"]')
     assert run(mode_script, consultant) == 'broad'
+    policy_script = 'require ' + json.dumps(helper) + '; $p=json_decode(getenv("REI70_PROFILES"),true); echo InstituicoesConsultaPolicy::onlyActiveForProfiles($p) ? "restricted" : "broad";'
+    access_evaluator = (base / 'app/access/AccessEvaluator.php').as_posix()
+    for profiles in (['CONSULTOR', 'MAGISTRADA'], ['CONSULTOR', 'DIRETORA']):
+        assert run(policy_script, profiles) == 'broad'
+        access_script = 'require ' + json.dumps(access_evaluator) + '; $p=json_decode(getenv("REI70_PROFILES"),true); echo AccessEvaluator::canAccessPage("instituicoespublicas",$p) ? "allowed" : "denied";'
+        assert run(access_script, profiles) == 'allowed'
+    policy_script = 'require_once ' + json.dumps(effective) + '; require ' + json.dumps(helper) + '; $raw=["ADMIN","CONSULTOR","MAGISTRADA"]; $_SESSION=["id_usuario"=>"SYN", "access_suppress_admin_profile"=>true]; $p=EffectiveAccessProfiles::applyForUser("SYN",$raw); echo InstituicoesConsultaPolicy::onlyActiveForProfiles($p) ? "restricted" : "broad";'
+    assert run(policy_script, consultant) == 'broad'
     handler = (base / 'app/helpers/InternalListExportHandlers.php').as_posix()
     def export(page, query, profiles):
         script = '$_SESSION=["id_usuario"=>"SYN"]; parse_str(' + json.dumps(query) + ', $_GET); require ' + json.dumps(handler) + '; $p=Conection::getInstance()->getConnection(); echo json_encode(InternalListExportHandlers::dispatch(' + json.dumps(page) + ',$p,"SYN",$_GET));'

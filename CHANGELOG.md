@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0167
+
+**Data:** 2026-11-16 15:12:00 | **Commit:** `6b2436f0` | **Tipo:** `patch`
+
+- test: cover mixed alias profiles for REI-70
+
 ## V. 1.87.0166
 
 **Data:** 2026-11-16 14:58:32 | **Commit:** `74c64778` | **Tipo:** `patch`
@@ -6423,6 +6429,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
