@@ -91,6 +91,7 @@ jobs:
             --mkpath \
             --exclude ".git/" \
             --exclude ".github/" \
+            --exclude "/tests/" \
             --exclude ".agents/" \
             --exclude ".cursor/" \
             --exclude "AGENTS.md" \
