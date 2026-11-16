@@ -22,4 +22,3 @@ const tick=()=>new Promise(r=>setImmediate(r));
   els['comarca-lookup-retry'].emit('click'); requests[4].resolve({ok:true,json:()=>Promise.resolve({found:true,id:'sp',uf:'SP'})}); await tick(); assert.equal(els['hidden-comarca-id'].value,'sp'); assert.equal(els['comarca-lookup-retry'].hidden,true);
   console.log('OK interface simulada: UF, inválida, respostas fora de ordem');
 })().catch(e=>{console.error(e);process.exitCode=1});
-
