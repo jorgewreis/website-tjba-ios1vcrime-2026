@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0144
+
+**Data:** 2026-11-15 22:46:37 | **Commit:** `e869cd5b` | **Tipo:** `patch`
+
+- fix: suspender consulta mni sem autorizacao por processo
+
 ## V. 1.87.0143
 
 **Data:** 2026-11-15 22:42:02 | **Commit:** `3c5531e6` | **Tipo:** `patch`
@@ -6285,6 +6291,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

@@ -19,6 +19,16 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=UTF-8');
 
+// REI-81: a consulta está suspensa até existir autorização por processo e sigilo.
+// Esta barreira precede a leitura da configuração e qualquer chamada ao tribunal.
+http_response_code(503);
+header('Cache-Control: no-store');
+echo json_encode([
+    'error' => 'Consulta MNI temporariamente indisponível.',
+    'kind' => 'unavailable',
+], JSON_UNESCAPED_UNICODE);
+exit;
+
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CnjValidator.php';
