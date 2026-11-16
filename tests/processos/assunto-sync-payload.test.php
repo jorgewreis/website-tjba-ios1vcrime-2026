@@ -34,6 +34,12 @@ foreach ([[null], [['codigo' => []]], [['descricao' => 'sem código']], ['texto'
 $empty = $service->syncFromDataJud($cnj, []);
 checkSyncPayload($empty['stats']['removed'] === 1, 'Lista vazia explícita não removeu o vínculo DataJud.');
 checkSyncPayload((int)$db->query("SELECT COUNT(*) FROM processo_assuntos WHERE origem='manual'")->fetchColumn() === 1, 'Lista vazia removeu vínculo manual.');
+$overlap = $service->syncFromDataJud($cnj, [['codigo' => '1', 'descricao' => 'Manual']]);
+checkSyncPayload($overlap['stats']['inserted'] === 0, 'Assunto já vinculado manualmente foi contado como novo vínculo.');
+checkSyncPayload((string)$db->query("SELECT origem FROM processo_assuntos WHERE assunto_id='A1'")->fetchColumn() === 'manual', 'Sync DataJud reclassificou vínculo manual.');
+$afterOverlapEmpty = $service->syncFromDataJud($cnj, []);
+checkSyncPayload($afterOverlapEmpty['stats']['removed'] === 0, 'Sync DataJud vazio removeu vínculo que era manual.');
+checkSyncPayload((string)$db->query("SELECT origem FROM processo_assuntos WHERE assunto_id='A1'")->fetchColumn() === 'manual', 'Vínculo manual não sobreviveu ao sync DataJud vazio.');
 $db->exec("INSERT INTO processo_assuntos VALUES ('D2','P','A2','datajud','','')");
 
 $db->exec("CREATE TRIGGER fail_datajud_delete BEFORE DELETE ON processo_assuntos WHEN OLD.origem='datajud' BEGIN SELECT RAISE(ABORT, 'synthetic delete failure'); END");

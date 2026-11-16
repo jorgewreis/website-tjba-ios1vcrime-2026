@@ -246,7 +246,12 @@ final class ProcessoAssuntosRepository
         }
 
         $existingDataJud = [];
+        $existingAnyOrigin = [];
         foreach ($existingRows as $row) {
+            $aid = trim((string) ($row['assunto_id'] ?? ''));
+            if ($aid !== '') {
+                $existingAnyOrigin[$aid] = true;
+            }
             $origem = trim((string) ($row['origem'] ?? ''));
             if ($origem !== ProcessoAssuntoOrigem::DATAJUD) {
                 continue;
@@ -262,7 +267,9 @@ final class ProcessoAssuntosRepository
             $novosMap[$id] = true;
         }
 
-        $toInsert = array_values(array_diff($novosIds, array_keys($existingDataJud)));
+        // An existing manual link is already satisfied. Do not pass it through upsert(),
+        // which would change its provenance to DataJud and make it eligible for deletion.
+        $toInsert = array_values(array_diff($novosIds, array_keys($existingAnyOrigin)));
         $toRemove = array_values(array_diff(array_keys($existingDataJud), $novosIds));
 
         $inserted = 0;

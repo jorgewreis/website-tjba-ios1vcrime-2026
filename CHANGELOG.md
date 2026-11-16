@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0166
+
+**Data:** 2026-11-16 11:31:52 | **Commit:** `a379993b` | **Tipo:** `patch`
+
+- fix(REI-153): preserve manual subject provenance
+
 ## V. 1.87.0165
 
 **Data:** 2026-11-16 11:27:41 | **Commit:** `d439a112` | **Tipo:** `patch`
@@ -6417,6 +6423,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
