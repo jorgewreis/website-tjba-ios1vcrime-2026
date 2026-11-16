@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0165
+
+**Data:** 2026-11-16 14:53:04 | **Commit:** `2fb95200` | **Tipo:** `patch`
+
+- test: validate public institutions with isolated MySQL
+
 ## V. 1.87.0164
 
 **Data:** 2026-11-16 06:16:54 | **Commit:** `2aec3c3b` | **Tipo:** `patch`
@@ -6411,6 +6417,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
