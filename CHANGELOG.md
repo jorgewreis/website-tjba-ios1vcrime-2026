@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0168
+
+**Data:** 2026-11-16 16:14:52 | **Commit:** `c7de2cb2` | **Tipo:** `patch`
+
+- fix(REI-78): block duplicate carta submissions
+
 ## V. 1.87.0167
 
 **Data:** 2026-11-16 15:43:02 | **Commit:** `ae959e86` | **Tipo:** `patch`
@@ -6429,6 +6435,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

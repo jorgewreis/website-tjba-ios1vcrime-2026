@@ -106,6 +106,9 @@
                 : helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
             const cityLookupEndpoint = String(settings.cityLookupEndpoint || '').trim();
             if (cityLookupEndpoint) {
+                // Fecha a guarda antes do primeiro await. Sem isso, cliques
+                // durante a consulta da cidade iniciavam múltiplos cadastros.
+                gate.setSubmitting();
                 try {
                     const lookupUrl = new URL(cityLookupEndpoint, global.location.origin);
                     lookupUrl.searchParams.set('cidade', cidadeDestino);
@@ -116,7 +119,10 @@
                         throw new Error(lookupData.error || 'Não foi possível validar a comarca de destino.');
                     }
                     if (lookupData.is_ccm === true || String(lookupData.status_cidade || '').trim().toUpperCase() === 'CCM') {
-                        if (!confirmCcm(cidadeDestino)) return;
+                        if (!confirmCcm(cidadeDestino)) {
+                            gate.setReady();
+                            return;
+                        }
                         if (cidadeInput) delete cidadeInput.dataset.ccmBlocked;
                     }
                 } catch (error) {
