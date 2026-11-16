@@ -60,7 +60,7 @@ class SalaAudienciasAtaService {
 }
 """, encoding="utf-8")
 
-    def request(name, origin=None, referer=None, user="synthetic", allowed="1", valid_session=True):
+    def request(name, origin=None, referer=None, user="synthetic", allowed="1", valid_session=True, expected_status=200):
         marker = root / "side-effect.txt"
         marker.unlink(missing_ok=True)
         server = {"REQUEST_METHOD": "POST", "HTTP_HOST": "court.example.test", "HTTPS": "on"}
@@ -102,7 +102,7 @@ class SalaAudienciasAtaService {
         ("trusted referer", None, "https://court.example.test/internal/atas", "synthetic", "1", True, 200, True),
     ]
     for name, origin, referer, user, allowed, valid_session, expected_status, expected_side_effect in cases:
-        body, changed = request(name, origin, referer, user, allowed, valid_session)
+        body, changed = request(name, origin, referer, user, allowed, valid_session, expected_status)
         assert (body.get("success") is True) == expected_side_effect, (name, body)
         assert changed is expected_side_effect, (name, changed)
         # The endpoint leaves the normal PHP success status unchanged; failures are explicit.

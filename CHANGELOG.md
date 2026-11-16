@@ -2,7 +2,7 @@
 
 ## V. 1.87.0165
 
-**Data:** 2026-11-16 13:30:22 | **Commit:** `892c5476` | **Tipo:** `patch`
+**Data:** 2026-11-16 13:30:22 | **Commit:** `b97baf42` | **Tipo:** `patch`
 
 - fix(security): validate origin on ata uploads
 
