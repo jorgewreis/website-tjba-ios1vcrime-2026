@@ -117,14 +117,14 @@ final class GabineteMonitoramentoEletronicoService
 
         $existing = $this->processosRepository->findByNumero($numeroFormatado);
         if ($existing === null) {
-            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, false);
+            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, null);
         } else {
             $processoId = trim((string) ($existing['id'] ?? ''));
             if ($processoId === '') {
                 throw new RuntimeException('Processo não encontrado após consolidação.');
             }
             if ($classeIdResolved !== null && $classeIdResolved !== '') {
-                $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, false);
+                $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, null);
             }
         }
 
@@ -198,7 +198,7 @@ final class GabineteMonitoramentoEletronicoService
             $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
             $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
         }
-        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
+        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
 
         $processoParteId = trim((string) ($payload['processo_parte_id'] ?? $payload['reu_processo_parte_id'] ?? ''));
         $reuId = trim((string) ($payload['reu_id'] ?? ''));

@@ -368,7 +368,7 @@ final class GabineteReusPresosService
             $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
         }
 
-        $processoId = $this->processosRepository->ensureProcess($numeroRaw, $classeId, null, false);
+        $processoId = $this->processosRepository->ensureProcess($numeroRaw, $classeId, null, null);
 
         if ($linkId !== '') {
             $existing = $this->procRepo->findById($linkId);

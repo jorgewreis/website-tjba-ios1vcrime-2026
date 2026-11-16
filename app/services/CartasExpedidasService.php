@@ -87,6 +87,11 @@ final class CartasExpedidasService
         return $this->repository->countByFinalidade($filters);
     }
 
+    private static function sigiloParaCriacao(array $payload): ?bool
+    {
+        return !empty($payload['nivel_sigilo']) ? true : null;
+    }
+
     public function create(array $payload): string
     {
         $processo = trim((string) ($payload['processo'] ?? $payload['numero_processo'] ?? ''));
@@ -122,7 +127,8 @@ final class CartasExpedidasService
 
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
         $classeNome = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-        $sigiloso = !empty($payload['nivel_sigilo']);
+        // Criar uma carta não autoriza retirar o sigilo de processo existente.
+        $sigiloso = self::sigiloParaCriacao($payload);
 
         if ($this->dataJudService !== null) {
             try {

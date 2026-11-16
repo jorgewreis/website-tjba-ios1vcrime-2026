@@ -95,7 +95,7 @@ class ReuManager
             return false;
         }
         try {
-            $processoId = $this->processosRepository->ensureProcess($numeroProcesso, null, null, false);
+            $processoId = $this->processosRepository->ensureProcess($numeroProcesso, null, null, null);
             $existente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $idReu);
             if ($existente !== null) {
                 return true;

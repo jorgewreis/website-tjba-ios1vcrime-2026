@@ -107,7 +107,7 @@ final class EditaisService
                 $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
                 $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
             }
-            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
+            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
         } else {
             $processoId = null;
             $existing = $this->processosRepository->findByNumero($numeroFormatado);

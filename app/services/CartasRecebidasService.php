@@ -142,7 +142,7 @@ final class CartasRecebidasService
 
         $processoOrigemId = null;
         if (strlen($digits) === 20) {
-            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
+            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
         }
 
         $idCarta = IdGenerator::generateUniquePrefixedId(

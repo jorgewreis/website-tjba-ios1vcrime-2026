@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0136
+
+**Data:** 2026-11-15 22:02:38 | **Commit:** `3e5f220f` | **Tipo:** `patch`
+
+- fix: preservar sigilo e transacoes de processo [skip draft]
+
 ## V. 1.87.0135
 
 **Data:** 2026-11-15 21:59:47 | **Commit:** `4866f593` | **Tipo:** `patch`
@@ -6237,6 +6243,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

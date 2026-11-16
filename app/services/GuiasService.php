@@ -203,9 +203,9 @@ final class GuiasService
         if ($classeCodigo !== '' && strlen($digits) === 20) {
             $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
             $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
-            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, $dataFato, false);
+            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, $dataFato, null);
         } elseif (strlen($digits) === 20) {
-            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, null, $dataFato, false);
+            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, null, $dataFato, null);
         }
 
         if ($parteId !== '' && $processoId !== null) {
