@@ -98,6 +98,31 @@ $inputs = [
 ];
 $service = new CartasExpedidasService($pdo);
 $expectedClassId = (new ClassesRepository($pdo))->ensureClass('CARTA-TESTE', 'Classe sintética');
+$repository = new CartasExpedidasRepository($pdo);
+$pdo->exec('ALTER TABLE cartas_expedidas DROP INDEX uq_cartas_expedidas_idempotency');
+$beforePartialSchema = [
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn(),
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn(),
+];
+try {
+    $service->create(array_merge($base, [
+        'usuario_cadastro_id' => 'USER-REI78-PARTIAL',
+        'idempotency_key' => str_repeat('c', 64),
+    ]));
+    throw new RuntimeException('Schema parcial sem índice único deveria bloquear o envio idempotente.');
+} catch (IdempotencySchemaUnavailableException $expected) {
+    if (!str_contains($expected->getPrevious()?->getMessage() ?? '', 'Índice único')) {
+        throw new RuntimeException('Falha inesperada ao detectar schema parcial.', 0, $expected);
+    }
+}
+if ($beforePartialSchema !== [
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn(),
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn(),
+]) {
+    throw new RuntimeException('Schema parcial permitiu gravação antes de bloquear a idempotência.');
+}
+$pdo->exec('ALTER TABLE cartas_expedidas ADD UNIQUE KEY uq_cartas_expedidas_idempotency (criado_por, idempotency_key)');
+$repository->assertIdempotencyColumnsAvailable();
 foreach ($inputs as $case => $extra) {
     $service->create($base + $extra);
     $row = $pdo->query("SELECT sigiloso, classe_id FROM processos WHERE id = 'PRC-EXISTING'")->fetch(PDO::FETCH_ASSOC);

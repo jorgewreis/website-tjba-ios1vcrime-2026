@@ -38,9 +38,11 @@ if ($hasKey && $hasHash && count($index) === 2) {
         && (int) $index[0]['NON_UNIQUE'] === 0
         && (int) $index[0]['SEQ_IN_INDEX'] === 1
         && strtolower((string) $index[0]['COLUMN_NAME']) === 'criado_por'
+        && $index[0]['SUB_PART'] === null
         && (int) $index[1]['NON_UNIQUE'] === 0
         && (int) $index[1]['SEQ_IN_INDEX'] === 2
-        && strtolower((string) $index[1]['COLUMN_NAME']) === 'idempotency_key';
+        && strtolower((string) $index[1]['COLUMN_NAME']) === 'idempotency_key'
+        && $index[1]['SUB_PART'] === null;
     if (!$valid) {
         throw new RuntimeException('Migração recusada: definição existente da chave idempotente não corresponde ao contrato.');
     }
@@ -62,5 +64,19 @@ $columnsQuery->execute([':table_name' => 'cartas_expedidas']);
 $verified = array_map('strtolower', $columnsQuery->fetchAll(PDO::FETCH_COLUMN));
 if (!in_array('idempotency_key', $verified, true) || !in_array('idempotency_payload_hash', $verified, true)) {
     throw new RuntimeException('Migração não pôde ser confirmada após execução.');
+}
+$indexQuery->execute([':table_name' => 'cartas_expedidas', ':index_name' => 'uq_cartas_expedidas_idempotency']);
+$verifiedIndex = $indexQuery->fetchAll(PDO::FETCH_ASSOC);
+$indexIsValid = count($verifiedIndex) === 2
+    && (int) $verifiedIndex[0]['NON_UNIQUE'] === 0
+    && (int) $verifiedIndex[0]['SEQ_IN_INDEX'] === 1
+    && strtolower((string) $verifiedIndex[0]['COLUMN_NAME']) === 'criado_por'
+    && $verifiedIndex[0]['SUB_PART'] === null
+    && (int) $verifiedIndex[1]['NON_UNIQUE'] === 0
+    && (int) $verifiedIndex[1]['SEQ_IN_INDEX'] === 2
+    && strtolower((string) $verifiedIndex[1]['COLUMN_NAME']) === 'idempotency_key'
+    && $verifiedIndex[1]['SUB_PART'] === null;
+if (!$indexIsValid) {
+    throw new RuntimeException('Migração não pôde confirmar o índice único após execução.');
 }
 fwrite(STDOUT, "OK cartas_expedidas idempotency schema aplicado e verificado.\n");

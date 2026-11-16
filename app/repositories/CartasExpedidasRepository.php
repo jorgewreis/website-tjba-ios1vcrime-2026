@@ -205,7 +205,43 @@ final class CartasExpedidasRepository
 
     public function assertIdempotencyColumnsAvailable(): void
     {
-        $this->connection->query(sprintf('SELECT `idempotency_key`, `idempotency_payload_hash` FROM `%s` LIMIT 0', $this->table));
+        $columns = $this->connection->prepare(
+            'SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table_name'
+        );
+        $columns->execute([':table_name' => $this->table]);
+        $definitions = [];
+        foreach ($columns->fetchAll(PDO::FETCH_ASSOC) as $column) {
+            $definitions[strtolower((string) $column['COLUMN_NAME'])] = $column;
+        }
+        foreach (['idempotency_key', 'idempotency_payload_hash'] as $name) {
+            $column = $definitions[$name] ?? null;
+            if (!is_array($column)
+                || strtolower((string) ($column['COLUMN_TYPE'] ?? '')) !== 'char(64)'
+                || strtoupper((string) ($column['IS_NULLABLE'] ?? '')) !== 'YES') {
+                throw new RuntimeException('Schema idempotente indisponível ou parcialmente aplicado.');
+            }
+        }
+
+        $index = $this->connection->prepare(
+            'SELECT NON_UNIQUE, SEQ_IN_INDEX, COLUMN_NAME, SUB_PART FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table_name AND INDEX_NAME = :index_name ORDER BY SEQ_IN_INDEX'
+        );
+        $index->execute([
+            ':table_name' => $this->table,
+            ':index_name' => 'uq_cartas_expedidas_idempotency',
+        ]);
+        $parts = $index->fetchAll(PDO::FETCH_ASSOC);
+        $valid = count($parts) === 2
+            && (int) $parts[0]['NON_UNIQUE'] === 0
+            && (int) $parts[0]['SEQ_IN_INDEX'] === 1
+            && strtolower((string) $parts[0]['COLUMN_NAME']) === 'criado_por'
+            && $parts[0]['SUB_PART'] === null
+            && (int) $parts[1]['NON_UNIQUE'] === 0
+            && (int) $parts[1]['SEQ_IN_INDEX'] === 2
+            && strtolower((string) $parts[1]['COLUMN_NAME']) === 'idempotency_key'
+            && $parts[1]['SUB_PART'] === null;
+        if (!$valid) {
+            throw new RuntimeException('Índice único de idempotência ausente ou incompatível.');
+        }
     }
 
     public function update(string $id, array $payload): bool
