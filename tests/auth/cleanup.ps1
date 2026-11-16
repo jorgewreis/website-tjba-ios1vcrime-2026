@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param()
 
+throw 'Limpeza manual suspensa: propriedade e isolamento do sandbox descartável não comprovados.'
+
 $ErrorActionPreference = 'Stop'
 $label = 'fokus.auth-e2e'
 

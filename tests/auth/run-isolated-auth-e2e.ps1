@@ -45,6 +45,11 @@ function App([string[]]$a) {
     $dockerArgs = @('exec','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_ENV_FILE=/workspace/tests/auth/.env.test.runtime','--env','AUTH_TEST_MAILPIT_URL=http://mailpit:8025','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner',"--env","AUTH_TEST_GUARD_TOKEN=$guardToken",$app) + $a
     return D $dockerArgs
 }
+function Client([string[]]$command, [string]$resetToken = '') {
+    $dockerArgs = @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner',"--env","AUTH_TEST_GUARD_TOKEN=$guardToken")
+    if ($resetToken -ne '') { $dockerArgs += @('--env',"E2E_RESET_TOKEN=$resetToken") }
+    return D ($dockerArgs + @($client) + $command)
+}
 function Run-AppTest([string]$testFile, [string[]]$arguments = @()) {
     Write-Output "STEP $testFile"
     if ($testFile -eq 'password-reset-states.test.php') {
@@ -89,11 +94,13 @@ try {
         if($item -eq 'tests/auth') { Assert-SafeTree $source; D @('cp',$source,"${app}:/workspace/tests/")|Out-Null }
         else { Copy-Tree $source }
     }
-    D @('exec',$client,'mkdir','-p','/workspace')|Out-Null
+    D @('exec',$client,'mkdir','-p','/workspace/tests/auth')|Out-Null
     foreach($clientTest in @('http-auth-flow.test.php', 'http-ready.test.php')) { D @('cp',(Join-Path $root "tests/auth/$clientTest"),"${client}:/workspace/$clientTest")|Out-Null }
+    D @('cp',(Join-Path $root 'tests/auth/sandbox-guard.php'),"${client}:/workspace/sandbox-guard.php")|Out-Null
     $runtime="APP_ENV=testing`nAUTH_TEST_ISOLATION=isolated-auth-test`nDB_HOST=mysql`nDB_PORT=3306`nDB_NAME=auth_test_e2e`nDB_USER=root`nDB_PASS=$pass`nDB_CHARSET=utf8mb4`nMAIL_DRIVER=smtp`nMAIL_HOST=mailpit`nMAIL_PORT=1025`nMAIL_USER=auth-test`nMAIL_PASSWORD=$pass`nMAIL_ENCRYPTION=none`nMAIL_FROM_ADDRESS=no-reply@auth-test.invalid`nMAIL_FROM_NAME=Auth E2E`nAPP_URL=https://auth-test.invalid`n"
     $runtime|& docker exec -i $app sh -c 'umask 077; cat > /workspace/tests/auth/.env.test.runtime'; if($LASTEXITCODE -ne 0){throw 'Não foi possível criar configuração interna.'}
     $guardToken=Secret
+    $guardToken|& docker exec -i $client sh -c 'umask 077; cat > /workspace/tests/auth/.isolated-runner'; if($LASTEXITCODE -ne 0){throw 'Não foi possível preparar o marcador para o cliente HTTP.'}
     $guardToken|& docker exec -i $app sh -c 'umask 077; cat > /workspace/tests/auth/.isolated-runner'; if($LASTEXITCODE -ne 0){throw 'Não foi possível criar o marcador interno de isolamento.'}
     & docker exec $app sh -c "grep -qx 'AUTH_TEST_ISOLATION=isolated-auth-test' /workspace/tests/auth/.env.test.runtime" 2>$null
     if($LASTEXITCODE -ne 0){throw 'A configuração interna não contém o marcador de isolamento exigido.'}
@@ -110,13 +117,13 @@ try {
     Run-AppTest 'login-rate-limit.fixture.php' @('seed')
     $token=(App @('php','/workspace/tests/auth/http-reset-token.fixture.php')|Select-Object -Last 1).Trim(); if($token -notmatch '^[a-f0-9]{64}$'){throw 'Token sintético inválido.'}
     D @('exec','-d',$app,'sh','-c','cd /workspace && exec php -S 0.0.0.0:8080 -t public >/tmp/auth-e2e-app.log 2>&1')|Out-Null
+    $clientReady = $false
     for($i=0; $i -lt 30; $i++) {
-        $probe = Start-Process -FilePath 'docker' -ArgumentList @('exec', $client, 'php', '/workspace/http-ready.test.php') -Wait -PassThru -NoNewWindow
-        if($probe.ExitCode -eq 0){break}
-        Start-Sleep -Seconds 1
+        try { Client @('php','/workspace/http-ready.test.php')|Out-Null; $clientReady = $true; break }
+        catch { Start-Sleep -Seconds 1 }
     }
-    if($i -eq 30){throw 'Aplicação HTTP não ficou pronta.'}
-    D @('exec','--workdir','/workspace','--env',"E2E_RESET_TOKEN=$token",$client,'php','http-auth-flow.test.php')|Write-Output
+    if(-not $clientReady){throw 'Aplicação HTTP não ficou pronta.'}
+    Client @('php','/workspace/http-auth-flow.test.php') $token|Write-Output
     Run-AppTest 'password-reset-states.test.php'
 } catch {
     $executionFailure = $_
