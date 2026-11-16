@@ -162,6 +162,30 @@
         });
     }
 
+    function bindReconciliation(ctx, settings) {
+        const button = global.document.getElementById('reconciliar-editais-btn');
+        if (!button || !Array.isArray(settings.editalIds) || settings.editalIds.length === 0) return;
+        button.addEventListener('click', function () {
+            if (!global.confirm('Atualizar as etapas dos editais exibidos nesta página?')) return;
+            button.disabled = true;
+            fetch(settings.reconcileEndpoint || '/api/cartorio-editais/reconciliar.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ edital_ids: settings.editalIds }),
+                credentials: 'same-origin'
+            }).then(function (response) {
+                return response.json().then(function (data) {
+                    if (!response.ok || !data.success) throw new Error(data.error || 'Falha ao atualizar etapas.');
+                    ctx.notify('success', 'Atualização concluída', 'Etapas atualizadas. Recarregando a página.');
+                    global.location.reload();
+                });
+            }).catch(function (error) {
+                ctx.notify('error', 'Erro', error.message || 'Não foi possível atualizar as etapas.');
+                button.disabled = false;
+            });
+        });
+    }
+
     function initialize(config) {
         if (!App.CartorioTaskList || typeof App.CartorioTaskList.initialize !== 'function') {
             return null;
@@ -187,6 +211,7 @@
             },
             onReady: function (ctx) {
                 bindConcludeButtons(ctx, settings.concludeEndpoint || '/api/cartorio-editais/concluir-subtarefa.php');
+                bindReconciliation(ctx, settings);
 
                 if (typeof settings.onReady === 'function') {
                     settings.onReady(ctx);

@@ -5,6 +5,7 @@ final class EditalListSqlite extends PDO {
  public function prepare(string $query, array $options = []): PDOStatement|false {
   // SQLite deste ambiente não aceita LIMIT em UPDATE; a cláusula WHERE identifica o edital.
   if (str_starts_with(ltrim($query), 'UPDATE ')) $query = preg_replace('/ LIMIT 1$/', '', $query);
+  $query = preg_replace('/ FOR UPDATE\s*$/i', '', $query);
   return parent::prepare($query, $options);
  }
  public function __construct() {
@@ -20,9 +21,29 @@ $db=new EditalListSqlite();
 $db->exec("INSERT INTO feriados VALUES (1,'2024-01-02','2024-01-02','unica')");
 $db->exec("INSERT INTO feriados VALUES (1,'2024-02-13','2024-02-13','movel')");
 $db->exec("INSERT INTO editais (id,prazo_dias,data_publicacao,status) VALUES ('E',1,'2024-01-01','aguardando decurso')");
-$before=[]; foreach (['feriados'] as $table) $before[$table]=$db->query("SELECT * FROM $table")->fetchAll(PDO::FETCH_ASSOC);
+$before=[]; foreach (['feriados','editais','editais_subtarefas'] as $table) $before[$table]=$db->query("SELECT * FROM $table")->fetchAll(PDO::FETCH_ASSOC);
 $result=(new EditaisService($db))->listEditais([],20,0);
 $info=$result['rows'][0]['DecursoInfo'];
 if ($result['total'] !== 1 || $info['data_inicio_contagem'] !== '2024-01-03' || $info['data_limite_decurso'] !== '2024-01-04') throw new RuntimeException('Feriado histórico ignorado');
 foreach ($before as $table=>$rows) if ($rows !== $db->query("SELECT * FROM $table")->fetchAll(PDO::FETCH_ASSOC)) throw new RuntimeException("Listagem alterou $table");
-echo "PASS preservação de feriado histórico e cálculo retroativo (SQLite adaptado; GET pode alterar editais)\n";
+$service = new EditaisService($db);
+if ($service->reconciliarEditais(['E']) !== 0) throw new RuntimeException('Reconciliação reportou finalização inesperada');
+if ((int) $db->query("SELECT COUNT(*) FROM editais_subtarefas WHERE edital_id='E'")->fetchColumn() !== 2) throw new RuntimeException('A ação explícita não criou as etapas ausentes');
+$db->exec("INSERT INTO editais (id,prazo_dias,data_publicacao,status) VALUES ('DONE',1,'2024-01-01','concluída'),('CANCEL',1,'2024-01-01','cancelada')");
+if ($service->reconciliarEditais(['DONE','CANCEL']) !== 0) throw new RuntimeException('Edital terminal foi reportado como finalizado');
+if ((int) $db->query("SELECT COUNT(*) FROM editais_subtarefas WHERE edital_id IN ('DONE','CANCEL')")->fetchColumn() !== 0) throw new RuntimeException('Reconciliação recriou etapas em edital terminal');
+$db->exec("INSERT INTO editais (id,prazo_dias,data_publicacao,status) VALUES ('A',1,'2024-01-01','pendente'),('Z',1,'2024-01-01','pendente')");
+$db->exec("CREATE TRIGGER falhar_segundo_edital BEFORE INSERT ON editais_subtarefas WHEN NEW.edital_id='Z' BEGIN SELECT RAISE(ABORT, 'falha sintética'); END");
+try {
+ $service->reconciliarEditais(['A','Z']);
+ throw new RuntimeException('Falha sintética da segunda linha não foi propagada');
+} catch (PDOException $expected) {
+ if (!str_contains($expected->getMessage(), 'falha sintética')) throw $expected;
+}
+if ((int) $db->query("SELECT COUNT(*) FROM editais_subtarefas WHERE edital_id IN ('A','Z')")->fetchColumn() !== 0) throw new RuntimeException('Falha no lote deixou etapas parcialmente criadas');
+$db->exec('DROP TRIGGER falhar_segundo_edital');
+try {
+ $service->reconciliarEditais(array_map(static fn($n) => 'E' . $n, range(1, 16)));
+ throw new RuntimeException('A reconciliação aceitou mais de 15 editais');
+} catch (InvalidArgumentException $expected) {}
+echo "PASS preservação de feriado histórico, GET sem alterações e manutenção somente por reconciliação explícita (SQLite adaptado)\n";
