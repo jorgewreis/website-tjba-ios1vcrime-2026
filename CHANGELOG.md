@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0168
+
+**Data:** 2026-11-16 16:58:16 | **Commit:** `09e322ce` | **Tipo:** `patch`
+
+- fix(REI-69): restore atomic profession sync
+
 ## V. 1.87.0167
 
 **Data:** 2026-11-16 16:45:03 | **Commit:** `43f8c903` | **Tipo:** `patch`
@@ -6429,6 +6435,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

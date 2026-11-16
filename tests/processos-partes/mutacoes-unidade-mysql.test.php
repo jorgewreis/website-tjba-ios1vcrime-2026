@@ -195,6 +195,7 @@ final class PartesRepository {
             $update = $this->connection->prepare('UPDATE partes SET profissao = :profissao WHERE id = :parte_id');
             $update->execute([':profissao' => $profissao, ':parte_id' => $parteId]);
         }
+        if (getenv('TEST_FAIL_SYNC') === '1') throw new RuntimeException('Falha sintética após sincronização.');
     }
 }
 PHP);
@@ -209,7 +210,7 @@ $snapshot = static function (PDO $db): array {
     }
     return $out;
 };
-$invoke = static function (string $endpoint, string $user, string $profile, array $payload, string $method = 'POST', string $origin = 'http://example.invalid', bool $authenticated = true, bool $hasSession = true) use ($lab): array {
+$invoke = static function (string $endpoint, string $user, string $profile, array $payload, string $method = 'POST', string $origin = 'http://example.invalid', bool $authenticated = true, bool $hasSession = true, bool $failSync = false) use ($lab): array {
     $script = $lab . '/public/api/processos-partes/' . $endpoint;
     $code = <<<'PHP'
 $_SERVER['REQUEST_METHOD'] = (string) getenv('TEST_METHOD');
@@ -232,6 +233,7 @@ PHP;
         'TEST_METHOD' => $method, 'TEST_ORIGIN' => $origin,
         'TEST_PAYLOAD' => json_encode($payload, JSON_THROW_ON_ERROR),
         'TEST_ENDPOINT' => $script,
+        'TEST_FAIL_SYNC' => $failSync ? '1' : '0',
     ];
     $pipes = [];
     $process = proc_open([PHP_BINARY, '-r', $code], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $lab, $environment);
@@ -253,12 +255,14 @@ try {
     $before = $snapshot($pdo);
     $sharedPartProfession = $pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn();
     $createPayload = ['processo_id' => 'PRC-1', 'parte_id' => 'PAR-2', 'tipo_parte' => 'advogado', 'polo' => 'passivo'];
+    [$failedCreateStatus] = $invoke('create.php', 'USR-1', 'SERVIDOR-CARTORIO', $createPayload, 'POST', 'http://example.invalid', true, true, true);
+    $assert($failedCreateStatus === 500 && $snapshot($pdo) === $before, 'Falha na sincronização do create deixou vínculo ou profissão parcial.');
     [$status, $body] = $invoke('create.php', 'USR-1', 'SERVIDOR-CARTORIO', $createPayload);
     $assert($status === 201 && isset($body['id']), 'Mesmo setor com permissão não criou o vínculo.');
     $afterCreate = $snapshot($pdo);
     $assert(count($afterCreate['processos_partes']) === count($before['processos_partes']) + 1, 'Create autorizado não persistiu exatamente um vínculo.');
-    $assert($afterCreate['sync_log'] === $before['sync_log'] && $afterCreate['partes'] === $before['partes'], 'Create alterou profissão global de pessoa compartilhada com outro setor.');
-    $assert($pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn() === $sharedPartProfession, 'Create alterou profissão global da pessoa vinculada a outro processo/setor.');
+    $assert(count($afterCreate['sync_log']) === count($before['sync_log']) + 1, 'Create autorizado não sincronizou profissão global.');
+    $assert($pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn() === 'Advogado' && $sharedPartProfession !== 'Advogado', 'Create autorizado não atualizou profissão global da pessoa compartilhada.');
 
     foreach ([
         ['USR-2', 'PRC-1', 'setor diferente'],
@@ -319,13 +323,16 @@ try {
     $holder->rollBack();
     $assert($snapshot($pdo) === $afterCreate, 'Delete durante lock deixou alteração parcial.');
 
+    $beforeFailedUpdate = $snapshot($pdo);
+    [$failedUpdateStatus] = $invoke('update.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => $body['id'], 'tipo_parte' => 'defensor_publico'], 'POST', 'http://example.invalid', true, true, true);
+    $assert($failedUpdateStatus === 500 && $snapshot($pdo) === $beforeFailedUpdate, 'Falha na sincronização do update deixou vínculo ou profissão parcial.');
     [$updateStatus] = $invoke('update.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => $body['id'], 'tipo_parte' => 'defensor_publico']);
     $assert($updateStatus === 200 && $pdo->query('SELECT tipo_parte FROM processos_partes WHERE id=' . $pdo->quote($body['id']))->fetchColumn() === 'defensor_publico', 'Update autorizado no mesmo setor não persistiu.');
-    $assert($pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn() === $sharedPartProfession && $snapshot($pdo)['sync_log'] === $afterCreate['sync_log'], 'Update alterou profissão global da pessoa vinculada a outro processo/setor.');
+    $assert($pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn() === 'Defensor Público' && count($snapshot($pdo)['sync_log']) === count($afterCreate['sync_log']) + 1, 'Update autorizado não sincronizou profissão global.');
     [$deleteStatus, $deleteBody] = $invoke('delete.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => 'VNC-1']);
     $assert($deleteStatus === 200 && ($deleteBody['deleted'] ?? false) === true, 'Delete autorizado no mesmo setor não persistiu.');
 
-    fwrite(STDOUT, "PASS MySQL/InnoDB: migração real a partir do schema legado (execução repetida sem efeito e sem backfill), autorização por setor, negações sem gravação, respostas sem enumeração e locks em update/delete. Sessão/perfis sintéticos via PHP CLI; sem navegador ou autenticação real.\n");
+    fwrite(STDOUT, "PASS MySQL/InnoDB: migração real idempotente sem backfill; autorização por setor; sincronização global de profissão no mesmo commit; rollback conjunto após falha; negações sem gravação; respostas sem enumeração e locks em update/delete. Sessão/perfis sintéticos via PHP CLI; sem navegador ou autenticação real.\n");
 } finally {
     // O laboratório é um tmpfs descartável, criado e validado no diretório temporário.
     $resolvedLab = realpath($lab);

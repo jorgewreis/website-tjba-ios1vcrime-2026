@@ -69,6 +69,7 @@ final class PartesRepository {
       $stmt = $this->db->prepare('UPDATE partes SET profissao = ? WHERE id = ?');
       $stmt->execute([$profession, $parteId]);
     }
+    if (getenv('TEST_FAIL_SYNC') === '1') throw new RuntimeException('Falha sintética após sincronização.');
   }
 }''')
 
@@ -92,11 +93,12 @@ final class PartesRepository {
     ''')
     db.commit()
 
-    def invoke(endpoint, user, profile, payload, method='POST', origin='http://example.invalid'):
+    def invoke(endpoint, user, profile, payload, method='POST', origin='http://example.invalid', fail_sync=False):
         env = os.environ.copy()
         env.update(TEST_DB=str(db_path), TEST_USER=user, TEST_PROFILE=profile, TEST_AUTH='1',
                    TEST_PAYLOAD=json.dumps(payload), TEST_METHOD=method, TEST_ORIGIN=origin,
-                   TEST_ENDPOINT=str(root / 'public/api/processos-partes' / endpoint))
+                   TEST_ENDPOINT=str(root / 'public/api/processos-partes' / endpoint),
+                   TEST_FAIL_SYNC='1' if fail_sync else '0')
         code = '''$_SERVER['REQUEST_METHOD']=getenv('TEST_METHOD');
 $_SERVER['HTTP_HOST']='example.invalid'; $_SERVER['HTTP_ORIGIN']=getenv('TEST_ORIGIN');
 $_SESSION=['id_usuario'=>getenv('TEST_USER')];
@@ -125,12 +127,15 @@ require getenv('TEST_ENDPOINT');'''
 
     before = snapshot()
     shared_profession = db.execute("SELECT profissao FROM partes WHERE id='B'").fetchone()[0]
+    failed_create_status, _ = invoke('create.php', 'U1', 'SERVIDOR-CARTORIO',
+                  {'processo_id': 'P1', 'parte_id': 'B', 'tipo_parte': 'advogado', 'polo': 'passivo'}, fail_sync=True)
+    assert failed_create_status == 500 and snapshot() == before
     create_status, created_body = invoke('create.php', 'U1', 'SERVIDOR-CARTORIO',
                   {'processo_id': 'P1', 'parte_id': 'B', 'tipo_parte': 'advogado', 'polo': 'passivo'})
     assert create_status == 201
     after_create = snapshot()
-    assert len(after_create[0]) == len(before[0]) + 1 and after_create[1] == before[1]
-    assert db.execute("SELECT profissao FROM partes WHERE id='B'").fetchone()[0] == shared_profession
+    assert len(after_create[0]) == len(before[0]) + 1 and len(after_create[1]) == len(before[1]) + 1
+    assert db.execute("SELECT profissao FROM partes WHERE id='B'").fetchone()[0] == 'Advogado' and shared_profession != 'Advogado'
 
     # Other unit, no unit assignment, process without assignment, inactive unit.
     for user, process in [('U2', 'P1'), ('U3', 'P1'), ('U1', 'P3'), ('U4', 'P4')]:
@@ -166,11 +171,15 @@ require getenv('TEST_ENDPOINT');'''
     assert cross_process_create == missing_process_create
     assert snapshot() == after_create
 
+    before_failed_update = snapshot()
+    failed_update_status, _ = invoke('update.php', 'U1', 'SERVIDOR-CARTORIO',
+                                     {'id': created_body['id'], 'tipo_parte': 'defensor_publico'}, fail_sync=True)
+    assert failed_update_status == 500 and snapshot() == before_failed_update
     update_status, update_body = invoke('update.php', 'U1', 'SERVIDOR-CARTORIO',
                                         {'id': created_body['id'], 'tipo_parte': 'defensor_publico'})
     assert update_status == 200, (update_status, update_body)
-    assert db.execute("SELECT profissao FROM partes WHERE id='B'").fetchone()[0] == shared_profession
-    assert snapshot()[1] == after_create[1]
+    assert db.execute("SELECT profissao FROM partes WHERE id='B'").fetchone()[0] == 'Defensor Público'
+    assert len(snapshot()[1]) == len(after_create[1]) + 1
     delete_created_status, _ = invoke('delete.php', 'U1', 'SERVIDOR-CARTORIO', {'id': created_body['id']})
     assert delete_created_status == 200
 
