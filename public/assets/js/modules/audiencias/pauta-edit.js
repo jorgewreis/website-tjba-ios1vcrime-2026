@@ -541,6 +541,47 @@
         });
     });
 
+    var pautaActionPending = false;
+    function executarAcaoPauta(url, id, actionButton, onSuccess) {
+        if (pautaActionPending) return;
+        pautaActionPending = true;
+        var restoreFocus = document.activeElement === actionButton;
+        var succeeded = false;
+        var buttons = [document.getElementById('btn-audiencia-edit-cancelar'), document.getElementById('btn-audiencia-edit-excluir')];
+        var previousDisabled = buttons.map(function (button) { return button ? button.disabled : false; });
+        buttons.forEach(function (button) { if (button) button.disabled = true; });
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ id: id })
+        }).then(function (response) {
+            return response.json().then(function (body) {
+                if (response.ok && body && body.success === true) {
+                    succeeded = true;
+                    onSuccess();
+                    return;
+                }
+                var message = response.status === 401 ? 'Sessão expirada. Faça login novamente.' :
+                    response.status === 403 ? 'Você não tem permissão para realizar esta ação.' :
+                    'Não foi possível concluir a ação. Tente novamente.';
+                notify('error', 'Erro', message);
+            }, function () {
+                notify('error', 'Erro', 'Resposta inválida do servidor. Confira a audiência antes de tentar novamente.');
+            });
+        }).catch(function () {
+            notify('error', 'Erro', 'Não foi possível conectar. Confira a audiência antes de tentar novamente.');
+        }).finally(function () {
+            pautaActionPending = false;
+            buttons.forEach(function (button, index) { if (button) button.disabled = previousDisabled[index]; });
+            var active = document.activeElement;
+            if (!succeeded && restoreFocus && actionButton && !actionButton.disabled && actionButton.isConnected !== false &&
+                (!active || active === document.body || active === document.documentElement) && typeof actionButton.focus === 'function') {
+                actionButton.focus();
+            }
+        });
+    }
+
     document.getElementById('btn-audiencia-edit-cancelar')?.addEventListener('click', function () {
         var id = resolvePautaEditId();
         if (!id) {
@@ -548,12 +589,7 @@
             return;
         }
         syncHiddenPautaEditId();
-        fetch('/api/sala-audiencias-pauta/cancel.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ id: id })
-        }).then(function () { window.location.reload(); }).catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
+        executarAcaoPauta('/api/sala-audiencias-pauta/cancel.php', id, document.getElementById('btn-audiencia-edit-cancelar'), function () { window.location.reload(); });
     });
 
     var pautaDeleteConfirmMessage = 'Clique novamente em Excluir audiência em até 5 segundos para confirmar.';
@@ -568,14 +604,9 @@
             return;
         }
         syncHiddenPautaEditId();
-        fetch('/api/sala-audiencias-pauta/delete.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ id: id })
-        }).then(function () {
+        executarAcaoPauta('/api/sala-audiencias-pauta/delete.php', id, document.getElementById('btn-audiencia-edit-excluir'), function () {
             window.location.href = '/frame.php?page=salapauta';
-        }).catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
+        });
     });
 
     function syncDateMinForStatusPauta() {
