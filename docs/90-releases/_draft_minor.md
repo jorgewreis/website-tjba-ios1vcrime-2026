@@ -6,3 +6,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 - **fix: proteger alteracoes de feriados por origem** `[e0e91e01]`
 
+- **fix: remover diagnostico temporario de pautas** `[8eee43c4]`
