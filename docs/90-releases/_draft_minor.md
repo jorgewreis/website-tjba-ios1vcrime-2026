@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: exigir escolha explicita de reu no monitoramento** `[4f59897c]`
+- **fix: validar data de movimentacao no servidor** `[d16a4e89]`
 
