@@ -16,6 +16,7 @@ if ($appRoot === false || $endpointRoot === false || $testPath === false
     || is_file($repoRoot . '/.env') || str_contains($repoRoot, '.env')) {
     throw new RuntimeException('Recusado: raízes da fixture inválidas ou arquivo .env presente.');
 }
+require_once $repoRoot . '/scripts/migrate-process-responsible-sector.php';
 
 $dsn = (string) getenv('REI69_MYSQL_DSN');
 if (!str_contains($dsn, 'unix_socket=/var/run/mysqld/mysqld.sock')
@@ -74,13 +75,26 @@ $pdo->exec("SET SESSION sql_mode = 'STRICT_ALL_TABLES'");
 $ddl = [
     "CREATE TABLE setores (id_setor CHAR(30) NOT NULL PRIMARY KEY, ativo TINYINT(1) NOT NULL DEFAULT 1) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE usuario_setor (usuario CHAR(30) NOT NULL, setor CHAR(30) NOT NULL, PRIMARY KEY (usuario,setor), CONSTRAINT fk_rei69_user_sector FOREIGN KEY (setor) REFERENCES setores(id_setor)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-    "CREATE TABLE processos (id CHAR(30) NOT NULL PRIMARY KEY, numero_processo VARCHAR(64) NULL, id_setor_responsavel CHAR(30) NULL, KEY ix_rei69_process_sector (id_setor_responsavel), CONSTRAINT fk_rei69_process_sector FOREIGN KEY (id_setor_responsavel) REFERENCES setores(id_setor) ON DELETE RESTRICT) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "CREATE TABLE processos (id CHAR(30) NOT NULL PRIMARY KEY, numero_processo VARCHAR(64) NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE partes (id CHAR(30) NOT NULL PRIMARY KEY, nome_completo VARCHAR(180) NULL, cpf VARCHAR(32) NULL, sexo VARCHAR(10) NULL, data_nascimento DATE NULL, profissao VARCHAR(255) NULL, created_at DATETIME NULL, updated_at DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE processos_partes (id CHAR(30) NOT NULL PRIMARY KEY, processo_id CHAR(30) NOT NULL, parte_id CHAR(30) NOT NULL, tipo_parte VARCHAR(50) NOT NULL, polo VARCHAR(50) NOT NULL, prioridade_mulher TINYINT(1) NOT NULL DEFAULT 0, prioridade_crianca_adolescente TINYINT(1) NOT NULL DEFAULT 0, prioridade_idoso TINYINT(1) NOT NULL DEFAULT 0, prioridade_pessoa_deficiencia TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NULL, updated_at DATETIME NULL, KEY ix_rei69_link_process (processo_id), CONSTRAINT fk_rei69_link_process FOREIGN KEY (processo_id) REFERENCES processos(id), CONSTRAINT fk_rei69_link_part FOREIGN KEY (parte_id) REFERENCES partes(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE sync_log (parte_id CHAR(30) NOT NULL, tipo_parte VARCHAR(50) NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 ];
 foreach ($ddl as $sql) {
     $pdo->exec($sql);
+}
+
+ob_start();
+$migration = new ProcessResponsibleSectorMigration($pdo);
+$migration->migrate();
+$firstMigrationOutput = (string) ob_get_clean();
+ob_start();
+$secondMigrationPlan = $migration->migrate();
+$secondMigrationOutput = (string) ob_get_clean();
+if ($firstMigrationOutput === '' || $secondMigrationOutput === ''
+    || $secondMigrationPlan !== ['add_column' => false, 'add_index' => false, 'add_foreign_key' => false]
+    || (int) $pdo->query('SELECT COUNT(*) FROM processos WHERE id_setor_responsavel IS NOT NULL')->fetchColumn() !== 0) {
+    throw new RuntimeException('Migração REI-69 não foi aditiva, idempotente ou deixou processo legado sem atribuição.');
 }
 
 $pdo->exec("INSERT INTO setores (id_setor,ativo) VALUES ('SET-CARTORIO',1),('SET-GABINETE',1),('SET-INATIVO',0)");
@@ -311,7 +325,7 @@ try {
     [$deleteStatus, $deleteBody] = $invoke('delete.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => 'VNC-1']);
     $assert($deleteStatus === 200 && ($deleteBody['deleted'] ?? false) === true, 'Delete autorizado no mesmo setor não persistiu.');
 
-    fwrite(STDOUT, "PASS MySQL/InnoDB: autorização por setor, negações sem gravação, respostas sem enumeração e locks em update/delete. Sessão/perfis sintéticos via PHP CLI; sem navegador ou autenticação real.\n");
+    fwrite(STDOUT, "PASS MySQL/InnoDB: migração real a partir do schema legado (execução repetida sem efeito e sem backfill), autorização por setor, negações sem gravação, respostas sem enumeração e locks em update/delete. Sessão/perfis sintéticos via PHP CLI; sem navegador ou autenticação real.\n");
 } finally {
     // O laboratório é um tmpfs descartável, criado e validado no diretório temporário.
     $resolvedLab = realpath($lab);

@@ -4,6 +4,7 @@ param()
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $appRoot = Join-Path $repoRoot 'app'
+$migrationScript = Join-Path $repoRoot 'scripts/migrate-process-responsible-sector.php'
 $endpointRoot = Join-Path $repoRoot 'public/api/processos-partes'
 $testFile = Join-Path $PSScriptRoot 'mutacoes-unidade-mysql.test.php'
 $mysqlImageRef = 'mysql@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902'
@@ -12,7 +13,7 @@ $phpImageRef = 'fokus-law-linux-qa@sha256:459cc8bd25b38009a8cf9a0ef5399d131f4f20
 if (Test-Path -LiteralPath (Join-Path $repoRoot '.env')) {
     throw 'Runner recusado: .env presente na raiz do checkout.'
 }
-foreach ($path in @($appRoot, $endpointRoot, $testFile)) {
+foreach ($path in @($appRoot, $migrationScript, $endpointRoot, $testFile)) {
     $item = Get-Item -LiteralPath $path -Force -ErrorAction Stop
     if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
         throw 'Runner recusado: fonte ou fixture é reparse point.'
@@ -150,13 +151,14 @@ try {
 
     # Nenhuma configuração de produção é montada. O teste gera stubs sintéticos em /tmp.
     $appMount = "type=bind,source=$appRoot,target=/repo/app,readonly"
+    $migrationMount = "type=bind,source=$migrationScript,target=/repo/scripts/migrate-process-responsible-sector.php,readonly"
     $endpointMount = "type=bind,source=$endpointRoot,target=/repo/public/api/processos-partes,readonly"
     $testMount = "type=bind,source=$testFile,target=/test/mutacoes-unidade-mysql.test.php,readonly"
     $phpId = (Invoke-DockerSafe @(
         'create', '--name', $phpName, '--label', "$label=$runId", '--network', 'none',
         '--cpus', '1', '--memory', '512m', '--read-only', '--cap-drop', 'ALL',
         '--security-opt', 'no-new-privileges=true', '--tmpfs', '/tmp:rw,size=128m,noexec,nosuid,nodev',
-        '--mount', $appMount, '--mount', $endpointMount, '--mount', $testMount,
+        '--mount', $appMount, '--mount', $migrationMount, '--mount', $endpointMount, '--mount', $testMount,
         '--mount', "type=volume,source=$volumeName,target=/var/run/mysqld",
         '--env', 'REI69_TEST_DISPOSABLE=1', '--env', 'REI69_TEST_REPO_ROOT=/repo',
         '--env', "REI69_TEST_MARKER=$marker",
@@ -169,10 +171,11 @@ try {
     $phpMounts = @($php.Mounts)
     $phpPortCount = if ($php.HostConfig.PortBindings) { @($php.HostConfig.PortBindings.PSObject.Properties).Count } else { 0 }
     $phpInvalid = $php.Image -ne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged
-    $phpInvalid = $phpInvalid -or $phpPortCount -ne 0 -or $phpMounts.Count -ne 4
+    $phpInvalid = $phpInvalid -or $phpPortCount -ne 0 -or $phpMounts.Count -ne 5
     $phpInvalid = $phpInvalid -or -not $php.HostConfig.ReadonlyRootfs -or @($php.HostConfig.CapDrop) -notcontains 'ALL'
     $phpInvalid = $phpInvalid -or @($php.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true'
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Destination -eq '/repo/app' -and -not $_.RW }).Count -ne 1
+    $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Destination -eq '/repo/scripts/migrate-process-responsible-sector.php' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Destination -eq '/repo/public/api/processos-partes' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Destination -eq '/test/mutacoes-unidade-mysql.test.php' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'volume' -and $_.Name -eq $volumeName -and $_.Destination -eq '/var/run/mysqld' }).Count -ne 1
