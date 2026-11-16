@@ -111,19 +111,38 @@ expectConcurrency(($result['finalizados'] ?? null) === 0, 'Reconciliação não 
 expectConcurrency(($row['status'] ?? null) === 'pendente' && $deadline instanceof DateTimeImmutable && $deadline > $today, 'Edital deve refletir o feriado e permanecer pendente.');
 expectConcurrency(array_key_exists('lock_owner_after', $workerResult) && $workerResult['lock_owner_after'] === null, 'A conexão de reconciliação deve liberar o mutex ao retornar.');
 
-$pdo->prepare('INSERT INTO editais VALUES (?, NULL, ?, ?, 1, ?, NULL, NULL, NULL, NULL)')->execute([
-    'REI114-AAA-TRIGGER', 'aguardando decurso', 'comum', $today->modify('-10 days')->format('Y-m-d'),
+$firstId = 'A-BATCH-FIRST';
+$cancelId = 'Z-CANCEL-RACE';
+$futurePublication = $today->modify('+1 day')->format('Y-m-d');
+$oldPublication = $today->modify('-6 days')->format('Y-m-d');
+$oldStart = $today->modify('-5 days')->format('Y-m-d');
+$oldDeadline = $today->modify('-2 days')->format('Y-m-d');
+$pdo->prepare('INSERT INTO editais VALUES (?, NULL, ?, ?, 2, ?, NULL, NULL, NULL, NULL)')->execute([
+    $firstId,
+    'pendente',
+    'comum',
+    $futurePublication,
 ]);
-$pdo->prepare('INSERT INTO editais VALUES (?, NULL, ?, ?, 1, ?, NULL, NULL, NULL, NULL)')->execute([
-    'REI114-ZZZ-CANCEL', 'pendente', 'comum', $today->modify('-10 days')->format('Y-m-d'),
+$pdo->prepare('INSERT INTO editais VALUES (?, NULL, ?, ?, 2, ?, ?, ?, NULL, NULL)')->execute([
+    $cancelId,
+    'pendente',
+    'comum',
+    $oldPublication,
+    $oldStart,
+    $oldDeadline,
 ]);
-$insertSubtask->execute(['CANCEL-PUB', 'REI114-ZZZ-CANCEL', 'certificacao_publicacao', 1, 'concluida', $publication]);
-$pdo->exec("CREATE TRIGGER rei114_pause_first_reconcile AFTER INSERT ON editais_subtarefas FOR EACH ROW BEGIN IF NEW.edital_id = 'REI114-AAA-TRIGGER' THEN DO SLEEP(3); END IF; END");
-$snapshotPath = sys_get_temp_dir() . '/rei114-current-read-worker-' . bin2hex(random_bytes(8));
-$worker = proc_open(
-    [PHP_BINARY, __DIR__ . '/rei114-calendar-reconcile-worker.php', $snapshotPath, 'REI114-AAA-TRIGGER', 'REI114-ZZZ-CANCEL'],
+$oldPublicationData = json_encode(['data_publicacao' => $oldPublication], JSON_THROW_ON_ERROR);
+$insertSubtask->execute(['PUB-CANCEL', $cancelId, 'certificacao_publicacao', 1, 'concluida', $oldPublicationData]);
+$insertSubtask->execute(['DEC-CANCEL', $cancelId, 'certificacao_decurso_prazo', 2, 'pendente', null]);
+
+$pdo->beginTransaction();
+$pdo->prepare("UPDATE editais SET status = 'cancelada' WHERE id = ?")->execute([$cancelId]);
+$snapshotPath = sys_get_temp_dir() . '/rei114-cancel-worker-' . bin2hex(random_bytes(8));
+$racePipes = [];
+$raceWorker = proc_open(
+    [PHP_BINARY, __DIR__ . '/rei114-calendar-reconcile-worker.php', $snapshotPath, $firstId, $cancelId],
     [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-    $pipes,
+    $racePipes,
     null,
     [
         'FERIADOS_TEST_ISOLATION' => 'isolated-feriados-test',
@@ -132,40 +151,56 @@ $worker = proc_open(
         'FERIADOS_TEST_PASSWORD' => (string) getenv('FERIADOS_TEST_PASSWORD'),
     ]
 );
-if (!is_resource($worker)) {
-    throw new RuntimeException('Não foi possível iniciar a reconciliação para testar leitura atual.');
-}
-fclose($pipes[0]);
+expectConcurrency(is_resource($raceWorker), 'Não foi possível iniciar o worker do teste de cancelamento concorrente.');
+fclose($racePipes[0]);
 try {
-    $deadline = microtime(true) + 5.0;
-    while (!is_file($snapshotPath) && microtime(true) < $deadline) {
+    $readyDeadline = microtime(true) + 5.0;
+    while (!is_file($snapshotPath) && microtime(true) < $readyDeadline) {
         usleep(10000);
     }
-    expectConcurrency(is_file($snapshotPath), 'Worker de leitura atual não sinalizou início.');
-    $snapshotWorker = json_decode((string) file_get_contents($snapshotPath), true, 512, JSON_THROW_ON_ERROR);
-    $sleepDeadline = microtime(true) + 5.0;
-    $insideTrigger = false;
+    expectConcurrency(is_file($snapshotPath), 'O worker do lote não sinalizou início dentro do limite.');
+    $raceInfo = json_decode((string) file_get_contents($snapshotPath), true, 512, JSON_THROW_ON_ERROR);
+    $pendingRowLock = $pdo->prepare('SELECT COUNT(*) FROM performance_schema.data_lock_waits AS waits JOIN performance_schema.threads AS requester ON requester.THREAD_ID = waits.REQUESTING_THREAD_ID WHERE requester.PROCESSLIST_ID = ?');
+    $rowWaitDeadline = microtime(true) + 5.0;
+    $isWaitingForCancel = false;
     do {
-        $process = $pdo->prepare('SELECT COUNT(*) FROM information_schema.PROCESSLIST WHERE ID = ? AND INFO LIKE \'%SLEEP%\'');
-        $process->execute([(int) ($snapshotWorker['connection_id'] ?? 0)]);
-        $insideTrigger = (int) $process->fetchColumn() > 0;
-        if (!$insideTrigger) {
-            usleep(10000);
+        $pendingRowLock->execute([(int) ($raceInfo['connection_id'] ?? 0)]);
+        $isWaitingForCancel = (int) $pendingRowLock->fetchColumn() > 0;
+        if (!$isWaitingForCancel) {
+            usleep(20000);
         }
-    } while (!$insideTrigger && microtime(true) < $sleepDeadline);
-    expectConcurrency($insideTrigger, 'Não foi possível observar o worker pausado após estabelecer o snapshot inicial.');
-    $pdo->exec("UPDATE editais SET status = 'cancelada' WHERE id = 'REI114-ZZZ-CANCEL'");
-} finally {
-    $stdout = stream_get_contents($pipes[1]);
-    $stderr = stream_get_contents($pipes[2]);
-    fclose($pipes[1]);
-    fclose($pipes[2]);
-    $exitCode = proc_close($worker);
-    @unlink($snapshotPath);
-    $pdo->exec('DROP TRIGGER IF EXISTS rei114_pause_first_reconcile');
-}
-expectConcurrency($exitCode === 0, 'Worker de leitura atual falhou: ' . trim((string) $stderr));
-$cancelledStatus = $pdo->query("SELECT status FROM editais WHERE id = 'REI114-ZZZ-CANCEL'")->fetchColumn();
-expectConcurrency($cancelledStatus === 'cancelada', 'Reconciliação não pode sobrescrever cancelamento concorrente com estado antigo do snapshot.');
+    } while (!$isWaitingForCancel && microtime(true) < $rowWaitDeadline);
+    expectConcurrency($isWaitingForCancel, 'O lote não aguardou o lock de linha mantido pela transação de cancelamento.');
+    $pdo->commit();
 
-echo "PASS REI-114: reconciliação aguardou mutação concorrente do calendário e leu o prazo recalculado em MySQL/InnoDB.\n";
+    $raceStdout = stream_get_contents($racePipes[1]);
+    $raceStderr = stream_get_contents($racePipes[2]);
+    fclose($racePipes[1]);
+    fclose($racePipes[2]);
+    $raceExit = proc_close($raceWorker);
+    $raceWorker = null;
+    expectConcurrency($raceExit === 0, 'Worker do lote concorrente falhou: ' . trim((string) $raceStderr));
+    $raceResult = json_decode(trim((string) $raceStdout), true, 512, JSON_THROW_ON_ERROR);
+    $cancelledRow = $pdo->query("SELECT status FROM editais WHERE id = 'Z-CANCEL-RACE'")->fetch(PDO::FETCH_ASSOC);
+    $cancelledDecurso = $pdo->query("SELECT status FROM editais_subtarefas WHERE id = 'DEC-CANCEL'")->fetch(PDO::FETCH_ASSOC);
+    expectConcurrency(($cancelledRow['status'] ?? null) === 'cancelada', 'Reconciliação não deve reabrir nem concluir edital cancelado durante o lote.');
+    expectConcurrency(($raceResult['result']['finalizados'] ?? null) === 0, 'Edital cancelado concorrencialmente não pode ser finalizado pelo lote.');
+    expectConcurrency(($cancelledDecurso['status'] ?? null) === 'pendente', 'Reconciliação não deve concluir subtarefa de edital cancelado durante o lote.');
+    expectConcurrency(($raceResult['lock_owner_after'] ?? null) === null, 'O mutex deve ser liberado após o lote com cancelamento concorrente.');
+    expectConcurrency(strtoupper((string) ($raceResult['isolation_after'] ?? '')) === 'REPEATABLE-READ', 'O nível padrão da sessão deve permanecer inalterado após o lote.');
+} finally {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    if (is_resource($raceWorker)) {
+        foreach ([1, 2] as $pipeIndex) {
+            if (isset($racePipes[$pipeIndex]) && is_resource($racePipes[$pipeIndex])) {
+                fclose($racePipes[$pipeIndex]);
+            }
+        }
+        proc_terminate($raceWorker);
+        proc_close($raceWorker);
+    }
+    @unlink($snapshotPath);
+}
+echo "PASS REI-114: mutex do calendário e cancelamento concorrente preservados com MySQL/InnoDB.\n";
