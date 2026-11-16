@@ -20,6 +20,30 @@ function insertResetScenario(PDO $pdo, string $id, string $userId, string $plain
     $statement->execute([$id, $userId, Security::hashAccessToken($plainToken), $used, '127.0.0.1']);
 }
 
+function mailpitMessages(): array
+{
+    $endpoint = (string) envValue('AUTH_TEST_MAILPIT_URL', 'http://127.0.0.1:38025');
+    $allowedEndpoints = ['http://127.0.0.1:38025', 'http://mailpit:8025'];
+    if (!in_array($endpoint, $allowedEndpoints, true)) {
+        throw new RuntimeException('Endpoint Mailpit de teste inválido.');
+    }
+
+    $parts = parse_url($endpoint);
+    $socket = @fsockopen((string) $parts['host'], (int) $parts['port'], $errno, $error, 10);
+    if ($socket === false) {
+        throw new RuntimeException("Mailpit indisponível: $errno $error");
+    }
+    stream_set_timeout($socket, 12);
+    fwrite($socket, "GET /api/v1/messages HTTP/1.1\r\nHost: {$parts['host']}:{$parts['port']}\r\nConnection: close\r\n\r\n");
+    $raw = stream_get_contents($socket);
+    fclose($socket);
+    if ($raw === false || !str_contains($raw, "\r\n\r\n")) {
+        throw new RuntimeException('Resposta Mailpit inválida.');
+    }
+    [, $body] = explode("\r\n\r\n", $raw, 2);
+    return json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+}
+
 $pdo = Conection::getInstance()->getConnection();
 $userId = 'USR-11111111111111111111111111';
 $service = new PasswordResetService();
@@ -27,7 +51,7 @@ $originalHash = (string) $pdo->query("SELECT senha_hash FROM usuarios WHERE id_u
 
 $resetLimiter = new LoginRateLimiter($pdo, 'reset');
 $resetLimiter->clear('529.982.247-25', '127.0.0.1');
-$mailpitBefore = json_decode((string) file_get_contents('http://127.0.0.1:38025/api/v1/messages'), true, 512, JSON_THROW_ON_ERROR);
+$mailpitBefore = mailpitMessages();
 $mailpitBeforeIds = array_column($mailpitBefore['messages'] ?? [], 'ID');
 
 $knownResponse = $service->requestReset('529.982.247-25', 'ativo@auth-test.invalid');
@@ -36,7 +60,7 @@ assertResetState($knownResponse['success'] === $unknownResponse['success'], 'Res
 assertResetState($knownResponse['emailSent'] === $unknownResponse['emailSent'], 'Reset conhecido e desconhecido precisam ter o mesmo indicador público.');
 assertResetState($knownResponse['message'] === $unknownResponse['message'], 'Reset conhecido e desconhecido precisam ter a mesma mensagem pública.');
 
-$mailpit = json_decode((string) file_get_contents('http://127.0.0.1:38025/api/v1/messages'), true, 512, JSON_THROW_ON_ERROR);
+$mailpit = mailpitMessages();
 $captured = false;
 foreach (($mailpit['messages'] ?? []) as $message) {
     if (in_array($message['ID'] ?? null, $mailpitBeforeIds, true)) {
