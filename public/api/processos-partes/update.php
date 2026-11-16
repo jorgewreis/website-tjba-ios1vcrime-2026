@@ -10,6 +10,7 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/repositories/ProcessosPartesRepository.php';
 require_once $basePath . '/app/repositories/PartesRepository.php';
+require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 
 try {
     $connection = Conection::getInstance()->getConnection();
@@ -41,9 +42,34 @@ if ($data === []) {
 }
 
 try {
+    $connection->beginTransaction();
     $repository = new ProcessosPartesRepository($connection);
+    $processId = ProcessoSetorAuthorization::findProcessIdByLink($connection, $id);
+    if ($processId === null) {
+        $connection->commit();
+        http_response_code(404);
+        echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if (!ProcessoSetorAuthorization::canModifyProcess(
+        $connection,
+        trim((string) ($_SESSION['id_usuario'] ?? '')),
+        $processId
+    )) {
+        $connection->rollBack();
+        http_response_code(404);
+        echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if (!ProcessoSetorAuthorization::linkBelongsToProcess($connection, $id, $processId)) {
+        $connection->rollBack();
+        http_response_code(404);
+        echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $vinculo = $repository->findById($id);
     if ($vinculo === null) {
+        $connection->rollBack();
         http_response_code(404);
         echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
         exit;
@@ -55,11 +81,15 @@ try {
         $partesRepo = new PartesRepository($connection);
         $partesRepo->syncProfissaoFromTipoProcessoParte($parteIdVinculo, $tipoAtual);
     }
+    $connection->commit();
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
+    if ($connection->inTransaction()) $connection->rollBack();
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    if ($connection->inTransaction()) $connection->rollBack();
+    error_log('processos-partes: falha ao atualizar vínculo.');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao atualizar vínculo.'], JSON_UNESCAPED_UNICODE);
 }
