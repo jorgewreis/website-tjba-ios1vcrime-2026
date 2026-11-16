@@ -114,25 +114,26 @@ final class PessoasService
 
     public function update(string $id, array $payload): bool
     {
-        $existente = $this->partesRepository->findById($id);
-        if ($existente === null) {
-            return false;
-        }
-        $allowed = ['nome_completo', 'sexo', 'data_nascimento'];
-        $data = array_intersect_key($payload, array_flip($allowed));
-        $anterior = trim((string) ($existente['profissao'] ?? ''));
-        if (array_key_exists('profissao_selecao', $payload) || array_key_exists('profissao_outra', $payload) || array_key_exists('profissao', $payload)) {
-            $data['profissao'] = $this->resolverProfissaoParaPayload($payload, $anterior);
-        }
-        if ($data === []) {
-            return true;
-        }
-        $ok = $this->partesRepository->update($id, $data);
-        if ($ok) {
-            $this->reconciliarProfissaoParteComVinculosInstituicao($id);
-        }
-
-        return $ok;
+        return $this->operacaoProfissaoAtomica(function () use ($id, $payload): bool {
+            $existente = $this->partesRepository->findById($id);
+            if ($existente === null) {
+                return false;
+            }
+            $allowed = ['nome_completo', 'sexo', 'data_nascimento'];
+            $data = array_intersect_key($payload, array_flip($allowed));
+            $anterior = trim((string) ($existente['profissao'] ?? ''));
+            if (array_key_exists('profissao_selecao', $payload) || array_key_exists('profissao_outra', $payload) || array_key_exists('profissao', $payload)) {
+                $data['profissao'] = $this->resolverProfissaoParaPayload($payload, $anterior);
+            }
+            if ($data === []) {
+                return true;
+            }
+            $ok = $this->partesRepository->update($id, $data);
+            if ($ok) {
+                $this->reconciliarProfissaoParteComVinculosInstituicao($id);
+            }
+            return $ok;
+        });
     }
 
     public function addDocumento(string $parteId, array $row): string
@@ -221,36 +222,39 @@ final class PessoasService
             'ativo' => array_key_exists('ativo', $row) ? (int) (bool) $row['ativo'] : 1,
             'observacoes' => isset($row['observacoes']) ? (trim((string) $row['observacoes']) ?: null) : null,
         ];
-        $novoId = $this->partesInstituicoesRepository->insert($data);
-        $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
-
-        return $novoId;
+        return $this->operacaoProfissaoAtomica(function () use ($data, $parteId): string {
+            $novoId = $this->partesInstituicoesRepository->insert($data);
+            $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
+            return $novoId;
+        });
     }
 
     public function updateVinculoInstituicao(string $id, array $payload): bool
     {
-        $ok = $this->partesInstituicoesRepository->update($id, $payload);
-        if ($ok) {
-            $row = $this->partesInstituicoesRepository->findById($id);
-            $parteId = trim((string) ($row['parte_id'] ?? ''));
-            if ($parteId !== '') {
-                $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
+        return $this->operacaoProfissaoAtomica(function () use ($id, $payload): bool {
+            $ok = $this->partesInstituicoesRepository->update($id, $payload);
+            if ($ok) {
+                $row = $this->partesInstituicoesRepository->findById($id);
+                $parteId = trim((string) ($row['parte_id'] ?? ''));
+                if ($parteId !== '') {
+                    $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
+                }
             }
-        }
-
-        return $ok;
+            return $ok;
+        });
     }
 
     public function deleteVinculoInstituicao(string $id): bool
     {
-        $row = $this->partesInstituicoesRepository->findById($id);
-        $parteId = $row !== null ? trim((string) ($row['parte_id'] ?? '')) : '';
-        $ok = $this->partesInstituicoesRepository->delete($id);
-        if ($ok && $parteId !== '') {
-            $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
-        }
-
-        return $ok;
+        return $this->operacaoProfissaoAtomica(function () use ($id): bool {
+            $row = $this->partesInstituicoesRepository->findById($id);
+            $parteId = $row !== null ? trim((string) ($row['parte_id'] ?? '')) : '';
+            $ok = $this->partesInstituicoesRepository->delete($id);
+            if ($ok && $parteId !== '') {
+                $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
+            }
+            return $ok;
+        });
     }
 
     /**
@@ -304,27 +308,61 @@ final class PessoasService
             return;
         }
 
-        $this->connection->beginTransaction();
-        try {
-            if ($alterarPartes) {
-                $this->partesRepository->update($parteId, ['profissao' => $valorAlvo]);
-            }
-            if ($alterarAlgumVinculo) {
-                foreach ($vinculos as $v) {
-                    $vid = trim((string) ($v['id'] ?? ''));
-                    if ($vid === '') {
-                        continue;
-                    }
-                    $cv = $this->canonProfissaoParaComparacao($v['profissao'] ?? null);
-                    if ($cv !== $valorAlvo) {
-                        $this->partesInstituicoesRepository->update($vid, ['profissao' => $valorAlvo]);
-                    }
+        if ($alterarPartes) {
+            $this->partesRepository->update($parteId, ['profissao' => $valorAlvo]);
+        }
+        if ($alterarAlgumVinculo) {
+            foreach ($vinculos as $v) {
+                $vid = trim((string) ($v['id'] ?? ''));
+                if ($vid === '') {
+                    continue;
+                }
+                $cv = $this->canonProfissaoParaComparacao($v['profissao'] ?? null);
+                if ($cv !== $valorAlvo) {
+                    $this->partesInstituicoesRepository->update($vid, ['profissao' => $valorAlvo]);
                 }
             }
-            $this->connection->commit();
-        } catch (Throwable $e) {
-            $this->connection->rollBack();
-            throw $e;
+        }
+    }
+
+    /** Envolve a alteração e a reconciliação; nunca confirma uma transação externa. */
+    private function operacaoProfissaoAtomica(callable $operation): mixed
+    {
+        $external = $this->connection->inTransaction();
+        $savepoint = 'pessoa_profissao_' . bin2hex(random_bytes(8));
+        if ($external) {
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
+        } elseif (!$this->connection->beginTransaction()) {
+            throw new RuntimeException('Não foi possível iniciar a operação de vínculo.');
+        }
+        try {
+            $result = $operation();
+            if ($external) {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            } elseif (!$this->connection->commit()) {
+                throw new RuntimeException('Não foi possível confirmar a operação de vínculo.');
+            }
+            return $result;
+        } catch (Throwable $error) {
+            try {
+                if ($external) {
+                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                } elseif ($this->connection->inTransaction()) {
+                    $this->connection->rollBack();
+                }
+            } catch (Throwable $rollbackError) {
+                if ($external && $this->connection->inTransaction()) {
+                    try {
+                        $this->connection->rollBack();
+                    } catch (Throwable $abortError) {
+                        throw new RuntimeException('Falha ao reverter operação; estado da transação incerto.', 0, $error);
+                    }
+                    throw new RuntimeException('Falha no savepoint; transação externa abortada.', 0, $error);
+                }
+                throw new RuntimeException('Falha ao reverter operação; estado da transação incerto.', 0, $error);
+            }
+            throw $error;
         }
     }
 
