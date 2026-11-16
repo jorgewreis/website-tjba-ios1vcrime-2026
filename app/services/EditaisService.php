@@ -536,89 +536,117 @@ final class EditaisService
             throw new InvalidArgumentException('A atualização aceita no máximo 15 editais por vez.');
         }
 
-        $ownsTransaction = !$this->connection->inTransaction();
-        $savepoint = $ownsTransaction ? null : 'edital_lote_reconciliar_' . bin2hex(random_bytes(8));
-        if ($ownsTransaction) {
-            $this->connection->beginTransaction();
-        } else {
-            $this->connection->exec('SAVEPOINT ' . $savepoint);
+        $mysql = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
+        if ($mysql && $this->connection->inTransaction()) {
+            throw new LogicException('A reconciliação de editais não pode herdar uma transação externa no MySQL.');
+        }
+        $lockAcquired = false;
+        if ($mysql) {
+            $lock = $this->connection->prepare('SELECT GET_LOCK(?, 15)');
+            $lock->execute(['fokus-law-feriados-recalc']);
+            $lockAcquired = (int) $lock->fetchColumn() === 1;
+            if (!$lockAcquired) {
+                throw new RuntimeException('Não foi possível obter o bloqueio do calendário para reconciliar editais.');
+            }
         }
 
-        $result = [
-            'solicitados' => count($ids),
-            'editais_alterados' => 0,
-            'editais_com_etapas_criadas' => 0,
-            'etapas_criadas' => 0,
-            'inalterados' => 0,
-            'nao_encontrados' => 0,
-            'finalizados' => 0,
-            'falhas' => 0,
-        ];
         try {
-            $orderedIds = array_keys($ids);
-            sort($orderedIds, SORT_STRING);
-            foreach ($orderedIds as $id) {
-                $outcome = $this->reconciliarComEditalBloqueado($id, function () use ($id): array {
-                    $edital = $this->repository->findById($id);
-                    if ($edital === null) {
-                        return ['encontrado' => false, 'etapas_criadas' => 0, 'finalizado' => false];
-                    }
-                    $status = strtolower(trim((string) ($edital['status'] ?? '')));
-                    if ($status === 'concluída') {
-                        $status = 'concluida';
-                    }
-                    if (in_array($status, ['concluida', 'cancelada'], true)) {
-                        return ['encontrado' => true, 'etapas_criadas' => 0, 'finalizado' => false];
-                    }
-                    $subtarefasAntes = count($this->subtarefasRepository->findByEditalId($id));
-                    $this->subtarefasRepository->ensureSubtarefasAtivas($id);
-                    $subtarefasDepois = count($this->subtarefasRepository->findByEditalId($id));
-                    return [
-                        'encontrado' => true,
-                        'etapas_criadas' => max(0, $subtarefasDepois - $subtarefasAntes),
-                        'finalizado' => $this->tentarFinalizacaoAutomaticaPorDecurso($id),
-                    ];
-                });
-                if (!is_array($outcome)) {
-                    $result['nao_encontrados']++;
-                    continue;
-                }
-                if (empty($outcome['encontrado'])) {
-                    $result['nao_encontrados']++;
-                    continue;
-                }
-                $created = max(0, (int) ($outcome['etapas_criadas'] ?? 0));
-                if ($created > 0) {
-                    $result['editais_com_etapas_criadas']++;
-                    $result['etapas_criadas'] += $created;
-                }
-                if (!empty($outcome['finalizado'])) {
-                    $result['finalizados']++;
-                }
-                if ($created > 0 || !empty($outcome['finalizado'])) {
-                    $result['editais_alterados']++;
-                }
-                if ($created === 0 && empty($outcome['finalizado'])) {
-                    $result['inalterados']++;
-                }
-            }
+            $ownsTransaction = !$this->connection->inTransaction();
+            $savepoint = $ownsTransaction ? null : 'edital_lote_reconciliar_' . bin2hex(random_bytes(8));
             if ($ownsTransaction) {
-                $this->connection->commit();
+                $this->connection->beginTransaction();
             } else {
-                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                $this->connection->exec('SAVEPOINT ' . $savepoint);
             }
-        } catch (Throwable $exception) {
-            if ($this->connection->inTransaction()) {
+
+            $result = [
+                'solicitados' => count($ids),
+                'editais_alterados' => 0,
+                'editais_com_etapas_criadas' => 0,
+                'etapas_criadas' => 0,
+                'inalterados' => 0,
+                'nao_encontrados' => 0,
+                'finalizados' => 0,
+                'falhas' => 0,
+            ];
+            try {
+                $orderedIds = array_keys($ids);
+                sort($orderedIds, SORT_STRING);
+                foreach ($orderedIds as $id) {
+                    $outcome = $this->reconciliarComEditalBloqueado($id, function () use ($id): array {
+                        $edital = $this->repository->findById($id);
+                        if ($edital === null) {
+                            return ['encontrado' => false, 'etapas_criadas' => 0, 'finalizado' => false];
+                        }
+                        $status = strtolower(trim((string) ($edital['status'] ?? '')));
+                        if ($status === 'concluída') {
+                            $status = 'concluida';
+                        }
+                        if (in_array($status, ['concluida', 'cancelada'], true)) {
+                            return ['encontrado' => true, 'etapas_criadas' => 0, 'finalizado' => false];
+                        }
+                        $subtarefasAntes = count($this->subtarefasRepository->findByEditalId($id));
+                        $this->subtarefasRepository->ensureSubtarefasAtivas($id);
+                        $subtarefasDepois = count($this->subtarefasRepository->findByEditalId($id));
+                        return [
+                            'encontrado' => true,
+                            'etapas_criadas' => max(0, $subtarefasDepois - $subtarefasAntes),
+                            'finalizado' => $this->tentarFinalizacaoAutomaticaPorDecurso($id),
+                        ];
+                    });
+                    if (!is_array($outcome)) {
+                        $result['nao_encontrados']++;
+                        continue;
+                    }
+                    if (empty($outcome['encontrado'])) {
+                        $result['nao_encontrados']++;
+                        continue;
+                    }
+                    $created = max(0, (int) ($outcome['etapas_criadas'] ?? 0));
+                    if ($created > 0) {
+                        $result['editais_com_etapas_criadas']++;
+                        $result['etapas_criadas'] += $created;
+                    }
+                    if (!empty($outcome['finalizado'])) {
+                        $result['finalizados']++;
+                    }
+                    if ($created > 0 || !empty($outcome['finalizado'])) {
+                        $result['editais_alterados']++;
+                    }
+                    if ($created === 0 && empty($outcome['finalizado'])) {
+                        $result['inalterados']++;
+                    }
+                }
                 if ($ownsTransaction) {
-                    $this->connection->rollBack();
+                    $this->connection->commit();
                 } else {
-                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
                     $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
                 }
+            } catch (Throwable $exception) {
+                if ($this->connection->inTransaction()) {
+                    if ($ownsTransaction) {
+                        $this->connection->rollBack();
+                    } else {
+                        $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                        $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                    }
+                }
+                throw $exception;
             }
-            throw $exception;
+            return $result;
+        } finally {
+            if ($lockAcquired) {
+                try {
+                    $release = $this->connection->prepare('SELECT RELEASE_LOCK(?)');
+                    $release->execute(['fokus-law-feriados-recalc']);
+                    if ((int) $release->fetchColumn() !== 1) {
+                        error_log('Falha ao liberar mutex do calendário após reconciliação de editais.');
+                    }
+                } catch (Throwable $releaseError) {
+                    error_log('Falha ao liberar mutex do calendário após reconciliação de editais: ' . $releaseError->getMessage());
+                }
+            }
         }
-        return $result;
     }
 
     /** Compara dias civis no fuso configurado, sem antecipar a certificação. */
@@ -645,7 +673,7 @@ final class EditaisService
      */
     public function recalcularDecursosPorIntervalosFeriado(array $intervalos): int
     {
-        $unicos = [];
+        $intervalosValidos = [];
         foreach ($intervalos as $par) {
             if (!is_array($par) || count($par) < 2) {
                 continue;
@@ -655,11 +683,18 @@ final class EditaisService
             if ($ini === '' || $fim === '' || $fim < $ini) {
                 continue;
             }
-            foreach ($this->repository->findIdsComDecursoPorSobreposicaoFeriado($ini, $fim) as $id) {
-                $id = trim((string) $id);
-                if ($id !== '') {
-                    $unicos[$id] = true;
-                }
+            $intervalosValidos[$ini . '/' . $fim] = [$ini, $fim];
+        }
+        if ($intervalosValidos === []) {
+            return 0;
+        }
+
+        $ids = $this->repository->findIdsComDecursoPorIntervalosFeriado(array_values($intervalosValidos));
+        $unicos = [];
+        foreach ($ids as $id) {
+            $id = trim((string) $id);
+            if ($id !== '') {
+                $unicos[$id] = true;
             }
         }
 

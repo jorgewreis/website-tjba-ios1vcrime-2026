@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/SalaAudienciasAtaSigiloHelper.php';
+require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
 
 final class SalaAudienciasEstudanteInscricaoRepository
 {
@@ -183,6 +184,15 @@ final class SalaAudienciasEstudanteInscricaoRepository
     public function listInscricoesVisiveisParaUsuario(string $idUsuario): array
     {
         $linkAudienciaSelect = $this->hasLinkAudienciaColumn() ? 'a.`link_audiencia`' : 'NULL';
+        $codigosPrioridadeBloqueio = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
+        $marcadoresPrioridadeBloqueioSelect = implode(', ', array_map(
+            static fn (int $i): string => ':prioridade_bloqueio_select_' . $i,
+            array_keys($codigosPrioridadeBloqueio)
+        ));
+        $marcadoresPrioridadeBloqueioFiltro = implode(', ', array_map(
+            static fn (int $i): string => ':prioridade_bloqueio_filtro_' . $i,
+            array_keys($codigosPrioridadeBloqueio)
+        ));
         $sql = sprintf(
             'SELECT i.`pauta`, i.`created_at` AS inscrito_em,
                     a.`processo` AS `processo_id`,
@@ -190,6 +200,8 @@ final class SalaAudienciasEstudanteInscricaoRepository
                     a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                     p.`numero_processo`, COALESCE(NULLIF(TRIM(cl.`nome`), \'\'), \'Classe não informada\') AS `classe_nome`,
                     COALESCE(p.`sigiloso`, 0) AS `processo_sigiloso`,
+                    (SELECT COUNT(*) FROM `sala_audiencias_pauta_parte` pp WHERE pp.`pauta` = a.`id_pauta` AND pp.`ativo` = 1 AND pp.`maioridade` = \'menor\') AS `qtd_menor`,
+                    CASE WHEN EXISTS (SELECT 1 FROM `processo_prioridades` pri WHERE pri.`processo_id` = a.`processo` AND pri.`codigo` IN (%s)) THEN 1 ELSE 0 END AS `tem_prioridade_bloqueio`,
                     ata.`id_ata`, ata.`expires_at`, ata.`nome_original`, ata.`uploaded_at`, ata.`arquivo_relativo`
              FROM `%s` i
              INNER JOIN `sala_audiencias_pauta` a ON a.`id_pauta` = i.`pauta` AND a.`ativo` = 1
@@ -201,14 +213,22 @@ final class SalaAudienciasEstudanteInscricaoRepository
                     ata.`id_ata` IS NULL
                     OR ata.`expires_at` > NOW()
                     OR TRIM(COALESCE(ata.`arquivo_relativo`, \'\')) = \'\'
-               )%s
+                    OR COALESCE(p.`sigiloso`, 0) <> 0
+                    OR EXISTS (SELECT 1 FROM `sala_audiencias_pauta_parte` pp WHERE pp.`pauta` = a.`id_pauta` AND pp.`ativo` = 1 AND pp.`maioridade` = \'menor\')
+                    OR EXISTS (SELECT 1 FROM `processo_prioridades` pri WHERE pri.`processo_id` = a.`processo` AND pri.`codigo` IN (%s))
+               )
              ORDER BY a.`data_audiencia` DESC, a.`hora_audiencia` DESC',
             $linkAudienciaSelect,
+            $marcadoresPrioridadeBloqueioSelect,
             $this->table,
-            SalaAudienciasAtaSigiloHelper::sqlExcluirProcessoSigiloso()
+            $marcadoresPrioridadeBloqueioFiltro
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':u', $idUsuario);
+        foreach ($codigosPrioridadeBloqueio as $i => $codigo) {
+            $st->bindValue(':prioridade_bloqueio_select_' . $i, $codigo);
+            $st->bindValue(':prioridade_bloqueio_filtro_' . $i, $codigo);
+        }
         $st->execute();
 
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -221,11 +241,12 @@ final class SalaAudienciasEstudanteInscricaoRepository
      */
     public function listHojeDesignadasElegiveis(string $idUsuario): array
     {
-        /*
-         * Os códigos bloqueantes precisam espelhar
-         * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
-         */
         $linkAudienciaSelect = $this->hasLinkAudienciaColumn() ? 'a.`link_audiencia`' : 'NULL';
+        $codigosPrioridadeBloqueio = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
+        $marcadoresPrioridadeBloqueio = implode(', ', array_map(
+            static fn (int $i): string => ':prioridade_bloqueio_' . $i,
+            array_keys($codigosPrioridadeBloqueio)
+        ));
         $sql = sprintf('
             SELECT a.`id_pauta`, a.`processo` AS `processo_id`, a.`tipo_audiencia`, a.`data_audiencia`, a.`hora_audiencia`, a.`localizacao`, a.`status`, %s AS `link_audiencia`,
                    a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
@@ -238,7 +259,7 @@ final class SalaAudienciasEstudanteInscricaoRepository
                    CASE WHEN EXISTS (
                         SELECT 1 FROM `processo_prioridades` pri
                         WHERE pri.`processo_id` = a.`processo`
-                          AND pri.`codigo` IN (\'sigiloso\', \'crianca_adolescente\', \'violencia_domestica\')
+                          AND pri.`codigo` IN (%s)
                    ) THEN 1 ELSE 0 END AS `tem_prioridade_bloqueio`
             FROM `sala_audiencias_pauta` a
             LEFT JOIN `processos` p ON p.`id` = a.`processo`
@@ -246,9 +267,12 @@ final class SalaAudienciasEstudanteInscricaoRepository
             LEFT JOIN `' . $this->table . '` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = :u
             WHERE a.`ativo` = 1
               AND a.`data_audiencia` = CURDATE()
-        ', $linkAudienciaSelect);
+        ', $linkAudienciaSelect, $marcadoresPrioridadeBloqueio);
         $st = $this->connection->prepare($sql);
         $st->bindValue(':u', $idUsuario);
+        foreach ($codigosPrioridadeBloqueio as $i => $codigo) {
+            $st->bindValue(':prioridade_bloqueio_' . $i, $codigo);
+        }
         $st->execute();
 
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];

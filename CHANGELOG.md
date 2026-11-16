@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0169
+
+**Data:** 2026-11-16 18:09:19 | **Commit:** `1c836ab4` | **Tipo:** `patch`
+
+- fix(REI-114): serialize reconciliation with calendar updates
+
 ## V. 1.87.0168
 
 **Data:** 2026-11-16 16:04:19 | **Commit:** `a9dc0a91` | **Tipo:** `patch`
@@ -17,12 +23,14 @@
 **Data:** 2026-11-16 15:51:35 | **Commit:** `d24c40c7` | **Tipo:** `patch`
 
 - fix(REI-114): validate reconciliation totals
+- fix(REI-122,REI-135): reconcile calendar atomically
 
 ## V. 1.87.0165
 
 **Data:** 2026-11-16 15:48:28 | **Commit:** `1b27c384` | **Tipo:** `patch`
 
 - fix(REI-114): report reconciliation outcomes
+- fix(REI-161): ocultar metadados de pautas inelegiveis
 
 ## V. 1.87.0164
 
@@ -6435,6 +6443,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

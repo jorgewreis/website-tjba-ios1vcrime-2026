@@ -64,6 +64,11 @@ try {
     }
     readfile($payload['full_path']);
     exit;
+} catch (SalaAudienciasInscricaoIndisponivel $e) {
+    http_response_code(400);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Audiência indisponível.';
+    exit;
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     header('Content-Type: text/plain; charset=UTF-8');
