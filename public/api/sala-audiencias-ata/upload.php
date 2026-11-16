@@ -16,6 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (!bootstrapRequireTrustedPostRequest()) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'error' => 'Requisição inválida.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 /**
  * Converte códigos de erro nativos de upload em mensagem amigável.
  */
