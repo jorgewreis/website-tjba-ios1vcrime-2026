@@ -155,12 +155,18 @@ final class CartasExpedidasRepository
             }
         }
 
-        $statement = $this->connection->prepare(
-            sprintf(
-                'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `finalidade`, `prazo_dias`, `comarca_destino_id`, `cidade_destino`, `uf_destino`, `numero_processo_destino`, `vara_destino_id`, `vara_destino_nome`, `status`, `observacoes`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :finalidade, :prazo_dias, :comarca_destino_id, :cidade_destino, :uf_destino, :numero_processo_destino, :vara_destino_id, :vara_destino_nome, :status, :observacoes, :criado_por, :atualizado_por, NOW(), NOW())',
-                $this->table
-            )
-        );
+        $idempotencyValues = array_key_exists('idempotency_key', $row)
+            ? ', `idempotency_key`, `idempotency_payload_hash`'
+            : '';
+        $idempotencyPlaceholders = array_key_exists('idempotency_key', $row)
+            ? ', :idempotency_key, :idempotency_payload_hash'
+            : '';
+        $statement = $this->connection->prepare(sprintf(
+            'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `finalidade`, `prazo_dias`, `comarca_destino_id`, `cidade_destino`, `uf_destino`, `numero_processo_destino`, `vara_destino_id`, `vara_destino_nome`, `status`, `observacoes`, `criado_por`, `atualizado_por`%s, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :finalidade, :prazo_dias, :comarca_destino_id, :cidade_destino, :uf_destino, :numero_processo_destino, :vara_destino_id, :vara_destino_nome, :status, :observacoes, :criado_por, :atualizado_por%s, NOW(), NOW())',
+            $this->table,
+            $idempotencyValues,
+            $idempotencyPlaceholders
+        ));
         $statement->bindValue(':id', $row['id']);
         $statement->bindValue(':processo_origem_id', $row['processo_origem_id']);
         $statement->bindValue(':numero_processo_origem', $row['numero_processo_origem']);
@@ -177,9 +183,29 @@ final class CartasExpedidasRepository
         $cp = $row['criado_por'] ?? null;
         $statement->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
         $statement->bindValue(':atualizado_por', $cp !== null && $cp !== '' ? $cp : null);
+        if (array_key_exists('idempotency_key', $row)) {
+            $statement->bindValue(':idempotency_key', $row['idempotency_key']);
+            $statement->bindValue(':idempotency_payload_hash', $row['idempotency_payload_hash']);
+        }
         $statement->execute();
 
         return (string) $row['id'];
+    }
+
+    public function findByIdempotencyKey(string $userId, string $key, bool $currentRead = false): ?array
+    {
+        $suffix = $currentRead ? ' FOR UPDATE' : '';
+        $statement = $this->connection->prepare(
+            sprintf('SELECT `id`, `idempotency_payload_hash` FROM `%s` WHERE `criado_por` = :user_id AND `idempotency_key` = :request_key LIMIT 1%s', $this->table, $suffix)
+        );
+        $statement->execute([':user_id' => $userId, ':request_key' => $key]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
+    }
+
+    public function assertIdempotencyColumnsAvailable(): void
+    {
+        $this->connection->query(sprintf('SELECT `idempotency_key`, `idempotency_payload_hash` FROM `%s` LIMIT 0', $this->table));
     }
 
     public function update(string $id, array $payload): bool

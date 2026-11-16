@@ -60,29 +60,40 @@ async function run() {
         buildClassePayload: () => ({}),
         notify: (...args) => feedbacks.push(args)
     };
-    let finishCityLookup;
+    const finishCityLookups = [];
     let cityLookupCalls = 0;
     let createCalls = 0;
+    const createPayloads = [];
     const location = { origin: 'https://example.test', href: '' };
+    const storageValues = new Map();
+    const sessionStorage = {
+        getItem: key => storageValues.has(key) ? storageValues.get(key) : null,
+        setItem: (key, value) => storageValues.set(key, String(value)),
+        removeItem: key => storageValues.delete(key)
+    };
     const window = {
         App: { CartorioCreateHelpers: helpers },
         document: { getElementById: id => values[id] || null },
         location,
+        sessionStorage,
         __currentUserName: 'Usuário sintético',
+        crypto: { getRandomValues: bytes => { bytes.fill(createPayloads.length + 7); return bytes; } },
         addEventListener() {},
         confirm: () => true
     };
     const context = {
         window,
         URL,
-        fetch(url) {
+        fetch(url, options) {
             if (url.includes('/city')) {
                 cityLookupCalls += 1;
                 return new Promise(resolve => {
-                    finishCityLookup = () => resolve({ ok: true, json: async () => ({ is_ccm: false }) });
+                    finishCityLookups.push(() => resolve({ ok: true, json: async () => ({ is_ccm: false }) }));
                 });
             }
             createCalls += 1;
+            createPayloads.push(JSON.parse(options.body));
+            if (createCalls === 1) return Promise.reject(new Error('resposta perdida após gravação'));
             return Promise.resolve({ ok: true, json: async () => ({ id: 'CARTA-SINTETICA' }) });
         },
         setTimeout
@@ -109,12 +120,41 @@ async function run() {
     assert.equal(cityLookupCalls, 1, 'segundo clique não pode iniciar outra busca');
     assert.equal(createCalls, 0, 'nenhum cadastro deve ocorrer enquanto a busca está pendente');
 
-    finishCityLookup();
+    finishCityLookups[0]();
     await first;
-    assert.equal(createCalls, 1, 'a submissão autorizada deve ocorrer uma única vez');
+    assert.equal(createCalls, 1, 'uma única submissão ocorre após a consulta');
+
+    const windowReloaded = {
+        App: window.App,
+        document: window.document,
+        location,
+        sessionStorage,
+        __currentUserName: window.__currentUserName,
+        crypto: window.crypto,
+        addEventListener() {},
+        confirm: () => true
+    };
+    vm.runInNewContext(
+        fs.readFileSync(path.join(__dirname, '../../public/assets/js/shared/cartorio-cartas-expedidas-create.js'), 'utf8'),
+        { window: windowReloaded, URL, fetch: context.fetch, setTimeout },
+        { filename: 'cartorio-cartas-expedidas-create.js (reload)' }
+    );
+    windowReloaded.App.CartorioCartasExpedidasCreate.initialize({
+        cityLookupEndpoint: '/api/city',
+        endpoint: '/api/create',
+        successRedirect: '/success'
+    });
+
+    const retry = click();
+    assert.equal(cityLookupCalls, 2, 'retry permitido após falha de resposta revalida cidade');
+    finishCityLookups[1]();
+    await retry;
+    assert.equal(createCalls, 2, 'o usuário pode repetir após resultado HTTP ambíguo');
+    assert.match(createPayloads[0].idempotency_key, /^[a-f0-9]{64}$/);
+    assert.equal(createPayloads[1].idempotency_key, createPayloads[0].idempotency_key, 'retry idêntico reutiliza a chave idempotente');
     assert.equal(location.href, '/success', 'sucesso deve redirecionar após um único cadastro');
     assert.equal(feedbacks.some(([message]) => message === 'Enviando dados...'), true);
-    console.log('PASS cartas expedidas: cliques repetidos durante consulta atrasada iniciam um único cadastro');
+    console.log('PASS cartas expedidas: bloqueio de clique duplicado e chave idempotente preservada após recarga');
 }
 
 run().catch(error => {

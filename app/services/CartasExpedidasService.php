@@ -15,6 +15,7 @@ require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
 require_once __DIR__ . '/../helpers/CentralMandadosCcm.php';
+require_once __DIR__ . '/../helpers/IdempotencySchemaUnavailableException.php';
 
 final class CartasExpedidasService
 {
@@ -106,6 +107,25 @@ final class CartasExpedidasService
 
         $numeroFormatado = $this->formatarCNJ($digits);
 
+        $idempotencyKey = strtolower(trim((string) ($payload['idempotency_key'] ?? '')));
+        $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+        $payloadHash = null;
+        if ($idempotencyKey !== '') {
+            if (preg_match('/^[a-f0-9]{64}$/D', $idempotencyKey) !== 1 || $usuarioCadastroId === '') {
+                throw new InvalidArgumentException('Chave de envio inválida. Atualize a página e tente novamente.');
+            }
+            try {
+                $this->repository->assertIdempotencyColumnsAvailable();
+            } catch (Throwable $exception) {
+                throw new IdempotencySchemaUnavailableException('O envio seguro está temporariamente indisponível.', 0, $exception);
+            }
+            $payloadHash = self::hashCreatePayload($payload, $digits, $usuarioCadastroId);
+            $existing = $this->repository->findByIdempotencyKey($usuarioCadastroId, $idempotencyKey);
+            if ($existing !== null) {
+                return self::resolveIdempotentResult($existing, $payloadHash);
+            }
+        }
+
         $ufDestino = strtoupper(trim((string) ($payload['estado'] ?? $payload['uf'] ?? '')));
         if (strlen($ufDestino) !== 2) {
             throw new InvalidArgumentException('O estado (UF) de destino é obrigatório (2 caracteres).');
@@ -150,7 +170,8 @@ final class CartasExpedidasService
             $sigiloso = true;
         }
 
-        return $this->withAtomicCreate(function () use (
+        try {
+            return $this->withAtomicCreate(function () use (
             $payload,
             $classeNaoInformada,
             $classeCodigo,
@@ -158,7 +179,9 @@ final class CartasExpedidasService
             $sigiloso,
             $numeroFormatado,
             $ufDestino,
-            $cidadeDestino
+            $cidadeDestino,
+            $idempotencyKey,
+            $payloadHash
         ): string {
 
         $tribunalSigla = 'TJBA';
@@ -218,6 +241,10 @@ final class CartasExpedidasService
         if ($usuarioCadastroId !== '') {
             $row['criado_por'] = $usuarioCadastroId;
         }
+        if ($idempotencyKey !== '') {
+            $row['idempotency_key'] = $idempotencyKey;
+            $row['idempotency_payload_hash'] = $payloadHash;
+        }
 
         $this->repository->insert($row);
 
@@ -238,6 +265,53 @@ final class CartasExpedidasService
 
         return $idCarta;
         });
+        } catch (PDOException $exception) {
+            if ($idempotencyKey === '' || !self::isUniqueConstraintViolation($exception)) {
+                throw $exception;
+            }
+            // Uma requisição concorrente pode ter confirmado a mesma chave
+            // enquanto esta transação era revertida. FOR UPDATE faz leitura
+            // atual mesmo se o chamador já estiver numa transação RR.
+            $existing = $this->repository->findByIdempotencyKey($usuarioCadastroId, $idempotencyKey, true);
+            if ($existing === null) {
+                throw $exception;
+            }
+            return self::resolveIdempotentResult($existing, (string) $payloadHash);
+        }
+    }
+
+    private static function hashCreatePayload(array $payload, string $processDigits, string $userId): string
+    {
+        $canonical = [
+            'version' => 1,
+            'user_id' => $userId,
+            'process_digits' => $processDigits,
+            'finalidade' => trim((string) ($payload['finalidade'] ?? '')),
+            'prazo' => (int) preg_replace('/\D+/', '', (string) ($payload['prazo'] ?? $payload['prazo_dias'] ?? '30')),
+            'uf' => strtoupper(trim((string) ($payload['estado'] ?? $payload['uf'] ?? ''))),
+            'cidade' => TextFormatter::formatProperName((string) ($payload['cidade'] ?? ''), 120),
+            'classe_codigo' => trim((string) ($payload['classe_codigo'] ?? '')),
+            'classe_descricao' => trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? '')),
+            'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
+            'sigilo_solicitado' => !empty($payload['nivel_sigilo']) ? 1 : 0,
+        ];
+        return hash('sha256', json_encode($canonical, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+    }
+
+    /** @param array{id:string,idempotency_payload_hash:?string} $existing */
+    private static function resolveIdempotentResult(array $existing, string $payloadHash): string
+    {
+        $storedHash = trim((string) ($existing['idempotency_payload_hash'] ?? ''));
+        if ($storedHash === '' || !hash_equals($storedHash, $payloadHash)) {
+            throw new DomainException('Esta chave de envio já foi usada com outros dados. Atualize a página antes de tentar novamente.');
+        }
+        return (string) $existing['id'];
+    }
+
+    private static function isUniqueConstraintViolation(PDOException $exception): bool
+    {
+        $driverCode = $exception->errorInfo[1] ?? null;
+        return $exception->getCode() === '23000' && (int) $driverCode === 1062;
     }
 
     private function withAtomicCreate(callable $operation): string

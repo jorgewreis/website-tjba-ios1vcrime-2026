@@ -17,9 +17,14 @@ Após a sincronização, `.github/workflows/deploy-prod.yml` atualiza `APP_URL` 
 as dependências PHP quando há `composer.json`. Também executa os scripts
 `scripts/migrate-cejusc.php`, `scripts/migrate-gabinete-reu-preso-controle-tipo.php`
 e `scripts/migrate-dashboard-conclusoes.php` **somente se cada arquivo existir**
-no servidor após o `rsync`. A instalação do cron de usuários externos inativos
-é chamada pelo workflow; a limpeza do cron e dos artefatos legados de
-Cartório/Tarefas é condicionada às ferramentas e arquivos existentes.
+no servidor após o `rsync`. A migração aditiva de idempotência de Cartas Expedidas
+é executada por `scripts/migrate-cartas-expedidas-idempotency.php`, também após o
+`rsync`, quando o script existe. Até a migração estar presente, a API recusa novas
+criações com chave idempotente usando 503; não há fallback para criação sem
+proteção. Em rollback de código, preserve as colunas e o índice junto aos dados
+de idempotência para que retries antigos continuem deduplicados. A instalação do
+cron de usuários externos inativos é chamada pelo workflow; a limpeza do cron e
+dos artefatos legados de Cartório/Tarefas é condicionada às ferramentas e arquivos existentes.
 
 Esses predicados não formam um executor geral de `database/migrations/`: outras
 migrações continuam fora do fluxo automático. Além disso, a presença de uma

@@ -32,6 +32,45 @@
             ? settings.submitDelayMs
             : 0;
         const ccmConfirmed = new Set();
+        const pendingRequestStorageKey = 'cartorio.cartasExpedidas.pendingRequestKey';
+        let pendingRequestSignature = '';
+        let pendingRequestKey = '';
+        let pendingRequestKeyRestored = false;
+        let requestKeyStorageAvailable = false;
+
+        try {
+            if (global.sessionStorage) {
+                const storageProbe = pendingRequestStorageKey + '.probe';
+                global.sessionStorage.setItem(storageProbe, '1');
+                global.sessionStorage.removeItem(storageProbe);
+                pendingRequestKey = String(global.sessionStorage.getItem(pendingRequestStorageKey) || '');
+                pendingRequestKeyRestored = /^[a-f0-9]{64}$/i.test(pendingRequestKey);
+                if (!pendingRequestKeyRestored) pendingRequestKey = '';
+                requestKeyStorageAvailable = true;
+            }
+        } catch (error) {
+            pendingRequestKey = '';
+            pendingRequestKeyRestored = false;
+        }
+
+        function clearPendingRequestKey() {
+            pendingRequestSignature = '';
+            pendingRequestKey = '';
+            pendingRequestKeyRestored = false;
+            try {
+                if (global.sessionStorage) global.sessionStorage.removeItem(pendingRequestStorageKey);
+            } catch (error) {
+                // A falha ao limpar não afeta uma criação confirmada; a próxima carga
+                // pode receber conflito e remover a chave antiga com segurança.
+            }
+        }
+
+        function newRequestKey() {
+            if (!global.crypto || typeof global.crypto.getRandomValues !== 'function') return '';
+            const bytes = new Uint8Array(32);
+            global.crypto.getRandomValues(bytes);
+            return Array.from(bytes, function (byte) { return byte.toString(16).padStart(2, '0'); }).join('');
+        }
         function confirmCcm(city) {
             const key = normalizeCidadeForCompare(city);
             if (ccmConfirmed.has(key)) return true;
@@ -164,11 +203,38 @@
                 usuario: usuarioAtual
             }, helpers.buildClassePayload({ classeValue: classeVal }));
 
+            const requestSignature = JSON.stringify(payload);
+            if (requestSignature !== pendingRequestSignature) {
+                if (!pendingRequestKeyRestored) pendingRequestKey = newRequestKey();
+                pendingRequestSignature = requestSignature;
+                pendingRequestKeyRestored = false;
+                if (!pendingRequestKey || !requestKeyStorageAvailable) {
+                    feedback('Não foi possível guardar a chave de envio seguro nesta sessão. Ative o armazenamento da sessão e tente novamente.', 'error');
+                    gate.setError();
+                    return;
+                }
+                try {
+                    global.sessionStorage.setItem(pendingRequestStorageKey, pendingRequestKey);
+                } catch (error) {
+                    clearPendingRequestKey();
+                    feedback('Não foi possível guardar a chave de envio seguro nesta sessão. Ative o armazenamento da sessão e tente novamente.', 'error');
+                    gate.setError();
+                    return;
+                }
+            }
+            if (!pendingRequestKey) {
+                feedback('Não foi possível preparar o envio seguro. Atualize a página e tente novamente.', 'error');
+                gate.setError();
+                return;
+            }
+            payload.idempotency_key = pendingRequestKey;
+
             gate.setSubmitting();
             feedback('Enviando dados...', 'info', 'Informação');
 
+            let response = null;
             try {
-                const response = await fetch(settings.endpoint || '/api/cartorio-cartas-expedidas/create.php', {
+                response = await fetch(settings.endpoint || '/api/cartorio-cartas-expedidas/create.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -177,11 +243,13 @@
                 if (!response.ok) {
                     throw new Error(data.error || 'Falha ao salvar a carta expedida.');
                 }
+                clearPendingRequestKey();
                 if (submitDelayMs > 0) {
                     await new Promise(function (resolve) { setTimeout(resolve, submitDelayMs); });
                 }
                 global.location.href = settings.successRedirect || '/frame.php?page=cartasexpedidas';
             } catch (error) {
+                if (response && response.status === 409) clearPendingRequestKey();
                 feedback(error.message || 'Não foi possível cadastrar a carta expedida.', 'error');
                 gate.setInitial();
             }

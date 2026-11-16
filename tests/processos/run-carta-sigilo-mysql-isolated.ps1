@@ -4,13 +4,14 @@ param()
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $appRoot = Join-Path $repoRoot 'app'
+$migrationRoot = Join-Path $repoRoot 'database/migrations'
 $testFile = Join-Path $PSScriptRoot 'carta-sigilo-mysql.test.php'
 $mysqlImageRef = 'mysql@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902'
 $phpImageRef = 'fokus-law-linux-qa@sha256:459cc8bd25b38009a8cf9a0ef5399d131f4f2001a1376d89389f673a92de430b'
 if (Test-Path -LiteralPath (Join-Path $repoRoot '.env')) {
     throw 'Runner recusado: não execute a fixture em checkout com .env.'
 }
-foreach ($path in @($appRoot, $testFile)) {
+foreach ($path in @($appRoot, $migrationRoot, $testFile)) {
     $item = Get-Item -LiteralPath $path -Force
     if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
         throw 'Runner recusado: source com reparse point.'
@@ -20,6 +21,10 @@ $reparseItems = Get-ChildItem -LiteralPath $appRoot -Recurse -Force | Where-Obje
     $_.Attributes -band [IO.FileAttributes]::ReparsePoint
 }
 if ($reparseItems) { throw 'Runner recusado: app contém reparse point.' }
+$migrationReparseItems = Get-ChildItem -LiteralPath $migrationRoot -Recurse -Force | Where-Object {
+    $_.Attributes -band [IO.FileAttributes]::ReparsePoint
+}
+if ($migrationReparseItems) { throw 'Runner recusado: migrations contém reparse point.' }
 $envItems = Get-ChildItem -LiteralPath $appRoot -Recurse -Force | Where-Object { $_.Name -like '.env*' }
 if ($envItems) { throw 'Runner recusado: app contém arquivo de ambiente.' }
 
@@ -144,12 +149,13 @@ try {
     Invoke-DockerSafe @('exec', $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'rei88_test', '-e', $markerSql) | Out-Null
 
     $appMount = "type=bind,source=$appRoot,target=/repo/app,readonly"
+    $migrationMount = "type=bind,source=$migrationRoot,target=/repo/database/migrations,readonly"
     $testMount = "type=bind,source=$testFile,target=/test/carta-sigilo-mysql.test.php,readonly"
     $phpId = (Invoke-DockerSafe @(
         'create', '--name', $phpName, '--label', "$label=$runId", '--network', 'none',
         '--cpus', '1', '--memory', '512m', '--read-only', '--cap-drop', 'ALL',
         '--security-opt', 'no-new-privileges=true', '--tmpfs', '/tmp:rw,size=64m,noexec,nosuid,nodev',
-        '--mount', $appMount, '--mount', $testMount,
+        '--mount', $appMount, '--mount', $migrationMount, '--mount', $testMount,
         '--mount', "type=volume,source=$volumeName,target=/var/run/mysqld",
         '--env', 'REI88_TEST_DISPOSABLE=1', '--env', 'REI88_TEST_REPO_ROOT=/repo',
         '--env', "REI88_TEST_DISPOSABLE_MARKER=$marker",
@@ -161,10 +167,11 @@ try {
     $phpMounts = @($php.Mounts)
     $phpPortCount = if ($php.HostConfig.PortBindings) { @($php.HostConfig.PortBindings.PSObject.Properties).Count } else { 0 }
     $phpInvalid = $php.Image -ne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged
-    $phpInvalid = $phpInvalid -or $phpPortCount -ne 0 -or $phpMounts.Count -ne 3
+    $phpInvalid = $phpInvalid -or $phpPortCount -ne 0 -or $phpMounts.Count -ne 4
     $phpInvalid = $phpInvalid -or -not $php.HostConfig.ReadonlyRootfs -or @($php.HostConfig.CapDrop) -notcontains 'ALL'
     $phpInvalid = $phpInvalid -or @($php.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true'
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Destination -eq '/repo/app' -and -not $_.RW }).Count -ne 1
+    $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Destination -eq '/repo/database/migrations' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Destination -eq '/test/carta-sigilo-mysql.test.php' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'volume' -and $_.Name -eq $volumeName -and $_.Destination -eq '/var/run/mysqld' }).Count -ne 1
     if ($phpInvalid) {

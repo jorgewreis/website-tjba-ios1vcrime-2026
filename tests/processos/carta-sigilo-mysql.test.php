@@ -66,6 +66,11 @@ $ddl = [
 foreach ($ddl as $sql) {
     $pdo->exec($sql);
 }
+$migrationSql = file_get_contents($repoRoot . '/database/migrations/20261116_add_cartas_expedidas_idempotency.sql');
+if (!is_string($migrationSql) || trim($migrationSql) === '') {
+    throw new RuntimeException('Migração sintética de idempotência ausente ou vazia.');
+}
+$pdo->exec($migrationSql);
 
 require_once $repoRoot . '/app/services/CartasExpedidasService.php';
 require_once $repoRoot . '/app/repositories/ProcessosRepository.php';
@@ -106,6 +111,31 @@ if ($letterCount !== count($inputs) || $subtaskCount !== count($inputs) * 2) {
     throw new RuntimeException('Criação completa de cartas/subtarefas não persistiu as quantidades esperadas.');
 }
 
+$idempotentPayload = array_merge($base, [
+    'usuario_cadastro_id' => 'USER-REI78-TEST',
+    'idempotency_key' => str_repeat('a', 64),
+]);
+$idempotentId = $service->create($idempotentPayload);
+$afterFirstIdempotentCreate = [
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn(),
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn(),
+];
+if ($service->create($idempotentPayload) !== $idempotentId
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $afterFirstIdempotentCreate[0]
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $afterFirstIdempotentCreate[1]) {
+    throw new RuntimeException('Retry idempotente criou registros duplicados ou retornou outra carta.');
+}
+try {
+    $service->create(array_merge($idempotentPayload, ['finalidade' => 'Finalidade diferente']));
+    throw new RuntimeException('Reutilização da chave idempotente com outro payload deveria ser recusada.');
+} catch (DomainException) {
+    // A chave fica vinculada ao conteúdo original.
+}
+if ((int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $afterFirstIdempotentCreate[0]
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $afterFirstIdempotentCreate[1]) {
+    throw new RuntimeException('Payload divergente com a mesma chave alterou registros.');
+}
+
 $newCnj = '0000002-54.2020.8.05.0001';
 $service->create(array_merge($base, ['numero_processo' => $newCnj]));
 $newProcess = (new ProcessosRepository($pdo))->findByNumero($newCnj);
@@ -141,6 +171,8 @@ $pdo->exec("CREATE TRIGGER rei88_fail_subtask BEFORE INSERT ON cartas_expedidas_
 $failurePayload = array_merge($base, [
     'classe_codigo' => 'REI88-ROLLBACK-CLASS',
     'classe_descricao' => 'Classe sintética para rollback',
+    'usuario_cadastro_id' => 'USER-REI78-TEST',
+    'idempotency_key' => str_repeat('b', 64),
 ]);
 try {
     $service->create($failurePayload);
@@ -157,9 +189,17 @@ if ($beforeFailureProcess === null || $afterFailureProcess === null
     || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $beforeFailureLetters
     || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $beforeFailureSubtasks
     || (int) $pdo->query('SELECT COUNT(*) FROM classes')->fetchColumn() !== $beforeFailureClasses
+    || (int) $pdo->query("SELECT COUNT(*) FROM cartas_expedidas WHERE idempotency_key = '" . str_repeat('b', 64) . "'")->fetchColumn() !== 0
     || $pdo->inTransaction()) {
     throw new RuntimeException('Falha na criação deixou processo, classe, carta, subtarefas ou transação parcial.');
 }
+$pdo->exec('DROP TRIGGER rei88_fail_subtask');
+$retryAfterRollbackId = $service->create($failurePayload);
+if ($service->create($failurePayload) !== $retryAfterRollbackId
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $beforeFailureLetters + 1
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $beforeFailureSubtasks + 2) {
+    throw new RuntimeException('Retry após rollback não foi idempotente ou criou registros duplicados.');
+}
 
 echo 'PASS CartasExpedidasService completo em MySQL/InnoDB ' . $version
-    . ': sigilo e classe existentes preservados (' . count($inputs) . ' entradas), criação completa, processo novo/classe ausente e rollback após falha na segunda subtarefa verificados.' . PHP_EOL;
+    . ': migração e retry idempotente (incluindo payload conflitante e retry após rollback), sigilo e classe existentes preservados (' . count($inputs) . ' entradas), criação completa, processo novo/classe ausente e rollback após falha na segunda subtarefa verificados.' . PHP_EOL;
