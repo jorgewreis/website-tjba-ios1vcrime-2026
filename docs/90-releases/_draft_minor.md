@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: validar comarca de cartas recebidas** `[36c0b036]`
+- **docs: suspender instrucoes de sandbox nao verificado** `[809460ab]`
 
