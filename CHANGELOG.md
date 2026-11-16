@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0172
+
+**Data:** 2026-11-16 18:26:18 | **Commit:** `653273be` | **Tipo:** `patch`
+
+- test(REI-114): validate calculated date reconciliation totals
+
 ## V. 1.87.0171
 
 **Data:** 2026-11-16 18:23:46 | **Commit:** `9dfe8966` | **Tipo:** `patch`
@@ -6455,6 +6461,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

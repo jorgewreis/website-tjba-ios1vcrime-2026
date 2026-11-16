@@ -192,6 +192,10 @@ return true;
         assert status == 200, (status, payload.decode(errors="replace"))
         parsed = json.loads(payload)
         assert parsed.get("success") is True, parsed
+        reconciliation = parsed.get("resultado")
+        assert isinstance(reconciliation, dict), parsed
+        assert isinstance(reconciliation.get("editais_com_datas_calculadas"), int), reconciliation
+        assert reconciliation["editais_com_datas_calculadas"] <= reconciliation["editais_alterados"], reconciliation
         with closing(sqlite3.connect(db_path)) as db:
             assert db.execute("SELECT COUNT(*) FROM editais_subtarefas WHERE edital_id='E-HTTP'").fetchone()[0] == 2
         print("PASS REI-114 HTTP: listagem GET sem efeitos, guards/método/origem, recusas sem alteração e reconciliação autorizada (SQLite sintético)")

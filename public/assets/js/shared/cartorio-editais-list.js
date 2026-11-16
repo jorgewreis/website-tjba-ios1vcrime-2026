@@ -187,6 +187,7 @@
                         result.solicitados !== settings.editalIds.length ||
                         result.editais_alterados + result.inalterados + result.nao_encontrados !== result.solicitados ||
                         result.editais_com_etapas_criadas > result.editais_alterados ||
+                        result.editais_com_datas_calculadas > result.editais_alterados ||
                         result.etapas_criadas < result.editais_com_etapas_criadas ||
                         result.finalizados > result.editais_alterados) {
                         throw new Error('A resposta da atualização está incompleta. Atualize a listagem antes de continuar.');
