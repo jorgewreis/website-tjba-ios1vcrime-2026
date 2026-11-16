@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0156
+
+**Data:** 2026-11-16 02:41:35 | **Commit:** `6fcc7d42` | **Tipo:** `patch`
+
+- docs: reconciliar comportamento de autenticacao
+
 ## V. 1.87.0155
 
 **Data:** 2026-11-16 02:19:18 | **Commit:** `02d2b100` | **Tipo:** `patch`
@@ -6357,6 +6363,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
