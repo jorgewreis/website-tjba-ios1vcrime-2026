@@ -3,14 +3,29 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../app/services/ProcessoAssuntoSyncService.php';
 
+final class PayloadSqlite extends PDO
+{
+    public function __construct()
+    {
+        parent::__construct('sqlite::memory:');
+        $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->sqliteCreateFunction('NOW', static fn(): string => '2026-11-16 12:00:00', 0);
+    }
+
+    public function prepare(string $query, array $options = []): PDOStatement|false
+    {
+        $query = preg_replace('/\s+FOR UPDATE\s*$/i', '', $query);
+        $query = preg_replace('/\s+LIMIT\s+1\s*$/i', '', $query);
+        return parent::prepare($query, $options);
+    }
+}
+
 function checkSyncPayload(bool $condition, string $message): void
 {
     if (!$condition) throw new RuntimeException($message);
 }
 
-$db = new PDO('sqlite::memory:');
-$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-$db->sqliteCreateFunction('NOW', static fn(): string => '2026-11-16 12:00:00', 0);
+$db = new PayloadSqlite();
 $db->exec('CREATE TABLE processos (id TEXT PRIMARY KEY, numero_processo TEXT, classe_id TEXT NULL, data_fato TEXT NULL, sigiloso INTEGER DEFAULT 0, created_at TEXT, updated_at TEXT)');
 $db->exec('CREATE TABLE assuntos (id TEXT PRIMARY KEY, codigo TEXT UNIQUE, descricao TEXT, created_at TEXT, updated_at TEXT)');
 $db->exec('CREATE TABLE processo_assuntos (id TEXT PRIMARY KEY, processo_id TEXT, assunto_id TEXT, origem TEXT, created_at TEXT, updated_at TEXT, UNIQUE(processo_id, assunto_id))');
@@ -31,15 +46,14 @@ foreach ([[null], [['codigo' => []]], [['descricao' => 'sem código']], ['texto'
     checkSyncPayload($snapshot() === $before, 'Payload inválido alterou assunto ou vínculo.');
 }
 
-$empty = $service->syncFromDataJud($cnj, []);
-checkSyncPayload($empty['stats']['removed'] === 1, 'Lista vazia explícita não removeu o vínculo DataJud.');
-checkSyncPayload((int)$db->query("SELECT COUNT(*) FROM processo_assuntos WHERE origem='manual'")->fetchColumn() === 1, 'Lista vazia removeu vínculo manual.');
+try {
+    $service->syncFromDataJud($cnj, []);
+    throw new RuntimeException('Lote vazio sem prova de completude foi aceito.');
+} catch (InvalidArgumentException $expected) {}
+checkSyncPayload($snapshot() === $before, 'Lote vazio alterou assunto ou vínculo.');
 $overlap = $service->syncFromDataJud($cnj, [['codigo' => '1', 'descricao' => 'Manual']]);
 checkSyncPayload($overlap['stats']['inserted'] === 0, 'Assunto já vinculado manualmente foi contado como novo vínculo.');
 checkSyncPayload((string)$db->query("SELECT origem FROM processo_assuntos WHERE assunto_id='A1'")->fetchColumn() === 'manual', 'Sync DataJud reclassificou vínculo manual.');
-$afterOverlapEmpty = $service->syncFromDataJud($cnj, []);
-checkSyncPayload($afterOverlapEmpty['stats']['removed'] === 0, 'Sync DataJud vazio removeu vínculo que era manual.');
-checkSyncPayload((string)$db->query("SELECT origem FROM processo_assuntos WHERE assunto_id='A1'")->fetchColumn() === 'manual', 'Vínculo manual não sobreviveu ao sync DataJud vazio.');
 $db->exec("INSERT INTO processo_assuntos VALUES ('D2','P','A2','datajud','','')");
 
 $db->exec("CREATE TRIGGER fail_datajud_delete BEFORE DELETE ON processo_assuntos WHEN OLD.origem='datajud' BEGIN SELECT RAISE(ABORT, 'synthetic delete failure'); END");
@@ -52,4 +66,4 @@ try {
     checkSyncPayload($snapshot() === $beforeFailure, 'Erro intermediário deixou gravações parciais.');
 }
 
-echo "PASS rejeição, [] explícito, vínculo manual e rollback SQLite\n";
+echo "PASS rejeição, proveniência manual e rollback SQLite\n";

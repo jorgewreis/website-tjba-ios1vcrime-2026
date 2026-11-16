@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0167
+
+**Data:** 2026-11-16 11:48:15 | **Commit:** `0f6d89bc` | **Tipo:** `patch`
+
+- fix(REI-72,REI-153): guard subject links and verify DataJud source
+
 ## V. 1.87.0166
 
 **Data:** 2026-11-16 11:31:52 | **Commit:** `a379993b` | **Tipo:** `patch`
@@ -6423,6 +6429,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

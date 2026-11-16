@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../helpers/CnjValidator.php';
+
 /**
  * Formatação única da resposta DataJud (Elasticsearch _source → payload da API interna).
  */
@@ -48,6 +50,9 @@ final class DataJudResponseMapper
             'tribunal' => $source['tribunal'] ?? null,
             'classe' => self::formatarClasse($source),
             'assuntos' => self::formatarAssuntos($source['assuntos'] ?? []),
+            // Só um lote integral e verificável pode substituir vínculos DataJud.
+            'assuntos_completos' => !$redactSigilo && self::assuntosSaoCompletos($source['assuntos'] ?? null),
+            'fonte_confirmada_para_sincronizacao' => self::fonteConfirmadaParaSincronizacao($source, $numeroDigitos),
             'prioridades' => self::formatarPrioridades($source['prioridade'] ?? []),
             'polo_passivo' => $poloPassivo,
             'movimentos' => $movimentos,
@@ -77,6 +82,8 @@ final class DataJudResponseMapper
             'tribunal' => null,
             'classe' => ['codigo' => null, 'descricao' => null],
             'assuntos' => [],
+            'assuntos_completos' => false,
+            'fonte_confirmada_para_sincronizacao' => false,
             'prioridades' => [],
             'polo_passivo' => [],
             'movimentos' => [],
@@ -92,6 +99,20 @@ final class DataJudResponseMapper
             'sigilo_restrito' => false,
             'sigilo_mensagem' => self::MSG_TOAST_SIGILO_PUBLICO,
         ];
+    }
+
+    /** A leitura tolera dados parciais; gravações exigem identidade e sigilo explícitos. */
+    private static function fonteConfirmadaParaSincronizacao(array $source, string $numeroDigitos): bool
+    {
+        $numero = $source['numeroProcesso'] ?? null;
+        $nivel = $source['nivelSigilo'] ?? null;
+        if (!is_string($numero)
+            || !(ctype_digit($numero) || CnjValidator::isFormatted($numero))
+            || CnjValidator::onlyDigits($numero) !== $numeroDigitos) {
+            return false;
+        }
+        // Apenas zero inteiro ou textual integral comprova ausência de sigilo.
+        return $nivel === 0 || (is_string($nivel) && preg_match('/^\s*0+\s*$/D', $nivel) === 1);
     }
 
     public static function formatarClasse(array $source): array
@@ -134,8 +155,8 @@ final class DataJudResponseMapper
                 continue;
             }
 
-            $codigo = trim((string) ($item['codigo'] ?? $item['codigoAssunto'] ?? $item['numAssunto'] ?? ''));
-            $desc = trim((string) ($item['descricaoAssunto'] ?? $item['descricao'] ?? $item['nome'] ?? ''));
+            $codigo = self::textoAssunto($item['codigo'] ?? $item['codigoAssunto'] ?? $item['numAssunto'] ?? '');
+            $desc = self::textoAssunto($item['descricaoAssunto'] ?? $item['descricao'] ?? $item['nome'] ?? '');
             if ($desc !== '') {
                 $lista[] = ['codigo' => $codigo !== '' ? $codigo : null, 'descricao' => $desc];
                 continue;
@@ -152,8 +173,8 @@ final class DataJudResponseMapper
                 if (!is_array($sub)) {
                     continue;
                 }
-                $nestedCodigo = trim((string) ($sub['codigo'] ?? $sub['codigoAssunto'] ?? $sub['numAssunto'] ?? $codigo));
-                $nestedDesc = trim((string) ($sub['descricaoAssunto'] ?? $sub['descricao'] ?? $sub['nome'] ?? ''));
+                $nestedCodigo = self::textoAssunto($sub['codigo'] ?? $sub['codigoAssunto'] ?? $sub['numAssunto'] ?? $codigo);
+                $nestedDesc = self::textoAssunto($sub['descricaoAssunto'] ?? $sub['descricao'] ?? $sub['nome'] ?? '');
                 if ($nestedDesc !== '') {
                     $lista[] = ['codigo' => $nestedCodigo !== '' ? $nestedCodigo : null, 'descricao' => $nestedDesc];
                 }
@@ -170,6 +191,25 @@ final class DataJudResponseMapper
         }
 
         return array_values($unicos);
+    }
+
+    private static function textoAssunto(mixed $value): string
+    {
+        return is_string($value) || is_int($value) ? trim((string) $value) : '';
+    }
+
+    /** Respostas parciais continuam legíveis, mas não são lotes de substituição seguros. */
+    private static function assuntosSaoCompletos(mixed $assuntos): bool
+    {
+        if (!is_array($assuntos) || $assuntos === [] || !array_is_list($assuntos)) return false;
+        foreach ($assuntos as $item) {
+            if (!is_array($item)) return false;
+            $codigo = $item['codigo'] ?? $item['codigoAssunto'] ?? $item['numAssunto'] ?? null;
+            $descricao = $item['descricaoAssunto'] ?? $item['descricao'] ?? $item['nome'] ?? null;
+            if ((!is_string($codigo) && !is_int($codigo)) || !preg_match('/[A-Za-z0-9]/', (string) $codigo)
+                || !is_string($descricao) || trim($descricao) === '') return false;
+        }
+        return true;
     }
 
     /**

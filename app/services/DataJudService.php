@@ -12,10 +12,12 @@ require_once __DIR__ . '/../DataJud/DataJudTribunalResolver.php';
 final class DataJudService
 {
     private array $config;
+    private ?Closure $transport;
 
-    public function __construct(array $config)
+    public function __construct(array $config, ?callable $transport = null)
     {
         $this->config = $config;
+        $this->transport = $transport === null ? null : Closure::fromCallable($transport);
     }
 
     /**
@@ -38,41 +40,113 @@ final class DataJudService
             $attempts[] = [$defaultAlias, DataJudTribunalResolver::buildSearchUrl($baseUrl, $defaultAlias)];
         }
 
+        $failedAttempt = false;
         foreach ($attempts as [$aliasUsed, $url]) {
-            $exec = $this->executeElasticsearchSearch($url, $body);
+            $exec = $this->transport === null
+                ? $this->executeElasticsearchSearch($url, $body)
+                : ($this->transport)($url, $body);
             $decoded = $exec['decoded'];
             $httpCode = $exec['http_code'];
 
             if ($exec['curl_error'] !== '') {
-                throw new RuntimeException('Falha ao contatar o DataJud: ' . $exec['curl_error']);
+                $failedAttempt = true;
+                continue;
             }
 
             if ($httpCode === 401 || $httpCode === 403) {
                 throw new RuntimeException('Não autorizado a consultar o DataJud. Verifique a chave da API.');
             }
 
-            if ($httpCode >= 500) {
-                throw new RuntimeException('Serviço DataJud indisponível no momento. Tente novamente em instantes.');
-            }
-
-            if (!is_array($decoded)) {
-                // Resposta não JSON ou corpo vazio: tenta índice alternativo (ex.: fallback tjba).
+            if ($httpCode < 200 || $httpCode >= 300 || !is_array($decoded)
+                || !isset($decoded['hits']) || !is_array($decoded['hits'])
+                || !isset($decoded['hits']['hits']) || !is_array($decoded['hits']['hits'])
+                || !array_is_list($decoded['hits']['hits'])) {
+                $failedAttempt = true;
                 continue;
             }
 
-            if (!isset($decoded['hits']['hits'][0]['_source'])) {
+            if ($decoded['hits']['hits'] === []) {
                 continue;
             }
 
+            if (!isset($decoded['hits']['hits'][0]['_source']) || !is_array($decoded['hits']['hits'][0]['_source'])) {
+                $failedAttempt = true;
+                continue;
+            }
             $source = $decoded['hits']['hits'][0]['_source'];
+            // O mapper aceita registros parciais, mas um hit vazio não é dado útil.
+            if ($source === []) {
+                $failedAttempt = true;
+                continue;
+            }
+            // Estes campos são repassados diretamente ao consumidor; objetos e
+            // listas não pertencem ao contrato escalar do mapper.
+            $invalidScalar = false;
+            foreach (['numeroProcesso', 'tribunal', 'nivelSigilo', 'grau', 'dataAjuizamento', 'dataHoraUltimaAtualizacao', 'id'] as $field) {
+                if (isset($source[$field]) && !is_scalar($source[$field])) {
+                    $invalidScalar = true;
+                    break;
+                }
+            }
+            if ($invalidScalar) {
+                $failedAttempt = true;
+                continue;
+            }
+            if (array_key_exists('numeroProcesso', $source) && $source['numeroProcesso'] !== null) {
+                $sourceNumero = $source['numeroProcesso'];
+                if (!is_string($sourceNumero)
+                    || !(ctype_digit($sourceNumero) || CnjValidator::isFormatted($sourceNumero))
+                    || CnjValidator::onlyDigits($sourceNumero) !== $numero) {
+                    $failedAttempt = true;
+                    continue;
+                }
+            }
             $nivelSigilo = $source['nivelSigilo'] ?? null;
             $redact = DataJudResponseMapper::isNivelSigiloRestrito($nivelSigilo);
+            $mapped = DataJudResponseMapper::mapSourceToPayload($source, $numero, $redact);
+            // O número padrão e os campos de sigilo derivados não provam que o
+            // documento de origem tenha fornecido qualquer dado aproveitável.
+            $evidence = $mapped;
+            if (!isset($source['numeroProcesso'])) {
+                unset($evidence['numero']);
+            }
+            unset($evidence['sigilo_restrito'], $evidence['sigilo_mensagem'], $evidence['assuntos_completos'], $evidence['fonte_confirmada_para_sincronizacao']);
+            if (!self::hasMeaningfulValue($evidence)) {
+                $failedAttempt = true;
+                continue;
+            }
 
-            return DataJudResponseMapper::mapSourceToPayload($source, $numero, $redact);
+            return $mapped;
         }
 
-        // 0 hits: na API pública isso ocorre com frequência em processos sigilosos (fora do índice público).
+        if ($failedAttempt) {
+            throw new RuntimeException('Não foi possível consultar o DataJud.');
+        }
+
+        // Somente respostas válidas e vazias permitem concluir que não houve hits.
         return DataJudResponseMapper::mapEmptyPublicSearch($numero);
+    }
+
+    /** Um campo parcial é útil se contém algum escalar, inclusive zero ou false. */
+    private static function hasMeaningfulValue(mixed $value, int $depth = 0): bool
+    {
+        if ($depth > 32 || $value === null) {
+            return false;
+        }
+        if (is_string($value)) {
+            return trim($value) !== '';
+        }
+        if (is_int($value) || is_float($value) || is_bool($value)) {
+            return true;
+        }
+        if (is_array($value)) {
+            foreach ($value as $nested) {
+                if (self::hasMeaningfulValue($nested, $depth + 1)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private function getBaseUrl(): string
