@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: normalizar data de decurso na exportacao** `[a5109794]`
+- **fix: atualizar painel apos pauta indisponivel** `[af020b8f]`
 
