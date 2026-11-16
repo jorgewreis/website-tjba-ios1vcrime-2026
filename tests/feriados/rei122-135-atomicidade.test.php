@@ -72,6 +72,23 @@ expect($updated['editais_decurso_recalculados'] === 2, 'atualização deve recal
 $service->delete($created['id']);
 expect((int) $pdo->query('SELECT COUNT(*) FROM feriados')->fetchColumn() === 0, 'exclusão deve persistir após recálculo');
 
+$reactivated = $service->create([
+    'tipo_feriado' => 'municipal', 'data_inicio' => '2026-11-17', 'data_fim' => '2026-11-17',
+    'regra_data' => 'unica', 'descricao' => 'deactivation-fixture', 'ativo' => 1,
+]);
+expect($reactivated['editais_decurso_recalculados'] === 2, 'feriado de ativação deve recalcular os dois editais');
+$duringActivation = $pdo->query("SELECT id, data_inicio_contagem, data_decurso_prazo FROM editais WHERE id IN ('E-1', 'E-2') ORDER BY id")->fetchAll(PDO::FETCH_NUM);
+expect($duringActivation === [['E-1', '2026-11-18', '2026-11-20'], ['E-2', '2026-11-18', '2026-11-20']], 'feriado ativo deve deslocar o início e o vencimento de ambos editais');
+$deactivated = $service->update($reactivated['id'], [
+    'tipo_feriado' => 'municipal', 'data_inicio' => '2026-11-17', 'data_fim' => '2026-11-17',
+    'regra_data' => 'unica', 'descricao' => 'deactivation-fixture', 'ativo' => 0,
+]);
+$afterDeactivation = $pdo->query("SELECT id, data_inicio_contagem, data_decurso_prazo FROM editais WHERE id IN ('E-1', 'E-2') ORDER BY id")->fetchAll(PDO::FETCH_NUM);
+$inactive = (int) $pdo->query('SELECT ativo FROM feriados WHERE id = ' . $pdo->quote($reactivated['id']))->fetchColumn();
+expect($deactivated['editais_decurso_recalculados'] === 2, 'desativação deve recalcular pelo intervalo antigo');
+expect($afterDeactivation === [['E-1', '2026-11-17', '2026-11-19'], ['E-2', '2026-11-17', '2026-11-19']], 'desativação deve remover o feriado antigo do cálculo');
+expect($inactive === 0, 'desativação deve persistir o feriado inativo');
+
 $pdo->exec("INSERT INTO feriados VALUES ('FER-aaaaaaaaaaaaaaaaaaaaaaaaaa', 'municipal', '2026-11-17', '2026-11-17', 'unica', 'fixture', 1, NULL, NULL)");
 $legacyRemoval = $service->delete('FER-aaaaaaaaaaaaaaaaaaaaaaaaaa');
 $legacy = $pdo->query("SELECT data_inicio_contagem, data_decurso_prazo FROM editais WHERE id = 'E-2'")->fetch(PDO::FETCH_NUM);
