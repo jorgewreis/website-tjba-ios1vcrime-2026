@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **docs: reconciliar escopo de tarefas e subtarefas** `[69d0c4e0]`
+- **docs: inventariar migracoes e limites conhecidos** `[4d2e5898]`
 
