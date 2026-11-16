@@ -2,7 +2,7 @@
 
 ## V. 1.87.0170
 
-**Data:** 2026-11-16 18:11:55 | **Commit:** `e3736b2d` | **Tipo:** `patch`
+**Data:** 2026-11-16 18:11:55 | **Commit:** `1df186d6` | **Tipo:** `patch`
 
 - fix(REI-114): assert calendar lock wait and release
 

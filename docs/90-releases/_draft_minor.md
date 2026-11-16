@@ -13,5 +13,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: restore verified auth sandbox entrypoints** `[2aec3c3b]`
 - **fix(REI-122,REI-135): reconcile calendar atomically** `[597f7ab6]`
 - **fix(REI-161): ocultar metadados de pautas inelegiveis** `[74a134a7]`
-- **fix(REI-114): serialize reconciliation with calendar updates** `[1c836ab4]`
+- **fix(REI-114): serialize reconciliation with calendar updates** `[b88609a1]`
+- **fix(REI-114): assert calendar lock wait and release** `[1df186d6]`
 
