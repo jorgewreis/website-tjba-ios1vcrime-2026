@@ -12,6 +12,10 @@
         delete pendingByPauta[pauta];
         if (!wrapper) return;
         wrapper.removeAttribute('data-inscricao-pendente');
+        if (typeof wrapper.__renderInscricaoState === 'function') {
+            wrapper.__renderInscricaoState(wrapper.__inscricaoLatestItem);
+            return;
+        }
         var currentButton = wrapper.querySelector('.btn-inscrever-ata');
         if (currentButton) {
             currentButton.setAttribute('aria-disabled', 'false');
