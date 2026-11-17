@@ -30,17 +30,29 @@
 
 - test(DataJud): align HTTP fixtures with verified source contract
 
+**Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
+
+- fix(guias): serializar inicializacao das subtarefas (REI-105)
+
 ## V. 1.87.0177
 
 **Data:** 2026-11-16 20:16:28 | **Commit:** `f0aca0f2` | **Tipo:** `patch`
 
 - fix(REI-72,REI-76,REI-153): validate DataJud subject sync
 
+**Data:** 2026-11-16 22:08:44 | **Commit:** `9142de98` | **Tipo:** `patch`
+
+- test(REI-105): cover guide dispatch validations
+
 ## V. 1.87.0176
 
 **Data:** 2026-11-16 19:45:05 | **Commit:** `e7c839ea` | **Tipo:** `patch`
 
 - fix(REI-76): protect DataJud synchronization
+
+**Data:** 2026-11-16 22:07:00 | **Commit:** `13950b37` | **Tipo:** `patch`
+
+- fix(REI-105): make guide completion atomic
 
 ## V. 1.87.0175
 
