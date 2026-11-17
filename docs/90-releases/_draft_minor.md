@@ -6,4 +6,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 - **docs(REI-73): reconcile merge blockers after REI-93 sync** `[d93cc291]`
 - **docs(REI-73): update synchronized PR evidence** `[20ad7b4c]`
+- **docs(REI-73): reconcile open PR merge blockers** `[fa2e5b29]`
 
