@@ -2,15 +2,16 @@
 
 ## V. 1.87.0185
 
-**Data:** 2026-11-17 06:57:42 | **Commit:** `2b1c19ee` | **Tipo:** `patch`
+**Data:** 2026-11-17 06:57:43 | **Commit:** `46777715` | **Tipo:** `patch`
 
 - feat(rei-69): add audited responsible sector assignment
+- fix(REI-69): restrict process-part access by sector (`79cc9a31`)
 
 ## V. 1.87.0184
 
-**Data:** 2026-11-17 05:34:12 | **Commit:** `79cc9a31` | **Tipo:** `patch`
+**Data:** 2026-11-17 05:33:49 | **Commit:** `aea3e451` | **Tipo:** `patch`
 
-- fix(REI-69): restrict process-part access by sector
+- merge: sync Carta atomicity with current main
 
 ## V. 1.87.0183
 
@@ -6542,8 +6543,6 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
-
-
 
 
 
