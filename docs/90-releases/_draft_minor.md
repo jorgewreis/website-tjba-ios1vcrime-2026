@@ -14,4 +14,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): refresh review and merge blockers** `[357f122d]`
 - **docs(REI-73): record reproduced REI-130 tests** `[79fd7618]`
 - **docs(REI-73): reconcile ready-for-review PR states** `[7343c1db]`
+- **docs(REI-73): verify REI-70 MySQL gate** `[5263faf9]`
 
