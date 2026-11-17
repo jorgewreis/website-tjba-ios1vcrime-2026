@@ -6,4 +6,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 - **fix(REI-78): reject stale Carta form after lookup** `[f2b99236]`
 - **ci(REI-78): run async form regression test** `[15fd28f1]`
+- **ci(REI-78): migrate Carta schema on DEV deploy** `[19b5da45]`
 
