@@ -8,3 +8,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **chore: preserve pending release draft** `[a6567251]`
 - **merge: sync guide dashboard with current main** `[37b0648a]`
 
+\n
