@@ -1,16 +1,22 @@
 # Changelog
 
-## V. 1.87.0176
+## V. 1.87.0177
 
-**Data:** 2026-11-16 22:08:44 | **Commit:** `11fe7466` | **Tipo:** `patch`
+**Data:** 2026-11-16 22:08:44 | **Commit:** `9142de98` | **Tipo:** `patch`
 
 - test(REI-105): cover guide dispatch validations
 
-## V. 1.87.0175
+## V. 1.87.0176
 
-**Data:** 2026-11-16 22:07:00 | **Commit:** `c6910f6c` | **Tipo:** `patch`
+**Data:** 2026-11-16 22:07:00 | **Commit:** `13950b37` | **Tipo:** `patch`
 
 - fix(REI-105): make guide completion atomic
+
+## V. 1.87.0175
+
+**Data:** 2026-11-16 20:38:23 | **Commit:** `d269e165` | **Tipo:** `patch`
+
+- chore(REI-85): sync with current main
 
 ## V. 1.87.0174
 
@@ -7548,4 +7554,7 @@
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
