@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0178
+
+**Data:** 2026-11-16 22:02:43 | **Commit:** `61544189` | **Tipo:** `patch`
+
+- chore(REI-78): sync current main
+
 ## V. 1.87.0177
 
 **Data:** 2026-11-16 22:00:57 | **Commit:** `14e8c18e` | **Tipo:** `patch`
@@ -14,9 +20,9 @@
 
 ## V. 1.87.0175
 
-**Data:** 2026-11-16 20:43:55 | **Commit:** `4a420af5` | **Tipo:** `patch`
+**Data:** 2026-11-16 20:38:23 | **Commit:** `d269e165` | **Tipo:** `patch`
 
-- chore(REI-78): sync with current main
+- chore(REI-85): sync with current main
 
 ## V. 1.87.0174
 
@@ -6491,7 +6497,6 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
-
 
 
 
