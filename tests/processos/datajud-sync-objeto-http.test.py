@@ -44,11 +44,11 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
   function searchProcesso(string $numero): array {
     file_put_contents(__DIR__.'/source-called', '1');
     return match ($_SERVER['HTTP_X_TEST_RESULT'] ?? 'ok') {
-      'ambiguous' => ['resultado_unico_verificado'=>false, 'sigilo_ausencia_verificada'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
-      'restricted' => ['resultado_unico_verificado'=>true, 'sigilo_ausencia_verificada'=>true, 'sigilo_restrito'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
-      'missing-sigilo' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>false, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
-      'subjects' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>[]],
-      default => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
+      'ambiguous' => ['resultado_unico_verificado'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
+      'restricted' => ['resultado_unico_verificado'=>true, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'sigilo_restrito'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
+      'missing-sigilo' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>false, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
+      'subjects' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>[]],
+      default => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
     };
   }
 }''', encoding='utf-8')
