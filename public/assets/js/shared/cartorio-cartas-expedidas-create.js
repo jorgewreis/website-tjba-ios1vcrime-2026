@@ -32,6 +32,7 @@
             ? settings.submitDelayMs
             : 0;
         const ccmConfirmed = new Set();
+        let cityLookupPending = false;
         const pendingRequestStorageKey = 'cartorio.cartasExpedidas.pendingRequestKey';
         let pendingRequestSignature = '';
         let pendingRequestKey = '';
@@ -103,7 +104,7 @@
         });
         global.addEventListener('datajudClasseResolved', function (event) {
             const detail = event && event.detail ? event.detail : {};
-            if (!detail.processoInputId || detail.processoInputId === 'filter-processo') gate.setReady();
+            if (!cityLookupPending && (!detail.processoInputId || detail.processoInputId === 'filter-processo')) gate.setReady();
         });
 
         const requiredFields = [
@@ -128,9 +129,20 @@
             return true;
         }
 
+        function getSubmissionInputSnapshot() {
+            return JSON.stringify({
+                processo: helpers.getValue('filter-processo'),
+                classe: helpers.getValue('filter-classe'),
+                finalidade: helpers.getValue('filter-tipo'),
+                prazo: helpers.getValue('filter-prazo'),
+                estado: helpers.getValue('filter-estado'),
+                cidade: helpers.getValue('filter-cidade')
+            });
+        }
+
         button.addEventListener('click', async function (event) {
             event.preventDefault();
-            if (button.disabled) {
+            if (button.disabled || cityLookupPending) {
                 return;
             }
 
@@ -160,6 +172,8 @@
             if (cityLookupEndpoint) {
                 // Fecha a guarda antes do primeiro await. Sem isso, cliques
                 // durante a consulta da cidade iniciavam múltiplos cadastros.
+                const inputSnapshot = getSubmissionInputSnapshot();
+                cityLookupPending = true;
                 gate.setSubmitting();
                 try {
                     const lookupUrl = new URL(cityLookupEndpoint, global.location.origin);
@@ -169,6 +183,11 @@
                     const lookupData = await lookupResponse.json();
                     if (!lookupResponse.ok) {
                         throw new Error(lookupData.error || 'Não foi possível validar a comarca de destino.');
+                    }
+                    if (inputSnapshot !== getSubmissionInputSnapshot()) {
+                        feedback('Os dados do cadastro mudaram durante a validação da comarca. Confira os campos e tente novamente.', 'error');
+                        gate.setReady();
+                        return;
                     }
                     if (lookupData.is_ccm === true || String(lookupData.status_cidade || '').trim().toUpperCase() === 'CCM') {
                         if (!confirmCcm(cidadeDestino)) {
@@ -181,6 +200,8 @@
                     feedback(error.message || 'Não foi possível validar a comarca de destino.', 'error');
                     gate.setError();
                     return;
+                } finally {
+                    cityLookupPending = false;
                 }
             }
 

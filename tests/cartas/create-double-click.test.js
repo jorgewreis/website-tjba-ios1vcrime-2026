@@ -228,8 +228,109 @@ async function run() {
     assert.equal(retryCreateCalls, 1, 'após revalidação, a tentativa envia apenas uma vez quando a persistência volta');
     assert.notEqual(retryPayloads[0].idempotency_key, attemptedKeys[0], 'a nova tentativa não reutiliza a chave que falhou ao persistir');
     assert.equal(persistedKeysAtSend[0], retryPayloads[0].idempotency_key, 'a chave enviada foi confirmada no sessionStorage');
+
+    const raceValues = {
+        'cadastrar-btn': new Element(),
+        'filter-processo': new Element('0000001-69.2020.8.05.0001'),
+        'filter-tipo': new Element('Precatória'),
+        'filter-prazo': new Element('30'),
+        'filter-estado': new Element('BA'),
+        'filter-cidade': new Element('Salvador'),
+        'filter-classe': new Element('Classe de teste')
+    };
+    const raceFeedbacks = [];
+    const raceHelpers = {
+        initCreateButtonGate({ button: raceButton }) {
+            const set = (label, disabled) => {
+                raceButton.textContent = label;
+                raceButton.disabled = disabled;
+            };
+            return {
+                setInitial: () => set('Novo cadastro', false),
+                setWaiting: () => set('Aguarde...', true),
+                setError: () => set('Erro', true),
+                setReady: () => set('Cadastrar', false),
+                setSubmitting: () => set('Aguarde...', true),
+                setBlocked: () => set('Aguarde...', true)
+            };
+        },
+        normalizeProcessValue: value => ({ ok: true, value }),
+        getValue: id => raceValues[id] ? raceValues[id].value : '',
+        formatProperName: value => value.trim(),
+        buildClassePayload: () => ({}),
+        notify: (...args) => raceFeedbacks.push(args)
+    };
+    const raceEvents = {};
+    const raceLookups = [];
+    const racePayloads = [];
+    const raceStorageValues = new Map();
+    const raceStorage = {
+        getItem: key => raceStorageValues.has(key) ? raceStorageValues.get(key) : null,
+        setItem: (key, value) => raceStorageValues.set(key, String(value)),
+        removeItem: key => raceStorageValues.delete(key)
+    };
+    const raceWindow = {
+        App: { CartorioCreateHelpers: raceHelpers },
+        document: { getElementById: id => raceValues[id] || null },
+        location: { origin: 'https://example.test', href: '' },
+        sessionStorage: raceStorage,
+        __currentUserName: 'Usuário sintético',
+        crypto: { getRandomValues: bytes => { bytes.fill(73); return bytes; } },
+        addEventListener: (name, callback) => { raceEvents[name] = callback; },
+        confirm: () => true
+    };
+    const raceContext = {
+        window: raceWindow,
+        URL,
+        fetch(url, options) {
+            if (url.includes('/city')) {
+                return new Promise(resolve => {
+                    raceLookups.push({
+                        url,
+                        finish: () => resolve({ ok: true, json: async () => ({ is_ccm: false }) })
+                    });
+                });
+            }
+            racePayloads.push(JSON.parse(options.body));
+            return Promise.resolve({ ok: true, json: async () => ({ id: 'CARTA-RACE' }) });
+        },
+        setTimeout
+    };
+    vm.runInNewContext(
+        fs.readFileSync(path.join(__dirname, '../../public/assets/js/shared/cartorio-cartas-expedidas-create.js'), 'utf8'),
+        raceContext,
+        { filename: 'cartorio-cartas-expedidas-create.js (edited during lookup)' }
+    );
+    raceWindow.App.CartorioCartasExpedidasCreate.initialize({
+        cityLookupEndpoint: '/api/city',
+        endpoint: '/api/create',
+        successRedirect: '/success'
+    });
+    const raceButton = raceValues['cadastrar-btn'];
+    const raceClick = () => raceButton.listeners.click({ preventDefault() {} });
+    const editedDuringLookup = raceClick();
+    assert.equal(raceLookups.length, 1, 'a primeira tentativa valida a comarca antes de enviar');
+    raceEvents.datajudClasseResolved({ detail: { processoInputId: 'filter-processo' } });
+    assert.equal(raceButton.disabled, true, 'resolução do DataJud não reabre o botão durante a consulta');
+    await raceClick();
+    assert.equal(raceLookups.length, 1, 'clique repetido continua bloqueado enquanto a consulta está pendente');
+    raceValues['filter-estado'].value = 'SP';
+    raceLookups[0].finish();
+    await editedDuringLookup;
+    assert.equal(racePayloads.length, 0, 'dados alterados durante a consulta não são enviados');
+    assert.equal(raceButton.disabled, false, 'a tentativa interrompida deixa o formulário pronto para nova validação');
+    assert.equal(raceFeedbacks.some(([message]) => message.includes('mudaram durante a validação')), true);
+
+    const revalidated = raceClick();
+    assert.equal(raceLookups.length, 2, 'nova tentativa refaz a consulta após a edição');
+    assert.equal(new URL(raceLookups[1].url).searchParams.get('uf'), 'SP', 'a nova consulta usa a UF atualizada');
+    raceLookups[1].finish();
+    await revalidated;
+    assert.equal(racePayloads.length, 1, 'a nova tentativa só envia após validar os dados atualizados');
+    assert.equal(racePayloads[0].estado, 'SP', 'o payload usa a mesma UF validada pela consulta');
     console.log('PASS cartas expedidas: bloqueio de clique duplicado e chave idempotente preservada após recarga');
     console.log('PASS cartas expedidas: falha de persistência limpa a tentativa e revalidação usa chave persistida nova');
+    console.log('PASS cartas expedidas: edição durante consulta interrompe envio e exige nova validação');
 }
 
 run().catch(error => {
