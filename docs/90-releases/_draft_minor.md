@@ -5,4 +5,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 ## Entradas Pendentes
 
 - **fix(REI-77): serialize student enrollment per hearing** `[8d404e0e]`
+- **test(REI-77): verify enrollment races on isolated MySQL** `[1822de25]`
 
