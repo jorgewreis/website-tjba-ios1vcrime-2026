@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0186
+
+**Data:** 2026-11-17 07:17:07 | **Commit:** `e0b03ee9` | **Tipo:** `patch`
+
+- docs(REI-69): document sector migration deploy
+
 ## V. 1.87.0185
 
 **Data:** 2026-11-17 06:57:43 | **Commit:** `46777715` | **Tipo:** `patch`

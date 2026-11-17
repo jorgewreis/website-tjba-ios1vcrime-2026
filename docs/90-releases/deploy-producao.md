@@ -14,8 +14,14 @@ ambiente ativo.
 
 Após a sincronização, `.github/workflows/deploy-prod.yml` atualiza `APP_URL` no
 `.env` existente, executa `npm ci` e o build quando há `package.json`, e prepara
-as dependências PHP quando há `composer.json`. Antes do `rsync`, o workflow envia
-o script e o SQL de idempotência de Cartas Expedidas a um diretório temporário
+as dependências PHP quando há `composer.json`. Antes do `rsync`, o workflow aplica
+primeiro a migration de setor responsável, sem preencher processos legados. A
+coluna `processos.id_setor_responsavel` permanece nula até atribuição explícita;
+as operações protegidas por setor negam acesso enquanto não houver setor ativo
+atribuído. Essa etapa usa `ALGORITHM=COPY, LOCK=SHARED`, então volume da tabela,
+espaço disponível e janela operacional precisam ser avaliados antes do deploy.
+Em seguida, envia o script e o SQL de idempotência de Cartas Expedidas a um
+diretório temporário
 privado no host e executa a migração contra a aplicação/schema atual. Se a
 configuração CLI, a conexão ou a migração falhar, o código novo ainda não foi
 sincronizado. O diretório temporário é removido ao final do passo. Depois do
