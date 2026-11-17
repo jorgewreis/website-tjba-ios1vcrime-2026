@@ -1,5 +1,18 @@
 # Changelog
 
+## V. 1.87.0180
+
+**Data:** 2026-11-17 04:01:04 | **Commit:** `d7ea35e9` | **Tipo:** `patch`
+
+- test(REI-75): cover revoked session mutations
+
+## V. 1.87.0179
+
+**Data:** 2026-11-17 03:22:50 | **Commits:** `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
+
+- merge: sync REI-75 with main
+- fix(REI-141): honor explicit CCM confirmation
+
 ## V. 1.87.0178
 
 **Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
