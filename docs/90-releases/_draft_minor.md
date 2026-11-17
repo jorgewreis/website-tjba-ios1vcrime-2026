@@ -12,4 +12,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-78): cover concurrent idempotent retries** `[10beeba0]`
 - **merge: sync Carta atomicity with current main** `[aea3e451]`
 
-\n
+- **fix(REI-87): keep ata retention out of read and upload flows**
+- **test(REI-87): cover read purity and isolated retention retries**
+- **docs(REI-87): document the explicit ata retention process**
