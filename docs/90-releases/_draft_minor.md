@@ -17,4 +17,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): verify REI-70 MySQL gate** `[5263faf9]`
 - **docs(security): expand REI-73 route permission matrix** `[4ed86277]`
 - **docs(REI-73): record enrollment guard candidate** `[b1f83698]`
+- **docs(REI-73): reconcile open PR snapshot** `[9255ce80]`
 
