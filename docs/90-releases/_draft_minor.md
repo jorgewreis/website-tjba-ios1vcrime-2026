@@ -21,6 +21,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): refresh ready PR inventory** `[6314a506]`
 - **docs(REI-73): reconcile runner cleanup and ready PRs** `[2066b122]`
 - **docs(REI-73): trace residual catalog lookup routes** `[9668a62a]`
-- **test(REI-88): verify pauta rollback on isolated MySQL** `[c723c85f]`
-- **fix(guias): serializar inicializacao das subtarefas (REI-105)** `[c26efa2e]`
+- **docs(REI-73): reconcile branches after PR 416 merge** `[784d20ae]`
 
