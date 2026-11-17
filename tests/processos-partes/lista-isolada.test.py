@@ -12,6 +12,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[2]
 FILES = [
     'public/api/processos-partes/list.php', 'app/helpers/ApiAccessGuard.php',
+    'app/helpers/ProcessoSetorAuthorization.php',
     'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php',
     'app/helpers/IdGenerator.php', 'app/access/AccessEvaluator.php',
     'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php',
@@ -52,8 +53,12 @@ final class Conection {
         prioridade_mulher INTEGER, prioridade_crianca_adolescente INTEGER, prioridade_idoso INTEGER,
         prioridade_pessoa_deficiencia INTEGER, created_at TEXT, updated_at TEXT);
       CREATE TABLE partes(id TEXT, nome_completo TEXT, cpf TEXT, sexo TEXT, data_nascimento TEXT);
-      CREATE TABLE processos(id TEXT, numero_processo TEXT);
-      INSERT INTO processos VALUES ('P1','001'),('P2','002');
+      CREATE TABLE processos(id TEXT, numero_processo TEXT, id_setor_responsavel TEXT);
+      CREATE TABLE setores(id_setor TEXT, ativo INTEGER);
+      CREATE TABLE usuario_setor(usuario TEXT, setor TEXT);
+      INSERT INTO setores VALUES ('S1',1),('S2',1);
+      INSERT INTO usuario_setor VALUES ('synthetic','S1');
+      INSERT INTO processos VALUES ('P1','001','S1'),('P2','002','S2'),('P3','003',NULL);
       INSERT INTO partes VALUES ('A','Pessoa A','000','X','2000-01-01'),('B','Pessoa B','111','X','2000-01-01');
       INSERT INTO processos_partes VALUES ('L1','P1','A','reu','passivo',0,0,0,0,'2026','2026'),
         ('L2','P2','B','vitima','ativo',0,0,0,0,'2026','2026');
@@ -83,7 +88,9 @@ require getenv('TEST_ENDPOINT');'''
     status, body = invoke({'processo_id': 'P1'}, 'SERVIDOR-CARTORIO')
     assert status == 200 and [r['id'] for r in body['data']] == ['L1'], body
     status, body = invoke({'parte_id': 'B'}, 'SERVIDOR-CARTORIO')
-    assert status == 200 and [r['id'] for r in body['data']] == ['L2'], body
+    assert status == 200 and body['data'] == [], body
+    status, body = invoke({'processo_id': 'P2'}, 'SERVIDOR-CARTORIO')
+    assert status == 200 and body['data'] == [], body
     status, body = invoke({}, 'SERVIDOR-CARTORIO')
     assert status == 400 and 'data' not in body, (status, body)
     status, body = invoke({'processo_id': 'P1'}, 'SERVIDOR-CARTORIO', method='POST')

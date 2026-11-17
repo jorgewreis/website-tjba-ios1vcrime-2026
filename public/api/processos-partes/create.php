@@ -10,6 +10,7 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/repositories/ProcessosPartesRepository.php';
 require_once $basePath . '/app/repositories/PartesRepository.php';
+require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 
 try {
     $connection = Conection::getInstance()->getConnection();
@@ -44,16 +45,33 @@ $prioridades = [
 ];
 
 try {
+    if (!$connection->beginTransaction()) {
+        throw new RuntimeException('Não foi possível iniciar a operação.');
+    }
+    if (!ProcessoSetorAuthorization::canModifyProcess(
+        $connection,
+        trim((string) ($_SESSION['id_usuario'] ?? '')),
+        $processoId
+    )) {
+        $connection->rollBack();
+        http_response_code(403);
+        echo json_encode(['error' => 'Acesso negado ao processo.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $repository = new ProcessosPartesRepository($connection);
     $newId = $repository->addParte($processoId, $parteId, $tipoParte, $polo, $prioridades);
-    $partesRepo = new PartesRepository($connection);
-    $partesRepo->syncProfissaoFromTipoProcessoParte($parteId, $tipoParte);
+    $partesRepository = new PartesRepository($connection);
+    $partesRepository->syncProfissaoFromTipoProcessoParte($parteId, $tipoParte);
+    $connection->commit();
     http_response_code(201);
     echo json_encode(['id' => $newId], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
+    if ($connection->inTransaction()) $connection->rollBack();
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    if ($connection->inTransaction()) $connection->rollBack();
+    error_log('processos-partes: falha ao vincular parte.');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao vincular parte ao processo.'], JSON_UNESCAPED_UNICODE);
 }
