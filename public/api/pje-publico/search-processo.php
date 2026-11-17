@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/pje-publico/search-processo.php');
 header('Content-Type: application/json; charset=UTF-8');
 @ini_set('default_socket_timeout', '25');
 @set_time_limit(30);

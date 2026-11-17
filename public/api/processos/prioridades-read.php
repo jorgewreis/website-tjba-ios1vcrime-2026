@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/processos/prioridades-read.php');
 /**
  * Leitura de prioridades processuais por número CNJ (20 dígitos).
  *
@@ -94,5 +97,5 @@ try {
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao consultar prioridades do processo: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao consultar prioridades do processo: ' . ApiErrorReporter::genericMessage($e, 'public/api/processos/prioridades-read.php')], JSON_UNESCAPED_UNICODE);
 }

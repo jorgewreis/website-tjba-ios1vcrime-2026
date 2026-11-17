@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-cejusc/delete.php');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/config/security.php';
 require_once $basePath . '/app/access/AccessEvaluator.php';
