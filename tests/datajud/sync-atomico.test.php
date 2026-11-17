@@ -15,7 +15,11 @@ $syncClasse = function () use ($db): array {
     $db->exec("UPDATE estado SET valor='classe nova' WHERE id=1");
     return ['action' => 'updated'];
 };
-$syncAssuntos = function () use ($db): array {
+$syncAssuntos = function (string $numero, array $itens) use ($db): array {
+    if ($itens === []) {
+        $db->exec("DELETE FROM estado WHERE id=3");
+        return ['action' => 'updated'];
+    }
     $db->exec("INSERT INTO estado VALUES (3, 'assunto datajud')");
     return ['action' => 'updated'];
 };
@@ -32,9 +36,11 @@ $failure = new ProcessoDataJudSyncService($db, $syncClasse, function () use ($db
 try { $failure->sync($numero, $classe, $assuntos); throw new LogicException('Esperava falha.'); }
 catch (RuntimeException $e) { if ($e->getMessage() !== 'falha sintética') throw $e; }
 if ($db->query('SELECT valor FROM estado WHERE id=1')->fetchColumn() !== 'classe anterior' || (int) $db->query('SELECT COUNT(*) FROM estado')->fetchColumn() !== 2) throw new RuntimeException('Rollback incompleto.');
-$service->sync($numero, $classe, []);
-if ((int) $db->query('SELECT COUNT(*) FROM estado')->fetchColumn() !== 2) throw new RuntimeException('Lista vazia alterou assuntos.');
-foreach ([null, [], [['codigo' => null]], [['codigo' => '456'], ['codigo' => '']]] as $payload) {
+$db->exec("INSERT INTO estado VALUES (3, 'assunto datajud')");
+$emptyResult = $service->sync($numero, null, []);
+if (($emptyResult['assuntos']['action'] ?? '') !== 'updated' || (int) $db->query('SELECT COUNT(*) FROM estado')->fetchColumn() !== 2) throw new RuntimeException('Lista vazia completa não reconciliou assuntos DataJud.');
+if ($db->query('SELECT valor FROM estado WHERE id=2')->fetchColumn() !== 'assunto manual') throw new RuntimeException('Lista vazia removeu assunto manual.');
+foreach ([null, [['codigo' => null]], [['codigo' => '456'], ['codigo' => '']]] as $payload) {
     try { $service->sync($numero, null, $payload); throw new LogicException('Esperava rejeição.'); }
     catch (InvalidArgumentException $e) {}
 }

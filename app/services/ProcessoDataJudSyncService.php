@@ -25,10 +25,10 @@ final class ProcessoDataJudSyncService
     }
 
     /**
-     * null significa fonte ausente. Lista vazia de assuntos também preserva os
-     * vínculos existentes, como os endpoints atuais. Nenhum dado inválido pode
-     * ser normalizado silenciosamente em lista vazia antes da reconciliação.
-     * O chamador deve confirmar identidade e completude da resposta de origem.
+     * null significa fonte ausente. Lista vazia é uma resposta completa e
+     * explícita sem assuntos; reconcilia removendo somente vínculos DataJud e
+     * preservando vínculos manuais. O chamador deve confirmar identidade e
+     * completude da resposta de origem antes de chamar este serviço.
      *
      * @return array{classe:?array,assuntos:?array}
      */
@@ -60,7 +60,7 @@ final class ProcessoDataJudSyncService
                 }
             }
         }
-        if ($classe === null && ($assuntos === null || $assuntos === [])) {
+        if ($classe === null && $assuntos === null) {
             throw new InvalidArgumentException('Nenhum dado DataJud sincronizável.');
         }
         if ($this->db->inTransaction()) throw new RuntimeException('Sincronização requer transação própria.');
@@ -72,7 +72,7 @@ final class ProcessoDataJudSyncService
                 throw new InvalidArgumentException('Processo não encontrado no cadastro local.');
             }
             $resultadoClasse = $classe === null ? null : ($this->classeSync)($numero, $codigo, $descricao);
-            $resultadoAssuntos = ($assuntos === null || $assuntos === []) ? null : ($this->assuntoSync)($numero, $assuntos);
+            $resultadoAssuntos = $assuntos === null ? null : ($this->assuntoSync)($numero, $assuntos);
             if (!$this->db->inTransaction()) throw new RuntimeException('Transação de sincronização interrompida.');
             if (!$this->db->commit()) throw new RuntimeException('Resultado da confirmação da sincronização é incerto; descarte a conexão.');
             return ['classe' => $resultadoClasse, 'assuntos' => $resultadoAssuntos];
