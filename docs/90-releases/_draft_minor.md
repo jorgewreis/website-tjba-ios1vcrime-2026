@@ -8,4 +8,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-77): verify enrollment races on isolated MySQL** `[1822de25]`
 - **test(REI-77): diagnose InnoDB lock observation** `[cb7a9545]`
 - **test(REI-77): verify waits through data lock metadata** `[e057ef70]`
+- **test(REI-77): verify both sides of row lock waits** `[2b428ea7]`
 
