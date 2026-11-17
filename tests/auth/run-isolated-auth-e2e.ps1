@@ -19,6 +19,16 @@ function Secret {
     return (([BitConverter]::ToString($b) -replace '-', '').ToLowerInvariant())
 }
 function Label-Value($labels, [string]$key) { $property = $labels.PSObject.Properties[$key]; if ($null -eq $property) { return $null }; return [string]$property.Value }
+. "$PSScriptRoot/docker-cleanup-verification.ps1"
+function Docker-Probe([string[]]$arguments) {
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        try { $output = @(& docker @arguments 2>&1); $exitCode = $LASTEXITCODE }
+        catch { $output = @($_.Exception.Message); $exitCode = 255 }
+    } finally { $ErrorActionPreference = $previousErrorActionPreference }
+    return [pscustomobject]@{ ExitCode = [int]$exitCode; Output = @($output) }
+}
 function Assert-SafeTree([string]$path) {
     $i=Get-Item -LiteralPath $path -Force; if ($i.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse point recusado: $path" }
     foreach($f in Get-ChildItem -LiteralPath $path -Force -Recurse) { if (($f.Attributes -band [IO.FileAttributes]::ReparsePoint) -or ($f.Name -like '.env*' -and $f.Name -ne '.env.example')) { throw "Fonte insegura recusada: $($f.FullName)" } }
@@ -133,8 +143,34 @@ try {
         if($serverLogExitCode -eq 0 -and $serverLog) { Write-Output ('APP_SERVER_LOG ' + ($serverLog -join ' ')) }
     }
 } finally {
-    foreach($id in @($client,$app,$mailpit,$mysql)){if($id -and $id -match '^[a-f0-9]{64}$'){ $raw=&docker inspect $id 2>$null; if($LASTEXITCODE -eq 0){$x=@($raw|ConvertFrom-Json)[0]; if((Label-Value $x.Config.Labels $label) -eq $runId){&docker rm -f $id 2>$null|Out-Null;if($LASTEXITCODE -ne 0){$cleanupFailed=$true}}else{$cleanupFailed=$true}}}}
-    $previousErrorActionPreference=$ErrorActionPreference;$ErrorActionPreference='Continue';$raw=&docker network inspect $network 2>$null;$networkExists=$LASTEXITCODE -eq 0;$ErrorActionPreference=$previousErrorActionPreference;if($networkExists){$n=@($raw|ConvertFrom-Json)[0];[int]$networkContainerCount=(@($n.Containers.PSObject.Properties | Where-Object { $_.MemberType -eq 'NoteProperty' })).Count;if((Label-Value $n.Labels $label) -ne $runId -or $networkContainerCount -ne 0){$cleanupFailed=$true}else{&docker network rm $network 2>$null|Out-Null;if($LASTEXITCODE -ne 0){$cleanupFailed=$true}}}
+    try {
+        foreach($id in @($client,$app,$mailpit,$mysql)) {
+            if(-not $id -or $id -notmatch '^[a-f0-9]{64}$') { continue }
+            $inspect = Docker-Probe @('inspect',$id)
+            if($inspect.ExitCode -ne 0) {
+                if(-not (Test-DockerResourceAbsent -Kind container -Identifier $id -Probe ${function:Docker-Probe})) { $cleanupFailed=$true }
+                continue
+            }
+            try { $x=@($inspect.Output|ConvertFrom-Json)[0] } catch { $cleanupFailed=$true; continue }
+            if((Label-Value $x.Config.Labels $label) -ne $runId) { $cleanupFailed=$true; continue }
+            $remove = Docker-Probe @('rm','-f',$id)
+            if($remove.ExitCode -ne 0 -or -not (Test-DockerResourceAbsent -Kind container -Identifier $id -Probe ${function:Docker-Probe})) { $cleanupFailed=$true }
+        }
+        $networkInspect = Docker-Probe @('network','inspect',$network)
+        if($networkInspect.ExitCode -ne 0) {
+            if(-not (Test-DockerResourceAbsent -Kind network -Identifier $network -Probe ${function:Docker-Probe})) { $cleanupFailed=$true }
+        } else {
+            try { $n=@($networkInspect.Output|ConvertFrom-Json)[0] } catch { $cleanupFailed=$true; $n=$null }
+            if($null -ne $n) {
+                [int]$networkContainerCount=(@($n.Containers.PSObject.Properties | Where-Object { $_.MemberType -eq 'NoteProperty' })).Count
+                if((Label-Value $n.Labels $label) -ne $runId -or $networkContainerCount -ne 0) { $cleanupFailed=$true }
+                else {
+                    $remove = Docker-Probe @('network','rm',$network)
+                    if($remove.ExitCode -ne 0 -or -not (Test-DockerResourceAbsent -Kind network -Identifier $network -Probe ${function:Docker-Probe})) { $cleanupFailed=$true }
+                }
+            }
+        }
+    } catch { $cleanupFailed=$true }
     $pass=$null;$guardToken=$null;if($cleanupFailed){throw 'Limpeza não comprovada; recursos etiquetados foram preservados para inspeção.'}
 }
 if($null -ne $executionFailure){throw $executionFailure}
