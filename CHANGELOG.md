@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0179
+
+**Data:** 2026-11-16 23:30:29 | **Commit:** `d93cc291` | **Tipo:** `patch`
+
+- docs(REI-73): reconcile merge blockers after REI-93 sync
+
 ## V. 1.87.0178
 
 **Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
@@ -6497,6 +6503,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
