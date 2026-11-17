@@ -1,11 +1,34 @@
 # Changelog
 
+## V. 1.87.0179
+
+**Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
+
+- fix(guias): serializar inicializacao das subtarefas (REI-105)
+
+## V. 1.87.0178
+
+**Data:** 2026-11-16 22:08:44 | **Commit:** `9142de98` | **Tipo:** `patch`
+
+- test(REI-105): cover guide dispatch validations
+
+## V. 1.87.0177
+
+**Data:** 2026-11-16 22:07:00 | **Commit:** `13950b37` | **Tipo:** `patch`
+
+- fix(REI-105): make guide completion atomic
+
+## V. 1.87.0176
+
+**Data:** 2026-11-16 20:38:23 | **Commit:** `d269e165` | **Tipo:** `patch`
+
+- chore(REI-85): sync with current main
+
 ## V. 1.87.0175
 
 **Data:** 2026-11-16 19:58:57 | **Commit:** `4e6a43a1` | **Tipo:** `patch`
 
 - build(REI-125): declare PHP platform requirements
-
 ## V. 1.87.0174
 
 **Data:** 2026-11-16 19:33:56 | **Commit:** `3e478b30` | **Tipo:** `patch`
