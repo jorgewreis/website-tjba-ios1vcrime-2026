@@ -8,9 +8,10 @@
 
 ## V. 1.87.0179
 
-**Data:** 2026-11-17 00:10:22 | **Commit:** `a35fc88b` | **Tipo:** `patch`
+**Data:** 2026-11-17 03:22:50 | **Commits:** `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
 
 - merge: sync REI-75 with main
+- fix(REI-141): honor explicit CCM confirmation
 
 ## V. 1.87.0178
 
