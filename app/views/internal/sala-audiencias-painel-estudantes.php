@@ -841,6 +841,11 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var pode = !!item.pode_inscrever;
             var pauta = String(item.id_pauta || wrapper.getAttribute('data-inscricao-ui') || '').trim();
             var status = statusForItem(item);
+            if (wrapper.getAttribute('data-inscricao-pendente') === '1') {
+                wrapper.style.display = '';
+                wrapper.innerHTML = '<button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="' + escapeHtml(pauta) + '" aria-disabled="true" aria-busy="true" aria-live="polite">Inscrição em andamento…</button>';
+                return;
+            }
             if (status && status !== 'designada' && status !== 'atrasada') {
                 wrapper.style.display = 'none';
                 return;

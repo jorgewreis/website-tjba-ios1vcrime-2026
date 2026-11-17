@@ -1,5 +1,25 @@
 (function () {
     var pageTools = window.App && App.Page ? App.Page : null;
+    var pendingByPauta = Object.create(null);
+
+    function setPendingUI(wrapper, pauta, pending) {
+        if (pending) {
+            pendingByPauta[pauta] = true;
+            if (wrapper) wrapper.setAttribute('data-inscricao-pendente', '1');
+            return;
+        }
+
+        delete pendingByPauta[pauta];
+        if (!wrapper) return;
+        wrapper.removeAttribute('data-inscricao-pendente');
+        var currentButton = wrapper.querySelector('.btn-inscrever-ata');
+        if (currentButton) {
+            currentButton.setAttribute('aria-disabled', 'false');
+            currentButton.setAttribute('aria-busy', 'false');
+            currentButton.removeAttribute('aria-live');
+            currentButton.textContent = 'Inscrever-me';
+        }
+    }
 
     function notify(type, title, message) {
         if (pageTools && typeof pageTools.notify === 'function') {
@@ -40,10 +60,18 @@
             return;
         }
         var pauta = String(btn.getAttribute('data-pauta') || '').trim();
-        if (!pauta || btn.disabled) {
+        if (!pauta || btn.disabled || pendingByPauta[pauta]) {
             return;
         }
-        btn.disabled = true;
+        var wrapper = typeof btn.closest === 'function' ? btn.closest('[data-inscricao-ui]') : null;
+        if (wrapper && wrapper.getAttribute('data-inscricao-pendente') === '1') {
+            return;
+        }
+        setPendingUI(wrapper, pauta, true);
+        btn.setAttribute('aria-disabled', 'true');
+        btn.setAttribute('aria-busy', 'true');
+        btn.setAttribute('aria-live', 'polite');
+        btn.textContent = 'Inscrição em andamento…';
 
         fetch('/api/sala-audiencias-ata/inscrever.php', {
             method: 'POST',
@@ -59,11 +87,11 @@
                     return;
                 }
                 notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Não foi possível inscrever.');
-                btn.disabled = false;
+                setPendingUI(wrapper, pauta, false);
             })
             .catch(function () {
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
-                btn.disabled = false;
+                setPendingUI(wrapper, pauta, false);
             });
     });
 })();
