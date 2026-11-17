@@ -288,3 +288,27 @@ Inventário extraído do snapshot `bca62b990c2893937e723e23de50651d67736cd7`. Em
 - Decisão funcional registrada para REI-69/85: sincronizar `partes.profissao` apenas em create/update de vínculo; delete não recalcula nem limpa o campo até existir regra de precedência. O vínculo autoritativo processo/unidade e backfill seguro ainda não foram definidos, portanto REI-69 permanece sem base para migração/conclusão.
 
 A auditoria geral continua parcial: esta reconciliação não valida login real, autorização por objeto em todos os módulos, concorrência/recuperação completa nem controles de proxy/infraestrutura, e não remove bloqueios nativos.
+
+### Inventário atual da fila de merge — 2026-11-17
+
+Consulta ao GitHub após os merges #408 e #436 e a sincronização das branches com `main` `3576675af7e98cf14a5c1592c8d51f4f255033b6`: 15 PRs abertas, 5 fora de draft, 10 em draft; 7 retornaram `mergeable=true` e 8 `false`. `mergeable=true` indica apenas que o GitHub não observa conflito no estado consultado; não prova aceite, revisão, segurança operacional nem autorização para merge.
+
+| PR | Estado/base e HEAD atual | CI observável | Bloqueio que ainda impede merge seguro |
+|---|---|---|---|
+| #406 / REI-130 | Aberta, fora de draft, mergeable; base `3576675`, HEAD `1075c312` | PHP Syntax `44037350467` SUCCESS; testes direcionados SQLite/Node e lint passaram no HEAD | Revisão formal e validação funcional autenticada/ambiente publicado pendentes |
+| #407 / REI-70 | Aberta, fora de draft, mergeable; base `3576675`, HEAD `ab6da94f` | PHP Syntax `44038141424` SUCCESS; policy/guard/HTTP/SQLite passaram; runner MySQL do HEAD anterior não foi repetido | REI-73 continua dependência nativa; sessão autenticada, proxy e ambiente publicado não demonstrados |
+| #411 / REI-68 | Aberta, fora de draft, mergeable; base `3576675`, HEAD `2144d321` | PHP Syntax `44037754532` SUCCESS; upload/origem, SQLite e regressões de prioridades/CCM passaram | REI-73 continua dependência nativa; token no banco, navegador autenticado e proxy/TLS pendentes |
+| #413 / REI-78 | Aberta, fora de draft, mergeable; base `3576675`, HEAD `d1bae91b` | PHP Syntax `44038671160` e interação `44038671138` SUCCESS; testes de idempotência, CCM, sigilo e migration sintética passaram | Migration ainda não executada no host DEV/PROD correto; configuração DB CLI e smoke autenticado pendentes |
+| #435 / REI-73 | Aberta, fora de draft, mergeable; base `3576675`, HEAD `91663745` | PHP Syntax `44039043323` SUCCESS; fluxo HTTP sintético, guard e lint passaram | REI-73 permanece incompleta; token contra DB/browser não demonstrados; teste trusted-origin segue bloqueado pelo guard REI-93 |
+| #431 / esta matriz | Draft, aberta, mergeable; base `3576675`, HEAD `ad1e17cd` | PHP Syntax `44039180826` SUCCESS; nenhum teste funcional desta atualização documental | Manter draft enquanto a auditoria REI-73 e os gates descritos permanecerem incompletos |
+| #433 / REI-67 | Draft, aberta, mergeable; base `d7683cc9` (anterior à main atual) | Checks reportados em HEAD anterior; não reexecutados nesta reconciliação | REI-73 e cobertura/revisão operacional pendentes; base antiga deve ser reavaliada |
+| #410 / REI-93 | Draft, aberta, não mergeable; base `d7683cc9` | Checks anteriores verdes; sem execução nova | Base antiga e gate de sandbox/daemon ainda não comprovado; suíte positiva permanece suspensa |
+| #415 / REI-69 | Draft, aberta, não mergeable; base `d7683cc9` | CI/testes verdes no HEAD anterior, sem execução nova | Base antiga; REI-73; migration `ALGORITHM=COPY` precisa de volume/espaço/janela e runner MySQL repetido |
+| #429 / REI-77 | Draft, aberta, não mergeable; base `bca62b99` | Checks anteriores; sem execução nova | Base antiga, smoke autenticado durante polling/resposta atrasada e revisão formal pendentes |
+| #428 / REI-72/76/153 | Draft, aberta, não mergeable; base `bca62b99` | Checks anteriores; sem execução nova | Base antiga, REI-73 e autorização por objeto ainda não demonstrada |
+| #425 / REI-161 | Draft, aberta, não mergeable; base `bca62b99` | Checks anteriores; sem execução nova | Base antiga e smoke autenticado pendente; Chrome DevTools MCP não está disponível nesta sessão |
+| #432 / REI-149 | Draft, aberta, não mergeable; base `bca62b99` | Checks do HEAD anterior; sem execução nova | Base antiga, DDL efetivo ainda não comprovado e revisão operacional pendente |
+| #412 / REI-88 | Draft, aberta, não mergeable; base `bca62b99` | Checks anteriores; sem execução nova | Base antiga, dependências REI-69/73 e autorização para alterar sigilo pendentes |
+| #427 / REI-125 | Draft, aberta, não mergeable; base `bca62b99` | Checks anteriores verdes no HEAD anterior; sem execução nova | Base antiga; mapeamento dos hosts alvo e runtimes CLI/FPM DEV/PROD pendente |
+
+As cinco PRs de código fora de draft e #431 foram sincronizadas por merge normal com a base `3576675`; os respectivos HEADs e resultados estão registrados acima. Isso remove a divergência mecânica dessas branches, mas não libera merges. As outras nove PRs ainda usam bases anteriores; #433 é a única delas que o GitHub reportou mergeable apesar da base antiga. Nenhuma PR foi mesclada neste lote. A revisão das bases restantes deve respeitar as dependências: primeiro REI-73/REI-93 e validações de host/schema, sem tratar check verde como substituto de aceite.
