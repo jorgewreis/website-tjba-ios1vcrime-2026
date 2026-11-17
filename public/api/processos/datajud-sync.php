@@ -65,7 +65,16 @@ try {
         echo json_encode(['error' => 'O DataJud não retornou assuntos completos e verificáveis para sincronização.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
-    $classe = is_array($resultadoBusca['classe'] ?? null) ? $resultadoBusca['classe'] : [];
+    $classe = $resultadoBusca['classe'] ?? [];
+    if (!is_array($classe) || ($classe !== [] && array_is_list($classe))) {
+        http_response_code(422);
+        echo json_encode(['error' => 'O DataJud retornou classe inválida para sincronização.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    // O mapper representa classe ausente com as duas chaves nulas.
+    if ($classe !== [] && ($classe['codigo'] ?? null) === null && ($classe['descricao'] ?? null) === null) {
+        $classe = [];
+    }
     $assuntos = is_array($resultadoBusca['assuntos'] ?? null) ? $resultadoBusca['assuntos'] : [];
     if ($assuntos !== [] && ($resultadoBusca['assuntos_completos'] ?? null) !== true) {
         http_response_code(422);

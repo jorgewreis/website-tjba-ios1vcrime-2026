@@ -47,7 +47,9 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
       'ambiguous' => ['resultado_unico_verificado'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
       'restricted' => ['resultado_unico_verificado'=>true, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'sigilo_restrito'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
       'missing-sigilo' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>false, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
-      'subjects' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>[]],
+      'subjects' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>['codigo'=>null,'descricao'=>null]],
+      'partial-class' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>['codigo'=>42,'descricao'=>null]],
+      'no-class-empty' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>false, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>null,'descricao'=>null]],
       default => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
     };
   }
@@ -99,6 +101,11 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
         assert request(result='ambiguous')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(result='restricted')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(result='missing-sigilo')[0] == 422 and read_marker.exists() and not write_marker.exists()
+        assert request(result='partial-class')[0] == 422 and read_marker.exists() and not write_marker.exists()
+        assert request(result='no-class-empty')[0] == 422 and read_marker.exists() and not write_marker.exists()
+        code, _ = request(result='subjects')
+        assert code == 200 and write_marker.exists()
+        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', None, [{'codigo':7,'descricao':'Fonte'}]]
         code, body = request()
         assert code == 200 and body['success'] is True and write_marker.exists()
         payload = json.loads(write_marker.read_text(encoding='utf-8'))
@@ -109,6 +116,11 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
         assert request(endpoint=cartorio, result='ambiguous')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(endpoint=cartorio, result='restricted')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(endpoint=cartorio, result='missing-sigilo')[0] == 422 and read_marker.exists() and not write_marker.exists()
+        assert request(endpoint=cartorio, result='partial-class')[0] == 422 and read_marker.exists() and not write_marker.exists()
+        assert request(endpoint=cartorio, result='no-class-empty')[0] == 422 and read_marker.exists() and not write_marker.exists()
+        code, _ = request(endpoint=cartorio, result='subjects')
+        assert code == 200 and write_marker.exists()
+        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', None, [{'codigo':7,'descricao':'Fonte'}]]
         code, body = request(endpoint=cartorio)
         assert code == 200 and body['success'] is True and write_marker.exists()
         assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', {'codigo':'42','descricao':'Classe'}, []]
