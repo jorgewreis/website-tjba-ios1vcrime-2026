@@ -34,6 +34,10 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
   function getConnection() { return new stdClass; }
 }''', encoding='utf-8')
     (base / 'app/helpers/BootstrapHelper.php').write_text('<?php', encoding='utf-8')
+    (base / 'app/helpers/ProcessoSetorAuthorization.php').write_text('''<?php class ProcessoSetorAuthorization {
+  static function canAccessProcess($connection, string $userId, string $processId, bool $lock=false): bool { return ($_SERVER['HTTP_X_TEST_SECTOR'] ?? 'allowed') !== 'denied'; }
+  static function canModifyProcess($connection, string $userId, string $processId, bool $lock=true): bool { return ($_SERVER['HTTP_X_TEST_SECTOR'] ?? 'allowed') !== 'denied'; }
+}''', encoding='utf-8')
     (base / 'app/repositories/ProcessosRepository.php').write_text('''<?php class ProcessosRepository {
   function __construct($connection) {}
   function findByNumero(string $numero): ?array { return ($_SERVER['HTTP_X_TEST_PROCESS'] ?? 'exists') === 'missing' ? null : ['id'=>'P1','numero_processo'=>$numero]; }
@@ -72,12 +76,12 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
     read_marker = base / 'app/services/source-called'
     write_marker = base / 'app/services/write-called'
 
-    def request(endpoint='processos/datajud-sync.php', result='ok', process='exists', profile='internal', origin='ok', number='12345678901234567890'):
+    def request(endpoint='processos/datajud-sync.php', result='ok', process='exists', profile='internal', origin='ok', number='12345678901234567890', sector='allowed'):
         read_marker.unlink(missing_ok=True)
         write_marker.unlink(missing_ok=True)
         data = json.dumps({'numero': number, 'codigo':'999', 'descricao':'client spoof', 'assuntos':[{'codigo':'999','descricao':'client spoof'}]}).encode()
         url = f'http://127.0.0.1:{port}/api/{endpoint}'
-        req = urllib.request.Request(url, data=data, headers={'Content-Type':'application/json','X-Test-Result':result,'X-Test-Process':process,'X-Test-Profile':profile,'X-Test-Origin':origin})
+        req = urllib.request.Request(url, data=data, headers={'Content-Type':'application/json','X-Test-Result':result,'X-Test-Process':process,'X-Test-Profile':profile,'X-Test-Origin':origin,'X-Test-Sector':sector})
         try:
             with urllib.request.urlopen(req, timeout=3) as response:
                 return response.status, json.loads(response.read())
@@ -100,6 +104,8 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
         assert request(process='missing')[0] == 404 and not read_marker.exists() and not write_marker.exists()
         assert request(profile='external')[0] == 403 and not read_marker.exists() and not write_marker.exists()
         assert request(origin='bad')[0] == 403 and not read_marker.exists() and not write_marker.exists()
+        code, body = request(sector='denied')
+        assert code == 403 and body.get('code') == 'acesso_setorial_obrigatorio' and not read_marker.exists() and not write_marker.exists()
         assert request(result='ambiguous')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(result='restricted')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(result='missing-sigilo')[0] == 422 and read_marker.exists() and not write_marker.exists()
@@ -117,6 +123,8 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
 
         cartorio = 'cartorio-cartas-expedidas/sync-processo-datajud.php'
         assert request(endpoint=cartorio, process='missing')[0] == 404 and not read_marker.exists() and not write_marker.exists()
+        code, body = request(endpoint=cartorio, sector='denied')
+        assert code == 403 and body.get('code') == 'acesso_setorial_obrigatorio' and not read_marker.exists() and not write_marker.exists()
         assert request(endpoint=cartorio, result='ambiguous')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(endpoint=cartorio, result='restricted')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(endpoint=cartorio, result='missing-sigilo')[0] == 422 and read_marker.exists() and not write_marker.exists()

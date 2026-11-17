@@ -19,7 +19,7 @@ try {
         $path = 'public/api/processos/' . $endpoint;
         $put($path, file_get_contents($source . '/' . $path));
     }
-    foreach (['app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php', 'app/access/AccessEvaluator.php', 'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php', 'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php', 'app/helpers/IdGenerator.php', 'app/repositories/ProcessosRepository.php'] as $path) {
+    foreach (['app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php', 'app/access/AccessEvaluator.php', 'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php', 'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php', 'app/helpers/IdGenerator.php', 'app/helpers/ProcessoSetorAuthorization.php', 'app/repositories/ProcessosRepository.php'] as $path) {
         $put($path, file_get_contents($source . '/' . $path));
     }
     $put('app/helpers/AutoloadHelper.php', '<?php');

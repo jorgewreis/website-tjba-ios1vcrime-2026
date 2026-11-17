@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0185
+
+**Data:** 2026-11-17 06:54:27 | **Commit:** `7bbcef09` | **Tipo:** `patch`
+
+- fix(REI-72): restrict subject mutations by sector
+
 ## V. 1.87.0184
 
 **Data:** 2026-11-17 05:47:39 | **Commit:** `7cf523db` | **Tipo:** `patch`
@@ -6540,6 +6546,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

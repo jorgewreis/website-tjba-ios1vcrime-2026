@@ -29,6 +29,20 @@ if (($result['classe']['action'] ?? '') !== 'updated' || (int) $db->query('SELEC
 if ($db->query('SELECT valor FROM estado WHERE id=2')->fetchColumn() !== 'assunto manual') throw new RuntimeException('Dado manual foi alterado.');
 
 $db->exec("DELETE FROM estado WHERE id=3; UPDATE estado SET valor='classe anterior' WHERE id=1");
+$beforeDenied = $db->query('SELECT valor FROM estado ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
+$callbackUnderTransaction = false;
+try {
+    $service->sync($numero, $classe, $assuntos, false, static function (PDO $connection) use (&$callbackUnderTransaction): bool {
+        $callbackUnderTransaction = $connection->inTransaction();
+        return false;
+    });
+    throw new LogicException('Esperava negação da autorização sob transação.');
+} catch (RuntimeException $e) {
+    if ($e->getMessage() !== 'A autorização para sincronizar o processo foi recusada.') throw $e;
+}
+if (!$callbackUnderTransaction || $db->query('SELECT valor FROM estado ORDER BY id')->fetchAll(PDO::FETCH_COLUMN) !== $beforeDenied) {
+    throw new RuntimeException('A autorização não foi verificada em transação antes de qualquer escrita.');
+}
 $failure = new ProcessoDataJudSyncService($db, $syncClasse, function () use ($db): array {
     $db->exec("INSERT INTO estado VALUES (3, 'transitório')");
     throw new RuntimeException('falha sintética');

@@ -19,11 +19,12 @@ with tempfile.TemporaryDirectory(prefix='assunto-sync-') as tmp:
         'app/helpers/ApiAccessGuard.php': '''<?php final class ApiAccessGuard { public static function requireAccess(array $pages, bool $write = false): void {} }''',
         'app/helpers/Conection.php': '''<?php final class Conection { public static function getInstance(): self { return new self; } public function getConnection(): object { return new stdClass; } }''',
         'app/helpers/BootstrapHelper.php': '''<?php $_SESSION['id_usuario'] = 'synthetic';''',
+        'app/helpers/ProcessoSetorAuthorization.php': '''<?php final class ProcessoSetorAuthorization { public static function canAccessProcess(object $db, string $userId, string $processId, bool $lock=false): bool { return ($_SERVER['HTTP_X_TEST_SECTOR'] ?? 'allowed') !== 'denied'; } public static function canModifyProcess(object $db, string $userId, string $processId, bool $lock=true): bool { return ($_SERVER['HTTP_X_TEST_SECTOR'] ?? 'allowed') !== 'denied'; } }''',
         'app/helpers/CnjValidator.php': '''<?php final class CnjValidator { public static function digits20OrThrow(string $v): string { $d = preg_replace('/\\D/', '', $v); if (!is_string($d) || strlen($d) !== 20) throw new InvalidArgumentException('CNJ inválido'); return $d; } }''',
         'public/api/datajud/config.php': '''<?php return ['api_key' => 'synthetic'];''',
-        'app/services/DataJudService.php': '''<?php final class DataJudService { public function __construct(array $config) {} public function searchProcesso(string $n): array { if (str_ends_with($n, '0005')) throw new RuntimeException('PRIVATE_DATAJUD_SENTINEL'); if (str_ends_with($n, '0002')) return ['assuntos_completos' => true, 'assuntos' => [['codigo' => '7']]]; if (str_ends_with($n, '0003')) return ['assuntos_completos' => false, 'assuntos' => [['codigo' => '7']]]; if (str_ends_with($n, '0004')) return ['assuntos_completos' => true, 'sigilo_restrito' => true, 'assuntos' => [['codigo' => '7']]]; if (str_ends_with($n, '0006')) return ['resultado_unico_verificado' => true, 'sigilo_ausencia_verificada' => true, 'fonte_confirmada_para_sincronizacao' => true, 'assuntos_completos' => true, 'assuntos_estado' => 'vazio', 'assuntos' => []]; return ['resultado_unico_verificado' => true, 'sigilo_ausencia_verificada' => true, 'fonte_confirmada_para_sincronizacao' => true, 'assuntos_completos' => true, 'assuntos_estado' => 'presente', 'assuntos' => [['codigo' => '42', 'descricao' => 'Fonte verificada']]]; } }''',
+        'app/services/DataJudService.php': '''<?php final class DataJudService { public function __construct(array $config) {} public function searchProcesso(string $n): array { file_put_contents(getenv('SOURCE_PROBE_FILE'), 'read'); if (str_ends_with($n, '0005')) throw new RuntimeException('PRIVATE_DATAJUD_SENTINEL'); if (str_ends_with($n, '0002')) return ['assuntos_completos' => true, 'assuntos' => [['codigo' => '7']]]; if (str_ends_with($n, '0003')) return ['assuntos_completos' => false, 'assuntos' => [['codigo' => '7']]]; if (str_ends_with($n, '0004')) return ['assuntos_completos' => true, 'sigilo_restrito' => true, 'assuntos' => [['codigo' => '7']]]; if (str_ends_with($n, '0006')) return ['resultado_unico_verificado' => true, 'sigilo_ausencia_verificada' => true, 'fonte_confirmada_para_sincronizacao' => true, 'assuntos_completos' => true, 'assuntos_estado' => 'vazio', 'assuntos' => []]; return ['resultado_unico_verificado' => true, 'sigilo_ausencia_verificada' => true, 'fonte_confirmada_para_sincronizacao' => true, 'assuntos_completos' => true, 'assuntos_estado' => 'presente', 'assuntos' => [['codigo' => '42', 'descricao' => 'Fonte verificada']]]; } }''',
         'app/repositories/ProcessosRepository.php': '''<?php final class ProcessosRepository { public function __construct(object $db) {} public function findByNumero(string $n): ?array { return ['id' => 'synthetic', 'numero_processo' => $n]; } }''',
-        'app/services/ProcessoDataJudSyncService.php': '''<?php final class ProcessoDataJudSyncService { public function __construct(object $db) {} public function sync(string $n, ?array $c, ?array $a): array { file_put_contents(getenv('PROBE_FILE'), 'write'); return ['assuntos' => $a]; } }''',
+        'app/services/ProcessoDataJudSyncService.php': '''<?php final class ProcessoDataJudSyncService { public function __construct(object $db) {} public function sync(string $n, ?array $c, ?array $a, bool $empty=false, ?callable $beforeWrite=null): array { file_put_contents(getenv('PROBE_FILE'), 'write'); return ['assuntos' => $a]; } }''',
     }
     for name, body in stubs.items():
         path = root / name
@@ -33,12 +34,13 @@ with tempfile.TemporaryDirectory(prefix='assunto-sync-') as tmp:
         s.bind(('127.0.0.1', 0))
         port = s.getsockname()[1]
     probe = root / 'connection-marker'
+    source_probe = root / 'source-probe'
     proc = subprocess.Popen(['php', '-S', f'127.0.0.1:{port}', '-t', str(root / 'public')],
                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                            env={**os.environ, 'PROBE_FILE': str(probe)})
+                            env={**os.environ, 'PROBE_FILE': str(probe), 'SOURCE_PROBE_FILE': str(root / 'source-probe')})
     url = f'http://127.0.0.1:{port}/api/processos/assunto-sync.php'
-    def send(body):
-        request = Request(url, data=body.encode(), headers={'Content-Type': 'application/json'})
+    def send(body, sector='allowed'):
+        request = Request(url, data=body.encode(), headers={'Content-Type': 'application/json', 'X-Test-Sector': sector})
         try:
             with urlopen(request, timeout=3) as response:
                 return response.status, json.load(response)
@@ -56,6 +58,10 @@ with tempfile.TemporaryDirectory(prefix='assunto-sync-') as tmp:
             status, _ = send(body)
             assert status == 400, (body, status)
             assert not probe.exists(), body
+        denied = '0000001-69.2020.8.05.0001'
+        status, data = send(json.dumps({'numero': denied, 'assuntos': []}), 'denied')
+        assert status == 403 and data.get('code') == 'acesso_setorial_obrigatorio', data
+        assert not source_probe.exists() and not probe.exists(), 'A consulta ou escrita DataJud ocorreu sem acesso setorial.'
         status, data = send('{"numero":"0000001-69.2020.8.05.0001","assuntos":[{"codigo":"  ","codigoAssunto":123,"descricao":"","nome":"Ataque"}]}')
         assert status == 200 and data == [{'codigo': '42', 'descricao': 'Fonte verificada'}], data
         assert probe.exists()

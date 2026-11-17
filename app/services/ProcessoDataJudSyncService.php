@@ -33,7 +33,13 @@ final class ProcessoDataJudSyncService
      * @param bool $verifiedEmptySubjects True only after the caller verified an explicit empty DataJud source response.
      * @return array{classe:?array,assuntos:?array}
      */
-    public function sync(string $numero, ?array $classe, ?array $assuntos, bool $verifiedEmptySubjects = false): array
+    public function sync(
+        string $numero,
+        ?array $classe,
+        ?array $assuntos,
+        bool $verifiedEmptySubjects = false,
+        ?callable $beforeWrite = null
+    ): array
     {
         $numero = CnjValidator::digits20OrThrow($numero);
         $processos = new ProcessosRepository($this->db);
@@ -74,6 +80,9 @@ final class ProcessoDataJudSyncService
             // de classe/assunto recebem também requireExisting=true.
             if ($processos->findByNumero($numero) === null) {
                 throw new InvalidArgumentException('Processo não encontrado no cadastro local.');
+            }
+            if ($beforeWrite !== null && $beforeWrite($this->db) !== true) {
+                throw new RuntimeException('A autorização para sincronizar o processo foi recusada.');
             }
             $resultadoClasse = $classe === null ? null : ($this->classeSync)($numero, $codigo, $descricao);
             $resultadoAssuntos = $assuntos === null ? null : ($this->assuntoSync)($numero, $assuntos, $verifiedEmptySubjects);

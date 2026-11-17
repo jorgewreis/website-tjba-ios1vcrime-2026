@@ -8,6 +8,7 @@ require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CnjValidator.php';
+require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 require_once $basePath . '/app/repositories/ProcessosRepository.php';
 require_once $basePath . '/app/services/DataJudService.php';
 require_once $basePath . '/app/services/ProcessoDataJudSyncService.php';
@@ -21,6 +22,8 @@ if (!is_array($payload)) {
 
 $numero = isset($payload['numero']) ? (string) $payload['numero'] : '';
 $escritaIniciada = false;
+$autorizacaoSetorialNegada = false;
+$fonteDataJudValidada = false;
 
 try {
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
@@ -37,11 +40,19 @@ try {
     }
 
     $connection = Conection::getInstance()->getConnection();
-    if ((new ProcessosRepository($connection))->findByNumero($digits) === null) {
+    $processo = (new ProcessosRepository($connection))->findByNumero($digits);
+    if ($processo === null) {
         http_response_code(404);
         echo json_encode(['error' => 'Processo não encontrado no cadastro local.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
+    $processoId = trim((string) ($processo['id'] ?? ''));
+    if ($processoId === '' || !ProcessoSetorAuthorization::canAccessProcess($connection, $usuarioId, $processoId, false)) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Acesso ao processo não autorizado.', 'code' => 'acesso_setorial_obrigatorio'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
     $resultadoBusca = (new DataJudService($config))->searchProcesso($digits);
     if (($resultadoBusca['resultado_unico_verificado'] ?? null) !== true
         || ($resultadoBusca['sigilo_ausencia_verificada'] ?? null) !== true
@@ -106,12 +117,38 @@ try {
         exit;
     }
 
-    $escritaIniciada = true;
+    $fonteDataJudValidada = true;
+    $beforeWrite = static function (PDO $writeConnection) use (
+        $digits,
+        $processoId,
+        $usuarioId,
+        &$autorizacaoSetorialNegada,
+        &$escritaIniciada
+    ): bool {
+        $lockSql = 'SELECT `numero_processo` FROM `processos` WHERE `id` = :processo_id LIMIT 1';
+        if ($writeConnection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+            $lockSql .= ' FOR UPDATE';
+        }
+        $lock = $writeConnection->prepare($lockSql);
+        $lock->execute([':processo_id' => $processoId]);
+        $numeroAtual = $lock->fetchColumn();
+        $lock->closeCursor();
+        $digitosAtuais = $numeroAtual === false ? '' : preg_replace('/\D+/', '', (string) $numeroAtual);
+        if (!is_string($digitosAtuais) || !hash_equals($digits, $digitosAtuais)
+            || !ProcessoSetorAuthorization::canModifyProcess($writeConnection, $usuarioId, $processoId)) {
+            $autorizacaoSetorialNegada = true;
+            return false;
+        }
+
+        $escritaIniciada = true;
+        return true;
+    };
     $resultadoSync = (new ProcessoDataJudSyncService($connection))->sync(
         $digits,
         $classeCodigo === '' ? null : ['codigo' => $classeCodigo, 'descricao' => $classeDescricao],
         $assuntos,
-        $estadoAssuntos === 'vazio'
+        $estadoAssuntos === 'vazio',
+        $beforeWrite
     );
     $classeResultado = $resultadoSync['classe'];
     $assuntosResultado = $resultadoSync['assuntos'];
@@ -145,6 +182,11 @@ try {
         'assuntos' => $assuntosResultado,
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
+    if ($autorizacaoSetorialNegada) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Acesso ao processo não autorizado.', 'code' => 'acesso_setorial_obrigatorio'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     if ($escritaIniciada) {
         http_response_code(409);
         echo json_encode(['error' => 'Não foi possível confirmar a sincronização. Confira os dados antes de tentar novamente.', 'code' => 'sincronizacao_resultado_indeterminado'], JSON_UNESCAPED_UNICODE);
@@ -153,14 +195,24 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (RuntimeException $e) {
+    if ($autorizacaoSetorialNegada) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Acesso ao processo não autorizado.', 'code' => 'acesso_setorial_obrigatorio'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     if ($escritaIniciada) {
         http_response_code(409);
         echo json_encode(['error' => 'Não foi possível confirmar a sincronização. Confira os dados antes de tentar novamente.', 'code' => 'sincronizacao_resultado_indeterminado'], JSON_UNESCAPED_UNICODE);
         exit;
     }
-    http_response_code(502);
-    echo json_encode(['error' => 'Não foi possível consultar o DataJud.'], JSON_UNESCAPED_UNICODE);
+    http_response_code($fonteDataJudValidada ? 500 : 502);
+    echo json_encode(['error' => $fonteDataJudValidada ? 'Não foi possível sincronizar os dados do processo.' : 'Não foi possível consultar o DataJud.'], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    if ($autorizacaoSetorialNegada) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Acesso ao processo não autorizado.', 'code' => 'acesso_setorial_obrigatorio'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     if ($escritaIniciada) {
         http_response_code(409);
         echo json_encode(['error' => 'Não foi possível confirmar a sincronização. Confira os dados antes de tentar novamente.', 'code' => 'sincronizacao_resultado_indeterminado'], JSON_UNESCAPED_UNICODE);
