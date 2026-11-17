@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0185
+
+**Data:** 2026-11-17 01:06:47 | **Commit:** `2064b7db` | **Tipo:** `patch`
+
+- docs(REI-73): record REI-78 pre-sync migration fix
+
 ## V. 1.87.0184
 
 **Data:** 2026-11-17 00:53:48 | **Commit:** `b241433b` | **Tipo:** `patch`
@@ -6533,6 +6539,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
