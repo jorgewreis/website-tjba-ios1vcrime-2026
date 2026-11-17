@@ -28,3 +28,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): reconcile live merge blockers** `[a6c5fc55]`
 - **merge: reconcile blocker matrix with current main** `[0208beb4]`
 
+\n
