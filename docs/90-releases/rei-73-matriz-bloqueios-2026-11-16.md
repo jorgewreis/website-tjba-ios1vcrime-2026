@@ -312,3 +312,30 @@ Consulta ao GitHub após os merges #408 e #436 e a sincronização das branches 
 | #427 / REI-125 | Draft, aberta, não mergeable; base `bca62b99` | Checks anteriores verdes no HEAD anterior; sem execução nova | Base antiga; mapeamento dos hosts alvo e runtimes CLI/FPM DEV/PROD pendente |
 
 As cinco PRs de código fora de draft e #431 foram sincronizadas por merge normal com a base `3576675`; os respectivos HEADs e resultados estão registrados acima. Isso remove a divergência mecânica dessas branches, mas não libera merges. As outras nove PRs ainda usam bases anteriores; #433 é a única delas que o GitHub reportou mergeable apesar da base antiga. Nenhuma PR foi mesclada neste lote. A revisão das bases restantes deve respeitar as dependências: primeiro REI-73/REI-93 e validações de host/schema, sem tratar check verde como substituto de aceite.
+
+### Apêndice D — reconciliação da fila de merges (2026-11-17, snapshot atual)
+
+Consulta live ao GitHub em 2026-11-17; prevalece sobre os snapshots anteriores deste documento. Há **16 PRs abertas: 6 fora de draft e 10 em draft**. GitHub reporta **14 mergeable e 2 não mergeable**. A base atual de `main` é `3576675af7e98cf14a5c1592c8d51f4f255033b6`.
+
+| PR | Estado e base atual | Bloqueio prioritário observado |
+|---|---|---|
+| #406 / REI-130 | Fora de draft, mergeable, base atual | Revisão formal e validação funcional autenticada/ambiente publicado. |
+| #407 / REI-70 | Fora de draft, mergeable, base atual | Dependência REI-73; MySQL/InnoDB não repetido no HEAD integrado e sessão/ambiente real pendentes. |
+| #411 / REI-68 | Fora de draft, mergeable, base atual | Dependência REI-73; sessão/token persistidos, navegador e proxy/TLS reais não demonstrados. |
+| #413 / REI-78 | Fora de draft, mergeable, base atual | Migration no host/DB correto, smoke autenticado e revisão formal. |
+| #435 / REI-73 | Fora de draft, mergeable, base atual | Critério central da REI-73 ainda incompleto; guard fail-closed REI-93 bloqueia o teste positivo. |
+| #437 / REI-167 | Fora de draft, mergeable, base atual | Schema MySQL autoritativo e smoke autenticado do dashboard pendentes. |
+| #410 / REI-93 | Draft, mergeable, base atual | Bloqueio operacional antecedente: provar isolamento daemon/imagens, DB/SMTP/rede e investigar o evento antes de reativar testes positivos. |
+| #415 / REI-69 | Draft, mergeable, base atual | Dependência REI-73; medir impacto/janela de DDL `ALGORITHM=COPY` no host/DB alvo. |
+| #425 / REI-161 | Draft, mergeable, base atual | Smoke autenticado pendente; Chrome DevTools MCP não está disponível nesta sessão. |
+| #428 / REI-72/76/153 | Draft, mergeable, base atual, HEAD `c835dd4d6c6b9954ce4911d8282834392c19dd23` | CI PHP Syntax run 44041980394 SUCCESS; faltam REI-73, autorização por objeto e evidência de sessão/DataJud real. |
+| #429 / REI-77 | Draft, mergeable, base atual | Smoke autenticado sob POST atrasado/polling, teclado/tecnologia assistiva e revisão formal. |
+| #431 / matriz REI-73 | Draft, mergeable, base atual | Documento parcial; o inventário live precisa ser continuado até os gates de auditoria/autorização da REI-73. |
+| #432 / REI-149 | Draft, mergeable, base atual | DDL/schema autoritativo da tabela não confirmado; runner isolado não comprova engine/índices do ambiente publicado. |
+| #433 / REI-67 | Draft, mergeable, base antiga `bca62b99` | REI-73 e validação operacional pendentes; sincronizar base e revalidar checks antes de qualquer liberação. |
+| #412 / REI-88 | Draft, **não mergeable**, base antiga `bca62b99` | Sincronizar base; dependências REI-69/73 e autorização explícita para alterar sigilo continuam pendentes. |
+| #427 / REI-125 | Draft, **não mergeable**, base antiga `bca62b99` | Sincronizar base; mapear alvos DEV/PROD e medir CLI/PHP-FPM nos hosts corretos. |
+
+**Ordem recomendada para desbloquear:** primeiro #410/REI-93, pois o guard impede os testes positivos de autenticação e origem usados pelas demais; em paralelo, completar o aceite da #435/REI-73 com a evidência permitida. Depois tratar bloqueios de host/schema/migration que são independentes (#413, #415, #432, #427), repetir testes em bases integradas e solicitar/recolher as revisões obrigatórias. Smoke autenticado das #425/#429 só é executável quando o Chrome DevTools MCP estiver conectado. Atualizar a base das #412/#427 é trabalho mecânico necessário, mas não remove seus gates de aceite.
+
+**Limite desta contagem:** `mergeable` mede compatibilidade/conflicto informado pelo GitHub, não aprovação, checks obrigatórios, fim de draft ou aceite funcional. Nenhuma PR foi mesclada neste snapshot. O pedido para habilitar/reiniciar o Chrome DevTools MCP foi recebido, porém a ferramenta de conexão/controle não está disponível nesta sessão; não houve smoke autenticado.

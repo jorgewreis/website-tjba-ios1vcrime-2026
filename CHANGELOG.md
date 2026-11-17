@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0200
+
+**Data:** 2026-11-17 04:55:49 | **Commit:** `a6c5fc55` | **Tipo:** `patch`
+
+- docs(REI-73): reconcile live merge blockers
+
 ## V. 1.87.0199
 
 **Data:** 2026-11-17 04:29:31 | **Commit:** `19025341` | **Tipo:** `patch`
@@ -6624,5 +6630,6 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
