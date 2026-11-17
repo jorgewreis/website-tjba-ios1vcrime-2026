@@ -60,6 +60,22 @@ final class GabineteMonitoramentoEletronicoSubtarefasRepository
         return $row === false ? null : $row;
     }
 
+    /** Lê e bloqueia a subtarefa após o bloqueio do monitoramento pai. */
+    public function findByIdForUpdate(string $id): ?array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return null;
+        }
+        $lock = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+        $st = $this->connection->prepare(sprintf('SELECT * FROM `%s` WHERE `id` = :id LIMIT 1%s', $this->table, $lock));
+        $st->bindValue(':id', $id);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
     public function findByMonitoramentoIdEOrdem(string $monitoramentoId, int $ordem): ?array
     {
         $st = $this->connection->prepare(
@@ -73,7 +89,7 @@ final class GabineteMonitoramentoEletronicoSubtarefasRepository
         return $row === false ? null : $row;
     }
 
-    public function atualizarStatus(string $id, string $status): void
+    public function atualizarStatus(string $id, string $status): bool
     {
         $st = $this->connection->prepare(
             sprintf('UPDATE `%s` SET `status` = :st, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
@@ -81,11 +97,12 @@ final class GabineteMonitoramentoEletronicoSubtarefasRepository
         $st->bindValue(':st', $status);
         $st->bindValue(':id', $id);
         $st->execute();
+        return $st->rowCount() > 0;
     }
 
-    public function marcarConcluida(string $id): void
+    public function marcarConcluida(string $id): bool
     {
-        $this->atualizarStatus($id, self::STATUS_CONCLUIDA);
+        return $this->atualizarStatus($id, self::STATUS_CONCLUIDA);
     }
 
     public function deleteByMonitoramentoId(string $monitoramentoId): void
