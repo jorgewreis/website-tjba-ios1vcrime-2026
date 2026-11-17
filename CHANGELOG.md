@@ -1,5 +1,29 @@
 # Changelog
 
+## V. 1.87.0184
+
+**Data:** 2026-11-17 05:26:56 | **Commit:** `44e44fb2` | **Tipo:** `patch`
+
+- merge: sync REI-93 guard with current main
+
+## V. 1.87.0183
+
+**Data:** 2026-11-17 05:15:00 | **Commit:** `27a69ff1` | **Tipo:** `patch`
+
+- test(REI-80): exercise trusted origin helper
+
+## V. 1.87.0182
+
+**Data:** 2026-11-17 05:08:46 | **Commit:** `6d55da93` | **Tipo:** `patch`
+
+- test(REI-80): cover authorized enrollment success
+
+## V. 1.87.0181
+
+**Data:** 2026-11-17 05:07:40 | **Commit:** `a74ac77d` | **Tipo:** `patch`
+
+- test(REI-80): cover same-site hostile origin
+
 ## V. 1.87.0180
 
 **Data:** 2026-11-17 04:01:04 | **Commit:** `d7ea35e9` | **Tipo:** `patch`
@@ -8,9 +32,9 @@
 
 ## V. 1.87.0179
 
-**Data:** 2026-11-17 03:31:48 | **Commits:** `cf09285a`, `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
+**Data:** 2026-11-17 03:22:50 | **Commits:** `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
 
-- test(REI-93): fail closed on invalid Docker inspect
+- fix(REI-73): validate student enrollment guard
 - merge: sync REI-75 with main
 - fix(REI-141): honor explicit CCM confirmation
 
@@ -28,15 +52,9 @@
 
 ## V. 1.87.0176
 
-**Data:** 2026-11-16 13:28:25 | **Commit:** `7a6f2be1` | **Tipo:** `patch`
-
-- test(auth): guard direct HTTP test entrypoints
-
 **Data:** 2026-11-16 22:07:00 | **Commit:** `13950b37` | **Tipo:** `patch`
 
 - fix(REI-105): make guide completion atomic
-
-
 
 ## V. 1.87.0175
 
@@ -7573,3 +7591,5 @@
 
 
 
+
+\n
