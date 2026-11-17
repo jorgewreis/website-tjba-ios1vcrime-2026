@@ -1,12 +1,29 @@
 # Changelog
 
+## V. 1.87.0178
+
+**Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
+
+- fix(guias): serializar inicializacao das subtarefas (REI-105)
+
+## V. 1.87.0177
+
+**Data:** 2026-11-16 22:08:44 | **Commit:** `9142de98` | **Tipo:** `patch`
+
+- test(REI-105): cover guide dispatch validations
+
+## V. 1.87.0176
+
+**Data:** 2026-11-16 22:07:00 | **Commit:** `13950b37` | **Tipo:** `patch`
+
+- fix(REI-105): make guide completion atomic
+
 ## V. 1.87.0175
 
-**Data:** 2026-11-16 23:39:11 | **Commit:** `b17833d0` | **Tipo:** `patch`
+**Data:** 2026-11-16 23:39:11 | **Commits:** `d269e165`, `b17833d0` | **Tipo:** `patch`
 
+- chore(REI-85): sync with current main
 - fix(REI-161): poll enrolled ata availability
-
-# Changelog
 
 ## V. 1.87.0174
 
@@ -7542,3 +7559,9 @@
 
 
 
+<<<<<<< HEAD
+=======
+
+
+
+>>>>>>> origin/main
