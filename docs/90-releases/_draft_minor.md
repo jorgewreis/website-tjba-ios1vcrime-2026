@@ -4,15 +4,11 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(datajud): reconcile verified empty subjects (REI-153)** `[dcd95ca7]`
-- **fix(guias): serializar inicializacao das subtarefas (REI-105)** `[c26efa2e]`
-- **fix: secure process priorities APIs (REI-75)** `[58c2d681]`
-- **test(auth): cover revoked session on priorities API** `[5f59cc3c]`
-- **merge: sync REI-75 with main** `[a35fc88b]`
-- **test(REI-75): cover revoked session mutations** `[d7ea35e9]`
+- **fix(REI-76): protect DataJud synchronization** `[e7c839ea]`
+- **fix(REI-72,REI-76,REI-153): validate DataJud subject sync** `[f0aca0f2]`
+- **test(DataJud): align HTTP fixtures with verified source contract** `[989c56b8]`
+- **fix(DataJud): allow subject sync without class** `[085e773f]`
+- **fix(DataJud): reject malformed class metadata** `[9cc8c877]`
+- **fix(REI-153): reconcile verified empty DataJud subjects** `[9636bb9e]`
+- **merge: sync DataJud process sync with current main** `[7cf523db]`
 
-- **fix(REI-141): honor explicit CCM confirmation** `[3b9fcfa5]`
-- **fix(REI-73): validate student enrollment guard** `[b684e5fc]`
-- **test(REI-80): cover same-site hostile origin** `[a74ac77d]`
-- **test(REI-80): cover authorized enrollment success** `[6d55da93]`
-- **test(REI-80): exercise trusted origin helper** `[27a69ff1]`
