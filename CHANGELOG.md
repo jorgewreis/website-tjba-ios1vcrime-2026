@@ -183,10 +183,11 @@
 
 ## V. 1.87.0165
 
-**Data:** 2026-11-16 15:48:28 | **Commit:** `1b27c384` | **Tipo:** `patch`
+**Data:** 2026-11-16 16:34:26 | **Commits:** `1b27c384`, `c723c85f` | **Tipo:** `patch`
 
 - fix(REI-114): report reconciliation outcomes
 - fix(REI-161): ocultar metadados de pautas inelegiveis
+- test(REI-88): verify pauta rollback on isolated MySQL
 
 ## V. 1.87.0164
 
