@@ -321,6 +321,11 @@ try {
     [$unauthorizedUpdateStatus, $unauthorizedUpdateBody] = $invoke('update.php', 'USR-2', 'SERVIDOR-CARTORIO', ['id' => 'VNC-1', 'tipo_parte' => 'vitima']);
     [$missingUpdateStatus, $missingUpdateBody] = $invoke('update.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => 'VNC-MISSING', 'tipo_parte' => 'vitima']);
     $assert($unauthorizedUpdateStatus === 404 && $unauthorizedUpdateStatus === $missingUpdateStatus && $unauthorizedUpdateBody === $missingUpdateBody, 'Update expõe existência de vínculo fora do setor.');
+    [$authorizedNoopStatus] = $invoke('update.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => $body['id']]);
+    $assert($authorizedNoopStatus === 200 && $snapshot($pdo) === $afterCreate, 'Update sem campos autorizados não preservou sucesso idempotente sem escrita.');
+    [$unauthorizedNoopStatus, $unauthorizedNoopBody] = $invoke('update.php', 'USR-2', 'SERVIDOR-CARTORIO', ['id' => 'VNC-1']);
+    [$missingNoopStatus, $missingNoopBody] = $invoke('update.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => 'VNC-MISSING']);
+    $assert($unauthorizedNoopStatus === 404 && $unauthorizedNoopStatus === $missingNoopStatus && $unauthorizedNoopBody === $missingNoopBody, 'Update vazio não aplicou autorização por objeto.');
     [$unauthorizedDeleteStatus, $unauthorizedDeleteBody] = $invoke('delete.php', 'USR-2', 'SERVIDOR-CARTORIO', ['id' => 'VNC-1']);
     [$missingDeleteStatus, $missingDeleteBody] = $invoke('delete.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => 'VNC-MISSING']);
     $assert($unauthorizedDeleteStatus === 404 && $unauthorizedDeleteStatus === $missingDeleteStatus && $unauthorizedDeleteBody === $missingDeleteBody, 'Delete expõe existência de vínculo fora do setor.');
@@ -362,6 +367,10 @@ try {
     [$updateStatus] = $invoke('update.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => $body['id'], 'tipo_parte' => 'defensor_publico']);
     $assert($updateStatus === 200 && $pdo->query('SELECT tipo_parte FROM processos_partes WHERE id=' . $pdo->quote($body['id']))->fetchColumn() === 'defensor_publico', 'Update autorizado no mesmo setor não persistiu.');
     $assert($pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn() === 'Defensor Público' && count($snapshot($pdo)['sync_log']) === count($afterCreate['sync_log']) + 1, 'Update autorizado não sincronizou profissão global.');
+    $beforeCreatedDelete = $snapshot($pdo);
+    [$createdDeleteStatus] = $invoke('delete.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => $body['id']]);
+    $assert($createdDeleteStatus === 200 && $pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn() === 'Defensor Público'
+        && count($snapshot($pdo)['sync_log']) === count($beforeCreatedDelete['sync_log']), 'Delete de vínculo recalculou ou limpou profissão global.');
     [$deleteStatus, $deleteBody] = $invoke('delete.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => 'VNC-1']);
     $assert($deleteStatus === 200 && ($deleteBody['deleted'] ?? false) === true, 'Delete autorizado no mesmo setor não persistiu.');
 

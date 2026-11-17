@@ -159,6 +159,9 @@ require getenv('TEST_ENDPOINT');'''
     assert snapshot() == after_create
     status, missing_update = invoke('update.php', 'U1', 'SERVIDOR-CARTORIO', {'id': 'MISSING', 'tipo_parte': 'vitima'})
     assert status == 404 and unauthorized_update == missing_update
+    status, unauthorized_noop = invoke('update.php', 'U2', 'SERVIDOR-CARTORIO', {'id': 'L1'})
+    missing_noop_status, missing_noop = invoke('update.php', 'U1', 'SERVIDOR-CARTORIO', {'id': 'MISSING'})
+    assert status == missing_noop_status == 404 and unauthorized_noop == missing_noop
     status, missing_delete = invoke('delete.php', 'U1', 'SERVIDOR-CARTORIO', {'id': 'MISSING'})
     assert status == 404 and unauthorized_delete == missing_delete
     assert snapshot() == after_create
@@ -180,8 +183,10 @@ require getenv('TEST_ENDPOINT');'''
     assert update_status == 200, (update_status, update_body)
     assert db.execute("SELECT profissao FROM partes WHERE id='B'").fetchone()[0] == 'Defensor Público'
     assert len(snapshot()[1]) == len(after_create[1]) + 1
+    before_delete = snapshot()
     delete_created_status, _ = invoke('delete.php', 'U1', 'SERVIDOR-CARTORIO', {'id': created_body['id']})
-    assert delete_created_status == 200
+    assert delete_created_status == 200 and db.execute("SELECT profissao FROM partes WHERE id='B'").fetchone()[0] == 'Defensor Público'
+    assert len(snapshot()[1]) == len(before_delete[1])
 
     status, _ = invoke('update.php', 'U1', 'SERVIDOR-CARTORIO', {'id': 'L1', 'tipo_parte': 'vitima'})
     assert status == 200

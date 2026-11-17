@@ -36,10 +36,6 @@ if ($id === '') {
 
 $allowed = ['tipo_parte', 'polo', 'prioridade_mulher', 'prioridade_crianca_adolescente', 'prioridade_idoso', 'prioridade_pessoa_deficiencia'];
 $data = array_intersect_key($parsed, array_flip($allowed));
-if ($data === []) {
-    echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
-    exit;
-}
 
 try {
     $connection->beginTransaction();
@@ -72,6 +68,11 @@ try {
         $connection->rollBack();
         http_response_code(404);
         echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($data === []) {
+        $connection->commit();
+        echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
         exit;
     }
     $repository->update($id, $data);
