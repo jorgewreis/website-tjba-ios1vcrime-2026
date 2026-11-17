@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0186
+
+**Data:** 2026-11-17 01:16:41 | **Commit:** `357f122d` | **Tipo:** `patch`
+
+- docs(REI-73): refresh review and merge blockers
+
 ## V. 1.87.0185
 
 **Data:** 2026-11-17 01:06:47 | **Commit:** `2064b7db` | **Tipo:** `patch`
@@ -6539,6 +6545,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
