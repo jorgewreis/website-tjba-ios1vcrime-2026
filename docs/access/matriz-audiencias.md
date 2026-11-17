@@ -36,7 +36,7 @@ Os nomes abaixo são relativos a `public/api/`. Esta é uma leitura dos controle
 | `sala-audiencias-pauta/tipos-list.php` | Na entrada examinada, não há verificação explícita de sessão ou perfil; não se inferiu ausência de controles externos. |
 | `sala-audiencias-ata/upload.php` | POST, ID de sessão e avaliação `salaata`; a entrada examinada não chama o guard de origem confiável. |
 | `sala-audiencias-ata/download-interno.php` | GET, ID de sessão e avaliação `salaata`; o serviço prepara o arquivo. |
-| `sala-audiencias-ata/inscrever.php` | POST, ID de sessão, `estudapainel` e perfil de cadastro exclusivamente externo estudante; o serviço avalia a inscrição. A entrada examinada não chama o guard de origem confiável. |
+| `sala-audiencias-ata/inscrever.php` | POST, autenticação/token de sessão, origem confiável, `estudapainel` e perfil de cadastro exclusivamente externo estudante; o serviço avalia a inscrição. |
 | `sala-audiencias-ata/download.php` | GET, ID de sessão, avaliação `estudaata` e perfil de cadastro exclusivamente externo estudante; o serviço verifica a solicitação. **`estudaata` não está no registro de páginas nem na lista de páginas externas do avaliador**, de modo que a verificação observada nega esse caminho antes do serviço. A intenção e eventual correção exigem validação separada. |
 
 O ID de sessão isolado não é equivalente a uma chamada observada a `Security::isAuthenticated()`. A existência de um guard de página também não demonstra autorização por pauta ou sigilo. As regras de inscrição e acesso a links após mudança de elegibilidade permanecem nas REI-161 e REI-162; o tratamento de pautas ausentes no polling está na REI-106. Nesta revisão não foram executadas requisições autenticadas nem consultas a dados reais para esta matriz.
