@@ -1,5 +1,23 @@
 # Changelog
 
+## V. 1.87.0181
+
+**Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
+
+- fix(guias): serializar inicializacao das subtarefas (REI-105)
+
+## V. 1.87.0180
+
+**Data:** 2026-11-16 22:08:44 | **Commit:** `9142de98` | **Tipo:** `patch`
+
+- test(REI-105): cover guide dispatch validations
+
+## V. 1.87.0179
+
+**Data:** 2026-11-16 22:07:00 | **Commit:** `13950b37` | **Tipo:** `patch`
+
+- fix(REI-105): make guide completion atomic
+
 ## V. 1.87.0178
 
 **Data:** 2026-11-16 22:02:43 | **Commit:** `61544189` | **Tipo:** `patch`
@@ -17,7 +35,6 @@
 **Data:** 2026-11-16 20:53:45 | **Commit:** `1e9b1642` | **Tipo:** `patch`
 
 - fix(REI-78): fail closed without unique idempotency index
-
 ## V. 1.87.0175
 
 **Data:** 2026-11-16 20:38:23 | **Commit:** `d269e165` | **Tipo:** `patch`

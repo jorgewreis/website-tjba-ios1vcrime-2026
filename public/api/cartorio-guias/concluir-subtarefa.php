@@ -10,7 +10,6 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CartorioSubtarefaUsuarioSessao.php';
 require_once $basePath . '/app/services/GuiasService.php';
-require_once $basePath . '/app/services/DashboardResumoService.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -33,10 +32,12 @@ if ($subtarefaId === '') {
 }
 
 try {
-    $before = DashboardResumoService::statusAnterior($connection, 'guias_subtarefas', $subtarefaId);
     $service = new GuiasService($connection);
-    $resultado = $service->concluirSubtarefa($subtarefaId, $dadosEspecificos);
-    DashboardResumoService::registrarConclusao($connection, $before, 'guias', 'CARTORIO', trim((string)($_SESSION['id_usuario'] ?? '')));
+    $resultado = $service->concluirSubtarefa(
+        $subtarefaId,
+        $dadosEspecificos,
+        trim((string) ($_SESSION['id_usuario'] ?? ''))
+    );
     $body = ['success' => true];
     if (isset($resultado['valor_multa_calculado'])) {
         $body['valor_multa_calculado'] = $resultado['valor_multa_calculado'];
