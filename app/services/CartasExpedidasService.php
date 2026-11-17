@@ -117,7 +117,8 @@ final class CartasExpedidasService
         }
         $cidadeDestino = TextFormatter::formatProperName($cidadeDestino, 120);
 
-        if (CentralMandadosCcm::contains($cidadeDestino, $ufDestino)) {
+        if (CentralMandadosCcm::contains($cidadeDestino, $ufDestino)
+            && ($payload['confirmacao_ccm'] ?? null) !== true) {
             throw new InvalidArgumentException(CentralMandadosCcm::MESSAGE);
         }
         $cidadeDestinoNormalizada = $this->normalizeNomeCidade($cidadeDestino);
