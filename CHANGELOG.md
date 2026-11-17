@@ -1,34 +1,40 @@
 # Changelog
 
-## V. 1.87.0179
+## V. 1.87.0180
 
 **Data:** 2026-11-16 21:44:48 | **Commit:** `9cc8c877` | **Tipo:** `patch`
 
 - fix(DataJud): reject malformed class metadata
 
-## V. 1.87.0178
+## V. 1.87.0179
 
 **Data:** 2026-11-16 21:42:26 | **Commit:** `085e773f` | **Tipo:** `patch`
 
 - fix(DataJud): allow subject sync without class
 
-## V. 1.87.0177
+## V. 1.87.0178
 
 **Data:** 2026-11-16 21:32:18 | **Commit:** `989c56b8` | **Tipo:** `patch`
 
 - test(DataJud): align HTTP fixtures with verified source contract
 
-## V. 1.87.0176
+## V. 1.87.0177
 
 **Data:** 2026-11-16 20:16:28 | **Commit:** `f0aca0f2` | **Tipo:** `patch`
 
 - fix(REI-72,REI-76,REI-153): validate DataJud subject sync
 
-## V. 1.87.0175
+## V. 1.87.0176
 
 **Data:** 2026-11-16 19:45:05 | **Commit:** `e7c839ea` | **Tipo:** `patch`
 
 - fix(REI-76): protect DataJud synchronization
+
+## V. 1.87.0175
+
+**Data:** 2026-11-16 20:38:23 | **Commit:** `d269e165` | **Tipo:** `patch`
+
+- chore(REI-85): sync with current main
 
 ## V. 1.87.0174
 
