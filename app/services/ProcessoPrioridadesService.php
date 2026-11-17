@@ -73,14 +73,15 @@ final class ProcessoPrioridadesService
             $numero = trim((string) ($proc['numero_processo'] ?? ''));
         }
 
-        $this->reconciliarAutomaticas($processoId, $numero, $partesMenoresNaPauta);
-
         $hasMenor = $this->partesRepository->countMenoresPorIdadeOuFlagNoProcesso($processoId) > 0
             || $partesMenoresNaPauta > 0;
         $hasReu = SalaAudienciasReuPresoDetector::processoTemReuPreso($this->connection, $processoId, $numero);
         $hasSigiloProcesso = $proc !== null && !empty($proc['sigiloso']);
 
         $rows = $this->repository->findByProcessoId($processoId);
+        // GET projects the same automatic state as reconciliation, without persisting it.
+        // Mutating flows continue to call reconciliarAutomaticas() explicitly.
+        $rows = $this->projectAutomaticasReadOnly($rows, $hasMenor, $hasReu, $hasSigiloProcesso);
         $prioridades = [];
         foreach ($rows as $row) {
             $c = trim((string) ($row['codigo'] ?? ''));
@@ -101,7 +102,6 @@ final class ProcessoPrioridadesService
         if ($hasReu) {
             $bloqueados[] = PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso();
         }
-        $codMenor = PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor();
         $codigosObrigamSigiloso = array_merge(
             [PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor()],
             PrioridadesProcessuaisCatalog::codigosQueDerivamSigiloso()
@@ -308,6 +308,59 @@ final class ProcessoPrioridadesService
         $this->syncMenor($processoId, $partesMenoresNaPauta);
         $this->syncReuPreso($processoId, $numeroProcesso);
         $this->syncSigiloso($processoId);
+    }
+
+    /**
+     * @param list<array<string,mixed>> $rows
+     * @return list<array<string,mixed>>
+     */
+    private function projectAutomaticasReadOnly(array $rows, bool $hasMenor, bool $hasReu, bool $hasSigiloProcesso): array
+    {
+        $rules = [
+            [PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor(), ProcessoPrioridadeOrigem::REGRA_MENOR, $hasMenor],
+            [PrioridadesProcessuaisCatalog::codigoAutomaticaReuPreso(), ProcessoPrioridadeOrigem::REGRA_REU_PRESO, $hasReu],
+        ];
+        foreach ($rules as [$codigo, $origem, $active]) {
+            $found = false;
+            foreach ($rows as $index => $row) {
+                if (trim((string) ($row['codigo'] ?? '')) !== $codigo) {
+                    continue;
+                }
+                $found = true;
+                if (!$active && trim((string) ($row['origem'] ?? '')) === $origem) {
+                    unset($rows[$index]);
+                } elseif ($active) {
+                    $rows[$index]['origem'] = $origem;
+                }
+            }
+            if ($active && !$found) {
+                $rows[] = ['codigo' => $codigo, 'origem' => $origem];
+            }
+        }
+
+        $codigoSig = PrioridadesProcessuaisCatalog::codigoSigiloso();
+        $temDerivada = false;
+        foreach ($rows as $row) {
+            $codigo = trim((string) ($row['codigo'] ?? ''));
+            if ($codigo === PrioridadesProcessuaisCatalog::codigoAutomaticaParteMenor()
+                || in_array($codigo, PrioridadesProcessuaisCatalog::codigosQueDerivamSigiloso(), true)) {
+                $temDerivada = true;
+                break;
+            }
+        }
+        if (!$hasSigiloProcesso && !$temDerivada) {
+            foreach ($rows as $index => $row) {
+                if (trim((string) ($row['codigo'] ?? '')) === $codigoSig
+                    && in_array(trim((string) ($row['origem'] ?? '')), [
+                        ProcessoPrioridadeOrigem::REGRA_SIGILOSO,
+                        ProcessoPrioridadeOrigem::REGRA_DERIVADA_MENOR_OU_VD,
+                    ], true)) {
+                    unset($rows[$index]);
+                }
+            }
+        }
+
+        return array_values($rows);
     }
 
     /**

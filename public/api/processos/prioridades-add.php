@@ -8,6 +8,7 @@ require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/repositories/SalaAudienciasPautaParteRepository.php';
+require_once $basePath . '/app/repositories/ProcessosRepository.php';
 require_once $basePath . '/app/services/ProcessoPrioridadesService.php';
 
 ApiAccessGuard::requireAccess(['salapautaedit'], true);
@@ -26,6 +27,11 @@ if ($processoId === '' || $codigo === '') {
 
 try {
     $pdo = Conection::getInstance()->getConnection();
+    if ((new ProcessosRepository($pdo))->findById($processoId) === null) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Processo não encontrado no cadastro local.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $svc = new ProcessoPrioridadesService($pdo);
     $svc->adicionarManualPorCodigoOuRotulo($processoId, $codigo);
 
