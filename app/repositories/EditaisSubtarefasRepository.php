@@ -186,10 +186,12 @@ final class EditaisSubtarefasRepository
             throw new InvalidArgumentException('Status de subtarefa inválido.');
         }
 
+        $limit = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' LIMIT 1' : '';
         $statement = $this->connection->prepare(
             sprintf(
-                'UPDATE `%s` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
-                $this->table
+                'UPDATE `%s` SET `status` = :status, `updated_at` = NOW() WHERE `id` = :id%s',
+                $this->table,
+                $limit
             )
         );
         $statement->bindValue(':status', $status);
@@ -204,10 +206,12 @@ final class EditaisSubtarefasRepository
             throw new InvalidArgumentException('ID da subtarefa é obrigatório.');
         }
 
+        $limit = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' LIMIT 1' : '';
         $statement = $this->connection->prepare(
             sprintf(
-                'UPDATE `%s` SET `dados_especificos` = :dados_especificos, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
-                $this->table
+                'UPDATE `%s` SET `dados_especificos` = :dados_especificos, `updated_at` = NOW() WHERE `id` = :id%s',
+                $this->table,
+                $limit
             )
         );
         $statement->bindValue(':dados_especificos', $dadosJson);
