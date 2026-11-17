@@ -55,9 +55,13 @@ function bootstrapRequireTrustedPostRequest(): bool {
         endpoint='/api/sala-audiencias-ata/inscrever.php'
         payload=json.dumps({'pauta':'sigilo'}).encode()
         same_origin={'Origin':f'http://127.0.0.1:{port}','X-Test-Auth':'valid'}
+        # Mesmo host (portanto same-site), outra origem (porta diferente): simula
+        # cookie SameSite enviado por um subcontexto hostil na mesma origem de site.
+        same_site_hostile={'Origin':f'http://127.0.0.1:{port+1}','X-Test-Auth':'valid'}
         for headers, expected in [
             ({'Origin':f'http://127.0.0.1:{port}'},401),
             ({'Origin':'http://evil.invalid','X-Test-Auth':'valid'},403),
+            (same_site_hostile,403),
             ({'X-Test-Auth':'valid'},403),
             ({**same_origin,'X-Test-Profile':'EXTERNO,CONSULTOR'},403),
             ({**same_origin,'X-Test-Profile':'ADMIN,ESTUDANTE'},403),
