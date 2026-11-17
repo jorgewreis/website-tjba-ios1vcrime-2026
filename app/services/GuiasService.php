@@ -507,7 +507,129 @@ final class GuiasService
      *
      * @return array{valor_multa_calculado?: string}
      */
-    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
+    public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null, ?string $usuarioIdDashboard = null): array
+    {
+        if ($this->connection->inTransaction()) {
+            throw new RuntimeException('A conclusão da guia deve controlar sua própria transação.');
+        }
+
+        require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
+        $dadosJson = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao($this->connection, $dadosJson);
+        $inicial = $this->subtarefasRepository->findById($subtarefaId);
+        $guiaId = trim((string) ($inicial['guia_id'] ?? ''));
+        if ($inicial === null || $guiaId === '') {
+            throw new InvalidArgumentException('Subtarefa ou guia não encontrada.');
+        }
+
+        $this->connection->beginTransaction();
+        try {
+            $guia = $this->repository->lockForUpdate($guiaId);
+            $atual = $this->subtarefasRepository->findById($subtarefaId);
+            if ($guia === null || $atual === null || trim((string) ($atual['guia_id'] ?? '')) !== $guiaId) {
+                throw new InvalidArgumentException('Subtarefa ou guia não encontrada.');
+            }
+            $guiaStatus = trim((string) ($guia['status'] ?? ''));
+            $ordem = (int) ($atual['ordem'] ?? 0);
+            $status = trim((string) ($atual['status'] ?? ''));
+            if ($ordem < 1 || $ordem > 8) {
+                throw new InvalidArgumentException('Ordem da subtarefa inválida.');
+            }
+            if ($status === 'concluida') {
+                if ($ordem === 8 && $guiaStatus !== 'concluída') {
+                    throw new RuntimeException('Estado inconsistente da conclusão da guia.');
+                }
+                $this->connection->commit();
+                return $ordem === 8
+                    ? ['tarefa_principal_concluida' => true, 'tarefa_principal_mensagem' => 'A guia já foi concluída.']
+                    : ['tarefa_principal_concluida' => false];
+            }
+            if (in_array($guiaStatus, ['cancelada', 'concluída'], true)) {
+                throw new InvalidArgumentException('Não é possível alterar subtarefas desta guia.');
+            }
+            if (!in_array($status, ['pendente', 'em_andamento'], true)) {
+                throw new InvalidArgumentException('Esta subtarefa não pode ser concluída.');
+            }
+
+            $etapas = $this->subtarefasRepository->findByGuiaId($guiaId);
+            for ($anterior = 1; $anterior < $ordem; $anterior++) {
+                $encontrada = false;
+                foreach ($etapas as $etapa) {
+                    if ((int) ($etapa['ordem'] ?? 0) !== $anterior) {
+                        continue;
+                    }
+                    $estado = trim((string) ($etapa['status'] ?? ''));
+                    $permitida = $estado === 'concluida'
+                        || ($anterior === 1 && $estado === GuiasSubtarefasRepository::STATUS_CANCELADA)
+                        || ($anterior === 2 && $estado === GuiasSubtarefasRepository::STATUS_PULADA);
+                    if (!$permitida) {
+                        throw new InvalidArgumentException('Conclua as etapas anteriores da guia primeiro.');
+                    }
+                    $encontrada = true;
+                }
+                if (!$encontrada) {
+                    throw new InvalidArgumentException('Etapa anterior da guia não encontrada.');
+                }
+            }
+
+            $dados = $dadosJson === null || $dadosJson === '' ? [] : json_decode($dadosJson, true);
+            if (!is_array($dados)) {
+                throw new InvalidArgumentException('Dados da subtarefa inválidos.');
+            }
+            if ($ordem === 1 && trim((string) ($dados['data_fato'] ?? '')) !== '') {
+                $data = trim((string) $dados['data_fato']);
+                $dt = DateTime::createFromFormat('!Y-m-d', $data);
+                if ($dt === false || $dt->format('Y-m-d') !== $data) {
+                    throw new InvalidArgumentException('A data do fato informada é inválida.');
+                }
+                if ($dt >= (new DateTime('today'))->modify('-10 days')) {
+                    throw new InvalidArgumentException('A data do fato deve ser anterior aos últimos 10 dias (não pode ser de hoje, futura ou dentro desse período).');
+                }
+            }
+            if ($ordem === 3) {
+                $tipoGuia = trim((string) ($dados['tipo_guia'] ?? ''));
+                if (!in_array($tipoGuia, ['Guia de Execução Definitiva', 'Guia de Recolhimento Provisória', 'Guia de Recolhimento Definitiva'], true)) {
+                    throw new InvalidArgumentException($tipoGuia === '' ? 'Selecione o tipo da guia expedida.' : 'Tipo de guia inválido. Selecione uma opção permitida.');
+                }
+            }
+            if ($ordem === 5) {
+                $juntada = mb_strtolower(trim((string) ($dados['tipo_juntada'] ?? '')), 'UTF-8');
+                $juntada = str_replace(['á', 'à', 'â', 'ã', 'ä'], 'a', $juntada);
+                if (!in_array($juntada, ['automatica', 'manual'], true)) {
+                    throw new InvalidArgumentException($juntada === '' ? 'Selecione o tipo de juntada (automática ou manual).' : 'Tipo de juntada inválido. Selecione automática ou manual.');
+                }
+            }
+            if ($ordem === 6) {
+                $quantidade = filter_var($dados['qtd_docs'] ?? null, FILTER_VALIDATE_INT);
+                if ($quantidade === false || $quantidade < 4) {
+                    throw new InvalidArgumentException('Informe no mínimo 4 documentos.');
+                }
+            }
+            if ($ordem === 7) {
+                $tipoEnvio = trim((string) ($dados['tipo_envio'] ?? ''));
+                $destinatario = trim((string) ($dados['destinatario'] ?? ''));
+                if (!in_array($tipoEnvio, ['E-mail', 'Malote Digital', 'PJe', 'eSAJ', 'ePROC'], true)
+                    || !in_array($destinatario, ['VEP', 'SEEU'], true)) {
+                    throw new InvalidArgumentException('Selecione um tipo de envio e destinatário válidos.');
+                }
+            }
+
+            $resultado = $this->concluirSubtarefaInterna($subtarefaId, $dadosJson);
+            $usuarioId = trim((string) ($usuarioIdDashboard ?? $_SESSION['id_usuario'] ?? ''));
+            if ($usuarioId !== '') {
+                require_once __DIR__ . '/DashboardResumoService.php';
+                DashboardResumoService::registrarConclusao($this->connection, ['id' => $subtarefaId, 'status' => $status], 'guias', 'CARTORIO', $usuarioId);
+            }
+            $this->connection->commit();
+            return $resultado;
+        } catch (Throwable $e) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    private function concluirSubtarefaInterna(string $subtarefaId, ?string $dadosJson = null): array
     {
         require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
         $dadosJson = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao($this->connection, $dadosJson);
@@ -542,8 +664,8 @@ final class GuiasService
         if ($usuarioIdMovimentacao !== null && $usuarioIdMovimentacao !== '') {
             try {
                 $this->alocadosRepository->addAlocado($guiaId, $usuarioIdMovimentacao);
-            } catch (RuntimeException $e) {
-                // limite ou duplicata
+            } catch (LimiteAlocadosException $e) {
+                // Limite atingido; erros de persistência precisam reverter a transação.
             }
         }
 
@@ -666,32 +788,57 @@ final class GuiasService
 
     public function cancelarSubtarefa(string $subtarefaId): void
     {
-        $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
-        if ($subtarefa === null) {
+        if ($this->connection->inTransaction()) {
+            throw new RuntimeException('O cancelamento da guia deve controlar sua própria transação.');
+        }
+        $inicial = $this->subtarefasRepository->findById($subtarefaId);
+        if ($inicial === null) {
             throw new InvalidArgumentException('Subtarefa não encontrada.');
         }
-
-        $ordem = (int) ($subtarefa['ordem'] ?? 0);
-        if ($ordem !== 1) {
-            throw new InvalidArgumentException('Apenas a subtarefa "Detalhamento de informações" pode ser cancelada.');
-        }
-
-        $guiaId = trim((string) ($subtarefa['guia_id'] ?? ''));
+        $guiaId = trim((string) ($inicial['guia_id'] ?? ''));
         if ($guiaId === '') {
             throw new InvalidArgumentException('Guia da subtarefa não identificada.');
         }
 
-        $this->subtarefasRepository->atualizarStatus($subtarefaId, GuiasSubtarefasRepository::STATUS_CANCELADA);
+        $this->connection->beginTransaction();
+        try {
+            $guia = $this->repository->lockForUpdate($guiaId);
+            $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
+            if ($guia === null || $subtarefa === null || trim((string) ($subtarefa['guia_id'] ?? '')) !== $guiaId) {
+                throw new InvalidArgumentException('Subtarefa ou guia não encontrada.');
+            }
+            if ((int) ($subtarefa['ordem'] ?? 0) !== 1) {
+                throw new InvalidArgumentException('Apenas a subtarefa "Detalhamento de informações" pode ser cancelada.');
+            }
+            if (in_array(trim((string) ($guia['status'] ?? '')), ['cancelada', 'concluída'], true)) {
+                throw new InvalidArgumentException('Não é possível alterar subtarefas desta guia.');
+            }
+            $status = trim((string) ($subtarefa['status'] ?? ''));
+            if ($status === GuiasSubtarefasRepository::STATUS_CANCELADA) {
+                $this->connection->commit();
+                return;
+            }
+            if (!in_array($status, ['pendente', 'em_andamento'], true)) {
+                throw new InvalidArgumentException('Esta subtarefa não pode ser cancelada.');
+            }
 
-        $ordem2 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 2);
-        if ($ordem2 !== null) {
-            $this->subtarefasRepository->atualizarStatus((string) $ordem2['id'], GuiasSubtarefasRepository::STATUS_PULADA);
+            $this->subtarefasRepository->atualizarStatus($subtarefaId, GuiasSubtarefasRepository::STATUS_CANCELADA);
+            $ordem2 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 2);
+            if ($ordem2 !== null) {
+                $this->subtarefasRepository->atualizarStatus((string) $ordem2['id'], GuiasSubtarefasRepository::STATUS_PULADA);
+            }
+            $ordem3 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 3);
+            if ($ordem3 !== null) {
+                $this->subtarefasRepository->atualizarStatus((string) $ordem3['id'], 'em_andamento');
+            }
+            $this->repository->update($guiaId, ['status' => 'em_andamento']);
+            $this->connection->commit();
+        } catch (Throwable $e) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            throw $e;
         }
-        $ordem3 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 3);
-        if ($ordem3 !== null) {
-            $this->subtarefasRepository->atualizarStatus((string) $ordem3['id'], 'em_andamento');
-        }
-        $this->repository->update($guiaId, ['status' => 'em_andamento']);
     }
 
     public function criarPrimeiraSubtarefa(string $guiaId, ?string $usuarioId = null): void
