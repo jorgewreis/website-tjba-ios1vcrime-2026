@@ -7,4 +7,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(REI-77): serialize student enrollment per hearing** `[8d404e0e]`
 - **test(REI-77): verify enrollment races on isolated MySQL** `[1822de25]`
 - **test(REI-77): diagnose InnoDB lock observation** `[cb7a9545]`
+- **test(REI-77): verify waits through data lock metadata** `[e057ef70]`
 
