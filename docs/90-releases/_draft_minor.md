@@ -4,15 +4,8 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: secure process priorities APIs (REI-75)** `[58c2d681]`
-- **test(auth): cover revoked session on priorities API** `[5f59cc3c]`
-- **merge: sync REI-75 with main** `[a35fc88b]`
-- **test(REI-75): cover revoked session mutations** `[d7ea35e9]`
+- **fix(dashboard): reconcile guide queue contract** `[4dbda414]`
+- **chore: preserve pending release draft** `[a6567251]`
+- **merge: sync guide dashboard with current main** `[37b0648a]`
+- **fix(REI-167): preserve pending release metadata** `[89bee829]`
 
-- **fix(REI-141): honor explicit CCM confirmation** `[3b9fcfa5]`
-- **fix(REI-73): validate student enrollment guard** `[b684e5fc]`
-- **test(REI-80): cover same-site hostile origin** `[a74ac77d]`
-- **test(REI-80): cover authorized enrollment success** `[6d55da93]`
-- **test(REI-80): exercise trusted origin helper** `[27a69ff1]`
-
-- **fix(dashboard): reconcile guide queue contract (REI-167)** `[4dbda414]`
