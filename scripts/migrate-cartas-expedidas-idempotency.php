@@ -23,7 +23,7 @@ foreach ($columnsQuery->fetchAll(PDO::FETCH_ASSOC) as $column) {
     $columns[strtolower((string) $column['COLUMN_NAME'])] = $column;
 }
 $indexQuery = $pdo->prepare(
-    'SELECT NON_UNIQUE, SEQ_IN_INDEX, COLUMN_NAME FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table_name AND INDEX_NAME = :index_name ORDER BY SEQ_IN_INDEX'
+    'SELECT NON_UNIQUE, SEQ_IN_INDEX, COLUMN_NAME, SUB_PART FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table_name AND INDEX_NAME = :index_name ORDER BY SEQ_IN_INDEX'
 );
 $indexQuery->execute([':table_name' => 'cartas_expedidas', ':index_name' => 'uq_cartas_expedidas_idempotency']);
 $index = $indexQuery->fetchAll(PDO::FETCH_ASSOC);

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0177
+
+**Data:** 2026-11-16 22:00:57 | **Commit:** `14e8c18e` | **Tipo:** `patch`
+
+- fix(REI-78): close idempotency review findings
+
 ## V. 1.87.0176
 
 **Data:** 2026-11-16 20:53:45 | **Commit:** `1e9b1642` | **Tipo:** `patch`
@@ -6485,6 +6491,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

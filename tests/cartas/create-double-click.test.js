@@ -154,7 +154,82 @@ async function run() {
     assert.equal(createPayloads[1].idempotency_key, createPayloads[0].idempotency_key, 'retry idêntico reutiliza a chave idempotente');
     assert.equal(location.href, '/success', 'sucesso deve redirecionar após um único cadastro');
     assert.equal(feedbacks.some(([message]) => message === 'Enviando dados...'), true);
+
+    const pendingKey = 'cartorio.cartasExpedidas.pendingRequestKey';
+    const retryStorageValues = new Map();
+    const attemptedKeys = [];
+    let rejectIdempotencyWrite = true;
+    const retryStorage = {
+        getItem: key => retryStorageValues.has(key) ? retryStorageValues.get(key) : null,
+        setItem(key, value) {
+            if (key === pendingKey) {
+                attemptedKeys.push(String(value));
+                if (rejectIdempotencyWrite) throw new Error('sessionStorage bloqueado');
+            }
+            retryStorageValues.set(key, String(value));
+        },
+        removeItem: key => retryStorageValues.delete(key)
+    };
+    const retryCityLookups = [];
+    const retryEvents = {};
+    let retryCreateCalls = 0;
+    const retryPayloads = [];
+    const persistedKeysAtSend = [];
+    const retryWindow = {
+        App: window.App,
+        document: window.document,
+        location,
+        sessionStorage: retryStorage,
+        __currentUserName: window.__currentUserName,
+        crypto: { getRandomValues: bytes => { bytes.fill(attemptedKeys.length + 91); return bytes; } },
+        addEventListener: (name, callback) => { retryEvents[name] = callback; },
+        confirm: () => true
+    };
+    const retryContext = {
+        window: retryWindow,
+        URL,
+        fetch(url, options) {
+            if (url.includes('/city')) {
+                return new Promise(resolve => {
+                    retryCityLookups.push(() => resolve({ ok: true, json: async () => ({ is_ccm: false }) }));
+                });
+            }
+            retryCreateCalls += 1;
+            retryPayloads.push(JSON.parse(options.body));
+            persistedKeysAtSend.push(retryStorageValues.get(pendingKey));
+            return Promise.resolve({ ok: true, json: async () => ({ id: 'CARTA-RETRY' }) });
+        },
+        setTimeout
+    };
+    button.disabled = false;
+    vm.runInNewContext(
+        fs.readFileSync(path.join(__dirname, '../../public/assets/js/shared/cartorio-cartas-expedidas-create.js'), 'utf8'),
+        retryContext,
+        { filename: 'cartorio-cartas-expedidas-create.js (storage retry)' }
+    );
+    retryWindow.App.CartorioCartasExpedidasCreate.initialize({
+        cityLookupEndpoint: '/api/city',
+        endpoint: '/api/create',
+        successRedirect: '/success'
+    });
+
+    const storageFailure = click();
+    retryCityLookups[0]();
+    await storageFailure;
+    assert.equal(retryCreateCalls, 0, 'chave não persistida nunca pode ser enviada');
+    assert.equal(attemptedKeys.length, 1, 'primeira tentativa tentou gravar a chave idempotente');
+    assert.equal(retryStorageValues.has(pendingKey), false, 'armazenamento não deve conter chave não confirmada');
+
+    retryEvents.datajudClasseResolved({ detail: { processoInputId: 'filter-processo' } });
+    rejectIdempotencyWrite = false;
+    const storageRetry = click();
+    retryCityLookups[1]();
+    await storageRetry;
+    assert.equal(retryCreateCalls, 1, 'após revalidação, a tentativa envia apenas uma vez quando a persistência volta');
+    assert.notEqual(retryPayloads[0].idempotency_key, attemptedKeys[0], 'a nova tentativa não reutiliza a chave que falhou ao persistir');
+    assert.equal(persistedKeysAtSend[0], retryPayloads[0].idempotency_key, 'a chave enviada foi confirmada no sessionStorage');
     console.log('PASS cartas expedidas: bloqueio de clique duplicado e chave idempotente preservada após recarga');
+    console.log('PASS cartas expedidas: falha de persistência limpa a tentativa e revalidação usa chave persistida nova');
 }
 
 run().catch(error => {

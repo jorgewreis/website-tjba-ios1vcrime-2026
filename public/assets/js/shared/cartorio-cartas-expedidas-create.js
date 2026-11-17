@@ -36,7 +36,6 @@
         let pendingRequestSignature = '';
         let pendingRequestKey = '';
         let pendingRequestKeyRestored = false;
-        let requestKeyStorageAvailable = false;
 
         try {
             if (global.sessionStorage) {
@@ -46,22 +45,36 @@
                 pendingRequestKey = String(global.sessionStorage.getItem(pendingRequestStorageKey) || '');
                 pendingRequestKeyRestored = /^[a-f0-9]{64}$/i.test(pendingRequestKey);
                 if (!pendingRequestKeyRestored) pendingRequestKey = '';
-                requestKeyStorageAvailable = true;
             }
         } catch (error) {
             pendingRequestKey = '';
             pendingRequestKeyRestored = false;
         }
 
-        function clearPendingRequestKey() {
+        function resetPendingRequestState() {
             pendingRequestSignature = '';
             pendingRequestKey = '';
             pendingRequestKeyRestored = false;
+        }
+
+        function clearPendingRequestKey() {
+            resetPendingRequestState();
             try {
                 if (global.sessionStorage) global.sessionStorage.removeItem(pendingRequestStorageKey);
             } catch (error) {
                 // A falha ao limpar não afeta uma criação confirmada; a próxima carga
                 // pode receber conflito e remover a chave antiga com segurança.
+            }
+        }
+
+        function persistPendingRequestKey() {
+            try {
+                const storage = global.sessionStorage;
+                if (!storage || !pendingRequestKey) return false;
+                storage.setItem(pendingRequestStorageKey, pendingRequestKey);
+                return String(storage.getItem(pendingRequestStorageKey) || '') === pendingRequestKey;
+            } catch (error) {
+                return false;
             }
         }
 
@@ -208,22 +221,18 @@
                 if (!pendingRequestKeyRestored) pendingRequestKey = newRequestKey();
                 pendingRequestSignature = requestSignature;
                 pendingRequestKeyRestored = false;
-                if (!pendingRequestKey || !requestKeyStorageAvailable) {
-                    feedback('Não foi possível guardar a chave de envio seguro nesta sessão. Ative o armazenamento da sessão e tente novamente.', 'error');
-                    gate.setError();
-                    return;
-                }
-                try {
-                    global.sessionStorage.setItem(pendingRequestStorageKey, pendingRequestKey);
-                } catch (error) {
-                    clearPendingRequestKey();
+                if (!pendingRequestKey) {
+                    resetPendingRequestState();
                     feedback('Não foi possível guardar a chave de envio seguro nesta sessão. Ative o armazenamento da sessão e tente novamente.', 'error');
                     gate.setError();
                     return;
                 }
             }
-            if (!pendingRequestKey) {
-                feedback('Não foi possível preparar o envio seguro. Atualize a página e tente novamente.', 'error');
+            // Confirme a persistência em cada tentativa, inclusive após a
+            // revalidação do formulário ou quando a chave foi restaurada.
+            if (!persistPendingRequestKey()) {
+                resetPendingRequestState();
+                feedback('Não foi possível guardar a chave de envio seguro nesta sessão. Ative o armazenamento da sessão e tente novamente.', 'error');
                 gate.setError();
                 return;
             }
