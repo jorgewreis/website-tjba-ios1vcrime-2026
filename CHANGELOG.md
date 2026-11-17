@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0185
+
+**Data:** 2026-11-17 06:57:42 | **Commit:** `2b1c19ee` | **Tipo:** `patch`
+
+- feat(rei-69): add audited responsible sector assignment
+
 ## V. 1.87.0184
 
 **Data:** 2026-11-17 05:34:12 | **Commit:** `79cc9a31` | **Tipo:** `patch`
@@ -6536,6 +6542,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

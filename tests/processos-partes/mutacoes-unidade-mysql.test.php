@@ -11,8 +11,9 @@ if (!extension_loaded('pdo_mysql') || !function_exists('proc_open')) {
 $repoRoot = getenv('REI69_TEST_REPO_ROOT') ?: '/repo';
 $appRoot = realpath($repoRoot . '/app');
 $endpointRoot = realpath($repoRoot . '/public/api/processos-partes');
+$responsibleEndpointRoot = realpath($repoRoot . '/public/api/processos');
 $testPath = realpath(__FILE__);
-if ($appRoot === false || $endpointRoot === false || $testPath === false
+if ($appRoot === false || $endpointRoot === false || $responsibleEndpointRoot === false || $testPath === false
     || is_file($repoRoot . '/.env') || str_contains($repoRoot, '.env')) {
     throw new RuntimeException('Recusado: raízes da fixture inválidas ou arquivo .env presente.');
 }
@@ -51,7 +52,7 @@ if (!is_string($marker) || !hash_equals($expectedMarker, $marker)) {
     throw new RuntimeException('Recusado: a sentinela não corresponde a esta execução.');
 }
 
-$fixtureTables = ['processos_partes', 'sync_log', 'partes', 'processos', 'usuario_setor', 'setores'];
+$fixtureTables = ['processos_partes', 'sync_log', 'logs_sistema', 'partes', 'processos', 'usuario_setor', 'setores'];
 register_shutdown_function(static function () use ($pdo, $fixtureTables, $expectedMarker): void {
     try {
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
@@ -75,7 +76,8 @@ $pdo->exec("SET SESSION sql_mode = 'STRICT_ALL_TABLES'");
 $ddl = [
     "CREATE TABLE setores (id_setor CHAR(30) NOT NULL PRIMARY KEY, ativo TINYINT(1) NOT NULL DEFAULT 1) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE usuario_setor (usuario CHAR(30) NOT NULL, setor CHAR(30) NOT NULL, PRIMARY KEY (usuario,setor), CONSTRAINT fk_rei69_user_sector FOREIGN KEY (setor) REFERENCES setores(id_setor)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-    "CREATE TABLE processos (id CHAR(30) NOT NULL PRIMARY KEY, numero_processo VARCHAR(64) NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "CREATE TABLE processos (id CHAR(30) NOT NULL PRIMARY KEY, numero_processo VARCHAR(64) NULL, updated_at DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "CREATE TABLE logs_sistema (id_log_sistema CHAR(30) NOT NULL PRIMARY KEY, usuario CHAR(30) NOT NULL, modulo VARCHAR(50) NOT NULL, acao VARCHAR(50) NOT NULL, tabela_afetada VARCHAR(50) NULL, registro_id CHAR(30) NULL, dados_anteriores TEXT NULL, dados_novos TEXT NULL, ip VARCHAR(45) NOT NULL, data_hora DATETIME NULL, KEY idx_registro (registro_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE partes (id CHAR(30) NOT NULL PRIMARY KEY, nome_completo VARCHAR(180) NULL, cpf VARCHAR(32) NULL, sexo VARCHAR(10) NULL, data_nascimento DATE NULL, profissao VARCHAR(255) NULL, created_at DATETIME NULL, updated_at DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE processos_partes (id CHAR(30) NOT NULL PRIMARY KEY, processo_id CHAR(30) NOT NULL, parte_id CHAR(30) NOT NULL, tipo_parte VARCHAR(50) NOT NULL, polo VARCHAR(50) NOT NULL, prioridade_mulher TINYINT(1) NOT NULL DEFAULT 0, prioridade_crianca_adolescente TINYINT(1) NOT NULL DEFAULT 0, prioridade_idoso TINYINT(1) NOT NULL DEFAULT 0, prioridade_pessoa_deficiencia TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NULL, updated_at DATETIME NULL, KEY ix_rei69_link_process (processo_id), CONSTRAINT fk_rei69_link_process FOREIGN KEY (processo_id) REFERENCES processos(id), CONSTRAINT fk_rei69_link_part FOREIGN KEY (parte_id) REFERENCES partes(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE sync_log (parte_id CHAR(30) NOT NULL, tipo_parte VARCHAR(50) NOT NULL, created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
@@ -138,8 +140,9 @@ $copyRelative = static function (string $root, string $relative, string $destina
 };
 $appFiles = [
     'helpers/ApiAccessGuard.php', 'helpers/BootstrapHelper.php', 'helpers/UserAccessHelper.php',
-    'helpers/ProcessoSetorAuthorization.php', 'helpers/IdGenerator.php',
+    'helpers/ProcessoSetorAuthorization.php', 'helpers/ProcessResponsibleSectorAdminPolicy.php', 'helpers/IdGenerator.php',
     'helpers/TextFormatter.php', 'helpers/ParteDocumentoHelper.php',
+    'services/ProcessResponsibleSectorService.php',
     'access/AccessEvaluator.php', 'access/ProfileNormalizer.php', 'access/PageAccessRegistry.php',
     'access/AccessAreas.php', 'access/AccessPolicyVersion.php',
     'repositories/ProcessosPartesRepository.php', 'repositories/PartesDocumentosRepository.php',
@@ -151,6 +154,8 @@ $copyRelative($appRoot, 'repositories/PartesRepository.php', $lab, 'app/reposito
 foreach (['create.php', 'update.php', 'delete.php', 'list.php'] as $endpoint) {
     $copyRelative($endpointRoot, $endpoint, $lab, 'public/api/processos-partes/' . $endpoint);
 }
+$copyRelative($responsibleEndpointRoot, 'setor-responsavel.php', $lab, 'public/api/processos/setor-responsavel.php');
+require_once $lab . '/app/services/ProcessResponsibleSectorService.php';
 file_put_contents($lab . '/app/helpers/AutoloadHelper.php', "<?php\ndeclare(strict_types=1);\n");
 file_put_contents($lab . '/app/helpers/Conection.php', <<<'PHP'
 <?php
@@ -169,7 +174,11 @@ file_put_contents($lab . '/app/helpers/UsuarioPerfisAutorizacao.php', <<<'PHP'
 <?php
 declare(strict_types=1);
 final class UsuarioPerfisAutorizacao {
-    public static function perfisDoUsuario(string $id): array { return [(string) getenv('TEST_PROFILE')]; }
+    public static function perfisDoUsuario(string $id): array {
+        $profiles = [(string) getenv('TEST_PROFILE')];
+        if (getenv('TEST_SUPPRESS_ADMIN') === '1') $profiles = array_values(array_diff($profiles, ['ADMIN']));
+        return $profiles;
+    }
 }
 PHP);
 file_put_contents($lab . '/config/security.php', <<<'PHP'
@@ -221,6 +230,31 @@ PHP);
 $assert = static function (bool $condition, string $message): void {
     if (!$condition) throw new RuntimeException($message);
 };
+$responsibleSectorService = new ProcessResponsibleSectorService($pdo);
+$assignment = $responsibleSectorService->assign('PRC-3', 'SET-CARTORIO', 'Atribuição administrativa sintética', 'ADMIN-1', '192.0.2.20');
+$assert($assignment['changed'] === true
+    && $pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-3'")->fetchColumn() === 'SET-CARTORIO'
+    && (int) $pdo->query("SELECT COUNT(*) FROM logs_sistema WHERE registro_id='PRC-3' AND acao='setor-responsavel'")->fetchColumn() === 1,
+    'Atribuição ADMIN no MySQL não persistiu processo e trilha juntos.');
+$beforeAuditCount = (int) $pdo->query("SELECT COUNT(*) FROM logs_sistema WHERE registro_id='PRC-3'")->fetchColumn();
+try {
+    $responsibleSectorService->assign('PRC-3', 'SET-INATIVO', 'Setor inativo precisa ser negado', 'ADMIN-1', '192.0.2.20');
+    throw new RuntimeException('Atribuição a setor inativo foi aceita.');
+} catch (InvalidArgumentException $expected) {
+    $assert($pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-3'")->fetchColumn() === 'SET-CARTORIO'
+        && (int) $pdo->query("SELECT COUNT(*) FROM logs_sistema WHERE registro_id='PRC-3'")->fetchColumn() === $beforeAuditCount,
+        'Tentativa de atribuir setor inativo alterou processo ou trilha.');
+}
+$pdo->exec("CREATE TRIGGER reject_responsible_sector_audit BEFORE INSERT ON logs_sistema FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='synthetic audit failure'");
+try {
+    $responsibleSectorService->assign('PRC-3', 'SET-GABINETE', 'Falha de auditoria sintética', 'ADMIN-1', '192.0.2.20');
+    throw new RuntimeException('Atribuição sem trilha foi aceita.');
+} catch (PDOException $expected) {
+    $assert($pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-3'")->fetchColumn() === 'SET-CARTORIO'
+        && (int) $pdo->query("SELECT COUNT(*) FROM logs_sistema WHERE registro_id='PRC-3'")->fetchColumn() === $beforeAuditCount,
+        'Falha no insert da trilha não reverteu o setor responsável.');
+}
+$pdo->exec('DROP TRIGGER reject_responsible_sector_audit');
 $snapshot = static function (PDO $db): array {
     $out = [];
     foreach (['processos_partes', 'sync_log', 'partes'] as $table) {
@@ -268,8 +302,71 @@ PHP;
     $body = $stdout === '' ? [] : json_decode($stdout, true, 512, JSON_THROW_ON_ERROR);
     return [(int) $statusText, is_array($body) ? $body : []];
 };
+$invokeResponsibleSector = static function (string $user, string $profile, array $payload, string $method = 'POST', string $origin = 'http://example.invalid', bool $authenticated = true, bool $hasSession = true, bool $suppressAdmin = false) use ($lab): array {
+    $script = $lab . '/public/api/processos/setor-responsavel.php';
+    $code = <<<'PHP'
+$_SERVER['REQUEST_METHOD'] = (string) getenv('TEST_METHOD');
+$_SERVER['HTTP_HOST'] = 'example.invalid';
+$_SERVER['HTTP_ORIGIN'] = (string) getenv('TEST_ORIGIN');
+$_SERVER['REMOTE_ADDR'] = '192.0.2.30';
+$_SESSION = getenv('TEST_SESSION') === '1' ? ['id_usuario' => (string) getenv('TEST_USER')] : [];
+$_POST = json_decode((string) getenv('TEST_PAYLOAD'), true) ?: [];
+register_shutdown_function(static function (): void { $code = http_response_code(); fwrite(STDERR, 'HTTP:' . ($code ?: 200)); });
+require (string) getenv('TEST_ENDPOINT');
+PHP;
+    $environment = [
+        'REI69_MYSQL_DSN' => (string) getenv('REI69_MYSQL_DSN'),
+        'REI69_MYSQL_USER' => (string) getenv('REI69_MYSQL_USER'),
+        'REI69_MYSQL_PASSWORD' => (string) getenv('REI69_MYSQL_PASSWORD'),
+        'REI69_TEST_LOCK_TIMEOUT' => '1',
+        'TEST_AUTH' => $authenticated ? '1' : '0', 'TEST_SESSION' => $hasSession ? '1' : '0',
+        'TEST_USER' => $user, 'TEST_PROFILE' => $profile,
+        'TEST_SUPPRESS_ADMIN' => $suppressAdmin ? '1' : '0',
+        'TEST_METHOD' => $method, 'TEST_ORIGIN' => $origin,
+        'TEST_PAYLOAD' => json_encode($payload, JSON_THROW_ON_ERROR), 'TEST_ENDPOINT' => $script,
+    ];
+    $pipes = [];
+    $process = proc_open([PHP_BINARY, '-r', $code], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $lab, $environment);
+    if (!is_resource($process)) throw new RuntimeException('Falha ao iniciar endpoint de atribuição.');
+    fclose($pipes[0]);
+    $stdout = stream_get_contents($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $exit = proc_close($process);
+    if ($exit !== 0) throw new RuntimeException('Endpoint de atribuição falhou (' . $stderr . ')');
+    $statusText = substr($stderr, (int) strrpos($stderr, 'HTTP:') + 5);
+    if ($statusText === '' || !ctype_digit($statusText)) throw new RuntimeException('Endpoint de atribuição sem status HTTP.');
+    $body = $stdout === '' ? [] : json_decode($stdout, true, 512, JSON_THROW_ON_ERROR);
+    return [(int) $statusText, is_array($body) ? $body : []];
+};
 
 try {
+    $apiAssignmentPayload = ['processo_id' => 'PRC-3', 'setor_id' => 'SET-GABINETE', 'justificativa' => 'Revisão administrativa pela API'];
+    [$apiAssignmentStatus, $apiAssignmentBody] = $invokeResponsibleSector('ADMIN-1', 'ADMIN', $apiAssignmentPayload);
+    $assert($apiAssignmentStatus === 200 && ($apiAssignmentBody['success'] ?? false) === true
+        && $pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-3'")->fetchColumn() === 'SET-GABINETE',
+        'A API não autorizou ADMIN efetivo na atribuição auditada.');
+    $apiAuditCount = (int) $pdo->query("SELECT COUNT(*) FROM logs_sistema WHERE registro_id='PRC-3'")->fetchColumn();
+    [$chiefAssignmentStatus] = $invokeResponsibleSector('CHIEF-1', 'CHEFIA', array_replace($apiAssignmentPayload, ['setor_id' => 'SET-CARTORIO']));
+    $assert($chiefAssignmentStatus === 403
+        && $pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-3'")->fetchColumn() === 'SET-GABINETE'
+        && (int) $pdo->query("SELECT COUNT(*) FROM logs_sistema WHERE registro_id='PRC-3'")->fetchColumn() === $apiAuditCount,
+        'CHEFIA sem ADMIN foi autorizada ou alterou dados.');
+    [$suppressedAdminStatus] = $invokeResponsibleSector('ADMIN-1', 'ADMIN', array_replace($apiAssignmentPayload, ['setor_id' => 'SET-CARTORIO']), 'POST', 'http://example.invalid', true, true, true);
+    $assert($suppressedAdminStatus === 403
+        && $pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-3'")->fetchColumn() === 'SET-GABINETE'
+        && (int) $pdo->query("SELECT COUNT(*) FROM logs_sistema WHERE registro_id='PRC-3'")->fetchColumn() === $apiAuditCount,
+        'ADMIN suprimido pelo modo operacional foi autorizado ou alterou dados.');
+    [$badOriginAssignmentStatus] = $invokeResponsibleSector('ADMIN-1', 'ADMIN', $apiAssignmentPayload, 'POST', 'http://hostile.invalid');
+    [$badMethodAssignmentStatus] = $invokeResponsibleSector('ADMIN-1', 'ADMIN', $apiAssignmentPayload, 'GET');
+    [$anonymousAssignmentStatus] = $invokeResponsibleSector('ADMIN-1', 'ADMIN', $apiAssignmentPayload, 'POST', 'http://example.invalid', false, false);
+    $assert($badOriginAssignmentStatus === 403 && $badMethodAssignmentStatus === 403 && $anonymousAssignmentStatus === 401,
+        'API de atribuição não protegeu origem, método e sessão.');
+    $assert($pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-3'")->fetchColumn() === 'SET-GABINETE'
+        && (int) $pdo->query("SELECT COUNT(*) FROM logs_sistema WHERE registro_id='PRC-3'")->fetchColumn() === $apiAuditCount,
+        'Requisição de atribuição rejeitada alterou processo ou trilha.');
+
     $before = $snapshot($pdo);
     $sharedPartProfession = $pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn();
     $createPayload = ['processo_id' => 'PRC-1', 'parte_id' => 'PAR-2', 'tipo_parte' => 'advogado', 'polo' => 'passivo'];
