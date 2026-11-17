@@ -1,7 +1,7 @@
 # REI-73 — matriz incremental de bloqueios e evidências
 
 **Snapshot:** 2026-11-16 (America/Bahia)  
-**Base inspecionada:** `origin/main` em `b9adf3e8846d228d9d46b798e365dbcff547a75e`  
+**Base inspecionada:** `origin/main` em `bca62b990c2893937e723e23de50651d67736cd7` (inclui merge de #430)
 **Worktree desta documentação:** `codex/rei73-blocker-matrix-20261117`  
 **Escopo:** oito dependências declaradas de REI-73: REI-66 a REI-72 e REI-88. Esta matriz é uma reconciliação incremental; não certifica a auditoria completa.
 
@@ -24,7 +24,7 @@ Resultados mencionados em comentários/corpos de PR são relatos e não foram re
 | REI-69 | PR #415, HEAD `74a418bb36a0bc643766d956312f0210a023b185` | Run `43985871543` (sintaxe PHP); testes MySQL/SQLite sintéticos reportados | Migração não aplicada; impacto/volume e janela autorizada pendentes; browser/sessão real ausentes |
 | REI-70 | PR #407, HEAD `76a6e75f21b4c1415e72634c2e14366ee5adb77e` | Bateria sintética extensa reportada, inclusive MySQL descartável | Sem workflow/check formal ou review; sessão/browser/proxy não demonstrados |
 | REI-71 | Sem PR aberto identificado | Testes sintéticos reportados em `b8cee7c…`; ancestral do SHA publicado `f5e657fc…`, run `43839505824` | Sessões e perfis autenticados reais não cobertos; issue concluída não encerra auditoria global |
-| REI-72 | PR #428 HEAD `eff3a85ae0886f44d701a96f6621e5fd7b681a33`; #405 antigo/sobreposto | Run `43997200791` sucesso de sintaxe; testes HTTP/atômicos reportados | Draft, sem merge/deploy; mapper real, concorrência MySQL, browser/sessão e política de autorização por registro pendentes |
+| REI-72 | PR #428 draft, HEAD `e83aced08b63ae6b4d7b51d4d67552225922217a`, base `bca62b99` | Após merge normal: testes reais SQLite e HTTP sintético afetados passaram; checks exatos `44001675569` e `44001683252` passaram | Concorrência MySQL, browser/sessão e política de autorização por registro seguem pendentes |
 | REI-88 | PR #412 HEAD `dae7bf98b1764042a7ca53004d38ff5e5549ba2a`; #416 HEAD `a21ddecf7030890dad62bd4df7a9b857a9afabed` | Testes MySQL sintéticos reportados; #416 run `43940823400` lint | Autorização de mudança de sigilo, transações de todos os callers e suíte MySQL no CI pendentes; #413 compartilha fixtures/atomicidade |
 
 ## Critérios e evidências por issue
@@ -87,17 +87,16 @@ Resultados mencionados em comentários/corpos de PR são relatos e não foram re
 
 **Aceite acompanhado:** sessão válida, permissão por operação/registro, método + origem confiável/CSRF; revisar APIs relacionadas; rejeições sem mutação; validar proveniência dos assuntos do cliente.
 
-- **Candidato atual:** PR #428, base `b9adf3e…`, HEAD `eff3a85ae0886f44d701a96f6621e5fd7b681a33`, draft. #405 (`e15b65b…`) está sobreposto/antigo; #409 (`fdc1032…`) pertence à frente REI-76.
-- **Validado no SHA exato (parcial):** run `43997200791` passou sintaxe PHP no HEAD. Comentários reportam `python -B tests/processos/datajud-sync-objeto-http.test.py` (dois endpoints), `php tests/datajud/sync-atomico.test.php` (reconciliação vazia completa, vínculo manual preservado, rollback), lint e `git diff --check`.
-- **Somente sintético/não verificado:** fixture HTTP não chama mapper real; concorrência MySQL, sessão/browser real e DataJud vivo ausentes. PR sem merge/deploy.
-- **Ambiguidade de autorização:** issue requer autorização por registro. A sincronização restringe a processo registrado, mas não há evidência suficiente aqui se cada operação de vínculo manual verifica setor responsável além do guard de operação. Não importar regra REI-69 sem confirmar decisão aplicável.
-- **Próximo gate:** fixar a política de escopo para link/unlink/read/sync e testar isolamento; depois executar concorrência MySQL descartável.
-
+- **Candidato atual:** PR #428 permanece draft. HEAD `e83aced08b63ae6b4d7b51d4d67552225922217a`, com merge normal da base atual `bca62b990c2893937e723e23de50651d67736cd7`; o conflito/defasagem com a base foi resolvido. #405 (`e15b65b…`) permanece sobreposto/antigo; #409 (`fdc1032…`) pertence à frente REI-76.
+- **Validado no SHA exato (reproduzido após merge):** `php tests/datajud/mapper-sync-real.test.php`, `php tests/datajud/sync-atomico.test.php`, `php tests/datajud/sync-rollback-repositorios.test.php`, `php tests/processos/assunto-sync-payload.test.php`, `php tests/processos/assunto-sync-service-validation.test.php`, `python -B tests/processos/datajud-sync-objeto-http.test.py` e `php tests/guias/conclusao-atomicidade.test.php` passaram. O mapper, serviço e repositórios foram exercitados em SQLite; os dois endpoints foram exercitados via harness HTTP sintético.
+- **CI no SHA exato:** runs `44001675569` e `44001683252` passaram para `e83aced08b63ae6b4d7b51d4d67552225922217a`.
+- **Limitações não resolvidas:** a fixture HTTP usa dublês e não testa sessão autenticada; a suíte separada cobre mapper/serviços/repositórios reais em SQLite. Concorrência MySQL, browser/sessão real e DataJud vivo continuam sem evidência. A issue ainda requer resolver/documentar autorização por registro para link/unlink/read/sync. Sem merge ou deploy do PR.
+- **Próximo gate:** fechar a política de escopo do registro e validar concorrência MySQL e sessão isolada. REI-73 continua bloqueada/incompleta até os gates individuais e a cobertura global serem demonstrados.
 ### REI-88 — preservação de sigilo e atomicidade em `ensureProcess`
 
 **Aceite acompanhado:** não apagar sigilo sem mudança explicitamente autorizada; auditar callers; atomicidade de processo/classe/pauta; testes MySQL sintéticos para processo sigiloso, rejeições/falhas, processo novo e mudança autorizada.
 
-- **Evidência na base:** mudança `ensureProcess`/transação de pauta presente em ancestral de `b9adf3e…` (`97da36…`, conforme PR #416); deploy reportado no run `43884547610`. Testes SQLite e cinco casos MySQL isolados reportados por #416.
+- **Evidência na base:** mudança `ensureProcess`/transação de pauta presente na ancestralidade da base atual `bca62b99…` (`97da36…`, conforme PR #416); deploy reportado no run `43884547610`. Testes SQLite e cinco casos MySQL isolados reportados por #416.
 - **Candidatos:** #412 (Carta, HEAD `dae7bf9…`) e #416 (Pauta, HEAD `a21ddec…`); #416 run `43940823400` passou lint. Ambos drafts. PR #413 (REI-78, HEAD `c17d051…`) compartilha fixtures/atomicidade; reconciliar para evitar versões divergentes.
 - **Somente inspeção estática/lacunas:** callers relevantes: `SalaAudienciasPautaService`, `ReuManager`, `OficiosCartorioService`, `OficiosGabineteService` e callers de Guias. Falta comprovar ownership transacional de cada caminho, propagação/captura de exceções e rollback de efeitos anteriores. Testes Carta/Pauta não provam todos os callers.
 - **Não verificado:** autorização para alteração explícita de sigilo e por processo não demonstrada em teste formal. PRs sem suíte MySQL ligada ao CI; sem merge/deploy dos PRs de teste.
@@ -106,11 +105,10 @@ Resultados mencionados em comentários/corpos de PR são relatos e não foram re
 
 ## Reconciliação e limites de REI-73
 
-1. Relações nativas de bloqueio em Linear: REI-66, REI-67, REI-68, REI-69, REI-70, REI-71, REI-72 e REI-88. Relações adicionais não foram promovidas a bloqueio sem evidência.
+1. Relações nativas de bloqueio em Linear: REI-66, REI-67, REI-68, REI-69, REI-70, REI-71, REI-72 e REI-88. Relações adicionais não foram promovidas a bloqueio sem evidência. PR #430 foi mesclado por Jorge; `origin/main` agora aponta para `bca62b990c2893937e723e23de50651d67736cd7`. Esta branch integrou essa base por merge normal. O HEAD atual do PR #428 ainda não é ancestral de `origin/main`.
 2. PRs não formam correspondência um-para-um. REI-66 e REI-71 aparecem integradas/deployadas segundo evidência registrada; REI-67 carece de candidato atribuível; REI-72 tem candidatos sobrepostos; REI-88 compartilha trabalho com REI-78.
 3. Documentos ligados à auditoria (inventário textual de APIs de 15/11 e auditoria WebApp de 15/11) declaram limites heurísticos/estáticos, usam baseline anterior e não cobrem integralmente rotas atuais, dependências, fronteiras de dados, sessões autenticadas, UI renderizada ou infraestrutura. Contagem textual não equivale a matriz de autorização validada.
 4. Esta tarefa não executou testes, smoke, deploy, migration nem acesso a dados reais. Evidências acima vêm de comentários, PRs e runs indicados; revalidar se SHA mudou.
 5. **REI-73 continua incompleta.** Faltam inventário executável de rotas/operações e controles, revisão de fluxos críticos/recuperação/concorrência, UI e autenticação isolada, reconciliação integral com issues e limitações por seção. Não mover REI-73 para concluída com esta matriz.
 
-**Próxima ação recomendada:** começar por REI-67 em branch limpa na base `b9adf3e…`: é lacuna transversal e não tem candidato atribuível. Em seguida, fechar gates de ambiente/review de #411, #415 e #407 e reconciliar #428/#412/#416/#413 antes de integrar trabalho compartilhado.
-
+**Próxima ação recomendada:** começar por REI-67 em branch limpa na base atual `bca62b99…`: é lacuna transversal e não tem candidato atribuível. Em seguida, fechar gates de ambiente/review de #411, #415 e #407 e reconciliar #428/#412/#416/#413 antes de integrar trabalho compartilhado.
