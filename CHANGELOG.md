@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0185
+
+**Data:** 2026-11-17 11:19:22 | **Commit:** `2ab745ff` | **Tipo:** `patch`
+
+- fix(REI-159): abort guide when priority replace fails
+
 ## V. 1.87.0184
 
 **Data:** 2026-11-17 05:33:49 | **Commit:** `aea3e451` | **Tipo:** `patch`
@@ -7593,3 +7599,4 @@
 
 
 \n
+
