@@ -24,3 +24,7 @@ Antes de remover arquivos, o processo registra um evento `ATA_RETENTION_AUDIT` n
 - Falha global retorna código 1. Um lote sem falhas retorna código 0. Uma execução parcial recorrente requer inspeção dos eventos no `error_log` e correção controlada do storage ou da referência.
 
 O lote de 100 limita o trabalho de uma execução. Se mais de 100 itens antigos falharem persistentemente, as execuções seguintes podem encontrar os mesmos candidatos; monitore o resultado parcial e faça triagem antes de repetir em ambiente operacional.
+
+## Verificação isolada
+
+`tests/ata/run-rei87-mysql-isolated.ps1` executa o teste com MySQL/InnoDB descartável, sem rede ou portas publicadas, dados do banco em `tmpfs` e mounts somente leitura limitados ao código e à fixture. A fixture exercita retry após falhas e os dois ordenamentos concorrentes entre retenção e upload. O runner não lê `config/`, não usa o banco da aplicação e remove seus próprios containers, volume e diretório temporário ao final.
