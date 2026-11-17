@@ -1,5 +1,18 @@
 # Changelog
 
+## V. 1.87.0180
+
+**Data:** 2026-11-17 04:01:04 | **Commit:** `d7ea35e9` | **Tipo:** `patch`
+
+- test(REI-75): cover revoked session mutations
+
+## V. 1.87.0179
+
+**Data:** 2026-11-17 03:22:50 | **Commits:** `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
+
+- merge: sync REI-75 with main
+- fix(REI-141): honor explicit CCM confirmation
+
 ## V. 1.87.0178
 
 **Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
@@ -20,10 +33,9 @@
 
 ## V. 1.87.0175
 
-**Data:** 2026-11-16 23:39:11 | **Commits:** `d269e165`, `b17833d0` | **Tipo:** `patch`
+**Data:** 2026-11-16 20:38:23 | **Commit:** `d269e165` | **Tipo:** `patch`
 
 - chore(REI-85): sync with current main
-- fix(REI-161): poll enrolled ata availability
 
 ## V. 1.87.0174
 
@@ -82,10 +94,11 @@
 
 ## V. 1.87.0165
 
-**Data:** 2026-11-16 15:48:28 | **Commit:** `1b27c384` | **Tipo:** `patch`
+**Data:** 2026-11-16 16:34:26 | **Commits:** `1b27c384`, `c723c85f` | **Tipo:** `patch`
 
 - fix(REI-114): report reconciliation outcomes
 - fix(REI-161): ocultar metadados de pautas inelegiveis
+- test(REI-88): verify pauta rollback on isolated MySQL
 
 ## V. 1.87.0164
 
@@ -6498,11 +6511,6 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
-
-
-
-
-
 
 
 
