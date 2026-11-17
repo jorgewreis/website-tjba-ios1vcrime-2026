@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(guias): serializar inicializacao das subtarefas (REI-105)** `[c26efa2e]`
+- **fix(REI-149): serialize institution updates** `[8226c801]`
 
