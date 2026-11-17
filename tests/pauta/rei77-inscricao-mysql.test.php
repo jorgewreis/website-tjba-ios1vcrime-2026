@@ -61,6 +61,15 @@ $engineCheck = $db->query("SELECT ENGINE FROM information_schema.TABLES WHERE TA
 if (strtoupper((string) $engineCheck) !== 'INNODB') {
     throw new RuntimeException('Synthetic pauta table is not InnoDB.');
 }
+// Capture stage/wait diagnostics only inside this disposable MySQL server.
+// The race assertion below still requires both workers to be in LOCK WAIT.
+try {
+    $db->exec("UPDATE performance_schema.setup_consumers SET ENABLED='YES' WHERE NAME IN ('events_stages_current','events_waits_current')");
+    $db->exec("UPDATE performance_schema.setup_instruments SET ENABLED='YES', TIMED='YES' WHERE NAME LIKE 'stage/sql/%' OR NAME = 'wait/lock/metadata/sql/mdl'");
+} catch (Throwable) {
+    // If Performance Schema is unavailable, the test still enforces the
+    // primary InnoDB lock observation and reports the missing diagnostics.
+}
 
 $insertPauta = $db->prepare('INSERT INTO sala_audiencias_pauta (id_pauta,ativo,processo,data_audiencia,hora_audiencia,status) VALUES (:id,1,NULL,:today,\'10:00\',\'designada\')');
 $insertInscricao = $db->prepare('INSERT INTO sala_audiencias_estudante_inscricao (id,pauta,usuario,created_at) VALUES (:id,:pauta,:usuario,NOW())');
@@ -224,6 +233,55 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
                 $processRow['Info'] = substr($info, 0, 300);
             }
             unset($processRow);
+            $performanceDiagnostics = ['stages' => null, 'waits' => null, 'data_lock_waits' => null];
+            try {
+                $stage = $db->prepare(
+                    'SELECT t.PROCESSLIST_ID, e.EVENT_NAME, e.TIMER_WAIT, e.WORK_COMPLETED, e.WORK_ESTIMATED '
+                    . 'FROM performance_schema.events_stages_current e '
+                    . 'JOIN performance_schema.threads t USING (THREAD_ID) '
+                    . 'WHERE t.PROCESSLIST_ID IN (?, ?)'
+                );
+                $stage->execute($threadIds);
+                $performanceDiagnostics['stages'] = $stage->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                $stage->closeCursor();
+            } catch (Throwable $diagnosticError) {
+                $performanceDiagnostics['stages'] = 'unavailable: ' . $diagnosticError->getMessage();
+            }
+            try {
+                $waits = $db->prepare(
+                    'SELECT t.PROCESSLIST_ID, e.EVENT_NAME, e.OPERATION, e.OBJECT_SCHEMA, e.OBJECT_NAME, '
+                    . 'e.INDEX_NAME, e.TIMER_WAIT '
+                    . 'FROM performance_schema.events_waits_current e '
+                    . 'JOIN performance_schema.threads t USING (THREAD_ID) '
+                    . 'WHERE t.PROCESSLIST_ID IN (?, ?)'
+                );
+                $waits->execute($threadIds);
+                $performanceDiagnostics['waits'] = $waits->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                $waits->closeCursor();
+            } catch (Throwable $diagnosticError) {
+                $performanceDiagnostics['waits'] = 'unavailable: ' . $diagnosticError->getMessage();
+            }
+            try {
+                $lockWaits = $db->prepare(
+                    'SELECT requester.PROCESSLIST_ID AS requesting_connection_id, '
+                    . 'blocker.PROCESSLIST_ID AS blocking_connection_id, '
+                    . 'requested.OBJECT_SCHEMA, requested.OBJECT_NAME, requested.INDEX_NAME, '
+                    . 'requested.LOCK_MODE AS requested_mode, requested.LOCK_STATUS AS requested_status, '
+                    . 'requested.LOCK_DATA AS requested_key, blocked.LOCK_MODE AS blocking_mode, '
+                    . 'blocked.LOCK_STATUS AS blocking_status, blocked.LOCK_DATA AS blocking_key '
+                    . 'FROM performance_schema.data_lock_waits w '
+                    . 'JOIN performance_schema.threads requester ON requester.THREAD_ID = w.REQUESTING_THREAD_ID '
+                    . 'JOIN performance_schema.threads blocker ON blocker.THREAD_ID = w.BLOCKING_THREAD_ID '
+                    . 'JOIN performance_schema.data_locks requested ON requested.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID '
+                    . 'JOIN performance_schema.data_locks blocked ON blocked.ENGINE_LOCK_ID = w.BLOCKING_ENGINE_LOCK_ID '
+                    . 'WHERE requester.PROCESSLIST_ID IN (?, ?) OR blocker.PROCESSLIST_ID IN (?, ?)'
+                );
+                $lockWaits->execute([$threadIds[0], $threadIds[1], $threadIds[0], $threadIds[1]]);
+                $performanceDiagnostics['data_lock_waits'] = $lockWaits->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                $lockWaits->closeCursor();
+            } catch (Throwable $diagnosticError) {
+                $performanceDiagnostics['data_lock_waits'] = 'unavailable: ' . $diagnosticError->getMessage();
+            }
             $describe = static function (array $rows, array $fields): string {
                 $out = [];
                 foreach ($rows as $row) {
@@ -239,7 +297,8 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
                 'Both worker transactions were not observed waiting on the held pauta lock. '
                 . 'Worker thread IDs=[' . implode(',', $threadIds) . ']; '
                 . 'InnoDB=[' . $describe($observedTransactions, ['trx_mysql_thread_id', 'trx_state']) . ']; '
-                . 'processlist=[' . $describe($observedProcesses, ['Id', 'Command', 'State', 'Time', 'Statement', 'Info']) . '].'
+                . 'processlist=[' . $describe($observedProcesses, ['Id', 'Command', 'State', 'Time', 'Statement', 'Info']) . ']; '
+                . 'performance_schema=' . json_encode($performanceDiagnostics, JSON_UNESCAPED_SLASHES) . '.'
             );
         }
         $db->commit();

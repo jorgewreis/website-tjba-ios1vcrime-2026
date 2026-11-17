@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0178
+
+**Data:** 2026-11-16 22:56:04 | **Commit:** `cb7a9545` | **Tipo:** `patch`
+
+- test(REI-77): diagnose InnoDB lock observation
+
 ## V. 1.87.0177
 
 **Data:** 2026-11-16 21:38:54 | **Commit:** `1822de25` | **Tipo:** `patch`
@@ -6491,6 +6497,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
