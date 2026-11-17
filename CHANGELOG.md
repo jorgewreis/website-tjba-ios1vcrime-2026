@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0180
+
+**Data:** 2026-11-17 01:02:37 | **Commit:** `65d63632` | **Tipo:** `patch`
+
+- chore(REI-149): trim changelog trailing blank
+
 ## V. 1.87.0179
 
 **Data:** 2026-11-16 23:40:47 | **Commit:** `8226c801` | **Tipo:** `patch`
