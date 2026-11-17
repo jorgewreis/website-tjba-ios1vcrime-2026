@@ -191,6 +191,18 @@ try {
     Invoke-DockerSafe @('start', $phpId) | Out-Null
     $output = Invoke-DockerSafe @('exec', $phpId, 'php', '/test/mutacoes-unidade-mysql.test.php')
     $output
+} catch {
+    if ($mysqlId -match '^[a-f0-9]{64}$') {
+        try {
+            $logs = Invoke-DockerSafe @('logs', '--tail', '80', $mysqlId)
+            $safeLogs = [string]::Join("`n", @($logs | ForEach-Object { [string] $_ }))
+            if ($password) { $safeLogs = $safeLogs.Replace($password, '[REDACTED]') }
+            Write-Warning "Diagnóstico MySQL descartável (últimas 80 linhas):`n$safeLogs"
+        } catch {
+            Write-Warning 'Não foi possível coletar logs do container MySQL próprio.'
+        }
+    }
+    throw
 } finally {
     try { if ($phpId -notmatch '^[a-f0-9]{64}$') { $phpId = Find-OwnedContainerByName $phpName } }
     catch { $cleanupFailed = $true; Write-Warning 'Não foi possível localizar com segurança o container PHP.' }

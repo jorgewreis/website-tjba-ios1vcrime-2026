@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0181
+
+**Data:** 2026-11-17 05:26:15 | **Commit:** `11607f71` | **Tipo:** `patch`
+
+- test(REI-69): report isolated MySQL startup failures
+
 ## V. 1.87.0180
 
 **Data:** 2026-11-17 04:01:04 | **Commit:** `d7ea35e9` | **Tipo:** `patch`
@@ -6513,3 +6519,4 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
