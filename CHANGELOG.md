@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0183
+
+**Data:** 2026-11-17 03:49:08 | **Commit:** `8b957a3d` | **Tipo:** `patch`
+
+- fix(REI-141): gate CCM before idempotent replay
+
 ## V. 1.87.0182
 
 **Data:** 2026-11-17 01:02:14 | **Commit:** `f835582f` | **Tipo:** `patch`
@@ -6521,6 +6527,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

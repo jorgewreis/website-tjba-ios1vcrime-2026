@@ -107,6 +107,26 @@ final class CartasExpedidasService
 
         $numeroFormatado = $this->formatarCNJ($digits);
 
+        $ufDestino = strtoupper(trim((string) ($payload['estado'] ?? $payload['uf'] ?? '')));
+        if (strlen($ufDestino) !== 2) {
+            throw new InvalidArgumentException('O estado (UF) de destino é obrigatório (2 caracteres).');
+        }
+
+        $cidadeDestino = trim((string) ($payload['cidade'] ?? ''));
+        if ($cidadeDestino === '') {
+            throw new InvalidArgumentException('A cidade de destino é obrigatória.');
+        }
+        $cidadeDestino = TextFormatter::formatProperName($cidadeDestino, 120);
+
+        if (CentralMandadosCcm::contains($cidadeDestino, $ufDestino)
+            && ($payload['confirmacao_ccm'] ?? null) !== true) {
+            throw new InvalidArgumentException(CentralMandadosCcm::MESSAGE);
+        }
+        $cidadeDestinoNormalizada = $this->normalizeNomeCidade($cidadeDestino);
+        if ($cidadeDestinoNormalizada === 'ilheus') {
+            throw new InvalidArgumentException('O cadastro de carta expedida não é permitido para a cidade de Ilhéus (comarca de origem).');
+        }
+
         $idempotencyKey = strtolower(trim((string) ($payload['idempotency_key'] ?? '')));
         $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
         $payloadHash = null;
@@ -124,25 +144,6 @@ final class CartasExpedidasService
             if ($existing !== null) {
                 return self::resolveIdempotentResult($existing, $payloadHash);
             }
-        }
-
-        $ufDestino = strtoupper(trim((string) ($payload['estado'] ?? $payload['uf'] ?? '')));
-        if (strlen($ufDestino) !== 2) {
-            throw new InvalidArgumentException('O estado (UF) de destino é obrigatório (2 caracteres).');
-        }
-
-        $cidadeDestino = trim((string) ($payload['cidade'] ?? ''));
-        if ($cidadeDestino === '') {
-            throw new InvalidArgumentException('A cidade de destino é obrigatória.');
-        }
-        $cidadeDestino = TextFormatter::formatProperName($cidadeDestino, 120);
-
-        if (CentralMandadosCcm::contains($cidadeDestino, $ufDestino)) {
-            throw new InvalidArgumentException(CentralMandadosCcm::MESSAGE);
-        }
-        $cidadeDestinoNormalizada = $this->normalizeNomeCidade($cidadeDestino);
-        if ($cidadeDestinoNormalizada === 'ilheus') {
-            throw new InvalidArgumentException('O cadastro de carta expedida não é permitido para a cidade de Ilhéus (comarca de origem).');
         }
 
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
