@@ -18,10 +18,10 @@ def copy(root: Path, relative: str) -> Path:
     return target
 
 
-def run_php(script: Path) -> subprocess.CompletedProcess:
+def run_php(script: Path, no_extensions: bool = False) -> subprocess.CompletedProcess:
     env = {"PATH": os.environ.get("PATH", ""), "SystemRoot": os.environ.get("SystemRoot", "")}
     return subprocess.run(
-        ["php", "-d", "display_errors=1", str(script)],
+        ["php", *( ["-n"] if no_extensions else []), "-d", "display_errors=1", str(script)],
         text=True,
         encoding="utf-8",
         capture_output=True,
@@ -71,12 +71,65 @@ final class DataJudService {
     assert "HTTP_STATUS:400" in result.stderr, result.stderr
     assert "api_internal_error" not in result.stderr
 
+    # The opt-in public PJe test proxy must not forward curl or upstream details.
+    pje_route = copy(root, "public/api/pje-publico/search-processo.php")
+    config = root / "config/config.php"
+    config.parent.mkdir(parents=True, exist_ok=True)
+    config.write_text("""<?php
+function envValue(string $key, $default = '') { return $key === 'PJE_PUBLIC_TEST_PAGE_ENABLED' ? '1' : $default; }
+""", encoding="utf-8")
+    curl_stubs = """$_POST = ['numero' => '00000016920208050001'];
+define('CURLOPT_RETURNTRANSFER', 1);
+define('CURLOPT_HEADER', 2);
+define('CURLOPT_HTTPGET', 3);
+define('CURLOPT_TIMEOUT', 4);
+define('CURLOPT_CONNECTTIMEOUT', 5);
+define('CURLOPT_HTTPHEADER', 6);
+define('CURLINFO_HTTP_CODE', 7);
+function curl_init(string $url) { return $url; }
+function curl_setopt_array($handle, array $options): bool { return true; }
+function curl_exec($handle) { return $GLOBALS['pje_test_body']; }
+function curl_error($handle): string { return $GLOBALS['pje_test_curl_error']; }
+function curl_getinfo($handle, int $option): int { return $GLOBALS['pje_test_status']; }
+function curl_close($handle): void {}
+"""
+    transport_driver = driver(
+        root,
+        "pje-transport-driver.php",
+        pje_route,
+        "$GLOBALS['pje_test_body'] = false; $GLOBALS['pje_test_curl_error'] = 'UPSTREAM_TRANSPORT_SENTINEL'; $GLOBALS['pje_test_status'] = 0; " + curl_stubs,
+    )
+    result = run_php(transport_driver, no_extensions=True)
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    assert json.loads(result.stdout)["error"] == "Não foi possível consultar o serviço público PJe de teste."
+    assert "UPSTREAM_TRANSPORT_SENTINEL" not in result.stdout + result.stderr
+    assert "api_internal_error endpoint=public/api/pje-publico/search-processo.php exception=RuntimeException" in result.stderr
+    assert "HTTP_STATUS:502" in result.stderr, result.stderr
+
+    upstream_driver = driver(
+        root,
+        "pje-upstream-driver.php",
+        pje_route,
+        "$GLOBALS['pje_test_body'] = '{\"detail\":\"UPSTREAM_BODY_SENTINEL\"}'; $GLOBALS['pje_test_curl_error'] = ''; $GLOBALS['pje_test_status'] = 503; " + curl_stubs,
+    )
+    result = run_php(upstream_driver, no_extensions=True)
+    assert result.returncode == 0, (result.stdout, result.stderr)
+    assert json.loads(result.stdout)["error"] == "Não foi possível consultar o serviço público PJe de teste."
+    assert "UPSTREAM_BODY_SENTINEL" not in result.stdout + result.stderr
+    assert "api_internal_error endpoint=public/api/pje-publico/search-processo.php exception=RuntimeException" in result.stderr
+    assert "HTTP_STATUS:503" in result.stderr, result.stderr
+
+    # Caught route exceptions must still write restricted diagnostics.
+    for relative in ["public/api/sala-audiencias-ata/download.php", "public/api/sala-audiencias-ata/inscrever.php"]:
+        source = (ROOT / relative).read_text(encoding="utf-8")
+        catch = source.split("catch (Throwable $e) {", 1)[1].split("}", 1)[0]
+        assert "ApiErrorReporter::logUnexpected($e," in catch, relative
+        assert "$e->getMessage()" not in catch, relative
+
     # Actual admin route and auth helper; only Security and the DB adapter are
     # stubbed so the helper passes authentication before the synthetic failure.
     admin_route = copy(root, "public/api/admin/feriados/list.php")
     copy(root, "public/api/admin/_auth_admin_diretora_json.php")
-    config = root / "config/config.php"
-    config.parent.mkdir(parents=True, exist_ok=True)
     config.write_text("<?php\n", encoding="utf-8")
     (root / "config/security.php").write_text("<?php final class Security { public static function isAuthenticated(): bool { return true; } }\n", encoding="utf-8")
     connection = root / "app/helpers/Conection.php"
@@ -102,4 +155,4 @@ final class Conection {
     missing = [str(path.relative_to(ROOT)) for path in routes if "ApiErrorReporter::register(" not in path.read_text(encoding="utf-8")]
     assert not missing, "API routes missing error reporter: " + ", ".join(missing)
 
-print("PASS synthetic public/authenticated API redaction, status/validation, and route inventory")
+print("PASS synthetic public/authenticated API redaction, PJe transport/upstream failures, caught diagnostics, status/validation, and route inventory")

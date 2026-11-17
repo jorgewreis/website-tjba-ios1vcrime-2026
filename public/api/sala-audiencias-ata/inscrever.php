@@ -60,6 +60,7 @@ try {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/sala-audiencias-ata/inscrever.php');
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Erro ao inscrever.'], JSON_UNESCAPED_UNICODE);
 }

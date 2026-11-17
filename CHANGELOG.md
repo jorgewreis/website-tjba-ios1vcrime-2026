@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0185
+
+**Data:** 2026-11-17 08:19:30 | **Commit:** `6a056296` | **Tipo:** `patch`
+
+- fix(api): close remaining error disclosure paths (REI-67)
+
 ## V. 1.87.0184
 
 **Data:** 2026-11-17 06:27:07 | **Commit:** `c2ffacf0` | **Tipo:** `patch`

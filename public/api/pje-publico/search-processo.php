@@ -70,7 +70,8 @@ function proxyRequest(string $url): void
     curl_close($ch);
 
     if ($curlError !== '' || !is_string($body) || $body === '') {
-        respond(['error' => 'Falha ao acionar API pública PJe de teste: ' . ($curlError ?: 'resposta vazia')], 502);
+        ApiErrorReporter::logUnexpected(new RuntimeException('PJe test upstream transport failure'), 'public/api/pje-publico/search-processo.php');
+        respond(['error' => 'Não foi possível consultar o serviço público PJe de teste.'], 502);
     }
 
     $decoded = json_decode($body, true);
@@ -79,8 +80,8 @@ function proxyRequest(string $url): void
     }
 
     if ($status < 200 || $status >= 300) {
-        $detail = $decoded['detail'] ?? $decoded['error'] ?? 'Falha na API pública PJe de teste.';
-        respond(['error' => is_scalar($detail) ? (string) $detail : 'Falha na API pública PJe de teste.'], $status >= 400 && $status < 600 ? $status : 502);
+        ApiErrorReporter::logUnexpected(new RuntimeException('PJe test upstream returned an error status'), 'public/api/pje-publico/search-processo.php');
+        respond(['error' => 'Não foi possível consultar o serviço público PJe de teste.'], $status >= 400 && $status < 600 ? $status : 502);
     }
 
     respond(['data' => $decoded], 200);

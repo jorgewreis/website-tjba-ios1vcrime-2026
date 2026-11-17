@@ -78,6 +78,7 @@ try {
     echo $e->getMessage();
     exit;
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/sala-audiencias-ata/download.php');
     http_response_code(500);
     header('Content-Type: text/plain; charset=UTF-8');
     echo 'Erro ao baixar o arquivo.';
