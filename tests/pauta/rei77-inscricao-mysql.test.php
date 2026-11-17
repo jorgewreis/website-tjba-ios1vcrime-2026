@@ -121,7 +121,9 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
         $db->beginTransaction();
         $lock = $db->prepare('SELECT id_pauta FROM sala_audiencias_pauta WHERE id_pauta=:pauta FOR UPDATE');
         $lock->execute([':pauta' => $pauta]);
-        if ($lock->fetchColumn() === false) {
+        $lockedPauta = $lock->fetchColumn();
+        $lock->closeCursor();
+        if ($lockedPauta === false) {
             throw new RuntimeException('Race pauta row was not found for lock barrier.');
         }
         $lockOwned = true;
@@ -202,12 +204,16 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
                 'SELECT w.ENGINE, requester.PROCESSLIST_ID AS requesting_connection_id, '
                 . 'blocker.PROCESSLIST_ID AS blocking_connection_id, requested.OBJECT_SCHEMA, '
                 . 'requested.OBJECT_NAME, requested.INDEX_NAME, requested.LOCK_STATUS AS requested_status, '
-                . 'requested.LOCK_DATA AS requested_key '
+                . 'requested.LOCK_DATA AS requested_key, blocked.OBJECT_SCHEMA AS blocking_schema, '
+                . 'blocked.OBJECT_NAME AS blocking_object, blocked.INDEX_NAME AS blocking_index, '
+                . 'blocked.LOCK_STATUS AS blocking_status, blocked.LOCK_DATA AS blocking_key '
                 . 'FROM performance_schema.data_lock_waits w '
                 . 'JOIN performance_schema.threads requester ON requester.THREAD_ID = w.REQUESTING_THREAD_ID '
                 . 'JOIN performance_schema.threads blocker ON blocker.THREAD_ID = w.BLOCKING_THREAD_ID '
                 . 'JOIN performance_schema.data_locks requested '
                 . 'ON requested.ENGINE = w.ENGINE AND requested.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID '
+                . 'JOIN performance_schema.data_locks blocked '
+                . 'ON blocked.ENGINE = w.ENGINE AND blocked.ENGINE_LOCK_ID = w.BLOCKING_ENGINE_LOCK_ID '
                 . 'WHERE requester.PROCESSLIST_ID IN (?, ?)'
             );
             $lockWaitStatement->execute($threadIds);
@@ -219,16 +225,25 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
                 $requesterId = (int) ($lockWait['requesting_connection_id'] ?? 0);
                 $blockerId = (int) ($lockWait['blocking_connection_id'] ?? 0);
                 $key = trim((string) ($lockWait['requested_key'] ?? ''), "'");
+                $blockingKey = trim((string) ($lockWait['blocking_key'] ?? ''), "'");
+                $blockingStatus = strtoupper((string) ($lockWait['blocking_status'] ?? ''));
                 $matchesPautaRow = strtoupper((string) ($lockWait['ENGINE'] ?? '')) === 'INNODB'
                     && (string) ($lockWait['OBJECT_SCHEMA'] ?? '') === 'rei77_test'
                     && (string) ($lockWait['OBJECT_NAME'] ?? '') === 'sala_audiencias_pauta'
                     && (string) ($lockWait['INDEX_NAME'] ?? '') === 'PRIMARY'
                     && strtoupper((string) ($lockWait['requested_status'] ?? '')) === 'WAITING'
                     && $key === $pauta
+                    && (string) ($lockWait['blocking_schema'] ?? '') === 'rei77_test'
+                    && (string) ($lockWait['blocking_object'] ?? '') === 'sala_audiencias_pauta'
+                    && (string) ($lockWait['blocking_index'] ?? '') === 'PRIMARY'
+                    && $blockingKey === $pauta
+                    && in_array($blockingStatus, ['GRANTED', 'WAITING'], true)
                     && in_array($blockerId, array_merge([$controllerThreadId], $threadIds), true);
                 if ($matchesPautaRow && in_array($requesterId, $threadIds, true)) {
                     $verifiedRequesters[] = $requesterId;
-                    if ($blockerId === $controllerThreadId) $controllerIsBlocking = true;
+                    if ($blockerId === $controllerThreadId && $blockingStatus === 'GRANTED') {
+                        $controllerIsBlocking = true;
+                    }
                 }
             }
             if (count(array_unique($verifiedRequesters)) === 2
