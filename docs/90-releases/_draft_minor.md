@@ -20,4 +20,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): reconcile open PR snapshot** `[9255ce80]`
 - **docs(REI-73): refresh ready PR inventory** `[6314a506]`
 - **docs(REI-73): reconcile runner cleanup and ready PRs** `[2066b122]`
+- **docs(REI-73): trace residual catalog lookup routes** `[9668a62a]`
 
