@@ -77,6 +77,15 @@ $seed($db, 7); $reject($db, 'ST7', '{}');
 $seed($db, 7); $reject($db, 'ST7', '{"tipo_envio":"invalid","destinatario":"invalid"}');
 $seed($db, 1); $reject($db, 'ST8', '{}');
 
+$seed($db, 6);
+(new GuiasService($db))->concluirSubtarefa('ST6', '{"qtd_docs":4}');
+if ($db->query("SELECT status FROM guias_subtarefas WHERE id='ST6'")->fetchColumn() !== 'concluida'
+    || $db->query("SELECT status FROM guias_subtarefas WHERE id='ST7'")->fetchColumn() !== 'em_andamento') throw new RuntimeException('Valid document count did not advance the guide.');
+$seed($db, 7);
+(new GuiasService($db))->concluirSubtarefa('ST7', '{"tipo_envio":"PJe","destinatario":"VEP"}');
+if ($db->query("SELECT status FROM guias_subtarefas WHERE id='ST7'")->fetchColumn() !== 'concluida'
+    || $db->query("SELECT status FROM guias_subtarefas WHERE id='ST8'")->fetchColumn() !== 'em_andamento') throw new RuntimeException('Valid dispatch details did not advance the guide.');
+
 $seed($db, 3);
 $beforeAllocationFailure = $snapshot($db);
 $db->exec("CREATE TRIGGER fail_allocation BEFORE INSERT ON guias_alocados FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='allocation failure fixture'");

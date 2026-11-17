@@ -79,6 +79,19 @@ deveRecusar(guiasFixture(7), 'ST7', '{}');
 deveRecusar(guiasFixture(7), 'ST7', '{"tipo_envio":"invalid","destinatario":"invalid"}');
 deveRecusar(guiasFixture(1), 'ST8', '{}');
 
+$db = guiasFixture(6);
+(new GuiasService($db))->concluirSubtarefa('ST6', '{"qtd_docs":4}');
+if ($db->query("SELECT status FROM guias_subtarefas WHERE id='ST6'")->fetchColumn() !== 'concluida'
+    || $db->query("SELECT status FROM guias_subtarefas WHERE id='ST7'")->fetchColumn() !== 'em_andamento') {
+    throw new RuntimeException('Valid document count did not advance the guide.');
+}
+$db = guiasFixture(7);
+(new GuiasService($db))->concluirSubtarefa('ST7', '{"tipo_envio":"PJe","destinatario":"VEP"}');
+if ($db->query("SELECT status FROM guias_subtarefas WHERE id='ST7'")->fetchColumn() !== 'concluida'
+    || $db->query("SELECT status FROM guias_subtarefas WHERE id='ST8'")->fetchColumn() !== 'em_andamento') {
+    throw new RuntimeException('Valid dispatch details did not advance the guide.');
+}
+
 $db = guiasFixture(3);
 $service = new GuiasService($db);
 $db->sqlOriginal = [];
