@@ -390,3 +390,18 @@ Nenhuma PR foi mesclada ou implantada neste ciclo de reconciliação. A PR #435 
 O resumo acima e os detalhes anteriores da REI-70 são snapshots históricos, não o estado atual. A PR #407 está agora na base `9954d124050c6b5774b5f247675053ba30d6aeb7`, HEAD `18be5602d41117f2438df9405f39d3c2711d5682`, aberta, fora de draft e reportada como mergeable. O CI PHP Syntax do SHA exato passou no run [44055062796](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44055062796). A revisão Codex desse mesmo SHA não encontrou problemas maiores. Os testes de autorização, SQLite/HTTP e MySQL/InnoDB descritos no corpo da PR foram executados sobre o código sincronizado antes do commit final metadata-only; não são alegados como reexecução byte-a-byte no HEAD atual.
 
 REI-70 segue bloqueada pela REI-73. Não foi observada aprovação formal; falta smoke autenticado em ambiente autorizado. Não houve merge nem deploy. Mergeability e CI sintático não demonstram aceite integral.
+
+### Reconciliação live após main \`e06a3481\` — 2026-11-17 10:07 UTC
+
+Esta seção substitui os contadores e o estado de branches anteriores. PR #413 foi integrada por merge à main \`e06a3481aeacee841f4df94d5b5409a874f76357\`. Consulta live após a sincronização da #438 encontrou 14 PRs abertas: 3 fora de draft e 11 em draft. GitHub reporta #438 mergeable, #428 unknown e as outras 12 conflitantes com main; mergeability informa somente compatibilidade mecânica.
+
+| PR | Estado live observado | Evidência ou gate atual |
+|---|---|---|
+| #438 / REI-69 | Draft, mergeable; HEAD \`5101d770d37d5f14f0abbb971b4fc66ff64d2172\`, base e06a3481 | Fluxo ADMIN auditado implementado; lint/SQLite/JS/MySQL descartável e CI PHP Syntax run [44061238564](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44061238564) passaram no HEAD. Branch sincronizada com main. REI-73 e planejamento operacional da migration \`ALGORITHM=COPY, LOCK=SHARED\` continuam bloqueando merge/deploy. Sem navegador, autenticação real ou DDL real. |
+| #431 / REI-73 | Draft, conflitante; HEAD \`ecc2b914\`, base antiga 9954d124 | Este branch de matriz está sendo sincronizado com e06a3481; cobertura integral ainda não demonstrada. |
+| #413 / REI-78 | Integrada antes deste snapshot | Não aparece mais na fila de PRs abertas; a aceitação e o deploy devem ser reconciliados pela issue e SHA publicados, sem inferir a partir da integração apenas. |
+| #407 / REI-70, #411 / REI-68, #406 / REI-130 | Fora de draft, conflitantes | Checks anteriores não validam automaticamente novos merges de main; reviews formais e/ou smoke autenticado permanecem gates conforme cada issue. |
+| #410 / REI-93, #412 / REI-88, #425 / REI-161, #427 / REI-125, #429 / REI-77, #432 / REI-149, #433 / REI-67, #437 / REI-167 | Draft, conflitantes | Sincronizar bases e revalidar individualmente após resolver aceites/requisitos de sandbox, autorização, schema, ambiente ou smoke pertinentes. |
+| #428 / REI-72/76/153 | Draft, mergeability desconhecida; base aponta para branch da REI-69 | Reconciliar dependência e base; não tratar UNKNOWN como mergeable. |
+
+O fluxo de atribuição explícita da REI-69 está no candidato #438, não em main; portanto os bloqueios nativos da REI-73 continuam corretos. Não atualizar a issue bloqueadora apenas porque os testes sintéticos e CI passaram: ainda há várias superfícies de API, autorização por objeto, dados reais protegidos e fluxos autenticados sem evidência suficiente. Nenhuma PR foi mesclada ou implantada durante esta reconciliação.

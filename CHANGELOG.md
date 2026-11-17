@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0184
+
+**Data:** 2026-11-17 05:33:49 | **Commit:** `aea3e451` | **Tipo:** `patch`
+
+- merge: sync Carta atomicity with current main
+
 ## V. 1.87.0183
 
 **Data:** 2026-11-17 05:15:00 | **Commit:** `27a69ff1` | **Tipo:** `patch`
@@ -7586,3 +7592,4 @@
 
 
 
+\n
