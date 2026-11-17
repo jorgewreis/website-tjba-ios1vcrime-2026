@@ -7,8 +7,11 @@ ApiErrorReporter::register('public/api/processos/prioridades-remove.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['salapautaedit'], true);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/repositories/ProcessosRepository.php';
 require_once $basePath . '/app/repositories/SalaAudienciasPautaParteRepository.php';
 require_once $basePath . '/app/services/ProcessoPrioridadesService.php';
 
@@ -33,6 +36,11 @@ try {
     }
 
     $pdo = Conection::getInstance()->getConnection();
+    if ((new ProcessosRepository($pdo))->findById($processoId) === null) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Processo não encontrado no cadastro local.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $nPauta = (new SalaAudienciasPautaParteRepository($pdo))->countPartesMenoresAtivasPorProcesso($processoId);
     $svc = new ProcessoPrioridadesService($pdo);
     $svc->removerPorCodigoOuRotulo($processoId, $codigo, $nPauta);

@@ -10,19 +10,27 @@ ApiErrorReporter::register('public/api/processos/prioridades-read.php');
  *
  * Resposta:
  * {
- *   "processo": { "id": string, "numero_processo": string } | null,
+ *   "processo": { "id": string, "numero_processo": string },
  *   "prioridades": [
  *     { "codigo": string, "label": string, "origem": string }
  *   ]
  * }
  *
- * Usada por telas de cadastro/edição para exibir prioridades já cadastradas
- * sem depender do `processo_id` resolvido (que pode não ser conhecido no front).
+ * Usada pelo cadastro de carta para exibir prioridades de processo já cadastrado localmente.
+ * Retorna 404 quando o número CNJ não corresponde a processo local.
  */
 
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['cartasexpedidascreate'], false);
+if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
+    http_response_code(405);
+    header('Allow: GET');
+    echo json_encode(['error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/PrioridadesProcessuaisCatalog.php';
@@ -30,12 +38,6 @@ require_once $basePath . '/app/repositories/ProcessosRepository.php';
 require_once $basePath . '/app/repositories/ProcessoPrioridadesRepository.php';
 
 $rawNumero = $_GET['numero'] ?? '';
-if ($rawNumero === '' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-    $payload = json_decode(file_get_contents('php://input') ?: '[]', true);
-    if (is_array($payload)) {
-        $rawNumero = $payload['numero'] ?? '';
-    }
-}
 
 $digits = preg_replace('/\D+/', '', (string) $rawNumero);
 
@@ -58,13 +60,15 @@ try {
     $processo = $processosRepo->findByNumero($digits);
 
     if ($processo === null) {
-        echo json_encode(['processo' => null, 'prioridades' => []], JSON_UNESCAPED_UNICODE);
+        http_response_code(404);
+        echo json_encode(['error' => 'Processo não encontrado no cadastro local.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     $processoId = trim((string) ($processo['id'] ?? ''));
     if ($processoId === '') {
-        echo json_encode(['processo' => null, 'prioridades' => []], JSON_UNESCAPED_UNICODE);
+        http_response_code(404);
+        echo json_encode(['error' => 'Processo não encontrado no cadastro local.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
