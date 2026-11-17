@@ -32,8 +32,8 @@
             ? settings.submitDelayMs
             : 0;
         const ccmConfirmed = new Set();
-        function confirmCcm(city) {
-            const key = normalizeCidadeForCompare(city);
+        function confirmCcm(city, uf) {
+            const key = normalizeCidadeForCompare(city) + '|' + String(uf || '').trim().toUpperCase();
             if (ccmConfirmed.has(key)) return true;
             const accepted = global.confirm('A comarca de ' + city + ' j\u00e1 possui Central de Mandados (CCM). Em regra, deve ser expedido Mandado em vez de Carta Precat\u00f3ria. Deseja cadastrar a carta mesmo assim?');
             if (accepted) ccmConfirmed.add(key);
@@ -101,6 +101,7 @@
 
             const cidadeInput = global.document.getElementById('filter-cidade');
             const estadoSelect = global.document.getElementById('filter-estado');
+            let confirmacaoCcm = false;
             const cidadeDestino = App.ProperNameHelper && App.ProperNameHelper.formatProper
                 ? App.ProperNameHelper.formatProper(helpers.getValue('filter-cidade'), 50)
                 : helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
@@ -116,7 +117,8 @@
                         throw new Error(lookupData.error || 'Não foi possível validar a comarca de destino.');
                     }
                     if (lookupData.is_ccm === true || String(lookupData.status_cidade || '').trim().toUpperCase() === 'CCM') {
-                        if (!confirmCcm(cidadeDestino)) return;
+                        if (!confirmCcm(cidadeDestino, estadoSelect ? estadoSelect.value : '')) return;
+                        confirmacaoCcm = true;
                         if (cidadeInput) delete cidadeInput.dataset.ccmBlocked;
                     }
                 } catch (error) {
@@ -157,6 +159,7 @@
                 cidade: cidadeDestino,
                 usuario: usuarioAtual
             }, helpers.buildClassePayload({ classeValue: classeVal }));
+            payload.confirmacao_ccm = confirmacaoCcm;
 
             gate.setSubmitting();
             feedback('Enviando dados...', 'info', 'Informação');
