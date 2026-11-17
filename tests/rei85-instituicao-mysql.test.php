@@ -56,13 +56,20 @@ foreach (['add', 'update', 'delete'] as $operation) {
     }
     $before = $snapshot();
     $service = new PessoasService($db);
+    if ($operation === 'delete') {
+        expectRei85($service->deleteVinculoInstituicao('V-DELETE'), 'Exclusão válida não foi concluída quando a reconciliação global estaria bloqueada.');
+        expectRei85((int) $db->query("SELECT COUNT(*) FROM partes_instituicoes WHERE id='V-DELETE'")->fetchColumn() === 0, 'Vínculo escolhido não foi removido.');
+        expectRei85($db->query("SELECT profissao FROM partes WHERE id='P-DELETE'")->fetchColumn() === 'Advogado', 'Exclusão alterou a profissão global da pessoa.');
+        expectRei85($db->query("SELECT profissao FROM partes_instituicoes WHERE id='V-KEEP'")->fetchColumn() === 'Outra', 'Exclusão recalculou profissão de outro vínculo.');
+        expectRei85(!$db->inTransaction(), 'Transação permaneceu aberta após excluir vínculo.');
+        $db->exec('DROP TRIGGER fail_rei85_reconcile');
+        continue;
+    }
     try {
         if ($operation === 'add') {
             $service->addVinculoInstituicao($personId, ['instituicao_id' => 'I1', 'profissao' => 'Medico']);
         } elseif ($operation === 'update') {
             $service->updateVinculoInstituicao('V-UPDATE', ['profissao' => 'Medico']);
-        } else {
-            $service->deleteVinculoInstituicao('V-DELETE');
         }
         throw new RuntimeException('Falha de sincronização não foi propagada: ' . $operation);
     } catch (PDOException $error) {

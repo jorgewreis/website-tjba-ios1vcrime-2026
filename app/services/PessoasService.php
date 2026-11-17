@@ -265,9 +265,9 @@ final class PessoasService
                 return false;
             }
             $ok = $this->partesInstituicoesRepository->delete($id);
-            if ($ok && $parteId !== '') {
-                $this->reconciliarProfissaoParteComVinculosInstituicao($parteId);
-            }
+            // A profissão é metadado global da pessoa e pode refletir outros
+            // vínculos/processos. A remoção deste vínculo não define qual valor
+            // deve prevalecer; não recalcular nem limpar `partes.profissao`.
             return $ok;
         });
     }
