@@ -847,45 +847,60 @@ final class GuiasService
         if ($guiaId === '') {
             throw new InvalidArgumentException('Identificador da guia é obrigatório.');
         }
-        if ($this->repository->findById($guiaId) === null) {
-            throw new InvalidArgumentException('Guia não encontrada.');
+        if ($this->connection->inTransaction()) {
+            throw new RuntimeException('A inicialização das subtarefas deve controlar sua própria transação.');
         }
-        $existentes = $this->subtarefasRepository->findByGuiaId($guiaId);
-        if (count($existentes) === 0) {
-            $this->subtarefasRepository->ensureOitoSubtarefas($guiaId);
-            $todas = $this->subtarefasRepository->findByGuiaId($guiaId);
-            $status = CartorioTarefaStatusPrincipalHelper::principalStatusPadrao(
-                $todas,
-                ['concluida', GuiasSubtarefasRepository::STATUS_PULADA],
-                'concluída'
-            );
-            $this->repository->update($guiaId, ['status' => $status]);
+
+        $this->connection->beginTransaction();
+        try {
+            // Lock before reading subtasks: completion/cancellation use this same
+            // parent row to serialize every state transition for the guide.
+            $guia = $this->repository->lockForUpdate($guiaId);
+            if ($guia === null) {
+                throw new InvalidArgumentException('Guia não encontrada.');
+            }
+            $statusGuia = trim((string) ($guia['status'] ?? ''));
+            if (in_array($statusGuia, ['cancelada', 'concluída'], true)) {
+                throw new InvalidArgumentException('Não é possível criar ou ativar subtarefas de uma guia encerrada.');
+            }
+
+            $existentes = $this->subtarefasRepository->findByGuiaId($guiaId);
+            if (count($existentes) === 0) {
+                $this->subtarefasRepository->ensureOitoSubtarefas($guiaId);
+                $todas = $this->subtarefasRepository->findByGuiaId($guiaId);
+                $status = CartorioTarefaStatusPrincipalHelper::principalStatusPadrao(
+                    $todas,
+                    ['concluida', GuiasSubtarefasRepository::STATUS_PULADA],
+                    'concluída'
+                );
+                $this->repository->update($guiaId, ['status' => $status]);
+            } else {
+                $ordem1 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 1);
+                if ($ordem1 !== null && trim((string) ($ordem1['status'] ?? '')) !== 'concluida' && trim((string) ($ordem1['status'] ?? '')) !== GuiasSubtarefasRepository::STATUS_CANCELADA) {
+                    $this->subtarefasRepository->atualizarStatus((string) $ordem1['id'], 'em_andamento');
+                }
+                $todas = $this->subtarefasRepository->findByGuiaId($guiaId);
+                $status = CartorioTarefaStatusPrincipalHelper::principalStatusPadrao(
+                    $todas,
+                    ['concluida', GuiasSubtarefasRepository::STATUS_PULADA],
+                    'concluída'
+                );
+                $this->repository->update($guiaId, ['status' => $status]);
+            }
+
             if ($usuarioId !== null && trim($usuarioId) !== '') {
                 try {
                     $this->alocadosRepository->addAlocado($guiaId, trim($usuarioId));
-                } catch (RuntimeException $e) {
-                    // limite ou duplicata
+                } catch (LimiteAlocadosException $e) {
+                    // Atingir o limite é permitido; persistência inválida deve reverter.
                 }
             }
-            return;
-        }
-        $ordem1 = $this->subtarefasRepository->findByGuiaIdEOrdem($guiaId, 1);
-        if ($ordem1 !== null && trim((string) ($ordem1['status'] ?? '')) !== 'concluida' && trim((string) ($ordem1['status'] ?? '')) !== GuiasSubtarefasRepository::STATUS_CANCELADA) {
-            $this->subtarefasRepository->atualizarStatus((string) $ordem1['id'], 'em_andamento');
-        }
-        $todas = $this->subtarefasRepository->findByGuiaId($guiaId);
-        $status = CartorioTarefaStatusPrincipalHelper::principalStatusPadrao(
-            $todas,
-            ['concluida', GuiasSubtarefasRepository::STATUS_PULADA],
-            'concluída'
-        );
-        $this->repository->update($guiaId, ['status' => $status]);
-        if ($usuarioId !== null && trim($usuarioId) !== '') {
-            try {
-                $this->alocadosRepository->addAlocado($guiaId, trim($usuarioId));
-            } catch (RuntimeException $e) {
-                // limite ou duplicata
+            $this->connection->commit();
+        } catch (Throwable $e) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
             }
+            throw $e;
         }
     }
 

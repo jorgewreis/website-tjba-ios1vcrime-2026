@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0178
+
+**Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
+
+- fix(guias): serializar inicializacao das subtarefas (REI-105)
+
 ## V. 1.87.0177
 
 **Data:** 2026-11-16 22:08:44 | **Commit:** `9142de98` | **Tipo:** `patch`
@@ -6491,6 +6497,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

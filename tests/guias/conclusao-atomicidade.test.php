@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../app/services/GuiasService.php';
 final class GuiasTestePDO extends PDO
 {
     public array $sqlOriginal = [];
+    public array $sqlInTransaction = [];
     public function __construct()
     {
         parent::__construct('sqlite::memory:');
@@ -23,11 +24,28 @@ final class GuiasTestePDO extends PDO
     public function prepare(string $query, array $options = []): PDOStatement|false
     {
         $this->sqlOriginal[] = $query;
+        $this->sqlInTransaction[] = $this->inTransaction();
         $query = preg_replace('/\s+FOR\s+UPDATE\s*$/i', '', $query);
         if (preg_match('/^\s*(UPDATE|DELETE)\b/i', $query)) {
             $query = preg_replace('/\s+LIMIT\s+1\s*$/i', '', $query);
         }
         return parent::prepare($query, $options);
+    }
+}
+
+function deveTravarGuiaAntesDaPrimeiraEscrita(GuiasTestePDO $db): void
+{
+    $lock = $write = null;
+    foreach ($db->sqlOriginal as $index => $sql) {
+        if ($lock === null && preg_match('/^\s*SELECT\b.*\bFROM\s+`?guias`?\b.*\bFOR\s+UPDATE\s*$/is', $sql)) {
+            $lock = $index;
+        }
+        if ($write === null && preg_match('/^\s*(UPDATE|INSERT|DELETE)\b/i', $sql)) {
+            $write = $index;
+        }
+    }
+    if ($lock === null || $write === null || $lock >= $write || ($db->sqlInTransaction[$lock] ?? false) !== true) {
+        throw new RuntimeException('A inicialização deve travar a guia dentro da transação antes da primeira escrita.');
     }
 }
 
@@ -192,6 +210,61 @@ try {
     if (!str_contains($exception->getMessage(), 'falha no dashboard') || $db->inTransaction()
         || estado($db) !== $antes || (int) $db->query('SELECT COUNT(*) FROM dashboard_conclusoes')->fetchColumn() !== 0) {
         throw new RuntimeException('Falha no dashboard não reverteu a conclusão.', 0, $exception);
+    }
+}
+
+// A inicialização das subtarefas compartilha o lock da guia com concluir/cancelar.
+$db = new GuiasTestePDO();
+$db->sqlOriginal = [];
+$db->sqlInTransaction = [];
+(new GuiasService($db))->criarPrimeiraSubtarefa('G1');
+deveTravarGuiaAntesDaPrimeiraEscrita($db);
+if ((int) $db->query('SELECT COUNT(*) FROM guias_subtarefas')->fetchColumn() !== 8
+    || $db->query('SELECT status FROM guias_subtarefas WHERE ordem=1')->fetchColumn() !== 'em_andamento'
+    || $db->query('SELECT status FROM guias_subtarefas WHERE ordem=2')->fetchColumn() !== 'pendente'
+    || $db->query("SELECT status FROM guias WHERE id='G1'")->fetchColumn() !== 'pendente'
+    || $db->inTransaction()) {
+    throw new RuntimeException('Inicialização da guia sem etapas não criou estado consistente e atômico.');
+}
+
+$db = guiasFixture(3);
+$db->sqlOriginal = [];
+$db->sqlInTransaction = [];
+(new GuiasService($db))->criarPrimeiraSubtarefa('G1');
+deveTravarGuiaAntesDaPrimeiraEscrita($db);
+if ((int) $db->query('SELECT COUNT(*) FROM guias_subtarefas')->fetchColumn() !== 8
+    || $db->query("SELECT status FROM guias_subtarefas WHERE id='ST1'")->fetchColumn() !== 'concluida'
+    || $db->query("SELECT status FROM guias_subtarefas WHERE id='ST2'")->fetchColumn() !== 'concluida'
+    || $db->query("SELECT status FROM guias_subtarefas WHERE id='ST3'")->fetchColumn() !== 'em_andamento'
+    || $db->inTransaction()) {
+    throw new RuntimeException('Inicialização repetida alterou etapas avançadas ou duplicou subtarefas.');
+}
+
+foreach (['cancelada', 'concluída'] as $terminal) {
+    $db = guiasFixture(1);
+    $db->prepare('UPDATE guias SET status=:status WHERE id=:id')->execute([':status' => $terminal, ':id' => 'G1']);
+    $antes = estado($db);
+    try {
+        (new GuiasService($db))->criarPrimeiraSubtarefa('G1');
+        throw new RuntimeException('Inicialização deveria recusar guia encerrada: ' . $terminal);
+    } catch (InvalidArgumentException) {
+        if ($db->inTransaction() || estado($db) !== $antes) {
+            throw new RuntimeException('Recusa de guia encerrada alterou dados ou deixou transação aberta.');
+        }
+    }
+}
+
+$db = new GuiasTestePDO();
+$db->exec("CREATE TRIGGER falha_inicializacao BEFORE INSERT ON guias_subtarefas WHEN NEW.ordem=4 BEGIN SELECT RAISE(ABORT, 'falha de inicialização induzida'); END");
+$antes = estado($db);
+try {
+    (new GuiasService($db))->criarPrimeiraSubtarefa('G1');
+    throw new RuntimeException('Falha sintética na inicialização não ocorreu.');
+} catch (PDOException $exception) {
+    if (!str_contains($exception->getMessage(), 'falha de inicialização induzida')
+        || $db->inTransaction()
+        || estado($db) !== $antes) {
+        throw new RuntimeException('Falha na inicialização deixou gravação parcial ou transação aberta.', 0, $exception);
     }
 }
 
