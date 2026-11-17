@@ -11,5 +11,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-69,REI-85): exercise real profession repository** `[a2a361d5]`
 - **chore(REI-69): sync with current main** `[ca2ab844]`
 - **fix(REI-69): authorize reads and validate sector FK safely** `[acca2a1f]`
-- **fix(guias): serializar inicializacao das subtarefas (REI-105)** `[c26efa2e]`
+- **fix(REI-69): authorize empty process-party updates** `[0795ba52]`
 
