@@ -1,10 +1,16 @@
 # Changelog
 
-## V. 1.87.0175
+## V. 1.87.0176
 
-**Data:** 2026-11-16 21:18:27 | **Commit:** `7a6f2be1` | **Tipo:** `patch`
+**Data:** 2026-11-16 13:28:25 | **Commit:** `7a6f2be1` | **Tipo:** `patch`
 
 - test(auth): guard direct HTTP test entrypoints
+
+## V. 1.87.0175
+
+**Data:** 2026-11-16 20:38:23 | **Commit:** `d269e165` | **Tipo:** `patch`
+
+- chore(REI-85): sync with current main
 
 ## V. 1.87.0174
 
@@ -6479,6 +6485,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
