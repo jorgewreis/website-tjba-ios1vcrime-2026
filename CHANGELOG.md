@@ -20,7 +20,7 @@
 
 ## V. 1.87.0179
 
-**Data:** 2026-11-17 03:22:50 | **Commits:** `b684e5fc`, `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
+**Data:** 2026-11-17 03:22:50 | **Commits:** `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
 
 - fix(REI-73): validate student enrollment guard
 - merge: sync REI-75 with main
@@ -6524,7 +6524,6 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
-
 
 
 
