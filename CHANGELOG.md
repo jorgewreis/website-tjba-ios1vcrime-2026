@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0186
+
+**Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
+
+- fix(REI-120): make monitoring transitions atomic
+
 ## V. 1.87.0185
 
 **Data:** 2026-11-17 11:19:22 | **Commit:** `2ab745ff` | **Tipo:** `patch`
@@ -7599,3 +7605,4 @@
 
 
 \n
+
