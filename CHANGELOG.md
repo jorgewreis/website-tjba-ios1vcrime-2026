@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0196
+
+**Data:** 2026-11-17 03:33:08 | **Commit:** `784d20ae` | **Tipo:** `patch`
+
+- docs(REI-73): reconcile branches after PR 416 merge
+
 ## V. 1.87.0195
 
 **Data:** 2026-11-17 03:11:05 | **Commit:** `9668a62a` | **Tipo:** `patch`
@@ -6600,6 +6606,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
