@@ -22,4 +22,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): reconcile runner cleanup and ready PRs** `[2066b122]`
 - **docs(REI-73): trace residual catalog lookup routes** `[9668a62a]`
 - **docs(REI-73): reconcile branches after PR 416 merge** `[784d20ae]`
+- **docs(REI-73): reconcile current merge queue** `[21fb35fd]`
 
