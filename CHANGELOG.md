@@ -1,39 +1,44 @@
 # Changelog
 
+## V. 1.87.0184
+
+**Data:** 2026-11-17 05:47:39 | **Commit:** `7cf523db` | **Tipo:** `patch`
+
+- merge: sync DataJud process sync with current main
+
+## V. 1.87.0183
+
+**Data:** 2026-11-17 05:15:00 | **Commit:** `27a69ff1` | **Tipo:** `patch`
+
+- test(REI-80): exercise trusted origin helper
+
 ## V. 1.87.0182
 
-**Data:** 2026-11-17 04:01:04 | **Commits:** `dcd95ca7`, `d7ea35e9`, `58c2d681`, `5f59cc3c`, `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
+**Data:** 2026-11-17 05:08:46 | **Commit:** `6d55da93` | **Tipo:** `patch`
 
-- fix(datajud): reconcile verified empty subjects (REI-153)
-- test(REI-75): cover revoked session mutations
-- fix: secure process priorities APIs
-- test(auth): cover revoked session on priorities API
-- merge: sync REI-75 with main
-- fix(REI-141): honor explicit CCM confirmation
+- test(REI-80): cover authorized enrollment success
 
 ## V. 1.87.0181
 
-**Data:** 2026-11-16 22:38:45 | **Commit:** `9636bb9e` | **Tipo:** `patch`
+**Data:** 2026-11-17 05:07:40 | **Commit:** `a74ac77d` | **Tipo:** `patch`
 
-- fix(REI-153): reconcile verified empty DataJud subjects
+- test(REI-80): cover same-site hostile origin
 
 ## V. 1.87.0180
 
-**Data:** 2026-11-16 21:44:48 | **Commit:** `9cc8c877` | **Tipo:** `patch`
+**Data:** 2026-11-17 04:01:04 | **Commit:** `d7ea35e9` | **Tipo:** `patch`
 
-- fix(DataJud): reject malformed class metadata
+- test(REI-75): cover revoked session mutations
 
 ## V. 1.87.0179
 
-**Data:** 2026-11-16 21:42:26 | **Commit:** `085e773f` | **Tipo:** `patch`
+**Data:** 2026-11-17 03:22:50 | **Commits:** `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
 
-- fix(DataJud): allow subject sync without class
+- fix(REI-73): validate student enrollment guard
+- merge: sync REI-75 with main
+- fix(REI-141): honor explicit CCM confirmation
 
 ## V. 1.87.0178
-
-**Data:** 2026-11-16 21:32:18 | **Commit:** `989c56b8` | **Tipo:** `patch`
-
-- test(DataJud): align HTTP fixtures with verified source contract
 
 **Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
 
@@ -41,19 +46,11 @@
 
 ## V. 1.87.0177
 
-**Data:** 2026-11-16 20:16:28 | **Commit:** `f0aca0f2` | **Tipo:** `patch`
-
-- fix(REI-72,REI-76,REI-153): validate DataJud subject sync
-
 **Data:** 2026-11-16 22:08:44 | **Commit:** `9142de98` | **Tipo:** `patch`
 
 - test(REI-105): cover guide dispatch validations
 
 ## V. 1.87.0176
-
-**Data:** 2026-11-16 19:45:05 | **Commit:** `e7c839ea` | **Tipo:** `patch`
-
-- fix(REI-76): protect DataJud synchronization
 
 **Data:** 2026-11-16 22:07:00 | **Commit:** `13950b37` | **Tipo:** `patch`
 
@@ -6539,6 +6536,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
