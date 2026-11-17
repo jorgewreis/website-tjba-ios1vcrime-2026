@@ -11,4 +11,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(DataJud): reject malformed class metadata** `[9cc8c877]`
 - **fix(REI-153): reconcile verified empty DataJud subjects** `[9636bb9e]`
 - **merge: sync DataJud process sync with current main** `[7cf523db]`
+- **fix(REI-69): restrict process-part access by sector** `[79cc9a31]`
 
