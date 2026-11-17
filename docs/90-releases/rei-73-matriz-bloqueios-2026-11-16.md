@@ -408,6 +408,6 @@ O fluxo de atribuição explícita da REI-69 está no candidato #438, não em ma
 
 ### Correção live posterior — 2026-11-17 10:10 UTC
 
-A sincronização desta PR foi concluída após o snapshot de 10:07: HEAD `143f95be3b0116b1cfd569ae56b9dfee21d70f73`, base `e06a3481aeacee841f4df94d5b5409a874f76357`, estado draft e mergeable; CI PHP Syntax SUCCESS no run [44062029787](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44062029787). A #438 também está mergeable em `5101d770`; #413 está integrada em main.
+A sincronização desta PR foi concluída após o snapshot de 10:07. Naquele momento, o HEAD era `143f95be3b0116b1cfd569ae56b9dfee21d70f73`, base `e06a3481aeacee841f4df94d5b5409a874f76357`; o CI PHP Syntax SUCCESS foi o run [44062029787](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44062029787). Depois, a matriz foi atualizada no HEAD `636ae99e2a6a6a2bbe51051da382d83cb682e951`, com CI PHP Syntax SUCCESS no [run 44062629470](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44062629470). Em ambas as consultas a PR estava draft e mergeable. A #438 também está mergeable em `5101d770`; #413 está integrada em main.
 
 Nova consulta confirma 14 PRs abertas: 3 fora de draft, 11 draft, 2 clean/mergeable (#431 e #438) e 12 não mergeable/dirty, incluindo #428 (base aponta à branch da #438). O snapshot 10:07 acima foi preservado como histórico e não descreve o estado posterior. A auditoria da REI-73 segue incompleta e sem aprovação formal.
