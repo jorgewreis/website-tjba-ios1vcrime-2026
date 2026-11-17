@@ -25,23 +25,18 @@ Testes automatizados (sugestão):
 
 ## Sandbox isolado de autenticação
 
-O procedimento canônico e as evidências REI-93 estão em
-`docs/90-releases/rei-93-auth-sandbox-evidence.md`. A preparação baixa apenas
-dependências fixadas e o runner cria e remove o sandbox a cada execução:
+O procedimento e o estado atual estão em `tests/auth/README.md` e
+`docs/90-releases/rei-93-auth-sandbox-evidence.md`. O caminho positivo está
+suspenso: não execute os testes, o runner, preparação de dependências ou
+limpeza até revisão independente comprovar identidade/procedência/isolamento
+Docker e a investigação histórica identificar destino e efeitos, ou registrar
+que os logs necessários não existem mais. A presença do runner, configuração
+sintética, imagens fixadas ou cópias temporárias não libera a execução. Não use
+entrypoints legados nem o Compose histórico para contornar o bloqueio.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/prepare-dependencies.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/run-isolated-auth-e2e.ps1
-```
-
-`bootstrap.ps1` e `run-auth-tests.ps1` permanecem aliases compatíveis do
-runner. Em interrupção externa, `cleanup.ps1` recupera somente recursos com o
-rótulo validado do sandbox; não use os entrypoints legados individuais nem o
-Compose histórico. A preparação precisa de egress para o repositório Composer;
-os contêineres de teste não têm egress.
-
-Mesmo após validação futura do fluxo HTTP local, evidência de cookies `Secure`
-em HTTPS, comportamento em iframe e paridade com produção exige testes próprios.
+Depois da liberação documentada, atualize este procedimento com o comando e os
+limites validados. Evidência de cookies `Secure` em HTTPS, comportamento em
+iframe e paridade com produção exige testes próprios.
 
 Relatar falhas em issue com passos para reproduzir, logs e URL do ambiente dev.
 
