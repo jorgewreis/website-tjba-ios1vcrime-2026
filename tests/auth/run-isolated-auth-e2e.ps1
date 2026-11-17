@@ -29,6 +29,59 @@ function Docker-Probe([string[]]$arguments) {
     } finally { $ErrorActionPreference = $previousErrorActionPreference }
     return [pscustomobject]@{ ExitCode = [int]$exitCode; Output = @($output) }
 }
+function Get-DockerNetworkInspectObject {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][pscustomobject]$Inspection,
+        [Parameter(Mandatory)][string]$ExpectedName,
+        [Parameter(Mandatory)][string]$ExpectedLabelKey
+    )
+
+    if ($Inspection.ExitCode -ne 0) {
+        throw 'Inspeção da rede Docker não terminou com sucesso.'
+    }
+
+    $lines = @($Inspection.Output | ForEach-Object { ([string]$_).Trim() } | Where-Object { $_ -ne '' })
+    if ($lines.Count -eq 0) {
+        throw 'Inspeção da rede Docker sem saída utilizável.'
+    }
+
+    try {
+        $parsed = ConvertFrom-Json -InputObject ($lines -join [Environment]::NewLine) -ErrorAction Stop
+    } catch {
+        throw 'Inspeção da rede Docker retornou JSON inválido.'
+    }
+
+    $items = @($parsed)
+    if ($items.Count -ne 1 -or $null -eq $items[0] -or $items[0] -isnot [pscustomobject]) {
+        throw 'Inspeção da rede Docker não retornou exatamente um objeto.'
+    }
+
+    $networkObject = $items[0]
+    $nameProperty = $networkObject.PSObject.Properties['Name']
+    if ($null -eq $nameProperty -or $nameProperty.Value -isnot [string] -or [string]::IsNullOrWhiteSpace($nameProperty.Value)) {
+        throw 'Inspeção da rede Docker sem nome válido.'
+    }
+    if ($nameProperty.Value -cne $ExpectedName) {
+        throw 'Inspeção da rede Docker retornou nome diferente da rede solicitada.'
+    }
+
+    $labelsProperty = $networkObject.PSObject.Properties['Labels']
+    if ($null -eq $labelsProperty -or $labelsProperty.Value -isnot [pscustomobject]) {
+        throw 'Inspeção da rede Docker sem mapa de labels válido.'
+    }
+    $expectedLabel = $labelsProperty.Value.PSObject.Properties[$ExpectedLabelKey]
+    if ($null -eq $expectedLabel -or $expectedLabel.Value -isnot [string] -or [string]::IsNullOrWhiteSpace($expectedLabel.Value)) {
+        throw 'Inspeção da rede Docker sem label de isolamento válido.'
+    }
+
+    $containersProperty = $networkObject.PSObject.Properties['Containers']
+    if ($null -eq $containersProperty -or $containersProperty.Value -isnot [pscustomobject]) {
+        throw 'Inspeção da rede Docker sem mapa de containers válido.'
+    }
+
+    return $networkObject
+}
 function Assert-SafeTree([string]$path) {
     $i=Get-Item -LiteralPath $path -Force; if ($i.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw "Reparse point recusado: $path" }
     foreach($f in Get-ChildItem -LiteralPath $path -Force -Recurse) { if (($f.Attributes -band [IO.FileAttributes]::ReparsePoint) -or ($f.Name -like '.env*' -and $f.Name -ne '.env.example')) { throw "Fonte insegura recusada: $($f.FullName)" } }
@@ -160,7 +213,7 @@ try {
         if($networkInspect.ExitCode -ne 0) {
             if(-not (Test-DockerResourceAbsent -Kind network -Identifier $network -Probe ${function:Docker-Probe})) { $cleanupFailed=$true }
         } else {
-            try { $n=@($networkInspect.Output|ConvertFrom-Json)[0] } catch { $cleanupFailed=$true; $n=$null }
+            try { $n=Get-DockerNetworkInspectObject -Inspection $networkInspect -ExpectedName $network -ExpectedLabelKey $label } catch { $cleanupFailed=$true; $n=$null }
             if($null -ne $n) {
                 [int]$networkContainerCount=(@($n.Containers.PSObject.Properties | Where-Object { $_.MemberType -eq 'NoteProperty' })).Count
                 if((Label-Value $n.Labels $label) -ne $runId -or $networkContainerCount -ne 0) { $cleanupFailed=$true }
