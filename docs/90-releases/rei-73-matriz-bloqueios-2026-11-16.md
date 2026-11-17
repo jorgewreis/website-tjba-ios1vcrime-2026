@@ -391,17 +391,23 @@ O resumo acima e os detalhes anteriores da REI-70 são snapshots históricos, n�
 
 REI-70 segue bloqueada pela REI-73. Não foi observada aprovação formal; falta smoke autenticado em ambiente autorizado. Não houve merge nem deploy. Mergeability e CI sintático não demonstram aceite integral.
 
-### Reconciliação live após main \`e06a3481\` — 2026-11-17 10:07 UTC
+### Reconciliação live após main `e06a3481` — 2026-11-17 10:07 UTC
 
-Esta seção substitui os contadores e o estado de branches anteriores. PR #413 foi integrada por merge à main \`e06a3481aeacee841f4df94d5b5409a874f76357\`. Consulta live após a sincronização da #438 encontrou 14 PRs abertas: 3 fora de draft e 11 em draft. GitHub reporta #438 mergeable, #428 unknown e as outras 12 conflitantes com main; mergeability informa somente compatibilidade mecânica.
+Esta seção substitui os contadores e o estado de branches anteriores. PR #413 foi integrada por merge à main `e06a3481aeacee841f4df94d5b5409a874f76357`. Consulta live após a sincronização da #438 encontrou 14 PRs abertas: 3 fora de draft e 11 em draft. GitHub reporta #438 mergeable, #428 unknown e as outras 12 conflitantes com main; mergeability informa somente compatibilidade mecânica.
 
 | PR | Estado live observado | Evidência ou gate atual |
 |---|---|---|
-| #438 / REI-69 | Draft, mergeable; HEAD \`5101d770d37d5f14f0abbb971b4fc66ff64d2172\`, base e06a3481 | Fluxo ADMIN auditado implementado; lint/SQLite/JS/MySQL descartável e CI PHP Syntax run [44061238564](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44061238564) passaram no HEAD. Branch sincronizada com main. REI-73 e planejamento operacional da migration \`ALGORITHM=COPY, LOCK=SHARED\` continuam bloqueando merge/deploy. Sem navegador, autenticação real ou DDL real. |
-| #431 / REI-73 | Draft, conflitante; HEAD \`ecc2b914\`, base antiga 9954d124 | Este branch de matriz está sendo sincronizado com e06a3481; cobertura integral ainda não demonstrada. |
+| #438 / REI-69 | Draft, mergeable; HEAD `5101d770d37d5f14f0abbb971b4fc66ff64d2172`, base e06a3481 | Fluxo ADMIN auditado implementado; lint/SQLite/JS/MySQL descartável e CI PHP Syntax run [44061238564](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44061238564) passaram no HEAD. Branch sincronizada com main. REI-73 e planejamento operacional da migration `ALGORITHM=COPY, LOCK=SHARED` continuam bloqueando merge/deploy. Sem navegador, autenticação real ou DDL real. |
+| #431 / REI-73 | Draft, conflitante; HEAD `ecc2b914`, base antiga 9954d124 | Este branch de matriz está sendo sincronizado com e06a3481; cobertura integral ainda não demonstrada. |
 | #413 / REI-78 | Integrada antes deste snapshot | Não aparece mais na fila de PRs abertas; a aceitação e o deploy devem ser reconciliados pela issue e SHA publicados, sem inferir a partir da integração apenas. |
 | #407 / REI-70, #411 / REI-68, #406 / REI-130 | Fora de draft, conflitantes | Checks anteriores não validam automaticamente novos merges de main; reviews formais e/ou smoke autenticado permanecem gates conforme cada issue. |
 | #410 / REI-93, #412 / REI-88, #425 / REI-161, #427 / REI-125, #429 / REI-77, #432 / REI-149, #433 / REI-67, #437 / REI-167 | Draft, conflitantes | Sincronizar bases e revalidar individualmente após resolver aceites/requisitos de sandbox, autorização, schema, ambiente ou smoke pertinentes. |
 | #428 / REI-72/76/153 | Draft, mergeability desconhecida; base aponta para branch da REI-69 | Reconciliar dependência e base; não tratar UNKNOWN como mergeable. |
 
 O fluxo de atribuição explícita da REI-69 está no candidato #438, não em main; portanto os bloqueios nativos da REI-73 continuam corretos. Não atualizar a issue bloqueadora apenas porque os testes sintéticos e CI passaram: ainda há várias superfícies de API, autorização por objeto, dados reais protegidos e fluxos autenticados sem evidência suficiente. Nenhuma PR foi mesclada ou implantada durante esta reconciliação.
+
+### Correção live posterior — 2026-11-17 10:10 UTC
+
+A sincronização desta PR foi concluída após o snapshot de 10:07: HEAD `143f95be3b0116b1cfd569ae56b9dfee21d70f73`, base `e06a3481aeacee841f4df94d5b5409a874f76357`, estado draft e mergeable; CI PHP Syntax SUCCESS no run [44062029787](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44062029787). A #438 também está mergeable em `5101d770`; #413 está integrada em main.
+
+Nova consulta confirma 14 PRs abertas: 3 fora de draft, 11 draft, 2 clean/mergeable (#431 e #438) e 12 não mergeable/dirty, incluindo #428 (base aponta à branch da #438). O snapshot 10:07 acima foi preservado como histórico e não descreve o estado posterior. A auditoria da REI-73 segue incompleta e sem aprovação formal.
