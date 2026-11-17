@@ -8,4 +8,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test: isolate authenticated E2E sandbox** `[5b34c31b]`
 - **fix: restore verified auth sandbox entrypoints** `[2aec3c3b]`
 - **fix(security): validate authenticated ata upload** `[b97baf42]`
+- **fix(guias): serializar inicializacao das subtarefas (REI-105)** `[c26efa2e]`
 

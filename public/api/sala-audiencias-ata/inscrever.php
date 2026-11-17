@@ -12,6 +12,7 @@ require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/access/ProfileNormalizer.php';
 require_once $basePath . '/app/helpers/UserAccessHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasAtaService.php';
+require_once $basePath . '/app/helpers/SalaAudienciasInscricaoIndisponivel.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -53,10 +54,13 @@ try {
     $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
     $service->inscreverEstudante($idPauta, $usuarioId);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
+} catch (SalaAudienciasInscricaoIndisponivel $e) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Audiência indisponível.'], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Erro ao inscrever: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'error' => 'Erro ao inscrever.'], JSON_UNESCAPED_UNICODE);
 }
