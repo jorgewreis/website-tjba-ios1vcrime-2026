@@ -23,4 +23,8 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): trace residual catalog lookup routes** `[9668a62a]`
 - **docs(REI-73): reconcile branches after PR 416 merge** `[784d20ae]`
 - **docs(REI-73): reconcile current merge queue** `[21fb35fd]`
-
+- **fix: secure process priorities APIs (REI-75)** `[58c2d681]`
+- **test(auth): cover revoked session on priorities API** `[5f59cc3c]`
+- **merge: sync REI-75 with main** `[a35fc88b]`
+- **test(REI-75): cover revoked session mutations** `[d7ea35e9]`
+- **fix(REI-141): honor explicit CCM confirmation** `[3b9fcfa5]`
