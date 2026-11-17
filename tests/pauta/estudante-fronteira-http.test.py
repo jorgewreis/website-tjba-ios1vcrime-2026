@@ -29,7 +29,7 @@ function bootstrapRequireTrustedPostRequest(): bool {
       'app/access/AccessEvaluator.php': "<?php class AccessEvaluator {static function canAccessPage($page,$profiles): bool {return in_array($page,['estudapainel','estudaata'],true) && (in_array('ESTUDANTE',$profiles,true) || in_array('ADMIN',$profiles,true));}}",
       'app/access/ProfileNormalizer.php': "<?php class ProfileNormalizer {static function normalize($profiles){return $profiles;} static function hasEstudante($profiles): bool {return in_array('ESTUDANTE',$profiles,true);}}",
       'app/helpers/UserAccessHelper.php': "<?php class UserAccessHelper {static function isUsuarioExterno($profiles): bool {return in_array('EXTERNO',$profiles,true);}}",
-      'app/services/SalaAudienciasAtaService.php': "<?php require_once __DIR__.'/../helpers/SalaAudienciasInscricaoIndisponivel.php'; class SalaAudienciasAtaService {function __construct($db){} function inscreverEstudante($id,$u){file_put_contents(getenv('FOKUS_TEST_SERVICE_CALLS'), \"called\\n\", FILE_APPEND); if($id==='outro')throw new InvalidArgumentException('Dados inválidos.'); if($id==='erro')throw new RuntimeException('SEGREDO'); throw new SalaAudienciasInscricaoIndisponivel('MENOR SIGILO');} function getDownloadPayloadForEstudante($id,$u){if($id==='outro')throw new InvalidArgumentException('Ata ainda não disponível.'); throw new SalaAudienciasInscricaoIndisponivel('MENOR SIGILO');}}"
+      'app/services/SalaAudienciasAtaService.php': "<?php require_once __DIR__.'/../helpers/SalaAudienciasInscricaoIndisponivel.php'; class SalaAudienciasAtaService {function __construct($db){} function inscreverEstudante($id,$u){file_put_contents(getenv('FOKUS_TEST_SERVICE_CALLS'), \"called\\n\", FILE_APPEND); if($id==='ok')return; if($id==='outro')throw new InvalidArgumentException('Dados inválidos.'); if($id==='erro')throw new RuntimeException('SEGREDO'); throw new SalaAudienciasInscricaoIndisponivel('MENOR SIGILO');} function getDownloadPayloadForEstudante($id,$u){if($id==='outro')throw new InvalidArgumentException('Ata ainda não disponível.'); throw new SalaAudienciasInscricaoIndisponivel('MENOR SIGILO');}}"
     }
     for name, code in stubs.items():
         dest=base/name; dest.parent.mkdir(parents=True,exist_ok=True); dest.write_text(code,encoding='utf-8')
@@ -69,13 +69,15 @@ function bootstrapRequireTrustedPostRequest(): bool {
             status, body=request(endpoint,payload,headers)
             assert status==expected, (status,body,expected)
             assert not (base/'service-calls').exists(), 'recusa não deve chamar o serviço'
+        status,body=request(endpoint,json.dumps({'pauta':'ok'}).encode(),same_origin)
+        assert status==200 and json.loads(body)=={'success':True}, (status,body)
         for val in ('sigilo','menor','prioridade'):
             status, body=request(endpoint,json.dumps({'pauta':val}).encode(),same_origin); assert status==400 and json.loads(body)['error']=='Audiência indisponível.'
             status, body=request('/api/sala-audiencias-ata/download.php?pauta='+val); assert status==400 and body=='Audiência indisponível.'
         status,body=request(endpoint,b'{"pauta":"outro"}',same_origin); assert status==400 and json.loads(body)['error']=='Dados inválidos.'
         status,body=request(endpoint,b'{"pauta":"erro"}',same_origin); assert status==500 and 'SEGREDO' not in body
         status,body=request('/api/sala-audiencias-ata/download.php?pauta=outro'); assert status==400 and body=='Ata ainda não disponível.'
-        assert len((base/'service-calls').read_text(encoding='utf-8').splitlines()) == 5
+        assert len((base/'service-calls').read_text(encoding='utf-8').splitlines()) == 6
         print('PASS: guard de autenticação/origem, sem chamadas nas recusas e fronteiras sintéticas preservadas')
     finally:
         proc.terminate(); proc.wait(timeout=5)
