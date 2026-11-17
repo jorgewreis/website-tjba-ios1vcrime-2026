@@ -26,13 +26,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): reconcile evidence after main sync** `[0fbf3d8e]`
 - **docs(REI-73): refresh synchronized PR evidence** `[19025341]`
 - **docs(REI-73): reconcile live merge blockers** `[a6c5fc55]`
+- **merge: reconcile blocker matrix with current main** `[0208beb4]`
 
-- **fix: secure process priorities APIs (REI-75)** `[58c2d681]`
-- **test(auth): cover revoked session on priorities API** `[5f59cc3c]`
-- **merge: sync REI-75 with main** `[a35fc88b]`
-- **test(REI-75): cover revoked session mutations** `[d7ea35e9]`
-- **fix(REI-141): honor explicit CCM confirmation** `[3b9fcfa5]`
-- **fix(REI-73): validate student enrollment guard** `[b684e5fc]`
-- **test(REI-80): cover same-site hostile origin** `[a74ac77d]`
-- **test(REI-80): cover authorized enrollment success** `[6d55da93]`
-- **test(REI-80): exercise trusted origin helper** `[27a69ff1]`
