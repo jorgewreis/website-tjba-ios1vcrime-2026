@@ -1,9 +1,9 @@
 # REI-73 — matriz incremental de bloqueios e evidências
 
-**Snapshot:** 2026-11-16 (America/Bahia)  
+**Snapshot:** 2026-11-16 (America/Bahia)
 **Base inspecionada:** `origin/main` em `bca62b990c2893937e723e23de50651d67736cd7` (inclui merge de #430)
-**Worktree desta documentação:** `codex/rei73-blocker-matrix-20261117`  
-**Escopo:** oito dependências declaradas de REI-73: REI-66 a REI-72 e REI-88. Esta matriz é uma reconciliação incremental; não certifica a auditoria completa.
+**Worktree desta documentação:** `codex/rei73-blocker-matrix-20261117`
+**Escopo:** oito issues originalmente ligadas como bloqueadas por REI-73 (REI-66 a REI-72 e REI-88). A relação com REI-71, concluída no Linear, foi removida em 2026-11-17; permanecem sete dependências nativas abertas. Esta matriz é uma reconciliação incremental; não certifica a auditoria completa.
 
 ## Como ler os estados
 
@@ -106,7 +106,7 @@ Resultados mencionados em comentários/corpos de PR são relatos e não foram re
 
 ## Reconciliação e limites de REI-73
 
-1. Relações nativas de bloqueio em Linear: REI-66, REI-67, REI-68, REI-69, REI-70, REI-71, REI-72 e REI-88. Relações adicionais não foram promovidas a bloqueio sem evidência. PR #430 foi mesclado por Jorge; `origin/main` agora aponta para `bca62b990c2893937e723e23de50651d67736cd7`. Esta branch integrou essa base por merge normal. PR #428 e #410 continuam abertos e seus HEADs ainda não são ancestrais de `origin/main`.
+1. Relações nativas restantes em Linear: REI-66, REI-67, REI-68, REI-69, REI-70, REI-72 e REI-88. A relação com REI-71 foi removida após confirmar seu estado `Concluído`; a issue continua listada nesta matriz como recorte concluído, sem bloquear a auditoria. Relações adicionais não foram promovidas a bloqueio sem evidência. PR #430 foi mesclado por Jorge; `origin/main` agora aponta para `bca62b990c2893937e723e23de50651d67736cd7`. PRs #410, #415 e #429 integraram essa base por merge normal e continuam abertos.
 2. PRs não formam correspondência um-para-um. REI-66 e REI-71 aparecem integradas/deployadas segundo evidência registrada; REI-67 carece de candidato atribuível; REI-72 tem candidatos sobrepostos; REI-88 compartilha trabalho com REI-78.
 3. Documentos ligados à auditoria (inventário textual de APIs de 15/11 e auditoria WebApp de 15/11) declaram limites heurísticos/estáticos, usam baseline anterior e não cobrem integralmente rotas atuais, dependências, fronteiras de dados, sessões autenticadas, UI renderizada ou infraestrutura. Contagem textual não equivale a matriz de autorização validada.
 4. Para REI-93, a sincronização e os testes de rejeição foram reproduzidos no HEAD `ae93c5a…`; os checks CI daquele SHA estão verdes. A suíte positiva, smoke, deploy, migration e acesso a dados reais não foram executados. Para as outras evidências, comentários, PRs e runs indicados são a origem; revalidar se SHA mudou.
