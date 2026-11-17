@@ -15,3 +15,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-69): report isolated MySQL startup failures** `[11607f71]`
 - **merge: sync process-sector access with current main** `[26299de9]`
 
+\n
