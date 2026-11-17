@@ -114,8 +114,10 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
         };
     try {
         // Hold the pauta row before launching workers. The test will release
-        // it only after both independent service transactions are observed in
-        // InnoDB's LOCK WAIT state, making the race deterministic.
+        // it only after Performance Schema directly shows both worker sessions
+        // waiting for this exact InnoDB primary-key row, making the race deterministic.
+        $controllerThreadId = (int) $db->query('SELECT CONNECTION_ID()')->fetchColumn();
+        if ($controllerThreadId < 1) throw new RuntimeException('Controller MySQL session ID is invalid.');
         $db->beginTransaction();
         $lock = $db->prepare('SELECT id_pauta FROM sala_audiencias_pauta WHERE id_pauta=:pauta FOR UPDATE');
         $lock->execute([':pauta' => $pauta]);
@@ -177,6 +179,7 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
         $waitDeadline = microtime(true) + 20;
         $bothWaiting = false;
         $observedTransactions = [];
+        $observedLockWaits = [];
         while (microtime(true) < $waitDeadline) {
             $earlyExit = $checkWorkers($processes, 'InnoDB lock observation');
             if ($earlyExit !== null) {
@@ -195,14 +198,48 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
                     $waitingIds[] = (int) $transaction['trx_mysql_thread_id'];
                 }
             }
-            if (count(array_unique($waitingIds)) === 2
-                && in_array($threadIds[0], $waitingIds, true)
-                && in_array($threadIds[1], $waitingIds, true)
+            $lockWaitStatement = $db->prepare(
+                'SELECT w.ENGINE, requester.PROCESSLIST_ID AS requesting_connection_id, '
+                . 'blocker.PROCESSLIST_ID AS blocking_connection_id, requested.OBJECT_SCHEMA, '
+                . 'requested.OBJECT_NAME, requested.INDEX_NAME, requested.LOCK_STATUS AS requested_status, '
+                . 'requested.LOCK_DATA AS requested_key '
+                . 'FROM performance_schema.data_lock_waits w '
+                . 'JOIN performance_schema.threads requester ON requester.THREAD_ID = w.REQUESTING_THREAD_ID '
+                . 'JOIN performance_schema.threads blocker ON blocker.THREAD_ID = w.BLOCKING_THREAD_ID '
+                . 'JOIN performance_schema.data_locks requested '
+                . 'ON requested.ENGINE = w.ENGINE AND requested.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID '
+                . 'WHERE requester.PROCESSLIST_ID IN (?, ?)'
+            );
+            $lockWaitStatement->execute($threadIds);
+            $observedLockWaits = $lockWaitStatement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            $lockWaitStatement->closeCursor();
+            $verifiedRequesters = [];
+            $controllerIsBlocking = false;
+            foreach ($observedLockWaits as $lockWait) {
+                $requesterId = (int) ($lockWait['requesting_connection_id'] ?? 0);
+                $blockerId = (int) ($lockWait['blocking_connection_id'] ?? 0);
+                $key = trim((string) ($lockWait['requested_key'] ?? ''), "'");
+                $matchesPautaRow = strtoupper((string) ($lockWait['ENGINE'] ?? '')) === 'INNODB'
+                    && (string) ($lockWait['OBJECT_SCHEMA'] ?? '') === 'rei77_test'
+                    && (string) ($lockWait['OBJECT_NAME'] ?? '') === 'sala_audiencias_pauta'
+                    && (string) ($lockWait['INDEX_NAME'] ?? '') === 'PRIMARY'
+                    && strtoupper((string) ($lockWait['requested_status'] ?? '')) === 'WAITING'
+                    && $key === $pauta
+                    && in_array($blockerId, array_merge([$controllerThreadId], $threadIds), true);
+                if ($matchesPautaRow && in_array($requesterId, $threadIds, true)) {
+                    $verifiedRequesters[] = $requesterId;
+                    if ($blockerId === $controllerThreadId) $controllerIsBlocking = true;
+                }
+            }
+            if (count(array_unique($verifiedRequesters)) === 2
+                && in_array($threadIds[0], $verifiedRequesters, true)
+                && in_array($threadIds[1], $verifiedRequesters, true)
+                && $controllerIsBlocking
             ) {
                 $bothWaiting = true;
                 break;
             }
-            usleep(10000);
+            usleep(100000);
         }
         if (!$bothWaiting) {
             // Diagnostic is intentionally restricted to the two synthetic
@@ -272,8 +309,10 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
                     . 'FROM performance_schema.data_lock_waits w '
                     . 'JOIN performance_schema.threads requester ON requester.THREAD_ID = w.REQUESTING_THREAD_ID '
                     . 'JOIN performance_schema.threads blocker ON blocker.THREAD_ID = w.BLOCKING_THREAD_ID '
-                    . 'JOIN performance_schema.data_locks requested ON requested.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID '
-                    . 'JOIN performance_schema.data_locks blocked ON blocked.ENGINE_LOCK_ID = w.BLOCKING_ENGINE_LOCK_ID '
+                    . 'JOIN performance_schema.data_locks requested '
+                    . 'ON requested.ENGINE = w.ENGINE AND requested.ENGINE_LOCK_ID = w.REQUESTING_ENGINE_LOCK_ID '
+                    . 'JOIN performance_schema.data_locks blocked '
+                    . 'ON blocked.ENGINE = w.ENGINE AND blocked.ENGINE_LOCK_ID = w.BLOCKING_ENGINE_LOCK_ID '
                     . 'WHERE requester.PROCESSLIST_ID IN (?, ?) OR blocker.PROCESSLIST_ID IN (?, ?)'
                 );
                 $lockWaits->execute([$threadIds[0], $threadIds[1], $threadIds[0], $threadIds[1]]);
@@ -297,6 +336,7 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
                 'Both worker transactions were not observed waiting on the held pauta lock. '
                 . 'Worker thread IDs=[' . implode(',', $threadIds) . ']; '
                 . 'InnoDB=[' . $describe($observedTransactions, ['trx_mysql_thread_id', 'trx_state']) . ']; '
+                . 'data_lock_waits=' . json_encode($observedLockWaits, JSON_UNESCAPED_SLASHES) . '; '
                 . 'processlist=[' . $describe($observedProcesses, ['Id', 'Command', 'State', 'Time', 'Statement', 'Info']) . ']; '
                 . 'performance_schema=' . json_encode($performanceDiagnostics, JSON_UNESCAPED_SLASHES) . '.'
             );
