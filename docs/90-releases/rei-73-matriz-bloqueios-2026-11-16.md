@@ -359,3 +359,27 @@ A prioridade seguinte é REI-93 (#410), cuja contenção continua impedindo test
 - Essa coincidência não comprova que algum registro Gateway corresponde ao `DEPLOY_HOST` dos workflows nem que algum pool FPM listado atende DEV/PROD. Assim, REI-125 permanece sem mapeamento de target/runtime. Nenhum dado de aplicação, arquivo de configuração sensível, deploy ou servidor foi alterado.
 
 **Estado após reconciliação:** o conflito mecânico que impedia #412/#427 foi resolvido; nenhuma PR está bloqueada por conflito reportado no snapshot. As prioridades de trabalho permanecem REI-93 e REI-73, seguidas por validações autenticadas e host/schema específicos. Nenhuma revisão formal APPROVED foi observada nas PRs prontas e a regra de proteção não pôde ser confirmada.
+
+### Apêndice G — reconciliação live depois da PR #435 (2026-11-17, 08:52 UTC)
+
+Esta seção substitui os totais e estados dos Apêndices D–F. Fonte: consulta live ao GitHub/Linear; o código e as branches não foram inferidos a partir dos snapshots anteriores.
+
+- `main` está em `9954d124050c6b5774b5f247675053ba30d6aeb7`, merge da PR #435. A #435 não está mais aberta.
+- O autor fechou a antiga #415 às 08:34 UTC e registrou que foi substituída pela draft #438, baseada na `main` atual. #415 não é mais candidata de merge; não reabrir nem usar sua branch antiga.
+- Há 15 PRs abertas: 5 fora de draft (#406, #407, #411, #413, #437) e 10 em draft. Após a sincronização normal de #412 e #431, o GitHub reporta as 15 como mergeable; isso remove conflitos, mas não aprova nem satisfaz gates de aceite.
+- HEADs sincronizados com `9954d124`: #410 `683949623f8fff96f0e9252728eb1aad5cd10319`; #412 `1434a4aff6d00f9e6451185ca455f92c4cd6e3a2`; #413 `fe666b14bfcce7e543f5fa64783c02149de14acf`; #427 `7411fa21c5134803dad1d7b08b54995529a6e576`; #428 `ba99bce7962c0d5dfa9e1c256cd1857225da1042`; #429 `dd0b986d16eef757b56fcfce5a702b05ca8cddb8`; #432 `98b9fe911b970c7e41aef807149abb2290e66b93`; #437 `d48a198334c05f5c5f07de6d21192892ab4b9cee`; #438 `c4d4a4af082eec6ed750d1826a22111e6a383fe4`. #431 recebe esta reconciliação nesta branch.
+- #406, #407, #411 e #425 continuam com base registrada em `3576675af7e98cf14a5c1592c8d51f4f255033b6`; #433 usa `bca62b990c2893937e723e23de50651d67736cd7`. Todos seguem mergeable sem conflito segundo GitHub, mas seus checks não validam necessariamente o HEAD da `main` atual.
+- CI exato confirmado: #410 PHP Syntax `44047196688` SUCCESS; #413 PHP Syntax `44047896436` e interação `44047896426` SUCCESS; #427 PHP Syntax `44049658424` SUCCESS; #428 `44049794224` SUCCESS; #432 `44049472831` SUCCESS; #437 `44049179989` SUCCESS; #438 `44047953205` SUCCESS. #429 PHP Syntax `44049905303` estava em andamento no último poll. #412 e #431 receberam novo push após o último run conhecido; confirmar CI dos novos HEADs antes de avançar.
+- As cinco PRs fora de draft não têm review `APPROVED` observada. #413 tem apenas reviews `COMMENTED`; nas outras quatro não há review formal. A leitura de branch protection/rulesets continua indisponível (403); aprovação obrigatória não pode ser confirmada.
+
+#### Bloqueios que permanecem
+
+- #410 / REI-93: PR segue draft. Não reativar o runner positivo até prova independente de daemon/imagens, isolamento MySQL/SMTP/rede e limpeza. A investigação de 15/11 continua inconclusiva; logs Security exigem elevação e faltam dados para correlação.
+- #438 / REI-69: decisão confirmada é setor responsável explícito, sem backfill; processo nulo/inativo nega mutação. Isso satisfaz fail-closed, mas não cria writer para atribuir processos novos. Continuam REI-73, medição de volume/espaço e janela da migration `ALGORITHM=COPY, LOCK=SHARED`, executada no deploy de produção; manter draft.
+- #413 / REI-78: testes MySQL/InnoDB isolados, SQLite, interação e CI passaram no HEAD atualizado; faltam revisão formal, migration planejada para o host/DB correto e smoke autenticado.
+- #406, #407, #411 e #437: continuam fora de draft, mas sem aprovação formal observável. #407/#411 também dependem de REI-73; #406 requer smoke autenticado; #437 requer schema MySQL autoritativo e smoke dashboard.
+- #425/#429: smoke autenticado continua pendente. A opção autorizada de habilitar/reiniciar Chrome DevTools foi solicitada, mas nenhum MCP de navegador aparece nas ferramentas desta sessão; não houve login nem dado real.
+- #427: CI valida PHP/dependências, mas o host de `DEPLOY_HOST` e o pool FPM do site continuam não associados aos registros Gateway observados.
+- #428: faltam autorização por objeto e evidência autenticada/upstream DataJud; #432 requer schema autoritativo no ambiente; #412 é uma fixture de teste e não satisfaz, sozinha, autorização para alterar sigilo; #433 permanece draft.
+
+Nenhuma PR foi mesclada ou implantada neste ciclo de reconciliação. A PR #435 já estava mesclada antes; não a contabilizar como merge deste trabalho. `mergeable=true` significa apenas ausência de conflito reportado pelo GitHub.
