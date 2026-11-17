@@ -9,4 +9,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): reconcile open PR merge blockers** `[fa2e5b29]`
 - **docs(REI-73): record current merge gates** `[91766a3a]`
 - **docs(REI-73): record review-ready PR** `[ed531684]`
+- **docs(REI-73): reflect REI-78 deployment blocker** `[b241433b]`
 
