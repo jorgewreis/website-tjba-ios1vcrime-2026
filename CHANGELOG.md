@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0176
+
+**Data:** 2026-11-16 21:38:54 | **Commit:** `1822de25` | **Tipo:** `patch`
+
+- test(REI-77): verify enrollment races on isolated MySQL
+
 ## V. 1.87.0175
 
 **Data:** 2026-11-16 21:05:36 | **Commit:** `8d404e0e` | **Tipo:** `patch`
@@ -6479,6 +6485,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
