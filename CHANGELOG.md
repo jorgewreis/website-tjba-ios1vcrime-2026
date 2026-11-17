@@ -2,9 +2,14 @@
 
 ## V. 1.87.0183
 
-**Data:** 2026-11-17 03:49:08 | **Commit:** `8b957a3d` | **Tipo:** `patch`
+**Data:** 2026-11-17 04:01:04 | **Commits:** `8b957a3d`, `d7ea35e9`, `58c2d681`, `5f59cc3c`, `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
 
 - fix(REI-141): honor explicit CCM confirmation before idempotent replay
+- test(REI-75): cover revoked session mutations
+- fix: secure process priorities APIs
+- test(auth): cover revoked session on priorities API
+- merge: sync REI-75 with main
+- fix(REI-141): honor explicit CCM confirmation
 
 ## V. 1.87.0182
 
