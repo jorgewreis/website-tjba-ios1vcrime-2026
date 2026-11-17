@@ -1,5 +1,23 @@
 # Changelog
 
+## V. 1.87.0183
+
+**Data:** 2026-11-17 05:15:00 | **Commit:** `27a69ff1` | **Tipo:** `patch`
+
+- test(REI-80): exercise trusted origin helper
+
+## V. 1.87.0182
+
+**Data:** 2026-11-17 05:08:46 | **Commit:** `6d55da93` | **Tipo:** `patch`
+
+- test(REI-80): cover authorized enrollment success
+
+## V. 1.87.0181
+
+**Data:** 2026-11-17 05:07:40 | **Commit:** `a74ac77d` | **Tipo:** `patch`
+
+- test(REI-80): cover same-site hostile origin
+
 ## V. 1.87.0180
 
 **Data:** 2026-11-17 04:01:04 | **Commit:** `d7ea35e9` | **Tipo:** `patch`
@@ -10,6 +28,7 @@
 
 **Data:** 2026-11-17 03:22:50 | **Commits:** `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
 
+- fix(REI-73): validate student enrollment guard
 - merge: sync REI-75 with main
 - fix(REI-141): honor explicit CCM confirmation
 
