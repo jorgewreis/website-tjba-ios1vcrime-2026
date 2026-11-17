@@ -339,3 +339,14 @@ Consulta live ao GitHub em 2026-11-17; prevalece sobre os snapshots anteriores d
 **Ordem recomendada para desbloquear:** primeiro #410/REI-93, pois o guard impede os testes positivos de autenticação e origem usados pelas demais; em paralelo, completar o aceite da #435/REI-73 com a evidência permitida. Depois tratar bloqueios de host/schema/migration que são independentes (#413, #415, #432, #427), repetir testes em bases integradas e solicitar/recolher as revisões obrigatórias. Smoke autenticado das #425/#429 só é executável quando o Chrome DevTools MCP estiver conectado. Atualizar a base das #412/#427 é trabalho mecânico necessário, mas não remove seus gates de aceite.
 
 **Limite desta contagem:** `mergeable` mede compatibilidade/conflicto informado pelo GitHub, não aprovação, checks obrigatórios, fim de draft ou aceite funcional. Nenhuma PR foi mesclada neste snapshot. O pedido para habilitar/reiniciar o Chrome DevTools MCP foi recebido, porém a ferramenta de conexão/controle não está disponível nesta sessão; não houve smoke autenticado.
+
+### Apêndice E — resultado após resolver os conflitos mecânicos (2026-11-17)
+
+As PRs #412 e #427 foram atualizadas com merge normal de `main` `3576675af7e98cf14a5c1592c8d51f4f255033b6`. Os conflitos eram somente em `VERSION`, `CHANGELOG.md` e `docs/90-releases/_draft_minor.md`; preservada a versão 1.87.0180 da main e reunidas as entradas de release de cada branch. Commits publicados sem force:
+
+- #412 / REI-88: `9c23f6d1c8c4b05f4b1f5ef017169beb8b2d1e42`; PHP Syntax run 44043616750 está em fila.
+- #427 / REI-125: `aea4fed164ead53b7e6a4810cbe7fa08455f529d`; PHP Syntax run 44043615457 está em fila. Composer não está instalado localmente; validação Composer deste SHA depende do CI.
+
+No snapshot live após esses pushes permanecem **16 PRs abertas, 6 fora de draft e 10 em draft; todas as 16 reportadas mergeable pelo GitHub**. #412 e #427 deixaram de ser bloqueadas por conflito. #433 ainda usa a base anterior `bca62b99`, mas o GitHub reporta mergeable; sincronização preventiva pode ser feita depois dos bloqueios de aceite. A base atual das outras 15 PRs é `3576675af7e98cf14a5c1592c8d51f4f255033b6`.
+
+A prioridade seguinte é REI-93 (#410), cuja contenção continua impedindo testes positivos até prova de isolamento do runner e investigação do evento; em paralelo, completar REI-73 (#435). Smoke autenticado das #425/#429 continua indisponível sem Chrome DevTools MCP. Após esses bloqueios, recolher gates específicos de host/schema/migration, repetir CI nos SHA integrados e obter revisões formais. Nenhuma PR foi mesclada; GitHub mergeable não satisfaz esses critérios.
