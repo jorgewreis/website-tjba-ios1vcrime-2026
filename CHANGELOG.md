@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0181
+
+**Data:** 2026-11-17 02:21:20 | **Commit:** `095f04ef` | **Tipo:** `patch`
+
+- test(REI-77): publish race barrier atomically
+
 ## V. 1.87.0180
 
 **Data:** 2026-11-16 23:03:19 | **Commit:** `2b428ea7` | **Tipo:** `patch`
@@ -6512,3 +6518,4 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+

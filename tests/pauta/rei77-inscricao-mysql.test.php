@@ -162,7 +162,14 @@ $race = static function (string $pauta, array $users, string $expectedRefusal) u
         if (!is_file($barrier . '/ready-0') || !is_file($barrier . '/ready-1')) {
             throw new RuntimeException('Workers did not reach the race barrier in time.');
         }
-        file_put_contents($barrier . '/go', $runId . ':' . $marker, LOCK_EX);
+        $goPath = $barrier . '/go';
+        $goTempPath = $barrier . '/go.tmp-' . bin2hex(random_bytes(8));
+        $goPayload = $runId . ':' . $marker;
+        $goBytes = file_put_contents($goTempPath, $goPayload, LOCK_EX);
+        if ($goBytes !== strlen($goPayload) || !rename($goTempPath, $goPath)) {
+            @unlink($goTempPath);
+            throw new RuntimeException('Could not publish complete race barrier marker atomically.');
+        }
         $deadline = microtime(true) + 20;
         while (microtime(true) < $deadline && (!is_file($barrier . '/started-0') || !is_file($barrier . '/started-1'))) {
             $earlyExit = $checkWorkers($processes, 'MySQL session announcement');
