@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(guias): serializar inicializacao das subtarefas (REI-105)** `[c26efa2e]`
+- **fix(REI-85): preserve global profession on link removal** `[bf6670f4]`
 
