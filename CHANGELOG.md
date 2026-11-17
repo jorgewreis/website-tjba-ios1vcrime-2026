@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0185
+
+**Data:** 2026-11-17 10:39:51 | **Commit:** `562941f1` | **Tipo:** `patch`
+
+- fix(cartorio): scope REI-107 deletions to parent records
+
 ## V. 1.87.0184
 
 **Data:** 2026-11-17 05:33:49 | **Commit:** `aea3e451` | **Tipo:** `patch`
@@ -7593,3 +7599,4 @@
 
 
 \n
+
