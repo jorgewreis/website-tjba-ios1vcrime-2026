@@ -75,6 +75,13 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "mkdir -p \"${PROD_PATH}\" && echo \"Diretório OK: ${PROD_PATH}\""
 
+      - name: Aplicar migration de cartas antes da publicação (PROD)
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
+        run: bash .github/scripts/deploy-staged-cartas-migration.sh
+
       - name: Sync files to server (PROD)
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
@@ -229,10 +236,6 @@ jobs:
 
             if [ -f scripts/migrate-dashboard-conclusoes.php ]; then
               php scripts/migrate-dashboard-conclusoes.php
-            fi
-
-            if [ -f scripts/migrate-cartas-expedidas-idempotency.php ]; then
-              php scripts/migrate-cartas-expedidas-idempotency.php
             fi
 
             bash scripts/install-cron-inactive-external-users.sh

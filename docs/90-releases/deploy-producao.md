@@ -14,12 +14,15 @@ ambiente ativo.
 
 Após a sincronização, `.github/workflows/deploy-prod.yml` atualiza `APP_URL` no
 `.env` existente, executa `npm ci` e o build quando há `package.json`, e prepara
-as dependências PHP quando há `composer.json`. Também executa os scripts
-`scripts/migrate-cejusc.php`, `scripts/migrate-gabinete-reu-preso-controle-tipo.php`
-e `scripts/migrate-dashboard-conclusoes.php` **somente se cada arquivo existir**
-no servidor após o `rsync`. A migração aditiva de idempotência de Cartas Expedidas
-é executada por `scripts/migrate-cartas-expedidas-idempotency.php`, também após o
-`rsync`, quando o script existe. Até a migração estar presente, a API recusa novas
+as dependências PHP quando há `composer.json`. Antes do `rsync`, o workflow envia
+o script e o SQL de idempotência de Cartas Expedidas a um diretório temporário
+privado no host e executa a migração contra a aplicação/schema atual. Se a
+configuração CLI, a conexão ou a migração falhar, o código novo ainda não foi
+sincronizado. O diretório temporário é removido ao final do passo. Depois do
+`rsync`, também executa os scripts `scripts/migrate-cejusc.php`,
+`scripts/migrate-gabinete-reu-preso-controle-tipo.php` e
+`scripts/migrate-dashboard-conclusoes.php` **somente se cada arquivo existir**
+no servidor. Até a migração de idempotência estar presente, a API recusa novas
 criações com chave idempotente usando 503; não há fallback para criação sem
 proteção. Em rollback de código, preserve as colunas e o índice junto aos dados
 de idempotência para que retries antigos continuem deduplicados. A instalação do

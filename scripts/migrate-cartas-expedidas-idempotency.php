@@ -1,7 +1,13 @@
 <?php
 declare(strict_types=1);
 
-$root = dirname(__DIR__);
+$configuredRoot = getenv('CARTAS_PROJECT_ROOT');
+$root = is_string($configuredRoot) && trim($configuredRoot) !== ''
+    ? realpath($configuredRoot)
+    : dirname(__DIR__);
+if (!is_string($root) || !is_file($root . '/app/helpers/Conection.php')) {
+    throw new RuntimeException('Raiz da aplicação inválida para a migração de cartas.');
+}
 require_once $root . '/app/helpers/Conection.php';
 
 $pdo = Conection::getInstance()->getConnection();
@@ -54,7 +60,10 @@ if ($hasKey || $hasHash || $index !== []) {
     throw new RuntimeException('Migração recusada: schema parcialmente aplicado; verifique a estrutura antes de corrigir.');
 }
 
-$sqlPath = $root . '/database/migrations/20261116_add_cartas_expedidas_idempotency.sql';
+$configuredSqlPath = getenv('CARTAS_MIGRATION_SQL');
+$sqlPath = is_string($configuredSqlPath) && trim($configuredSqlPath) !== ''
+    ? $configuredSqlPath
+    : $root . '/database/migrations/20261116_add_cartas_expedidas_idempotency.sql';
 $sql = file_get_contents($sqlPath);
 if (!is_string($sql) || trim($sql) === '') {
     throw new RuntimeException('Migração SQL não encontrada ou vazia.');
