@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0182
+
+**Data:** 2026-11-17 04:52:25 | **Commit:** `a6567251` | **Tipo:** `patch`
+
+- chore: preserve pending release draft
+
 ## V. 1.87.0181
 
 **Data:** 2026-11-17 04:51:36 | **Commit:** `4dbda414` | **Tipo:** `patch`
@@ -6517,6 +6523,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
