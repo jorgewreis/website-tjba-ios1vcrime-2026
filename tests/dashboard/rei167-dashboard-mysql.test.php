@@ -21,6 +21,9 @@ if ((int) $guard->fetchColumn() !== 1) {
     throw new RuntimeException('MySQL fixture ownership marker did not match.');
 }
 $pdo->exec("SET SESSION sql_mode = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
+if (!str_contains((string) $pdo->query('SELECT @@SESSION.sql_mode')->fetchColumn(), 'ONLY_FULL_GROUP_BY')) {
+    throw new RuntimeException('MySQL did not enable ONLY_FULL_GROUP_BY for this test session.');
+}
 
 $modules = [
     ['cartas_expedidas', 'cartas_expedidas_subtarefas', 'carta_expedida_id'],
@@ -105,6 +108,19 @@ $result = $summary();
 $queue = $guideQueue($result);
 if ($result['geral']['tarefas_abertas'] !== null || !$result['fila_parcial'] || !($queue['error'] ?? false) || $queue['count'] !== null) {
     throw new RuntimeException('A missing guide queue table must surface an unavailable count.');
+}
+
+$pdo->exec("CREATE TABLE guias_subtarefas (
+    id VARCHAR(40) PRIMARY KEY, guia_id VARCHAR(40) NOT NULL, tipo VARCHAR(80) NOT NULL,
+    ordem INT NULL, status VARCHAR(40) NULL,
+    KEY idx_fixture_parent_order (guia_id, ordem)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$pdo->exec("INSERT INTO guias (id,status,created_at) VALUES ('guide-query-error','em_andamento',NOW())");
+$pdo->exec("INSERT INTO guias_subtarefas (id,guia_id,tipo,ordem,status) VALUES ('query-error-step','guide-query-error','detalhamento_informacoes',1,'em_andamento')");
+$result = $summary();
+$queue = $guideQueue($result);
+if ($result['geral']['tarefas_abertas'] !== null || !$result['fila_parcial'] || !($queue['error'] ?? false) || $queue['count'] !== null) {
+    throw new RuntimeException('A SQL error after table discovery must surface an unavailable count.');
 }
 
 echo "PASS: REI-167 dashboard queue ran on disposable MySQL/InnoDB with ONLY_FULL_GROUP_BY\n";

@@ -30,7 +30,7 @@ if ($sourceReparseItems) { throw 'Runner recusado: app contém reparse point.' }
 $testReparseItems = Get-ChildItem -LiteralPath $testRoot -Recurse -Force | Where-Object {
     $_.Attributes -band [IO.FileAttributes]::ReparsePoint
 }
-if ($testReparseItems) { throw 'Runner recusado: tests/guias contém reparse point.' }
+if ($testReparseItems) { throw 'Runner recusado: tests/dashboard contém reparse point.' }
 $envItems = Get-ChildItem -LiteralPath $appRoot -Recurse -Force | Where-Object { $_.Name -like '.env*' }
 if ($envItems) { throw 'Runner recusado: app contém arquivo de ambiente.' }
 $configEnvItems = Get-ChildItem -LiteralPath $configRoot -Recurse -Force | Where-Object { $_.Name -like '.env*' }
