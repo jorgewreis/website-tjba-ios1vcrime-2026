@@ -10,3 +10,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-93): fail closed on invalid Docker inspect** `[cf09285a]`
 - **merge: sync REI-93 guard with current main** `[44e44fb2]`
 
+\n
