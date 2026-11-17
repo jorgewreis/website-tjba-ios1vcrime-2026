@@ -24,6 +24,7 @@ try {
     $put('config/security.php', '<?php final class Security { public static function isAuthenticated(): bool { return getenv("TEST_AUTH") === "1"; } }');
     $put('app/helpers/UsuarioPerfisAutorizacao.php', '<?php final class UsuarioPerfisAutorizacao { public static function perfisDoUsuario(string $id): array { return [getenv("TEST_PROFILE")]; } }');
     foreach (['app/repositories/SalaAudienciasPautaParteRepository.php', 'app/services/ProcessoPrioridadesService.php', 'app/services/ProcessoClasseSyncService.php'] as $path) $put($path, '<?php');
+    $put('app/repositories/ProcessosRepository.php', '<?php final class ProcessosRepository { public function __construct(PDO $pdo) {} public function findById(string $id): ?array { return null; } }');
 
     $authorizedProfiles = ['prioridades-add.php' => 'SERVIDOR-AUDIENCIAS', 'update-classe.php' => 'SERVIDOR-CARTORIO'];
     foreach ($authorizedProfiles as $endpoint => $authorizedProfile) {
