@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0184
+
+**Data:** 2026-11-17 06:27:07 | **Commit:** `c2ffacf0` | **Tipo:** `patch`
+
+- test: copy API error reporter into HTTP fixtures
+
 ## V. 1.87.0183
 
 **Data:** 2026-11-17 05:15:00 | **Commit:** `27a69ff1` | **Tipo:** `patch`
@@ -6530,6 +6536,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
