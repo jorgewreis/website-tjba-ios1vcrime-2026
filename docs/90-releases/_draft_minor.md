@@ -24,4 +24,3 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): reconcile branches after PR 416 merge** `[784d20ae]`
 - **docs(REI-73): reconcile current merge queue** `[21fb35fd]`
 - **docs(REI-73): reconcile evidence after main sync** `[0fbf3d8e]`
-
