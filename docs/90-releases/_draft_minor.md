@@ -12,3 +12,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-78): cover concurrent idempotent retries** `[10beeba0]`
 - **merge: sync Carta atomicity with current main** `[aea3e451]`
 
+\n
