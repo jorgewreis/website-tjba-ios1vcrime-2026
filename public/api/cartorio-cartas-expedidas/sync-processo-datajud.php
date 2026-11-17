@@ -100,7 +100,8 @@ try {
     $resultadoSync = (new ProcessoDataJudSyncService($connection))->sync(
         $digits,
         $classe === [] ? null : ['codigo' => (string) $codigo, 'descricao' => trim($descricao)],
-        $assuntos
+        $assuntos,
+        $estadoAssuntos === 'vazio'
     );
     $classeResultado = $resultadoSync['classe'];
     $assuntosResultado = $resultadoSync['assuntos'];

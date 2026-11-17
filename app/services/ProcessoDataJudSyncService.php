@@ -20,8 +20,8 @@ final class ProcessoDataJudSyncService
             fn(string $numero, string $codigo, string $descricao): array =>
                 (new ProcessoClasseSyncService($this->db))->syncFromDataJud($numero, $codigo, $descricao, true));
         $this->assuntoSync = Closure::fromCallable($assuntoSync ??
-            fn(string $numero, array $assuntos): array =>
-                (new ProcessoAssuntoSyncService($this->db))->syncFromDataJud($numero, $assuntos, true));
+            fn(string $numero, array $assuntos, bool $allowVerifiedEmpty): array =>
+                (new ProcessoAssuntoSyncService($this->db))->syncFromDataJud($numero, $assuntos, true, $allowVerifiedEmpty));
     }
 
     /**
@@ -30,9 +30,10 @@ final class ProcessoDataJudSyncService
      * preservando vínculos manuais. O chamador deve confirmar identidade e
      * completude da resposta de origem antes de chamar este serviço.
      *
+     * @param bool $verifiedEmptySubjects True only after the caller verified an explicit empty DataJud source response.
      * @return array{classe:?array,assuntos:?array}
      */
-    public function sync(string $numero, ?array $classe, ?array $assuntos): array
+    public function sync(string $numero, ?array $classe, ?array $assuntos, bool $verifiedEmptySubjects = false): array
     {
         $numero = CnjValidator::digits20OrThrow($numero);
         $processos = new ProcessosRepository($this->db);
@@ -52,6 +53,9 @@ final class ProcessoDataJudSyncService
         }
         if ($assuntos !== null) {
             if (!array_is_list($assuntos)) throw new InvalidArgumentException('Assuntos DataJud inválidos.');
+            if ($assuntos === [] && !$verifiedEmptySubjects) {
+                throw new InvalidArgumentException('Lista vazia de assuntos exige confirmação explícita da origem.');
+            }
             foreach ($assuntos as $item) {
                 if (!is_array($item) || !isset($item['codigo']) || !is_scalar($item['codigo']) ||
                     AssuntosRepository::normalizeCodigo((string) $item['codigo']) === '' ||
@@ -72,7 +76,7 @@ final class ProcessoDataJudSyncService
                 throw new InvalidArgumentException('Processo não encontrado no cadastro local.');
             }
             $resultadoClasse = $classe === null ? null : ($this->classeSync)($numero, $codigo, $descricao);
-            $resultadoAssuntos = $assuntos === null ? null : ($this->assuntoSync)($numero, $assuntos);
+            $resultadoAssuntos = $assuntos === null ? null : ($this->assuntoSync)($numero, $assuntos, $verifiedEmptySubjects);
             if (!$this->db->inTransaction()) throw new RuntimeException('Transação de sincronização interrompida.');
             if (!$this->db->commit()) throw new RuntimeException('Resultado da confirmação da sincronização é incerto; descarte a conexão.');
             return ['classe' => $resultadoClasse, 'assuntos' => $resultadoAssuntos];

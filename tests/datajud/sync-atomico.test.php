@@ -37,7 +37,11 @@ try { $failure->sync($numero, $classe, $assuntos); throw new LogicException('Esp
 catch (RuntimeException $e) { if ($e->getMessage() !== 'falha sintética') throw $e; }
 if ($db->query('SELECT valor FROM estado WHERE id=1')->fetchColumn() !== 'classe anterior' || (int) $db->query('SELECT COUNT(*) FROM estado')->fetchColumn() !== 2) throw new RuntimeException('Rollback incompleto.');
 $db->exec("INSERT INTO estado VALUES (3, 'assunto datajud')");
-$emptyResult = $service->sync($numero, null, []);
+$snapshotBeforeUnverifiedEmpty = (int) $db->query('SELECT COUNT(*) FROM estado')->fetchColumn();
+try { $service->sync($numero, null, []); throw new LogicException('Lista vazia sem confirmação explícita deveria ser rejeitada.'); }
+catch (InvalidArgumentException $e) {}
+if ((int) $db->query('SELECT COUNT(*) FROM estado')->fetchColumn() !== $snapshotBeforeUnverifiedEmpty) throw new RuntimeException('Lista vazia não verificada alterou estado.');
+$emptyResult = $service->sync($numero, null, [], true);
 if (($emptyResult['assuntos']['action'] ?? '') !== 'updated' || (int) $db->query('SELECT COUNT(*) FROM estado')->fetchColumn() !== 2) throw new RuntimeException('Lista vazia completa não reconciliou assuntos DataJud.');
 if ($db->query('SELECT valor FROM estado WHERE id=2')->fetchColumn() !== 'assunto manual') throw new RuntimeException('Lista vazia removeu assunto manual.');
 foreach ([null, [['codigo' => null]], [['codigo' => '456'], ['codigo' => '']]] as $payload) {

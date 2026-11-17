@@ -31,10 +31,10 @@ $sync = new ProcessoDataJudSyncService($db);
 $snapshot = static fn(): array => $db->query('SELECT assunto_id, origem FROM processo_assuntos ORDER BY assunto_id')->fetchAll(PDO::FETCH_ASSOC);
 $before = $snapshot();
 $map = static fn(array $source): array => DataJudResponseMapper::mapSourceToPayload($source, '00008323520184013202', false);
-foreach ([[], ['assuntos' => []]] as $source) {
+foreach ([[]] as $source) {
     $payload = $map($source);
-    if (!in_array($payload['assuntos_estado'], ['ausente', 'vazio'], true)) throw new RuntimeException('Estado ausente/vazio incorreto.');
-    try { $sync->sync('00008323520184013202', null, $payload['assuntos']); throw new LogicException('Sem dados deve falhar.'); }
+    if ($payload['assuntos_estado'] !== 'ausente') throw new RuntimeException('Fonte ausente deveria permanecer distinta da lista vazia explícita.');
+    try { $sync->sync('00008323520184013202', null, null); throw new LogicException('Sem dados deve falhar.'); }
     catch (InvalidArgumentException $expected) {}
     if ($snapshot() !== $before) throw new RuntimeException('Ausência alterou vínculos.');
 }
@@ -46,4 +46,36 @@ foreach ([null, [['nome' => 'Sem código']], [['codigo'=>42,'nome'=>'Manual'], [
 $payload = $map(['assuntos'=>[['codigo'=>42,'nome'=>'Manual']]]);
 $sync->sync('00008323520184013202', null, $payload['assuntos']);
 if ($snapshot() !== [['assunto_id'=>'a1','origem'=>'manual']]) throw new RuntimeException('Sincronização não preservou vínculo manual ou não removeu automático obsoleto.');
+
+$db->exec("INSERT INTO assuntos VALUES ('a3','8','DataJud antigo',NULL,NULL)");
+$db->exec("INSERT INTO processo_assuntos VALUES ('d2','p1','a3','datajud',NULL,NULL)");
+$empty = $map(['numeroProcesso'=>'00008323520184013202','nivelSigilo'=>0,'assuntos'=>[]]);
+if ($empty['assuntos_estado'] !== 'vazio' || $empty['assuntos'] !== [] || $empty['assuntos_completos'] !== false) {
+    throw new RuntimeException('Resposta explicitamente vazia foi mapeada incorretamente.');
+}
+try {
+    $sync->sync('00008323520184013202', null, $empty['assuntos']);
+    throw new LogicException('Lista vazia sem evidência explícita deveria ser rejeitada.');
+} catch (InvalidArgumentException $expected) {}
+if ($snapshot() !== [['assunto_id'=>'a1','origem'=>'manual'], ['assunto_id'=>'a3','origem'=>'datajud']]) {
+    throw new RuntimeException('Lista vazia não autorizada alterou vínculos.');
+}
+$sync->sync('00008323520184013202', null, $empty['assuntos'], true);
+if ($snapshot() !== [['assunto_id'=>'a1','origem'=>'manual']]) {
+    throw new RuntimeException('Lista vazia não removeu somente vínculos DataJud, ou removeu vínculo manual.');
+}
+$db->exec("INSERT INTO assuntos VALUES ('a4','9','DataJud a preservar',NULL,NULL)");
+$db->exec("INSERT INTO processo_assuntos VALUES ('d3','p1','a4','datajud',NULL,NULL)");
+$beforeInvalid = $snapshot();
+try {
+    $sync->sync('00008323520184013202', null, [['codigo'=>[],'descricao'=>'inválido']]);
+    throw new LogicException('Payload inválido deveria ser rejeitado.');
+} catch (InvalidArgumentException $expected) {}
+if ($snapshot() !== $beforeInvalid) throw new RuntimeException('Payload inválido alterou vínculos.');
+
+try {
+    (new ProcessoAssuntoSyncService($db))->syncFromDataJud('00008323520184013202', [], true);
+    throw new LogicException('Sincronização direta não deve aceitar lista vazia sem autorização explícita.');
+} catch (InvalidArgumentException $expected) {}
+if ($snapshot() !== $beforeInvalid) throw new RuntimeException('Lista vazia direta alterou vínculos.');
 echo "PASS: mapper e serviços reais preservam ausência, erro e vínculo manual em SQLite.\n";

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0182
+
+**Data:** 2026-11-16 23:02:42 | **Commit:** `dcd95ca7` | **Tipo:** `patch`
+
+- fix(datajud): reconcile verified empty subjects (REI-153)
+
 ## V. 1.87.0181
 
 **Data:** 2026-11-16 22:38:45 | **Commit:** `9636bb9e` | **Tipo:** `patch`
@@ -6515,6 +6521,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

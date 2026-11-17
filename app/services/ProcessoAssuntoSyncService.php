@@ -64,11 +64,16 @@ final class ProcessoAssuntoSyncService
      *   stats:array{inserted:int,removed:int,unchanged:int}
      * }
      */
-    public function syncFromDataJud(string $digits20, array $assuntosPayload, bool $requireExistingProcess = false): array
+    public function syncFromDataJud(
+        string $digits20,
+        array $assuntosPayload,
+        bool $requireExistingProcess = false,
+        bool $allowVerifiedEmptyPayload = false
+    ): array
     {
         $digits20 = CnjValidator::digits20OrThrow($digits20);
 
-        $assuntosNormalizados = $this->normalizeAssuntosPayload($assuntosPayload);
+        $assuntosNormalizados = $this->normalizeAssuntosPayload($assuntosPayload, $allowVerifiedEmptyPayload);
         $processo = $this->processosRepository->findByNumero($digits20);
         if ($requireExistingProcess && $processo === null) {
             throw new InvalidArgumentException('Processo não encontrado no cadastro local.');
@@ -196,11 +201,12 @@ final class ProcessoAssuntoSyncService
      * @param list<mixed> $payload
      * @return list<array{codigo:string,descricao:string}>
      */
-    private function normalizeAssuntosPayload(array $payload): array
+    private function normalizeAssuntosPayload(array $payload, bool $allowEmpty): array
     {
         // A ausência de assuntos não prova que a origem devolveu um lote completo.
-        // Nenhum consumidor versionado envia lote vazio para esta operação.
-        if ($payload === [] || !array_is_list($payload)) {
+        // Somente o agregador, após validar a resposta DataJud, pode autorizar []
+        // como resultado explícito e completo sem assuntos.
+        if (($payload === [] && !$allowEmpty) || !array_is_list($payload)) {
             throw new InvalidArgumentException('Informe uma lista não vazia de assuntos válidos.');
         }
         $out = [];

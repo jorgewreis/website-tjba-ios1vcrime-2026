@@ -51,14 +51,15 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
       'partial-class' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>['codigo'=>42,'descricao'=>null]],
       'malformed-class' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>['unexpected'=>'x']],
       'no-class-empty' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>false, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>null,'descricao'=>null]],
+      'absent-subjects' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>false, 'assuntos_estado'=>'ausente', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
       default => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
     };
   }
 }''', encoding='utf-8')
     (base / 'app/services/ProcessoDataJudSyncService.php').write_text('''<?php class ProcessoDataJudSyncService {
   function __construct($connection) {}
-    function sync(string $numero, ?array $classe, ?array $assuntos): array {
-    file_put_contents(__DIR__.'/write-called', json_encode([$numero,$classe,$assuntos]));
+    function sync(string $numero, ?array $classe, ?array $assuntos, bool $verifiedEmptySubjects=false): array {
+    file_put_contents(__DIR__.'/write-called', json_encode([$numero,$classe,$assuntos,$verifiedEmptySubjects]));
     return ['classe'=>$classe === null ? null : ['action'=>'updated'], 'assuntos'=>$assuntos === null ? null : ['action'=>'updated']];
   }
 }''', encoding='utf-8')
@@ -105,13 +106,14 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
         assert request(result='partial-class')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(result='malformed-class')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(result='no-class-empty')[0] == 422 and read_marker.exists() and not write_marker.exists()
+        assert request(result='absent-subjects')[0] == 422 and read_marker.exists() and not write_marker.exists()
         code, _ = request(result='subjects')
         assert code == 200 and write_marker.exists()
-        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', None, [{'codigo':7,'descricao':'Fonte'}]]
+        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', None, [{'codigo':7,'descricao':'Fonte'}], False]
         code, body = request()
         assert code == 200 and body['success'] is True and write_marker.exists()
         payload = json.loads(write_marker.read_text(encoding='utf-8'))
-        assert payload == ['12345678901234567890', {'codigo':'42','descricao':'Classe'}, []]
+        assert payload == ['12345678901234567890', {'codigo':'42','descricao':'Classe'}, [], True]
 
         cartorio = 'cartorio-cartas-expedidas/sync-processo-datajud.php'
         assert request(endpoint=cartorio, process='missing')[0] == 404 and not read_marker.exists() and not write_marker.exists()
@@ -121,12 +123,13 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
         assert request(endpoint=cartorio, result='partial-class')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(endpoint=cartorio, result='malformed-class')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(endpoint=cartorio, result='no-class-empty')[0] == 422 and read_marker.exists() and not write_marker.exists()
+        assert request(endpoint=cartorio, result='absent-subjects')[0] == 422 and read_marker.exists() and not write_marker.exists()
         code, _ = request(endpoint=cartorio, result='subjects')
         assert code == 200 and write_marker.exists()
-        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', None, [{'codigo':7,'descricao':'Fonte'}]]
+        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', None, [{'codigo':7,'descricao':'Fonte'}], False]
         code, body = request(endpoint=cartorio)
         assert code == 200 and body['success'] is True and write_marker.exists()
-        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', {'codigo':'42','descricao':'Classe'}, []]
+        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', {'codigo':'42','descricao':'Classe'}, [], True]
 
         assunto = 'processos/assunto-sync.php'
         assert request(endpoint=assunto, process='missing')[0] == 404 and not read_marker.exists() and not write_marker.exists()
@@ -135,7 +138,7 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
         assert request(endpoint=assunto, result='missing-sigilo')[0] == 422 and read_marker.exists() and not write_marker.exists()
         code, _ = request(endpoint=assunto, result='subjects')
         assert code == 200 and write_marker.exists()
-        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', None, [{'codigo':7,'descricao':'Fonte'}]]
+        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', None, [{'codigo':7,'descricao':'Fonte'}], False]
     finally:
         server.terminate()
         server.wait(timeout=5)
