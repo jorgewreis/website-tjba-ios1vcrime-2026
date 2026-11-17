@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0199
+
+**Data:** 2026-11-17 04:29:31 | **Commit:** `19025341` | **Tipo:** `patch`
+
+- docs(REI-73): refresh synchronized PR evidence
+
 ## V. 1.87.0198
 
 **Data:** 2026-11-17 04:25:48 | **Commit:** `0fbf3d8e` | **Tipo:** `patch`
@@ -6618,4 +6624,5 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
