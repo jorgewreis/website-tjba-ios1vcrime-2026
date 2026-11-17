@@ -13,4 +13,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): record REI-78 pre-sync migration fix** `[2064b7db]`
 - **docs(REI-73): refresh review and merge blockers** `[357f122d]`
 - **docs(REI-73): record reproduced REI-130 tests** `[79fd7618]`
+- **docs(REI-73): reconcile ready-for-review PR states** `[7343c1db]`
 
