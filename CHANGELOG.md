@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0188
+
+**Data:** 2026-11-17 01:35:13 | **Commit:** `7343c1db` | **Tipo:** `patch`
+
+- docs(REI-73): reconcile ready-for-review PR states
+
 ## V. 1.87.0187
 
 **Data:** 2026-11-17 01:20:41 | **Commit:** `79fd7618` | **Tipo:** `patch`
@@ -6551,6 +6557,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
