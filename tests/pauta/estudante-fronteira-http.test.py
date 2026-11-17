@@ -3,27 +3,12 @@ import json, os, pathlib, shutil, socket, subprocess, tempfile, time, urllib.err
 root = pathlib.Path(__file__).resolve().parents[2]
 with tempfile.TemporaryDirectory(prefix='pauta-privacidade-') as tmp:
     base = pathlib.Path(tmp)
-    for name in ('public/api/sala-audiencias-ata/inscrever.php', 'public/api/sala-audiencias-ata/download.php', 'app/helpers/SalaAudienciasInscricaoIndisponivel.php', 'app/helpers/ApiAccessGuard.php'):
+    for name in ('public/api/sala-audiencias-ata/inscrever.php', 'public/api/sala-audiencias-ata/download.php', 'app/helpers/SalaAudienciasInscricaoIndisponivel.php', 'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php'):
         dest = base / name; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(root / name, dest)
     stubs = {
-      'app/helpers/Conection.php': '<?php class Conection {static function getInstance(){return new self;} function getConnection(){return null;}}',
-      'app/helpers/BootstrapHelper.php': """<?php
-$_SESSION = ['id_usuario' => 'sintetico'];
-function bootstrapRequireTrustedPostRequest(): bool {
-    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
-    $origin = trim((string) ($_SERVER['HTTP_ORIGIN'] ?? ''));
-    $referer = trim((string) ($_SERVER['HTTP_REFERER'] ?? ''));
-    $source = $origin !== '' ? $origin : $referer;
-    $parts = $source === '' ? false : parse_url($source);
-    $request = $host === '' ? false : parse_url('http://' . $host);
-    return strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) === 'POST'
-        && is_array($parts) && is_array($request)
-        && strtolower((string) ($parts['scheme'] ?? '')) === 'http'
-        && strtolower((string) ($parts['host'] ?? '')) === strtolower((string) ($request['host'] ?? ''))
-        && (int) ($parts['port'] ?? 80) === (int) ($request['port'] ?? 80);
-}
-""",
-      'config/security.php': "<?php class Security {static function isAuthenticated(): bool {return ($_SERVER['HTTP_X_TEST_AUTH'] ?? '') === 'valid';}}",
+      'app/helpers/Conection.php': "<?php $_SESSION=['id_usuario'=>'sintetico']; function appIsHttpsRequest(): bool {return false;} class Conection {static function getInstance(){return new self;} function getConnection(){return null;}}",
+      'app/helpers/AutoloadHelper.php': '<?php',
+      'config/security.php': "<?php $_SESSION=['id_usuario'=>'sintetico']; class Security {static function isAuthenticated(): bool {return ($_SERVER['HTTP_X_TEST_AUTH'] ?? '') === 'valid';}}",
       'app/helpers/UsuarioPerfisAutorizacao.php': "<?php class UsuarioPerfisAutorizacao {static function perfisDoUsuario($id){return explode(',',$_SERVER['HTTP_X_TEST_PROFILE']??'EXTERNO,ESTUDANTE');}}",
       'app/models/Usuario.php': "<?php class Usuario {function listarPerfisUsuario($id){return explode(',',$_SERVER['HTTP_X_TEST_PROFILE']??'EXTERNO,ESTUDANTE');}}",
       'app/access/AccessEvaluator.php': "<?php class AccessEvaluator {static function canAccessPage($page,$profiles): bool {return in_array($page,['estudapainel','estudaata'],true) && (in_array('ESTUDANTE',$profiles,true) || in_array('ADMIN',$profiles,true));}}",
