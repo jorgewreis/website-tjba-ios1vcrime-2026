@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0195
+
+**Data:** 2026-11-17 03:11:05 | **Commit:** `9668a62a` | **Tipo:** `patch`
+
+- docs(REI-73): trace residual catalog lookup routes
+
 ## V. 1.87.0194
 
 **Data:** 2026-11-17 02:53:39 | **Commit:** `2066b122` | **Tipo:** `patch`
@@ -6593,6 +6599,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
