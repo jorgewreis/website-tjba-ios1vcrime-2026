@@ -25,3 +25,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-73): reconcile current merge queue** `[21fb35fd]`
 - **docs(REI-73): reconcile evidence after main sync** `[0fbf3d8e]`
 - **docs(REI-73): refresh synchronized PR evidence** `[19025341]`
+- **docs(REI-73): reconcile live merge blockers** `[a6c5fc55]`
+
