@@ -35,6 +35,40 @@ final class PartesInstituicoesRepository
         return $result === false ? null : $result;
     }
 
+    /** Current locking read used to serialize updates to a person's profession. */
+    public function findByIdForUpdate(string $id): ?array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return null;
+        }
+        $statement = $this->connection->prepare(
+            sprintf('SELECT `id`, `parte_id`, `instituicao_id`, `setor_id`, `profissao`, `cargo_funcao`, `data_inclusao`, `data_inicio`, `data_fim`, `ativo`, `observacoes`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1 FOR UPDATE', $this->table)
+        );
+        $statement->execute([':id' => $id]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $result === false ? null : $result;
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function findByParteIdForUpdate(string $parteId, bool $ativoOnly = true): array
+    {
+        $parteId = trim($parteId);
+        if ($parteId === '') {
+            return [];
+        }
+        $sql = sprintf(
+            'SELECT `id`, `parte_id`, `instituicao_id`, `setor_id`, `profissao`, `cargo_funcao`, `data_inclusao`, `data_inicio`, `data_fim`, `ativo`, `observacoes`, `created_at`, `updated_at` FROM `%s` WHERE `parte_id` = :parte_id%s ORDER BY `data_inclusao` DESC, `created_at` DESC FOR UPDATE',
+            $this->table,
+            $ativoOnly ? ' AND `ativo` = 1' : ''
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->execute([':parte_id' => $parteId]);
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     /** @return list<array<string, mixed>> */
     public function findByParteId(string $parteId, ?bool $ativo = null, bool $onlyActiveInstitutions = false): array
     {

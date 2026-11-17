@@ -43,6 +43,22 @@ final class PartesRepository
         return $result === false ? null : $result;
     }
 
+    /** Current locking read used by profession reconciliation inside an existing transaction. */
+    public function findByIdForUpdate(string $id): ?array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return null;
+        }
+        $statement = $this->connection->prepare(
+            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1 FOR UPDATE', $this->table)
+        );
+        $statement->execute([':id' => $id]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $result === false ? null : $result;
+    }
+
     public function findByCpf(string $cpf): ?array
     {
         $cpf = $this->normalizeCpf($cpf);

@@ -51,21 +51,16 @@ final class FeriadosService
     {
         $normalized = $this->normalizePayload($payload);
         $id = $this->generateId();
-        $this->repository->insert($id, $normalized);
-
-        $recalc = 0;
-        if ($normalized['ativo'] === 1) {
-            require_once __DIR__ . '/EditaisService.php';
-            $recalc = (new EditaisService($this->connection))->recalcularDecursosPorSobreposicaoFeriado(
-                $normalized['data_inicio'],
-                $normalized['data_fim']
-            );
-        }
-
-        return [
-            'id' => $id,
-            'editais_decurso_recalculados' => $recalc,
-        ];
+        return $this->withCalendarTransaction(function () use ($id, $normalized): array {
+            $this->repository->insert($id, $normalized);
+            $intervalos = $normalized['ativo'] === 1
+                ? [[$normalized['data_inicio'], $normalized['data_fim']]]
+                : [];
+            return [
+                'id' => $id,
+                'editais_decurso_recalculados' => $this->recalcularEditaisDecursoPorVariosIntervalosFeriado($intervalos),
+            ];
+        });
     }
 
     /**
@@ -77,28 +72,23 @@ final class FeriadosService
         if (!$this->isValidId($id)) {
             throw new InvalidArgumentException('Identificador inválido.');
         }
-        $anterior = $this->repository->findById($id);
-        if ($anterior === null) {
-            throw new InvalidArgumentException('Feriado não encontrado.');
-        }
         $normalized = $this->normalizePayload($payload);
-        $this->repository->update($id, $normalized);
-
-        $intervalosParaRecalcular = [];
-        if (!empty($anterior['ativo'])) {
-            $oi = trim((string) ($anterior['data_inicio'] ?? ''));
-            $of = trim((string) ($anterior['data_fim'] ?? ''));
-            if ($oi !== '' && $of !== '' && $of >= $oi) {
-                $intervalosParaRecalcular[] = [$oi, $of];
+        return $this->withCalendarTransaction(function () use ($id, $normalized): array {
+            $anterior = $this->repository->findByIdForUpdate($id);
+            if ($anterior === null) {
+                throw new InvalidArgumentException('Feriado não encontrado.');
             }
-        }
-        if ($normalized['ativo'] === 1) {
-            $intervalosParaRecalcular[] = [$normalized['data_inicio'], $normalized['data_fim']];
-        }
+            $this->repository->update($id, $normalized);
 
-        return [
-            'editais_decurso_recalculados' => $this->recalcularEditaisDecursoPorVariosIntervalosFeriado($intervalosParaRecalcular),
-        ];
+            $intervalos = [];
+            if (!empty($anterior['ativo'])) {
+                $intervalos[] = [trim((string) $anterior['data_inicio']), trim((string) $anterior['data_fim'])];
+            }
+            if ($normalized['ativo'] === 1) {
+                $intervalos[] = [$normalized['data_inicio'], $normalized['data_fim']];
+            }
+            return ['editais_decurso_recalculados' => $this->recalcularEditaisDecursoPorVariosIntervalosFeriado($intervalos)];
+        });
     }
 
     /**
@@ -109,21 +99,59 @@ final class FeriadosService
         if (!$this->isValidId($id)) {
             throw new InvalidArgumentException('Identificador inválido.');
         }
-        $anterior = $this->repository->findById($id);
-        if ($this->repository->deleteById($id) < 1) {
-            throw new InvalidArgumentException('Feriado não encontrado ou já excluído.');
+        return $this->withCalendarTransaction(function () use ($id): array {
+            $anterior = $this->repository->findByIdForUpdate($id);
+            if ($anterior === null || $this->repository->deleteById($id) < 1) {
+                throw new InvalidArgumentException('Feriado não encontrado ou já excluído.');
+            }
+            $intervalos = [];
+            if (!empty($anterior['ativo'])) {
+                $intervalos[] = [trim((string) $anterior['data_inicio']), trim((string) $anterior['data_fim'])];
+            }
+            return ['editais_decurso_recalculados' => $this->recalcularEditaisDecursoPorVariosIntervalosFeriado($intervalos)];
+        });
+    }
+
+    /** Executa cada mutação do calendário e seus recálculos como uma unidade serializada. */
+    private function withCalendarTransaction(callable $operation): array
+    {
+        if ($this->connection->inTransaction()) {
+            throw new LogicException('A mutação de calendário não pode herdar uma transação externa.');
         }
-        $recalc = 0;
-        if ($anterior !== null && !empty($anterior['ativo'])) {
-            $oi = trim((string) ($anterior['data_inicio'] ?? ''));
-            $of = trim((string) ($anterior['data_fim'] ?? ''));
-            if ($oi !== '' && $of !== '' && $of >= $oi) {
-                require_once __DIR__ . '/EditaisService.php';
-                $recalc = (new EditaisService($this->connection))->recalcularDecursosPorSobreposicaoFeriado($oi, $of);
+        $mysql = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
+        $lockAcquired = false;
+        if ($mysql) {
+            $stmt = $this->connection->query("SELECT GET_LOCK('fokus-law-feriados-recalc', 15)");
+            $lockAcquired = $stmt !== false && (int) $stmt->fetchColumn() === 1;
+            if (!$lockAcquired) {
+                throw new RuntimeException('Não foi possível obter o bloqueio do calendário.');
             }
         }
 
-        return ['editais_decurso_recalculados' => $recalc];
+        try {
+            if (!$this->connection->beginTransaction()) {
+                throw new RuntimeException('Não foi possível iniciar a transação do calendário.');
+            }
+            try {
+                $result = $operation();
+                if (!$this->connection->commit()) {
+                    throw new RuntimeException('Não foi possível confirmar a transação do calendário.');
+                }
+                return $result;
+            } catch (Throwable $error) {
+                if ($this->connection->inTransaction()) {
+                    $this->connection->rollBack();
+                }
+                throw $error;
+            }
+        } finally {
+            if ($lockAcquired) {
+                $stmt = $this->connection->query("SELECT RELEASE_LOCK('fokus-law-feriados-recalc')");
+                if ($stmt === false || (int) $stmt->fetchColumn() !== 1) {
+                    error_log('Falha ao liberar bloqueio serial do calendário de feriados.');
+                }
+            }
+        }
     }
 
     private function isValidId(string $id): bool
