@@ -61,15 +61,62 @@ final class InstituicoesPublicasService
 
     public function update(string $id, array $payload): bool
     {
-        if ($this->repository->findById($id) === null) {
-            return false;
+        $id = trim($id);
+        return $this->operacaoComLock(function () use ($id, $payload): bool {
+            if ($this->repository->findByIdForUpdate($id) === null) {
+                return false;
+            }
+
+            $allowed = ['nome', 'nome_fantasia', 'cnpj', 'observacoes', 'ativo'];
+            $data = array_intersect_key($payload, array_flip($allowed));
+            if ($data === []) {
+                return true;
+            }
+
+            return $this->repository->update($id, $data);
+        });
+    }
+
+    private function operacaoComLock(callable $operation): mixed
+    {
+        $ownsTransaction = !$this->connection->inTransaction();
+        $savepoint = null;
+
+        if ($ownsTransaction) {
+            $this->connection->beginTransaction();
+        } else {
+            $savepoint = 'instituicao_update_' . bin2hex(random_bytes(8));
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
         }
-        $allowed = ['nome', 'nome_fantasia', 'cnpj', 'observacoes', 'ativo'];
-        $data = array_intersect_key($payload, array_flip($allowed));
-        if ($data === []) {
-            return true;
+
+        try {
+            $result = $operation();
+            if ($ownsTransaction) {
+                $this->connection->commit();
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            return $result;
+        } catch (Throwable $error) {
+            try {
+                if ($ownsTransaction) {
+                    if ($this->connection->inTransaction()) {
+                        $this->connection->rollBack();
+                    }
+                } elseif ($this->connection->inTransaction()) {
+                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                }
+            } catch (Throwable $rollbackError) {
+                error_log('Instituições públicas: falha ao reverter atualização (' . get_class($rollbackError) . ').');
+                throw new RuntimeException(
+                    'Falha ao reverter atualização; o estado da transação pode estar inválido.',
+                    0,
+                    $error
+                );
+            }
+            throw $error;
         }
-        return $this->repository->update($id, $data);
     }
 
     public function addTelefone(string $instituicaoId, array $row): string
