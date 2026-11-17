@@ -12,4 +12,9 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-77): publish race barrier atomically** `[095f04ef]`
 - **fix(REI-77): preserve focus and refresh enrollment eligibility** `[5976b65f]`
 - **fix(REI-77): preserve focus when eligibility disappears** `[3007f621]`
+- **fix: secure process priorities APIs (REI-75)** `[58c2d681]`
+- **test(auth): cover revoked session on priorities API** `[5f59cc3c]`
+- **merge: sync REI-75 with main** `[a35fc88b]`
+- **test(REI-75): cover revoked session mutations** `[d7ea35e9]`
 
+- **fix(REI-141): honor explicit CCM confirmation** `[3b9fcfa5]`

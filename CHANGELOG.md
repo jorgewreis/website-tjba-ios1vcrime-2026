@@ -2,9 +2,14 @@
 
 ## V. 1.87.0183
 
-**Data:** 2026-11-17 03:07:52 | **Commit:** `3007f621` | **Tipo:** `patch`
+**Data:** 2026-11-17 04:01:04 | **Commits:** `3007f621`, `d7ea35e9`, `58c2d681`, `5f59cc3c`, `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
 
 - fix(REI-77): preserve focus when eligibility disappears
+- test(REI-75): cover revoked session mutations
+- fix: secure process priorities APIs
+- test(auth): cover revoked session on priorities API
+- merge: sync REI-75 with main
+- fix(REI-141): honor explicit CCM confirmation
 
 ## V. 1.87.0182
 
@@ -114,10 +119,11 @@
 
 ## V. 1.87.0165
 
-**Data:** 2026-11-16 15:48:28 | **Commit:** `1b27c384` | **Tipo:** `patch`
+**Data:** 2026-11-16 16:34:26 | **Commits:** `1b27c384`, `c723c85f` | **Tipo:** `patch`
 
 - fix(REI-114): report reconciliation outcomes
 - fix(REI-161): ocultar metadados de pautas inelegiveis
+- test(REI-88): verify pauta rollback on isolated MySQL
 
 ## V. 1.87.0164
 
@@ -6530,6 +6536,3 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
-
-
-
