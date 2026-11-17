@@ -17,3 +17,7 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-75): cover revoked session mutations** `[d7ea35e9]`
 
 - **fix(REI-141): honor explicit CCM confirmation** `[3b9fcfa5]`
+- **fix(REI-73): validate student enrollment guard** `[b684e5fc]`
+- **test(REI-80): cover same-site hostile origin** `[a74ac77d]`
+- **test(REI-80): cover authorized enrollment success** `[6d55da93]`
+- **test(REI-80): exercise trusted origin helper** `[27a69ff1]`
