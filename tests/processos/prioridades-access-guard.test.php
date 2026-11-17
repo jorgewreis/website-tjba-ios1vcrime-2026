@@ -15,7 +15,7 @@ $put = static function (string $path, string $content) use ($root, &$files): voi
 };
 
 try {
-    foreach (['prioridades-list.php', 'prioridades-read.php', 'prioridades-remove.php'] as $endpoint) {
+    foreach (['prioridades-list.php', 'prioridades-read.php', 'prioridades-add.php', 'prioridades-remove.php'] as $endpoint) {
         $path = 'public/api/processos/' . $endpoint;
         $put($path, file_get_contents($source . '/' . $path));
     }
@@ -51,6 +51,7 @@ PHP);
 final class ProcessoPrioridadesService {
     public function __construct(PDO $pdo) {}
     public function getEstadoEdicaoPorProcessoId(string $id, int $n): array { return ['processo_id' => $id]; }
+    public function adicionarManualPorCodigoOuRotulo(string $id, string $codigo): void { file_put_contents(getenv('TEST_DISPATCH_MARKER'), 'add'); }
     public function removerPorCodigoOuRotulo(string $id, string $codigo, int $n): void { file_put_contents(getenv('TEST_DISPATCH_MARKER'), 'remove'); }
 }
 PHP);
@@ -82,6 +83,9 @@ PHP);
         ['prioridades-read.php', '1', 'SERVIDOR-CARTORIO', 'POST', 'http://example.invalid', ['numero' => '12345678901234567890'], 405, false, false],
         ['prioridades-read.php', '1', 'SERVIDOR-CARTORIO', 'GET', 'http://example.invalid', ['numero' => '12345678901234567890'], 200, true, false, true],
         ['prioridades-read.php', '1', 'SERVIDOR-CARTORIO', 'GET', 'http://example.invalid', ['numero' => '12345678901234567890'], 404, true, false, false],
+        // Sessão revogada deve bloquear mutações POST antes de DB/serviço.
+        ['prioridades-add.php', '1', 'SERVIDOR-AUDIENCIAS', 'POST', 'http://example.invalid', ['processo_id' => 'P1', 'codigo' => '1'], 401, false, false, true, false],
+        ['prioridades-remove.php', '1', 'SERVIDOR-AUDIENCIAS', 'POST', 'http://example.invalid', ['processo_id' => 'P1', 'codigo' => '1'], 401, false, false, true, false],
         // Remoção exige salapautaedit e POST confiável.
         ['prioridades-remove.php', '0', 'SERVIDOR-AUDIENCIAS', 'POST', 'http://example.invalid', ['processo_id' => 'P1', 'codigo' => '1'], 401, false, false],
         ['prioridades-remove.php', '1', 'CONSULTOR', 'POST', 'http://example.invalid', ['processo_id' => 'P1', 'codigo' => '1'], 403, false, false],
@@ -99,7 +103,7 @@ PHP);
         $dispatchMarker = $root . '/dispatch-marker';
         foreach ([$dbMarker, $dispatchMarker] as $marker) if (is_file($marker)) unlink($marker);
         $path = $root . '/public/api/processos/' . $endpoint;
-        $payload = $endpoint === 'prioridades-remove.php' ? $query : [];
+        $payload = in_array($endpoint, ['prioridades-add.php', 'prioridades-remove.php'], true) ? $query : [];
         $code = 'putenv(' . var_export('TEST_AUTH=' . $auth, true) . '); putenv(' . var_export('TEST_SESSION_TOKEN_ACTIVE=' . ($sessionTokenActive ? '1' : '0'), true) . '); putenv(' . var_export('TEST_PROFILE=' . $profile, true) . '); putenv(' . var_export('TEST_PROCESS_EXISTS=' . ($processExists ? '1' : '0'), true) . '); putenv(' . var_export('TEST_DB_MARKER=' . $dbMarker, true) . '); putenv(' . var_export('TEST_DISPATCH_MARKER=' . $dispatchMarker, true) . '); $_SESSION=["id_usuario"=>"synthetic","token"=>"synthetic-revocable-token"]; $_SERVER["REQUEST_METHOD"]=' . var_export($method, true) . '; $_SERVER["HTTP_HOST"]="example.invalid"; $_SERVER["HTTP_ORIGIN"]=' . var_export($origin, true) . '; $_GET=' . var_export($query, true) . '; $_POST=' . var_export($payload, true) . '; http_response_code(200); register_shutdown_function(function(){fwrite(STDERR,"HTTP:".http_response_code());}); require ' . var_export($path, true) . ';';
         $proc = proc_open([PHP_BINARY, '-r', $code], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (!is_resource($proc)) throw new RuntimeException('Falha ao iniciar PHP.');
