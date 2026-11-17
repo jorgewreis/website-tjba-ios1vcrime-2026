@@ -4,7 +4,7 @@
 
 **Data:** 2026-11-17 03:49:08 | **Commit:** `8b957a3d` | **Tipo:** `patch`
 
-- fix(REI-141): gate CCM before idempotent replay
+- fix(REI-141): honor explicit CCM confirmation before idempotent replay
 
 ## V. 1.87.0182
 
