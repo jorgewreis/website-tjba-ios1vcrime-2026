@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0179
+
+**Data:** 2026-11-16 21:44:48 | **Commit:** `9cc8c877` | **Tipo:** `patch`
+
+- fix(DataJud): reject malformed class metadata
+
 ## V. 1.87.0178
 
 **Data:** 2026-11-16 21:42:26 | **Commit:** `085e773f` | **Tipo:** `patch`
@@ -6497,6 +6503,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 

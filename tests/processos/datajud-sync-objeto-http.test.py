@@ -49,6 +49,7 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
       'missing-sigilo' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>false, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
       'subjects' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>['codigo'=>null,'descricao'=>null]],
       'partial-class' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>['codigo'=>42,'descricao'=>null]],
+      'malformed-class' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>['unexpected'=>'x']],
       'no-class-empty' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>false, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>null,'descricao'=>null]],
       default => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
     };
@@ -102,6 +103,7 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
         assert request(result='restricted')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(result='missing-sigilo')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(result='partial-class')[0] == 422 and read_marker.exists() and not write_marker.exists()
+        assert request(result='malformed-class')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(result='no-class-empty')[0] == 422 and read_marker.exists() and not write_marker.exists()
         code, _ = request(result='subjects')
         assert code == 200 and write_marker.exists()
@@ -117,6 +119,7 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
         assert request(endpoint=cartorio, result='restricted')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(endpoint=cartorio, result='missing-sigilo')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(endpoint=cartorio, result='partial-class')[0] == 422 and read_marker.exists() and not write_marker.exists()
+        assert request(endpoint=cartorio, result='malformed-class')[0] == 422 and read_marker.exists() and not write_marker.exists()
         assert request(endpoint=cartorio, result='no-class-empty')[0] == 422 and read_marker.exists() and not write_marker.exists()
         code, _ = request(endpoint=cartorio, result='subjects')
         assert code == 200 and write_marker.exists()

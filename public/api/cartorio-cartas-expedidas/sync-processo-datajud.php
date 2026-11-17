@@ -77,7 +77,8 @@ try {
         exit;
     }
     // O mapper representa classe ausente com as duas chaves nulas.
-    if ($classe !== [] && ($classe['codigo'] ?? null) === null && ($classe['descricao'] ?? null) === null) {
+    if ($classe !== [] && array_key_exists('codigo', $classe) && array_key_exists('descricao', $classe)
+        && $classe['codigo'] === null && $classe['descricao'] === null) {
         $classe = [];
     }
     $codigo = $classe['codigo'] ?? null;
