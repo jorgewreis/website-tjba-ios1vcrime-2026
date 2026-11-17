@@ -4,9 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(guias): serializar inicializacao das subtarefas (REI-105)** `[c26efa2e]`
-- **chore(REI-78): sync with current main** `[4a420af5]`
-- **fix(REI-78): fail closed without unique idempotency index** `[1e9b1642]`
-- **fix(REI-78): close idempotency review findings** `[14e8c18e]`
-- **chore(REI-78): sync current main** `[61544189]`
+- **fix(REI-78): reject stale Carta form after lookup** `[f2b99236]`
 
