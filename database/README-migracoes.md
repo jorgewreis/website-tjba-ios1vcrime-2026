@@ -151,6 +151,13 @@ preenche unidades de processos existentes. Pode ser reaplicado com
 O workflow `.github/workflows/deploy-prod.yml` o executa antes de
 sincronizar os arquivos da aplicação.
 
+Ao criar a chave estrangeira, o script mantém `foreign_key_checks` ativo e
+usa `ALGORITHM=COPY, LOCK=SHARED` para que o InnoDB valide as referências
+durante a operação, sem permitir escritas concorrentes em `processos`.
+Essa etapa reconstrói a tabela e pode bloquear gravações pelo tempo da cópia;
+antes de executá-la em produção, verifique volume e espaço disponível e programe
+uma janela operacional compatível. O preflight `--dry-run` não estima duração.
+
 Enquanto `id_setor_responsavel` estiver nulo, operações protegidas por
 unidade devem negar mutações. Os fluxos atuais de criação de processos
 não atribuem setor automaticamente; processos existentes e novos só

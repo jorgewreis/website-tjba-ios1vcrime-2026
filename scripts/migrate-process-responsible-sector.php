@@ -95,7 +95,7 @@ final class ProcessResponsibleSectorMigration
             echo 'Preflight estrutural passou; nenhuma alteração executada.' . PHP_EOL;
             echo 'Coluna: ' . ($plan['add_column'] ? 'seria adicionada' : 'compatível') . PHP_EOL;
             echo 'Índice: ' . ($plan['add_index'] ? 'seria adicionado' : 'compatível') . PHP_EOL;
-            echo 'Chave estrangeira: ' . ($plan['add_foreign_key'] ? 'seria adicionada após checagem de órfãos' : 'compatível') . PHP_EOL;
+            echo 'Chave estrangeira: ' . ($plan['add_foreign_key'] ? 'seria validada e adicionada com ALGORITHM=COPY; pode bloquear escritas enquanto reconstrói a tabela' : 'compatível') . PHP_EOL;
             echo 'Dry run não verifica órfãos nem comprova execução do DDL.' . PHP_EOL;
             return $plan;
         }
@@ -126,20 +126,15 @@ final class ProcessResponsibleSectorMigration
             if ($foreignKeyChecks !== 1) {
                 throw new RuntimeException('foreign_key_checks da sessão precisa estar habilitado antes da migração.');
             }
-            // MySQL requires checks off to add an FK INPLACE. The indexed orphan
-            // preflight above validates existing values; checks are restored in
-            // this connection immediately, without changing global server state.
-            $this->connection->exec('SET SESSION foreign_key_checks = 0');
-            try {
-                $this->connection->exec(
-                    'ALTER TABLE `processos` ADD CONSTRAINT `fk_processos_setor_responsavel` '
-                    . 'FOREIGN KEY (`id_setor_responsavel`) REFERENCES `setores` (`id_setor`) '
-                    . 'ON DELETE RESTRICT ON UPDATE RESTRICT, ALGORITHM=INPLACE, LOCK=NONE'
-                );
-            } finally {
-                $this->connection->exec('SET SESSION foreign_key_checks = 1');
-            }
-            echo 'Chave estrangeira para setores criada com exclusão e atualização restritas.' . PHP_EOL;
+            // Keep checks enabled so InnoDB validates rows while rebuilding the
+            // table. COPY blocks concurrent DML during validation and closes
+            // the orphan-insert race between preflight and constraint creation.
+            $this->connection->exec(
+                'ALTER TABLE `processos` ADD CONSTRAINT `fk_processos_setor_responsavel` '
+                . 'FOREIGN KEY (`id_setor_responsavel`) REFERENCES `setores` (`id_setor`) '
+                . 'ON DELETE RESTRICT ON UPDATE RESTRICT, ALGORITHM=COPY, LOCK=SHARED'
+            );
+            echo 'Chave estrangeira validada e criada com verificações habilitadas; DDL COPY permite leituras e bloqueia escritas.' . PHP_EOL;
         }
 
         $remaining = $this->preflight();

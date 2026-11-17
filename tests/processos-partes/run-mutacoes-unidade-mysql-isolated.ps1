@@ -136,18 +136,26 @@ try {
     Invoke-DockerSafe @('start', $mysqlId) | Out-Null
 
     $ready = $false
+    $lastProbeExit = $null
+    $lastProbeOutput = ''
     for ($i = 0; $i -lt 90; $i++) {
         $ErrorActionPreference = 'Continue'
-        $probe = & docker --host $dockerEndpoint exec $mysqlId sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --protocol=socket --socket=/var/run/mysqld/mysqld.sock -uroot rei69_test -N -e "SELECT 1"' 2>&1
+        $probe = & docker --host $dockerEndpoint exec $mysqlId sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --protocol=socket --socket=/var/run/mysqld/mysqld.sock -uroot rei69_test -N -e SELECT\ 1' 2>&1
         $probeExit = $LASTEXITCODE
         $ErrorActionPreference = 'Stop'
+        $lastProbeExit = $probeExit
+        $lastProbeOutput = [string]::Join(' ', @($probe | ForEach-Object { [string] $_ })).Trim()
         if ($probeExit -eq 0 -and ($probe | Select-Object -Last 1).Trim() -eq '1') { $ready = $true; break }
         Start-Sleep -Seconds 1
     }
-    if (-not $ready) { throw 'MySQL descartável não ficou pronto.' }
+    if (-not $ready) { throw "MySQL descartável não ficou pronto; probe exit=$lastProbeExit output='$lastProbeOutput'." }
 
     $markerSql = "CREATE TABLE rei69_test_guard (marker CHAR(64) NOT NULL PRIMARY KEY) ENGINE=InnoDB; INSERT INTO rei69_test_guard (marker) VALUES ('$marker');"
-    Invoke-DockerSafe @('exec', $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', "--password=$password", 'rei69_test', '-e', $markerSql) | Out-Null
+    $markerSqlBase64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($markerSql))
+    Invoke-DockerSafe @(
+        'exec', '--env', "REI69_MARKER_SQL_B64=$markerSqlBase64", $mysqlId, 'sh', '-c',
+        'printf %s "$REI69_MARKER_SQL_B64" | base64 -d | MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql --protocol=socket --socket=/var/run/mysqld/mysqld.sock -uroot rei69_test'
+    ) | Out-Null
 
     # Nenhuma configuração de produção é montada. O teste gera stubs sintéticos em /tmp.
     $appMount = "type=bind,source=$appRoot,target=/repo/app,readonly"

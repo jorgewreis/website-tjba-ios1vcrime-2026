@@ -93,6 +93,7 @@ $secondMigrationPlan = $migration->migrate();
 $secondMigrationOutput = (string) ob_get_clean();
 if ($firstMigrationOutput === '' || $secondMigrationOutput === ''
     || $secondMigrationPlan !== ['add_column' => false, 'add_index' => false, 'add_foreign_key' => false]
+    || (int) $pdo->query('SELECT @@SESSION.foreign_key_checks')->fetchColumn() !== 1
     || (int) $pdo->query('SELECT COUNT(*) FROM processos WHERE id_setor_responsavel IS NOT NULL')->fetchColumn() !== 0) {
     throw new RuntimeException('Migração REI-69 não foi aditiva, idempotente ou deixou processo legado sem atribuição.');
 }
@@ -101,7 +102,7 @@ $pdo->exec("INSERT INTO setores (id_setor,ativo) VALUES ('SET-CARTORIO',1),('SET
 $pdo->exec("INSERT INTO usuario_setor (usuario,setor) VALUES ('USR-1','SET-CARTORIO'),('USR-2','SET-GABINETE'),('USR-4','SET-INATIVO')");
 $pdo->exec("INSERT INTO processos (id,numero_processo,id_setor_responsavel) VALUES ('PRC-1','CNJ-SINTETICO-1','SET-CARTORIO'),('PRC-2','CNJ-SINTETICO-2','SET-GABINETE'),('PRC-3','CNJ-SINTETICO-3',NULL),('PRC-4','CNJ-SINTETICO-4','SET-INATIVO')");
 $pdo->exec("INSERT INTO partes (id,nome_completo,cpf,sexo,data_nascimento,profissao,created_at,updated_at) VALUES ('PAR-1','Pessoa Sintética 1','00000000000','X','2000-01-01','Réu','2026-01-01 00:00:00','2026-01-01 00:00:00'),('PAR-2','Pessoa Sintética 2','00000000001','X','2000-01-01','Advogada anterior','2026-01-01 00:00:00','2026-01-01 00:00:00')");
-$pdo->exec("INSERT INTO processos_partes (id,processo_id,parte_id,tipo_parte,polo,created_at,updated_at) VALUES ('VNC-1','PRC-1','PAR-1','reu','passivo',NOW(),NOW()),('VNC-2','PRC-2','PAR-2','vitima','ativo',NOW(),NOW())");
+$pdo->exec("INSERT INTO processos_partes (id,processo_id,parte_id,tipo_parte,polo,created_at,updated_at) VALUES ('VNC-1','PRC-1','PAR-1','reu','passivo',NOW(),NOW()),('VNC-2','PRC-2','PAR-2','vitima','ativo',NOW(),NOW()),('VNC-3','PRC-3','PAR-1','testemunha','ativo',NOW(),NOW())");
 
 // Copia só as dependências estritamente necessárias para uma fixture local em /tmp.
 // A configuração é stub sintético; config real e .env nunca entram no executor.
@@ -147,7 +148,7 @@ foreach ($appFiles as $relative) {
     $copyRelative($appRoot, $relative, $lab, 'app/' . $relative);
 }
 $copyRelative($appRoot, 'repositories/PartesRepository.php', $lab, 'app/repositories/PartesRepositoryReal.php');
-foreach (['create.php', 'update.php', 'delete.php'] as $endpoint) {
+foreach (['create.php', 'update.php', 'delete.php', 'list.php'] as $endpoint) {
     $copyRelative($endpointRoot, $endpoint, $lab, 'public/api/processos-partes/' . $endpoint);
 }
 file_put_contents($lab . '/app/helpers/AutoloadHelper.php', "<?php\ndeclare(strict_types=1);\n");
@@ -281,6 +282,21 @@ try {
     $assert(count($afterCreate['sync_log']) === count($before['sync_log']) + 1, 'Create autorizado não sincronizou profissão global.');
     $assert($pdo->query("SELECT profissao FROM partes WHERE id='PAR-2'")->fetchColumn() === 'Advogado' && $sharedPartProfession !== 'Advogado', 'Create autorizado não atualizou profissão global da pessoa compartilhada.');
 
+    [$readAllowedStatus, $readAllowedBody] = $invoke('list.php', 'USR-1', 'SERVIDOR-CARTORIO', ['processo_id' => 'PRC-1'], 'GET');
+    [$readCrossSectorStatus, $readCrossSectorBody] = $invoke('list.php', 'USR-1', 'SERVIDOR-CARTORIO', ['processo_id' => 'PRC-2'], 'GET');
+    [$readLegacyStatus, $readLegacyBody] = $invoke('list.php', 'USR-1', 'SERVIDOR-CARTORIO', ['processo_id' => 'PRC-3'], 'GET');
+    [$readByPartStatus, $readByPartBody] = $invoke('list.php', 'USR-1', 'SERVIDOR-CARTORIO', ['parte_id' => 'PAR-2'], 'GET');
+    $readAllowedIds = array_column($readAllowedBody['data'] ?? [], 'id');
+    $assert($readAllowedStatus === 200 && count($readAllowedIds) === 2 && in_array('VNC-1', $readAllowedIds, true)
+        && in_array((string) $body['id'], $readAllowedIds, true), 'Leitura autorizada no setor não retornou os vínculos esperados.');
+    $assert($readCrossSectorStatus === 200 && ($readCrossSectorBody['data'] ?? null) === [], 'Leitura por processo expôs vínculo de outro setor.');
+    $assert($readLegacyStatus === 200 && ($readLegacyBody['data'] ?? null) === [], 'Leitura expôs vínculo de processo legado sem setor.');
+    $readByPartIds = array_column($readByPartBody['data'] ?? [], 'id');
+    $assert($readByPartStatus === 200 && $readByPartIds === [(string) $body['id']], 'Leitura por parte não filtrou exatamente os vínculos fora do setor.');
+    [$anonymousReadStatus] = $invoke('list.php', 'USR-1', 'SERVIDOR-CARTORIO', ['processo_id' => 'PRC-1'], 'GET', 'http://example.invalid', false, false);
+    [$invalidReadMethodStatus] = $invoke('list.php', 'USR-1', 'SERVIDOR-CARTORIO', ['processo_id' => 'PRC-1'], 'POST');
+    $assert($anonymousReadStatus === 401 && $invalidReadMethodStatus === 405, 'Leitura aceitou usuário anônimo ou método inválido.');
+
     foreach ([
         ['USR-2', 'PRC-1', 'setor diferente'],
         ['USR-3', 'PRC-1', 'usuário sem setor'],
@@ -349,7 +365,7 @@ try {
     [$deleteStatus, $deleteBody] = $invoke('delete.php', 'USR-1', 'SERVIDOR-CARTORIO', ['id' => 'VNC-1']);
     $assert($deleteStatus === 200 && ($deleteBody['deleted'] ?? false) === true, 'Delete autorizado no mesmo setor não persistiu.');
 
-    fwrite(STDOUT, "PASS MySQL/InnoDB: migração real idempotente sem backfill; autorização por setor; sincronização global de profissão no mesmo commit; rollback conjunto após falha; negações sem gravação; respostas sem enumeração e locks em update/delete. Sessão/perfis sintéticos via PHP CLI; sem navegador ou autenticação real.\n");
+    fwrite(STDOUT, "PASS MySQL/InnoDB: migração real idempotente sem backfill e com FK checks habilitados; leitura e mutação protegidas por setor; sincronização global de profissão no mesmo commit; rollback conjunto após falha; negações sem gravação; respostas sem enumeração e locks em update/delete. Sessão/perfis sintéticos via PHP CLI; sem navegador ou autenticação real.\n");
 } finally {
     // O laboratório é um tmpfs descartável, criado e validado no diretório temporário.
     $resolvedLab = realpath($lab);

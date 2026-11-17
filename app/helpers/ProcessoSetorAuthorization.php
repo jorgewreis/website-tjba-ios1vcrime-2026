@@ -5,6 +5,15 @@ declare(strict_types=1);
 final class ProcessoSetorAuthorization
 {
     /**
+     * Confere o escopo de acesso ao registro. A permissão da operação deve ser
+     * validada separadamente pelo guard do endpoint.
+     */
+    public static function canAccessProcess(PDO $connection, string $userId, string $processId, bool $lock = true): bool
+    {
+        return self::canModifyProcess($connection, $userId, $processId, $lock);
+    }
+
+    /**
      * Exige transação ativa quando $lock=true para manter o setor responsável
      * estável entre a autorização e a mutação que o chamador executará.
      */
