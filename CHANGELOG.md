@@ -1,10 +1,18 @@
 # Changelog
 
+## V. 1.87.0180
+
+**Data:** 2026-11-17 04:01:04 | **Commit:** `d7ea35e9` | **Tipo:** `patch`
+
+- test(REI-75): cover revoked session mutations
+
 ## V. 1.87.0179
 
-**Data:** 2026-11-17 03:31:48 | **Commit:** `cf09285a` | **Tipo:** `patch`
+**Data:** 2026-11-17 03:31:48 | **Commits:** `cf09285a`, `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
 
 - test(REI-93): fail closed on invalid Docker inspect
+- merge: sync REI-75 with main
+- fix(REI-141): honor explicit CCM confirmation
 
 ## V. 1.87.0178
 
