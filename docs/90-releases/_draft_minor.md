@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-115): make edital conclusion atomic** `[3e478b30]`
+- **fix(REI-77): serialize student enrollment per hearing** `[8d404e0e]`
 
