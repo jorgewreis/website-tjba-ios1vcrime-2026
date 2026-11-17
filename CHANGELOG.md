@@ -2,6 +2,11 @@
 
 ## V. 1.87.0185
 
+**Data:** 2026-11-17 06:57:43 | **Commit:** `46777715` | **Tipo:** `patch`
+
+- feat(rei-69): add audited responsible sector assignment
+- fix(REI-69): restrict process-part access by sector (`79cc9a31`)
+
 **Data:** 2026-11-17 06:54:27 | **Commit:** `7bbcef09` | **Tipo:** `patch`
 
 - fix(REI-72): restrict subject mutations by sector
@@ -12,10 +17,9 @@
 
 - merge: sync DataJud process sync with current main
 
-**Data:** 2026-11-17 05:34:12 | **Commit:** `79cc9a31` | **Tipo:** `patch`
+**Data:** 2026-11-17 05:33:49 | **Commit:** `aea3e451` | **Tipo:** `patch`
 
-- fix(REI-69): restrict process-part access by sector
-
+- merge: sync Carta atomicity with current main
 ## V. 1.87.0183
 
 **Data:** 2026-11-17 05:15:00 | **Commit:** `27a69ff1` | **Tipo:** `patch`
