@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(guias): serializar inicializacao das subtarefas (REI-105)** `[c26efa2e]`
+- **docs(REI-73): reconcile merge blockers after REI-93 sync** `[d93cc291]`
 
