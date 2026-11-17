@@ -9,3 +9,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test: cover mixed alias profiles for REI-70** `[6b2436f0]`
 - **merge: sync consultant access with current main** `[02018d79]`
 
+\n
