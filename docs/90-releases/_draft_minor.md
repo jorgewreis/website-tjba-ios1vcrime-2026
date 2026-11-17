@@ -10,4 +10,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-77): verify waits through data lock metadata** `[e057ef70]`
 - **test(REI-77): verify both sides of row lock waits** `[2b428ea7]`
 - **test(REI-77): publish race barrier atomically** `[095f04ef]`
+- **fix(REI-77): preserve focus and refresh enrollment eligibility** `[5976b65f]`
 
