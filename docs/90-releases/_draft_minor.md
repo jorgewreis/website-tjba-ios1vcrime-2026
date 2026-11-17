@@ -12,4 +12,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **chore(REI-69): sync with current main** `[ca2ab844]`
 - **fix(REI-69): authorize reads and validate sector FK safely** `[acca2a1f]`
 - **fix(REI-69): authorize empty process-party updates** `[0795ba52]`
+- **test(REI-88): verify pauta rollback on isolated MySQL** `[c723c85f]`
+- **fix(guias): serializar inicializacao das subtarefas (REI-105)** `[c26efa2e]`
 
