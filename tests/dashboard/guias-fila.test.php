@@ -41,6 +41,23 @@ foreach ($steps as $i => $type) {
 }
 $insert->execute(['x','cancelada','detalhamento_informacoes',1,'em_andamento','2026-01-01']);
 $service = new DashboardResumoService($db);
+$db->exec("INSERT INTO guias VALUES ('futura-invalida','em_andamento','2026-01-01')");
+$insert->execute(['f1','futura-invalida','detalhamento_informacoes',1,'em_andamento','2026-01-01']);
+$insert->execute(['f2','futura-invalida','etapa_inexistente',2,'pendente','2026-01-01']);
+$result = $service->resumo('usuario', ['CARTORIO']);
+$queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
+verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && ($queue[0]['error'] ?? false), 'Tipo desconhecido em etapa futura deve tornar fila indisponível');
+$db->exec("DELETE FROM guias_subtarefas WHERE guia_id='futura-invalida'");
+$db->exec("DELETE FROM guias WHERE id='futura-invalida'");
+$db->exec("INSERT INTO guias VALUES ('futura-duplicada','em_andamento','2026-01-01')");
+$insert->execute(['d1','futura-duplicada','detalhamento_informacoes',1,'em_andamento','2026-01-01']);
+$insert->execute(['d2','futura-duplicada','calculo_pena_multa',2,'pendente','2026-01-01']);
+$insert->execute(['d3','futura-duplicada','calculo_pena_multa',2,'pendente','2026-01-01']);
+$result = $service->resumo('usuario', ['CARTORIO']);
+$queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
+verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && ($queue[0]['error'] ?? false), 'Empate em etapa futura deve tornar fila indisponível');
+$db->exec("DELETE FROM guias_subtarefas WHERE guia_id='futura-duplicada'");
+$db->exec("DELETE FROM guias WHERE id='futura-duplicada'");
 foreach ($steps as $i => $type) {
     if ($i > 0) $db->exec("UPDATE guias_subtarefas SET status='concluida' WHERE id='a" . ($i-1) . "'");
     $result = $service->resumo('usuario', ['CARTORIO']);

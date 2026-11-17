@@ -73,6 +73,27 @@ final class DashboardResumoService
                 try {
                     if (!$this->tableExists($meta['table']) || !$this->tableExists($meta['parent'])) { $hasQueueErrors=true; $queues[]=['key'=>$key,'label'=>$meta['label'],'count'=>null,'route'=>$meta['route'],'error'=>true]; continue; }
                     $types=array_keys($meta['types']);$marks=implode(',',array_fill(0,count($types),'?'));
+                    if ($key === 'guias') {
+                        // Validate every unresolved step, including future pending steps hidden behind the current one.
+                        $validation = $this->pdo->query("SELECT s.guia_id,s.tipo,s.ordem,s.status FROM `guias_subtarefas` s JOIN `guias` p ON p.id=s.guia_id WHERE LOWER(COALESCE(p.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada') AND (s.status IN ('pendente','em_andamento') OR COALESCE(s.status,'') NOT IN ('pendente','em_andamento','concluida','cancelada','pulada'))");
+                        $seenOrders = [];
+                        foreach ($validation->fetchAll(PDO::FETCH_ASSOC) as $step) {
+                            $status = (string) ($step['status'] ?? '');
+                            if (!in_array($status, ['pendente','em_andamento','concluida','cancelada','pulada'], true)) {
+                                throw new RuntimeException('Guia com status de etapa desconhecido.');
+                            }
+                            $type = (string) ($step['tipo'] ?? '');
+                            $order = $step['ordem'] ?? null;
+                            $expectedOrder = $meta['orders'][$type] ?? null;
+                            if ($status === 'pendente' || $status === 'em_andamento') {
+                                if ($expectedOrder === null) throw new RuntimeException('Guia com etapa ativa desconhecida.');
+                                if ($order === null || (int) $order !== $expectedOrder) throw new RuntimeException('Tipo e ordem de etapa da guia não correspondem.');
+                                $guideOrder = (string) $step['guia_id'] . ':' . (string) $order;
+                                if (isset($seenOrders[$guideOrder])) throw new RuntimeException('Guia com etapas ativas de mesma ordem.');
+                                $seenOrders[$guideOrder] = true;
+                            }
+                        }
+                    }
                     // GuiasSubtarefasRepository treats the first pending/in-progress step as executable.
                     $active = $key === 'guias'
                         ? "((s.status IN ('pendente','em_andamento') AND NOT EXISTS (SELECT 1 FROM `guias_subtarefas` anterior WHERE anterior.guia_id=s.guia_id AND anterior.ordem<s.ordem AND anterior.status IN ('pendente','em_andamento'))) OR COALESCE(s.status,'') NOT IN ('pendente','em_andamento','concluida','cancelada','pulada'))"

@@ -1,11 +1,5 @@
 # Changelog
 
-## V. 1.87.0184
-
-**Data:** 2026-11-17 05:59:07 | **Commit:** `89bee829` | **Tipo:** `patch`
-
-- fix(REI-167): preserve pending release metadata
-
 ## V. 1.87.0183
 
 **Data:** 2026-11-17 05:15:00 | **Commit:** `27a69ff1` | **Tipo:** `patch`
@@ -6536,7 +6530,6 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
-
 
 
 
