@@ -2,9 +2,9 @@
 
 ## V. 1.87.0184
 
-**Data:** 2026-11-17 05:42:44 | **Commit:** `37b0648a` | **Tipo:** `patch`
+**Data:** 2026-11-17 05:59:07 | **Commit:** `89bee829` | **Tipo:** `patch`
 
-- merge: sync guide dashboard with current main
+- fix(REI-167): preserve pending release metadata
 
 ## V. 1.87.0183
 
@@ -7593,4 +7593,3 @@
 
 
 
-\n
