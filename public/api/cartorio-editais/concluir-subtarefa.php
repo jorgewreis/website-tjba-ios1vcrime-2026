@@ -34,15 +34,23 @@ if ($subtarefaId === '') {
 }
 
 try {
+    $connection->beginTransaction();
     $before = DashboardResumoService::statusAnterior($connection, 'editais_subtarefas', $subtarefaId);
     $service = new EditaisService($connection);
     $resultado = $service->concluirSubtarefa($subtarefaId, $dadosEspecificos);
     DashboardResumoService::registrarConclusao($connection, $before, 'editais', 'CARTORIO', trim((string)($_SESSION['id_usuario'] ?? '')));
+    $connection->commit();
     echo json_encode(array_merge(['success' => true], is_array($resultado) ? $resultado : []), JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
+    if ($connection->inTransaction()) {
+        $connection->rollBack();
+    }
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $exception) {
+    if ($connection->inTransaction()) {
+        $connection->rollBack();
+    }
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao concluir subtarefa.'], JSON_UNESCAPED_UNICODE);
 }

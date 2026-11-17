@@ -1,9 +1,90 @@
 # Changelog
 
+## V. 1.87.0178
+
+**Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
+
+- fix(guias): serializar inicializacao das subtarefas (REI-105)
+
+## V. 1.87.0177
+
+**Data:** 2026-11-16 22:08:44 | **Commit:** `9142de98` | **Tipo:** `patch`
+
+- test(REI-105): cover guide dispatch validations
+
+## V. 1.87.0176
+
+**Data:** 2026-11-16 22:07:00 | **Commit:** `13950b37` | **Tipo:** `patch`
+
+- fix(REI-105): make guide completion atomic
+
+## V. 1.87.0175
+
+**Data:** 2026-11-16 20:38:23 | **Commit:** `d269e165` | **Tipo:** `patch`
+
+- chore(REI-85): sync with current main
+
+## V. 1.87.0174
+
+**Data:** 2026-11-16 19:33:56 | **Commit:** `3e478b30` | **Tipo:** `patch`
+
+- fix(REI-115): make edital conclusion atomic
+
+## V. 1.87.0173
+
+**Data:** 2026-11-16 18:33:09 | **Commit:** `04896097` | **Tipo:** `patch`
+
+- fix(REI-114): use current reads after row locks
+
+## V. 1.87.0172
+
+**Data:** 2026-11-16 18:26:18 | **Commit:** `653273be` | **Tipo:** `patch`
+
+- test(REI-114): validate calculated date reconciliation totals
+
+## V. 1.87.0171
+
+**Data:** 2026-11-16 18:23:46 | **Commit:** `9dfe8966` | **Tipo:** `patch`
+
+- fix(REI-114): report date writes and keep reconciliation summary
+
+## V. 1.87.0170
+
+**Data:** 2026-11-16 18:11:55 | **Commit:** `1df186d6` | **Tipo:** `patch`
+
+- fix(REI-114): assert calendar lock wait and release
+
+## V. 1.87.0169
+
+**Data:** 2026-11-16 18:09:19 | **Commit:** `b88609a1` | **Tipo:** `patch`
+
+- fix(REI-114): serialize reconciliation with calendar updates
+
+## V. 1.87.0168
+
+**Data:** 2026-11-16 16:04:19 | **Commit:** `a9dc0a91` | **Tipo:** `patch`
+
+- test(REI-114): verify side-effect-free edital list
+
+## V. 1.87.0167
+
+**Data:** 2026-11-16 15:58:21 | **Commit:** `c40f24f2` | **Tipo:** `patch`
+
+- test(REI-114): exercise edital reconciliation over HTTP
+
+## V. 1.87.0166
+
+**Data:** 2026-11-16 15:51:35 | **Commit:** `d24c40c7` | **Tipo:** `patch`
+
+- fix(REI-114): validate reconciliation totals
+- fix(REI-122,REI-135): reconcile calendar atomically
+
 ## V. 1.87.0165
 
-**Data:** 2026-11-16 16:34:26 | **Commit:** `c723c85f` | **Tipo:** `patch`
+**Data:** 2026-11-16 16:34:26 | **Commits:** `1b27c384`, `c723c85f` | **Tipo:** `patch`
 
+- fix(REI-114): report reconciliation outcomes
+- fix(REI-161): ocultar metadados de pautas inelegiveis
 - test(REI-88): verify pauta rollback on isolated MySQL
 
 ## V. 1.87.0164
