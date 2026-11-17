@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0189
+
+**Data:** 2026-11-17 01:41:06 | **Commit:** `5263faf9` | **Tipo:** `patch`
+
+- docs(REI-73): verify REI-70 MySQL gate
+
 ## V. 1.87.0188
 
 **Data:** 2026-11-17 01:35:13 | **Commit:** `7343c1db` | **Tipo:** `patch`
@@ -6557,6 +6563,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
