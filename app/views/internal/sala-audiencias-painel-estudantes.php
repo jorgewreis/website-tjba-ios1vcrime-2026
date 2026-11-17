@@ -922,6 +922,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 }
             } else {
                 wrapper.innerHTML = '<span class="minor-info">Inscricao indisponivel.</span>';
+                focusAvailabilityState();
             }
         }
         function renderVagas(item) {

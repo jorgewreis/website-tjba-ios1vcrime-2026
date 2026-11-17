@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0183
+
+**Data:** 2026-11-17 03:07:52 | **Commit:** `3007f621` | **Tipo:** `patch`
+
+- fix(REI-77): preserve focus when eligibility disappears
+
 ## V. 1.87.0182
 
 **Data:** 2026-11-17 02:39:24 | **Commit:** `5976b65f` | **Tipo:** `patch`
@@ -6524,5 +6530,6 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 

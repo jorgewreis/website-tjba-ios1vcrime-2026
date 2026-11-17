@@ -160,7 +160,8 @@ const failure = { ok: false, json: () => Promise.resolve({ success: false, error
         { status: 'cancelada' },
         { processo_sigiloso: true },
         { envolve_menor: true },
-        { ja_inscrito: true }
+        { ja_inscrito: true },
+        { pode_inscrever: false }
     ]) {
         const blockedWrapper = makeWrapper('pauta-bloqueada-' + posts.length);
         render(blockedWrapper, blockedWrapper.getAttribute('data-inscricao-ui'));
