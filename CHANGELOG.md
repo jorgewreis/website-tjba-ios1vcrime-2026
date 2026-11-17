@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0184
+
+**Data:** 2026-11-17 00:53:48 | **Commit:** `b241433b` | **Tipo:** `patch`
+
+- docs(REI-73): reflect REI-78 deployment blocker
+
 ## V. 1.87.0183
 
 **Data:** 2026-11-17 00:19:06 | **Commit:** `ed531684` | **Tipo:** `patch`
@@ -6527,6 +6533,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
