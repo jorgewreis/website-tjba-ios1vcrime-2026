@@ -174,6 +174,26 @@ final class FeriadosRepository
         return $row !== false ? $row : null;
     }
 
+    public function findByIdForUpdate(string $id): ?array
+    {
+        if (!$this->connection->inTransaction()) {
+            throw new LogicException('A leitura bloqueante de feriado exige transação.');
+        }
+
+        $sql = sprintf(
+            'SELECT `id`, `tipo_feriado`, `data_inicio`, `data_fim`, `regra_data`, `descricao`, `ativo`, `created_at`, `updated_at` FROM `%s` WHERE `id` = ? LIMIT 1',
+            $this->table
+        );
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+            $sql .= ' FOR UPDATE';
+        }
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute([$id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $row !== false ? $row : null;
+    }
+
     /**
      * @param array{tipo_feriado: string, data_inicio: string, data_fim: string, regra_data: string, descricao: ?string, ativo: int} $data
      */

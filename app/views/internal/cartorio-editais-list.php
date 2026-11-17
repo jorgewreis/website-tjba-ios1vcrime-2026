@@ -11,6 +11,8 @@ require_once __DIR__ . '/../../repositories/EditaisSubtarefasRepository.php';
 require_once __DIR__ . '/../../helpers/EditaisUiCopy.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
+require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
+require_once __DIR__ . '/../../access/AccessEvaluator.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -50,6 +52,10 @@ try {
 }
 
 $rows = $listResult['rows'] ?? [];
+$canReconcileEditais = AccessEvaluator::canAccessPage(
+    'editaisedit',
+    UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) ($_SESSION['id_usuario'] ?? '')))
+);
 $rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
 $registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
@@ -180,6 +186,10 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
                     <option value="csv">Exportar CSV</option>
                 </select>
                 <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
+                <?php if ($canReconcileEditais && $rows !== []): ?>
+                    <button type="button" class="btn btn-secondary" id="reconciliar-editais-btn" aria-describedby="reconciliar-editais-help">Atualizar etapas desta página</button>
+                    <span id="reconciliar-editais-help" class="sr-only">Executa a manutenção de etapas somente após sua confirmação.</span>
+                <?php endif; ?>
             </div>
         </div>
 
@@ -504,7 +514,8 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
             }
 
             App.CartorioEditaisList.initialize({
-                routePage: <?php echo json_encode($routePage, JSON_UNESCAPED_UNICODE); ?>
+                routePage: <?php echo json_encode($routePage, JSON_UNESCAPED_UNICODE); ?>,
+                editalIds: <?php echo json_encode(array_values(array_filter(array_map(static fn($row) => (string) ($row['IdEdital'] ?? ''), $rows))), JSON_UNESCAPED_UNICODE); ?>
             });
         })();
     </script>
