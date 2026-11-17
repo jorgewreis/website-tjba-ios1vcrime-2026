@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0187
+
+**Data:** 2026-11-17 01:20:41 | **Commit:** `79fd7618` | **Tipo:** `patch`
+
+- docs(REI-73): record reproduced REI-130 tests
+
 ## V. 1.87.0186
 
 **Data:** 2026-11-17 01:16:41 | **Commit:** `357f122d` | **Tipo:** `patch`
@@ -6545,6 +6551,7 @@
 - [Notas do diretório de releases](docs/90-releases/README.md)
 - [Bugs conhecidos](docs/90-releases/KNOWN_ISSUES.md)
 - [Versão 1.00.0000](docs/90-releases/notes/v1.00.md)
+
 
 
 
