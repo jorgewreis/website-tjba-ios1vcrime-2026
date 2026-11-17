@@ -2,7 +2,7 @@
 
 ## V. 1.87.0185
 
-**Data:** 2026-11-17 10:59:28 | **Commit:** `4b32bcf4` | **Tipo:** `patch`
+**Data:** 2026-11-17 10:59:28 | **Commit:** `61a3f713` | **Tipo:** `patch`
 
 - fix(REI-89): tornar cancelamento e exclusao atomicos
 
@@ -7599,4 +7599,3 @@
 
 
 \n
-
