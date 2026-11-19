@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0188
+
+**Data:** 2026-11-19 19:10:08 | **Commit:** `403cff96` | **Tipo:** `patch`
+
+- fix(access): authorize enrolled student ata downloads
+
 ## V. 1.87.0187
 
 **Data:** 2026-11-19 19:00:08 | **Commit:** `83cdd64b` | **Tipo:** `patch`
@@ -7611,5 +7617,6 @@
 
 
 \n
+
 
 
