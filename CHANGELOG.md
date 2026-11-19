@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0187
+
+**Data:** 2026-11-19 19:00:08 | **Commit:** `83cdd64b` | **Tipo:** `patch`
+
+- fix(REI-99): validate active sessions before ata downloads
+
 ## V. 1.87.0186
 
 **Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
@@ -7605,4 +7611,5 @@
 
 
 \n
+
 
