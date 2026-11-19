@@ -45,16 +45,14 @@ final class UsuariosService
 
         if ($tipoFilter !== 'externo') {
             $repoServidores = new UsuariosListRepository($this->connection);
-            $perfilForServidores = ($perfilFilter === '' || $perfilFilter === 'estudante') ? null : $perfilFilter;
-            if ($perfilFilter !== 'estudante') {
-                $servidores = $repoServidores->listServidores($perfilForServidores);
-            }
+            $perfilForServidores = $perfilFilter === '' ? null : $perfilFilter;
+            $servidores = $repoServidores->listServidores($perfilForServidores);
         }
 
         if ($tipoFilter !== 'interno') {
             $repoServidores = new UsuariosListRepository($this->connection);
             if ($perfilFilter === '' || $perfilFilter === 'estudante') {
-                $externos = $repoServidores->listExternosEstudantes();
+                $externos = $repoServidores->listExternos($perfilFilter);
             }
         }
 
@@ -62,12 +60,50 @@ final class UsuariosService
         if ($tipoFilter === '' && $perfilFilter === '') {
             $semPerfil = (new UsuariosListRepository($this->connection))->listSemPerfil();
         }
-        $merged = array_merge($servidores, $externos, $semPerfil);
+        $merged = $this->deduplicateByUserId(array_merge($servidores, $externos, $semPerfil));
         $this->sortUnified($merged);
         $total = count($merged);
         $rows = array_slice($merged, $offset, $limit);
 
         return ['rows' => $rows, 'total' => $total];
+    }
+
+    /**
+     * A fonte unificada é a identidade técnica id_usuario, não o perfil
+     * que originou cada consulta. Se uma identidade aparecer em mais de uma
+     * fonte, conserva uma linha e privilegia a classificação interna.
+     *
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function deduplicateByUserId(array $rows): array
+    {
+        $unique = [];
+        $anonymous = 0;
+        $typePriority = ['interno' => 0, 'externo' => 1, 'sem_perfil' => 2];
+
+        foreach ($rows as $row) {
+            $userId = trim((string) ($row['id_usuario'] ?? ''));
+            if ($userId === '') {
+                // Não colapsar linhas sem identidade técnica conhecida.
+                $unique['__sem_id_' . $anonymous++] = $row;
+                continue;
+            }
+
+            $key = 'usuario:' . $userId;
+            if (!isset($unique[$key])) {
+                $unique[$key] = $row;
+                continue;
+            }
+
+            $currentPriority = $typePriority[(string) ($unique[$key]['tipo'] ?? '')] ?? PHP_INT_MAX;
+            $candidatePriority = $typePriority[(string) ($row['tipo'] ?? '')] ?? PHP_INT_MAX;
+            if ($candidatePriority < $currentPriority) {
+                $unique[$key] = $row;
+            }
+        }
+
+        return array_values($unique);
     }
 
     /**
@@ -128,9 +164,10 @@ final class UsuariosService
 
         if ($perfilFilter === '') {
             $interno = $repoServidores->countServidores(null);
-            $externo = $repoServidores->countExternosEstudantes();
+            $externo = $repoServidores->countExternos();
         } elseif ($perfilFilter === 'estudante') {
-            $externo = $repoServidores->countExternosEstudantes();
+            $interno = $repoServidores->countServidores('estudante');
+            $externo = $repoServidores->countExternos('estudante');
         } else {
             $perfilForServ = $repoServidores::PERFIL_MAP[$perfilFilter] ?? null;
             if ($perfilForServ !== null) {
@@ -162,8 +199,12 @@ final class UsuariosService
                 $counts[$key] = $n;
             }
         }
-        if ($tipoFilter !== 'interno' && $tipoFilter !== 'sem_perfil') {
-            $counts['estudante'] = $repoServidores->countExternosEstudantes();
+        if ($tipoFilter === 'interno') {
+            $counts['estudante'] = $repoServidores->countServidores('estudante');
+        } elseif ($tipoFilter === 'externo') {
+            $counts['estudante'] = $repoServidores->countExternos('estudante');
+        } elseif ($tipoFilter !== 'sem_perfil') {
+            $counts['estudante'] = $repoServidores->countEstudantes();
         }
 
         return $counts;
