@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-120): make monitoring transitions atomic** `[49415bce]`
+- **fix(cartas): keep expedited letters GET read-only** `[9de01a71]`
 
