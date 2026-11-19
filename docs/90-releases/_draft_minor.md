@@ -4,6 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: harden workflow transitions and reset tokens** `[e8ffdbad]`
-- **fix(REI-90): rollback nested completion atomically** `[62e34dc7]`
+- **fix: close atomicity and recovery gaps across five issues** `[026efee3]`
 
