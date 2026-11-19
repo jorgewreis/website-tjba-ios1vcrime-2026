@@ -1,16 +1,18 @@
 # Changelog
 
+## V. 1.87.0186
+
+**Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
+
+- fix(REI-120): make monitoring transitions atomic
+
 ## V. 1.87.0185
 
-**Data:** 2026-11-17 08:19:30 | **Commit:** `6a056296` | **Tipo:** `patch`
+**Data:** 2026-11-17 11:19:22 | **Commit:** `2ab745ff` | **Tipo:** `patch`
 
-- fix(api): close remaining error disclosure paths (REI-67)
+- fix(REI-159): abort guide when priority replace fails
 
 ## V. 1.87.0184
-
-**Data:** 2026-11-17 06:27:07 | **Commit:** `c2ffacf0` | **Tipo:** `patch`
-
-- test: copy API error reporter into HTTP fixtures
 
 **Data:** 2026-11-17 05:33:49 | **Commit:** `aea3e451` | **Tipo:** `patch`
 
@@ -7603,3 +7605,4 @@
 
 
 \n
+
