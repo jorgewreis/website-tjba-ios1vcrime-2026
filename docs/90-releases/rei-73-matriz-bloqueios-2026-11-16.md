@@ -425,3 +425,11 @@ Consulta feita contra `main` `269d5880ea6d9243cd3755ce169dfae8e8ad2dd4`. O estad
 | #413 / REI-78 e #435 | Mescladas em 17/11/2026 | O merge é histórico e não satisfaz automaticamente gates ou aceites remanescentes nas issues. |
 
 Esta reconciliação atualiza estado e evidência, mas não completa o inventário nem a auditoria funcional da REI-73. Nenhum banco real, dado judicial, browser autenticado ou ambiente de produção foi usado nesta etapa; não houve deploy.
+
+### Continuação da auditoria — REI-99 — 2026-11-19 22:01 UTC
+
+A REI-99 registrou que os handlers de download de atas exigiam apenas ID de sessão e perfil, sem validar token, expiração ou conta ativa. A PR #448 adiciona `Security::isAuthenticated()` a `download.php` e `download-interno.php` antes da consulta de perfil/serviço, preservando os controles existentes de perfil, inscrição e sigilo. HEAD `2304eb2a8178ae3976d693fd0ddb4b2b6ac60306`; draft, mergeable e CI PHP Syntax passou no run [44624419678](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44624419678).
+
+A fixture sintética usa a implementação real de `config/security.php` contra SQLite temporário e cobre token válido, expirado, divergente/revogado e conta inativa; perfil, `AccessEvaluator` e serviço são simulados. Isso verifica a consulta de autenticação e o bloqueio nos handlers, mas não paridade de MySQL, browser ou política real de download. A chave `estudaata` segue fora da correção: a matriz a registra como não autorizada para estudante, e a intenção de tornar o fluxo público ainda não foi confirmada. REI-99 continua em andamento até revisão/aceite; sem merge ou deploy.
+
+Este achado não remove o bloqueio amplo da REI-73 nem conclui a revisão completa de rotas, perfis e infraestrutura.

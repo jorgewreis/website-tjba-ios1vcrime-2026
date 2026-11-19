@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0188
+
+**Data:** 2026-11-19 19:02:19 | **Commit:** `fbb64a64` | **Tipo:** `patch`
+
+- docs(REI-73): record REI-99 session gate evidence
+
 ## V. 1.87.0187
 
 **Data:** 2026-11-19 18:31:21 | **Commit:** `0f961ec6` | **Tipo:** `patch`
@@ -7611,5 +7617,6 @@
 
 
 \n
+
 
 
