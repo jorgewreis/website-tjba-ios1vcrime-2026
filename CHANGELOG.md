@@ -1,10 +1,22 @@
 # Changelog
 
+## V. 1.87.0186
+
+**Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
+
+- fix(REI-120): make monitoring transitions atomic
+
+## V. 1.87.0185
+
+**Data:** 2026-11-17 11:19:22 | **Commit:** `2ab745ff` | **Tipo:** `patch`
+
+- fix(REI-159): abort guide when priority replace fails
+
 ## V. 1.87.0184
 
-**Data:** 2026-11-17 06:13:47 | **Commit:** `29f2f5ee` | **Tipo:** `patch`
+**Data:** 2026-11-17 05:33:49 | **Commit:** `aea3e451` | **Tipo:** `patch`
 
-- merge: sync ata upload origin guard with current main
+- merge: sync Carta atomicity with current main
 
 ## V. 1.87.0183
 
@@ -119,11 +131,10 @@
 
 ## V. 1.87.0165
 
-**Data:** 2026-11-16 16:34:26 | **Commits:** `1b27c384`, `b97baf42`, `c723c85f` | **Tipo:** `patch`
+**Data:** 2026-11-16 16:34:26 | **Commits:** `1b27c384`, `c723c85f` | **Tipo:** `patch`
 
 - fix(REI-114): report reconciliation outcomes
 - fix(REI-161): ocultar metadados de pautas inelegiveis
-- fix(security): validate origin on ata uploads
 - test(REI-88): verify pauta rollback on isolated MySQL
 
 ## V. 1.87.0164
@@ -7592,4 +7603,6 @@
 
 
 
+
+\n
 
