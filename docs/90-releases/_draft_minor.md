@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-120): make monitoring transitions atomic** `[49415bce]`
+- **test(REI-148): correct external student count** `[05155013]`
 
