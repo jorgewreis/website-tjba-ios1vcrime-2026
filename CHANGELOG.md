@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0187
+
+**Data:** 2026-11-19 16:29:08 | **Commit:** `05155013` | **Tipo:** `patch`
+
+- test(REI-148): correct external student count
+
 ## V. 1.87.0186
 
 **Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
@@ -7605,4 +7611,5 @@
 
 
 \n
+
 

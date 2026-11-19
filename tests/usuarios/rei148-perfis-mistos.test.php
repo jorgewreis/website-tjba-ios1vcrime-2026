@@ -126,7 +126,7 @@ expectRei148($typeCounts === ['interno' => 3, 'externo' => 4, 'sem_perfil' => 1]
 $profileCounts = $service->getPerfilCounts([]);
 expectRei148($profileCounts['servidor'] === 2 && $profileCounts['estudante'] === 4, 'Contagens por perfil devem preservar ESTUDANTE em conta mista sem duplicar identidade.');
 expectRei148($service->getPerfilCounts(['tipo' => 'interno'])['estudante'] === 1, 'Contagem interna de estudante deve incluir a conta mista, classificada como interna.');
-expectRei148($service->getPerfilCounts(['tipo' => 'externo'])['estudante'] === 2, 'Contagem externa de estudante deve excluir perfis operacionais internos.');
+expectRei148($service->getPerfilCounts(['tipo' => 'externo'])['estudante'] === 3, 'Contagem externa de estudante deve excluir perfis operacionais internos e manter estudantes sem perfil operacional.');
 
 $studentAll = $service->list(['perfil' => 'estudante'], 20, 0);
 expectRei148($studentAll['total'] === 4, 'Filtro de perfil estudante deve preservar todos os usuários com esse perfil.');
