@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0187
+
+**Data:** 2026-11-19 19:12:51 | **Commit:** `9de01a71` | **Tipo:** `patch`
+
+- fix(cartas): keep expedited letters GET read-only
+
 ## V. 1.87.0186
 
 **Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
@@ -7605,4 +7611,5 @@
 
 
 \n
+
 
