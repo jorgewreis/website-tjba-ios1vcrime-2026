@@ -411,3 +411,17 @@ O fluxo de atribuição explícita da REI-69 está no candidato #438, não em ma
 A sincronização desta PR foi concluída após o snapshot de 10:07. Naquele momento, o HEAD era `143f95be3b0116b1cfd569ae56b9dfee21d70f73`, base `e06a3481aeacee841f4df94d5b5409a874f76357`; o CI PHP Syntax SUCCESS foi o run [44062029787](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44062029787). Depois, a matriz foi atualizada no HEAD `636ae99e2a6a6a2bbe51051da382d83cb682e951`, com CI PHP Syntax SUCCESS no [run 44062629470](https://github.com/jorgewreis/website-tjba-ios1vcrime-2026/actions/runs/44062629470). Em ambas as consultas a PR estava draft e mergeable. A #438 também está mergeable em `5101d770`; #413 está integrada em main.
 
 Nova consulta confirma 14 PRs abertas: 3 fora de draft, 11 draft, 2 clean/mergeable (#431 e #438) e 12 não mergeable/dirty, incluindo #428 (base aponta à branch da #438). O snapshot 10:07 acima foi preservado como histórico e não descreve o estado posterior. A auditoria da REI-73 segue incompleta e sem aprovação formal.
+
+### Reconciliação live após main `269d5880` — 2026-11-19 21:28 UTC
+
+Consulta feita contra `main` `269d5880ea6d9243cd3755ce169dfae8e8ad2dd4`. O estado abaixo é snapshot desta consulta; mergeability e checks de sintaxe não equivalem a aceite integral nem aprovação.
+
+| Item | Estado observado | Evidência atual e limite |
+|---|---|---|
+| REI-73 | Em revisão; sem dependências de entrada; bloqueia REI-66/67/68/69/70/72/88 | A matriz e o inventário continuam parciais; faltam cobertura completa por rota/operação/perfil, autorização por objeto e validações autenticadas/UI/infraestrutura. |
+| #447 / REI-90/100/104/152/156 | Aberta, draft, mergeable; HEAD `8c3a81dd8dabc1ee6d86b34f3edca6cda7272c00`; base `269d5880` | Dois checks PHP Syntax no HEAD passaram. Runners locais relatados na PR cobrem MySQL/InnoDB descartável para REI-90/100/104/152 e fluxo HTTP/Node para REI-156; gates externos de REI-152 e REI-156 permanecem. Cobertura de REI-133 também foi acrescentada, embora não faça parte do título original da PR. |
+| #438 / REI-69 | Aberta, draft, mergeable; HEAD `684d45771476650800a12889f3fa6d942dc2b7c9`; base `269d5880` | Dois checks PHP Syntax passaram. A PR relata testes MySQL/SQLite sintéticos; permanecem REI-73 e o planejamento/medição da migration `ALGORITHM=COPY, LOCK=SHARED` no ambiente apropriado. |
+| REI-93 / REI-133 | REI-93 em andamento e relacionada como bloqueadora de REI-133, que está em revisão | A recusa fail-closed e a suíte MySQL/Mailpit descartável passaram na branch #447. A ocorrência histórica que motivou REI-93 segue sem confirmação de conexão/escrita; testes atuais não esclarecem o evento anterior. |
+| #413 / REI-78 e #435 | Mescladas em 17/11/2026 | O merge é histórico e não satisfaz automaticamente gates ou aceites remanescentes nas issues. |
+
+Esta reconciliação atualiza estado e evidência, mas não completa o inventário nem a auditoria funcional da REI-73. Nenhum banco real, dado judicial, browser autenticado ou ambiente de produção foi usado nesta etapa; não houve deploy.

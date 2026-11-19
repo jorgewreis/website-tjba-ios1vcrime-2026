@@ -4,47 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-88): make carta creation atomic** `[cc3b6220]`
-- **test(REI-88): verify nested transaction rollback** `[3b01d3e9]`
-- **test: cover pauta rollback on isolated MySQL REI-88** `[ae959e86]`
-- **fix(REI-78): block duplicate carta submissions** `[c7de2cb2]`
-- **fix(REI-78): make carta creation idempotent** `[2a30b969]`
-- **test(REI-78): cover concurrent idempotent retries** `[10beeba0]`
-- **merge: sync Carta atomicity with current main** `[aea3e451]`
+- **fix(REI-120): make monitoring transitions atomic** `[49415bce]`
 
-- **fix: secure process priorities APIs (REI-75)** `[58c2d681]`
-- **test(auth): cover revoked session on priorities API** `[5f59cc3c]`
-- **merge: sync REI-75 with main** `[a35fc88b]`
-- **test(REI-75): cover revoked session mutations** `[d7ea35e9]`
-
-- **fix(REI-141): honor explicit CCM confirmation** `[3b9fcfa5]`
-- **fix(REI-73): validate student enrollment guard** `[b684e5fc]`
-- **test(REI-80): cover same-site hostile origin** `[a74ac77d]`
-- **test(REI-80): cover authorized enrollment success** `[6d55da93]`
-- **test(REI-80): exercise trusted origin helper** `[27a69ff1]`
-
-- **docs(REI-73): reconcile merge blockers after REI-93 sync** `[d93cc291]`
-- **docs(REI-73): update synchronized PR evidence** `[20ad7b4c]`
-- **docs(REI-73): reconcile open PR merge blockers** `[fa2e5b29]`
-- **docs(REI-73): record current merge gates** `[91766a3a]`
-- **docs(REI-73): record review-ready PR** `[ed531684]`
-- **docs(REI-73): reflect REI-78 deployment blocker** `[b241433b]`
-- **docs(REI-73): record REI-78 pre-sync migration fix** `[2064b7db]`
-- **docs(REI-73): refresh review and merge blockers** `[357f122d]`
-- **docs(REI-73): record reproduced REI-130 tests** `[79fd7618]`
-- **docs(REI-73): reconcile ready-for-review PR states** `[7343c1db]`
-- **docs(REI-73): verify REI-70 MySQL gate** `[5263faf9]`
-- **docs(security): expand REI-73 route permission matrix** `[4ed86277]`
-- **docs(REI-73): record enrollment guard candidate** `[b1f83698]`
-- **docs(REI-73): reconcile open PR snapshot** `[9255ce80]`
-- **docs(REI-73): refresh ready PR inventory** `[6314a506]`
-- **docs(REI-73): reconcile runner cleanup and ready PRs** `[2066b122]`
-- **docs(REI-73): trace residual catalog lookup routes** `[9668a62a]`
-- **docs(REI-73): reconcile branches after PR 416 merge** `[784d20ae]`
-- **docs(REI-73): reconcile current merge queue** `[21fb35fd]`
-- **docs(REI-73): reconcile evidence after main sync** `[0fbf3d8e]`
-- **docs(REI-73): refresh synchronized PR evidence** `[19025341]`
-- **docs(REI-73): reconcile live merge blockers** `[a6c5fc55]`
-- **merge: reconcile blocker matrix with current main** `[0208beb4]`
-
-- **docs(REI-73): reconcile live blocker evidence** `[f55d22eb]`
