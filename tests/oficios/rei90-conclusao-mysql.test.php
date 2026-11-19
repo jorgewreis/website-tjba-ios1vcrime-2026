@@ -96,6 +96,27 @@ try {
         $assert(str_contains($e->getMessage(), 'rei90 synthetic failure'), 'Falha inesperada na injeção do fixture.');
     }
     $assert($state($pdo) === ['pendente', 'concluida', 'em_andamento'], 'Falha da atualização do ofício deve reverter a subtarefa 2.');
+
+    // When the caller owns the transaction, the service must roll back only its
+    // savepoint and leave the outer transaction usable after a partial failure.
+    $pdo->beginTransaction();
+    try {
+        try {
+            (new OficiosCartorioService($pdo))->concluirSubtarefa('S2', 'USR-REI90');
+            throw new RuntimeException('Falha injetada em transação externa não foi propagada.');
+        } catch (PDOException $e) {
+            $assert(str_contains($e->getMessage(), 'rei90 synthetic failure'), 'Falha inesperada na transação externa.');
+        }
+        $assert($pdo->inTransaction(), 'O serviço encerrou a transação externa do chamador.');
+        $assert($state($pdo) === ['pendente', 'concluida', 'em_andamento'], 'Falha em transação externa deixou escrita parcial.');
+        $pdo->exec("UPDATE oficios_cartorio_subtarefas SET updated_at=updated_at WHERE id='S1'");
+        $pdo->rollBack();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
 } finally {
     $pdo->exec('DROP TRIGGER IF EXISTS rei90_reject_finalize');
 }

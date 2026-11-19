@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0188
+
+**Data:** 2026-11-19 17:13:32 | **Commit:** `62e34dc7` | **Tipo:** `patch`
+
+- fix(REI-90): rollback nested completion atomically
+
 ## V. 1.87.0187
 
 **Data:** 2026-11-19 17:08:36 | **Commit:** `e8ffdbad` | **Tipo:** `patch`
@@ -7611,5 +7617,6 @@
 
 
 \n
+
 
 

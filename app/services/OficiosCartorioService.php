@@ -267,8 +267,11 @@ final class OficiosCartorioService
         // Re-read all state only after acquiring this lock; this prevents a concurrent
         // order-1 completion from racing an order-2 finalization.
         $ownsTransaction = !$this->connection->inTransaction();
+        $savepoint = 'rei90_concluir_subtarefa';
         if ($ownsTransaction) {
             $this->connection->beginTransaction();
+        } else {
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
         }
         try {
             $lock = $this->connection->prepare('SELECT `id` FROM `oficios_cartorio` WHERE `id` = :id FOR UPDATE');
@@ -327,11 +330,18 @@ final class OficiosCartorioService
             }
             if ($ownsTransaction) {
                 $this->connection->commit();
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
             }
             return $result;
         } catch (\Throwable $e) {
-            if ($ownsTransaction && $this->connection->inTransaction()) {
-                $this->connection->rollBack();
+            if ($this->connection->inTransaction()) {
+                if ($ownsTransaction) {
+                    $this->connection->rollBack();
+                } else {
+                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                }
             }
             throw $e;
         }
