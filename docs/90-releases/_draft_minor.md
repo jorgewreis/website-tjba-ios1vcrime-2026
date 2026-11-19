@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-120): make monitoring transitions atomic** `[49415bce]`
+- **fix(REI-99): validate active sessions before ata downloads** `[83cdd64b]`
 
