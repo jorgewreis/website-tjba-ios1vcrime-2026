@@ -3,7 +3,6 @@
 Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
-
 - **fix(REI-76): protect DataJud synchronization** `[e7c839ea]`
 - **fix(REI-72,REI-76,REI-153): validate DataJud subject sync** `[f0aca0f2]`
 - **test(DataJud): align HTTP fixtures with verified source contract** `[989c56b8]`
@@ -12,6 +11,8 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(REI-153): reconcile verified empty DataJud subjects** `[9636bb9e]`
 - **merge: sync DataJud process sync with current main** `[7cf523db]`
 - **fix(REI-72): restrict subject mutations by sector** `[7bbcef09]`
+
+- **fix(REI-120): make monitoring transitions atomic** `[49415bce]`
 - **fix(REI-69): restrict process-part access by sector** `[79cc9a31]`
 - **feat(rei-69): add audited responsible sector assignment** `[46777715]`
 - **fix(REI-88): make carta creation atomic** `[cc3b6220]`

@@ -2,16 +2,15 @@
 
 ## V. 1.87.0186
 
-**Data:** 2026-11-17 07:17:07 | **Commit:** `e0b03ee9` | **Tipo:** `patch`
+**Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
 
-- docs(REI-69): document sector migration deploy
+- fix(REI-120): make monitoring transitions atomic
 
 ## V. 1.87.0185
 
-**Data:** 2026-11-17 06:57:43 | **Commit:** `46777715` | **Tipo:** `patch`
+**Data:** 2026-11-17 11:19:22 | **Commit:** `2ab745ff` | **Tipo:** `patch`
 
-- feat(rei-69): add audited responsible sector assignment
-- fix(REI-69): restrict process-part access by sector (`79cc9a31`)
+- fix(REI-159): abort guide when priority replace fails
 
 **Data:** 2026-11-17 06:54:27 | **Commit:** `7bbcef09` | **Tipo:** `patch`
 
@@ -7612,5 +7611,6 @@
 
 
 
+\n
 
 
