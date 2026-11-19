@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0187
+
+**Data:** 2026-11-19 20:21:18 | **Commit:** `20e78c24` | **Tipo:** `patch`
+
+- test(REI-127): cover matching date with stale etag
+
 ## V. 1.87.0186
 
 **Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
@@ -7605,4 +7611,5 @@
 
 
 \n
+
 
