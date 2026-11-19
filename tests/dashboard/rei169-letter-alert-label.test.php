@@ -51,6 +51,13 @@ $cases = [
         'Cartas Recebidas',
         $receivedStage,
     ],
+    [
+        'both queues: equal timestamps preserve first queue',
+        [[$sentDate, $sentLabel], [$sentDate, $receivedLabel]],
+        $sentDate,
+        'Cartas Expedidas',
+        'aguardando envio',
+    ],
 ];
 
 foreach ($cases as [$scenario, $candidates, $expectedDate, $expectedLabel, $expectedDetail]) {
