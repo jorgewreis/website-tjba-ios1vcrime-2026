@@ -11,6 +11,7 @@ require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['consultapartes'], false);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/services/PessoasService.php';
+require_once $basePath . '/app/helpers/InstituicoesConsultaPolicy.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -23,7 +24,8 @@ if ($id === '') {
 
 try {
     $service = new PessoasService($connection);
-    $pessoa = $service->find($id);
+    $onlyActive = InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''));
+    $pessoa = $service->find($id, $onlyActive);
     if ($pessoa === null) {
         http_response_code(404);
         echo json_encode(['error' => 'Pessoa não encontrada.'], JSON_UNESCAPED_UNICODE);

@@ -12,6 +12,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/services/PessoasService.php';
+require_once $basePath . '/app/helpers/InstituicoesConsultaPolicy.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -169,7 +170,8 @@ function pessoasSearchScore(string $nomeBuscado, array $row): float
 try {
     $service = new PessoasService($connection);
     $queryLimit = min(50, max($limit * 5, 20));
-    $result = $service->list(['nome' => $nome], $queryLimit, 0);
+    $onlyActive = InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''));
+    $result = $service->list(['nome' => $nome, 'somente_instituicoes_ativas' => $onlyActive], $queryLimit, 0);
     $rows = $result['rows'] ?? [];
     $nomeBuscado = pessoasSearchNormalize($nome);
 

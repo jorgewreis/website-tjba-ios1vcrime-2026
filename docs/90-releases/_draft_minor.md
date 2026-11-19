@@ -5,4 +5,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 ## Entradas Pendentes
 
 - **fix(api): log sanitized diagnostics for unexpected errors** `[8ede2741]`
+- **test(REI-127): cover matching date with stale etag** `[20e78c24]`
 

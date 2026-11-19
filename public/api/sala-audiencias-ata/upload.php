@@ -9,8 +9,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
-require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
-require_once $basePath . '/app/access/AccessEvaluator.php';
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/services/SalaAudienciasAtaService.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -18,6 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
+ApiAccessGuard::requireAccess(['salaata'], true);
 
 /**
  * Converte códigos de erro nativos de upload em mensagem amigável.
@@ -44,18 +45,7 @@ function uploadErrorMessage(int $errorCode): string
 }
 
 try {
-    $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-    if ($usuarioId === '') {
-        http_response_code(401);
-        echo json_encode(['success' => false, 'error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    $perfils = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
-    if (!AccessEvaluator::canAccessPage('salaata', $perfils)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
+    $usuarioId = trim((string) ($_SESSION['id_usuario'] ?? ''));
 
     $idPauta = trim((string) ($_POST['pauta'] ?? ''));
     $file = $_FILES['arquivo'] ?? null;

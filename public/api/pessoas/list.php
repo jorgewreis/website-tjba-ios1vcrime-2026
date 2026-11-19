@@ -11,6 +11,7 @@ require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['consultapartes'], false);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/services/PessoasService.php';
+require_once $basePath . '/app/helpers/InstituicoesConsultaPolicy.php';
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -32,10 +33,12 @@ $filters = [
 ];
 
 try {
+    $filters['somente_instituicoes_ativas'] = InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''));
     $service = new PessoasService($connection);
     $listResult = $service->list($filters, $itemsPerPage, $offset);
     $totalItems = (int) ($listResult['total'] ?? 0);
     $totalPages = $totalItems > 0 ? (int) ceil($totalItems / $itemsPerPage) : 0;
+    unset($filters['somente_instituicoes_ativas']);
 
     $response = [
         'data' => $listResult['rows'] ?? [],

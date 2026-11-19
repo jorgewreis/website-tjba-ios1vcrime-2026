@@ -1,10 +1,20 @@
 # Changelog
 
+## V. 1.87.0188
+
+**Data:** 2026-11-19 20:45:21 | **Commit:** `791ccc37` | **Tipo:** `patch`
+
+- chore: sync main into REI-67 branch
+
 ## V. 1.87.0187
 
 **Data:** 2026-11-19 20:39:35 | **Commit:** `8ede2741` | **Tipo:** `patch`
 
 - fix(api): log sanitized diagnostics for unexpected errors
+
+**Data:** 2026-11-19 20:21:18 | **Commit:** `20e78c24` | **Tipo:** `patch`
+
+- test(REI-127): cover matching date with stale etag
 
 ## V. 1.87.0186
 
@@ -7611,5 +7621,6 @@
 
 
 \n
+
 
 
