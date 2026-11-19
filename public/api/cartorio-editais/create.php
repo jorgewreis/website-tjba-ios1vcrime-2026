@@ -46,7 +46,8 @@ try {
     http_response_code(201);
     echo json_encode(['id' => $newId], JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
-    http_response_code(400);
+    $conflict = str_starts_with($exception->getMessage(), 'Esta tentativa de criação já foi usada com outros dados.');
+    http_response_code($conflict ? 409 : 400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $exception) {
     http_response_code(500);

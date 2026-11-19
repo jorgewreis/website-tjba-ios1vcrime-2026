@@ -48,7 +48,9 @@ assert.match(resetService, /redefinir_senha\.php#token=/, 'email link must carry
 assert.doesNotMatch(resetService, /redefinir_senha\.php\?token=/, 'email link must not send the credential in the request URL');
 assert.match(resetWrapper, /reset_action.*stage_token/s, 'wrapper must accept the token only through the staging POST');
 assert.match(resetWrapper, /password_reset_form_token/, 'wrapper must keep a staged token in the session');
-assert.doesNotMatch(resetWrapper, /\$_GET\[['"]token['"]\]/, 'wrapper must not accept credentials in the query');
+assert.match(resetWrapper, /legacyToken[\s\S]*Location: \/redefinir_senha\.php#token=/, 'legacy query links must be migrated to a fragment redirect');
+assert.ok(resetWrapper.includes("preg_match('/^[a-f0-9]{64}$/iD'"), 'legacy redirect must accept only generated token shape');
+assert.doesNotMatch(resetWrapper, /echo[^;]*legacyToken/, 'legacy credential must not be reflected in the response body');
 assert.doesNotMatch(fs.readFileSync('public/views/public/redefinir-senha-form.php', 'utf8'), /\$_GET\[['"]token['"]\]/, 'form must not accept credentials in the query');
 assert.doesNotMatch(fs.readFileSync('public/_layout_login.php', 'utf8'), /cdn-uicons\.flaticon\.com[\s\S]{0,100}\$needsResetFragmentBootstrap/, 'reset shell must not load third-party CSS');
 setImmediate(() => {

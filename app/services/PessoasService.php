@@ -69,47 +69,51 @@ final class PessoasService
 
     public function create(array $payload): string
     {
-        $this->connection->beginTransaction();
-        try {
-            $documentosPayload = $this->normalizarDocumentosPayload($payload);
-            if ($documentosPayload === [] && !empty($payload['cpf'])) {
-                $cpfUnico = ParteDocumentoHelper::normalizarNumero('CPF', (string) $payload['cpf']);
-                if ($cpfUnico !== '') {
-                    ParteDocumentoHelper::validarNumero('CPF', $cpfUnico);
-                    $documentosPayload = [['tipo' => 'CPF', 'numero' => $cpfUnico]];
-                }
+        $documentosPayload = $this->normalizarDocumentosPayload($payload);
+        if ($documentosPayload === [] && !empty($payload['cpf'])) {
+            $cpfUnico = ParteDocumentoHelper::normalizarNumero('CPF', (string) $payload['cpf']);
+            if ($cpfUnico !== '') {
+                ParteDocumentoHelper::validarNumero('CPF', $cpfUnico);
+                $documentosPayload = [['tipo' => 'CPF', 'numero' => $cpfUnico]];
             }
+        }
 
-            $id = $this->partesRepository->insert([
-                'cpf' => '',
-                'nome_completo' => $payload['nome_completo'] ?? '',
-                'sexo' => $payload['sexo'] ?? '',
-                'data_nascimento' => $payload['data_nascimento'] ?? '',
-                'profissao' => $this->resolverProfissaoParaPayload($payload, null),
-            ]);
+        return $this->withDocumentNumberLocks($documentosPayload, function () use ($payload, $documentosPayload): string {
+            $this->connection->beginTransaction();
+            try {
+                $id = $this->partesRepository->insert([
+                    'cpf' => '',
+                    'nome_completo' => $payload['nome_completo'] ?? '',
+                    'sexo' => $payload['sexo'] ?? '',
+                    'data_nascimento' => $payload['data_nascimento'] ?? '',
+                    'profissao' => $this->resolverProfissaoParaPayload($payload, null),
+                ]);
 
-            $this->persistirDocumentos($id, $documentosPayload);
+                $this->persistirDocumentos($id, $documentosPayload);
 
-            $telefones = $payload['telefones'] ?? [];
-            if (is_array($telefones)) {
-                foreach ($telefones as $tel) {
-                    $numero = trim((string) ($tel['numero'] ?? ''));
-                    if ($numero !== '') {
-                        $this->telefonesRepository->insert([
-                            'parte_id' => $id,
-                            'tipo' => trim((string) ($tel['tipo'] ?? '')) ?: null,
-                            'numero' => $numero,
-                        ]);
+                $telefones = $payload['telefones'] ?? [];
+                if (is_array($telefones)) {
+                    foreach ($telefones as $tel) {
+                        $numero = trim((string) ($tel['numero'] ?? ''));
+                        if ($numero !== '') {
+                            $this->telefonesRepository->insert([
+                                'parte_id' => $id,
+                                'tipo' => trim((string) ($tel['tipo'] ?? '')) ?: null,
+                                'numero' => $numero,
+                            ]);
+                        }
                     }
                 }
-            }
 
-            $this->connection->commit();
-            return $id;
-        } catch (Throwable $e) {
-            $this->connection->rollBack();
-            throw $e;
-        }
+                $this->connection->commit();
+                return $id;
+            } catch (Throwable $e) {
+                if ($this->connection->inTransaction()) {
+                    $this->connection->rollBack();
+                }
+                throw $e;
+            }
+        });
     }
 
     public function update(string $id, array $payload): bool
@@ -145,25 +149,27 @@ final class PessoasService
         }
         ParteDocumentoHelper::validarNumero($tipo, $numero);
 
-        return $this->operacaoProfissaoAtomica(function () use ($parteId, $tipo, $numero): string {
-            if ($this->partesRepository->findByIdForUpdate($parteId) === null) {
-                throw new InvalidArgumentException('Pessoa não encontrada.');
-            }
-            $existentes = $this->documentosRepository->findByParteId($parteId);
-            foreach ($existentes as $doc) {
-                if (ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? '')) === $tipo) {
-                    throw new InvalidArgumentException('Esta pessoa já possui documento do tipo ' . $tipo . '.');
+        return $this->withDocumentNumberLocks([['tipo' => $tipo, 'numero' => $numero]], function () use ($parteId, $tipo, $numero): string {
+            return $this->operacaoProfissaoAtomica(function () use ($parteId, $tipo, $numero): string {
+                if ($this->partesRepository->findByIdForUpdate($parteId) === null) {
+                    throw new InvalidArgumentException('Pessoa não encontrada.');
                 }
-            }
+                $existentes = $this->documentosRepository->findByParteId($parteId);
+                foreach ($existentes as $doc) {
+                    if (ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? '')) === $tipo) {
+                        throw new InvalidArgumentException('Esta pessoa já possui documento do tipo ' . $tipo . '.');
+                    }
+                }
 
-            $newId = $this->documentosRepository->insert([
-                'parte_id' => $parteId,
-                'tipo' => $tipo,
-                'numero' => $numero,
-            ]);
-            $this->sincronizarCpfLegado($parteId);
+                $newId = $this->documentosRepository->insert([
+                    'parte_id' => $parteId,
+                    'tipo' => $tipo,
+                    'numero' => $numero,
+                ]);
+                $this->sincronizarCpfLegado($parteId);
 
-            return $newId;
+                return $newId;
+            });
         });
     }
 
@@ -452,6 +458,64 @@ final class PessoasService
         $documentos = $this->documentosRepository->findByParteId($parteId);
         $cpf = ParteDocumentoHelper::resolverCpfParaColunaLegada($documentos);
         $this->partesRepository->setCpfLegado($parteId, $cpf);
+    }
+
+    /**
+     * Serializa números de documento globalmente no MySQL, inclusive quando duas
+     * requisições tentam vinculá-los a partes diferentes. O lock envolve o commit
+     * da transação que grava o documento, evitando depender de índice ausente no
+     * checkout. SQLite segue sem lock advisory para os testes unitários locais.
+     *
+     * @param list<array{tipo: string, numero: string}> $documentos
+     */
+    private function withDocumentNumberLocks(array $documentos, callable $operation): mixed
+    {
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql' || $documentos === []) {
+            return $operation();
+        }
+
+        $lockNames = [];
+        foreach ($documentos as $documento) {
+            $tipo = ParteDocumentoHelper::normalizarTipo((string) ($documento['tipo'] ?? ''));
+            $numero = ParteDocumentoHelper::normalizarNumero($tipo, (string) ($documento['numero'] ?? ''));
+            if ($tipo === '' || $numero === '') {
+                continue;
+            }
+            $lockNames[] = 'pd_' . substr(hash('sha256', $tipo . "\0" . $numero), 0, 60);
+        }
+        $lockNames = array_values(array_unique($lockNames));
+        sort($lockNames, SORT_STRING);
+        if ($lockNames === []) {
+            return $operation();
+        }
+
+        $acquired = [];
+        try {
+            $acquire = $this->connection->prepare('SELECT GET_LOCK(:lock_name, 10)');
+            foreach ($lockNames as $lockName) {
+                $acquire->execute([':lock_name' => $lockName]);
+                if ((int) $acquire->fetchColumn() !== 1) {
+                    throw new RuntimeException('Não foi possível reservar o documento para gravação. Tente novamente.');
+                }
+                $acquired[] = $lockName;
+            }
+
+            return $operation();
+        } finally {
+            if ($acquired !== []) {
+                $release = $this->connection->prepare('SELECT RELEASE_LOCK(:lock_name)');
+                foreach (array_reverse($acquired) as $lockName) {
+                    try {
+                        $release->execute([':lock_name' => $lockName]);
+                        if ((int) $release->fetchColumn() !== 1) {
+                            error_log('liberar bloqueio de documento: lock não pertencia à conexão atual');
+                        }
+                    } catch (Throwable $releaseError) {
+                        error_log('liberar bloqueio de documento: ' . $releaseError->getMessage());
+                    }
+                }
+            }
+        }
     }
 
     private function canonProfissaoParaComparacao(?string $valor): string

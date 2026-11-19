@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0189
+
+**Data:** 2026-11-19 18:04:13 | **Commit:** `026efee3` | **Tipo:** `patch`
+
+- fix: close atomicity and recovery gaps across five issues
+
 ## V. 1.87.0188
 
 **Data:** 2026-11-19 17:13:32 | **Commit:** `62e34dc7` | **Tipo:** `patch`
@@ -7617,6 +7623,7 @@
 
 
 \n
+
 
 
 

@@ -65,9 +65,13 @@ ok($staged['status'] === 204, 'bootstrap do fragmento não guardou token válido
 $fragmentForm = req('/views/public/redefinir-senha-form.php', 'GET', [], $resetCookie);
 ok(str_contains($fragmentForm['body'], 'id="formRedefinirSenha"'), 'token enviado no corpo não foi recuperado da sessão');
 $resetCookie = refreshedSessionCookie($fragmentForm['headers'], $resetCookie);
-$legacyQuerySentinel = 'legacy-query-sentinel-not-a-secret';
+$legacyQuerySentinel = str_repeat('a', 64);
 $legacyShell = req('/redefinir_senha.php?token=' . rawurlencode($legacyQuerySentinel));
 ok(!str_contains($legacyShell['body'], $legacyQuerySentinel), 'shell não deve ecoar credencial legada na query');
+ok($legacyShell['status'] === 302, 'link legado válido deve migrar para fragmento sem renderizar a página com query');
+ok((bool) array_filter($legacyShell['headers'], static fn (string $h): bool => stripos($h, 'Location: /redefinir_senha.php#token=' . $legacyQuerySentinel) === 0), 'link legado deve redirecionar para o fragmento');
+ok((bool) array_filter($legacyShell['headers'], static fn (string $h): bool => stripos($h, 'Referrer-Policy: no-referrer') === 0), 'migração do link legado precisa impedir envio de referrer');
+ok((bool) array_filter($legacyShell['headers'], static fn (string $h): bool => stripos($h, 'Cache-Control:') === 0 && stripos($h, 'no-store') !== false), 'redirect de link legado não pode ser armazenado em cache');
 ok(!str_contains($legacyShell['body'], 'cdn-uicons.flaticon.com'), 'shell do reset não deve incluir recurso externo');
 $legacyForm = req('/views/public/redefinir-senha-form.php');
 ok(!str_contains($legacyForm['body'], 'id="formRedefinirSenha"'), 'query legada não deve conceder acesso ao formulário');

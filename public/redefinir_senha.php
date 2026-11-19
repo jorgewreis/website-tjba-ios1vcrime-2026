@@ -14,6 +14,20 @@ if (!headers_sent()) {
 
 $resetService = new PasswordResetService();
 $requestMethod = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+
+// Links emitidos antes da troca para fragmentos ainda chegam com ?token=...
+// O navegador remove o fragmento antes de fazer a próxima requisição, então
+// redirecionamos apenas tokens no formato emitido para a URL segura atual.
+// A requisição legada já pode constar no access log; esse salto evita que o
+// token siga nas requisições subsequentes e não o reflete no HTML.
+if ($requestMethod === 'GET' && isset($_GET['token']) && is_string($_GET['token'])) {
+    $legacyToken = trim($_GET['token']);
+    if (preg_match('/^[a-f0-9]{64}$/iD', $legacyToken) === 1) {
+        header('Location: /redefinir_senha.php#token=' . rawurlencode($legacyToken), true, 302);
+        exit;
+    }
+}
+
 if ($requestMethod === 'POST' && ($_POST['reset_action'] ?? '') === 'stage_token') {
     header('Content-Type: application/json; charset=UTF-8');
     $csrf = $_POST['csrf_token'] ?? null;

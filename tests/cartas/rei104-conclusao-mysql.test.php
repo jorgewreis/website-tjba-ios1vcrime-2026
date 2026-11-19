@@ -91,6 +91,79 @@ if (($retry['tarefa_principal_concluida'] ?? false) !== true || $snapshot($db, '
     throw new RuntimeException('Retentativa da devolução não foi idempotente.');
 }
 
+// Competing order-2 completion must wait for the in-flight order-1 commit and
+// re-read state after acquiring the parent-row lock.
+$seed($db, 'CONCURRENT');
+$db->beginTransaction();
+$parentLock = $db->prepare('SELECT id FROM cartas_recebidas WHERE id = ? FOR UPDATE');
+$parentLock->execute(['CONCURRENT']);
+$workerEnv = [
+    'REI104_TEST_ISOLATION' => 'disposable-rei104-mysql',
+    'REI104_TEST_RUN_ID' => (string) getenv('REI104_TEST_RUN_ID'),
+    'REI104_TEST_MARKER' => (string) getenv('REI104_TEST_MARKER'),
+    'REI104_TEST_DSN' => $dsn,
+    'REI104_TEST_USER' => (string) getenv('REI104_TEST_USER'),
+    'REI104_TEST_PASSWORD' => (string) getenv('REI104_TEST_PASSWORD'),
+];
+$pipes = [];
+$worker = proc_open([PHP_BINARY, __DIR__ . '/rei104-concurrency-worker.php'], [
+    0 => ['pipe', 'r'],
+    1 => ['pipe', 'w'],
+    2 => ['pipe', 'w'],
+], $pipes, __DIR__, $workerEnv);
+if (!is_resource($worker)) {
+    $db->rollBack();
+    throw new RuntimeException('Não foi possível iniciar worker concorrente REI-104.');
+}
+try {
+    stream_set_timeout($pipes[1], 10);
+    if (fgets($pipes[1]) !== "READY\n") {
+        throw new RuntimeException('Worker concorrente não confirmou conexão MySQL.');
+    }
+    fwrite($pipes[0], "GO\n");
+    fflush($pipes[0]);
+    if (fgets($pipes[1]) !== "LOCKING\n") {
+        throw new RuntimeException('Worker concorrente não iniciou a conclusão da devolução.');
+    }
+    usleep(300000);
+    $workerStatus = proc_get_status($worker);
+    if (!$workerStatus['running']) {
+        $error = stream_get_contents($pipes[2]);
+        throw new RuntimeException('A devolução concorrente terminou antes do commit do cumprimento: ' . trim($error));
+    }
+
+    (new CartasRecebidasService($db))->concluirSubtarefa('CUM-CONCURRENT', '{"etapa":"cumprimento"}');
+    $db->commit();
+    stream_set_blocking($pipes[1], true);
+    $workerOutput = stream_get_contents($pipes[1]);
+    $workerError = stream_get_contents($pipes[2]);
+    fclose($pipes[0]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $workerExit = proc_close($worker);
+    if ($workerExit !== 0 || !str_contains((string) $workerOutput, 'PASS|concurrent order-2')) {
+        throw new RuntimeException('Worker concorrente falhou: ' . trim((string) $workerError . ' ' . (string) $workerOutput));
+    }
+    if ($db->query("SELECT status FROM cartas_recebidas WHERE id='CONCURRENT'")->fetchColumn() !== 'concluída'
+        || $db->query("SELECT status FROM cartas_recebidas_subtarefas WHERE id='DEV-CONCURRENT'")->fetchColumn() !== 'concluida') {
+        throw new RuntimeException('Concorrência válida não concluiu a carta e sua devolução.');
+    }
+} catch (Throwable $e) {
+    if ($db->inTransaction()) {
+        $db->rollBack();
+    }
+    foreach ([0, 1, 2] as $index) {
+        if (isset($pipes[$index]) && is_resource($pipes[$index])) {
+            fclose($pipes[$index]);
+        }
+    }
+    if (is_resource($worker)) {
+        proc_terminate($worker);
+        proc_close($worker);
+    }
+    throw $e;
+}
+
 $seed($db, 'ROLLBACK');
 $db->exec("CREATE TRIGGER rei104_fail_status BEFORE UPDATE ON cartas_recebidas FOR EACH ROW BEGIN IF NEW.id='ROLLBACK' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='falha induzida REI-104'; END IF; END");
 $beforeFailure = $snapshot($db, 'ROLLBACK');
@@ -105,4 +178,4 @@ try {
     }
 }
 
-echo "PASS REI-104 MySQL/InnoDB sequência, retry e rollback\n";
+echo "PASS REI-104 MySQL/InnoDB sequência, retry, rollback e concorrência\n";
