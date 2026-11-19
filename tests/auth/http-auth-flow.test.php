@@ -44,8 +44,23 @@ $login = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!1234
 ok(responseSuccess($login['body']), 'login válido não autenticou: ' . substr($login['body'], 0, 500)); $session = sessionCookie($login['headers']);
 $home = req('/home.php', 'GET', [], $session); $logoutCsrf = csrf($home['body']);
 $badLogout = req('/logout.php', 'POST', ['csrf_token'=>'invalid'], $session); ok($badLogout['status'] === 403, 'logout com CSRF inválido não retornou 403');
-$logout = req('/logout.php', 'POST', ['csrf_token'=>$logoutCsrf], $session); ok($logout['status'] === 302, 'logout válido não redirecionou');
-$closed = req('/home.php', 'GET', [], $session); ok(in_array($closed['status'], [302,401,403], true), 'sessão encerrada acessou área autenticada');
+
+// A second login replaces the persisted token while the first browser session
+// remains open. Logging out from that stale session must not revoke the new one.
+$secondLoginForm = req('/views/public/login-form.php');
+$secondLogin = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12345','csrf_token'=>csrf($secondLoginForm['body'])], sessionCookie($secondLoginForm['headers']));
+ok(responseSuccess($secondLogin['body']), 'segundo login válido não autenticou');
+$secondSession = sessionCookie($secondLogin['headers']);
+$staleLogout = req('/logout.php', 'POST', ['csrf_token'=>$logoutCsrf], $session);
+ok($staleLogout['status'] === 302, 'logout de sessão antiga não encerrou o cookie local');
+$oldSessionAccess = req('/home.php', 'GET', [], $session);
+ok(in_array($oldSessionAccess['status'], [302,401,403], true), 'sessão antiga permaneceu autenticada depois do segundo login');
+$secondHome = req('/home.php', 'GET', [], $secondSession);
+ok($secondHome['status'] === 200, 'logout antigo revogou o login mais recente');
+$secondLogout = req('/logout.php', 'POST', ['csrf_token'=>csrf($secondHome['body'])], $secondSession);
+ok($secondLogout['status'] === 302, 'logout da sessão mais recente não redirecionou');
+$secondClosed = req('/home.php', 'GET', [], $secondSession);
+ok(in_array($secondClosed['status'], [302,401,403], true), 'logout recente não encerrou a sessão local');
 
 // The runner seeds synthetic scopes; this successful login must clear them.
 $rate = req('/views/public/login-form.php'); $rateCookie = sessionCookie($rate['headers']); $rateLogin = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12345','csrf_token'=>csrf($rate['body'])], $rateCookie);

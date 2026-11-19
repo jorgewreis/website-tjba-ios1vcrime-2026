@@ -104,6 +104,7 @@ try {
     Run-AppTest 'sandbox-connectivity.test.php'
     Run-AppTest 'fixture-setup.test.php'
     Run-AppTest 'auth-fixtures.test.php'
+    Run-AppTest 'logout-concurrent-revocation.test.php'
     Run-AppTest 'login-rate-limit.test.php'
     Run-AppTest 'reset-token-concurrency.test.php'
     Run-AppTest 'smtp-capture.test.php'

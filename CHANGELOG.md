@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0190
+
+**Data:** 2026-11-19 18:16:26 | **Commit:** `6c6a3481` | **Tipo:** `patch`
+
+- test(REI-133): cover stale logout across sessions
+
 ## V. 1.87.0189
 
 **Data:** 2026-11-19 18:04:13 | **Commit:** `026efee3` | **Tipo:** `patch`
@@ -7623,6 +7629,7 @@
 
 
 \n
+
 
 
 
