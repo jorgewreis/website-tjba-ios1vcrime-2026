@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/SalaAudienciasPautaRepository.php';
+require_once __DIR__ . '/SalaAudienciasPautaSequenceLock.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasPautaAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasPautaParteRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasTiposRepository.php';
@@ -190,8 +191,15 @@ final class SalaAudienciasPautaService
             throw new InvalidArgumentException('Já existe audiência designada neste dia e horário. Escolha outro horário.');
         }
 
-        $this->connection->beginTransaction();
+        $ano = (int) date('Y');
+        $sequenceLock = new SalaAudienciasPautaSequenceLock($this->connection);
+        $sequenceLock->acquire($ano);
+        $transactionStarted = false;
         try {
+            // O lock MySQL é adquirido antes da transação para que o MAX+1 não
+            // use um snapshot REPEATABLE READ aberto antes da serialização.
+            $this->connection->beginTransaction();
+            $transactionStarted = true;
             $classeId = null;
             $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
             $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
@@ -213,7 +221,6 @@ final class SalaAudienciasPautaService
                     'Já existe audiência ativa para este número de processo. Só é permitido cadastrar outra quando a anterior estiver cancelada, redesignada, finalizada ou realizada.'
                 );
             }
-            $ano = (int) date('Y');
             $status = $this->finalizeStatusPauta(trim((string) ($payload['status'] ?? '')), 'designada');
 
             $seq = $this->pautaRepository->nextSequencialForYear($ano);
@@ -238,10 +245,15 @@ final class SalaAudienciasPautaService
                 $this->alocadosRepository->addAlocado($id, $uidCad, SalaAudienciasPautaAlocadosRepository::TIPO_ALL);
             }
             $this->connection->commit();
+            $transactionStarted = false;
             return $id;
         } catch (Throwable $e) {
-            $this->connection->rollBack();
+            if ($transactionStarted && $this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
             throw $e;
+        } finally {
+            $sequenceLock->release();
         }
     }
 
