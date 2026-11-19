@@ -51,6 +51,7 @@ try {
     $service->updateSetor($id, $data);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/instituicoes-publicas/setores/update.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao atualizar setor.'], JSON_UNESCAPED_UNICODE);
 }

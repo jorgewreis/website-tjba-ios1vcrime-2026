@@ -37,6 +37,7 @@ try {
     $deleted = $service->deleteDocumento($id);
     echo json_encode(['deleted' => $deleted], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/pessoas/documentos/delete.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao excluir documento.'], JSON_UNESCAPED_UNICODE);
 }

@@ -49,6 +49,7 @@ try {
     }
     echo json_encode(['instituicoes' => $instituicoes], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/instituicoes-publicas/search.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao buscar.', 'instituicoes' => []], JSON_UNESCAPED_UNICODE);
 }

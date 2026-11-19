@@ -49,6 +49,7 @@ try {
         'message' => (string) $result['message'],
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/gabinete-reus-presos/send-revisao-resumo-email.php');
     http_response_code(500);
     echo json_encode([
         'success' => false,

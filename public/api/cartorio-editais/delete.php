@@ -46,5 +46,6 @@ try {
 } catch (\InvalidArgumentException $exception) {
     ApiJsonResponse::send(['error' => $exception->getMessage()], 400);
 } catch (\Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/cartorio-editais/delete.php');
     ApiJsonResponse::send(['error' => 'Erro ao excluir edital.'], 500);
 }

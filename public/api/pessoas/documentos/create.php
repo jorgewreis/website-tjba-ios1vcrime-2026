@@ -52,6 +52,7 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/pessoas/documentos/create.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao adicionar documento.'], JSON_UNESCAPED_UNICODE);
 }

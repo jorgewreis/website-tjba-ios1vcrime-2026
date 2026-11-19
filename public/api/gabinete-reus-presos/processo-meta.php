@@ -79,6 +79,7 @@ try {
         'data_fato' => $dataFato,
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/gabinete-reus-presos/processo-meta.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao carregar metadados do processo.'], JSON_UNESCAPED_UNICODE);
 }

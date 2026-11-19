@@ -39,6 +39,7 @@ try {
     $removed = $service->deleteTelefone($id);
     echo json_encode(['deleted' => $removed], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/pessoas/telefones/delete.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao excluir telefone.'], JSON_UNESCAPED_UNICODE);
 }

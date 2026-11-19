@@ -35,6 +35,7 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/gabinete-reus-presos/get.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao carregar.'], JSON_UNESCAPED_UNICODE);
 }

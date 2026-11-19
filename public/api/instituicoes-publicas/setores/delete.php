@@ -49,6 +49,7 @@ try {
     $removed = $service->deleteSetor($id);
     echo json_encode(['deleted' => $removed], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/instituicoes-publicas/setores/delete.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao excluir setor.'], JSON_UNESCAPED_UNICODE);
 }

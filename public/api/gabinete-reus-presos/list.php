@@ -42,6 +42,7 @@ try {
         'items_per_page' => $itemsPerPage,
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/gabinete-reus-presos/list.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao listar.'], JSON_UNESCAPED_UNICODE);
 }

@@ -28,6 +28,7 @@ try {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Lista de editais inválida ou acima do limite permitido.'], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/cartorio-editais/reconciliar.php');
     http_response_code(500);
     echo json_encode([
         'success' => false,

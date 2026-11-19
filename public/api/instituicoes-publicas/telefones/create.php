@@ -48,6 +48,7 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/instituicoes-publicas/telefones/create.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao adicionar telefone.'], JSON_UNESCAPED_UNICODE);
 }

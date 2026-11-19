@@ -43,6 +43,7 @@ try {
     }
     echo json_encode(['data' => $rows], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/processos-partes/list.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao listar vínculos.'], JSON_UNESCAPED_UNICODE);
 }

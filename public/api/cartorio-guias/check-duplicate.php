@@ -35,6 +35,7 @@ try {
     $exists = $service->existsGuiaComMesmoProcessoDenunciadoTipo($numeroProcesso, $denunciado, $tipo);
     echo json_encode(['exists' => $exists], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/cartorio-guias/check-duplicate.php');
     http_response_code(500);
     echo json_encode(['exists' => false, 'error' => 'Erro ao verificar duplicidade.'], JSON_UNESCAPED_UNICODE);
 }

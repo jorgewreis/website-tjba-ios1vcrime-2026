@@ -48,6 +48,7 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/instituicoes-publicas/setores/create.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao adicionar setor.'], JSON_UNESCAPED_UNICODE);
 }

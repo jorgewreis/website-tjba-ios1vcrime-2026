@@ -41,6 +41,7 @@ try {
     }
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/pessoas/vinculos-instituicoes/update.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao atualizar vínculo.'], JSON_UNESCAPED_UNICODE);
 }

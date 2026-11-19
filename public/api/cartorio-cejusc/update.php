@@ -16,4 +16,5 @@ if (!Security::isAuthenticated() || !bootstrapRequireTrustedPostRequest()) { Api
 if (!AccessEvaluator::canAccessPage('cejuscedit', UsuarioPerfisAutorizacao::perfisDoUsuario(trim((string) ($_SESSION['id_usuario'] ?? ''))))) { ApiJsonResponse::send(['error' => 'Acesso negado.'], 403); exit; }
 try { $payload = ApiJsonResponse::readJsonPayload(); $id = trim((string) ($payload['id'] ?? '')); unset($payload['id']); $ok = (new CejuscRegistrosService(Conection::getInstance()->getConnection()))->update($id, $payload, trim((string) ($_SESSION['id_usuario'] ?? ''))); ApiJsonResponse::send(['success' => $ok]); }
 catch (InvalidArgumentException $e) { ApiJsonResponse::send(['error' => $e->getMessage()], 400); }
-catch (Throwable $e) { ApiJsonResponse::send(['error' => 'Erro ao atualizar registro CEJUSC.'], 500); }
+catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/cartorio-cejusc/update.php'); ApiJsonResponse::send(['error' => 'Erro ao atualizar registro CEJUSC.'], 500); }

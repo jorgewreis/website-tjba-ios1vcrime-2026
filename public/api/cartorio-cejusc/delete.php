@@ -19,4 +19,5 @@ if (!AccessEvaluator::canAccessPage('cejuscedit', $perfisUsuario)) { ApiJsonResp
 if (!DeleteAuthorization::perfisIncluemServidorOuChefia($perfisUsuario)) { ApiJsonResponse::send(['error' => 'Seu perfil não tem permissão para remover registro CEJUSC.'], 403); exit; }
 try { $payload = ApiJsonResponse::readJsonPayload(); $id = trim((string) ($payload['id'] ?? '')); $deleted = (new CejuscRegistrosService(Conection::getInstance()->getConnection()))->delete($id); ApiJsonResponse::send(['deleted' => $deleted]); }
 catch (InvalidArgumentException $e) { ApiJsonResponse::send(['error' => $e->getMessage()], 400); }
-catch (Throwable $e) { ApiJsonResponse::send(['error' => 'Erro ao excluir registro CEJUSC.'], 500); }
+catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/cartorio-cejusc/delete.php'); ApiJsonResponse::send(['error' => 'Erro ao excluir registro CEJUSC.'], 500); }

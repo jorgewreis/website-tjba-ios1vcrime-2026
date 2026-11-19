@@ -34,6 +34,7 @@ try {
     $service->updateTelefone($id, $parsed);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/pessoas/telefones/update.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao atualizar telefone.'], JSON_UNESCAPED_UNICODE);
 }

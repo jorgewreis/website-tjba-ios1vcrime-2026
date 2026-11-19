@@ -43,6 +43,7 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/cartorio-cartas-recebidas/avancar.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao movimentar carta recebida.'], JSON_UNESCAPED_UNICODE);
 }

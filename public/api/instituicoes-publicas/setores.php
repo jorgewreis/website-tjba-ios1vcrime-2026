@@ -51,6 +51,7 @@ try {
     }
     echo json_encode(['setores' => $setores], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/instituicoes-publicas/setores.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao listar setores.', 'setores' => []], JSON_UNESCAPED_UNICODE);
 }

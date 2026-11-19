@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import re
 import subprocess
 import tempfile
 
@@ -152,6 +153,52 @@ final class Conection {
     # Inventory is reproducible and fails if a new route omits registration.
     api_files = list((ROOT / "public/api").rglob("*.php"))
     routes = [path for path in api_files if not path.name.startswith("_") and path.name != "config.php"]
+
+    # Every unexpected Throwable handled as an API 500 must leave a bounded diagnostic.
+    def php_block(source: str, opening_brace: int) -> str:
+        depth = 1
+        index = opening_brace + 1
+        quote = None
+        escaped = False
+        while index < len(source) and depth:
+            char = source[index]
+            if quote is not None:
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == quote:
+                    quote = None
+            elif char in ("'", '\\"', "`"):
+                quote = char
+            elif char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+            index += 1
+        return source[opening_brace + 1:index - 1]
+
+    unreported = []
+    raw_diagnostics = []
+    catch_pattern = re.compile(r"catch\s*\(\s*\\?Throwable\s+\$(\w+)\s*\)\s*\{")
+    for route in routes:
+        relative = route.relative_to(ROOT).as_posix()
+        source = route.read_text(encoding="utf-8")
+        for match in catch_pattern.finditer(source):
+            body = php_block(source, match.end() - 1)
+            emits_500 = "http_response_code(500)" in body or bool(
+                re.search(r"(?:ApiJsonResponse::send|respond)\(.*?,\s*500\s*\)", body, re.S)
+            )
+            if not emits_500:
+                continue
+            variable = match.group(1)
+            if "ApiErrorReporter::" not in body and "error_log(" not in body:
+                unreported.append(f"{relative}:{source.count(chr(10), 0, match.start()) + 1}")
+            if re.search(rf"\${variable}\s*->\s*getMessage\s*\(", body):
+                raw_diagnostics.append(f"{relative}:{source.count(chr(10), 0, match.start()) + 1}")
+    assert not unreported, "API 500 catches without diagnostics: " + ", ".join(unreported)
+    assert not raw_diagnostics, "API 500 catches may log raw exception messages: " + ", ".join(raw_diagnostics)
+
     missing = [str(path.relative_to(ROOT)) for path in routes if "ApiErrorReporter::register(" not in path.read_text(encoding="utf-8")]
     assert not missing, "API routes missing error reporter: " + ", ".join(missing)
 

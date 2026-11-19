@@ -168,6 +168,7 @@ try {
     }
     echo json_encode(['success' => true, 'items' => (object) $items, 'completo' => true, 'consultados' => $ids], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/sala-audiencias-pauta/status-bulk.php');
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Erro ao consultar status.'], JSON_UNESCAPED_UNICODE);
 }
