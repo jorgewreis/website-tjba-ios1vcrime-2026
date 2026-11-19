@@ -117,13 +117,19 @@ try {
     }
     if($i -eq 30){throw 'Aplicação HTTP não ficou pronta.'}
     D @('exec','--workdir','/workspace','--env',"E2E_RESET_TOKEN=$token",$client,'php','http-auth-flow.test.php')|Write-Output
+    $serverLog = (D @('exec',$app,'cat','/tmp/auth-e2e-app.log')) -join "`n"
+    if($token -and $serverLog.Contains($token)){throw 'Token de redefinição sintético apareceu no log HTTP.'}
     Run-AppTest 'password-reset-states.test.php'
 } catch {
     $executionFailure = $_
     Write-Output ('RUNNER_FAILURE ' + $_.Exception.Message)
     if($app -and $app -match '^[a-f0-9]{64}$') {
         $previousErrorActionPreference=$ErrorActionPreference;$ErrorActionPreference='Continue';$serverLog = & docker exec $app sh -c 'test -f /tmp/auth-e2e-app.log && tail -n 40 /tmp/auth-e2e-app.log' 2>$null;$serverLogExitCode=$LASTEXITCODE;$ErrorActionPreference=$previousErrorActionPreference
-        if($serverLogExitCode -eq 0 -and $serverLog) { Write-Output ('APP_SERVER_LOG ' + ($serverLog -join ' ')) }
+        if($serverLogExitCode -eq 0 -and $serverLog) {
+            $safeServerLog = $serverLog -join ' '
+            if($token){$safeServerLog = $safeServerLog.Replace($token,'[REDACTED-SYNTHETIC-TOKEN]')}
+            Write-Output ('APP_SERVER_LOG ' + $safeServerLog)
+        }
     }
 } finally {
     foreach($id in @($client,$app,$mailpit,$mysql)){if($id -and $id -match '^[a-f0-9]{64}$'){ $raw=&docker inspect $id 2>$null; if($LASTEXITCODE -eq 0){$x=@($raw|ConvertFrom-Json)[0]; if((Label-Value $x.Config.Labels $label) -eq $runId){&docker rm -f $id 2>$null|Out-Null;if($LASTEXITCODE -ne 0){$cleanupFailed=$true}}else{$cleanupFailed=$true}}}}

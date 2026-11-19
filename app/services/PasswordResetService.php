@@ -363,7 +363,7 @@ final class PasswordResetService
             throw new RuntimeException('APP_URL HTTPS canônica é obrigatória para recuperação de senha.');
         }
 
-        return $appUrl . '/redefinir_senha.php?token=' . urlencode($plainToken);
+        return $appUrl . '/redefinir_senha.php#token=' . rawurlencode($plainToken);
     }
 
     /**

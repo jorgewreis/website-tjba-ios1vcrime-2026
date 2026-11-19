@@ -143,28 +143,40 @@ final class EditaisService
         if ($editalId === '') {
             throw new InvalidArgumentException('Identificador do edital é obrigatório.');
         }
-        if ($this->repository->findById($editalId) === null) {
-            throw new InvalidArgumentException('Edital não encontrado.');
-        }
-        $existentes = $this->subtarefasRepository->findByEditalId($editalId);
-        if (count($existentes) > 0) {
+        $this->reconciliarComEditalBloqueado($editalId, function () use ($editalId): void {
+            if ($this->repository->findById($editalId) === null) {
+                throw new InvalidArgumentException('Edital não encontrado.');
+            }
+
+            $repo = $this->subtarefasRepository;
+            $existentes = $repo->findByEditalId($editalId);
+            $ordensExistentes = [];
+            foreach ($existentes as $subtarefa) {
+                $tipo = trim((string) ($subtarefa['tipo'] ?? ''));
+                $ordem = (int) ($subtarefa['ordem'] ?? 0);
+                if ($tipo === $repo::TIPO_PUBLICACAO || $ordem === $repo::ORDEM_PUBLICACAO) {
+                    $ordensExistentes[$repo::ORDEM_PUBLICACAO] = true;
+                } elseif ($tipo === $repo::TIPO_DECURSO || $ordem === $repo::ORDEM_DECURSO) {
+                    $ordensExistentes[$repo::ORDEM_DECURSO] = true;
+                }
+            }
+
+            if (!isset($ordensExistentes[$repo::ORDEM_PUBLICACAO])) {
+                $repo->create($editalId, $repo::TIPO_PUBLICACAO, $repo::ORDEM_PUBLICACAO, 'em_andamento', null);
+            }
+            if (!isset($ordensExistentes[$repo::ORDEM_DECURSO])) {
+                $repo->create($editalId, $repo::TIPO_DECURSO, $repo::ORDEM_DECURSO, 'pendente', null);
+            }
+
+            $todas = $repo->findByEditalId($editalId);
             require_once __DIR__ . '/../helpers/EditaisUiCopy.php';
-            $status = EditaisUiCopy::statusPrincipalFromSubtarefas($existentes);
+            $status = EditaisUiCopy::statusPrincipalFromSubtarefas($todas);
             if ($status === 'concluída' || $status === 'concluida') {
                 $status = 'concluída';
             }
             $this->repository->update($editalId, ['status' => $status]);
             $this->tentarFinalizacaoAutomaticaPorDecurso($editalId);
-            return;
-        }
-
-        $repo = $this->subtarefasRepository;
-        $repo->create($editalId, $repo::TIPO_PUBLICACAO, $repo::ORDEM_PUBLICACAO, 'em_andamento', null);
-        $repo->create($editalId, $repo::TIPO_DECURSO, $repo::ORDEM_DECURSO, 'pendente', null);
-
-        require_once __DIR__ . '/../helpers/EditaisUiCopy.php';
-        $this->repository->update($editalId, ['status' => EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO]);
-
+        });
     }
 
     public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
@@ -491,7 +503,8 @@ final class EditaisService
             $this->connection->exec('SAVEPOINT ' . $savepoint);
         }
         try {
-            $statement = $this->connection->prepare('SELECT `id` FROM `editais` WHERE `id` = :id FOR UPDATE');
+            $lockSuffix = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+            $statement = $this->connection->prepare('SELECT `id` FROM `editais` WHERE `id` = :id' . $lockSuffix);
             $statement->execute([':id' => $editalId]);
             $exists = $statement->fetchColumn() !== false;
             $statement->closeCursor();

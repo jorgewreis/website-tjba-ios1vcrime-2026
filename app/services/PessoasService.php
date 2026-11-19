@@ -145,21 +145,26 @@ final class PessoasService
         }
         ParteDocumentoHelper::validarNumero($tipo, $numero);
 
-        $existentes = $this->documentosRepository->findByParteId($parteId);
-        foreach ($existentes as $doc) {
-            if (ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? '')) === $tipo) {
-                throw new InvalidArgumentException('Esta pessoa já possui documento do tipo ' . $tipo . '.');
+        return $this->operacaoProfissaoAtomica(function () use ($parteId, $tipo, $numero): string {
+            if ($this->partesRepository->findByIdForUpdate($parteId) === null) {
+                throw new InvalidArgumentException('Pessoa não encontrada.');
             }
-        }
+            $existentes = $this->documentosRepository->findByParteId($parteId);
+            foreach ($existentes as $doc) {
+                if (ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? '')) === $tipo) {
+                    throw new InvalidArgumentException('Esta pessoa já possui documento do tipo ' . $tipo . '.');
+                }
+            }
 
-        $newId = $this->documentosRepository->insert([
-            'parte_id' => $parteId,
-            'tipo' => $tipo,
-            'numero' => $numero,
-        ]);
-        $this->sincronizarCpfLegado($parteId);
+            $newId = $this->documentosRepository->insert([
+                'parte_id' => $parteId,
+                'tipo' => $tipo,
+                'numero' => $numero,
+            ]);
+            $this->sincronizarCpfLegado($parteId);
 
-        return $newId;
+            return $newId;
+        });
     }
 
     public function deleteDocumento(string $id): bool
@@ -169,12 +174,24 @@ final class PessoasService
             return false;
         }
         $parteId = trim((string) ($row['parte_id'] ?? ''));
-        $ok = $this->documentosRepository->delete($id);
-        if ($ok && $parteId !== '') {
-            $this->sincronizarCpfLegado($parteId);
+        if ($parteId === '') {
+            return false;
         }
 
-        return $ok;
+        return $this->operacaoProfissaoAtomica(function () use ($id, $parteId): bool {
+            if ($this->partesRepository->findByIdForUpdate($parteId) === null) {
+                return false;
+            }
+            $atual = $this->documentosRepository->findById($id);
+            if ($atual === null || trim((string) ($atual['parte_id'] ?? '')) !== $parteId) {
+                return false;
+            }
+            $ok = $this->documentosRepository->delete($id);
+            if ($ok) {
+                $this->sincronizarCpfLegado($parteId);
+            }
+            return $ok;
+        });
     }
 
     public function addTelefone(string $parteId, array $row): string

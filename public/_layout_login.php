@@ -57,12 +57,18 @@ if ($_isFimDeSemana) {
 // ── Variáveis do template ─────────────────────────────────────────────────────
 $iframeSrc  = $iframeSrc  ?? '';
 $pageTitle  = $pageTitle  ?? 'Primeira Vara Criminal de Ilhéus - Sistema de Gestão';
+$needsResetFragmentBootstrap = (bool) ($needsResetFragmentBootstrap ?? false);
+$resetBootstrapCsrf = (string) ($resetBootstrapCsrf ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php if ($needsResetFragmentBootstrap): ?>
+    <meta name="referrer" content="no-referrer">
+    <meta name="reset-bootstrap-csrf" content="<?php echo htmlspecialchars($resetBootstrapCsrf, ENT_QUOTES, 'UTF-8'); ?>">
+    <?php endif; ?>
     <title><?php echo htmlspecialchars($pageTitle, ENT_QUOTES, 'UTF-8'); ?></title>
 
     <link rel="stylesheet" href="/assets/css/shared/reset.css">
@@ -74,7 +80,9 @@ $pageTitle  = $pageTitle  ?? 'Primeira Vara Criminal de Ilhéus - Sistema de Ges
     <link rel="stylesheet" href="/assets/css/shared/login.css">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
 
+    <?php if (!$needsResetFragmentBootstrap): ?>
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-straight/css/uicons-regular-straight.css">
+    <?php endif; ?>
     <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico">
 
     <script>
@@ -128,6 +136,7 @@ $pageTitle  = $pageTitle  ?? 'Primeira Vara Criminal de Ilhéus - Sistema de Ges
                         id="login-iframe"
                         src="<?php echo htmlspecialchars($iframeSrc, ENT_QUOTES, 'UTF-8'); ?>"
                         title="Conteúdo da página"
+                        <?php if ($needsResetFragmentBootstrap): ?>style="visibility: hidden"<?php endif; ?>
                     ></iframe>
                 </div>
 
@@ -141,6 +150,9 @@ $pageTitle  = $pageTitle  ?? 'Primeira Vara Criminal de Ilhéus - Sistema de Ges
 
     <script src="/assets/js/shared/navigate-buttons.js" defer></script>
     <script src="/assets/js/shared/toast.js" defer></script>
+    <?php if ($needsResetFragmentBootstrap): ?>
+    <script src="/assets/js/shared/reset-link-bootstrap.js" defer></script>
+    <?php endif; ?>
     <script>
         window.addEventListener('message', function (e) {
             if (!e.data || typeof e.data !== 'object') return;

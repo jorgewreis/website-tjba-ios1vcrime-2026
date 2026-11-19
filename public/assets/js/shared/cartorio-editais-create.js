@@ -14,6 +14,33 @@
         const gate = helpers.initCreateButtonGate({ button: button, initialLabel: 'Novo cadastro', readyLabel: 'Cadastrar' });
         const feedback = helpers.notify;
         const processoInput = global.document.getElementById('filter-processo');
+        const pendingStorageKey = 'cartorio-editais-pending-subtasks';
+        let pendingEditalId = '';
+        try { pendingEditalId = global.sessionStorage.getItem(pendingStorageKey) || ''; } catch (_error) {}
+
+        function completeSubtasks(id) {
+            return fetch(settings.firstSubtaskEndpoint || '/api/cartorio-editais/criar-primeira-subtarefa.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ edital_id: id }),
+                credentials: 'same-origin'
+            }).then(function (response) {
+                if (!response.ok) {
+                    return response.json().then(function (body) {
+                        throw new Error(body.error || 'Erro ao criar subtarefas');
+                    });
+                }
+                pendingEditalId = '';
+                try { global.sessionStorage.removeItem(pendingStorageKey); } catch (_error) {}
+                return id;
+            });
+        }
+
+        function finishCreation() {
+            gate.setInitial();
+            feedback('Edital cadastrado.', 'success');
+            global.location.href = settings.successRedirect || '/frame.php?page=editais';
+        }
 
         if (!button) {
             return;
@@ -37,6 +64,15 @@
         });
 
         button.addEventListener('click', function () {
+            if (pendingEditalId !== '') {
+                gate.setSubmitting();
+                completeSubtasks(pendingEditalId).then(finishCreation).catch(function () {
+                    gate.setInitial();
+                    feedback('O edital já foi criado. Clique novamente em Cadastrar para concluir suas etapas.', 'error');
+                });
+                return;
+            }
+
             const processo = helpers.normalizeProcessValue(helpers.getValue('filter-processo'), {
                 inputId: 'filter-processo',
                 buttonGate: gate,
@@ -95,29 +131,16 @@
                     if (!id) {
                         throw new Error('Resposta inválida do servidor.');
                     }
-
-                    return fetch(settings.firstSubtaskEndpoint || '/api/cartorio-editais/criar-primeira-subtarefa.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ edital_id: id }),
-                        credentials: 'same-origin'
-                    }).then(function (response) {
-                        if (!response.ok) {
-                            return response.json().then(function (body) {
-                                throw new Error(body.error || 'Erro ao criar subtarefas');
-                            });
-                        }
-                        return id;
-                    });
+                    pendingEditalId = String(id);
+                    try { global.sessionStorage.setItem(pendingStorageKey, pendingEditalId); } catch (_error) {}
+                    return completeSubtasks(pendingEditalId);
                 })
-                .then(function () {
-                    gate.setInitial();
-                    feedback('Edital cadastrado.', 'success');
-                    global.location.href = settings.successRedirect || '/frame.php?page=editais';
-                })
+                .then(finishCreation)
                 .catch(function (error) {
                     gate.setInitial();
-                    feedback(error && error.message ? error.message : 'Erro ao cadastrar.', 'error');
+                    feedback(pendingEditalId !== ''
+                        ? 'O edital já foi criado. Clique novamente em Cadastrar para concluir suas etapas.'
+                        : (error && error.message ? error.message : 'Erro ao cadastrar.'), 'error');
                 });
         });
     }

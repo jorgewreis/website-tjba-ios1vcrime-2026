@@ -262,36 +262,79 @@ final class OficiosCartorioService
         if ($oficioId === '') {
             throw new InvalidArgumentException('Ofício não identificado.');
         }
-        $oficio = $this->repository->findById($oficioId);
-        if ($oficio === null) {
-            throw new InvalidArgumentException('Ofício não encontrado.');
-        }
-        if (($oficio['status'] ?? '') === 'cancelada') {
-            throw new InvalidArgumentException('Ofício cancelado.');
-        }
-        if (($oficio['status'] ?? '') === 'finalizada') {
-            throw new InvalidArgumentException('Ofício já finalizado.');
-        }
-        $ordem = (int) ($st['ordem'] ?? 0);
-        $statusSt = (string) ($st['status'] ?? '');
-        if ($statusSt === 'concluida') {
-            throw new InvalidArgumentException('Esta subtarefa já foi concluída.');
-        }
 
-        $this->subtarefasRepository->marcarConcluida($subtarefaId);
-
-        if ($ordem === 1) {
-            $s2 = $this->subtarefasRepository->findByOficioIdEOrdem($oficioId, 2);
-            if ($s2 !== null) {
-                $this->subtarefasRepository->atualizarStatus((string) $s2['id'], 'em_andamento');
+        // Lock the parent row first so completions of either child serialize per oficio.
+        // Re-read all state only after acquiring this lock; this prevents a concurrent
+        // order-1 completion from racing an order-2 finalization.
+        $ownsTransaction = !$this->connection->inTransaction();
+        if ($ownsTransaction) {
+            $this->connection->beginTransaction();
+        }
+        try {
+            $lock = $this->connection->prepare('SELECT `id` FROM `oficios_cartorio` WHERE `id` = :id FOR UPDATE');
+            $lock->bindValue(':id', $oficioId);
+            $lock->execute();
+            if ($lock->fetchColumn() === false) {
+                throw new InvalidArgumentException('Ofício não encontrado.');
             }
-            return ['tarefa_principal_concluida' => false];
+
+            $readTask = $this->connection->prepare(
+                'SELECT * FROM `oficios_cartorio_subtarefas` WHERE `id` = :id LIMIT 1 FOR UPDATE'
+            );
+            $readTask->bindValue(':id', $subtarefaId);
+            $readTask->execute();
+            $st = $readTask->fetch(PDO::FETCH_ASSOC);
+            if ($st === false) {
+                $st = null;
+            }
+            if ($st === null || trim((string) ($st['oficio_cartorio_id'] ?? '')) !== $oficioId) {
+                throw new InvalidArgumentException('Subtarefa não encontrada.');
+            }
+            $oficio = $this->repository->findById($oficioId);
+            if ($oficio === null) {
+                throw new InvalidArgumentException('Ofício não encontrado.');
+            }
+            if (($oficio['status'] ?? '') === 'cancelada') {
+                throw new InvalidArgumentException('Ofício cancelado.');
+            }
+            if (($oficio['status'] ?? '') === 'finalizada') {
+                throw new InvalidArgumentException('Ofício já finalizado.');
+            }
+            $ordem = (int) ($st['ordem'] ?? 0);
+            if (!in_array($ordem, [1, 2], true)) {
+                throw new InvalidArgumentException('Ordem de subtarefa inválida.');
+            }
+            if ((string) ($st['status'] ?? '') === 'concluida') {
+                throw new InvalidArgumentException('Esta subtarefa já foi concluída.');
+            }
+            if ($ordem === 2) {
+                $s1 = $this->subtarefasRepository->findByOficioIdEOrdem($oficioId, 1);
+                if ($s1 === null || (string) ($s1['status'] ?? '') !== 'concluida') {
+                    throw new InvalidArgumentException('Conclua a subtarefa anterior antes desta.');
+                }
+            }
+
+            $this->subtarefasRepository->marcarConcluida($subtarefaId);
+            if ($ordem === 1) {
+                $s2 = $this->subtarefasRepository->findByOficioIdEOrdem($oficioId, 2);
+                if ($s2 !== null) {
+                    $this->subtarefasRepository->atualizarStatus((string) $s2['id'], 'em_andamento');
+                }
+                $result = ['tarefa_principal_concluida' => false];
+            } else {
+                $this->repository->updateStatus($oficioId, 'finalizada', $atualizadoPor);
+                $result = ['tarefa_principal_concluida' => true];
+            }
+            if ($ownsTransaction) {
+                $this->connection->commit();
+            }
+            return $result;
+        } catch (\Throwable $e) {
+            if ($ownsTransaction && $this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            throw $e;
         }
-        if ($ordem === 2) {
-            $this->repository->updateStatus($oficioId, 'finalizada', $atualizadoPor);
-            return ['tarefa_principal_concluida' => true];
-        }
-        throw new InvalidArgumentException('Ordem de subtarefa inválida.');
     }
 
     public function cancel(string $id, ?string $atualizadoPor = null): bool

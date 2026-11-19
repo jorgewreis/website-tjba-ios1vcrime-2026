@@ -131,7 +131,8 @@ final class PartesDocumentosRepository
         if ($id === '') {
             return false;
         }
-        $statement = $this->connection->prepare(sprintf('DELETE FROM `%s` WHERE `id` = :id LIMIT 1', $this->table));
+        $limit = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' LIMIT 1' : '';
+        $statement = $this->connection->prepare(sprintf('DELETE FROM `%s` WHERE `id` = :id%s', $this->table, $limit));
         $statement->bindValue(':id', $id);
         $statement->execute();
 
