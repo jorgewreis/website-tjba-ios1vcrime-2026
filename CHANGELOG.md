@@ -2,8 +2,9 @@
 
 ## V. 1.87.0187
 
-**Data:** 2026-11-19 20:36:07 | **Commit:** `2dc9e45d` | **Tipo:** `patch`
+**Data:** 2026-11-19 20:36:07 | **Commits:** `20e78c24`, `7706055e` | **Tipo:** `patch`
 
+- test(REI-127): cover matching date with stale etag
 - fix(auth): prevent stale login after password reset
 
 ## V. 1.87.0186
