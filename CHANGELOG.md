@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0189
+
+**Data:** 2026-11-20 08:32:37 | **Commit:** `0707afae` | **Tipo:** `patch`
+
+- docs(REI-124): update isolated CI status
+
 ## V. 1.87.0188
 
 **Data:** 2026-11-20 08:27:54 | **Commit:** `6ed7521a` | **Tipo:** `patch`
@@ -7618,6 +7624,7 @@
 
 
 \n
+
 
 
 
