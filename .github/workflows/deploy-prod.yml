@@ -40,37 +40,45 @@ jobs:
           DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
         run: bash .github/scripts/deploy-preflight.sh
 
-      - name: Abrir acesso SSH temporário para este runner
-        id: hostinger_firewall
+      - name: Conectar à produção pela VPN WireGuard
         env:
-          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
-        run: bash .github/scripts/deploy-hostinger-firewall-setup.sh
-
-      - name: Instrução de liberação temporária no UFW
-        env:
-          RUNNER_PUBLIC_IP: ${{ steps.hostinger_firewall.outputs.runner_ip }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+          WG_CLIENT_PRIVATE_KEY: ${{ secrets.WG_CLIENT_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          rule_comment="gha-deploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          command="sudo ufw allow from ${RUNNER_PUBLIC_IP} to any port 22 proto tcp comment '${rule_comment}'"
-          echo "O UFW do VPS precisa permitir temporariamente o runner deste job. No Terminal do hPanel, execute:" >> "$GITHUB_STEP_SUMMARY"
-          echo '```sh' >> "$GITHUB_STEP_SUMMARY"
-          echo "$command" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          echo "IP público do runner: ${RUNNER_PUBLIC_IP}/32. O job aguardará até 4 minutos; depois do primeiro SSH válido, removerá apenas a regra comentada ${rule_comment}." >> "$GITHUB_STEP_SUMMARY"
-          echo "Regra UFW necessária: ${command}"
+          if [ -z "${WG_CLIENT_PRIVATE_KEY:-}" ]; then
+            echo "::error::Secret WG_CLIENT_PRIVATE_KEY não configurado no environment production."
+            exit 1
+          fi
+          if ! command -v wg >/dev/null 2>&1 || ! command -v wg-quick >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y wireguard-tools
+          fi
+
+          config="${RUNNER_TEMP}/gha-rei169-wg.conf"
+          umask 077
+          cat > "$config" <<EOF
+          [Interface]
+          PrivateKey = ${WG_CLIENT_PRIVATE_KEY}
+          Address = 10.222.231.3/32
+
+          [Peer]
+          PublicKey = 83ZQWbfYaFvwvemWMrnmRLO9V5tGfisfapOFFTBtgEs=
+          AllowedIPs = 10.222.231.1/32
+          Endpoint = 72.60.250.46:51820
+          PersistentKeepalive = 25
+          EOF
+          unset WG_CLIENT_PRIVATE_KEY
+          chmod 600 "$config"
+          printf 'DEPLOY_HOST_EFFECTIVE=10.222.231.1\n' >> "$GITHUB_ENV"
+
+          sudo wg-quick up "$config"
+          echo "Interface WireGuard configurada; a conectividade será validada pelo SSH com fingerprint fixada."
 
       - name: Setup SSH (decode + validar chave + keyscan)
-        id: ssh_setup
         env:
           DEPLOY_KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
           DEPLOY_HOST_KEY_SHA256: ${{ secrets.DEPLOY_HOST_KEY_SHA256 }}
-          RUNNER_PUBLIC_IP: ${{ steps.hostinger_firewall.outputs.runner_ip }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
         run: bash .github/scripts/deploy-ssh-setup.sh
 
       - name: SSH sanity check
@@ -297,20 +305,9 @@ jobs:
             '
           EOF
 
-      - name: Remover regra UFW temporária do runner
-        if: always() && steps.ssh_setup.outcome == 'success'
-        env:
-          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
-          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
-          RUNNER_PUBLIC_IP: ${{ steps.hostinger_firewall.outputs.runner_ip }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
-        run: bash .github/scripts/deploy-ufw-ssh-cleanup.sh
-
-      - name: Remover firewall temporário do deploy
-        if: always() && steps.hostinger_firewall.outputs.firewall_id != ''
-        env:
-          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
-          FIREWALL_ID: ${{ steps.hostinger_firewall.outputs.firewall_id }}
-          FIREWALL_ACTIVATED: ${{ steps.hostinger_firewall.outputs.activated }}
-        run: bash .github/scripts/deploy-hostinger-firewall-cleanup.sh
+      - name: Remover túnel WireGuard do runner
+        if: always()
+        run: |
+          config="${RUNNER_TEMP}/gha-rei169-wg.conf"
+          sudo wg-quick down "$config" >/dev/null 2>&1 || true
+          rm -f "$config"
