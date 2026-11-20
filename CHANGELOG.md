@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0189
+
+**Data:** 2026-11-19 21:09:59 | **Commit:** `894fea52` | **Tipo:** `patch`
+
+- chore: sync main into REI-67 branch
+
 ## V. 1.87.0188
 
 **Data:** 2026-11-19 20:45:21 | **Commit:** `791ccc37` | **Tipo:** `patch`
@@ -12,9 +18,10 @@
 
 - fix(api): log sanitized diagnostics for unexpected errors
 
-**Data:** 2026-11-19 20:21:18 | **Commit:** `20e78c24` | **Tipo:** `patch`
+**Data:** 2026-11-19 20:36:07 | **Commits:** `20e78c24`, `7706055e` | **Tipo:** `patch`
 
 - test(REI-127): cover matching date with stale etag
+- fix(auth): prevent stale login after password reset
 
 ## V. 1.87.0186
 
@@ -7621,3 +7628,4 @@
 
 
 \n
+

@@ -123,8 +123,26 @@ if (!$rateLimiter->isStorageAvailable()) {
    Sessão (backend manda)
    ===================== */
 
-session_regenerate_id(true);
 $sessionToken = Security::generateSecureToken();
+$perfisLogin = $resultado['perfis'] ?? [];
+if (is_array($perfisLogin)) {
+    EffectiveAccessProfiles::applyDefaultOperacionalIfCumulative($perfisLogin);
+}
+
+/* Persistir token somente se a senha ainda for a mesma validada no login. */
+if (!$usuario->atualizarToken(
+    $resultado['id_usuario'],
+    $sessionToken,
+    TOKEN_EXPIRATION_HOURS
+)) {
+    echo json_encode([
+        'success' => false,
+        'message' => 'CPF ou senha inválidos.'
+    ]);
+    exit;
+}
+
+session_regenerate_id(true);
 Security::initializeAuthenticatedSession(
     $resultado['id_usuario'],
     $resultado['perfil'],
@@ -132,17 +150,6 @@ Security::initializeAuthenticatedSession(
     (string) ($resultado['nome'] ?? '')
 );
 
-$perfisLogin = $resultado['perfis'] ?? [];
-if (is_array($perfisLogin)) {
-    EffectiveAccessProfiles::applyDefaultOperacionalIfCumulative($perfisLogin);
-}
-
-/* Persistir token */
-$usuario->atualizarToken(
-    $resultado['id_usuario'],
-    $sessionToken,
-    TOKEN_EXPIRATION_HOURS
-);
 $usuario->registrarUltimoAcesso($resultado['id_usuario']);
 
 
