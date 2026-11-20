@@ -9,4 +9,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-155): verify ordered reset races** `[7cf2f8ff]`
 - **test(REI-155): guard ordered race entrypoints** `[bc981db7]`
 - **test(REI-155): verify issuance and password race** `[e0058088]`
+- **test: allow diagnostic probe time on CI** `[5da1149f]`
 
