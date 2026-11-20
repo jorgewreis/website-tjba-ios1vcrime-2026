@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0006
+
+**Data:** 2026-11-20 14:56:59 | **Commit:** `a082afda` | **Tipo:** `patch`
+
+- fix(footer): force credit metadata onto separate lines
+
 ## V. 1.88.0005
 
 **Data:** 2026-11-20 14:46:11 | **Commit:** `7dd86e73` | **Tipo:** `patch`
@@ -7667,6 +7673,7 @@
 
 
 \n
+
 
 
 
