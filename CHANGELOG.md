@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0188
+
+**Data:** 2026-11-19 21:39:13 | **Commit:** `e55d20f9` | **Tipo:** `patch`
+
+- test(REI-136): fix concurrent pauta fixture inputs
+
 ## V. 1.87.0187
 
 **Data:** 2026-11-19 20:36:07 | **Commits:** `20e78c24`, `7706055e` | **Tipo:** `patch`
@@ -7612,5 +7618,6 @@
 
 
 \n
+
 
 

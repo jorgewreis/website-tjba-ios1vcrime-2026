@@ -337,11 +337,11 @@ if (file_put_contents($workerPath, $workerScript, LOCK_EX) === false) {
 $workerPayloads = [
     array_replace($basePayload, [
         'numero_processo' => '0000003-39.2020.8.05.0001',
-        'hora_audiencia' => '09:15',
+        'hora_audiencia' => '09:10',
     ]),
     array_replace($basePayload, [
-        'numero_processo' => '0000004-20.2020.8.05.0001',
-        'hora_audiencia' => '09:30',
+        'numero_processo' => '0000004-24.2020.8.05.0001',
+        'hora_audiencia' => '09:20',
     ]),
 ];
 $workers = [];
@@ -401,9 +401,13 @@ try {
     foreach ($workers as $worker) {
         $exitCode = proc_close($worker['process']);
         $resultText = is_file($worker['resultPath']) ? file_get_contents($worker['resultPath']) : false;
-        $workerResults[] = is_string($resultText) ? json_decode($resultText, true, 512, JSON_THROW_ON_ERROR) : null;
+        $workerResult = is_string($resultText) ? json_decode($resultText, true, 512, JSON_THROW_ON_ERROR) : null;
+        $workerResults[] = $workerResult;
         $stderr = is_file($worker['stderrPath']) ? trim((string) file_get_contents($worker['stderrPath'])) : '';
-        $assert($exitCode === 0, 'Worker concorrente falhou: ' . $stderr);
+        $assert(
+            $exitCode === 0,
+            'Worker concorrente falhou (exit=' . $exitCode . ', resultado=' . json_encode($workerResult, JSON_UNESCAPED_UNICODE) . ', stderr=' . $stderr . ').'
+        );
     }
 } finally {
     foreach ($workers as $worker) {
