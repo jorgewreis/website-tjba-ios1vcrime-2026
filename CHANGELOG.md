@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0002
+
+**Data:** 2026-11-20 13:52:35 | **Commit:** `bec23f45` | **Tipo:** `patch`
+
+- ci(deploy): permitir runner temporário no UFW
+
 ## V. 1.88.0001
 
 **Data:** 2026-11-20 13:09:54 | **Commit:** `16c5f76d` | **Tipo:** `patch`
@@ -7643,6 +7649,7 @@
 
 
 \n
+
 
 
 

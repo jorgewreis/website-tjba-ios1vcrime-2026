@@ -62,4 +62,5 @@ api_request POST "/firewall/${firewall_id}/rules" \
 api_request POST "/firewall/${firewall_id}/activate/${VPS_ID}" >/dev/null
 
 printf 'activated=true\n' >> "$GITHUB_OUTPUT"
+printf 'runner_ip=%s\n' "$runner_ip" >> "$GITHUB_OUTPUT"
 echo "Firewall temporário ${firewall_id} ativado; SSH liberado somente para ${runner_cidr}, com HTTP/HTTPS preservados."

@@ -46,11 +46,31 @@ jobs:
           HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
         run: bash .github/scripts/deploy-hostinger-firewall-setup.sh
 
+      - name: Instrução de liberação temporária no UFW
+        env:
+          RUNNER_PUBLIC_IP: ${{ steps.hostinger_firewall.outputs.runner_ip }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          rule_comment="gha-deploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          command="sudo ufw allow from ${RUNNER_PUBLIC_IP} to any port 22 proto tcp comment '${rule_comment}'"
+          echo "O UFW do VPS precisa permitir temporariamente o runner deste job. No Terminal do hPanel, execute:" >> "$GITHUB_STEP_SUMMARY"
+          echo '```sh' >> "$GITHUB_STEP_SUMMARY"
+          echo "$command" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          echo "IP público do runner: ${RUNNER_PUBLIC_IP}/32. O job aguardará até 4 minutos; depois do primeiro SSH válido, removerá apenas a regra comentada ${rule_comment}." >> "$GITHUB_STEP_SUMMARY"
+          echo "Regra UFW necessária: ${command}"
+
       - name: Setup SSH (decode + validar chave + keyscan)
+        id: ssh_setup
         env:
           DEPLOY_KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
           DEPLOY_HOST_KEY_SHA256: ${{ secrets.DEPLOY_HOST_KEY_SHA256 }}
+          RUNNER_PUBLIC_IP: ${{ steps.hostinger_firewall.outputs.runner_ip }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
         run: bash .github/scripts/deploy-ssh-setup.sh
 
       - name: SSH sanity check
@@ -251,6 +271,16 @@ jobs:
             sudo systemctl reload php8.1-fpm 2>/dev/null || true
             sudo systemctl reload php8.0-fpm 2>/dev/null || true
           EOF
+
+      - name: Remover regra UFW temporária do runner
+        if: always() && steps.ssh_setup.outcome == 'success'
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          RUNNER_PUBLIC_IP: ${{ steps.hostinger_firewall.outputs.runner_ip }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: bash .github/scripts/deploy-ufw-ssh-cleanup.sh
 
       - name: Remover firewall temporário do deploy
         if: always() && steps.hostinger_firewall.outputs.firewall_id != ''

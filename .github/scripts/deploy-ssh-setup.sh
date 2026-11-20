@@ -31,12 +31,25 @@ echo "Fingerprint da chave de deploy:"
 cat /tmp/gha_ssh_kfl.txt
 
 run_keyscan() {
-  local extra=("$@")
-  ssh-keyscan "${extra[@]}" -H -T 20 "${DEPLOY_HOST}" >"$KS_OUT" 2>/tmp/gha_keyscan.err
+  ssh-keyscan -4 -H -T 5 "${DEPLOY_HOST}" >"$KS_OUT" 2>/tmp/gha_keyscan.err
 }
 
-if ! run_keyscan && ! run_keyscan -4; then
-  echo "::error::ssh-keyscan falhou — porta 22 inacessível, timeout de rede ou firewall a bloquear o runner do GitHub."
+keyscan_attempt=0
+keyscan_max_attempts=24
+while ! run_keyscan; do
+  keyscan_attempt=$((keyscan_attempt + 1))
+  if (( keyscan_attempt >= keyscan_max_attempts )); then
+    echo "::error::SSH continuou inacessível após $((keyscan_max_attempts * 10)) segundos. Confirme a regra UFW temporária indicada no resumo do job."
+    echo "Se a regra foi adicionada manualmente, remova-a no VPS com: sudo ufw delete allow from ${RUNNER_PUBLIC_IP:-<IP_DO_RUNNER>} to any port 22 proto tcp comment 'gha-deploy-${GITHUB_RUN_ID:-<RUN_ID>}-${GITHUB_RUN_ATTEMPT:-<TENTATIVA>}'"
+    [ -s /tmp/gha_keyscan.err ] && cat /tmp/gha_keyscan.err
+    exit 1
+  fi
+  echo "::notice::Aguardando liberação UFW do runner (${keyscan_attempt}/${keyscan_max_attempts}); próxima tentativa em 5s."
+  sleep 5
+done
+
+if [ ! -s "$KS_OUT" ]; then
+  echo "::error::ssh-keyscan terminou sem chaves de host."
   [ -s /tmp/gha_keyscan.err ] && cat /tmp/gha_keyscan.err
   exit 1
 fi
