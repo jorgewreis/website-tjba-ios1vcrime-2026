@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0192
+
+**Data:** 2026-11-19 21:33:15 | **Commit:** `a2cd94b9` | **Tipo:** `patch`
+
+- docs(REI-73): refresh REI-100 merge evidence
+
 ## V. 1.87.0191
 
 **Data:** 2026-11-19 21:31:25 | **Commit:** `f17ba3dd` | **Tipo:** `patch`
@@ -7642,4 +7648,5 @@
 
 
 \n
+
 
