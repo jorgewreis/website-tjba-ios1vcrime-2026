@@ -5,6 +5,7 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CnjValidator.php';
@@ -70,7 +71,14 @@ try {
     $result = (new ProcessoDataJudSyncService($connection))->sync(
         $digits,
         ['codigo' => (string) $codigo, 'descricao' => trim($descricao)],
-        null
+        null,
+        false,
+        static function (PDO $db) use ($usuarioId, $digits): bool {
+            $processo = (new ProcessosRepository($db))->findByNumero($digits);
+            $processoId = trim((string) ($processo['id'] ?? ''));
+            return $processoId !== ''
+                && ProcessoSetorAuthorization::canModifyProcess($db, $usuarioId, $processoId, true);
+        }
     )['classe'];
     echo json_encode($result, JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
