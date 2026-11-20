@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0003
+
+**Data:** 2026-11-20 14:01:52 | **Commit:** `c85a9638` | **Tipo:** `patch`
+
+- ci(deploy): sincronizar firewall temporário Hostinger
+
 ## V. 1.88.0002
 
 **Data:** 2026-11-20 13:52:35 | **Commit:** `bec23f45` | **Tipo:** `patch`
@@ -7649,6 +7655,7 @@
 
 
 \n
+
 
 
 
