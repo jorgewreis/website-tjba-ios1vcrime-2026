@@ -1,36 +1,48 @@
 # Changelog
 
-## V. 1.87.0195
+## V. 1.87.0190
+
+**Data:** 2026-11-20 09:50:21 | **Commit:** `da820415` | **Tipo:** `patch`
+
+- test(REI-148): run mysql regressions in CI
+
+## Alteracao REI-148 - versao pendente
+
+**Data:** 2026-11-20 08:28:59 | **Commit:** `1836082a` | **Tipo:** `patch`
+
+- fix(REI-148): stabilize user pagination and counts
+
+## Alteracao REI-155 - versao pendente
 
 **Data:** 2026-11-20 09:49:03 | **Commit:** `5da1149f` | **Tipo:** `patch`
 
 - test: allow diagnostic probe time on CI
 
-## V. 1.87.0194
+## Alteracao REI-155 - versao pendente
 
 **Data:** 2026-11-20 09:46:51 | **Commit:** `e0058088` | **Tipo:** `patch`
 
 - test(REI-155): verify issuance and password race
 
-## V. 1.87.0193
+## Alteracao REI-155 - versao pendente
 
 **Data:** 2026-11-20 09:38:38 | **Commit:** `bc981db7` | **Tipo:** `patch`
 
 - test(REI-155): guard ordered race entrypoints
 
-## V. 1.87.0192
+## Alteracao REI-155 - versao pendente
 
 **Data:** 2026-11-20 09:36:29 | **Commit:** `7cf2f8ff` | **Tipo:** `patch`
 
 - test(REI-155): verify ordered reset races
 
-## V. 1.87.0191
+## Alteracao REI-155 - versao pendente
 
 **Data:** 2026-11-20 09:07:22 | **Commit:** `a56a90fb` | **Tipo:** `patch`
 
 - test(REI-155): include diagnostics in sandbox fixture
 
-## V. 1.87.0190
+## Alteracao REI-155 - versao pendente
 
 **Data:** 2026-11-20 09:04:31 | **Commit:** `beb5d477` | **Tipo:** `patch`
 
@@ -7660,11 +7672,6 @@
 
 
 \n
-
-
-
-
-
 
 
 
