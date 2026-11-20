@@ -12,6 +12,8 @@ import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SOURCE = ROOT / 'public/api/sala-audiencias-pauta/status-bulk.php'
+assert 'purgeAtasExpiradas' not in SOURCE.read_text(encoding='utf-8')
+assert 'listMinhasInscricoesEstudante' not in SOURCE.read_text(encoding='utf-8')
 
 
 def request(port, payload):
@@ -39,7 +41,7 @@ with tempfile.TemporaryDirectory(prefix='pauta-status-test-') as tmp:
     stubs = {
         'app/helpers/Conection.php': '''<?php
 class Conection { public static function getInstance(){return new self();} public function getConnection(){return new FakeDB();} }
-class FakeDB { public function prepare($sql){if (isset($_GET['fail'])) throw new RuntimeException('sensitive synthetic error'); return new FakeStatement($sql);} }
+class FakeDB { public function prepare($sql){if (!str_starts_with(ltrim($sql), 'SELECT ')) throw new RuntimeException('unexpected non-read query'); if (isset($_GET['fail'])) throw new RuntimeException('sensitive synthetic error'); return new FakeStatement($sql);} }
 class FakeStatement {
   private $sql; private $bindings=[];
   public function __construct($sql){$this->sql=$sql;}
@@ -53,13 +55,18 @@ class FakeStatement {
   }
   public function fetchAll($mode){
   $base=['status'=>'designada','data_audiencia'=>'2099-01-01','hora_audiencia'=>'10:00','processo_sigiloso'=>0,'ja_inscrito'=>0,'qtd_menor'=>0,'total_inscritos_pauta'=>0,'tem_prioridade_bloqueio'=>0];
-  $rows=[array_merge($base,['id_pauta'=>'SYNTHETIC-1']),array_merge($base,['id_pauta'=>'SIG','processo_sigiloso'=>1]),array_merge($base,['id_pauta'=>'MENOR','qtd_menor'=>1,'ja_inscrito'=>1]),array_merge($base,['id_pauta'=>'PRIORIDADE','tem_prioridade_bloqueio'=>1]),array_merge($base,['id_pauta'=>'MEDIDA','tem_prioridade_bloqueio'=>1])];
+  $rows=[array_merge($base,['id_pauta'=>'SYNTHETIC-1']),array_merge($base,['id_pauta'=>'WATCH','ja_inscrito'=>1]),array_merge($base,['id_pauta'=>'SECRET_BLOCK','ja_inscrito'=>1,'processo_sigiloso'=>1]),array_merge($base,['id_pauta'=>'SIG','processo_sigiloso'=>1]),array_merge($base,['id_pauta'=>'MENOR','qtd_menor'=>1,'ja_inscrito'=>1]),array_merge($base,['id_pauta'=>'PRIORIDADE','tem_prioridade_bloqueio'=>1]),array_merge($base,['id_pauta'=>'MEDIDA','tem_prioridade_bloqueio'=>1])];
   $ids=array_slice(array_values($this->bindings),5);
-  return array_values(array_filter($rows,static function($row) use ($ids){return in_array($row['id_pauta'],$ids,true);}));
+  $result=[];
+  foreach($ids as $id) foreach($rows as $row) {
+    $match=isset($_GET['binary']) ? $row['id_pauta']===$id : strcasecmp($row['id_pauta'],$id)===0;
+    if($match) { $row['consulta_id']=$id; $result[]=$row; }
+  }
+  return $result;
 } }
 ''',
-        'app/helpers/BootstrapHelper.php': "<?php function bootstrapRequireTrustedPostRequest(){return true;} $_SESSION=['id_usuario'=>'synthetic'];",
-        'config/security.php': '<?php class Security { public static function isAuthenticated(){return true;} }',
+        'app/helpers/BootstrapHelper.php': "<?php function bootstrapRequireTrustedPostRequest(){return true;} $_SESSION=['id_usuario'=>'synthetic','rei161_observacoes'=>[str_repeat('a',32)=>['usuario'=>'synthetic','ids'=>['watch','SECRET_BLOCK'],'created'=>time()],str_repeat('b',32)=>['usuario'=>'synthetic','ids'=>['SECRET_BLOCK'],'created'=>time()],str_repeat('c',32)=>['usuario'=>'synthetic','ids'=>['WATCH'],'created'=>time()-3601],str_repeat('d',32)=>['usuario'=>'other','ids'=>['WATCH'],'created'=>time()]]];",
+        'config/security.php': '<?php class Security { public static function isAuthenticated(){throw new RuntimeException("polling renewed activity");} public static function isAuthenticatedWithoutActivity(){return true;} }',
         'app/helpers/UsuarioPerfisAutorizacao.php': "<?php class UsuarioPerfisAutorizacao { public static function perfisDoUsuario($id){return ['ESTUDANTE'];} }",
         'app/models/Usuario.php': "<?php class Usuario { public function listarPerfisUsuario($id){return ['ESTUDANTE'];} }",
         'app/access/AccessEvaluator.php': '<?php class AccessEvaluator { public static function canAccessPage($page,$profiles){return true;} }',
@@ -90,8 +97,24 @@ class FakeStatement {
                 time.sleep(0.1)
         else:
             raise RuntimeError('PHP server did not start')
+        status, body = request(port, {'pautas': ['SYNTHETIC-1'] + [f'ROW-{i}' for i in range(59)], 'observacao': 'a' * 32})
+        assert status == 200 and 'SYNTHETIC-1' in body['items'] and body['observacao_alterada'] is True
+        status, body = request(port, {'pautas': ['SYNTHETIC-1'] * 61})
+        assert status == 413 and body['success'] is False
+        status, body = request(port, {'pautas': [], 'padding': 'x' * 16385})
+        assert status == 413 and body['success'] is False
         status, body = request(port, {'pautas': []})
         assert status == 200 and body == {'success': True, 'items': []}
+        status, body = request(port, {'pautas': [], 'observacao': 'a' * 32})
+        assert status == 200 and body['observacao_alterada'] is True and body['items'] == {} and body['consultados'] == []
+        assert 'WATCH' not in json.dumps(body) and 'watch' not in json.dumps(body) and 'SECRET_BLOCK' not in json.dumps(body)
+        status, body = request(port, {'pautas': ['synthetic-1']})
+        assert status == 200 and body['items']['synthetic-1']['id_pauta'] == 'synthetic-1'
+        status, body = request(port, {'pautas': [], 'observacao': 'b' * 32})
+        assert status == 200 and body['observacao_alterada'] is False
+        for bad in ('c' * 32, 'd' * 32, 'e' * 32):
+            status, body = request(port, {'pautas': [], 'observacao': bad})
+            assert status == 409 and body['success'] is False
         status, body = request(port, {'pautas': ['SYNTHETIC-1']})
         assert status == 200 and body['success'] is True
         assert body['items']['SYNTHETIC-1']['pode_inscrever'] is True
