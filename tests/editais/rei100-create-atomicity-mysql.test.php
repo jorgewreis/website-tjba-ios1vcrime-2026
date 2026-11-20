@@ -91,6 +91,28 @@ rei100MysqlAssert((int) $pdo->query("SELECT COUNT(*) FROM editais WHERE id = '{$
 rei100MysqlAssert((int) $pdo->query("SELECT COUNT(*) FROM editais_subtarefas WHERE edital_id = '{$rollbackId}'")->fetchColumn() === 0, 'MySQL rollback retained a workflow stage');
 $pdo->exec('DROP TRIGGER rei100_fail_second_stage');
 
+// Recover a committed, partially persisted edital through the same idempotency
+// key used by the original create request. This models a legacy/partial record
+// whose first stage survived independently of the retry request.
+$partialKey = '123e4567-e89b-42d3-a456-426614174004';
+$partialId = 'EDI-' . strtoupper(substr(hash('sha256', strtolower($partialKey)), 0, 26));
+$partialPayload = rei100CreatePayload($partialKey, 'SINTETICO-PARCIAL', 'Recuperar etapas parciais');
+$pdo->prepare("INSERT INTO editais (id, processo_id, status, tipo_edital, prazo_dias, observacoes) VALUES (?, NULL, 'pendente', 'intimacao', 5, ?)")->execute([$partialId, $partialPayload['observacoes']]);
+$pdo->prepare("INSERT INTO editais_subtarefas (id, edital_id, tipo, ordem, status) VALUES ('EDS-REI100-PARTIAL-1', ?, 'certificacao_publicacao', 1, 'em_andamento')")->execute([$partialId]);
+$partialReplayId = (new EditaisService($pdo))->create($partialPayload);
+rei100MysqlAssert($partialReplayId === $partialId, 'Partial same-key replay returned a different edital ID');
+$partialRows = $pdo->prepare('SELECT id, tipo, ordem, status FROM editais_subtarefas WHERE edital_id = ? ORDER BY ordem');
+$partialRows->execute([$partialId]);
+$partialRowsBeforeRetry = $partialRows->fetchAll(PDO::FETCH_ASSOC);
+rei100MysqlAssert(count($partialRowsBeforeRetry) === 2, 'Partial same-key replay did not restore exactly two workflow stages');
+rei100MysqlAssert($partialRowsBeforeRetry[0]['id'] === 'EDS-REI100-PARTIAL-1' && $partialRowsBeforeRetry[0]['status'] === 'em_andamento', 'Partial recovery replaced or changed the existing stage');
+rei100MysqlAssert((int) $partialRowsBeforeRetry[0]['ordem'] === 1 && (int) $partialRowsBeforeRetry[1]['ordem'] === 2, 'Partial recovery left incorrect active stage order');
+rei100MysqlAssert((string) $pdo->query("SELECT status FROM editais WHERE id = '{$partialId}'")->fetchColumn() === 'aguardando publicação', 'Partial same-key replay did not reconcile derived edital status');
+$partialRetryId = (new EditaisService($pdo))->create($partialPayload);
+$partialRows->execute([$partialId]);
+$partialRowsAfterRetry = $partialRows->fetchAll(PDO::FETCH_ASSOC);
+rei100MysqlAssert($partialRetryId === $partialId && $partialRowsAfterRetry === $partialRowsBeforeRetry, 'Repeated partial recovery duplicated or replaced workflow stages');
+
 // An idempotent replay with a different class must conflict before ensureProcess
 // can mutate the linked process row.
 $classKey = '123e4567-e89b-42d3-a456-426614174003';

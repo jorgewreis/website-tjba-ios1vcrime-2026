@@ -77,7 +77,7 @@ try {
     for ($attempt = 0; $attempt -lt 300; $attempt++) {
         $previousErrorPreference = $ErrorActionPreference
         $ErrorActionPreference = 'Continue'
-        $probe = & docker --host $dockerEndpoint exec $mysqlName mysql -uroot "-p$mysqlPassword" -N -B -e "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='rei100_test'" 2>$null
+        $probe = & docker --host $dockerEndpoint exec --env "MYSQL_PWD=$mysqlPassword" $mysqlName mysql -uroot -N -B -e "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME='rei100_test'" 2>$null
         $probeExitCode = $LASTEXITCODE
         $ErrorActionPreference = $previousErrorPreference
         if ($probeExitCode -eq 0 -and ($probe -join '').Trim() -eq 'rei100_test') { $ready = $true; break }
@@ -85,7 +85,7 @@ try {
     }
     if (-not $ready) { throw 'MySQL descartável não ficou pronto.' }
     $guardSql = "CREATE TABLE rei100_disposable_guard (run_id CHAR(32) PRIMARY KEY, marker CHAR(64) NOT NULL) ENGINE=InnoDB; INSERT INTO rei100_disposable_guard VALUES ('$runId','$marker');"
-    Invoke-DockerSafe @('exec', $mysqlName, 'mysql', '-uroot', "-p$mysqlPassword", 'rei100_test', '-e', $guardSql) | Out-Null
+    Invoke-DockerSafe @('exec', '--env', "MYSQL_PWD=$mysqlPassword", $mysqlName, 'mysql', '-uroot', 'rei100_test', '-e', $guardSql) | Out-Null
 
     $phpArgs = @(
         'run', '--rm', '--network', $network, '--label', "$label=$runId",

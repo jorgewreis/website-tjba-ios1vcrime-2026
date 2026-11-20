@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0191
+
+**Data:** 2026-11-19 21:16:05 | **Commit:** `2d87dd59` | **Tipo:** `patch`
+
+- test(editais): cover partial REI-100 recovery
+
 ## V. 1.87.0190
 
 **Data:** 2026-11-19 18:16:26 | **Commit:** `6c6a3481` | **Tipo:** `patch`
@@ -7629,6 +7635,7 @@
 
 
 \n
+
 
 
 
