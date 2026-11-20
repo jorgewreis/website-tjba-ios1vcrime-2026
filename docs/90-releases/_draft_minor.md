@@ -10,5 +10,10 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **ci(deploy): preservar acesso WireGuard no firewall temporário** `[f0a15d4d]`
 - **fix(footer): show last successful deploy timestamp** `[7dd86e73]`
 - **fix(footer): force credit metadata onto separate lines** `[a082afda]`
+- **fix(ci): normalize WireGuard deployment key** `[9a74caa2]`
+- **chore(sync): merge latest main into deployment key fix** `[c35478b0]`
+- **fix(ci): reveal sanitized WireGuard validation error** `[de7e73d2]`
+- **fix(ci): run WireGuard validation with explicit sudo** `[9654ab41]`
+- **fix(ci): validate installed WireGuard config only** `[ae8c7d43]`
 
 - **fix: resolve received letter comarca consistently** `[55a6dd6d]`

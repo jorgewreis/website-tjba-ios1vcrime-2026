@@ -5,6 +5,54 @@
 **Data:** 2026-11-20 14:52:07 | **Commit:** `55a6dd6d` | **Tipo:** `patch`
 
 - fix: resolve received letter comarca consistently
+## V. 1.88.0014
+
+**Data:** 2026-11-20 15:51:30 | **Commit:** `ae8c7d43` | **Tipo:** `patch`
+
+- fix(ci): validate installed WireGuard config only
+
+## V. 1.88.0013
+
+**Data:** 2026-11-20 15:47:19 | **Commit:** `9654ab41` | **Tipo:** `patch`
+
+- fix(ci): run WireGuard validation with explicit sudo
+
+## V. 1.88.0012
+
+**Data:** 2026-11-20 15:43:36 | **Commit:** `de7e73d2` | **Tipo:** `patch`
+
+- fix(ci): reveal sanitized WireGuard validation error
+
+## V. 1.88.0011
+
+**Data:** 2026-11-20 15:38:19 | **Commit:** `c35478b0` | **Tipo:** `patch`
+
+- chore(sync): merge latest main into deployment key fix
+
+## V. 1.88.0010
+
+**Data:** 2026-11-20 15:35:30 | **Commit:** `9a74caa2` | **Tipo:** `patch`
+
+- fix(ci): normalize WireGuard deployment key
+- fix(ci): validate WireGuard config after root install
+
+## V. 1.88.0009
+
+**Data:** 2026-11-20 15:18:50 | **Commit:** `61e43d48` | **Tipo:** `patch`
+
+- fix(ci): store WireGuard config with root permissions
+
+## V. 1.88.0008
+
+**Data:** 2026-11-20 15:06:06 | **Commit:** `86f0b54d` | **Tipo:** `patch`
+
+- fix(ci): use WireGuard for production deploy
+
+## V. 1.88.0007
+
+**Data:** 2026-11-20 14:52:07 | **Commit:** `55a6dd6d` | **Tipo:** `patch`
+
+- fix: resolve received letter comarca consistently
 
 ## V. 1.88.0006
 
