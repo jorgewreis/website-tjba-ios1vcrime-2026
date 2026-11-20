@@ -120,7 +120,7 @@ $pageTitle  = $pageTitle  ?? 'Primeira Vara Criminal de Ilhéus - Sistema de Ges
                         </div>
                         <div class="info-app footer-credit">
                             <span>Uma solução da Fokus Cloud para a Justiça</span>
-                            <span>ios1vcrime.com.br · Versão V. 1.87.0190 · Atualizado em 20/11/2026 às 11:18 · Todos os direitos reservados</span>
+                            <span>ios1vcrime.com.br · Versão V. 1.88 · Atualizado em 20/11/2026 às 11:21 · Todos os direitos reservados</span>
                         </div>
                     </div>
                 </div>
