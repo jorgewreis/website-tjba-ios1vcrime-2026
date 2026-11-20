@@ -6,7 +6,7 @@ final class PasswordResetTransactionalGuard
 {
     private static ?WeakMap $unsafeConnections = null;
 
-    public static function requireTransactionalTables(PDO $pdo, bool $includeHistory = true): void
+    public static function requireTransactionalTables(PDO $pdo, bool $includeHistory = true, bool $requireHistory = true): void
     {
         self::$unsafeConnections ??= new WeakMap();
         if (isset(self::$unsafeConnections[$pdo])) {
@@ -24,16 +24,8 @@ final class PasswordResetTransactionalGuard
             throw new RuntimeException('Operação de recuperação de senha requer banco transacional compatível.');
         }
 
-        // Ordem fixa e nomes restritos: não aceitar identificadores do usuário.
-        $tables = $includeHistory ? ['historico_senha', 'recuperacao_senha', 'usuarios'] : ['recuperacao_senha', 'usuarios'];
-        self::withBoundedMetadataWait($pdo, static function () use ($pdo, $tables): void {
-            foreach ($tables as $table) {
-                // O SELECT mantém o metadata lock até a transação terminar,
-                // impedindo ALTER TABLE depois da verificação do engine.
-                $statement = $pdo->query('SELECT 1 FROM `' . $table . '` LIMIT 0');
-                if ($statement === false) throw new RuntimeException('Tabela da recuperação de senha indisponível.');
-                $statement->closeCursor();
-            }
+        $requiredTables = ['recuperacao_senha', 'usuarios'];
+        self::withBoundedMetadataWait($pdo, static function () use ($pdo, $requiredTables, $includeHistory, $requireHistory): void {
             $caseMode = $pdo->query('SELECT @@lower_case_table_names')->fetchColumn();
             if (!in_array((string) $caseMode, ['0', '1', '2'], true)) {
                 throw new RuntimeException('Não foi possível verificar a política de nomes de tabelas.');
@@ -46,12 +38,37 @@ final class PasswordResetTransactionalGuard
             $schemaPredicate = (string) $caseMode === '0'
                 ? 'BINARY TABLE_SCHEMA = BINARY DATABASE()'
                 : 'BINARY LOWER(TABLE_SCHEMA) = BINARY LOWER(DATABASE())';
-            $statement = $pdo->prepare('SELECT ENGINE FROM information_schema.TABLES WHERE ' . $schemaPredicate . ' AND ' . $tablePredicate . ' AND TABLE_TYPE = ?');
-            if ($statement === false) throw new RuntimeException('Não foi possível consultar engines das tabelas.');
+
+            $tables = $requiredTables;
+            $metadata = $pdo->prepare('SELECT ENGINE FROM information_schema.TABLES WHERE ' . $schemaPredicate . ' AND ' . $tablePredicate . ' AND TABLE_TYPE = ?');
+            if ($metadata === false) throw new RuntimeException('Não foi possível consultar engines das tabelas.');
+            if ($includeHistory) {
+                if (!$metadata->execute(['historico_senha', 'BASE TABLE'])) {
+                    throw new RuntimeException('Não foi possível verificar a tabela de histórico de senhas.');
+                }
+                $historyEngine = $metadata->fetchColumn();
+                $metadata->closeCursor();
+                if ($historyEngine === false) {
+                    if ($requireHistory) {
+                        throw new RuntimeException('A tabela de histórico de senhas é obrigatória para esta operação.');
+                    }
+                } else {
+                    $tables[] = 'historico_senha';
+                }
+            }
+
             foreach ($tables as $table) {
-                if (!$statement->execute([$table, 'BASE TABLE'])) throw new RuntimeException('Não foi possível verificar engine.');
-                $engine = $statement->fetchColumn();
+                // O SELECT mantém o metadata lock até a transação terminar,
+                // impedindo ALTER TABLE depois da verificação do engine.
+                $statement = $pdo->query('SELECT 1 FROM `' . $table . '` LIMIT 0');
+                if ($statement === false) throw new RuntimeException('Tabela da recuperação de senha indisponível.');
                 $statement->closeCursor();
+            }
+
+            foreach ($tables as $table) {
+                if (!$metadata->execute([$table, 'BASE TABLE'])) throw new RuntimeException('Não foi possível verificar engine.');
+                $engine = $metadata->fetchColumn();
+                $metadata->closeCursor();
                 if (!is_string($engine) || strcasecmp($engine, 'InnoDB') !== 0) {
                     throw new RuntimeException('Operação de recuperação de senha requer tabelas InnoDB.');
                 }

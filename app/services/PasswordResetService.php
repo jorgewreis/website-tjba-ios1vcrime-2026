@@ -71,7 +71,7 @@ final class PasswordResetService
 
         $cpfFormatado = Security::formatCPF($cpf);
         $stmt = $this->pdo->prepare("
-            SELECT id_usuario, nome, email
+            SELECT id_usuario, nome, email, senha_hash
               FROM usuarios
              WHERE cpf = ?
                AND LOWER(email) = ?
@@ -93,10 +93,14 @@ final class PasswordResetService
         try {
             $this->pdo->beginTransaction();
             PasswordResetTransactionalGuard::requireTransactionalTables($this->pdo, false);
-            $lockUser = $this->pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ? FOR UPDATE');
-            $lockUser->execute([$user['id_usuario']]);
-            if ($lockUser->fetchColumn() === false) {
-                throw new RuntimeException('Usuário indisponível para recuperação.');
+            $lockUser = $this->pdo->prepare(
+                'SELECT id_usuario, nome, email, senha_hash FROM usuarios WHERE id_usuario = ? AND cpf = ? AND LOWER(email) = ? LIMIT 1 FOR UPDATE'
+            );
+            $lockUser->execute([$user['id_usuario'], $cpfFormatado, $email]);
+            $lockedUser = $lockUser->fetch(PDO::FETCH_ASSOC);
+            if ($lockedUser === false || !hash_equals((string) ($user['senha_hash'] ?? ''), (string) ($lockedUser['senha_hash'] ?? ''))) {
+                $this->pdo->rollBack();
+                return $this->acceptedResetResponse();
             }
             $invalidateStmt = $this->pdo->prepare("
                 UPDATE " . self::TABLE . "
@@ -104,7 +108,7 @@ final class PasswordResetService
                  WHERE usuario = ?
                    AND usado = 0
             ");
-            $invalidateStmt->execute([$user['id_usuario']]);
+            $invalidateStmt->execute([$lockedUser['id_usuario']]);
 
             $insertStmt = $this->pdo->prepare("
                 INSERT INTO " . self::TABLE . " (
@@ -113,10 +117,10 @@ final class PasswordResetService
                     ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND), 0, ?, NOW()
                 )
             ");
-            $insertStmt->execute([$resetId, $user['id_usuario'], $tokenHash, PASSWORD_RESET_TOKEN_TTL_SECONDS, $ip]);
+            $insertStmt->execute([$resetId, $lockedUser['id_usuario'], $tokenHash, PASSWORD_RESET_TOKEN_TTL_SECONDS, $ip]);
             $this->pdo->commit();
 
-            $sendResult = $this->sendEmail((string) $user['email'], (string) $user['nome'], $resetUrl);
+            $sendResult = $this->sendEmail((string) $lockedUser['email'], (string) $lockedUser['nome'], $resetUrl);
             if (!$sendResult['ok']) {
                 $this->invalidateResetToken($tokenHash);
             }
@@ -184,7 +188,7 @@ final class PasswordResetService
         $this->pdo->beginTransaction();
 
         try {
-            PasswordResetTransactionalGuard::requireTransactionalTables($this->pdo);
+            PasswordResetTransactionalGuard::requireTransactionalTables($this->pdo, true, false);
             $lockUser = $this->pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ? FOR UPDATE');
             $lockUser->execute([$candidateUser]);
             if ($lockUser->fetchColumn() === false) {

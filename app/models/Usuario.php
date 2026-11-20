@@ -238,9 +238,11 @@ final class Usuario
             return ['success' => false, 'message' => 'Não foi possível atualizar a senha. Tente novamente.'];
         }
 
+        $checkHistory = PASSWORD_HISTORY_ON_CHANGE_ENABLED
+            && (!function_exists('isPasswordHistoryCheckEnabled') || isPasswordHistoryCheckEnabled());
         $this->pdo->beginTransaction();
         try {
-            PasswordResetTransactionalGuard::requireTransactionalTables($this->pdo);
+            PasswordResetTransactionalGuard::requireTransactionalTables($this->pdo, true, $checkHistory);
             $stmt = $this->pdo->prepare("
                 SELECT senha_hash FROM usuarios WHERE id_usuario = ? LIMIT 1 FOR UPDATE
             ");
@@ -267,8 +269,6 @@ final class Usuario
                 return ['success' => false, 'message' => 'A nova senha deve ser diferente da senha atual.'];
             }
 
-            $checkHistory = PASSWORD_HISTORY_ON_CHANGE_ENABLED
-                && (!function_exists('isPasswordHistoryCheckEnabled') || isPasswordHistoryCheckEnabled());
             if ($checkHistory && $this->passwordMatchesStoredHistory($idUsuario, $novaSenha)) {
                 $this->pdo->rollBack();
                 return ['success' => false, 'message' => 'A nova senha não pode repetir nenhuma das últimas senhas utilizadas.'];

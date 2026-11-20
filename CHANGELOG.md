@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0191
+
+**Data:** 2026-11-20 20:02:09 | **Commit:** `1c6528bd` | **Tipo:** `patch`
+
+- fix(REI-155): allow optional password history schema
+
 ## V. 1.87.0190
 
 **Data:** 2026-11-20 09:50:21 | **Commit:** `da820415` | **Tipo:** `patch`
@@ -7672,6 +7678,7 @@
 
 
 \n
+
 
 
 
