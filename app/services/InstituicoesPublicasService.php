@@ -29,14 +29,14 @@ final class InstituicoesPublicasService
         ];
     }
 
-    public function find(string $id): ?array
+    public function find(string $id, bool $onlyActive = false): ?array
     {
-        $instituicao = $this->repository->findById($id);
+        $instituicao = $this->repository->findById($id, $onlyActive);
         if ($instituicao === null) {
             return null;
         }
-        $instituicao['telefones'] = $this->telefonesRepository->findByInstituicaoId($id);
-        $instituicao['setores'] = $this->setoresRepository->findByInstituicaoId($id);
+        $instituicao['telefones'] = $this->telefonesRepository->findByInstituicaoId($id, $onlyActive);
+        $instituicao['setores'] = $this->setoresRepository->findByInstituicaoId($id, $onlyActive);
         return $instituicao;
     }
 

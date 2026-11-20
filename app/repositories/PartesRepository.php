@@ -334,6 +334,11 @@ final class PartesRepository
         $instituicaoId = trim((string) ($filters['instituicao_id'] ?? ''));
         if ($instituicaoId !== '') {
             $joinClause = ' INNER JOIN `partes_instituicoes` pi ON pi.`parte_id` = p.`id` AND pi.`instituicao_id` = :instituicao_id ';
+            if (!empty($filters['somente_instituicoes_ativas'])) {
+                $joinClause .= ' INNER JOIN `instituicoes_publicas` inst ON inst.`id` = pi.`instituicao_id` AND inst.`ativo` = 1 ';
+                $conditions[] = 'pi.`ativo` = 1';
+                $conditions[] = '(pi.`setor_id` IS NULL OR EXISTS (SELECT 1 FROM `instituicoes_setores` setor WHERE setor.`id` = pi.`setor_id` AND setor.`instituicao_id` = pi.`instituicao_id` AND setor.`ativo` = 1))';
+            }
             $params[':instituicao_id'] = $instituicaoId;
         }
 
