@@ -49,6 +49,7 @@ with tempfile.TemporaryDirectory(prefix="toast-cache-test-") as tmp:
         etag = headers["ETag"]
         current = headers["Last-Modified"]
         future = "Wed, 21 Oct 2099 07:28:00 GMT"
+        assert request({"If-None-Match": '"different"', "If-Modified-Since": current})[0] == 200
         assert request({"If-None-Match": '"different"', "If-Modified-Since": future})[0] == 200
         status304, headers304, body304 = request({"If-None-Match": etag, "If-Modified-Since": "Wed, 21 Oct 2015 07:28:00 GMT"})
         assert status304 == 304 and body304 == b""

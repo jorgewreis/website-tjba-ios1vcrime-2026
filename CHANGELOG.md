@@ -1,10 +1,28 @@
 # Changelog
 
+## V. 1.87.0188
+
+**Data:** 2026-11-19 21:02:04 | **Commit:** `29d5e9c1` | **Tipo:** `patch`
+
+- merge: sync REI-89 with current main
+
+## V. 1.87.0187
+
+**Data:** 2026-11-19 20:21:18 | **Commit:** `20e78c24` | **Tipo:** `patch`
+
+- test(REI-127): cover matching date with stale etag
+
+## V. 1.87.0186
+
+**Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
+
+- fix(REI-120): make monitoring transitions atomic
+
 ## V. 1.87.0185
 
-**Data:** 2026-11-17 10:59:28 | **Commit:** `61a3f713` | **Tipo:** `patch`
+**Data:** 2026-11-17 11:19:22 | **Commit:** `2ab745ff` | **Tipo:** `patch`
 
-- fix(REI-89): tornar cancelamento e exclusao atomicos
+- fix(REI-159): abort guide when priority replace fails
 
 ## V. 1.87.0184
 
@@ -7599,3 +7617,6 @@
 
 
 \n
+
+
+
