@@ -1,10 +1,10 @@
 ![Badge](https://img.shields.io/badge/MINOR-blue?style=for-the-badge)
 
-**Data de Lançamento:** 15 de abril de 2026
+**Data de Lançamento:** 20 de novembro de 2026
 
 # V. 1.88
 
-> feat: add temporary debug output for productivity list view to display formatted task details
+> feat: atualizar crédito do rodapé com Fokus Cloud
 
 ## Nível de Impacto
 
@@ -12,8 +12,7 @@
 
 ## Alterações
 
-- **docs: add release notes for version 1.87 detailing updates to productivity rules and search functionality** `[814a869]`
-- **feat: add temporary debug output for productivity list view to display formatted task details** `[9762fee]`
+- **feat: atualizar crédito do rodapé com Fokus Cloud** `[37c6c21d]`
 
 ---
 
