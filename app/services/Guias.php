@@ -213,7 +213,9 @@ class Guias
 
             // 6. Cadastra prioridades do processo
             if (!empty($prioridades)) {
-                $this->cadastrarPrioridades($dados['processo'], $prioridades);
+                if (!$this->cadastrarPrioridades($dados['processo'], $prioridades)) {
+                    throw new RuntimeException('Não foi possível substituir as prioridades do processo.');
+                }
             }
 
             // 6. Cadastra a guia (tabela guia usa parte_id após migração alter-cejusc-guias-partes-drop-reus)
@@ -358,13 +360,15 @@ class Guias
             ];
 
         } catch (Throwable $e) {
-            $this->pdo->rollBack();
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
             error_log('Erro ao cadastrar guia: ' . $e->getMessage());
             
             return [
                 'ok' => false,
                 'id' => null,
-                'message' => 'Erro ao cadastrar guia: ' . $e->getMessage()
+                'message' => 'Não foi possível cadastrar a guia.'
             ];
         }
     }
@@ -425,7 +429,9 @@ class Guias
                 }
             }
             if (!empty($dados['processo'])) {
-                $this->cadastrarPrioridades($dados['processo'], $prioridades);
+                if (!$this->cadastrarPrioridades($dados['processo'], $prioridades)) {
+                    throw new RuntimeException('Não foi possível substituir as prioridades do processo.');
+                }
             }
 
             // 6. Atualiza dados da guia
@@ -526,12 +532,14 @@ class Guias
             ];
 
         } catch (Throwable $e) {
-            $this->pdo->rollBack();
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
             error_log('Erro ao atualizar guia: ' . $e->getMessage());
             return [
                 'ok' => false,
                 'id' => $idGuia,
-                'message' => 'Erro ao atualizar guia: ' . $e->getMessage()
+                'message' => 'Não foi possível atualizar a guia.'
             ];
         }
     }
