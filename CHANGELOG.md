@@ -26,9 +26,11 @@
 
 ## V. 1.87.0187
 
-**Data:** 2026-11-19 17:08:36 | **Commit:** `e8ffdbad` | **Tipo:** `patch`
+**Data:** 2026-11-19 | **Commits:** `e8ffdbad`, `20e78c24`, `7706055e` | **Tipo:** `patch`
 
 - fix: harden workflow transitions and reset tokens
+- test(REI-127): cover matching date with stale etag
+- fix(auth): prevent stale login after password reset
 
 ## V. 1.87.0186
 
