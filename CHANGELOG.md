@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0014
+
+**Data:** 2026-11-20 15:51:30 | **Commit:** `ae8c7d43` | **Tipo:** `patch`
+
+- fix(ci): validate installed WireGuard config only
+
 ## V. 1.88.0013
 
 **Data:** 2026-11-20 15:47:19 | **Commit:** `9654ab41` | **Tipo:** `patch`
@@ -7716,6 +7722,7 @@
 
 
 \n
+
 
 
 
