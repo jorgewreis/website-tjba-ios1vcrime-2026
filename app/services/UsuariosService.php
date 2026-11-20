@@ -130,7 +130,11 @@ final class UsuariosService
             }
             $nomeA = trim((string) ($a['nome_completo'] ?? ''));
             $nomeB = trim((string) ($b['nome_completo'] ?? ''));
-            return strcasecmp($nomeA, $nomeB);
+            $cmp = strcasecmp($nomeA, $nomeB);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            return strcmp(trim((string) ($a['id_usuario'] ?? '')), trim((string) ($b['id_usuario'] ?? '')));
         });
     }
 

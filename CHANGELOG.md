@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0188
+
+**Data:** 2026-11-20 08:28:59 | **Commit:** `1836082a` | **Tipo:** `patch`
+
+- fix(REI-148): stabilize user pagination and counts
+
 ## V. 1.87.0187
 
 **Data:** 2026-11-19 20:36:07 | **Commits:** `20e78c24`, `7706055e` | **Tipo:** `patch`
@@ -7612,5 +7618,6 @@
 
 
 \n
+
 
 

@@ -195,9 +195,14 @@ final class UsuariosListRepository
         unset($reverseMap['ESTUDANTE']);
         $result = array_fill_keys(array_values($reverseMap), 0);
 
-        $sql = "SELECT up.usuario, up.perfil
+        $sql = "SELECT u.id_usuario AS usuario, up.perfil
                 FROM usuario_perfil up
+                INNER JOIN usuarios u ON u.id_usuario = up.usuario
                 WHERE EXISTS (
+                    SELECT 1 FROM v_usuarios_completo v
+                    WHERE v.id_usuario = u.id_usuario
+                )
+                AND EXISTS (
                     SELECT 1 FROM usuario_perfil up_interno
                     WHERE up_interno.usuario = up.usuario
                     AND UPPER(TRIM(up_interno.perfil)) IN (" . self::PERFIS_INTERNOS_SQL . ")

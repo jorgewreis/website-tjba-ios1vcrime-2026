@@ -65,6 +65,8 @@ $insertProfile = $pdo->prepare('INSERT INTO usuario_perfil (usuario, perfil) VAL
 foreach ([
     ['student', 'ESTUDANTE'],
     ['internal', 'SERVIDOR'],
+    // Associação órfã não representa conta listável.
+    ['orphan', 'SERVIDOR'],
     // Perfil composto e caixa/espaço divergentes exercitam a normalização.
     ['mixed', ' estudante '],
     ['mixed', ' servidor-gabinete '],
@@ -143,5 +145,25 @@ expectRei148($studentInternals['rows'][0]['id_usuario'] === 'mixed', 'A conta mi
 expectRei148($studentExternals['total'] === 3, 'Filtro ESTUDANTE em tipo externo deve listar apenas estudantes externos.');
 $studentTypeCounts = $service->getTipoCounts(['perfil' => 'estudante']);
 expectRei148($studentTypeCounts['interno'] === 1 && $studentTypeCounts['externo'] === 3, 'Contagens por tipo no filtro estudante devem separar a conta mista dos estudantes externos.');
+
+// A ordenação deve ser independente da ordem que o banco entrega em empate.
+$ties = [
+    ['id_usuario'=>'tie-z','tipo'=>'interno','setores'=>'Cartório','cargo'=>'Servidor','nome_completo'=>'Pessoa Igual'],
+    ['id_usuario'=>'tie-a','tipo'=>'interno','setores'=>'Cartório','cargo'=>'Servidor','nome_completo'=>'Pessoa Igual'],
+];
+$sort = new ReflectionMethod(UsuariosService::class, 'sortUnified');
+$otherOrder = array_reverse($ties);
+$sort->invokeArgs($service, [&$ties]);
+$sort->invokeArgs($service, [&$otherOrder]);
+expectRei148(array_column($ties, 'id_usuario') === ['tie-a', 'tie-z'] && $ties === $otherOrder, 'Empates devem ter ordenação determinística pelo identificador, independente da ordem de entrada.');
+
+// Mesmo empate por meio do serviço real e páginas de tamanho um.
+foreach (['tie-z', 'tie-a'] as $id) {
+    $insertUser->execute([':id'=>$id, ':nome'=>'Pessoa', ':sobrenome'=>'Igual', ':nome_completo'=>'Pessoa Igual', ':cpf'=>'CPF-'.$id, ':email'=>$id.'@example.invalid', ':cargo'=>'Servidor', ':instituicao'=>'Cartório', ':telefone'=>'']);
+    $insertProfile->execute([$id, 'SERVIDOR']);
+}
+$first = $service->list(['tipo'=>'interno','perfil'=>'servidor'], 1, 0);
+$second = $service->list(['tipo'=>'interno','perfil'=>'servidor'], 1, 1);
+expectRei148($first['total'] === 4 && $second['total'] === 4 && $first['rows'][0]['id_usuario'] === 'tie-a' && $second['rows'][0]['id_usuario'] === 'tie-z', 'Empates devem ocupar páginas estáveis e distintas.');
 
 echo "PASS REI-148: perfis mistos, classificação, deduplicação por id_usuario, filtros, contagens e paginação isolada.\n";
