@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../app/services/FeriadosService.php';
+require_once __DIR__ . '/../../app/services/EditaisService.php';
 
 function expect(bool $ok, string $message): void
 {
@@ -120,6 +121,15 @@ if ($mysql) {
     expect((int) $pdo->query("SELECT GET_LOCK('fokus-law-feriados-recalc', 0)")->fetchColumn() === 1, 'primeira conexão deve obter o mutex global');
     expect((int) $secondConnection->query("SELECT GET_LOCK('fokus-law-feriados-recalc', 1)")->fetchColumn() === 0, 'segunda conexão deve aguardar o mutex já mantido');
     expect((int) $pdo->query("SELECT RELEASE_LOCK('fokus-law-feriados-recalc')")->fetchColumn() === 1, 'mutex global deve ser liberado pela conexão proprietária');
+
+    $secondConnection->beginTransaction();
+    try {
+        (new EditaisService($secondConnection))->reconciliarEditais(['MISSING-OUTER-TX']);
+        throw new RuntimeException('A reconciliação aceitou transação externa que liberaria o mutex antes do commit real');
+    } catch (LogicException $expected) {
+        expect($secondConnection->inTransaction(), 'a transação externa deve permanecer sob controle de quem a iniciou');
+        $secondConnection->rollBack();
+    }
 }
 
-echo 'REI-122/135: criação, atualização, exclusão, publicação legada, feriados consecutivos, não afetados, rollback atômico e mutex ' . ($mysql ? 'verificados em MySQL/InnoDB' : 'não aplicável') . " isolado.\n";
+echo 'REI-122/135/114: criação, atualização, exclusão, publicação legada, feriados consecutivos, não afetados, rollback atômico, mutex e rejeição de transação externa ' . ($mysql ? 'verificados em MySQL/InnoDB' : 'não aplicável') . " isolado.\n";

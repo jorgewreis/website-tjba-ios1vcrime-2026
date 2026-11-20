@@ -199,6 +199,23 @@ final class EditaisRepository
         return $result === false ? null : $result;
     }
 
+    /** Current locking read for state checks made after this row has been locked in a transaction. */
+    public function findByIdForUpdate(string $id): ?array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return null;
+        }
+        $statement = $this->connection->prepare(sprintf(
+            'SELECT * FROM `%s` WHERE `id` = :id LIMIT 1 FOR UPDATE',
+            $this->table
+        ));
+        $statement->execute([':id' => $id]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $result === false ? null : $result;
+    }
+
     private function buildFromClause(): string
     {
         require_once __DIR__ . '/../helpers/RegistroMetadataHelper.php';

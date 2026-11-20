@@ -14,6 +14,8 @@ if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
 }
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/repositories/InstituicoesSetoresRepository.php';
+require_once $basePath . '/app/repositories/InstituicoesPublicasRepository.php';
+require_once $basePath . '/app/helpers/InstituicoesConsultaPolicy.php';
 
 try {
     $connection = Conection::getInstance()->getConnection();
@@ -33,8 +35,13 @@ if ($instituicaoId === '') {
 }
 
 try {
+    $onlyActive = InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''));
+    if ($onlyActive && (new InstituicoesPublicasRepository($connection))->findById($instituicaoId, true) === null) {
+        echo json_encode(['setores' => []], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $repository = new InstituicoesSetoresRepository($connection);
-    $rows = $repository->findByInstituicaoId($instituicaoId);
+    $rows = $repository->findByInstituicaoId($instituicaoId, true);
     $setores = [];
     foreach ($rows as $row) {
         if (empty($row['ativo'])) {

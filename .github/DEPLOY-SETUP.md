@@ -8,6 +8,26 @@ confiável. Quando configurado, somente a chave correspondente é aceita.
 Enquanto o secret estiver ausente, o workflow mantém a conexão anterior e
 emite um aviso: a identidade do servidor ainda não está fixada.
 
+## Túnel WireGuard do deploy de produção
+
+O workflow de produção estabelece um peer WireGuard temporário no runner e
+conecta o SSH a `10.222.231.1`. O peer do CI usa somente `10.222.231.3/32` e
+roteia apenas `10.222.231.1/32`; não habilita encaminhamento para outras redes.
+O endpoint usa UDP `51820`, já reservado ao serviço WireGuard do servidor.
+
+Guarde a chave privada do peer exclusivamente no secret
+`WG_CLIENT_PRIVATE_KEY` do environment GitHub `production`. Não a grave no
+repositório, em arquivo de configuração versionado ou no servidor. O servidor
+recebe apenas a chave pública do peer e `AllowedIPs = 10.222.231.3/32` em
+`/etc/wireguard/wg0.conf`. O environment `production` deve permitir deploy
+somente da branch `main`.
+
+Para rotacionar o peer, gere um novo par de chaves em um ambiente confiável,
+atualize o secret do environment e substitua a chave pública do peer no servidor.
+Confirme o handshake e o SSH pelo endereço WireGuard antes de remover a chave
+anterior. Preserve `DEPLOY_HOST_KEY_SHA256`; o túnel não substitui a validação
+da identidade SSH do servidor.
+
 A chave privada antiga foi retirada da versão atual do repositório, mas sua
 retirada não revoga acessos nem apaga o histórico. É necessário substituir a
 chave autorizada no servidor, atualizar `DEPLOY_KEY_B64` e só então revogar a
