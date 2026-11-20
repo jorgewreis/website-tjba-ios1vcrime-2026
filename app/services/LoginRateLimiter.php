@@ -120,7 +120,10 @@ final class LoginRateLimiter
 
         $lockNames = [];
         foreach ($this->buildScopes($cpf, $ip) as $scope) {
-            $digest = hash('sha256', $database . "\0" . $scope['type'] . "\0" . $scope['value']);
+            // IPv6 hex digits are case-insensitive, as is the scope column's
+            // documented collation. Equal IP scopes must share the same lock.
+            $lockValue = $scope['type'] === 'ip' ? strtolower($scope['value']) : $scope['value'];
+            $digest = hash('sha256', $database . "\0" . $scope['type'] . "\0" . $lockValue);
             // MySQL limits named locks to 64 bytes; keep the app prefix and a
             // collision-resistant 52-character suffix within that bound.
             $lockNames[] = 'fokus_login_' . substr($digest, 0, 52);

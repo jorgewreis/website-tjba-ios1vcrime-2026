@@ -185,6 +185,28 @@ try {
     $lockOwner = $used->fetchColumn();
     assertLoginConcurrency($lockOwner === false || $lockOwner === null, 'Trava parcialmente adquirida não foi liberada.');
 
+    // MySQL's scope_value collation is case insensitive; equivalent IPv6
+    // spellings must not enter through different advisory locks.
+    $caseIp = '2001:db8::abcd';
+    $caseLock = 'fokus_login_' . substr(hash('sha256', $database . "\0ip\0" . $caseIp), 0, 52);
+    $hold = $holder->prepare('SELECT GET_LOCK(?, 0)');
+    $hold->execute([$caseLock]);
+    assertLoginConcurrency((int)$hold->fetchColumn() === 1, 'Não foi possível preparar trava de IPv6.');
+    $caseCallback = false;
+    $caseTimedOut = false;
+    try {
+        try {
+            $limiter->withLoginAttemptLock('52998224725', strtoupper($caseIp), static function () use (&$caseCallback): void { $caseCallback = true; });
+        } catch (RuntimeException $expected) {
+            $caseTimedOut = $expected->getMessage() === 'Tempo esgotado ao serializar uma tentativa de login.';
+        }
+    } finally {
+        $release = $holder->prepare('SELECT RELEASE_LOCK(?)');
+        $release->execute([$caseLock]);
+        assertLoginConcurrency((int)$release->fetchColumn() === 1, 'Trava IPv6 não foi liberada.');
+    }
+    assertLoginConcurrency(!$caseCallback && $caseTimedOut, 'Escopos IPv6 equivalentes não foram serializados.');
+
     // Storage is also fail closed before the callback, with the original table
     // restored so the rest of the isolated authentication suite can continue.
     $GLOBALS['rei158_stage'] = 'storage';

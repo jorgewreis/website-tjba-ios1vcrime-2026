@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0195
+
+**Data:** 2026-11-20 10:56:04 | **Commit:** `428321d6` | **Tipo:** `patch`
+
+- fix(REI-158): align IPv6 lock case
+
 ## V. 1.87.0194
 
 **Data:** 2026-11-20 10:49:23 | **Commit:** `0b3d0eb5` | **Tipo:** `patch`
@@ -7660,6 +7666,7 @@
 
 
 \n
+
 
 
 
