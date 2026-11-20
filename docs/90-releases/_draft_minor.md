@@ -11,3 +11,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(footer): show last successful deploy timestamp** `[7dd86e73]`
 - **fix(footer): force credit metadata onto separate lines** `[a082afda]`
 
+- **fix: resolve received letter comarca consistently** `[55a6dd6d]`
