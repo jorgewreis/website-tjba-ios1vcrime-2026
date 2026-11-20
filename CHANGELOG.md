@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0005
+
+**Data:** 2026-11-20 14:46:11 | **Commit:** `7dd86e73` | **Tipo:** `patch`
+
+- fix(footer): show last successful deploy timestamp
+
 ## V. 1.88.0004
 
 **Data:** 2026-11-20 14:14:40 | **Commit:** `f0a15d4d` | **Tipo:** `patch`
@@ -7661,6 +7667,7 @@
 
 
 \n
+
 
 
 
