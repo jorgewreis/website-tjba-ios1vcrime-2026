@@ -70,13 +70,7 @@ if ($edital !== null) {
     $prazoDiasValue = isset($edital['prazo_dias']) ? (int) $edital['prazo_dias'] : 0;
 
     $subtarefasRepo = new EditaisSubtarefasRepository($connection);
-    $subtarefasRepo->ensureSubtarefasAtivas($idEdital);
     $serviceEditalFluxo = new EditaisService($connection);
-    $serviceEditalFluxo->tentarFinalizacaoAutomaticaPorDecurso($idEdital);
-    $edital = $serviceEditalFluxo->find($idEdital) ?? $edital;
-    if ($edital !== null) {
-        $statusAtual = trim((string) ($edital['status'] ?? $statusAtual));
-    }
     $subtarefas = $subtarefasRepo->findByEditalId($idEdital);
     foreach ($subtarefas as $st) {
         $subtarefasPorOrdem[(int) $st['ordem']] = $st;

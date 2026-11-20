@@ -162,6 +162,58 @@
         });
     }
 
+    function bindReconciliation(ctx, settings) {
+        const button = global.document.getElementById('reconciliar-editais-btn');
+        if (!button || !Array.isArray(settings.editalIds) || settings.editalIds.length === 0) return;
+        button.addEventListener('click', function () {
+            if (!global.confirm('Atualizar as etapas dos editais exibidos nesta página?')) return;
+            button.disabled = true;
+            fetch(settings.reconcileEndpoint || '/api/cartorio-editais/reconciliar.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ edital_ids: settings.editalIds }),
+                credentials: 'same-origin'
+            }).then(function (response) {
+                return response.json().then(function (data) {
+                    if (!response.ok || !data.success) {
+                        throw new Error('Não foi possível atualizar os editais. Verifique a listagem antes de tentar novamente.');
+                    }
+                    const result = data.resultado;
+                    const integerFields = ['solicitados', 'editais_alterados', 'editais_com_etapas_criadas', 'etapas_criadas', 'editais_com_datas_calculadas', 'inalterados', 'nao_encontrados', 'finalizados', 'falhas'];
+                    const validResult = result && integerFields.every(function (field) {
+                        return Number.isInteger(result[field]) && result[field] >= 0;
+                    });
+                    if (!validResult || result.falhas !== 0 ||
+                        result.solicitados !== settings.editalIds.length ||
+                        result.editais_alterados + result.inalterados + result.nao_encontrados !== result.solicitados ||
+                        result.editais_com_etapas_criadas > result.editais_alterados ||
+                        result.editais_com_datas_calculadas > result.editais_alterados ||
+                        result.etapas_criadas < result.editais_com_etapas_criadas ||
+                        result.finalizados > result.editais_alterados) {
+                        throw new Error('A resposta da atualização está incompleta. Atualize a listagem antes de continuar.');
+                    }
+                    const etapas = result.etapas_criadas;
+                    const editais = result.editais_com_etapas_criadas;
+                    const editaisComDatas = result.editais_com_datas_calculadas;
+                    const inalterados = result.inalterados;
+                    const finalizados = result.finalizados;
+                    const ausentes = result.nao_encontrados;
+                    ctx.queuePostReloadToast(
+                        'success',
+                        'Atualização concluída',
+                        editais + ' editais receberam ' + etapas + ' etapas; ' + editaisComDatas +
+                            ' tiveram as datas calculadas; ' + inalterados + ' permaneceram inalterados; ' +
+                            finalizados + ' foram finalizados; ' + ausentes + ' não foram encontrados.'
+                    );
+                    global.location.reload();
+                });
+            }).catch(function (error) {
+                ctx.notify('error', 'Erro', error.message || 'Não foi possível atualizar os editais.');
+                button.disabled = false;
+            });
+        });
+    }
+
     function initialize(config) {
         if (!App.CartorioTaskList || typeof App.CartorioTaskList.initialize !== 'function') {
             return null;
@@ -187,6 +239,7 @@
             },
             onReady: function (ctx) {
                 bindConcludeButtons(ctx, settings.concludeEndpoint || '/api/cartorio-editais/concluir-subtarefa.php');
+                bindReconciliation(ctx, settings);
 
                 if (typeof settings.onReady === 'function') {
                     settings.onReady(ctx);

@@ -265,13 +265,13 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Dados inválidos.');
         }
 
-        if ($this->inscricaoRepository->exists($idPauta, $usuarioId)) {
-            throw new InvalidArgumentException('Você já está inscrito nesta audiência.');
-        }
-
         $pauta = $this->pautaRepository->findById($idPauta);
         if ($pauta === null) {
             throw new InvalidArgumentException('Audiência não encontrada.');
+        }
+        $this->assertPautaDisponivelParaEstudante($idPauta, $pauta);
+        if ($this->inscricaoRepository->exists($idPauta, $usuarioId)) {
+            throw new InvalidArgumentException('Você já está inscrito nesta audiência.');
         }
 
         $st = trim((string) ($pauta['status'] ?? ''));
@@ -291,14 +291,31 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Inscrição só é permitida no dia da audiência.');
         }
 
-        SalaAudienciasAtaSigiloHelper::assertPautaPermiteAtas($this->connection, $pauta);
+        $totalInscritos = $this->inscricaoRepository->countInscritosPorPauta($idPauta);
+        if ($totalInscritos >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA) {
+            throw new InvalidArgumentException(
+                'O limite de ' . self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA . ' estudantes por audiência foi atingido. Não é possível efetuar novas inscrições.'
+            );
+        }
+
+        $this->inscricaoRepository->insert($idPauta, $usuarioId);
+    }
+
+    private function assertPautaDisponivelParaEstudante(string $idPauta, array $pauta): void
+    {
+        require_once __DIR__ . '/../helpers/SalaAudienciasInscricaoIndisponivel.php';
+        try {
+            SalaAudienciasAtaSigiloHelper::assertPautaPermiteAtas($this->connection, $pauta);
+        } catch (InvalidArgumentException $e) {
+            throw new SalaAudienciasInscricaoIndisponivel('Audiência indisponível.', 0, $e);
+        }
 
         $sqlMenor = 'SELECT COUNT(*) FROM `sala_audiencias_pauta_parte` WHERE `pauta` = :p AND `ativo` = 1 AND `maioridade` = \'menor\'';
         $stc = $this->connection->prepare($sqlMenor);
         $stc->bindValue(':p', $idPauta);
         $stc->execute();
         if ((int) $stc->fetchColumn() > 0) {
-            throw new InvalidArgumentException('Esta audiência envolve menor e não permite inscrição de estudantes.');
+            throw new SalaAudienciasInscricaoIndisponivel('Audiência indisponível.');
         }
 
         $processoIdPauta = trim((string) ($pauta['processo'] ?? ''));
@@ -308,19 +325,11 @@ final class SalaAudienciasAtaService
             foreach ($prioridadesRepo->findByProcessoId($processoIdPauta) as $prioridade) {
                 $codigo = trim((string) ($prioridade['codigo'] ?? ''));
                 if ($codigo !== '' && in_array($codigo, $codigosBloqueio, true)) {
-                    throw new InvalidArgumentException('Esta audiência não está disponível para inscrição de estudantes.');
+                    throw new SalaAudienciasInscricaoIndisponivel('Audiência indisponível.');
                 }
             }
         }
 
-        $totalInscritos = $this->inscricaoRepository->countInscritosPorPauta($idPauta);
-        if ($totalInscritos >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA) {
-            throw new InvalidArgumentException(
-                'O limite de ' . self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA . ' estudantes por audiência foi atingido. Não é possível efetuar novas inscrições.'
-            );
-        }
-
-        $this->inscricaoRepository->insert($idPauta, $usuarioId);
     }
 
     /**
@@ -344,7 +353,7 @@ final class SalaAudienciasAtaService
         if ($pauta === null) {
             throw new InvalidArgumentException('Audiência não encontrada.');
         }
-        SalaAudienciasAtaSigiloHelper::assertPautaPermiteAtas($this->connection, $pauta);
+        $this->assertPautaDisponivelParaEstudante($idPauta, $pauta);
 
         $ata = $this->ataRepository->findByPauta($idPauta);
         if ($ata === null) {
