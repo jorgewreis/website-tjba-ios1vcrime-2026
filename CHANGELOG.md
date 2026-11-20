@@ -2,10 +2,11 @@
 
 ## V. 1.87.0187
 
-**Data:** 2026-11-19 20:46:13 | **Commits:** `20e78c24`, `4494e7de` | **Tipo:** `patch`
+**Data:** 2026-11-19 21:03:50 | **Commits:** `20e78c24`, `4494e7de`, `7706055e` | **Tipo:** `patch`
 
 - test(REI-127): cover matching date with stale etag
 - test(REI-169): cover equal queue timestamps
+- fix(auth): prevent stale login after password reset
 
 ## V. 1.87.0186
 
