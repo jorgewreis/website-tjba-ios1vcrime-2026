@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../helpers/ParteDocumentoHelper.php';
 require_once __DIR__ . '/../../services/PessoasService.php';
 require_once __DIR__ . '/../../repositories/PartesTelefonesRepository.php';
 require_once __DIR__ . '/../../repositories/PartesInstituicoesRepository.php';
+require_once __DIR__ . '/../../helpers/InstituicoesConsultaPolicy.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -39,6 +40,8 @@ if ($filtrou) {
     $offset = ($currentPage - 1) * $itemsPerPage;
 
     try {
+        $onlyActiveInstitutions = InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''));
+        $filters['somente_instituicoes_ativas'] = $onlyActiveInstitutions;
         $service = new PessoasService($connection);
         $listResult = $service->list($filters, $itemsPerPage, $offset);
         $rows = $listResult['rows'] ?? [];
@@ -50,7 +53,7 @@ if ($filtrou) {
             $parteId = (string) ($row['id'] ?? $row['ID'] ?? '');
             if ($parteId !== '') {
                 $rows[$i]['telefones'] = $telefonesRepo->findByParteId($parteId);
-                $vinculos = $vinculosInstRepo->findByParteId($parteId, true);
+                $vinculos = $vinculosInstRepo->findByParteId($parteId, true, $onlyActiveInstitutions);
                 $rows[$i]['instituicoes'] = array_map(function (array $v): array {
                     return [
                         'nome' => $v['instituicao_nome'] ?? '',

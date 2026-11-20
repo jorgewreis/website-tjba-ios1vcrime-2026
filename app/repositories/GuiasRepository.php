@@ -23,6 +23,18 @@ final class GuiasRepository
         $this->table = $table;
     }
 
+    /** Bloqueia a guia para serializar transições de suas subtarefas. */
+    public function lockForUpdate(string $id): ?array
+    {
+        $statement = $this->connection->prepare(sprintf(
+            'SELECT `id`, `status` FROM `%s` WHERE `id` = :id LIMIT 1 FOR UPDATE',
+            $this->table
+        ));
+        $statement->execute([':id' => trim($id)]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        return $row === false ? null : $row;
+    }
+
     public function fetchList(array $filters, int $limit, int $offset): array
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'g', true);
