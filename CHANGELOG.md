@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0190
+
+**Data:** 2026-11-20 09:37:07 | **Commit:** `7cd95d0b` | **Tipo:** `patch`
+
+- test(REI-160): run sqlite regressions in CI
+
 ## Versão pendente
 
 **Data:** 2026-11-20 08:29:38 | **Commit:** `2063ec9d` | **Tipo:** `patch`
@@ -7630,6 +7636,7 @@
 
 
 \n
+
 
 
 
