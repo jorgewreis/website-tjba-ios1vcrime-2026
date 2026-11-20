@@ -40,6 +40,12 @@ jobs:
           DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
         run: bash .github/scripts/deploy-preflight.sh
 
+      - name: Abrir acesso SSH temporário para este runner
+        id: hostinger_firewall
+        env:
+          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: bash .github/scripts/deploy-hostinger-firewall-setup.sh
+
       - name: Setup SSH (decode + validar chave + keyscan)
         env:
           DEPLOY_KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
@@ -245,3 +251,11 @@ jobs:
             sudo systemctl reload php8.1-fpm 2>/dev/null || true
             sudo systemctl reload php8.0-fpm 2>/dev/null || true
           EOF
+
+      - name: Remover firewall temporário do deploy
+        if: always() && steps.hostinger_firewall.outputs.firewall_id != ''
+        env:
+          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+          FIREWALL_ID: ${{ steps.hostinger_firewall.outputs.firewall_id }}
+          FIREWALL_ACTIVATED: ${{ steps.hostinger_firewall.outputs.activated }}
+        run: bash .github/scripts/deploy-hostinger-firewall-cleanup.sh

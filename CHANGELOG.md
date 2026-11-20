@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0001
+
+**Data:** 2026-11-20 13:09:54 | **Commit:** `16c5f76d` | **Tipo:** `patch`
+
+- ci(deploy): add temporary Hostinger SSH allowlist
+
 ## V. 1.87.0190
 
 **Data:** 2026-11-20 09:50:21 | **Commit:** `da820415` | **Tipo:** `patch`
@@ -7637,6 +7643,7 @@
 
 
 \n
+
 
 
 
