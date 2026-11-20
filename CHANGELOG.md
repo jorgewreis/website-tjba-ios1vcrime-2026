@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0190
+
+**Data:** 2026-11-19 21:28:02 | **Commit:** `e37ae0da` | **Tipo:** `patch`
+
+- docs(REI-73): update live evidence matrix
+
 ## V. 1.87.0189
 
 **Data:** 2026-11-19 21:25:50 | **Commit:** `a2cb752c` | **Tipo:** `patch`
@@ -7630,6 +7636,7 @@
 
 
 \n
+
 
 
 
