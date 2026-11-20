@@ -118,7 +118,10 @@ $pageTitle  = $pageTitle  ?? 'Primeira Vara Criminal de Ilhéus - Sistema de Ges
                             <span class="info-line">Rua Dr. Hygino Filho, bloco C, 1º andar, sala 132 - Jardim Atlântico, Ilhéus - BA</span>
                             <span class="info-line">Tel.: 73 3234-3428 - WhatsApp: 71 99610-8241 - Email: ilheus1vcriminal@tjba.jus.br</span>
                         </div>
-                        <div class="info-app">Sistema desenvolvido integralmente por Jorge Reis Developer - 2026 - Todos os direitos reservados</div>
+                        <div class="info-app footer-credit">
+                            <span>Uma solução da Fokus Cloud para a Justiça</span>
+                            <span>ios1vcrime.com.br · Versão V. 1.87.0190 · Atualizado em 20/11/2026 às 11:18 · Todos os direitos reservados</span>
+                        </div>
                     </div>
                 </div>
 
