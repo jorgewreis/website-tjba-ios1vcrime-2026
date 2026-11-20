@@ -1,10 +1,16 @@
 # Changelog
 
-## V. 1.88.0005
+## V. 1.88.0006
 
-**Data:** 2026-11-20 14:52:07 | **Commit:** `845ba745` | **Tipo:** `patch`
+**Data:** 2026-11-20 14:52:07 | **Commit:** `55a6dd6d` | **Tipo:** `patch`
 
 - fix: resolve received letter comarca consistently
+
+## V. 1.88.0005
+
+**Data:** 2026-11-20 14:46:11 | **Commit:** `7dd86e73` | **Tipo:** `patch`
+
+- fix(footer): show last successful deploy timestamp
 
 ## V. 1.88.0004
 

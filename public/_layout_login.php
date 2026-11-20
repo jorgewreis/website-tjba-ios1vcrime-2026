@@ -57,6 +57,32 @@ if ($_isFimDeSemana) {
 // ── Variáveis do template ─────────────────────────────────────────────────────
 $iframeSrc  = $iframeSrc  ?? '';
 $pageTitle  = $pageTitle  ?? 'Primeira Vara Criminal de Ilhéus - Sistema de Gestão';
+
+$_siteVersionPath = __DIR__ . '/../VERSION';
+$_siteVersion = is_file($_siteVersionPath) ? trim((string) @file_get_contents($_siteVersionPath)) : '';
+if ($_siteVersion === '') {
+    $_siteVersion = 'indisponível';
+}
+
+$_siteTimezoneName = function_exists('envValue')
+    ? (string) envValue('APP_TIMEZONE', 'America/Bahia')
+    : 'America/Bahia';
+$_siteTimezoneName = $_siteTimezoneName !== '' ? $_siteTimezoneName : 'America/Bahia';
+$_siteTimezone = new DateTimeZone($_siteTimezoneName);
+$_siteDeployedAtValue = function_exists('envValue') ? envValue('SITE_DEPLOYED_AT') : null;
+$_siteUpdatedAt = null;
+if ($_siteDeployedAtValue !== null) {
+    try {
+        $_siteUpdatedAt = new DateTimeImmutable($_siteDeployedAtValue);
+    } catch (Throwable $_e) {
+        $_siteUpdatedAt = null;
+    }
+}
+$_siteUpdatedAtLabel = 'indisponível';
+if ($_siteUpdatedAt instanceof DateTimeImmutable) {
+    $_siteUpdatedAtLocal = $_siteUpdatedAt->setTimezone($_siteTimezone);
+    $_siteUpdatedAtLabel = $_siteUpdatedAtLocal->format('d/m/Y') . ' às ' . $_siteUpdatedAtLocal->format('H:i');
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -120,7 +146,7 @@ $pageTitle  = $pageTitle  ?? 'Primeira Vara Criminal de Ilhéus - Sistema de Ges
                         </div>
                         <div class="info-app footer-credit">
                             <span>Uma solução da Fokus Cloud para a Justiça</span>
-                            <span>ios1vcrime.com.br · Versão V. 1.88 · Atualizado em 20/11/2026 às 11:21 · Todos os direitos reservados</span>
+                            <span>ios1vcrime.com.br · Versão <?php echo htmlspecialchars($_siteVersion, ENT_QUOTES, 'UTF-8'); ?> · Atualizado em <?php echo htmlspecialchars($_siteUpdatedAtLabel, ENT_QUOTES, 'UTF-8'); ?> · Todos os direitos reservados</span>
                         </div>
                     </div>
                 </div>
