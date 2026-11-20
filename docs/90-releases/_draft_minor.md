@@ -9,4 +9,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **ci(deploy): sincronizar firewall temporário Hostinger** `[c85a9638]`
 - **ci(deploy): preservar acesso WireGuard no firewall temporário** `[f0a15d4d]`
 - **fix(footer): show last successful deploy timestamp** `[7dd86e73]`
+- **fix(footer): force credit metadata onto separate lines** `[a082afda]`
 
