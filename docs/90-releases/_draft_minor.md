@@ -12,4 +12,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(footer): force credit metadata onto separate lines** `[a082afda]`
 - **fix(ci): normalize WireGuard deployment key** `[9a74caa2]`
 - **chore(sync): merge latest main into deployment key fix** `[c35478b0]`
+- **fix(ci): reveal sanitized WireGuard validation error** `[de7e73d2]`
 

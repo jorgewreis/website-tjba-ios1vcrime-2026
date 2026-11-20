@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0012
+
+**Data:** 2026-11-20 15:43:36 | **Commit:** `de7e73d2` | **Tipo:** `patch`
+
+- fix(ci): reveal sanitized WireGuard validation error
+
 ## V. 1.88.0011
 
 **Data:** 2026-11-20 15:38:19 | **Commit:** `c35478b0` | **Tipo:** `patch`
@@ -7704,5 +7710,6 @@
 
 
 \n
+
 
 
