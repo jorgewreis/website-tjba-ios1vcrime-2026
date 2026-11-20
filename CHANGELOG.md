@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0009
+
+**Data:** 2026-11-20 15:18:50 | **Commit:** `61e43d48` | **Tipo:** `patch`
+
+- fix(ci): store WireGuard config with root permissions
+
 ## V. 1.88.0008
 
 **Data:** 2026-11-20 15:06:06 | **Commit:** `86f0b54d` | **Tipo:** `patch`

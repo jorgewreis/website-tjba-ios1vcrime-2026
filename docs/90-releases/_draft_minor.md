@@ -10,3 +10,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(ci): use WireGuard for production deploy** `[c1b1100a]`
 - **fix(ci): use WireGuard for production deploy** `[74ffcaa2]`
 - **fix(ci): use WireGuard for production deploy** `[86f0b54d]`
+- **fix(ci): store WireGuard config with root permissions** `[61e43d48]`
