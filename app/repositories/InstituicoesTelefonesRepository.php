@@ -35,7 +35,7 @@ final class InstituicoesTelefonesRepository
     }
 
     /** @return list<array<string, mixed>> */
-    public function findByInstituicaoId(string $instituicaoId): array
+    public function findByInstituicaoId(string $instituicaoId, bool $onlyActive = false): array
     {
         $instituicaoId = trim($instituicaoId);
         if ($instituicaoId === '') {
@@ -44,8 +44,8 @@ final class InstituicoesTelefonesRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'SELECT `id`, `instituicao_id`, `tipo`, `numero`, `ramal`, `principal`, `ativo`, `created_at`, `updated_at` FROM `%s` WHERE `instituicao_id` = :instituicao_id ORDER BY `principal` DESC, `created_at` ASC',
-                $this->table
+                'SELECT `id`, `instituicao_id`, `tipo`, `numero`, `ramal`, `principal`, `ativo`, `created_at`, `updated_at` FROM `%s` WHERE `instituicao_id` = :instituicao_id%s ORDER BY `principal` DESC, `created_at` ASC',
+                $this->table, $onlyActive ? ' AND `ativo` = 1' : ''
             )
         );
         $statement->bindValue(':instituicao_id', $instituicaoId);
