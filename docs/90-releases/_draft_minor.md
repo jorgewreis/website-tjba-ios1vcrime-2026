@@ -11,4 +11,3 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-127): cover matching date with stale etag** `[20e78c24]`
 - **test(REI-169): cover equal queue timestamps** `[4494e7de]`
 - **fix(auth): prevent stale login after password reset** `[7706055e]`
-
