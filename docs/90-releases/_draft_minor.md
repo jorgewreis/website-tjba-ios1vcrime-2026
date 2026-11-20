@@ -3,18 +3,8 @@
 Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
-- **fix(api): log sanitized diagnostics for unexpected errors** `[8ede2741]`
-- **chore: sync main into REI-67 branch** `[791ccc37]`
-- **chore: sync main into REI-67 branch** `[894fea52]`
 
-- **ci(deploy): add temporary Hostinger SSH allowlist** `[16c5f76d]`
-- **ci(deploy): permitir runner temporário no UFW** `[bec23f45]`
-- **ci(deploy): sincronizar firewall temporário Hostinger** `[c85a9638]`
-- **ci(deploy): preservar acesso WireGuard no firewall temporário** `[f0a15d4d]`
-- **fix(footer): show last successful deploy timestamp** `[7dd86e73]`
-- **fix(footer): force credit metadata onto separate lines** `[a082afda]`
-- **fix(ci): normalize WireGuard deployment key** `[9a74caa2]`
-- **chore(sync): merge latest main into deployment key fix** `[c35478b0]`
-- **fix(ci): reveal sanitized WireGuard validation error** `[de7e73d2]`
-- **fix(ci): run WireGuard validation with explicit sudo** `[9654ab41]`
-- **fix(ci): validate installed WireGuard config only** `[ae8c7d43]`
+- **test: copy API error reporter into HTTP fixtures** `[c2ffacf0]`
+- **fix(api): close remaining error disclosure paths (REI-67)** `[6a056296]`
+- **merge: reconcile REI-67 sanitized errors with origin/main** `[0df63805]`
+
