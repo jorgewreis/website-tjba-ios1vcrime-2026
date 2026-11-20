@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([ValidateSet(0, 1)][int]$LowerCaseTableNames = 0)
+param([ValidateSet(0, 1)][int]$LowerCaseTableNames = 0, [switch]$CiLinux, [string]$QaImageId)
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
@@ -10,6 +10,13 @@ $securityFile = Join-Path $repoRoot 'config/security.php'
 $testFile = Join-Path $PSScriptRoot 'rei148-mysql.test.php'
 $mysqlImageRef = 'mysql@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902'
 $phpImageRef = 'fokus-law-linux-qa@sha256:459cc8bd25b38009a8cf9a0ef5399d131f4f2001a1376d89389f673a92de430b'
+if ($CiLinux) {
+    $mysqlImageRef = 'mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903'
+    if (-not $IsLinux -or $env:GITHUB_ACTIONS -ne 'true' -or $QaImageId -notmatch '^sha256:[a-f0-9]{64}$') {
+        throw 'Runner CI recusado: requer Linux, GitHub Actions e ID de imagem explícito.'
+    }
+    $phpImageRef = $QaImageId
+}
 if (Test-Path -LiteralPath (Join-Path $repoRoot '.env')) {
     throw 'Runner recusado: não execute a fixture em checkout com .env.'
 }
@@ -32,13 +39,16 @@ $envItems = Get-ChildItem -LiteralPath $appRoot -Recurse -Force | Where-Object {
 if ($envItems) { throw 'Runner recusado: app contém arquivo de ambiente.' }
 
 $contextName = (& docker context show 2>$null | Select-Object -Last 1).Trim()
-if ($LASTEXITCODE -ne 0 -or $contextName -ne 'desktop-linux') {
-    throw 'Runner recusado: somente o contexto local desktop-linux é permitido.'
-}
-$dockerEndpoint = 'npipe:////./pipe/dockerDesktopLinuxEngine'
+if ($LASTEXITCODE -ne 0) { throw 'Contexto Docker indisponível.' }
 $contextInfo = @((& docker context inspect $contextName 2>$null | ConvertFrom-Json))[0]
+if ($CiLinux) {
+    $dockerEndpoint = 'unix:///var/run/docker.sock'
+} else {
+    if ($contextName -ne 'desktop-linux') { throw 'Runner recusado: somente Docker Desktop local.' }
+    $dockerEndpoint = 'npipe:////./pipe/dockerDesktopLinuxEngine'
+}
 if ($LASTEXITCODE -ne 0 -or $contextInfo.Endpoints.docker.Host -ne $dockerEndpoint) {
-    throw 'Runner recusado: endpoint do Docker não é o pipe local esperado.'
+    throw 'Runner recusado: endpoint Docker local esperado não confere.'
 }
 
 $runId = [Guid]::NewGuid().ToString('N')
@@ -47,7 +57,8 @@ $label = 'com.fokus.rei148-usuarios-test'
 $dbName = "fokus-rei88-mysql-$runId"
 $phpName = "fokus-rei88-php-$runId"
 $volumeName = "fokus-rei88-socket-$runId"
-$tempRoot = (Resolve-Path -LiteralPath $env:TEMP).Path
+$tempPath = if ($CiLinux) { $env:RUNNER_TEMP } else { $env:TEMP }
+$tempRoot = (Resolve-Path -LiteralPath $tempPath).Path
 $configFixtureRoot = Join-Path $tempRoot "rei148-usuarios-config-$runId"
 $mysqlId = $null
 $phpId = $null
@@ -104,7 +115,9 @@ function Find-OwnedContainerByName([string]$name) {
 try {
     $mysqlImage = @((Invoke-DockerSafe @('image', 'inspect', $mysqlImageRef)) | ConvertFrom-Json)[0]
     $phpImage = @((Invoke-DockerSafe @('image', 'inspect', $phpImageRef)) | ConvertFrom-Json)[0]
-    $imageInvalid = -not $mysqlImage.Id -or -not $phpImage.Id -or (@($mysqlImage.RepoDigests) -notcontains $mysqlImageRef) -or (@($phpImage.RepoDigests) -notcontains $phpImageRef)
+    $imageInvalid = -not $mysqlImage.Id -or -not $phpImage.Id -or (@($mysqlImage.RepoDigests) -notcontains $mysqlImageRef)
+    if ($CiLinux) { $imageInvalid = $imageInvalid -or $phpImage.Id -ne $QaImageId }
+    else { $imageInvalid = $imageInvalid -or (@($phpImage.RepoDigests) -notcontains $phpImageRef) }
     if ($imageInvalid) { throw 'Imagens MySQL/PHP não correspondem aos digests aprovados.' }
 
     if (Test-Path -LiteralPath $configFixtureRoot) { throw 'Diretório temporário da configuração já existe.' }
