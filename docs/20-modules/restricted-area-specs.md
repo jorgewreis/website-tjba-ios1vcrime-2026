@@ -52,6 +52,7 @@ Regra transversal:
 - **Cartório:** Cartas Expedidas, Cartas Recebidas, Editais, Guias e Ofícios do Cartório.
 - **Gabinete:** réus presos e ofícios.
 - **Monitoramento eletrônico:** acesso global (`all_internal`) para usuários internos com perfil composto (cartório, gabinete ou audiências); menu apenas em **Consultas**; qualquer interno autorizado pode operar cadastro, subtarefas, cancelamento e exclusão (esta última na edição, se for o último sequencial do ano). Breadcrumb neutro (sem “Gabinete”); lista padrão em aberto.
+- **Datas do monitoramento:** decisão de Jorge em 15/11/2026: início futuro e encerramento antecipado são permitidos. Se encerrado antes do início registrado, a data final operacional é igual à data de início; ela não representa a data efetiva da ação de encerramento.
 - **Usuários e perfis:** cadastro, edição, perfis e dados pessoais.
 - **Consultas e cadastros auxiliares:** partes, processos, instituições públicas, prioridades e feriados.
 - **Configuração e governança:** páginas internas e regras administrativas existentes no roteamento atual.

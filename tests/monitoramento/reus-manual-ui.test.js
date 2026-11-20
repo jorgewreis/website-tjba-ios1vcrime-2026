@@ -155,6 +155,22 @@ async function run() {
   assert.equal(JSON.parse(pending[12].options.body).reu_complemento, 'Nome sem blur');
   pending[12].resolve({ ok: false, json: async () => ({ error: 'simulado' }) });
   await new Promise(resolve => setImmediate(resolve));
+  el['gab-mon-reu-nome'].value = 'Resposta inválida';
+  el['gab-mon-reu-nome'].handlers.input();
+  el['gab-mon-reu-nome'].handlers.blur();
+  pending[13].resolve({ ok: true, json: async () => ({ pessoas: null }) });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(el['btn-gab-mon-registrar'].disabled, true, 'resposta malformada não confirma nome');
+  assert.ok(el['gab-mon-reu-select'].children.some(option => option.value === '__repetir__'));
+  events.cnjValidated({ detail: { inputId: 'filter-processo', digits: el['filter-processo'].value } });
+  pending[14].resolve({ ok: true, json: async () => ({ reus: null }) });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.ok(notices.some(args => args[2] === 'Resposta inválida ao carregar réus.'));
+  const antesRetry = pending.length;
+  events.datajudClasseResolved({ detail: { processoInputId: 'filter-processo' } });
+  assert.equal(pending.length, antesRetry + 1, 'falha permite repetição ao resolver classe');
+  pending[15].resolve({ ok: true, json: async () => ({ reus: [] }) });
+  await new Promise(resolve => setImmediate(resolve));
   console.log('PASS orientação manual e seleção existente (DOM/fetch simulados)');
 }
 run().catch(error => { console.error(error); process.exitCode = 1; });

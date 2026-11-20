@@ -1,6 +1,6 @@
-# Inventário e uso dos scripts SQL versionados
+# Referência histórica de migrações
 
-Este arquivo substitui a lista antiga de migrações que já não existem no repositório.
+**Atenção:** as seções abaixo descrevem scripts por módulo, mas várias referências não estão rastreadas ou não foram encontradas na revisão `c6b0274a` de 16/11/2026. Elas não são instruções de execução nem comprovam aplicação em qualquer ambiente. Consulte o [inventário REI-97](../docs/10-architecture/migracoes-inventario-rei97.md) para a distinção entre arquivos versionados, locais e ausentes. Confirme esquema, dependências, recuperação e autorização antes de qualquer migração.
 
 ## 1. Observações gerais
 
@@ -61,7 +61,7 @@ Cria as tabelas do módulo de acompanhamento de réus presos:
 
 Separa, na tabela `gabinete_reu_preso`, os registros dos controles “Réus Presos” e “Réus Presos - Substituto” por meio de `controle_tipo`. Os registros já existentes recebem o valor `principal`; novos registros do controle substituto recebem `substituto`.
 
-No deploy de produção, a alteração é aplicada de forma idempotente por `php scripts/migrate-gabinete-reu-preso-controle-tipo.php`.
+O workflow de produção na revisão de referência prevê chamar `scripts/migrate-gabinete-reu-preso-controle-tipo.php` quando o arquivo estiver presente; isso não comprova sua execução nem o estado do banco.
 
 Requer a tabela `processos`.
 
@@ -166,21 +166,6 @@ quando a localização for `Virtual - Audin`.
 2. Se existir `processoPrioridades`, executar `php database/migrations/run_processo_prioridades_unificacao_data.php`.
 3. Tratar `20260330_processoPrioridades.sql` apenas como referência histórica.
 
-## 10. Arquivos presentes hoje em `database/migrations/`
+## 10. Estado dos arquivos
 
-- `20260322_gabinete_reus_presos.sql`
-- `20261009_add_gabinete_reu_preso_controle_tipo.sql`
-- `20260322_oficios_criado_por.sql`
-- `20260322_seed_setores_inicial.sql`
-- `20260322_setores_codigo_area.sql`
-- `20260322_usuario_perfil_composite_limpeza.sql`
-- `20260330_processoPrioridades.sql`
-- `20260331_processo_prioridades_unificacao.sql`
-- `20260401_login_rate_limits.sql`
-- `20260526_sala_audiencias_pauta_parte_contatos.sql`
-- `20260826_add_link_audiencia_sala_pauta.sql`
-- `guias.sql`
-- `run_processo_prioridades_unificacao_data.php`
-- `salario_minimo_e_valor_multa_guias.sql`
-- `seed_salario_minimo_1994_2026.sql`
-- `usuarios_created_at_updated_at.sql`
+A lista rastreada e a observação do checkout local estão no [inventário REI-97](../docs/10-architecture/migracoes-inventario-rei97.md). Use `git ls-files database/migrations` no commit candidato para atualizar o inventário; presença no disco ou em outro checkout não demonstra versionamento nem aplicação.

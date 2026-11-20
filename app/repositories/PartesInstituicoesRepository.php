@@ -35,8 +35,42 @@ final class PartesInstituicoesRepository
         return $result === false ? null : $result;
     }
 
+    /** Current locking read used to serialize updates to a person's profession. */
+    public function findByIdForUpdate(string $id): ?array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return null;
+        }
+        $statement = $this->connection->prepare(
+            sprintf('SELECT `id`, `parte_id`, `instituicao_id`, `setor_id`, `profissao`, `cargo_funcao`, `data_inclusao`, `data_inicio`, `data_fim`, `ativo`, `observacoes`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1 FOR UPDATE', $this->table)
+        );
+        $statement->execute([':id' => $id]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $result === false ? null : $result;
+    }
+
     /** @return list<array<string, mixed>> */
-    public function findByParteId(string $parteId, ?bool $ativo = null): array
+    public function findByParteIdForUpdate(string $parteId, bool $ativoOnly = true): array
+    {
+        $parteId = trim($parteId);
+        if ($parteId === '') {
+            return [];
+        }
+        $sql = sprintf(
+            'SELECT `id`, `parte_id`, `instituicao_id`, `setor_id`, `profissao`, `cargo_funcao`, `data_inclusao`, `data_inicio`, `data_fim`, `ativo`, `observacoes`, `created_at`, `updated_at` FROM `%s` WHERE `parte_id` = :parte_id%s ORDER BY `data_inclusao` DESC, `created_at` DESC FOR UPDATE',
+            $this->table,
+            $ativoOnly ? ' AND `ativo` = 1' : ''
+        );
+        $statement = $this->connection->prepare($sql);
+        $statement->execute([':parte_id' => $parteId]);
+
+        return $statement->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /** @return list<array<string, mixed>> */
+    public function findByParteId(string $parteId, ?bool $ativo = null, bool $onlyActiveInstitutions = false): array
     {
         $parteId = trim($parteId);
         if ($parteId === '') {
@@ -52,6 +86,9 @@ final class PartesInstituicoesRepository
             $sql .= ' AND pi.`ativo` = :ativo';
             $params[':ativo'] = $ativo ? 1 : 0;
         }
+        if ($onlyActiveInstitutions) {
+            $sql .= ' AND pi.`ativo` = 1 AND i.`ativo` = 1 AND (pi.`setor_id` IS NULL OR EXISTS (SELECT 1 FROM `instituicoes_setores` setor WHERE setor.`id` = pi.`setor_id` AND setor.`instituicao_id` = i.`id` AND setor.`ativo` = 1))';
+        }
         $sql .= ' ORDER BY pi.`data_inclusao` DESC, pi.`created_at` DESC';
 
         $statement = $this->connection->prepare($sql);
@@ -64,7 +101,7 @@ final class PartesInstituicoesRepository
     }
 
     /** @return list<array<string, mixed>> */
-    public function findByInstituicaoId(string $instituicaoId, ?bool $ativo = null): array
+    public function findByInstituicaoId(string $instituicaoId, ?bool $ativo = null, bool $onlyActiveInstitutions = false): array
     {
         $instituicaoId = trim($instituicaoId);
         if ($instituicaoId === '') {
@@ -79,6 +116,9 @@ final class PartesInstituicoesRepository
         if ($ativo !== null) {
             $sql .= ' AND pi.`ativo` = :ativo';
             $params[':ativo'] = $ativo ? 1 : 0;
+        }
+        if ($onlyActiveInstitutions) {
+            $sql .= ' AND pi.`ativo` = 1 AND EXISTS (SELECT 1 FROM `instituicoes_publicas` inst WHERE inst.`id` = pi.`instituicao_id` AND inst.`ativo` = 1) AND (pi.`setor_id` IS NULL OR EXISTS (SELECT 1 FROM `instituicoes_setores` setor WHERE setor.`id` = pi.`setor_id` AND setor.`instituicao_id` = pi.`instituicao_id` AND setor.`ativo` = 1))';
         }
         $sql .= ' ORDER BY pi.`data_inclusao` DESC, p.`nome_completo` ASC';
 
@@ -188,7 +228,7 @@ final class PartesInstituicoesRepository
         }
 
         if (empty($set)) {
-            return false;
+            return $this->findById($id) !== null;
         }
 
         $set[] = '`updated_at` = NOW()';
@@ -200,7 +240,7 @@ final class PartesInstituicoesRepository
         }
         $statement->execute();
 
-        return $statement->rowCount() > 0;
+        return $statement->rowCount() > 0 || $this->findById($id) !== null;
     }
 
     /** Cargo/função: trim, maiúsculas (qualquer caractere), limite 120 — ex.: SD/PM. */

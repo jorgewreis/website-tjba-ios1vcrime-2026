@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
 require_once __DIR__ . '/../../models/Usuario.php';
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
+require_once __DIR__ . '/../../helpers/SalaAudienciasEstudantePrivacidade.php';
 
 $userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
 $usuarioModel = new Usuario();
@@ -325,21 +326,21 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
 
     <div class="container-full card-page" id="card-audiencias-hoje-estudante">
         <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start padding-x-md"><h2>Audiências de hoje</h2></div>
+            <div class="display-flex row row-fit justify-start padding-x-md"><h2 tabindex="-1">Audiências de hoje</h2></div>
         </div>
 
         <div class="display-flex row row-full padding-x-md padding-y-sm border-bottom">
             <div id="timeline-hoje-painel-estudante" class="timeline-day-ruler row row-full"></div>
         </div>
-        <?php if (count($hojePageRows) === 0): ?>
-        <div class="padding-x-lg padding-y-lg">
-        </div>
-        <?php endif; ?>
+        <p class="padding-x-lg padding-y-lg js-painel-empty"<?php echo count($hojePageRows) ? ' hidden' : ''; ?>>Nenhuma audiência nesta página.</p>
         <?php $processo_bloco_variant = 'estudantes'; ?>
         <?php $processo_bloco_model = 'full'; ?>
         <?php foreach ($hojePageRows as $row):
             $idPautaRaw = trim((string) ($row['id_pauta'] ?? ''));
             $idPauta = htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8');
+            if (SalaAudienciasEstudantePrivacidade::indisponivel($row)): ?>
+        <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo $idPauta; ?>" data-indisponivel="1"><p class="padding-x-lg padding-y-md">Audiência indisponível.</p></div>
+        <?php continue; endif;
             $pode = !empty($row['pode_inscrever']);
             $ja = !empty($row['ja_inscrito']);
             $lotado = !empty($row['vagas_esgotadas']);
@@ -488,19 +489,19 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         </div>
     </div>
 
-    <div class="container-full card-page">
+    <div class="container-full card-page" id="card-minhas-inscricoes-estudante">
         <div class="display-flex row row-full align-center justify-between padding-x-lg padding-y-md border-bottom">
-            <div class="display-flex row row-fit justify-start padding-x-md"><h2>Minhas inscrições</h2></div>
+            <div class="display-flex row row-fit justify-start padding-x-md"><h2 tabindex="-1">Minhas inscrições</h2></div>
         </div>
 
-        <?php if (count($minhasPageRows) === 0): ?>
-        <div class="padding-x-md padding-y-lg">
-        </div>
-        <?php endif; ?>
+        <p class="padding-x-md padding-y-lg js-painel-empty"<?php echo count($minhasPageRows) ? ' hidden' : ''; ?>>Nenhuma inscrição nesta página.</p>
         <?php $processo_bloco_variant = 'estudantes'; ?>
         <?php $processo_bloco_model = 'full'; ?>
         <?php foreach ($minhasPageRows as $m):
             $idPautaMinhasRaw = trim((string) ($m['pauta'] ?? ''));
+            if (SalaAudienciasEstudantePrivacidade::indisponivel($m)): ?>
+        <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>" data-indisponivel="1"><p class="padding-x-lg padding-y-md">Audiência indisponível.</p></div>
+        <?php continue; endif;
             $stRow = (string) ($m['status'] ?? '');
             $stRow = painelEstudanteStatusExibicao($m);
             $inicioEfetivoRaw = trim((string) ($m['data_hora_inicio_efetivo'] ?? ''));
@@ -891,7 +892,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         }
         function collectPautas() {
             var ids = {};
-            document.querySelectorAll('.js-time-block[data-pauta]').forEach(function (el) {
+            document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (el) {
                 var id = String(el.getAttribute('data-pauta') || '').trim();
                 if (id) ids[id] = true;
             });
@@ -909,6 +910,19 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             });
         }
         function applyUpdates(items) {
+            Object.keys(items).forEach(function (id) {
+                if (!items[id] || !items[id].indisponivel) return;
+                document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (register) {
+                    if (String(register.getAttribute('data-pauta') || '').trim() !== id) return;
+                    if (register.contains(document.activeElement)) {
+                        var section = register.closest('.card-page');
+                        var destination = section && section.querySelector('h2');
+                        if (destination) destination.focus();
+                    }
+                    register.innerHTML = '<p class="padding-x-lg padding-y-md">Audiência indisponível.</p>';
+                    register.setAttribute('data-indisponivel', '1');
+                });
+            });
             renderVisibleTimeBlocks(latestItemsById);
             document.querySelectorAll('[data-status-label-pauta]').forEach(function (labelEl) {
                 var id = String(labelEl.getAttribute('data-status-label-pauta') || '').trim();
@@ -1029,10 +1043,12 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             if (!root || !window.TimelineDayRuler) return;
             window.TimelineDayRuler.render(root, buildTimelineItems(overrides), { studentPanel: true });
         }
+        var statusRequestInFlight = false;
         function refreshStatusAndTime() {
+            if (statusRequestInFlight) return;
             var pautas = collectPautas();
             if (!pautas.length) return;
-            if (allPautasFinished(latestItemsById)) return;
+            statusRequestInFlight = true;
             fetch('/api/sala-audiencias-pauta/status-bulk.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1045,13 +1061,54 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     });
                 })
                 .then(function (res) {
-                    if (!res.ok || !res.body.success || !res.body.items) return;
-                    Object.keys(res.body.items).forEach(function (id) {
-                        latestItemsById[id] = Object.assign({}, latestItemsById[id] || {}, res.body.items[id]);
+                    if (!res.ok || res.body.success !== true || res.body.completo !== true ||
+                        !Array.isArray(res.body.consultados) || !res.body.items ||
+                        typeof res.body.items !== 'object' || Array.isArray(res.body.items)) return;
+                    var consultados = res.body.consultados.map(String);
+                    if (consultados.length !== pautas.length || new Set(consultados).size !== pautas.length ||
+                        pautas.some(function (id) { return consultados.indexOf(id) === -1; }) ||
+                        Object.keys(res.body.items).some(function (id) {
+                            var item = res.body.items[id];
+                            return pautas.indexOf(id) === -1 || !item || typeof item !== 'object' ||
+                                String(item.id_pauta || '') !== id;
+                        })) return;
+                    pautas.forEach(function (id) {
+                        if (Object.prototype.hasOwnProperty.call(res.body.items, id)) return;
+                        delete latestItemsById[id];
+                        document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (row) {
+                            if (String(row.getAttribute('data-pauta') || '').trim() !== id) return;
+                            if (row.contains(document.activeElement)) {
+                                var section = row.closest('.card-page');
+                                var destination = section && section.querySelector('h2');
+                                if (destination) destination.focus();
+                            }
+                            row.remove();
+                        });
                     });
+                    ['card-audiencias-hoje-estudante', 'card-minhas-inscricoes-estudante'].forEach(function (sectionId) {
+                        var section = document.getElementById(sectionId);
+                        if (!section) return;
+                        var empty = section.querySelector('.js-painel-empty');
+                        if (empty) empty.hidden = !!section.querySelector('.register.register-painel-estudante[data-pauta]');
+                    });
+                    Object.keys(res.body.items).forEach(function (id) {
+                        var item = res.body.items[id];
+                        if (item.indisponivel) {
+                            latestItemsById[id] = {id_pauta: id, indisponivel: true};
+                        } else {
+                            latestItemsById[id] = Object.assign({}, latestItemsById[id] || {}, item);
+                        }
+                    });
+                    var precisaRecarregar = false;
+                    document.querySelectorAll('.register.register-painel-estudante[data-pauta][data-indisponivel="1"]').forEach(function (row) {
+                        var id = String(row.getAttribute('data-pauta') || '').trim();
+                        if (res.body.items[id] && !res.body.items[id].indisponivel) precisaRecarregar = true;
+                    });
+                    if (precisaRecarregar) { window.location.reload(); return; }
                     applyUpdates(res.body.items);
                 })
-                .catch(function () { /* erro silencioso de polling */ });
+                .catch(function () { /* erro silencioso de polling */ })
+                .finally(function () { statusRequestInFlight = false; });
         }
         var latestItemsById = buildCurrentItemsFromDom();
         var pollTimer = null;
@@ -1059,13 +1116,6 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             // Atualiza marcador "agora" mesmo sem mudança de dados.
             renderVisibleTimeBlocks(latestItemsById);
             renderTimeline(latestItemsById);
-            if (allPautasFinished(latestItemsById)) {
-                if (pollTimer !== null) {
-                    window.clearInterval(pollTimer);
-                    pollTimer = null;
-                }
-                return;
-            }
             // Atualiza dados reais sem recarregar a página.
             refreshStatusAndTime();
         }

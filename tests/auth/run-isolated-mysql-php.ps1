@@ -3,6 +3,9 @@ param(
     [Parameter(Mandatory=$true)][string]$TestScript,
     [Parameter(Mandatory=$true)][string[]]$Files
 )
+# Contenção provisória: recursos ou variáveis não comprovam sandbox descartável.
+throw 'Testes de autenticação suspensos: sandbox descartável não comprovado.'
+
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $runId = [Guid]::NewGuid().ToString('N')

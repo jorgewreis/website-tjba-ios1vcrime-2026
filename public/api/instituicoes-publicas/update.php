@@ -35,7 +35,11 @@ if ($id === '') {
 
 try {
     $service = new InstituicoesPublicasService($connection);
-    $service->update($id, $parsed);
+    if (!$service->update($id, $parsed)) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Instituição não encontrada.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);

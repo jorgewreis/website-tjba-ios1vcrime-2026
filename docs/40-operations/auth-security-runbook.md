@@ -8,8 +8,9 @@ Este runbook consolida os passos operacionais mínimos para deploy, validação 
 
 - o workflow [`deploy-prod.yml`](../../.github/workflows/deploy-prod.yml) sincroniza arquivos e recarrega serviços em produção;
 - o workflow [`deploy-dev.yml`](../../.github/workflows/deploy-dev.yml) permanece disponível apenas para disparo manual no ambiente de desenvolvimento;
-- o deploy automatizado **não executa migrações SQL automaticamente**;
-- portanto, qualquer mudança de banco exigida pela release precisa ser aplicada manualmente no ambiente.
+- o deploy de produção executa, se presentes após a sincronização, os scripts PHP `scripts/migrate-cejusc.php`, `scripts/migrate-gabinete-reu-preso-controle-tipo.php` e `scripts/migrate-dashboard-conclusoes.php`;
+- esse comportamento não constitui um executor geral de `database/migrations/`. Identifique as alterações de banco exigidas pela release e planeje separadamente as que não forem cobertas pelos scripts, conforme [`database/README-migracoes.md`](../../database/README-migracoes.md) e o [guia de deploy](../90-releases/deploy-producao.md);
+- a configuração do workflow não comprova que uma migração foi executada: confira a revisão, os logs do run e a estrutura efetiva do ambiente antes de declarar o resultado.
 
 ## 3. Checklist de pós-deploy
 
@@ -103,15 +104,11 @@ Fluxo atual:
 3. geração e persistência via [`app/services/PasswordResetService.php`](../../app/services/PasswordResetService.php);
 4. redefinição final em [`public/redefinir_senha.php`](../../public/redefinir_senha.php).
 
-### 7.1. Observação operacional crítica
+### 7.1. Recuperação de senha e logs
 
-Se `MAIL_DRIVER` não estiver configurado para SMTP, o sistema registra o link de reset no `error_log`.
+O fluxo de recuperação exige entrega de e-mail. Se a entrega falhar ou SMTP estiver indisponível, o serviço tenta invalidar o token e devolve resposta genérica; falhas de invalidação são registradas para investigação. Não há fallback autorizado que registre o link de redefinição ou token em logs. A resposta genérica não comprova entrega nem invalidação bem-sucedida.
 
-Isso implica:
-
-- comportamento aceitável para desenvolvimento/homologação;
-- necessidade de cuidado extra com acesso aos logs;
-- recomendação forte de SMTP ativo em produção.
+Verifique a configuração e a disponibilidade de SMTP e os eventos de erro, que podem conter detalhes técnicos; revise e sanitize antes de compartilhar, sem copiar credenciais, destinatários, links ou tokens para registros de suporte. O fallback de auditoria é separado e não deve conter esses dados.
 
 ## 8. Sinais de incidente e triagem rápida
 
@@ -143,7 +140,7 @@ Verificar:
 - `MAIL_DRIVER`;
 - `MAIL_HOST`, `MAIL_PORT`, usuário e senha;
 - disponibilidade de PHPMailer no ambiente;
-- presença de logs `[RESET SENHA]` no `error_log`.
+- eventos de falha de envio ou invalidação no `error_log`; sanitize antes de compartilhar e não copie links ou tokens.
 
 ## 9. Estado atual de auditoria
 

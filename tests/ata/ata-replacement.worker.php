@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+require __DIR__ . '/sandbox-guard.php';
 
 if ($argc !== 7) {
     fwrite(STDERR, "Uso: ata-replacement.worker.php <origem> <raiz> <início> <pronto> <continuar> <nome>\n");

@@ -75,7 +75,7 @@ Independentemente do destino final do log, devem existir padrões mínimos de fo
 
 Além das integrações com serviços externos, a solução expõe uma API interna consumida principalmente pelo frontend e por páginas autenticadas do próprio sistema. Essa API acompanha o modelo oficial de autenticação da aplicação e deve ser documentada, testada e mantida com o mesmo rigor aplicado às integrações externas.
 
-A API interna é responsável por disponibilizar, em formato programático, funcionalidades como gestão de audiências, tarefas internas, expedições, notificações, painéis de produtividade, perfis e configurações. A forma como esses recursos são expostos deve considerar tanto a estabilidade a longo prazo quanto a capacidade de evolução controlada.
+A API interna é responsável por disponibilizar, em formato programático, funcionalidades como gestão de audiências, subtarefas das rotinas existentes, notificações, painéis de produtividade, perfis e configurações. A forma como esses recursos são expostos deve considerar tanto a estabilidade a longo prazo quanto a capacidade de evolução controlada.
 
 ### 4.1 Estrutura atual de endpoints e diretriz de evolução
 

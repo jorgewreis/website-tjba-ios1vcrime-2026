@@ -27,7 +27,7 @@ O escopo de produto descreve o conjunto de capacidades e características que o 
 O sistema tem como objetivo geral prover uma plataforma institucional e operacional integrada para a Primeira Vara Crime, centralizando:
 
 - a divulgação de informações públicas (canal institucional oficial, consultas permitidas, conteúdo informativo); e  
-- o gerenciamento das rotinas administrativas e judiciais internas (Cartório, Gabinete, Audiências, Tarefas, Produtividade, Logs).
+- o gerenciamento das rotinas administrativas e judiciais internas (Cartório, Gabinete, Audiências, Produtividade, Logs).
 
 Essa abrangência cobre desde a experiência do cidadão e de usuários externos até o trabalho diário de servidores, chefias e estagiários, com foco em segurança, rastreabilidade, padronização de fluxos e geração de indicadores de produtividade.
 
@@ -45,7 +45,7 @@ O produto final é organizado em duas grandes áreas:
 - **Área Restrita (Interna)**  
   - Ambiente de trabalho oficial para usuários internos autenticados, com rastreabilidade compatível com o módulo e com a instrumentação operacional existente.  
   - Autenticação, gestão de sessão, perfis e permissões, acesso a manuais internos.  
-  - Núcleo operacional, com módulos para Cartório, Gabinete, Audiências, Tarefas, Notificações, Produtividade, Logs e Configurações Gerais.  
+  - Núcleo operacional, com módulos para Cartório, Gabinete, Audiências, Notificações, Produtividade, Logs e Configurações Gerais.
   - Regras transversais: segurança reforçada, sigilo, LGPD, feedback padronizado, pontuação e produtividade, versionamento e governança de regras e parâmetros.
 
 ### 2.3 Principais módulos internos
@@ -62,11 +62,8 @@ O escopo de produto contempla, como visão-alvo, os seguintes módulos e submód
   - Disponibilização de atas públicas.
   - Regra crítica: tarefas de oitiva/interrogatório são baixadas automaticamente ao concluir audiência.
 
-- **Módulo m3 — Tarefas e Fluxos Internos**
-  - Catálogo de tipos de tarefa.
-  - Sub-tarefas configuráveis.
-  - Regras de pontuação parametrizadas.
-  - Exclusão controlada (hard/soft delete).
+- **Subtarefas das rotinas existentes**
+  - As subtarefas pertencem aos fluxos de Cartório, Gabinete e Audiências; não constituem módulo independente neste sistema. Os módulos independentes de Tarefas e Expedições pertencem ao FokusCloud.
 
 - **Módulo m4 — Cartório**  
   - Regras transversais:
@@ -188,7 +185,7 @@ Para manter o foco na fundação do projeto, são explicitamente considerados **
 
 - Implementação completa e pronta para uso dos módulos funcionais descritos em **Funcionalidades das Áreas Pública e Restrita**, incluindo:
   - Módulo de Audiências (m1) em regime de produção.
-  - Módulo de Tarefas (m3), Cartório (m4), Notificações (m5), Produtividade (m6), Logs/Auditoria (m11), Configurações (m12) e Gabinete em uso operacional pleno.
+  - Cartório (m4), Notificações (m5), Produtividade (m6), Logs/Auditoria (m11), Configurações (m12) e Gabinete em uso operacional pleno.
 - Disponibilização oficial do sistema para o público externo em ambiente de produção.
 - Desenvolvimento de aplicativo mobile nativo ou híbrido.
 - Integração em produção com API do CNJ (a fase 2026.01 limita-se ao desenho e documentação da integração).

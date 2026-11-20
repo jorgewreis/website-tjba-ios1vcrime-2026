@@ -31,7 +31,11 @@ if ($id === '') {
 
 try {
     $service = new PessoasService($connection);
-    $service->updateVinculoInstituicao($id, $parsed);
+    if (!$service->updateVinculoInstituicao($id, $parsed)) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);

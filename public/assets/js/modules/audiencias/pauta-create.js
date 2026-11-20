@@ -198,32 +198,46 @@
         }
     }
 
+    var horariosCreateRequest = 0;
+    var horariosCreatePendingDate = '';
+    var horariosCreatePendingHour = '';
     function refreshHoraDisponiveisCreate() {
+        var request = ++horariosCreateRequest;
         var dataEl = document.getElementById('audiencia-data');
         var d = String(dataEl && dataEl.value || '').trim();
         var grade = readGradeFromWindow();
         if (!d) {
+            horariosCreatePendingDate = '';
+            horariosCreatePendingHour = '';
             fillHoraSelectCreate(grade);
             return;
         }
+        var previousHour = String(document.getElementById('audiencia-hora')?.value || '').trim();
+        if (!previousHour && horariosCreatePendingDate === d) previousHour = horariosCreatePendingHour;
+        horariosCreatePendingDate = d;
+        horariosCreatePendingHour = previousHour;
+        fillHoraSelectCreate([]);
         fetch('/api/sala-audiencias-pauta/occupied-slots.php?data=' + encodeURIComponent(d), {
             credentials: 'same-origin'
         })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
+                if (request !== horariosCreateRequest || String(dataEl.value || '').trim() !== d) return;
                 if (!res.ok || !res.j || !Array.isArray(res.j.available)) {
                     notifyByKey('audiencias.schedule.load.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao carregar horários.');
-                    fillHoraSelectCreate(grade);
+                    fillHoraSelectCreate([]);
                     return;
                 }
                 fillHoraSelectCreate(res.j.available);
+                if (res.j.available.indexOf(previousHour) >= 0) document.getElementById('audiencia-hora').value = previousHour;
                 if (res.j.available.length === 0) {
                     notifyByKey('audiencias.schedule.unavailable.info', {}, 'info', 'Horários', 'Não há horários livres nesta data.');
                 }
             })
             .catch(function () {
+                if (request !== horariosCreateRequest || String(dataEl.value || '').trim() !== d) return;
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
-                fillHoraSelectCreate(grade);
+                fillHoraSelectCreate([]);
             });
     }
 

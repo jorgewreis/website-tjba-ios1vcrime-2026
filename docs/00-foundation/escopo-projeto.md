@@ -32,7 +32,7 @@ A visão de produto contempla, de forma ampla, os seguintes elementos:
 - **Área Restrita (Interna):**  
   - Autenticação, perfis, permissões, logs e auditoria.  
   - Módulo de Audiências (m1), com cadastro, gestão, partes, PDFs de preparo, controle de presença e vínculo com inscrições de estudantes.  
-  - Módulo de Tarefas e Fluxos Internos (m3), com catálogo de tarefas, sub-tarefas parametrizáveis e regras de pontuação.  
+  - Subtarefas próprias das rotinas existentes de Cartório, Gabinete e Audiências; módulos independentes de Tarefas e Expedições pertencem ao FokusCloud.
   - Módulo de Cartório (m4) e seus submódulos (Cartas Recebidas, Cartas Expedidas, Editais, Guias, Ofícios).  
   - Módulo de Notificações (m5), Módulo de Produtividade e Painéis (m6), Módulo de Logs, Auditoria e Segurança (m11), Configurações Gerais (m12) e módulo de Gabinete.
 
@@ -80,11 +80,12 @@ Essas entregas garantem que, ao término do Projeto 2026.01, o sistema ainda nã
 
 ## 4. Itens fora do escopo da fase 2026.01
 
+A preservação das subtarefas já existentes permanece aplicável; esta seção não determina sua remoção.
+
 Para manter o foco e evitar expansão indevida de trabalho, são explicitamente considerados **fora do escopo** deste ciclo inicial:
 
 - Desenvolvimento completo dos módulos funcionais descritos em “Funcionalidades das Áreas Pública e Restrita” para uso em produção, incluindo:
   - Implementação completa do Módulo de Audiências (m1) com todas as telas, regras e relatórios.
-  - Implementação completa do Módulo de Tarefas e Fluxos Internos (m3).
   - Implementação completa do Módulo de Cartório (m4) e seus submódulos.
   - Implementação completa dos módulos de Notificações (m5), Produtividade (m6), Logs/Auditoria (m11), Configurações (m12) e Gabinete.
 - Disponibilização pública oficial do webapp para acesso externo em ambiente de produção com todas as funcionalidades ativas.

@@ -325,11 +325,12 @@
                 })
                 .then(function (data) {
                     if (!requestIsCurrent()) return;
+                    if (!data || !Array.isArray(data.reus)) throw new Error('Resposta inválida ao carregar réus.');
                     if (reuNome) {
                         reuNome.placeholder = 'Digite o nome completo';
                         reuNome.disabled = false;
                     }
-                    const reus = (data && data.reus) ? data.reus : [];
+                    const reus = data.reus;
                     if (reus.length > 0) {
                         showReuSelect(reus);
                     } else {
@@ -341,6 +342,7 @@
                 })
                 .catch(function (error) {
                     if (!requestIsCurrent()) return;
+                    reusProcessoConsultado = '';
                     if (reuNome) {
                         reuNome.placeholder = 'Digite o nome completo';
                         reuNome.disabled = false;
@@ -445,7 +447,8 @@
                             || requestedProcess !== onlyDigits(processoInput?.value || '')
                             || reuNome.disabled || reuNome.style.display === 'none') return;
                         suggestionPending = false;
-                        const pessoas = (data && data.pessoas) ? data.pessoas : [];
+                        if (!data || !Array.isArray(data.pessoas)) throw new Error('Resposta inválida ao buscar pessoas.');
+                        const pessoas = data.pessoas;
                         if (pessoas.length > 0) {
                             showReuSelectSugestoes(pessoas, nome);
                         } else {

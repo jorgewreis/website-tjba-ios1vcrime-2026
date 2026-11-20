@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require __DIR__ . '/sandbox-guard.php';
+
 // Carrega somente configuração sintética, sem criar conexão de banco ou rede.
 $path = __DIR__ . '/.trusted-origin-' . bin2hex(random_bytes(12)) . '.runtime';
 $env = "APP_ENV=testing\nAUTH_TEST_ISOLATION=isolated-auth-test\nDB_HOST=127.0.0.1\nDB_PORT=1\nDB_NAME=auth_test_origin\nDB_USER=fixture\nDB_PASS=fixture\nMAIL_DRIVER=smtp\nMAIL_HOST=127.0.0.1\nMAIL_USER=fixture\nMAIL_ENCRYPTION=none\nMAIL_FROM_ADDRESS=fixture@auth-test.invalid\nAPP_URL=https://auth-test.invalid\n";

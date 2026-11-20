@@ -1,10 +1,372 @@
 # Changelog
 
+## V. 1.88.0015
+
+**Data:** 2026-11-20 20:36:47 | **Commit:** `2dd023cf` | **Tipo:** `patch`
+
+- merge: reconcile REI-126 explicit choice with origin/main
+
+## V. 1.88.0014
+
+**Data:** 2026-11-20 15:51:30 | **Commit:** `ae8c7d43` | **Tipo:** `patch`
+
+- fix(ci): validate installed WireGuard config only
+
+## V. 1.88.0013
+
+**Data:** 2026-11-20 15:47:19 | **Commit:** `9654ab41` | **Tipo:** `patch`
+
+- fix(ci): run WireGuard validation with explicit sudo
+
+## V. 1.88.0012
+
+**Data:** 2026-11-20 15:43:36 | **Commit:** `de7e73d2` | **Tipo:** `patch`
+
+- fix(ci): reveal sanitized WireGuard validation error
+
+## V. 1.88.0011
+
+**Data:** 2026-11-20 15:38:19 | **Commit:** `c35478b0` | **Tipo:** `patch`
+
+- chore(sync): merge latest main into deployment key fix
+
+## V. 1.88.0010
+
+**Data:** 2026-11-20 15:35:30 | **Commit:** `9a74caa2` | **Tipo:** `patch`
+
+- fix(ci): normalize WireGuard deployment key
+- fix(ci): validate WireGuard config after root install
+
+## V. 1.88.0009
+
+**Data:** 2026-11-20 15:18:50 | **Commit:** `61e43d48` | **Tipo:** `patch`
+
+- fix(ci): store WireGuard config with root permissions
+
+## V. 1.88.0008
+
+**Data:** 2026-11-20 15:06:06 | **Commit:** `86f0b54d` | **Tipo:** `patch`
+
+- fix(ci): use WireGuard for production deploy
+
+## V. 1.88.0007
+
+**Data:** 2026-11-20 14:52:07 | **Commit:** `55a6dd6d` | **Tipo:** `patch`
+
+- fix: resolve received letter comarca consistently
+
+## V. 1.88.0006
+
+**Data:** 2026-11-20 14:56:59 | **Commit:** `a082afda` | **Tipo:** `patch`
+
+- fix(footer): force credit metadata onto separate lines
+
+## V. 1.88.0005
+
+**Data:** 2026-11-20 14:46:11 | **Commit:** `7dd86e73` | **Tipo:** `patch`
+
+- fix(footer): show last successful deploy timestamp
+
+## V. 1.88.0004
+
+**Data:** 2026-11-20 14:14:40 | **Commit:** `f0a15d4d` | **Tipo:** `patch`
+
+- ci(deploy): preservar acesso WireGuard no firewall temporário
+
+## V. 1.88.0003
+
+**Data:** 2026-11-20 14:01:52 | **Commit:** `c85a9638` | **Tipo:** `patch`
+
+- ci(deploy): sincronizar firewall temporário Hostinger
+
+## V. 1.88.0002
+
+**Data:** 2026-11-20 13:52:35 | **Commit:** `bec23f45` | **Tipo:** `patch`
+
+- ci(deploy): permitir runner temporário no UFW
+
+## V. 1.88.0001
+
+**Data:** 2026-11-20 13:09:54 | **Commit:** `16c5f76d` | **Tipo:** `patch`
+
+- ci(deploy): add temporary Hostinger SSH allowlist
+
+## V. 1.87.0190
+
+**Data:** 2026-11-20 09:50:21 | **Commit:** `da820415` | **Tipo:** `patch`
+
+- test(REI-148): run mysql regressions in CI
+
+## Alteracao REI-148 - versao pendente
+
+**Data:** 2026-11-20 08:28:59 | **Commit:** `1836082a` | **Tipo:** `patch`
+
+- fix(REI-148): stabilize user pagination and counts
+
+## V. 1.87.0189
+
+**Data:** 2026-11-20 08:32:37 | **Commit:** `0707afae` | **Tipo:** `patch`
+
+- docs(REI-124): update isolated CI status
+
+## V. 1.87.0188
+
+**Data:** 2026-11-20 08:27:54 | **Commit:** `6ed7521a` | **Tipo:** `patch`
+
+- test(REI-124): isolate authentication and ata integration tests
+
+## V. 1.87.0187
+
+**Data:** 2026-11-19 21:03:50 | **Commits:** `20e78c24`, `4494e7de`, `7706055e` | **Tipo:** `patch`
+
+- test(REI-127): cover matching date with stale etag
+- test(REI-169): cover equal queue timestamps
+- fix(auth): prevent stale login after password reset
+
+## V. 1.87.0186
+
+**Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
+
+- fix(REI-120): make monitoring transitions atomic
+
+## V. 1.87.0185
+
+**Data:** 2026-11-17 11:19:22 | **Commit:** `2ab745ff` | **Tipo:** `patch`
+
+- fix(REI-159): abort guide when priority replace fails
+
+## V. 1.87.0184
+
+**Data:** 2026-11-17 05:33:49 | **Commit:** `aea3e451` | **Tipo:** `patch`
+
+- merge: sync Carta atomicity with current main
+
+## V. 1.87.0183
+
+**Data:** 2026-11-17 05:15:00 | **Commit:** `27a69ff1` | **Tipo:** `patch`
+
+- test(REI-80): exercise trusted origin helper
+
+## V. 1.87.0182
+
+**Data:** 2026-11-17 05:08:46 | **Commit:** `6d55da93` | **Tipo:** `patch`
+
+- test(REI-80): cover authorized enrollment success
+
+## V. 1.87.0181
+
+**Data:** 2026-11-17 05:07:40 | **Commit:** `a74ac77d` | **Tipo:** `patch`
+
+- test(REI-80): cover same-site hostile origin
+
+## V. 1.87.0180
+
+**Data:** 2026-11-17 04:01:04 | **Commit:** `d7ea35e9` | **Tipo:** `patch`
+
+- test(REI-75): cover revoked session mutations
+
+## V. 1.87.0179
+
+**Data:** 2026-11-17 03:22:50 | **Commits:** `a35fc88b`, `3b9fcfa5` | **Tipo:** `patch`
+
+- fix(REI-73): validate student enrollment guard
+- merge: sync REI-75 with main
+- fix(REI-141): honor explicit CCM confirmation
+
+## V. 1.87.0178
+
+**Data:** 2026-11-16 22:42:13 | **Commit:** `c26efa2e` | **Tipo:** `patch`
+
+- fix(guias): serializar inicializacao das subtarefas (REI-105)
+
+## V. 1.87.0177
+
+**Data:** 2026-11-16 22:08:44 | **Commit:** `9142de98` | **Tipo:** `patch`
+
+- test(REI-105): cover guide dispatch validations
+
+## V. 1.87.0176
+
+**Data:** 2026-11-16 22:07:00 | **Commit:** `13950b37` | **Tipo:** `patch`
+
+- fix(REI-105): make guide completion atomic
+
+## V. 1.87.0175
+
+**Data:** 2026-11-16 20:38:23 | **Commit:** `d269e165` | **Tipo:** `patch`
+
+- chore(REI-85): sync with current main
+
+## V. 1.87.0174
+
+**Data:** 2026-11-16 19:33:56 | **Commit:** `3e478b30` | **Tipo:** `patch`
+
+- fix(REI-115): make edital conclusion atomic
+
+## V. 1.87.0173
+
+**Data:** 2026-11-16 18:33:09 | **Commit:** `04896097` | **Tipo:** `patch`
+
+- fix(REI-114): use current reads after row locks
+
+## V. 1.87.0172
+
+**Data:** 2026-11-16 18:26:18 | **Commit:** `653273be` | **Tipo:** `patch`
+
+- test(REI-114): validate calculated date reconciliation totals
+
+## V. 1.87.0171
+
+**Data:** 2026-11-16 18:23:46 | **Commit:** `9dfe8966` | **Tipo:** `patch`
+
+- fix(REI-114): report date writes and keep reconciliation summary
+
+## V. 1.87.0170
+
+**Data:** 2026-11-16 18:11:55 | **Commit:** `1df186d6` | **Tipo:** `patch`
+
+- fix(REI-114): assert calendar lock wait and release
+
+## V. 1.87.0169
+
+**Data:** 2026-11-16 18:09:19 | **Commit:** `b88609a1` | **Tipo:** `patch`
+
+- fix(REI-114): serialize reconciliation with calendar updates
+
+## V. 1.87.0168
+
+**Data:** 2026-11-16 16:04:19 | **Commit:** `a9dc0a91` | **Tipo:** `patch`
+
+- test(REI-114): verify side-effect-free edital list
+
+## V. 1.87.0167
+
+**Data:** 2026-11-16 15:58:21 | **Commit:** `c40f24f2` | **Tipo:** `patch`
+
+- test(REI-114): exercise edital reconciliation over HTTP
+
+## V. 1.87.0166
+
+**Data:** 2026-11-16 15:51:35 | **Commit:** `d24c40c7` | **Tipo:** `patch`
+
+- fix(REI-114): validate reconciliation totals
+- fix(REI-122,REI-135): reconcile calendar atomically
+
+## V. 1.87.0165
+
+**Data:** 2026-11-16 16:34:26 | **Commits:** `1b27c384`, `c723c85f` | **Tipo:** `patch`
+
+- fix(REI-114): report reconciliation outcomes
+- fix(REI-161): ocultar metadados de pautas inelegiveis
+- test(REI-88): verify pauta rollback on isolated MySQL
+
+## V. 1.87.0164
+
+**Data:** 2026-11-16 06:16:54 | **Commit:** `2aec3c3b` | **Tipo:** `patch`
+
+- fix: restore verified auth sandbox entrypoints
+
+## V. 1.87.0163
+
+**Data:** 2026-11-16 05:24:56 | **Commit:** `db9327cb` | **Tipo:** `patch`
+
+- fix: require explicit monitoring person selection
+
+## V. 1.87.0162
+
+**Data:** 2026-11-16 05:11:34 | **Commit:** `4159489f` | **Tipo:** `patch`
+
+- fix: track reviewed SQL migrations
+
+## V. 1.87.0161
+
+**Data:** 2026-11-16 03:17:38 | **Commit:** `1c469531` | **Tipo:** `patch`
+
+- fix: sincronizar selecao de prioridade da pauta
+
+## V. 1.87.0160
+
+**Data:** 2026-11-16 03:11:01 | **Commit:** `af020b8f` | **Tipo:** `patch`
+
+- fix: atualizar painel apos pauta indisponivel
+
+## V. 1.87.0159
+
+**Data:** 2026-11-16 03:01:04 | **Commit:** `a5109794` | **Tipo:** `patch`
+
+- fix: normalizar data de decurso na exportacao
+
+## V. 1.87.0158
+
+**Data:** 2026-11-16 02:54:36 | **Commit:** `4d2e5898` | **Tipo:** `patch`
+
+- docs: inventariar migracoes e limites conhecidos
+
+## V. 1.87.0157
+
+**Data:** 2026-11-16 02:48:24 | **Commit:** `69d0c4e0` | **Tipo:** `patch`
+
+- docs: reconciliar escopo de tarefas e subtarefas
+
+## V. 1.87.0156
+
+**Data:** 2026-11-16 02:41:35 | **Commit:** `6fcc7d42` | **Tipo:** `patch`
+
+- docs: reconciliar comportamento de autenticacao
+
+## V. 1.87.0155
+
+**Data:** 2026-11-16 02:19:18 | **Commit:** `02d2b100` | **Tipo:** `patch`
+
+- fix: informar falhas na edicao de instituicoes
+
+## V. 1.87.0154
+
+**Data:** 2026-11-16 02:08:54 | **Commit:** `47c670a2` | **Tipo:** `patch`
+
+- fix: descartar horarios obsoletos da pauta
+
+## V. 1.87.0153
+
+**Data:** 2026-11-16 02:01:53 | **Commit:** `83657a18` | **Tipo:** `patch`
+
+- fix: versionar changelog no fluxo develop
+
+## V. 1.87.0152
+
+**Data:** 2026-11-16 00:29:30 | **Commit:** `809460ab` | **Tipo:** `patch`
+
+- docs: suspender instrucoes de sandbox nao verificado
+
+## V. 1.87.0151
+
+**Data:** 2026-11-16 00:23:53 | **Commit:** `36c0b036` | **Tipo:** `patch`
+
+- fix: validar comarca de cartas recebidas
+
+## V. 1.87.0150
+
+**Data:** 2026-11-16 00:09:24 | **Commit:** `51eccc0f` | **Tipo:** `patch`
+
+- fix: reconciliar agendamento de limpeza de usuarios
+
+## V. 1.87.0149
+
+**Data:** 2026-11-15 23:51:30 | **Commit:** `956c61fb` | **Tipo:** `patch`
+
+- docs: separar raiz publica do destino de deploy
+
+## V. 1.87.0148
+
+**Data:** 2026-11-15 23:19:51 | **Commit:** `2acdbc0d` | **Tipo:** `patch`
+
+- fix: preservar cronologia de monitoramento
+
 ## V. 1.87.0147
 
-**Data:** 2026-11-15 23:07:32 | **Commit:** `4f59897c` | **Tipo:** `patch`
+**Data:** 2026-11-15 23:11:42 | **Commit:** `a30e6dc8` | **Tipo:** `patch`
 
-- fix: exigir escolha explicita de reu no monitoramento
+- fix: bloquear testes auth sem sandbox comprovado
 
 ## V. 1.87.0146
 
@@ -7356,6 +7718,16 @@
 
 
 
+
+
+
+
+
+
+
+
+
+\n
 
 
 

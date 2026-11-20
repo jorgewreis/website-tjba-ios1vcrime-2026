@@ -76,7 +76,7 @@
                 ativo: !!global.document.getElementById('ativo')?.checked,
                 observacoes: String(global.document.getElementById('observacoes')?.value || '').trim() || null
             }).then(function (result) {
-                if (result.data && result.data.success) {
+                if (result.ok && result.data && result.data.success) {
                     if (typeof common.notifyByKey === 'function') {
                         common.notifyByKey(
                             'generic.link.update.success',

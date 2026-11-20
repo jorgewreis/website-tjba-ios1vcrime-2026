@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=UTF-8');
+header('Cache-Control: no-store');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
@@ -15,6 +16,7 @@ require_once $basePath . '/app/helpers/UserAccessHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasAtaService.php';
 require_once $basePath . '/app/helpers/PrioridadesProcessuaisCatalog.php';
 require_once $basePath . '/app/helpers/SalaAudienciasAtaSigiloHelper.php';
+require_once $basePath . '/app/helpers/SalaAudienciasEstudantePrivacidade.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -77,10 +79,8 @@ try {
 
     $pdo = Conection::getInstance()->getConnection();
     $marks = implode(',', array_fill(0, count($ids), '?'));
-    /*
-     * Os códigos bloqueantes devem espelhar
-     * PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante().
-     */
+    $codigosPrioridadeBloqueio = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
+    $marksPrioridade = implode(',', array_fill(0, count($codigosPrioridadeBloqueio), '?'));
     $sql = "SELECT a.`id_pauta`, a.`status`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                    " . SalaAudienciasAtaSigiloHelper::sqlProcessoSigilosoEfetivo('p', 'a') . " AS `processo_sigiloso`,
                    CASE WHEN i.`id` IS NOT NULL THEN 1 ELSE 0 END AS `ja_inscrito`,
@@ -89,19 +89,31 @@ try {
                    CASE WHEN EXISTS (
                         SELECT 1 FROM `processo_prioridades` pri
                         WHERE pri.`processo_id` = a.`processo`
-                          AND pri.`codigo` IN ('sigiloso', 'crianca_adolescente', 'violencia_domestica')
+                          AND pri.`codigo` IN ($marksPrioridade)
                    ) THEN 1 ELSE 0 END AS `tem_prioridade_bloqueio`
             FROM `sala_audiencias_pauta` a
             LEFT JOIN `processos` p ON p.`id` = a.`processo`
             LEFT JOIN `sala_audiencias_estudante_inscricao` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = ?
             WHERE a.`ativo` = 1 AND a.`id_pauta` IN ($marks)";
     $st = $pdo->prepare($sql);
-    $st->bindValue(1, $usuarioId);
-    foreach ($ids as $i => $id) {
-        $st->bindValue($i + 2, $id);
+    if ($st === false) {
+        throw new RuntimeException('Falha ao preparar consulta.');
     }
-    $st->execute();
-    $rows = $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    foreach ($codigosPrioridadeBloqueio as $i => $codigo) {
+        $st->bindValue($i + 1, $codigo);
+    }
+    $indiceUsuario = count($codigosPrioridadeBloqueio) + 1;
+    $st->bindValue($indiceUsuario, $usuarioId);
+    foreach ($ids as $i => $id) {
+        $st->bindValue($indiceUsuario + $i + 1, $id);
+    }
+    if (!$st->execute()) {
+        throw new RuntimeException('Falha ao executar consulta.');
+    }
+    $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+    if ($rows === false) {
+        throw new RuntimeException('Falha ao consultar pautas.');
+    }
 
     $items = [];
     $agoraStatusTs = time();
@@ -127,6 +139,10 @@ try {
         $sigiloso = (int) ($r['processo_sigiloso'] ?? 0) !== 0;
         $envolveMenor = (int) ($r['qtd_menor'] ?? 0) > 0;
         $temPrioridadeBloqueio = (int) ($r['tem_prioridade_bloqueio'] ?? 0) !== 0;
+        if (SalaAudienciasEstudantePrivacidade::indisponivel($r)) {
+            $items[$id] = SalaAudienciasEstudantePrivacidade::respostaIndisponivel($id);
+            continue;
+        }
         $vagasEsgotadas = $totalIns >= SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
         $podeInscrever = !$jaInscrito
             && !$vagasEsgotadas
@@ -141,16 +157,13 @@ try {
             'data_hora_inicio_efetivo' => trim((string) ($r['data_hora_inicio_efetivo'] ?? '')),
             'data_hora_fim_efetivo' => trim((string) ($r['data_hora_fim_efetivo'] ?? '')),
             'duracao_estimada_minutos' => (int) ($r['duracao_estimada_minutos'] ?? 0),
-            'processo_sigiloso' => $sigiloso,
             'ja_inscrito' => $jaInscrito,
-            'envolve_menor' => $envolveMenor,
-            'tem_prioridade_bloqueio' => $temPrioridadeBloqueio,
             'vagas_esgotadas' => $vagasEsgotadas,
             'total_inscritos_pauta' => $totalIns,
             'pode_inscrever' => $podeInscrever,
         ];
     }
-    echo json_encode(['success' => true, 'items' => $items], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => true, 'items' => (object) $items, 'completo' => true, 'consultados' => $ids], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Erro ao consultar status.'], JSON_UNESCAPED_UNICODE);

@@ -41,29 +41,126 @@ final class ComarcasRepository
      * Busca a primeira comarca cujo nome ou cidade coincida com o termo (normalizado, sem acento).
      * Retorna ['id', 'uf', 'nome', 'cidade'] ou null.
      */
-    public function findFirstByNomeOuCidade(string $nomeOuCidade): ?array
+    public function findFirstByNomeOuCidade(string $nomeOuCidade, ?string $uf = null, ?string $tribunalId = null): ?array
     {
         $term = $this->normalizeNomeCidade($nomeOuCidade);
         if ($term === '') {
             return null;
         }
 
+        $uf = $uf === null ? '' : strtoupper(trim($uf));
+        if ($uf !== '' && !preg_match('/^[A-Z]{2}$/D', $uf)) {
+            return null;
+        }
+        $tribunalId = $tribunalId === null ? '' : trim($tribunalId);
+        $where = [];
+        if ($uf !== '') $where[] = '`uf` = :uf';
+        if ($tribunalId !== '') $where[] = '`tribunal_id` = :tribunal';
         $statement = $this->connection->prepare(
             sprintf(
-                'SELECT `id`, `tribunal_id`, `uf`, `nome`, `cidade`, `status_cidade`, `created_at`, `updated_at` FROM `%s`',
-                $this->table
+                'SELECT `id`, `tribunal_id`, `uf`, `nome`, `cidade`, `status_cidade`, `created_at`, `updated_at` FROM `%s`%s',
+                $this->table,
+                $where === [] ? '' : ' WHERE ' . implode(' AND ', $where)
             )
         );
+        if ($uf !== '') $statement->bindValue(':uf', $uf);
+        if ($tribunalId !== '') $statement->bindValue(':tribunal', $tribunalId);
         $statement->execute();
 
+        $matchesCidade = [];
+        $matchesNome = [];
         while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
             $nomeNorm = $this->normalizeNomeCidade((string) ($row['nome'] ?? ''));
             $cidadeNorm = $this->normalizeNomeCidade((string) ($row['cidade'] ?? ''));
-            if ($nomeNorm === $term || $cidadeNorm === $term) {
+            if ($uf === '' && ($nomeNorm === $term || $cidadeNorm === $term)) {
                 return $row;
             }
+            if ($cidadeNorm === $term) $matchesCidade[] = $row;
+            elseif ($nomeNorm === $term) $matchesNome[] = $row;
         }
-        return null;
+        $matches = $matchesCidade !== [] ? $matchesCidade : $matchesNome;
+        return count($matches) === 1 ? $matches[0] : null;
+    }
+
+    /** Resolve uma cidade agregada à sua sede, sem escolher entre sedes ambíguas. */
+    public function resolverSede(array $row, bool $bloquear = false): ?array
+    {
+        if (mb_strtolower(trim((string) ($row['status_cidade'] ?? '')), 'UTF-8') !== 'agregada') return $row;
+        $nome = $this->normalizeNomeCidade((string) ($row['nome'] ?? ''));
+        $tribunal = trim((string) ($row['tribunal_id'] ?? ''));
+        $uf = strtoupper(trim((string) ($row['uf'] ?? '')));
+        if ($nome === '' || $tribunal === '' || !preg_match('/^[A-Z]{2}$/D', $uf)) return null;
+        $statement = $this->connection->prepare(sprintf(
+            'SELECT `id`, `tribunal_id`, `uf`, `nome`, `cidade`, `status_cidade` FROM `%s` WHERE `tribunal_id` = :tribunal AND `uf` = :uf',
+            $this->table
+        ));
+        $statement->execute([':tribunal' => $tribunal, ':uf' => $uf]);
+        $candidates = [];
+        while (($candidate = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            if (mb_strtolower(trim((string) ($candidate['status_cidade'] ?? '')), 'UTF-8') !== 'agregada'
+                && $this->normalizeNomeCidade((string) ($candidate['nome'] ?? '')) === $nome
+                && $this->normalizeNomeCidade((string) ($candidate['cidade'] ?? '')) === $nome) $candidates[] = $candidate;
+        }
+        if (count($candidates) !== 1) return null;
+        if (!$bloquear) return $candidates[0];
+        $lock = $this->connection->prepare(sprintf(
+            'SELECT `id`, `tribunal_id`, `uf`, `nome`, `cidade`, `status_cidade` FROM `%s` WHERE `id` = :id LIMIT 1 FOR UPDATE',
+            $this->table
+        ));
+        $lock->execute([':id' => $candidates[0]['id']]);
+        $candidate = $lock->fetch(PDO::FETCH_ASSOC);
+        if ($candidate === false || (string) ($candidate['tribunal_id'] ?? '') !== $tribunal
+            || strtoupper(trim((string) ($candidate['uf'] ?? ''))) !== $uf
+            || mb_strtolower(trim((string) ($candidate['status_cidade'] ?? '')), 'UTF-8') === 'agregada'
+            || $this->normalizeNomeCidade((string) ($candidate['nome'] ?? '')) !== $nome
+            || $this->normalizeNomeCidade((string) ($candidate['cidade'] ?? '')) !== $nome) return null;
+        return $candidate;
+    }
+
+    public function existeNomeOuCidade(string $nomeOuCidade, string $uf, ?string $tribunalId = null): bool
+    {
+        $term = $this->normalizeNomeCidade($nomeOuCidade);
+        $uf = strtoupper(trim($uf));
+        if ($term === '' || !preg_match('/^[A-Z]{2}$/D', $uf)) return false;
+        $tribunalId = $tribunalId === null ? '' : trim($tribunalId);
+        $statement = $this->connection->prepare(sprintf('SELECT `nome`, `cidade` FROM `%s` WHERE `uf` = :uf%s', $this->table, $tribunalId === '' ? '' : ' AND `tribunal_id` = :tribunal'));
+        $params = [':uf' => $uf];
+        if ($tribunalId !== '') $params[':tribunal'] = $tribunalId;
+        $statement->execute($params);
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            if ($this->normalizeNomeCidade((string) ($row['nome'] ?? '')) === $term || $this->normalizeNomeCidade((string) ($row['cidade'] ?? '')) === $term) return true;
+        }
+        return false;
+    }
+
+    public function resolverCidadeUf(string $id, string $cidade, string $uf, bool $bloquear = false): ?array
+    {
+        $cidade = $this->normalizeNomeCidade($cidade);
+        $uf = strtoupper(trim($uf));
+        if (trim($id) === '' || $cidade === '' || !preg_match('/^[A-Z]{2}$/D', $uf)) return null;
+        $statement = $this->connection->prepare(sprintf(
+            'SELECT `id`, `tribunal_id`, `uf`, `nome`, `cidade`, `status_cidade` FROM `%s` WHERE `id` = :id LIMIT 1%s',
+            $this->table,
+            $bloquear ? ' FOR UPDATE' : ''
+        ));
+        $statement->bindValue(':id', trim($id));
+        $statement->execute();
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ($row === false || strtoupper(trim((string) $row['uf'])) !== $uf
+            || ($this->normalizeNomeCidade((string) ($row['nome'] ?? '')) !== $cidade && $this->normalizeNomeCidade((string) ($row['cidade'] ?? '')) !== $cidade)) return null;
+        return $this->resolverSede($row, $bloquear);
+    }
+
+    public function correspondeIdCidadeUf(string $id, string $cidade, string $uf): bool
+    {
+        if (trim($id) === '' || trim($cidade) === '' || strlen(trim($uf)) !== 2) return false;
+        $statement = $this->connection->prepare(sprintf('SELECT `uf`, `nome`, `cidade` FROM `%s` WHERE `id` = :id', $this->table));
+        $statement->bindValue(':id', trim($id));
+        $statement->execute();
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if ($row === false || strtoupper(trim((string) $row['uf'])) !== strtoupper(trim($uf))) return false;
+        $term = $this->normalizeNomeCidade($cidade);
+        return $term === $this->normalizeNomeCidade((string) $row['nome']) || $term === $this->normalizeNomeCidade((string) ($row['cidade'] ?? ''));
     }
 
     private function normalizeNomeCidade(string $s): string
