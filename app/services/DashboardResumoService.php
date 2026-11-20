@@ -122,9 +122,13 @@ final class DashboardResumoService
                         $count=(int)$row['total'];$moduleCount+=$count;$date=$row['oldest']??null;
                         $isSending=$key==='cartas_expedidas'&&$row['tipo']==='aguardando_envio';
                         $isReturning=$key==='cartas_recebidas'&&$row['tipo']==='devolucao';
-                        if($count>0&&$date&&($isSending||$isReturning)&&($oldest===null||$date<$oldest)){
-                            $oldest=$date;
-                            $oldestLabel=$isSending?'Cartas Expedidas aguardando envio':'Cartas Recebidas aguardando devolução';
+                        if($count>0&&$date&&($isSending||$isReturning)){
+                            [$oldest,$oldestLabel]=self::selectOldestQueue(
+                                $oldest,
+                                $oldestLabel,
+                                (string)$date,
+                                $isSending?'Cartas Expedidas aguardando envio':"Cartas Recebidas aguardando devolu\u{00e7}\u{00e3}o"
+                            );
                         }
                         if($isReturning&&$count>0)$oldestReturns=$date;
                         $queues[]=['key'=>$key,'type'=>$row['tipo'],'label'=>$meta['types'][$row['tipo']]??$key,'count'=>$count,'route'=>$meta['route']];
@@ -217,6 +221,15 @@ final class DashboardResumoService
         return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'semana'=>['labels'=>$weeklyLabels,'expedidas'=>$weeklyLetters['expedidas'],'recebidas'=>$weeklyLetters['recebidas']]],'oficios_cadastrados'=>['ano'=>['cartorio'=>$officesRegistered['cartorio'],'gabinete'=>$officesRegistered['gabinete']],'semana'=>['labels'=>$weeklyLabels,'cartorio'=>$weeklyOffices['cartorio'],'gabinete'=>$weeklyOffices['gabinete']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'prazos_vencidos'=>$overdueDeadlines,'prazos_vencidos_dias'=>['expedidas'=>$mostOverdueExpedidaDays,'recebidas'=>$mostOverdueRecebidaDays],'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'alertas'=>$alerts,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors];
     }
 
+    /** @return array{0: ?string, 1: ?string} */
+    private static function selectOldestQueue(?string $oldest, ?string $oldestLabel, string $candidateDate, string $candidateLabel): array
+    {
+        if ($oldest === null || $candidateDate < $oldest) {
+            return [$candidateDate, $candidateLabel];
+        }
+        return [$oldest, $oldestLabel];
+    }
+
     private function letterAlerts(?string $oldest,?string $label,?int $returns,?string $oldestReturns,?int $deadlines,?string $nearestDeadline,?int $mostOverdueExpedidaDays): array
     {
         $alerts=[];
@@ -228,7 +241,25 @@ final class DashboardResumoService
         }
         if($oldest!==null){
             $days=max(0,(int)(new DateTimeImmutable($oldest))->setTime(0,0)->diff(new DateTimeImmutable('today'))->format('%r%a'));
-            $alerts[]=['key'=>'fila_mais_antiga','label'=>'Cartas Expedidas','detail'=>'aguardando envio','value'=>$days,'unit'=>'days','color'=>'purple','priority'=>1,'date'=>$oldest,'order'=>1];
+            $alertLabel = 'Cartas Expedidas';
+            $alertDetail = 'aguardando envio';
+            $separator = ' aguardando ';
+            $separatorPosition = $label !== null ? strpos($label, $separator) : false;
+            if ($separatorPosition !== false) {
+                $alertLabel = substr($label, 0, $separatorPosition);
+                $alertDetail = 'aguardando ' . substr($label, $separatorPosition + strlen($separator));
+            }
+            $alerts[] = [
+                'key' => 'fila_mais_antiga',
+                'label' => $alertLabel,
+                'detail' => $alertDetail,
+                'value' => $days,
+                'unit' => 'days',
+                'color' => 'purple',
+                'priority' => 1,
+                'date' => $oldest,
+                'order' => 1,
+            ];
         }
         if($returns!==null&&$returns>0){
             $alerts[]=['key'=>'devolucoes_aguardando','label'=>'Devoluções aguardando','detail'=>'Cartas Recebidas','value'=>$returns,'unit'=>'count','color'=>'mint','priority'=>1,'date'=>$oldestReturns??'9999-12-31','order'=>2];
