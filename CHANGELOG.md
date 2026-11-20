@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0013
+
+**Data:** 2026-11-20 15:47:19 | **Commit:** `9654ab41` | **Tipo:** `patch`
+
+- fix(ci): run WireGuard validation with explicit sudo
+
 ## V. 1.88.0012
 
 **Data:** 2026-11-20 15:43:36 | **Commit:** `de7e73d2` | **Tipo:** `patch`
@@ -7710,6 +7716,7 @@
 
 
 \n
+
 
 
 
