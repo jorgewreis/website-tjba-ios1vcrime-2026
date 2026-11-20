@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../services/SalaAudienciasAtaService.php';
 require_once __DIR__ . '/../../models/Usuario.php';
 require_once __DIR__ . '/../../helpers/UserAccessHelper.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
+require_once __DIR__ . '/../../helpers/SalaAudienciasEstudantePrivacidade.php';
 
 $userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
 $usuarioModel = new Usuario();
@@ -24,7 +25,8 @@ $podeInscricaoComoEstudante = UserAccessHelper::isUsuarioExterno($perfilsUsuario
 $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
 $minhasRows = $userId !== '' ? $service->listMinhasInscricoesEstudante($userId) : [];
 $minhasRows = array_values(array_filter($minhasRows, static function (array $row): bool {
-    return !SalaAudienciasAtaService::ocultarDaListagemAtasPorPrazoSemDownload($row);
+    return SalaAudienciasEstudantePrivacidade::indisponivel($row)
+        || !SalaAudienciasAtaService::ocultarDaListagemAtasPorPrazoSemDownload($row);
 }));
 $itemsPerPage = 15;
 if (!in_array($itemsPerPage, [15], true)) {
@@ -134,6 +136,9 @@ if ($totalPages > 0) {
 
         <?php $processo_bloco_variant = 'estudantes'; ?>
         <?php foreach ($rowsPage as $m):
+            if (SalaAudienciasEstudantePrivacidade::indisponivel($m)): ?>
+        <div class="display-flex col col-full register border-bottom"><p class="padding-x-lg padding-y-md">Audiência indisponível.</p></div>
+        <?php continue; endif;
             $arquivoRelEst = trim((string) ($m['arquivo_relativo'] ?? ''));
             $expira = trim((string) ($m['expires_at'] ?? ''));
             $expiraTs = $expira !== '' ? strtotime($expira) : false;
