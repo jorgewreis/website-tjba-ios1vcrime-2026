@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0189
+
+**Data:** 2026-11-19 21:25:50 | **Commit:** `a2cb752c` | **Tipo:** `patch`
+
+- chore: sync main into REI-73 evidence branch
+
 ## V. 1.87.0188
 
 **Data:** 2026-11-19 19:02:19 | **Commit:** `fbb64a64` | **Tipo:** `patch`
@@ -11,6 +17,13 @@
 **Data:** 2026-11-19 18:31:21 | **Commit:** `0f961ec6` | **Tipo:** `patch`
 
 - docs(REI-73): reconcile live blocker matrix
+
+## V. 1.87.0187
+
+**Data:** 2026-11-19 20:36:07 | **Commits:** `20e78c24`, `7706055e` | **Tipo:** `patch`
+
+- test(REI-127): cover matching date with stale etag
+- fix(auth): prevent stale login after password reset
 
 ## V. 1.87.0186
 
@@ -7617,6 +7630,7 @@
 
 
 \n
+
 
 
 
