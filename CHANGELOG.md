@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0190
+
+**Data:** 2026-11-20 09:04:31 | **Commit:** `beb5d477` | **Tipo:** `patch`
+
+- fix(REI-155): invalidate reset links on password change
+
 ## V. 1.87.0189
 
 **Data:** 2026-11-20 08:32:37 | **Commit:** `0707afae` | **Tipo:** `patch`
@@ -7624,6 +7630,7 @@
 
 
 \n
+
 
 
 

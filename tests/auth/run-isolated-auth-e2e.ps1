@@ -23,7 +23,13 @@ if ($LASTEXITCODE -ne 0 -or $contextInfo.Endpoints.docker.Host -notin @('npipe:/
 $mysql = $mailpit = $app = $client = $null; $cleanupFailed = $false; $networkAttempted = $false; $creationPending = $false;
 . (Join-Path $PSScriptRoot 'cleanup-owned.ps1')
 $executionFailure = $null; $guardToken = $null
-function D([string[]]$a) { $o = & docker --context $dockerContext @a 2>&1; if ($LASTEXITCODE -ne 0) { throw "Docker falhou: $($o -join ' ')" }; return $o }
+. (Join-Path $PSScriptRoot 'rei155-safe-diagnostic.ps1')
+function D([string[]]$a) {
+    $prior = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
+    try { $o = & docker --context $dockerContext @a 2>&1; $code = $LASTEXITCODE } finally { $ErrorActionPreference = $prior }
+    if ($code -ne 0) { throw (Format-AuthDockerFailure ([string]$a[0]) $code $o) }
+    return $o
+}
 function Id([string]$v, [string]$what) { if ($v -notmatch '^[a-f0-9]{64}$') { throw "ID inválido: $what" }; $v }
 function Secret {
     $b = [byte[]]::new(32)
@@ -72,7 +78,7 @@ function Run-AppTest([string]$testFile, [string[]]$arguments = @()) {
         if ($testExitCode -ne 0) { throw "Falha em $testFile (exit=$testExitCode; detalhes suprimidos para evitar exposição de tokens)." }
         return
     }
-    App (@('php', "/workspace/tests/auth/$testFile") + $arguments) | Out-Null
+    App (@('php', '-d', 'error_log=/tmp/auth-fixture-error.log', "/workspace/tests/auth/$testFile") + $arguments) | Out-Null
 }
 try {
     $required=@('app','config','public','vendor','services','tests/auth')
@@ -129,6 +135,10 @@ try {
     Run-AppTest 'fixture-setup.test.php'
     Run-AppTest 'auth-fixtures.test.php'
     Run-AppTest 'login-rate-limit.test.php'
+    Run-AppTest 'rei155-password-change.test.php'
+    Run-AppTest 'rei155-legacy-denied.test.php'
+    Run-AppTest 'rei155-nontransactional.test.php'
+    Run-AppTest 'rei155-metadata-lock.test.php'
     Run-AppTest 'rei171-login-reset-race.test.php'
     Run-AppTest 'reset-token-concurrency.test.php'
     Run-AppTest 'smtp-capture.test.php'

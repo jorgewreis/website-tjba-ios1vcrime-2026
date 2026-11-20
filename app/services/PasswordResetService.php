@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/Conection.php';
+require_once __DIR__ . '/../helpers/PasswordResetTransactionalGuard.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/SmtpTransactionalMailer.php';
 require_once __DIR__ . '/LoginRateLimiter.php';
@@ -18,6 +19,12 @@ final class PasswordResetService
     public function __construct()
     {
         $this->pdo = Conection::getInstance()->getConnection();
+    }
+
+    /** Prepara o armazenamento antes de abrir a transação da troca de senha. */
+    public function prepareResetStorage(): bool
+    {
+        return $this->ensureStorage();
     }
 
     /**
@@ -81,11 +88,16 @@ final class PasswordResetService
         $tokenHash = Security::hashAccessToken($plainToken);
         $resetId = $this->generateId('REC');
         $resetUrl = $this->buildResetUrl($plainToken);
-        $expiresAt = date('Y-m-d H:i:s', time() + PASSWORD_RESET_TOKEN_TTL_SECONDS);
         $ip = Security::getClientIp();
 
         try {
             $this->pdo->beginTransaction();
+            PasswordResetTransactionalGuard::requireTransactionalTables($this->pdo, false);
+            $lockUser = $this->pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ? FOR UPDATE');
+            $lockUser->execute([$user['id_usuario']]);
+            if ($lockUser->fetchColumn() === false) {
+                throw new RuntimeException('Usuário indisponível para recuperação.');
+            }
             $invalidateStmt = $this->pdo->prepare("
                 UPDATE " . self::TABLE . "
                    SET usado = 1
@@ -98,10 +110,10 @@ final class PasswordResetService
                 INSERT INTO " . self::TABLE . " (
                     id_recuperacao, usuario, token, expira_em, usado, ip, data_solicitacao
                 ) VALUES (
-                    ?, ?, ?, ?, 0, ?, NOW()
+                    ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? SECOND), 0, ?, NOW()
                 )
             ");
-            $insertStmt->execute([$resetId, $user['id_usuario'], $tokenHash, $expiresAt, $ip]);
+            $insertStmt->execute([$resetId, $user['id_usuario'], $tokenHash, PASSWORD_RESET_TOKEN_TTL_SECONDS, $ip]);
             $this->pdo->commit();
 
             $sendResult = $this->sendEmail((string) $user['email'], (string) $user['nome'], $resetUrl);
@@ -151,6 +163,9 @@ final class PasswordResetService
      */
     public function resetPassword(string $plainToken, string $novaSenha): array
     {
+        if (!$this->ensureStorage()) {
+            return ['success' => false, 'message' => 'Não foi possível redefinir a senha. Tente novamente.'];
+        }
         $policy = Security::validatePasswordPolicy($novaSenha);
         if (($policy['valid'] ?? false) !== true) {
             return ['success' => false, 'message' => $policy['message'] ?? 'Senha inválida.'];
@@ -159,9 +174,22 @@ final class PasswordResetService
         $tokenHash = Security::hashAccessToken($plainToken);
         $passwordHash = Security::hashPassword($novaSenha);
 
+        // Descobrir o titular antes de travar; o token é revalidado sob lock abaixo.
+        $lookup = $this->pdo->prepare('SELECT usuario FROM ' . self::TABLE . ' WHERE token = ? LIMIT 1');
+        $lookup->execute([$tokenHash]);
+        $candidateUser = $lookup->fetchColumn();
+        if (!is_string($candidateUser) || $candidateUser === '') {
+            return ['success' => false, 'message' => 'O link de redefinição é inválido ou expirou.'];
+        }
         $this->pdo->beginTransaction();
 
         try {
+            PasswordResetTransactionalGuard::requireTransactionalTables($this->pdo);
+            $lockUser = $this->pdo->prepare('SELECT id_usuario FROM usuarios WHERE id_usuario = ? FOR UPDATE');
+            $lockUser->execute([$candidateUser]);
+            if ($lockUser->fetchColumn() === false) {
+                throw new RuntimeException('Usuário da redefinição não encontrado.');
+            }
             // A linha é travada antes de qualquer efeito. Uma segunda requisição
             // concorrente só a verá depois do commit, já marcada como utilizada.
             $resetRequest = $this->lockValidResetRequest($tokenHash);
@@ -171,7 +199,7 @@ final class PasswordResetService
             }
 
             $userId = trim((string) ($resetRequest['usuario'] ?? ''));
-            if ($userId === '') {
+            if ($userId === '' || $userId !== $candidateUser) {
                 $this->pdo->rollBack();
                 return ['success' => false, 'message' => 'Usuário da redefinição não encontrado.'];
             }
@@ -250,6 +278,10 @@ final class PasswordResetService
 
     private function ensureStorage(): bool
     {
+        // Preparação pode emitir DDL com commit implícito; jamais invadir transação do chamador.
+        if ($this->pdo->inTransaction()) {
+            return false;
+        }
         if ($this->storageChecked) {
             return $this->storageReady;
         }
@@ -257,6 +289,14 @@ final class PasswordResetService
         $this->storageChecked = true;
 
         try {
+            PasswordResetTransactionalGuard::withBoundedMetadataWait($this->pdo, function (): void {
+            $caseMode = (string)$this->pdo->query('SELECT @@lower_case_table_names')->fetchColumn();
+            if (!in_array($caseMode, ['0', '1', '2'], true)) throw new RuntimeException('Modo de nomes de tabela inválido.');
+            $schemaExpr = $caseMode === '0' ? 'BINARY TABLE_SCHEMA = BINARY DATABASE()' : 'BINARY LOWER(TABLE_SCHEMA) = BINARY LOWER(DATABASE())';
+            $singleNameExpr = $caseMode === '0' ? 'BINARY TABLE_NAME = BINARY ?' : 'BINARY LOWER(TABLE_NAME) = BINARY LOWER(?)';
+            $exists = $this->pdo->prepare('SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE ' . $schemaExpr . ' AND ' . $singleNameExpr . " AND TABLE_TYPE = 'BASE TABLE'");
+            $exists->execute([self::TABLE]);
+            if ($exists->fetchColumn() === false) {
             $this->pdo->exec(
                 "CREATE TABLE IF NOT EXISTS " . self::TABLE . " (
                     id_recuperacao CHAR(30) NOT NULL PRIMARY KEY,
@@ -271,9 +311,25 @@ final class PasswordResetService
                     INDEX idx_expira (expira_em)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
             );
+            }
+
+            $caseMode = (string)$this->pdo->query('SELECT @@lower_case_table_names')->fetchColumn();
+            if (!in_array($caseMode, ['0', '1', '2'], true)) throw new RuntimeException('Modo de nomes de tabela inválido.');
+            $schemaExpr = $caseMode === '0' ? 'BINARY TABLE_SCHEMA = BINARY DATABASE()' : 'BINARY LOWER(TABLE_SCHEMA) = BINARY LOWER(DATABASE())';
+            $nameExpr = $caseMode === '0' ? "BINARY TABLE_NAME IN (BINARY 'usuarios', BINARY 'recuperacao_senha')" : "BINARY LOWER(TABLE_NAME) IN (BINARY 'usuarios', BINARY 'recuperacao_senha')";
+            $engines = $this->pdo->prepare("SELECT TABLE_NAME, ENGINE FROM INFORMATION_SCHEMA.TABLES WHERE $schemaExpr AND $nameExpr AND TABLE_TYPE = 'BASE TABLE'");
+            $engines->execute();
+            $found = [];
+            while ($row = $engines->fetch(PDO::FETCH_ASSOC)) {
+                $tableName = (string) $row['TABLE_NAME'];
+                $found[PasswordResetTransactionalGuard::normalizeMetadataTableName($tableName, $caseMode)] = strtoupper((string) $row['ENGINE']);
+            }
+            if (($found['usuarios'] ?? '') !== 'INNODB' || ($found[self::TABLE] ?? '') !== 'INNODB') {
+                throw new RuntimeException('Tabelas de autenticação exigem InnoDB para atomicidade.');
+            }
 
             $this->upgradeRecuperacaoSenhaSchemaIfNeeded();
-
+            });
             $this->storageReady = true;
         } catch (Throwable $e) {
             error_log('PasswordResetService: armazenamento indisponível: ' . $e->getMessage());
@@ -296,17 +352,16 @@ final class PasswordResetService
                 return;
             }
 
-            $stmt = $this->pdo->prepare(
-                'SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH
-                   FROM INFORMATION_SCHEMA.COLUMNS
-                  WHERE TABLE_SCHEMA = ?
-                    AND TABLE_NAME = ?'
-            );
+            $caseMode = (string)$this->pdo->query('SELECT @@lower_case_table_names')->fetchColumn();
+            if (!in_array($caseMode, ['0', '1', '2'], true)) throw new RuntimeException('Modo de nomes de tabela inválido.');
+            $schemaExpr = $caseMode === '0' ? 'BINARY TABLE_SCHEMA = BINARY ?' : 'BINARY LOWER(TABLE_SCHEMA) = BINARY LOWER(?)';
+            $nameExpr = $caseMode === '0' ? 'BINARY TABLE_NAME = BINARY ?' : 'BINARY LOWER(TABLE_NAME) = BINARY LOWER(?)';
+            $stmt = $this->pdo->prepare('SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE ' . $schemaExpr . ' AND ' . $nameExpr);
             $stmt->execute([$dbName, self::TABLE]);
             $cols = [];
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 if (is_array($row) && isset($row['COLUMN_NAME'])) {
-                    $cols[(string) $row['COLUMN_NAME']] = $row;
+                    $cols[strtolower((string) $row['COLUMN_NAME'])] = $row;
                 }
             }
 
@@ -348,6 +403,7 @@ final class PasswordResetService
             }
         } catch (Throwable $e) {
             error_log('PasswordResetService: upgrade schema recuperacao_senha: ' . $e->getMessage());
+            throw $e;
         }
     }
 

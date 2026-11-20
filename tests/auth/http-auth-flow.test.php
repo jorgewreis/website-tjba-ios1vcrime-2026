@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . "/sandbox-guard.php";
+set_exception_handler(static function (Throwable $e): void { echo "HTTP_DIAG: " . ($GLOBALS['phase'] ?? 'unknown') . " " . get_class($e) . " code=" . (string)$e->getCode() . PHP_EOL; exit(1); });
 
 function fail(string $m): never { fwrite(STDERR, "FAIL http-auth-flow: $m\n"); exit(1); }
 function ok(bool $v, string $m): void { if (!$v) fail($m); }
@@ -31,13 +32,35 @@ function request(string $host, int $port, string $path, string $method = 'GET', 
     if ($raw === false || !str_contains($raw, "\r\n\r\n")) fail("resposta HTTP inválida: $path");
     [$head, $content] = explode("\r\n\r\n", $raw, 2);
     $received = explode("\r\n", $head);
+    foreach ($received as $header) {
+        if (preg_match('/^Transfer-Encoding:\s*(.+)$/i', $header, $encoding)) {
+            $codings = array_map(static fn(string $v): string => strtolower(trim($v)), explode(',', $encoding[1]));
+            if ($codings !== ['chunked']) fail('transfer encoding não suportado');
+            $decoded = ''; $offset = 0; $length = strlen($content);
+            while (true) {
+                $end = strpos($content, "\r\n", $offset);
+                if ($end === false) fail('chunk HTTP inválido');
+                $line = explode(';', substr($content, $offset, $end - $offset), 2)[0];
+                if ($line === '' || !ctype_xdigit($line)) fail('tamanho de chunk inválido');
+                $size = hexdec($line); $offset = $end + 2;
+                if ($size === 0) {
+                    $trailers = substr($content, $offset);
+                    if (!preg_match('/\A(?:[!#$%&\x27*+.^_`|~0-9A-Za-z-]+:[^\r\n]*\r\n)*\r\n\z/D', $trailers)) fail('final de chunk inválido');
+                    break;
+                }
+                if ($size > $length - $offset - 2 || substr($content, $offset + $size, 2) !== "\r\n") fail('chunk HTTP incompleto');
+                $decoded .= substr($content, $offset, $size); $offset += $size + 2;
+            }
+            $content = $decoded; break;
+        }
+    }
     preg_match('#\\s(\\d{3})\\s#', $received[0] ?? '', $status);
     return ['status' => (int)($status[1] ?? 0), 'headers' => $received, 'body' => $content];
 }
 function req(string $path, string $method = 'GET', array $fields = [], string $cookie = '', bool $json = false): array { return request('app', 8080, $path, $method, $fields, $cookie, $json); }
 function sessionCookie(array $headers): string { foreach ($headers as $h) if (stripos($h, 'Set-Cookie: PHPSESSID=') === 0 && preg_match('/PHPSESSID=([^;]+)/', $h, $m)) return 'PHPSESSID=' . $m[1]; fail('cookie de sessão ausente'); }
 function refreshedSessionCookie(array $headers, string $fallback): string { foreach ($headers as $h) if (stripos($h, 'Set-Cookie: PHPSESSID=') === 0 && preg_match('/PHPSESSID=([^;]+)/', $h, $m)) return 'PHPSESSID=' . $m[1]; return $fallback; }
-function mails(): int { return count(json_decode(request('mailpit', 8025, '/api/v1/messages')['body'], true, flags: JSON_THROW_ON_ERROR)['messages'] ?? []); }
+function mails(): int { $GLOBALS['phase'] = 'mail_json'; return count(json_decode(request('mailpit', 8025, '/api/v1/messages')['body'], true, flags: JSON_THROW_ON_ERROR)['messages'] ?? []); }
 
 $form = req('/views/public/login-form.php'); $loginCsrf = csrf($form['body']); $loginCookie = sessionCookie($form['headers']);
 $invalid = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12345','csrf_token'=>'invalid'], $loginCookie);
@@ -71,6 +94,7 @@ ok($badReset['status'] === 419 && mails() === $before, 'reset com CSRF inválido
 $known = req('/envia_mail.php', 'POST', ['cpf'=>'52998224725','email'=>'ativo@auth-test.invalid','csrf_token'=>$resetCsrf], $resetCookie, true);
 $unknownForm = req('/views/public/recupera-form.php', 'GET', [], $resetCookie); $unknownCsrf = csrf($unknownForm['body']);
 $unknown = req('/envia_mail.php', 'POST', ['cpf'=>'12345678909','email'=>'ausente@auth-test.invalid','csrf_token'=>$unknownCsrf], $resetCookie, true);
+$GLOBALS['phase'] = 'response_json';
 $knownPayload = json_decode($known['body'], true, flags: JSON_THROW_ON_ERROR); $unknownPayload = json_decode($unknown['body'], true, flags: JSON_THROW_ON_ERROR);
 ok($knownPayload === $unknownPayload, 'reset conhecido e desconhecido são distinguíveis: conhecido=' . $known['body'] . ' desconhecido=' . $unknown['body']);
 ok(mails() > $before, 'reset conhecido não chegou ao Mailpit');

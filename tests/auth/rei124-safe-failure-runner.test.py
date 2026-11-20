@@ -27,7 +27,7 @@ sys.exit(5)
 '''
 with tempfile.TemporaryDirectory(prefix='rei124-auth-failure-') as tmp:
  root=Path(tmp);auth=root/'tests'/'auth';auth.mkdir(parents=True)
- for n in ['run-isolated-auth-e2e.ps1','cleanup-owned.ps1']:shutil.copyfile(HERE/n,auth/n)
+ for n in ['run-isolated-auth-e2e.ps1','cleanup-owned.ps1','rei155-safe-diagnostic.ps1']:shutil.copyfile(HERE/n,auth/n)
  for n in ['app','config','public','vendor','services']:(root/n).mkdir()
  (root/'vendor'/'autoload.php').write_text('<?php');bin=root/'bin';bin.mkdir();fake=bin/'fake.py';fake.write_text(FAKE)
  if os.name=='nt':(bin/'docker.cmd').write_text(f'@"{sys.executable}" "{fake}" %*\r\n')
