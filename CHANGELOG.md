@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0010
+
+**Data:** 2026-11-20 15:30:45 | **Commit:** `84617eab` | **Tipo:** `patch`
+
+- fix(ci): validate WireGuard config after root install
+
 ## V. 1.88.0009
 
 **Data:** 2026-11-20 15:18:50 | **Commit:** `61e43d48` | **Tipo:** `patch`
@@ -7691,3 +7697,4 @@
 
 
 \n
+
