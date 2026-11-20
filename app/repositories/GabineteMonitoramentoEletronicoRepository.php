@@ -48,6 +48,22 @@ final class GabineteMonitoramentoEletronicoRepository
         return $row === false ? null : $row;
     }
 
+    /** Lê e bloqueia a linha do monitoramento para serializar transições concorrentes. */
+    public function findByIdForUpdate(string $id): ?array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return null;
+        }
+        $lock = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+        $st = $this->connection->prepare(sprintf('SELECT * FROM `%s` WHERE `id` = :id LIMIT 1%s', $this->table, $lock));
+        $st->bindValue(':id', $id);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+
+        return $row === false ? null : $row;
+    }
+
     public function nextSequencialForYear(int $ano): int
     {
         $st = $this->connection->prepare(
@@ -68,6 +84,43 @@ final class GabineteMonitoramentoEletronicoRepository
         $st->execute();
 
         return (int) $st->fetchColumn();
+    }
+
+    /** Serializa alocação e exclusão do último sequencial sem depender de uma tabela auxiliar. */
+    public function acquireYearSequenceLock(int $ano, int $timeoutSeconds = 5): void
+    {
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') {
+            return;
+        }
+        $name = $this->yearSequenceLockName($ano);
+        $st = $this->connection->prepare('SELECT GET_LOCK(:lock_name, :timeout_seconds)');
+        $st->bindValue(':lock_name', $name);
+        $st->bindValue(':timeout_seconds', max(0, $timeoutSeconds), PDO::PARAM_INT);
+        $st->execute();
+        if ((int) $st->fetchColumn() !== 1) {
+            throw new RuntimeException('Não foi possível obter o bloqueio do sequencial anual.');
+        }
+    }
+
+    public function releaseYearSequenceLock(int $ano): bool
+    {
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') {
+            return true;
+        }
+        try {
+            $st = $this->connection->prepare('SELECT RELEASE_LOCK(:lock_name)');
+            $st->bindValue(':lock_name', $this->yearSequenceLockName($ano));
+            $st->execute();
+            return (int) $st->fetchColumn() === 1;
+        } catch (Throwable $exception) {
+            error_log('Monitoramento eletrônico: erro ao liberar o lock anual (' . get_class($exception) . ').');
+            return false;
+        }
+    }
+
+    private function yearSequenceLockName(int $ano): string
+    {
+        return 'fokus_gme_seq_' . substr(hash('sha256', $this->table . ':' . $ano), 0, 49);
     }
 
     public function insert(array $row): void

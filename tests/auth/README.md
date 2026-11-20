@@ -28,3 +28,11 @@ O runner cria uma rede Docker `--internal` descartável, não publica portas,
 não usa bind mounts nos contêineres de teste e usa `tmpfs` para o banco MySQL.
 O sucesso termina com `PASS auth-test-runner`; a limpeza remove todos os
 recursos marcados com `fokus.auth-e2e`.
+
+## CI de autenticação
+
+O workflow `auth-isolated-e2e.yml` constrói `tests/auth/ci-runtime/Dockerfile` sem rede, a partir de imagens PHP e Composer fixadas por digest, compila `pdo_mysql` e `pcntl` e verifica extensões exigidas. O checkout não persiste credenciais; antes dos mounts, os manifests devem ser arquivos regulares sem links e `vendor/` deve ser criado vazio e inexistente. A instalação de `composer.lock` usa imagem Composer separada, também pinada, com scripts e plugins desativados; em seguida, valida os requisitos no runtime construído sem rede. O ID exato da imagem construída é passado por `-QaImageId` ao runner; o valor padrão local permanece disponível. O job não utiliza segredos, publica portas ou usa banco persistente, e verifica resíduos ao final.
+
+O job exercita autenticação e a fixture de serviço de atas, sem executar o runner de atas suspenso. A fixture cobre sigilo, falhas de arquivo/banco, duas substituições concorrentes com waits observados no MySQL e upload HTTP multipart com sessões sintéticas; não cobre browser, schema real ou acesso à rede externa. O workflow está configurado para executar no GitHub Actions em pushes e pull requests; consulte o resultado do run e do commit correspondentes para verificar cada execução. A disponibilidade futura dos digests e a reprodução binária idêntica entre builders não são garantidas. Os pacotes Composer são obtidos da rede e sua disponibilidade é uma dependência externa. A existência de lint verde não substitui o resultado deste job.
+
+A verificação final falha se o daemon não responder ou se houver recursos etiquetados, inclusive containers temporários do Composer. Ela não executa remoção genérica. Em cancelamento abrupto ou timeout do job, nem a etapa final nem o `finally` do runner são garantidos; a eliminação do executor hospedado é uma fronteira adicional, não prova de cleanup interno.

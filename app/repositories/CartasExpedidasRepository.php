@@ -155,12 +155,18 @@ final class CartasExpedidasRepository
             }
         }
 
-        $statement = $this->connection->prepare(
-            sprintf(
-                'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `finalidade`, `prazo_dias`, `comarca_destino_id`, `cidade_destino`, `uf_destino`, `numero_processo_destino`, `vara_destino_id`, `vara_destino_nome`, `status`, `observacoes`, `criado_por`, `atualizado_por`, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :finalidade, :prazo_dias, :comarca_destino_id, :cidade_destino, :uf_destino, :numero_processo_destino, :vara_destino_id, :vara_destino_nome, :status, :observacoes, :criado_por, :atualizado_por, NOW(), NOW())',
-                $this->table
-            )
-        );
+        $idempotencyValues = array_key_exists('idempotency_key', $row)
+            ? ', `idempotency_key`, `idempotency_payload_hash`'
+            : '';
+        $idempotencyPlaceholders = array_key_exists('idempotency_key', $row)
+            ? ', :idempotency_key, :idempotency_payload_hash'
+            : '';
+        $statement = $this->connection->prepare(sprintf(
+            'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `finalidade`, `prazo_dias`, `comarca_destino_id`, `cidade_destino`, `uf_destino`, `numero_processo_destino`, `vara_destino_id`, `vara_destino_nome`, `status`, `observacoes`, `criado_por`, `atualizado_por`%s, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :finalidade, :prazo_dias, :comarca_destino_id, :cidade_destino, :uf_destino, :numero_processo_destino, :vara_destino_id, :vara_destino_nome, :status, :observacoes, :criado_por, :atualizado_por%s, NOW(), NOW())',
+            $this->table,
+            $idempotencyValues,
+            $idempotencyPlaceholders
+        ));
         $statement->bindValue(':id', $row['id']);
         $statement->bindValue(':processo_origem_id', $row['processo_origem_id']);
         $statement->bindValue(':numero_processo_origem', $row['numero_processo_origem']);
@@ -177,9 +183,65 @@ final class CartasExpedidasRepository
         $cp = $row['criado_por'] ?? null;
         $statement->bindValue(':criado_por', $cp !== null && $cp !== '' ? $cp : null);
         $statement->bindValue(':atualizado_por', $cp !== null && $cp !== '' ? $cp : null);
+        if (array_key_exists('idempotency_key', $row)) {
+            $statement->bindValue(':idempotency_key', $row['idempotency_key']);
+            $statement->bindValue(':idempotency_payload_hash', $row['idempotency_payload_hash']);
+        }
         $statement->execute();
 
         return (string) $row['id'];
+    }
+
+    public function findByIdempotencyKey(string $userId, string $key, bool $currentRead = false): ?array
+    {
+        $suffix = $currentRead ? ' FOR UPDATE' : '';
+        $statement = $this->connection->prepare(
+            sprintf('SELECT `id`, `idempotency_payload_hash` FROM `%s` WHERE `criado_por` = :user_id AND `idempotency_key` = :request_key LIMIT 1%s', $this->table, $suffix)
+        );
+        $statement->execute([':user_id' => $userId, ':request_key' => $key]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+        return $result === false ? null : $result;
+    }
+
+    public function assertIdempotencyColumnsAvailable(): void
+    {
+        $columns = $this->connection->prepare(
+            'SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table_name'
+        );
+        $columns->execute([':table_name' => $this->table]);
+        $definitions = [];
+        foreach ($columns->fetchAll(PDO::FETCH_ASSOC) as $column) {
+            $definitions[strtolower((string) $column['COLUMN_NAME'])] = $column;
+        }
+        foreach (['idempotency_key', 'idempotency_payload_hash'] as $name) {
+            $column = $definitions[$name] ?? null;
+            if (!is_array($column)
+                || strtolower((string) ($column['COLUMN_TYPE'] ?? '')) !== 'char(64)'
+                || strtoupper((string) ($column['IS_NULLABLE'] ?? '')) !== 'YES') {
+                throw new RuntimeException('Schema idempotente indisponível ou parcialmente aplicado.');
+            }
+        }
+
+        $index = $this->connection->prepare(
+            'SELECT NON_UNIQUE, SEQ_IN_INDEX, COLUMN_NAME, SUB_PART FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table_name AND INDEX_NAME = :index_name ORDER BY SEQ_IN_INDEX'
+        );
+        $index->execute([
+            ':table_name' => $this->table,
+            ':index_name' => 'uq_cartas_expedidas_idempotency',
+        ]);
+        $parts = $index->fetchAll(PDO::FETCH_ASSOC);
+        $valid = count($parts) === 2
+            && (int) $parts[0]['NON_UNIQUE'] === 0
+            && (int) $parts[0]['SEQ_IN_INDEX'] === 1
+            && strtolower((string) $parts[0]['COLUMN_NAME']) === 'criado_por'
+            && $parts[0]['SUB_PART'] === null
+            && (int) $parts[1]['NON_UNIQUE'] === 0
+            && (int) $parts[1]['SEQ_IN_INDEX'] === 2
+            && strtolower((string) $parts[1]['COLUMN_NAME']) === 'idempotency_key'
+            && $parts[1]['SUB_PART'] === null;
+        if (!$valid) {
+            throw new RuntimeException('Índice único de idempotência ausente ou incompatível.');
+        }
     }
 
     public function update(string $id, array $payload): bool
