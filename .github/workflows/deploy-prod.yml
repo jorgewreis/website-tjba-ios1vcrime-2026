@@ -87,7 +87,7 @@ jobs:
           Endpoint = 72.60.250.46:51820
           PersistentKeepalive = 25
           EOF
-          unset wg_private_key
+          unset wg_private_key WG_CLIENT_PRIVATE_KEY
           if ! wg-quick strip "$tmp_config" >/dev/null 2>&1; then
             rm -f -- "$tmp_config"
             echo "::error::Configuração WireGuard inválida; conteúdo omitido."
@@ -102,6 +102,10 @@ jobs:
           rm -f -- "$tmp_config"
           sudo -n chown root:root -- "$config"
           sudo -n chmod 600 -- "$config"
+          if ! sudo -n wg-quick strip "$config" >/dev/null 2>&1; then
+            echo "::error::Configuração WireGuard inválida; conteúdo omitido."
+            exit 1
+          fi
           printf 'DEPLOY_HOST_EFFECTIVE=10.222.231.1\n' >> "$GITHUB_ENV"
 
           sudo -n wg-quick up "$config"
