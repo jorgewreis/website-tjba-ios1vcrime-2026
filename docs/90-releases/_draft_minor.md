@@ -6,4 +6,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 - **chore: sync main into REI-73 evidence branch** `[a2cb752c]`
 - **docs(REI-73): update live evidence matrix** `[e37ae0da]`
+- **docs(REI-73): record final verification results** `[f17ba3dd]`
 
