@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0191
+
+**Data:** 2026-11-20 10:34:29 | **Commit:** `f95be398` | **Tipo:** `patch`
+
+- fix(REI-158): serialize login admission
+
 ## V. 1.87.0190
 
 **Data:** 2026-11-20 09:50:21 | **Commit:** `da820415` | **Tipo:** `patch`
@@ -7636,6 +7642,7 @@
 
 
 \n
+
 
 
 

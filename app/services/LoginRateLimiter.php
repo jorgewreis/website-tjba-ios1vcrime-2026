@@ -4,6 +4,7 @@ declare(strict_types=1);
 final class LoginRateLimiter
 {
     private const TABLE = 'login_rate_limits';
+    private const LOGIN_LOCK_TIMEOUT_SECONDS = 5;
 
     private PDO $pdo;
     private bool $storageChecked = false;
@@ -86,6 +87,79 @@ final class LoginRateLimiter
     public function isStorageAvailable(): bool
     {
         return $this->ensureStorage();
+    }
+
+    /**
+     * Serialize the login admission, credential check, and result update for
+     * both the normalized CPF and client IP scopes.
+     *
+     * The callback runs while MySQL named locks are held on this PDO session.
+     * A timeout, unavailable table, unsupported driver, or release failure must
+     * fail closed so the caller never authenticates outside the protected gate.
+     *
+     * @template T
+     * @param callable():T $operation
+     * @return T
+     */
+    public function withLoginAttemptLock(string $cpf, string $ip, callable $operation): mixed
+    {
+        if ($this->scopePrefix !== '') {
+            throw new LogicException('A trava de admissão é exclusiva ao fluxo de login.');
+        }
+        if (!$this->ensureStorage()) {
+            throw new RuntimeException('Armazenamento do rate limit indisponível.');
+        }
+        if ($this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') {
+            throw new RuntimeException('A trava de admissão exige MySQL.');
+        }
+
+        $database = $this->pdo->query('SELECT DATABASE()')->fetchColumn();
+        if (!is_string($database) || trim($database) === '') {
+            throw new RuntimeException('Não foi possível identificar o banco da trava de admissão.');
+        }
+
+        $lockNames = [];
+        foreach ($this->buildScopes($cpf, $ip) as $scope) {
+            $digest = hash('sha256', $database . "\0" . $scope['type'] . "\0" . $scope['value']);
+            // MySQL limits named locks to 64 bytes; keep the app prefix and a
+            // collision-resistant 52-character suffix within that bound.
+            $lockNames[] = 'fokus_login_' . substr($digest, 0, 52);
+        }
+        $lockNames = array_values(array_unique($lockNames));
+        sort($lockNames, SORT_STRING);
+
+        $acquired = [];
+        try {
+            foreach ($lockNames as $lockName) {
+                $statement = $this->pdo->prepare('SELECT GET_LOCK(?, ?)');
+                $statement->execute([$lockName, self::LOGIN_LOCK_TIMEOUT_SECONDS]);
+                $locked = $statement->fetchColumn();
+                if ((int) $locked !== 1) {
+                    throw new RuntimeException('Tempo esgotado ao serializar uma tentativa de login.');
+                }
+                $acquired[] = $lockName;
+            }
+
+            return $operation();
+        } finally {
+            $releaseFailure = null;
+            foreach (array_reverse($acquired) as $lockName) {
+                try {
+                    $statement = $this->pdo->prepare('SELECT RELEASE_LOCK(?)');
+                    $statement->execute([$lockName]);
+                    if ((int) $statement->fetchColumn() !== 1) {
+                        throw new RuntimeException('A sessão não confirmou a liberação da trava de login.');
+                    }
+                } catch (Throwable $exception) {
+                    $releaseFailure ??= $exception;
+                }
+            }
+
+            if ($releaseFailure !== null) {
+                error_log('LoginRateLimiter: falha ao liberar trava de admissão: ' . get_class($releaseFailure));
+                throw new RuntimeException('Não foi possível liberar a trava de admissão do login.', 0, $releaseFailure);
+            }
+        }
     }
 
     private function ensureStorage(): bool
