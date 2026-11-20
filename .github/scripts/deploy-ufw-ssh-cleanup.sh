@@ -18,7 +18,7 @@ if [[ -z "${DEPLOY_USER:-}" || -z "${DEPLOY_HOST:-}" ]]; then
   exit 1
 fi
 
-ssh -i ~/.ssh/id_ed25519 \
+if ! ssh -i ~/.ssh/id_ed25519 \
   -o IdentitiesOnly=yes \
   -o StrictHostKeyChecking=yes \
   "${DEPLOY_USER}@${DEPLOY_HOST}" \
@@ -41,3 +41,7 @@ if sudo -n ufw status | grep -Fq -- "$rule_comment"; then
   exit 1
 fi
 REMOTE
+then
+  echo "Não foi possível confirmar a remoção automática. Se a regra ainda existir, remova-a no Terminal do hPanel com: sudo ufw delete allow from ${RUNNER_PUBLIC_IP} to any port 22 proto tcp comment 'gha-deploy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}'" >&2
+  exit 1
+fi
