@@ -4,12 +4,15 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **test(REI-124): isolate authentication and ata integration tests** `[6ed7521a]`
-- **docs(REI-124): update isolated CI status** `[0707afae]`
-- **fix(REI-148): stabilize user pagination and counts** `[1836082a]`
-- **test(REI-148): run mysql regressions in CI** `[da820415]`
-- **fix(REI-158): serialize login admission** `[f95be398]`
-- **test(REI-158): exercise concurrent HTTP logins** `[101c01a9]`
-- **test: allow diagnostic probe time on CI** `[119e261f]`
-- **test(REI-158): observe HTTP admission lock** `[0b3d0eb5]`
-- **fix(REI-158): align IPv6 lock case** `[428321d6]`
+- **ci(deploy): add temporary Hostinger SSH allowlist** `[16c5f76d]`
+- **ci(deploy): permitir runner temporário no UFW** `[bec23f45]`
+- **ci(deploy): sincronizar firewall temporário Hostinger** `[c85a9638]`
+- **ci(deploy): preservar acesso WireGuard no firewall temporário** `[f0a15d4d]`
+- **fix(footer): show last successful deploy timestamp** `[7dd86e73]`
+- **fix(footer): force credit metadata onto separate lines** `[a082afda]`
+- **fix(ci): normalize WireGuard deployment key** `[9a74caa2]`
+- **chore(sync): merge latest main into deployment key fix** `[c35478b0]`
+- **fix(ci): reveal sanitized WireGuard validation error** `[de7e73d2]`
+- **fix(ci): run WireGuard validation with explicit sudo** `[9654ab41]`
+- **fix(ci): validate installed WireGuard config only** `[ae8c7d43]`
+
