@@ -14,9 +14,10 @@
 
 ## V. 1.87.0187
 
-**Data:** 2026-11-19 19:00:08 | **Commit:** `83cdd64b` | **Tipo:** `patch`
+**Data:** 2026-11-19 20:21:18 | **Commits:** `83cdd64b`, `20e78c24` | **Tipo:** `patch`
 
 - fix(REI-99): validate active sessions before ata downloads
+- test(REI-127): cover matching date with stale etag
 
 ## V. 1.87.0186
 
@@ -7623,7 +7624,5 @@
 
 
 \n
-
-
 
 

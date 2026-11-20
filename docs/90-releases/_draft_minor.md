@@ -7,4 +7,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(REI-99): validate active sessions before ata downloads** `[83cdd64b]`
 - **fix(access): authorize enrolled student ata downloads** `[403cff96]`
 - **test(REI-99): exercise ata downloads over isolated HTTP** `[a9c1f040]`
+- **test(REI-127): cover matching date with stale etag** `[20e78c24]`
 
