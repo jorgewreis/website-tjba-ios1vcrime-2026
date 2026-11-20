@@ -5,6 +5,10 @@ require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/UserInitialsHelper.php';
 require_once __DIR__ . '/../helpers/CartorioAlocacaoTipo.php';
 
+final class LimiteAlocadosException extends RuntimeException
+{
+}
+
 final class GuiasAlocadosRepository
 {
     private PDO $connection;
@@ -55,7 +59,7 @@ final class GuiasAlocadosRepository
         $count->bindValue(':guia_id', $guiaId);
         $count->execute();
         if ((int) $count->fetchColumn() >= self::MAX_ALOCADOS) {
-            throw new RuntimeException('Limite de alocados por guia atingido (' . self::MAX_ALOCADOS . ').');
+            throw new LimiteAlocadosException('Limite de alocados por guia atingido (' . self::MAX_ALOCADOS . ').');
         }
 
         $id = IdGenerator::generateUniquePrefixedId(

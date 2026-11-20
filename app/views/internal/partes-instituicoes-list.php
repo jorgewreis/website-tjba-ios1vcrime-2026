@@ -8,12 +8,14 @@ require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../repositories/PartesInstituicoesRepository.php';
 require_once __DIR__ . '/../../repositories/PartesRepository.php';
 require_once __DIR__ . '/../../repositories/InstituicoesPublicasRepository.php';
+require_once __DIR__ . '/../../helpers/InstituicoesConsultaPolicy.php';
 
 $parteId = trim((string) ($_GET['parte_id'] ?? ''));
 $instituicaoId = trim((string) ($_GET['instituicao_id'] ?? ''));
 
 $connection = Conection::getInstance()->getConnection();
 $repo = new PartesInstituicoesRepository($connection);
+$onlyActiveInstitutions = InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''));
 $rows = [];
 $parteNome = '';
 $instituicaoNome = '';
@@ -22,12 +24,12 @@ if ($parteId !== '') {
     $partesRepo = new PartesRepository($connection);
     $p = $partesRepo->findById($parteId);
     $parteNome = $p['nome_completo'] ?? $parteId;
-    $rows = $repo->findByParteId($parteId);
+    $rows = $repo->findByParteId($parteId, null, $onlyActiveInstitutions);
 } elseif ($instituicaoId !== '') {
     $instRepo = new InstituicoesPublicasRepository($connection);
-    $inst = $instRepo->findById($instituicaoId);
+    $inst = $instRepo->findById($instituicaoId, $onlyActiveInstitutions);
     $instituicaoNome = $inst['nome'] ?? $instituicaoId;
-    $rows = $repo->findByInstituicaoId($instituicaoId);
+    $rows = $repo->findByInstituicaoId($instituicaoId, null, $onlyActiveInstitutions);
 }
 $itemsPerPage = 15;
 $totalRows = count($rows);
