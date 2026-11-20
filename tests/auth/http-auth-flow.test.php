@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require __DIR__ . "/sandbox-guard.php";
+
 function fail(string $m): never { fwrite(STDERR, "FAIL http-auth-flow: $m\n"); exit(1); }
 function ok(bool $v, string $m): void { if (!$v) fail($m); }
 function responseSuccess(string $body): bool { $decoded = json_decode($body, true); return is_array($decoded) && ($decoded['success'] ?? false) === true; }

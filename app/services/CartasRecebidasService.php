@@ -113,12 +113,7 @@ final class CartasRecebidasService
         }
         $cidadeOrigem = TextFormatter::formatProperName($cidadeOrigem, 120);
 
-        $tribunalSigla = 'TJ' . $ufOrigem;
-        $tribunalId = $this->tribunaisRepository->ensureTribunal($tribunalSigla, 'Tribunal de Justiça do Estado');
-        $comarcaOrigem = $this->comarcasRepository->findByTribunalUfNome($tribunalId, $ufOrigem, $cidadeOrigem);
-        $comarcaOrigemId = $comarcaOrigem !== null
-            ? (string) $comarcaOrigem['id']
-            : $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, $cidadeOrigem);
+        [$cidadeOrigem, $comarcaOrigemId] = $this->resolverLocalidadeCadastro($cidadeOrigem, $ufOrigem);
 
         $dataRecebimento = $this->parseDate($payload['data_recebimento'] ?? null);
         $finalidade = trim((string) ($payload['finalidade'] ?? ''));
@@ -181,6 +176,28 @@ final class CartasRecebidasService
         $this->repository->update($idCarta, ['status' => CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO]);
 
         return $idCarta;
+    }
+
+    /** @return array{0:string,1:string} Nome e ID canônicos para o cadastro. */
+    private function resolverLocalidadeCadastro(string $cidadeOrigem, string $ufOrigem): array
+    {
+        $tribunalId = $this->tribunaisRepository->ensureTribunal('TJ' . $ufOrigem, 'Tribunal de Justiça do Estado');
+        $comarca = $this->comarcasRepository->findFirstByNomeOuCidade($cidadeOrigem, $ufOrigem, $tribunalId);
+        if ($comarca === null && $this->comarcasRepository->existeNomeOuCidade($cidadeOrigem, $ufOrigem, $tribunalId)) {
+            throw new InvalidArgumentException('A cidade possui mais de uma comarca possível.');
+        }
+        if ($comarca === null) {
+            return [$cidadeOrigem, $this->comarcasRepository->ensureComarca($tribunalId, $ufOrigem, $cidadeOrigem)];
+        }
+        if ((string) ($comarca['tribunal_id'] ?? '') !== $tribunalId) {
+            throw new InvalidArgumentException('A comarca não pertence ao tribunal da UF informada.');
+        }
+        $sede = $this->comarcasRepository->resolverCidadeUf((string) $comarca['id'], $cidadeOrigem, $ufOrigem, true);
+        if ($sede === null || (string) ($sede['tribunal_id'] ?? '') !== $tribunalId) {
+            throw new InvalidArgumentException('Não foi possível identificar a comarca-sede da cidade.');
+        }
+        if ((string) $sede['id'] !== (string) $comarca['id']) $cidadeOrigem = (string) $sede['nome'];
+        return [$cidadeOrigem, (string) $sede['id']];
     }
 
     public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
@@ -367,19 +384,55 @@ final class CartasRecebidasService
         }
         unset($payload['usuario_id'], $payload['alocar_usuario_ids']);
 
-        $camposComarca = ['comarca_origem_id', 'cidade_origem', 'uf_origem'];
-        if (array_intersect($camposComarca, array_keys($payload))) {
-            foreach ($camposComarca as $campo) {
-                if (!isset($payload[$campo]) || !is_string($payload[$campo]) || trim($payload[$campo]) === '') {
-                    throw new InvalidArgumentException('Informe comarca, cidade e UF correspondentes.');
-                }
-            }
-            if (!$this->comarcasRepository->correspondeIdCidadeUf($payload['comarca_origem_id'], $payload['cidade_origem'], $payload['uf_origem'])) {
-                throw new InvalidArgumentException('A comarca não corresponde à cidade e UF informadas.');
-            }
-        }
+        $locationKeys = ['cidade_origem', 'uf_origem', 'comarca_origem_id'];
+        if (array_intersect($locationKeys, array_keys($payload)) === []) return $this->repository->update($id, $payload);
 
-        return $this->repository->update($id, $payload);
+        $ownsTransaction = !$this->connection->inTransaction();
+        $savepoint = $ownsTransaction ? null : 'carta_localidade_' . bin2hex(random_bytes(8));
+        if ($ownsTransaction) {
+            if (!$this->connection->beginTransaction()) throw new RuntimeException('Não foi possível iniciar a atualização da localidade.');
+        } else {
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
+        }
+        try {
+            $statement = $this->connection->prepare('SELECT `cidade_origem`, `uf_origem`, `comarca_origem_id` FROM `cartas_recebidas` WHERE `id` = :id LIMIT 1 FOR UPDATE');
+            $statement->execute([':id' => $id]);
+            $current = $statement->fetch(PDO::FETCH_ASSOC);
+            if ($current === false) throw new InvalidArgumentException('Carta recebida não encontrada.');
+            $cidade = trim((string) (array_key_exists('cidade_origem', $payload) ? $payload['cidade_origem'] : ($current['cidade_origem'] ?? '')));
+            $uf = trim((string) (array_key_exists('uf_origem', $payload) ? $payload['uf_origem'] : ($current['uf_origem'] ?? '')));
+            $comarca = trim((string) (array_key_exists('comarca_origem_id', $payload) ? $payload['comarca_origem_id'] : ($current['comarca_origem_id'] ?? '')));
+            $sede = $this->comarcasRepository->resolverCidadeUf($comarca, $cidade, $uf, true);
+            $tribunal = $this->tribunaisRepository->findBySigla('TJ' . strtoupper($uf));
+            if ($sede === null || $tribunal === null || (string) $sede['tribunal_id'] !== (string) $tribunal['id']) {
+                throw new InvalidArgumentException('A comarca não corresponde à cidade e ao estado informados.');
+            }
+            if ((string) $sede['id'] !== $comarca) {
+                $payload['comarca_origem_id'] = (string) $sede['id'];
+                $payload['cidade_origem'] = (string) $sede['nome'];
+                $payload['uf_origem'] = strtoupper(trim((string) $sede['uf']));
+            }
+            $updated = $this->repository->update($id, $payload);
+            if ($ownsTransaction) {
+                if (!$this->connection->commit()) throw new RuntimeException('Não foi possível confirmar a atualização da localidade.');
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            return $updated;
+        } catch (Throwable $exception) {
+            try {
+                if ($this->connection->inTransaction()) {
+                    if ($ownsTransaction) $this->connection->rollBack();
+                    else {
+                        $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                        $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                    }
+                }
+            } catch (Throwable $rollbackError) {
+                error_log('rollback atualização de localidade: ' . $rollbackError->getMessage());
+            }
+            throw $exception;
+        }
     }
 
     public function cancel(string $id): bool
