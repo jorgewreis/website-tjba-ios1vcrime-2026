@@ -1,193 +1,213 @@
 #!/usr/bin/env python3
-"""Check that both ata download handlers gate profile/service access on session auth."""
-import os
-import hashlib
+"""HTTP regression for ata downloads using only temporary code, SQLite and files."""
+from datetime import datetime, timedelta
+from http.client import HTTPConnection
 from pathlib import Path
+import os
 import shutil
+import socket
 import sqlite3
 import subprocess
 import tempfile
-from datetime import datetime, timedelta, timezone
+import time
 
 ROOT = Path(__file__).resolve().parents[2]
+SOURCE = ROOT
 
 
-with tempfile.TemporaryDirectory(prefix="ata-download-auth-") as tmp:
-    root = Path(tmp)
+def write(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
 
-    def put(relative: str, content: str) -> None:
+
+if (ROOT / ".env").exists():
+    raise RuntimeError("Recusado: teste isolado não usa checkout com .env.")
+for name in ("helpers", "repositories", "services", "models", "access"):
+    source = SOURCE / "app" / name
+    if not source.is_dir() or any(p.is_symlink() for p in source.rglob("*")):
+        raise RuntimeError(f"Recusado: árvore de código ausente ou com symlink: {source}")
+
+with tempfile.TemporaryDirectory(prefix="ata-download-http-") as tmp:
+    root = Path(tmp).resolve()
+    for name in ("helpers", "repositories", "services", "models", "access"):
+        shutil.copytree(SOURCE / "app" / name, root / "app" / name)
+    for relative in (
+        "public/api/sala-audiencias-ata/download.php",
+        "public/api/sala-audiencias-ata/download-interno.php",
+        "config/security.php",
+    ):
         target = root / relative
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content, encoding="utf-8")
+        shutil.copyfile(SOURCE / relative, target)
 
-    for endpoint in ("download.php", "download-interno.php"):
-        target = root / "public/api/sala-audiencias-ata" / endpoint
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(ROOT / "public/api/sala-audiencias-ata" / endpoint, target)
-
-    put("app/helpers/Conection.php", """<?php
-class Conection {
-    static function getInstance() { return new self(); }
-    function getConnection() {
-        file_put_contents(getenv('AUTH_MARKER'), 'database-checked');
-        $pdo = new PDO('sqlite:' . getenv('AUTH_DB'), null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-        $pdo->sqliteCreateFunction('NOW', static fn() => gmdate('Y-m-d H:i:s'));
+    write(root / "app/helpers/Conection.php", """<?php
+final class Conection {
+    public static function getInstance(): self { static $instance; return $instance ??= new self(); }
+    public function getConnection(): PDO {
+        $pdo = new PDO('sqlite:' . getenv('ATA_TEST_DB'), null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+        $pdo->sqliteCreateFunction('NOW', static fn(): string => date('Y-m-d H:i:s'));
         return $pdo;
     }
 }
 """)
-    put("app/helpers/BootstrapHelper.php", "<?php\n")
-    security_path = root / "config/security.php"
-    security_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(ROOT / "config/security.php", security_path)
-    put("app/helpers/UsuarioPerfisAutorizacao.php", """<?php
-class UsuarioPerfisAutorizacao {
-    static function perfisDoUsuario($id): array {
-        file_put_contents(getenv('PROFILE_MARKER'), 'called');
-        return [getenv('PROFILE')];
-    }
+    write(root / "app/helpers/UsuarioPerfisAutorizacao.php", """<?php
+final class UsuarioPerfisAutorizacao {
+    public static function perfisDoUsuario(string $id): array { return $_SESSION['fixture_profiles'] ?? []; }
 }
 """)
-    put("app/access/AccessEvaluator.php", """<?php
-class AccessEvaluator {
-    static function canAccessPage($page, $profiles): bool {
-        return getenv('ALLOW_PAGE') === $page;
-    }
-}
-""")
-    put("app/access/ProfileNormalizer.php", """<?php
-class ProfileNormalizer {
-    static function normalize(array $profiles): array {
-        return array_map(static fn($profile) => strtoupper((string) $profile), $profiles);
-    }
-    static function hasEstudante(array $profiles): bool {
-        return in_array('ESTUDANTE', $profiles, true);
-    }
-}
-""")
-    put("app/helpers/UserAccessHelper.php", """<?php
-class UserAccessHelper {
-    static function isUsuarioExterno(array $profiles): bool {
-        return in_array('ESTUDANTE', $profiles, true);
-    }
-}
-""")
-    put("app/models/Usuario.php", """<?php
-class Usuario {
-    function listarPerfisUsuario($id): array { return [getenv('PROFILE')]; }
-}
-""")
-    put("app/services/SalaAudienciasAtaService.php", """<?php
-class SalaAudienciasInscricaoIndisponivel extends RuntimeException {}
-class SalaAudienciasAtaService {
-    function __construct($pdo) {}
-    private function payload(): array {
-        file_put_contents(getenv('SERVICE_MARKER'), 'called');
-        return ['nome_original' => 'synthetic.pdf', 'mime' => 'application/pdf', 'full_path' => getenv('PDF_PATH')];
-    }
-    function getDownloadPayloadForEstudante($idPauta, $usuarioId): array {
-        file_put_contents(getenv('SERVICE_MARKER'), 'called');
-        if (getenv('ENROLLED') !== '1') throw new SalaAudienciasInscricaoIndisponivel('not enrolled');
-        if (getenv('SECRET_ALLOWED') !== '1') throw new InvalidArgumentException('not eligible for secret ata');
-        return $this->payload();
-    }
-    function getDownloadPayloadInterno($idPauta): array { return $this->payload(); }
+    write(root / "app/models/Usuario.php", """<?php
+final class Usuario {
+    public function listarPerfisUsuario(string $id): array { return $_SESSION['fixture_profiles'] ?? []; }
 }
 """)
 
-    pdf = root / "synthetic.pdf"
-    pdf.write_bytes(b"synthetic-pdf-content")
+    db_path = root / "fixture.sqlite"
+    db = sqlite3.connect(db_path)
+    db.executescript("""
+        CREATE TABLE usuarios (id_usuario TEXT PRIMARY KEY, token_acesso TEXT, token_expira TEXT, cadastro_ativo INTEGER);
+        CREATE TABLE classes (id TEXT PRIMARY KEY, nome TEXT);
+        CREATE TABLE processos (id TEXT PRIMARY KEY, numero_processo TEXT, classe_id TEXT, sigiloso INTEGER);
+        CREATE TABLE sala_audiencias_pauta (
+            id_pauta TEXT PRIMARY KEY, ativo INTEGER, processo TEXT, numero_sequencial INTEGER, ano INTEGER,
+            tipo_audiencia TEXT, data_audiencia TEXT, hora_audiencia TEXT, status TEXT,
+            data_hora_inicio_efetivo TEXT, data_hora_fim_efetivo TEXT, duracao_estimada_minutos INTEGER,
+            localizacao TEXT, link_audiencia TEXT
+        );
+        CREATE TABLE sala_audiencias_pauta_parte (pauta TEXT, ativo INTEGER, maioridade TEXT);
+        CREATE TABLE sala_audiencias_estudante_inscricao (id TEXT, pauta TEXT, usuario TEXT, created_at TEXT);
+        CREATE TABLE processo_prioridades (id TEXT, processo_id TEXT, codigo TEXT, origem TEXT, regra_detalhe TEXT, created_at TEXT);
+        CREATE TABLE sala_audiencias_ata (
+            id_ata TEXT PRIMARY KEY, pauta TEXT, arquivo_relativo TEXT, nome_original TEXT, mime TEXT,
+            tamanho_bytes INTEGER, uploaded_at TEXT, uploaded_by TEXT, expires_at TEXT
+        );
+    """)
+    expires = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+    db.execute("INSERT INTO classes VALUES ('class-1', 'Classe sintética')")
+    db.executemany("INSERT INTO processos VALUES (?, ?, 'class-1', ?)", [
+        ("process-1", "0000001-69.2020.8.05.0001", 0),
+        ("process-secret", "0000002-54.2020.8.05.0001", 1),
+    ])
+    db.executemany("""INSERT INTO sala_audiencias_pauta
+        (id_pauta, ativo, processo, numero_sequencial, ano, tipo_audiencia, data_audiencia, hora_audiencia,
+         status, localizacao) VALUES (?, 1, ?, 1, 2026, 'Instrução', '2026-11-19', '10:00', 'realizada', 'Sala sintética')""", [
+        ("hearing-valid", "process-1"), ("hearing-secret", "process-secret"),
+    ])
+    db.execute("INSERT INTO sala_audiencias_estudante_inscricao VALUES ('enrollment-1','hearing-valid','synthetic-user',CURRENT_TIMESTAMP)")
+    db.executemany("""INSERT INTO sala_audiencias_ata
+        (id_ata,pauta,arquivo_relativo,nome_original,mime,tamanho_bytes,uploaded_at,uploaded_by,expires_at)
+        VALUES (?, ?, 'sala-audiencias-atas/synthetic.pdf', 'synthetic.pdf', 'application/pdf', 21, CURRENT_TIMESTAMP, 'staff', ?)""", [
+        ("ata-valid", "hearing-valid", expires), ("ata-secret", "hearing-secret", expires),
+    ])
+    db.commit()
+    db.close()
 
-    def request(endpoint: str, auth_state: str, profile: str, allow_page: str,
-                enrolled: str = "1", secret_allowed: str = "1"):
-        auth_marker = root / "auth-marker"
-        profile_marker = root / "profile-marker"
-        service_marker = root / "service-marker"
-        auth_db = root / f"auth-{endpoint}-{auth_state}-{profile}-{enrolled}-{secret_allowed}.sqlite"
-        for marker in (auth_marker, profile_marker, service_marker):
-            marker.unlink(missing_ok=True)
-        now = datetime.now(timezone.utc)
-        expiry = now + timedelta(days=1)
-        active = 1
-        stored_token = hashlib.sha256(b"synthetic-token").hexdigest()
-        if auth_state == "expired":
-            expiry = now - timedelta(days=1)
-        elif auth_state == "revoked":
-            stored_token = hashlib.sha256(b"different-revoked-token").hexdigest()
-        elif auth_state == "inactive":
-            active = 0
-        elif auth_state != "valid":
-            raise AssertionError(f"unsupported auth fixture state: {auth_state}")
-        db = sqlite3.connect(auth_db)
+    storage = root / "storage/sala-audiencias-atas"
+    storage.mkdir(parents=True)
+    (storage / "synthetic.pdf").write_bytes(b"synthetic-pdf-content")
+    sessions = root / "sessions"
+    sessions.mkdir()
+    router = root / "router.php"
+    write(router, """<?php
+define('SESSION_IDLE_TIMEOUT', 3600);
+$state = (string) ($_SERVER['HTTP_X_FIXTURE_AUTH'] ?? 'valid');
+$profile = (string) ($_SERVER['HTTP_X_FIXTURE_PROFILE'] ?? 'ESTUDANTE');
+$token = 'synthetic-token';
+$storedToken = hash('sha256', $token);
+$expires = date('Y-m-d H:i:s', time() + 3600);
+$active = 1;
+$lastActivity = time();
+if ($state === 'expired') $expires = date('Y-m-d H:i:s', time() - 3600);
+elseif ($state === 'idle') $lastActivity = time() - SESSION_IDLE_TIMEOUT - 1;
+elseif ($state === 'revoked') $storedToken = hash('sha256', 'revoked-token');
+elseif ($state === 'inactive') $active = 0;
+elseif ($state !== 'valid') { http_response_code(400); echo 'bad fixture'; return true; }
+$db = new PDO('sqlite:' . getenv('ATA_TEST_DB'), null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$st = $db->prepare('INSERT OR REPLACE INTO usuarios (id_usuario, token_acesso, token_expira, cadastro_ativo) VALUES (?, ?, ?, ?)');
+$st->execute(['synthetic-user', $storedToken, $expires, $active]);
+session_save_path(getenv('ATA_TEST_SESSIONS'));
+session_id(bin2hex(random_bytes(16)));
+session_start();
+$_SESSION = ['id_usuario' => 'synthetic-user', 'token' => $token, 'last_activity_at' => $lastActivity, 'fixture_profiles' => array_filter(array_map('trim', explode(',', $profile)))];
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+if ($path === '/api/sala-audiencias-ata/download.php') {
+    require __DIR__ . '/public/api/sala-audiencias-ata/download.php';
+    return true;
+}
+if ($path === '/api/sala-audiencias-ata/download-interno.php') {
+    require __DIR__ . '/public/api/sala-audiencias-ata/download-interno.php';
+    return true;
+}
+http_response_code(404);
+echo 'not found';
+return true;
+""")
+
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        port = sock.getsockname()[1]
+    env = dict(os.environ)
+    env.update({"ATA_TEST_DB": str(db_path), "ATA_TEST_SESSIONS": str(sessions)})
+    server = subprocess.Popen(
+        ["php", "-d", "log_errors=1", "-d", f"error_log={root / 'php.log'}", "-S", f"127.0.0.1:{port}", str(router)], cwd=root, env=env,
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+
+    def request(path: str, auth: str = "valid", profile: str = "ESTUDANTE"):
+        conn = HTTPConnection("127.0.0.1", port, timeout=3)
         try:
-            db.execute("CREATE TABLE usuarios (id_usuario TEXT, token_acesso TEXT, token_expira TEXT, cadastro_ativo INTEGER)")
-            db.execute(
-                "INSERT INTO usuarios (id_usuario, token_acesso, token_expira, cadastro_ativo) VALUES (?, ?, ?, ?)",
-                ("synthetic-user", stored_token, expiry.strftime("%Y-%m-%d %H:%M:%S"), active),
-            )
-            db.commit()
+            conn.request("GET", path, headers={"X-Fixture-Auth": auth, "X-Fixture-Profile": profile})
+            response = conn.getresponse()
+            return response.status, response.read(), dict(response.getheaders())
         finally:
-            db.close()
+            conn.close()
 
-        target = (root / "public/api/sala-audiencias-ata" / endpoint).as_posix()
-        script = (
-            "$_SERVER['REQUEST_METHOD']='GET'; $_GET=['pauta'=>'synthetic-pauta']; "
-            "$_SESSION=['id_usuario'=>'synthetic-user','token'=>'synthetic-token']; "
-            "register_shutdown_function(function(){ $status=http_response_code(); "
-            "fwrite(STDERR, 'HTTP_STATUS:' . ($status === false ? 200 : $status)); }); "
-            "require " + repr(target) + ";"
-        )
-        env = dict(os.environ)
-        env.update({
-            "PROFILE": profile,
-            "ALLOW_PAGE": allow_page,
-            "ENROLLED": enrolled,
-            "SECRET_ALLOWED": secret_allowed,
-            "AUTH_MARKER": str(auth_marker),
-            "AUTH_DB": str(auth_db),
-            "PROFILE_MARKER": str(profile_marker),
-            "SERVICE_MARKER": str(service_marker),
-            "PDF_PATH": str(pdf),
-        })
-        result = subprocess.run(["php", "-d", "display_errors=0", "-r", script],
-                                cwd=root, env=env, capture_output=True, timeout=10)
-        assert result.returncode == 0, (endpoint, auth_state, profile, result.stdout, result.stderr)
-        status = next((int(line.removeprefix("HTTP_STATUS:"))
-                       for line in result.stderr.decode("ascii", errors="replace").splitlines()
-                       if line.startswith("HTTP_STATUS:")), None)
-        return status, result.stdout, auth_marker.exists(), profile_marker.exists(), service_marker.exists()
+    try:
+        ready = False
+        for _ in range(50):
+            if server.poll() is not None:
+                raise RuntimeError("Servidor PHP local encerrou antes de iniciar.")
+            try:
+                status, _, _ = request("/missing")
+                if status == 404:
+                    ready = True
+                    break
+            except OSError:
+                time.sleep(0.1)
+        if not ready:
+            raise RuntimeError("Servidor PHP local não ficou pronto.")
 
-    for endpoint in ("download.php", "download-interno.php"):
-        for state in ("expired", "revoked", "inactive"):
-            status, body, auth_called, profile_called, service_called = request(
-                endpoint, state, "ESTUDANTE" if endpoint == "download.php" else "AUDIENCIA",
-                "estudaata" if endpoint == "download.php" else "salaata")
-            assert status == 401 and "Sessão expirada.".encode("utf-8") in body, (endpoint, state, status, body)
-            assert auth_called and not profile_called and not service_called, (endpoint, state)
+        for endpoint, profile in (("download.php", "ESTUDANTE"), ("download-interno.php", "SERVIDOR-AUDIENCIAS")):
+            for state in ("expired", "idle", "revoked", "inactive"):
+                status, body, _ = request(f"/api/sala-audiencias-ata/{endpoint}?pauta=hearing-valid", state, profile)
+                assert status == 401 and body == "Sessão expirada.".encode(), (endpoint, state, status, body)
 
-    status, body, auth_called, profile_called, service_called = request(
-        "download.php", "valid", "ESTUDANTE", "estudaata")
-    assert status == 200 and body == b"synthetic-pdf-content", (status, body)
-    assert auth_called and profile_called and service_called, "download válido de estudante não chegou ao serviço"
+        status, body, headers = request("/api/sala-audiencias-ata/download.php?pauta=hearing-valid")
+        assert status == 200 and body == b"synthetic-pdf-content", (status, body)
+        assert headers.get("Content-Type") == "application/pdf"
+        status, body, _ = request("/api/sala-audiencias-ata/download-interno.php?pauta=hearing-valid", profile="SERVIDOR-AUDIENCIAS")
+        assert status == 200 and body == b"synthetic-pdf-content", (status, body)
 
-    status, body, auth_called, profile_called, service_called = request(
-        "download-interno.php", "valid", "AUDIENCIA", "salaata")
-    assert status == 200 and body == b"synthetic-pdf-content", (status, body)
-    assert auth_called and profile_called and service_called, "download interno válido não chegou ao serviço"
+        status, body, _ = request("/api/sala-audiencias-ata/download.php?pauta=hearing-valid", profile="CONSULTOR")
+        assert status == 403 and body == "Acesso negado.".encode(), (status, body)
+        status, body, _ = request("/api/sala-audiencias-ata/download.php?pauta=hearing-valid", profile="SERVIDOR-AUDIENCIAS")
+        assert status == 403 and body == "Acesso negado.".encode(), (status, body)
 
-    status, body, auth_called, profile_called, service_called = request(
-        "download.php", "valid", "AUDIENCIA", "estudaata")
-    assert status == 403 and "Acesso negado.".encode("utf-8") in body, (status, body)
-    assert auth_called and profile_called and not service_called, "perfil sem acesso chegou ao serviço"
+        status, body, _ = request("/api/sala-audiencias-ata/download.php?pauta=hearing-secret")
+        assert status == 400 and b"synthetic-pdf-content" not in body, (status, body)
+        status, body, _ = request("/api/sala-audiencias-ata/download-interno.php?pauta=hearing-secret", profile="SERVIDOR-AUDIENCIAS")
+        assert status == 400 and b"synthetic-pdf-content" not in body, (status, body)
 
-    status, body, auth_called, profile_called, service_called = request(
-        "download.php", "valid", "ESTUDANTE", "estudaata", enrolled="0")
-    assert status == 400 and "Audiência indisponível.".encode("utf-8") in body, (status, body)
-    assert auth_called and profile_called and service_called, "o controle sintético de inscrição não foi acionado"
-
-    status, body, auth_called, profile_called, service_called = request(
-        "download.php", "valid", "ESTUDANTE", "estudaata", secret_allowed="0")
-    assert status == 400 and b"not eligible for secret ata" in body, (status, body)
-    assert auth_called and profile_called and service_called, "o controle sintético de sigilo não foi acionado"
-
-print("PASS ata downloads: expired/revoked/inactive sessions stop before profile/service; valid profiles preserve service gates")
+        db = sqlite3.connect(db_path)
+        db.execute("DELETE FROM sala_audiencias_estudante_inscricao WHERE pauta='hearing-valid'")
+        db.commit()
+        db.close()
+        status, body, _ = request("/api/sala-audiencias-ata/download.php?pauta=hearing-valid")
+        assert status == 400 and b"synthetic-pdf-content" not in body, (status, body)
+        print("PASS HTTP ata download: expired/revoked/inactive sessions; student/internal profiles; enrollment and secrecy gates")
+    finally:
+        server.terminate()
+        try:
+            server.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            server.kill()
+            server.wait(timeout=5)

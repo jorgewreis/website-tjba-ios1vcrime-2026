@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0189
+
+**Data:** 2026-11-19 21:02:54 | **Commit:** `a9c1f040` | **Tipo:** `patch`
+
+- test(REI-99): exercise ata downloads over isolated HTTP
+
 ## V. 1.87.0188
 
 **Data:** 2026-11-19 19:10:08 | **Commit:** `403cff96` | **Tipo:** `patch`
@@ -7617,6 +7623,7 @@
 
 
 \n
+
 
 
 
