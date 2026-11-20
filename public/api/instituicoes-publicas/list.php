@@ -14,6 +14,7 @@ if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
 }
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/services/InstituicoesPublicasService.php';
+require_once $basePath . '/app/helpers/InstituicoesConsultaPolicy.php';
 
 try {
     $connection = Conection::getInstance()->getConnection();
@@ -44,6 +45,7 @@ if ($ativo !== null) {
 }
 
 try {
+    if (InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''))) $filters['ativo'] = 1;
     $service = new InstituicoesPublicasService($connection);
     $listResult = $service->list($filters, $itemsPerPage, $offset);
     $totalItems = (int) ($listResult['total'] ?? 0);

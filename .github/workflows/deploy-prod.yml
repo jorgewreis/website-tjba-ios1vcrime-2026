@@ -40,6 +40,75 @@ jobs:
           DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
         run: bash .github/scripts/deploy-preflight.sh
 
+      - name: Conectar à produção pela VPN WireGuard
+        env:
+          WG_CLIENT_PRIVATE_KEY: ${{ secrets.WG_CLIENT_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${WG_CLIENT_PRIVATE_KEY:-}" ]; then
+            echo "::error::Secret WG_CLIENT_PRIVATE_KEY não configurado no environment production."
+            exit 1
+          fi
+          wg_private_key="$(printf '%s' "$WG_CLIENT_PRIVATE_KEY" | tr -d '\r\n[:space:]')"
+          wg_private_key="${wg_private_key#PrivateKey=}"
+          wg_private_key="${wg_private_key#PRIVATE_KEY=}"
+          wg_private_key="${wg_private_key#WG_CLIENT_PRIVATE_KEY=}"
+          wg_private_key="${wg_private_key#\"}"
+          wg_private_key="${wg_private_key%\"}"
+          wg_private_key="${wg_private_key#\'}"
+          wg_private_key="${wg_private_key%\'}"
+          unset WG_CLIENT_PRIVATE_KEY
+          if ! [[ "$wg_private_key" =~ ^[A-Za-z0-9+/]{43}=$ ]]; then
+            unset wg_private_key
+            echo "::error::Secret WireGuard não contém uma chave privada base64 válida; conteúdo omitido."
+            exit 1
+          fi
+          if ! command -v wg >/dev/null 2>&1 || ! command -v wg-quick >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y wireguard-tools
+          fi
+          if ! printf '%s' "$wg_private_key" | wg pubkey >/dev/null 2>&1; then
+            unset wg_private_key
+            echo "::error::A chave privada WireGuard não pôde ser validada; conteúdo omitido."
+            exit 1
+          fi
+
+          tmp_config="${RUNNER_TEMP}/gha-rei169-wg.conf"
+          config="/etc/wireguard/gha-rei169-wg.conf"
+          umask 077
+          cat > "$tmp_config" <<EOF
+          [Interface]
+          PrivateKey = ${wg_private_key}
+          Address = 10.222.231.3/32
+
+          [Peer]
+          PublicKey = 83ZQWbfYaFvwvemWMrnmRLO9V5tGfisfapOFFTBtgEs=
+          AllowedIPs = 10.222.231.1/32
+          Endpoint = 72.60.250.46:51820
+          PersistentKeepalive = 25
+          EOF
+          unset wg_private_key WG_CLIENT_PRIVATE_KEY
+          sudo -n install -d -m 700 /etc/wireguard
+          if ! cat "$tmp_config" | sudo -n sh -c 'umask 077; cat > /etc/wireguard/gha-rei169-wg.conf'; then
+            rm -f -- "$tmp_config"
+            echo "::error::Não foi possível instalar a configuração WireGuard protegida."
+            exit 1
+          fi
+          rm -f -- "$tmp_config"
+          sudo -n chown root:root -- "$config"
+          sudo -n chmod 600 -- "$config"
+          if ! strip_error="$(sudo -n wg-quick strip "$config" 2>&1 >/dev/null)"; then
+            safe_error="$(printf '%s\n' "$strip_error" | sed -E 's/(PrivateKey|PresharedKey)[[:space:]]*=.*/\1=[redacted]/I; s/[A-Za-z0-9+\/]{40,}={0,2}/[redacted-base64]/g' | tr '\n' ' ' | cut -c1-300)"
+            unset strip_error
+            echo "::error::Configuração WireGuard inválida após instalação: ${safe_error:-sem detalhe}"
+            exit 1
+          fi
+          unset strip_error
+          printf 'DEPLOY_HOST_EFFECTIVE=10.222.231.1\n' >> "$GITHUB_ENV"
+
+          sudo -n wg-quick up "$config"
+          echo "Interface WireGuard configurada; a conectividade será validada pelo SSH com fingerprint fixada."
+
       - name: Setup SSH (decode + validar chave + keyscan)
         env:
           DEPLOY_KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
@@ -75,6 +144,13 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "mkdir -p \"${PROD_PATH}\" && echo \"Diretório OK: ${PROD_PATH}\""
 
+      - name: Aplicar migration de cartas antes da publicação (PROD)
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
+        run: bash .github/scripts/deploy-staged-cartas-migration.sh
+
       - name: Migrar setor responsável de processos (PROD, antes do sync)
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
@@ -89,7 +165,6 @@ jobs:
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
             "${DEPLOY_USER}@${DEPLOY_HOST}" "$remote_command"
-
       - name: Sync files to server (PROD)
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
@@ -106,6 +181,7 @@ jobs:
             --mkpath \
             --exclude ".git/" \
             --exclude ".github/" \
+            --exclude "/tests/" \
             --exclude ".agents/" \
             --exclude ".cursor/" \
             --exclude "AGENTS.md" \
@@ -156,7 +232,7 @@ jobs:
               $line = "APP_URL=https://ios1vcrime.com.br";
               $updated = preg_match("/^APP_URL=.*/m", $content) === 1
                 ? preg_replace("/^APP_URL=.*/m", $line, $content, 1)
-                : rtrim($content, "\\r\\n") . PHP_EOL . $line . PHP_EOL;
+                : rtrim($content, "\r\n") . PHP_EOL . $line . PHP_EOL;
               if ($updated === null || file_put_contents($path, $updated, LOCK_EX) === false) {
                 fwrite(STDERR, "Não foi possível atualizar APP_URL no .env de produção.\n");
                 exit(1);
@@ -251,4 +327,38 @@ jobs:
             sudo systemctl reload php8.2-fpm 2>/dev/null || true
             sudo systemctl reload php8.1-fpm 2>/dev/null || true
             sudo systemctl reload php8.0-fpm 2>/dev/null || true
+
+            # Registre o horário só depois que sincronização, migrations e tarefas
+            # pós-deploy terminaram; uma falha anterior mantém o último deploy válido.
+            site_deployed_at="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+            SITE_DEPLOYED_AT="$site_deployed_at" php -r '
+              $path = ".env";
+              $timestamp = getenv("SITE_DEPLOYED_AT");
+              if (!is_string($timestamp) || preg_match("/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$/D", $timestamp) !== 1) {
+                fwrite(STDERR, "Timestamp de deploy ausente ou inválido.\n");
+                exit(1);
+              }
+              $content = file_get_contents($path);
+              if ($content === false) {
+                fwrite(STDERR, "Não foi possível ler o .env ao registrar o deploy.\n");
+                exit(1);
+              }
+              $line = "SITE_DEPLOYED_AT=" . $timestamp;
+              $updated = preg_match("/^SITE_DEPLOYED_AT=.*/m", $content) === 1
+                ? preg_replace("/^SITE_DEPLOYED_AT=.*/m", $line, $content, 1)
+                : rtrim($content, "\r\n") . PHP_EOL . $line . PHP_EOL;
+              if ($updated === null || file_put_contents($path, $updated, LOCK_EX) === false) {
+                fwrite(STDERR, "Não foi possível registrar SITE_DEPLOYED_AT no .env.\n");
+                exit(1);
+              }
+            '
           EOF
+
+      - name: Remover túnel WireGuard do runner
+        if: always()
+        run: |
+          tmp_config="${RUNNER_TEMP}/gha-rei169-wg.conf"
+          config="/etc/wireguard/gha-rei169-wg.conf"
+          sudo -n wg-quick down "$config" >/dev/null 2>&1 || true
+          sudo -n rm -f -- "$config" >/dev/null 2>&1 || true
+          rm -f -- "$tmp_config"
