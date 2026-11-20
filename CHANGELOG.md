@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0193
+
+**Data:** 2026-11-20 09:38:38 | **Commit:** `bc981db7` | **Tipo:** `patch`
+
+- test(REI-155): guard ordered race entrypoints
+
 ## V. 1.87.0192
 
 **Data:** 2026-11-20 09:36:29 | **Commit:** `7cf2f8ff` | **Tipo:** `patch`
@@ -7642,6 +7648,7 @@
 
 
 \n
+
 
 
 

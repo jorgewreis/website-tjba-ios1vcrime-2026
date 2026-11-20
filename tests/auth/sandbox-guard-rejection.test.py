@@ -12,6 +12,7 @@ PHP_FILES = (
     'http-auth-flow.test.php', 'http-ready.test.php', 'rei171-login-reset-race.test.php',
     'rei155-concurrency.worker.php', 'rei155-legacy-denied.test.php', 'rei155-password-change.test.php',
     'rei155-nontransactional.test.php', 'rei155-metadata-lock.test.php',
+    'rei155-ordered.test.php', 'rei155-ordered.worker.php',
     'http-reset-token.fixture.php', 'login-rate-limit.fixture.php',
     'login-rate-limit-storage.fixture.php', 'login-rate-limit.test.php',
     'password-reset-states.test.php', 'reset-concurrency.worker.php',
