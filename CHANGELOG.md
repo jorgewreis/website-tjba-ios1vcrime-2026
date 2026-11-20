@@ -1,5 +1,17 @@
 # Changelog
 
+## V. 1.87.0189
+
+**Data:** 2026-11-20 08:32:37 | **Commit:** `0707afae` | **Tipo:** `patch`
+
+- docs(REI-124): update isolated CI status
+
+## V. 1.87.0188
+
+**Data:** 2026-11-20 08:27:54 | **Commit:** `6ed7521a` | **Tipo:** `patch`
+
+- test(REI-124): isolate authentication and ata integration tests
+
 ## V. 1.87.0187
 
 **Data:** 2026-11-19 20:36:07 | **Commits:** `20e78c24`, `7706055e` | **Tipo:** `patch`
@@ -7612,5 +7624,7 @@
 
 
 \n
+
+
 
 
