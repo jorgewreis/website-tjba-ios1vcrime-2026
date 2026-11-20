@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0191
+
+**Data:** 2026-11-20 09:07:22 | **Commit:** `a56a90fb` | **Tipo:** `patch`
+
+- test(REI-155): include diagnostics in sandbox fixture
+
 ## V. 1.87.0190
 
 **Data:** 2026-11-20 09:04:31 | **Commit:** `beb5d477` | **Tipo:** `patch`
@@ -7630,6 +7636,7 @@
 
 
 \n
+
 
 
 

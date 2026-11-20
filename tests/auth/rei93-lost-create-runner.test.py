@@ -42,7 +42,7 @@ class LostCreateRunner(unittest.TestCase):
  def test_lost_create_remains_failure_and_removes_only_unique_owner(self):
   with tempfile.TemporaryDirectory(prefix='rei93-runner-fake-') as temp:
    root=Path(temp); auth=root/'tests'/'auth'; auth.mkdir(parents=True)
-   for name in ['run-isolated-auth-e2e.ps1','cleanup-owned.ps1']: shutil.copyfile(HERE/name,auth/name)
+   for name in ['run-isolated-auth-e2e.ps1','cleanup-owned.ps1','rei155-safe-diagnostic.ps1']: shutil.copyfile(HERE/name,auth/name)
    for name in ['app','config','public','vendor','services']: (root/name).mkdir()
    (root/'vendor'/'autoload.php').write_text('<?php',encoding='utf8')
    fake=root/'bin';fake.mkdir(); script=fake/'fake_docker.py';script.write_text(FAKE,encoding='utf8')
