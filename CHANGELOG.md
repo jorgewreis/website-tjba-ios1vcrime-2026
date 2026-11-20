@@ -1,9 +1,16 @@
 # Changelog
 
+## V. 1.88.0011
+
+**Data:** 2026-11-20 15:38:19 | **Commit:** `c35478b0` | **Tipo:** `patch`
+
+- chore(sync): merge latest main into deployment key fix
+
 ## V. 1.88.0010
 
-**Data:** 2026-11-20 15:30:45 | **Commit:** `84617eab` | **Tipo:** `patch`
+**Data:** 2026-11-20 15:35:30 | **Commit:** `9a74caa2` | **Tipo:** `patch`
 
+- fix(ci): normalize WireGuard deployment key
 - fix(ci): validate WireGuard config after root install
 
 ## V. 1.88.0009
@@ -7697,3 +7704,5 @@
 
 
 \n
+
+
