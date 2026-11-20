@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0005
+
+**Data:** 2026-11-20 14:52:07 | **Commit:** `845ba745` | **Tipo:** `patch`
+
+- fix: resolve received letter comarca consistently
+
 ## V. 1.88.0004
 
 **Data:** 2026-11-20 14:14:40 | **Commit:** `f0a15d4d` | **Tipo:** `patch`
@@ -7661,6 +7667,7 @@
 
 
 \n
+
 
 
 
