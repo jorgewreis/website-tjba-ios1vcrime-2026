@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0195
+
+**Data:** 2026-11-20 09:49:03 | **Commit:** `5da1149f` | **Tipo:** `patch`
+
+- test: allow diagnostic probe time on CI
+
 ## V. 1.87.0194
 
 **Data:** 2026-11-20 09:46:51 | **Commit:** `e0058088` | **Tipo:** `patch`
@@ -7654,6 +7660,7 @@
 
 
 \n
+
 
 
 
