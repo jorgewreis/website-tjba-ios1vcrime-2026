@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0194
+
+**Data:** 2026-11-20 09:46:51 | **Commit:** `e0058088` | **Tipo:** `patch`
+
+- test(REI-155): verify issuance and password race
+
 ## V. 1.87.0193
 
 **Data:** 2026-11-20 09:38:38 | **Commit:** `bc981db7` | **Tipo:** `patch`
@@ -7648,6 +7654,7 @@
 
 
 \n
+
 
 
 

@@ -30,6 +30,7 @@ file_put_contents($barrier . '.' . $mode . '.connection', (string)$pdo->query('S
 $result = match ($mode) {
     'change' => (new Usuario())->alterarSenha($user, 'Ativo!12345', 'Troca!Senha1552026'),
     'reset' => (new PasswordResetService())->resetPassword($token, 'Reset!Senha1552026'),
+    'request' => (new PasswordResetService())->requestReset('529.982.247-25', 'ativo@auth-test.invalid'),
     default => throw new RuntimeException('Modo inválido.'),
 };
 echo json_encode($result, JSON_THROW_ON_ERROR);
