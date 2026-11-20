@@ -1,5 +1,29 @@
 # Changelog
 
+## V. 1.87.0190
+
+**Data:** 2026-11-20 09:50:21 | **Commit:** `da820415` | **Tipo:** `patch`
+
+- test(REI-148): run mysql regressions in CI
+
+## Alteracao REI-148 - versao pendente
+
+**Data:** 2026-11-20 08:28:59 | **Commit:** `1836082a` | **Tipo:** `patch`
+
+- fix(REI-148): stabilize user pagination and counts
+
+## V. 1.87.0189
+
+**Data:** 2026-11-20 08:32:37 | **Commit:** `0707afae` | **Tipo:** `patch`
+
+- docs(REI-124): update isolated CI status
+
+## V. 1.87.0188
+
+**Data:** 2026-11-20 08:27:54 | **Commit:** `6ed7521a` | **Tipo:** `patch`
+
+- test(REI-124): isolate authentication and ata integration tests
+
 ## V. 1.87.0187
 
 **Data:** 2026-11-19 21:03:50 | **Commits:** `20e78c24`, `4494e7de`, `7706055e` | **Tipo:** `patch`
@@ -7613,5 +7637,8 @@
 
 
 \n
+
+
+
 
 
