@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0191
+
+**Data:** 2026-11-19 21:31:25 | **Commit:** `f17ba3dd` | **Tipo:** `patch`
+
+- docs(REI-73): record final verification results
+
 ## V. 1.87.0190
 
 **Data:** 2026-11-19 21:28:02 | **Commit:** `e37ae0da` | **Tipo:** `patch`
@@ -7636,3 +7642,4 @@
 
 
 \n
+
