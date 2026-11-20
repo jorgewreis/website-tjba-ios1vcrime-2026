@@ -54,9 +54,10 @@ jobs:
             sudo apt-get install -y wireguard-tools
           fi
 
-          config="${RUNNER_TEMP}/gha-rei169-wg.conf"
+          tmp_config="${RUNNER_TEMP}/gha-rei169-wg.conf"
+          config="/etc/wireguard/gha-rei169-wg.conf"
           umask 077
-          cat > "$config" <<EOF
+          cat > "$tmp_config" <<EOF
           [Interface]
           PrivateKey = ${WG_CLIENT_PRIVATE_KEY}
           Address = 10.222.231.3/32
@@ -68,10 +69,23 @@ jobs:
           PersistentKeepalive = 25
           EOF
           unset WG_CLIENT_PRIVATE_KEY
-          chmod 600 "$config"
+          if ! wg-quick strip "$tmp_config" >/dev/null 2>&1; then
+            rm -f -- "$tmp_config"
+            echo "::error::Configuração WireGuard inválida; conteúdo omitido."
+            exit 1
+          fi
+          sudo -n install -d -m 700 /etc/wireguard
+          if ! cat "$tmp_config" | sudo -n sh -c 'umask 077; cat > /etc/wireguard/gha-rei169-wg.conf'; then
+            rm -f -- "$tmp_config"
+            echo "::error::Não foi possível instalar a configuração WireGuard protegida."
+            exit 1
+          fi
+          rm -f -- "$tmp_config"
+          sudo -n chown root:root -- "$config"
+          sudo -n chmod 600 -- "$config"
           printf 'DEPLOY_HOST_EFFECTIVE=10.222.231.1\n' >> "$GITHUB_ENV"
 
-          sudo wg-quick up "$config"
+          sudo -n wg-quick up "$config"
           echo "Interface WireGuard configurada; a conectividade será validada pelo SSH com fingerprint fixada."
 
       - name: Setup SSH (decode + validar chave + keyscan)
@@ -308,6 +322,8 @@ jobs:
       - name: Remover túnel WireGuard do runner
         if: always()
         run: |
-          config="${RUNNER_TEMP}/gha-rei169-wg.conf"
-          sudo wg-quick down "$config" >/dev/null 2>&1 || true
-          rm -f "$config"
+          tmp_config="${RUNNER_TEMP}/gha-rei169-wg.conf"
+          config="/etc/wireguard/gha-rei169-wg.conf"
+          sudo -n wg-quick down "$config" >/dev/null 2>&1 || true
+          sudo -n rm -f -- "$config" >/dev/null 2>&1 || true
+          rm -f -- "$tmp_config"
