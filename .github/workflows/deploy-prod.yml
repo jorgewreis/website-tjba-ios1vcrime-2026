@@ -88,7 +88,7 @@ jobs:
           PersistentKeepalive = 25
           EOF
           unset wg_private_key WG_CLIENT_PRIVATE_KEY
-          if ! strip_error="$(wg-quick strip "$tmp_config" 2>&1 >/dev/null)"; then
+          if ! strip_error="$(sudo -n wg-quick strip "$tmp_config" 2>&1 >/dev/null)"; then
             rm -f -- "$tmp_config"
             safe_error="$(printf '%s\n' "$strip_error" | sed -E 's/(PrivateKey|PresharedKey)[[:space:]]*=.*/\1=[redacted]/I; s/[A-Za-z0-9+\/]{40,}={0,2}/[redacted-base64]/g' | tr '\n' ' ' | cut -c1-300)"
             unset strip_error
