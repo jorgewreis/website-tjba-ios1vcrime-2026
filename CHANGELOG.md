@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0194
+
+**Data:** 2026-11-20 10:49:23 | **Commit:** `0b3d0eb5` | **Tipo:** `patch`
+
+- test(REI-158): observe HTTP admission lock
+
 ## V. 1.87.0193
 
 **Data:** 2026-11-20 10:43:51 | **Commit:** `119e261f` | **Tipo:** `patch`
@@ -7654,6 +7660,7 @@
 
 
 \n
+
 
 
 
