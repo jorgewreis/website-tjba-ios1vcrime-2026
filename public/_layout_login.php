@@ -144,7 +144,7 @@ if ($_siteUpdatedAt instanceof DateTimeImmutable) {
                             <span class="info-line">Rua Dr. Hygino Filho, bloco C, 1º andar, sala 132 - Jardim Atlântico, Ilhéus - BA</span>
                             <span class="info-line">Tel.: 73 3234-3428 - WhatsApp: 71 99610-8241 - Email: ilheus1vcriminal@tjba.jus.br</span>
                         </div>
-                        <div class="info-app footer-credit">
+                        <div class="info-app footer-credit" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center;">
                             <span>Uma solução da Fokus Cloud para a Justiça</span>
                             <span>ios1vcrime.com.br · Versão <?php echo htmlspecialchars($_siteVersion, ENT_QUOTES, 'UTF-8'); ?> · Atualizado em <?php echo htmlspecialchars($_siteUpdatedAtLabel, ENT_QUOTES, 'UTF-8'); ?> · Todos os direitos reservados</span>
                         </div>
