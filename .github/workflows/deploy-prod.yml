@@ -49,9 +49,28 @@ jobs:
             echo "::error::Secret WG_CLIENT_PRIVATE_KEY não configurado no environment production."
             exit 1
           fi
+          wg_private_key="$(printf '%s' "$WG_CLIENT_PRIVATE_KEY" | tr -d '\r\n[:space:]')"
+          wg_private_key="${wg_private_key#PrivateKey=}"
+          wg_private_key="${wg_private_key#PRIVATE_KEY=}"
+          wg_private_key="${wg_private_key#WG_CLIENT_PRIVATE_KEY=}"
+          wg_private_key="${wg_private_key#\"}"
+          wg_private_key="${wg_private_key%\"}"
+          wg_private_key="${wg_private_key#\'}"
+          wg_private_key="${wg_private_key%\'}"
+          unset WG_CLIENT_PRIVATE_KEY
+          if ! [[ "$wg_private_key" =~ ^[A-Za-z0-9+/]{43}=$ ]]; then
+            unset wg_private_key
+            echo "::error::Secret WireGuard não contém uma chave privada base64 válida; conteúdo omitido."
+            exit 1
+          fi
           if ! command -v wg >/dev/null 2>&1 || ! command -v wg-quick >/dev/null 2>&1; then
             sudo apt-get update
             sudo apt-get install -y wireguard-tools
+          fi
+          if ! printf '%s' "$wg_private_key" | wg pubkey >/dev/null 2>&1; then
+            unset wg_private_key
+            echo "::error::A chave privada WireGuard não pôde ser validada; conteúdo omitido."
+            exit 1
           fi
 
           tmp_config="${RUNNER_TEMP}/gha-rei169-wg.conf"
@@ -59,7 +78,7 @@ jobs:
           umask 077
           cat > "$tmp_config" <<EOF
           [Interface]
-          PrivateKey = ${WG_CLIENT_PRIVATE_KEY}
+          PrivateKey = ${wg_private_key}
           Address = 10.222.231.3/32
 
           [Peer]
@@ -68,7 +87,7 @@ jobs:
           Endpoint = 72.60.250.46:51820
           PersistentKeepalive = 25
           EOF
-          unset WG_CLIENT_PRIVATE_KEY
+          unset wg_private_key
           if ! wg-quick strip "$tmp_config" >/dev/null 2>&1; then
             rm -f -- "$tmp_config"
             echo "::error::Configuração WireGuard inválida; conteúdo omitido."

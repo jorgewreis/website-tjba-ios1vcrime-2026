@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0010
+
+**Data:** 2026-11-20 15:35:30 | **Commit:** `9a74caa2` | **Tipo:** `patch`
+
+- fix(ci): normalize WireGuard deployment key
+
 ## V. 1.88.0009
 
 **Data:** 2026-11-20 15:18:50 | **Commit:** `61e43d48` | **Tipo:** `patch`
@@ -7691,3 +7697,4 @@
 
 
 \n
+
