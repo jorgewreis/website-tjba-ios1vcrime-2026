@@ -136,6 +136,7 @@ try {
     Run-AppTest 'auth-fixtures.test.php'
     Run-AppTest 'login-rate-limit.test.php'
     Run-AppTest 'rei155-password-change.test.php'
+    Run-AppTest 'rei155-ordered.test.php'
     Run-AppTest 'rei155-legacy-denied.test.php'
     Run-AppTest 'rei155-nontransactional.test.php'
     Run-AppTest 'rei155-metadata-lock.test.php'

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0192
+
+**Data:** 2026-11-20 09:36:29 | **Commit:** `7cf2f8ff` | **Tipo:** `patch`
+
+- test(REI-155): verify ordered reset races
+
 ## V. 1.87.0191
 
 **Data:** 2026-11-20 09:07:22 | **Commit:** `a56a90fb` | **Tipo:** `patch`
@@ -7636,6 +7642,7 @@
 
 
 \n
+
 
 
 
