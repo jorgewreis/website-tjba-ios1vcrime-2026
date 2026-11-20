@@ -19,7 +19,7 @@ try {
     foreach ($endpoints as $endpoint) {
         putFixture($tmp, 'public/api/instituicoes-publicas/' . $endpoint, file_get_contents($root . '/public/api/instituicoes-publicas/' . $endpoint));
     }
-    foreach (['app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php', 'app/access/AccessEvaluator.php', 'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php', 'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php'] as $file) {
+    foreach (['app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php', 'app/helpers/InstituicoesConsultaPolicy.php', 'app/access/AccessEvaluator.php', 'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php', 'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php'] as $file) {
         putFixture($tmp, $file, file_get_contents($root . '/' . $file));
     }
     putFixture($tmp, 'app/helpers/AutoloadHelper.php', '<?php');
