@@ -8,4 +8,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(access): authorize enrolled student ata downloads** `[403cff96]`
 - **test(REI-99): exercise ata downloads over isolated HTTP** `[a9c1f040]`
 - **test(REI-127): cover matching date with stale etag** `[20e78c24]`
+- **fix(auth): prevent stale login after password reset** `[7706055e]`
 
