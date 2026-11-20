@@ -112,7 +112,7 @@ try {
         else { Copy-Tree $source }
     }
     D @('exec',$client,'mkdir','-p','/workspace/tests/auth')|Out-Null
-    foreach($clientTest in @('http-auth-flow.test.php', 'http-ready.test.php', 'sandbox-guard.php')) { D @('cp',(Join-Path $root "tests/auth/$clientTest"),"${client}:/workspace/tests/auth/$clientTest")|Out-Null }
+    foreach($clientTest in @('http-auth-flow.test.php', 'http-ready.test.php', 'rei158-http-concurrency.test.php', 'sandbox-guard.php')) { D @('cp',(Join-Path $root "tests/auth/$clientTest"),"${client}:/workspace/tests/auth/$clientTest")|Out-Null }
     $runtime="APP_ENV=testing`nAUTH_TEST_ISOLATION=isolated-auth-test`nDB_HOST=mysql`nDB_PORT=3306`nDB_NAME=auth_test_e2e`nDB_USER=root`nDB_PASS=$pass`nDB_CHARSET=utf8mb4`nMAIL_DRIVER=smtp`nMAIL_HOST=mailpit`nMAIL_PORT=1025`nMAIL_USER=auth-test`nMAIL_PASSWORD=$pass`nMAIL_ENCRYPTION=none`nMAIL_FROM_ADDRESS=no-reply@auth-test.invalid`nMAIL_FROM_NAME=Auth E2E`nAPP_URL=https://auth-test.invalid`n"
     $runtime|& docker --context $dockerContext exec -i $app sh -c 'umask 077; cat > /workspace/tests/auth/.env.test.runtime'; if($LASTEXITCODE -ne 0){throw 'Não foi possível criar configuração interna.'}
     $guardToken=Secret
@@ -135,7 +135,7 @@ try {
     Run-AppTest 'smtp-capture.test.php'
     Run-AppTest 'login-rate-limit.fixture.php' @('seed')
     $token=(App @('php','/workspace/tests/auth/http-reset-token.fixture.php')|Select-Object -Last 1).Trim(); if($token -notmatch '^[a-f0-9]{64}$'){throw 'Token sintético inválido.'}
-    D @('exec','-d',$app,'sh','-c','cd /workspace && exec php -S 0.0.0.0:8080 -t public >/tmp/auth-e2e-app.log 2>&1')|Out-Null
+    D @('exec','-d','--env','PHP_CLI_SERVER_WORKERS=4',$app,'sh','-c','cd /workspace && exec php -S 0.0.0.0:8080 -t public >/tmp/auth-e2e-app.log 2>&1')|Out-Null
     for($i=0; $i -lt 30; $i++) {
         $probe = Start-Process -FilePath 'docker' -ArgumentList @('--context', $dockerContext, 'exec', '--env', 'APP_ENV=testing', '--env', 'AUTH_TEST_ISOLATION=isolated-auth-test', '--env', 'AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner', '--env', "AUTH_TEST_GUARD_TOKEN=$guardToken", $client, 'php', '/workspace/tests/auth/http-ready.test.php') -Wait -PassThru -NoNewWindow
         if($probe.ExitCode -eq 0){break}
@@ -143,6 +143,7 @@ try {
     }
     if($i -eq 30){throw 'Aplicação HTTP não ficou pronta.'}
     D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",'--env',"E2E_RESET_TOKEN=$token",$client,'php','tests/auth/http-auth-flow.test.php')|Write-Output
+    D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",$client,'php','tests/auth/rei158-http-concurrency.test.php')|Write-Output
     Run-AppTest 'password-reset-states.test.php'
 } catch {
     # Dados de erro do Docker, testes e servidor podem conter tokens; nunca os imprima.

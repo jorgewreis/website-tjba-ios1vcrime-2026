@@ -9,7 +9,7 @@ import unittest
 HERE = Path(__file__).resolve().parent
 PHP_FILES = (
     'auth-fixtures.test.php', 'config-environment-selection.test.php', 'fixture-setup.test.php',
-    'http-auth-flow.test.php', 'http-ready.test.php', 'rei171-login-reset-race.test.php',
+    'http-auth-flow.test.php', 'http-ready.test.php', 'rei158-http-concurrency.test.php', 'rei171-login-reset-race.test.php',
     'http-reset-token.fixture.php', 'login-rate-limit.fixture.php',
     'login-rate-limit-storage.fixture.php', 'login-rate-limit.test.php', 'login-rate-limit-concurrency.test.php',
     'password-reset-states.test.php', 'reset-concurrency.worker.php',

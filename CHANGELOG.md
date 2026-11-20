@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0192
+
+**Data:** 2026-11-20 10:41:05 | **Commit:** `101c01a9` | **Tipo:** `patch`
+
+- test(REI-158): exercise concurrent HTTP logins
+
 ## V. 1.87.0191
 
 **Data:** 2026-11-20 10:34:29 | **Commit:** `f95be398` | **Tipo:** `patch`
@@ -7642,6 +7648,7 @@
 
 
 \n
+
 
 
 
