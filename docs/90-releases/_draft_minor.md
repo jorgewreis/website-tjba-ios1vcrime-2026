@@ -4,5 +4,11 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-_Nenhuma entrada pendente._
+- **test(REI-124): isolate authentication and ata integration tests** `[6ed7521a]`
+- **docs(REI-124): update isolated CI status** `[0707afae]`
+- **fix(REI-148): stabilize user pagination and counts** `[1836082a]`
+- **test(REI-148): run mysql regressions in CI** `[da820415]`
+- **test(REI-127): cover matching date with stale etag** `[20e78c24]`
+- **test(REI-169): cover equal queue timestamps** `[4494e7de]`
+- **fix(auth): prevent stale login after password reset** `[7706055e]`
 
