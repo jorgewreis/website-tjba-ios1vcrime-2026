@@ -35,7 +35,7 @@ final class PessoasService
         foreach ($rows as $i => $row) {
             $parteId = (string) ($row['id'] ?? '');
             $rows[$i]['total_processos'] = $parteId !== '' ? count($this->processosPartesRepository->findByParteId($parteId)) : 0;
-            $vinculosInst = $parteId !== '' ? $this->partesInstituicoesRepository->findByParteId($parteId, true) : [];
+            $vinculosInst = $parteId !== '' ? $this->partesInstituicoesRepository->findByParteId($parteId, true, !empty($filters['somente_instituicoes_ativas'])) : [];
             $rows[$i]['total_instituicoes'] = count($vinculosInst);
             $rows[$i]['documentos'] = $parteId !== '' ? $this->documentosRepository->findByParteId($parteId) : [];
             $rows[$i]['telefones'] = $parteId !== '' ? $this->telefonesRepository->findByParteId($parteId) : [];
@@ -54,7 +54,7 @@ final class PessoasService
         ];
     }
 
-    public function find(string $id): ?array
+    public function find(string $id, bool $onlyActiveInstitutions = false): ?array
     {
         $parte = $this->partesRepository->findById($id);
         if ($parte === null) {
@@ -62,7 +62,7 @@ final class PessoasService
         }
         $parte['documentos'] = $this->documentosRepository->findByParteId($id);
         $parte['telefones'] = $this->telefonesRepository->findByParteId($id);
-        $parte['vinculos_instituicoes'] = $this->partesInstituicoesRepository->findByParteId($id, null);
+        $parte['vinculos_instituicoes'] = $this->partesInstituicoesRepository->findByParteId($id, null, $onlyActiveInstitutions);
         $parte['vinculos_processos'] = $this->processosPartesRepository->findByParteId($id);
         return $parte;
     }
