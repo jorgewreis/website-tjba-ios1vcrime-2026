@@ -8,6 +8,7 @@ if (function_exists('mb_internal_encoding')) {
 
 require_once __DIR__ . '/../../helpers/Conection.php';
 require_once __DIR__ . '/../../services/InstituicoesPublicasService.php';
+require_once __DIR__ . '/../../helpers/InstituicoesConsultaPolicy.php';
 require_once __DIR__ . '/../../../config/security.php';
 
 $connection = Conection::getInstance()->getConnection();
@@ -34,6 +35,7 @@ if ($filtrou) {
     $offset = ($currentPage - 1) * $itemsPerPage;
 
     try {
+        if (InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''))) $filters['ativo'] = 1;
         $service = new InstituicoesPublicasService($connection);
         $listResult = $service->list($filters, $itemsPerPage, $offset);
         $rows = $listResult['rows'] ?? [];
