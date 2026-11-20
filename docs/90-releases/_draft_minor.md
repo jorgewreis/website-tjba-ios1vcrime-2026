@@ -14,4 +14,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **chore(sync): merge latest main into deployment key fix** `[c35478b0]`
 - **fix(ci): reveal sanitized WireGuard validation error** `[de7e73d2]`
 - **fix(ci): run WireGuard validation with explicit sudo** `[9654ab41]`
+- **fix(ci): validate installed WireGuard config only** `[ae8c7d43]`
 
