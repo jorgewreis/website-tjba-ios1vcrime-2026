@@ -9,3 +9,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **ci(deploy): sincronizar firewall temporário Hostinger** `[c85a9638]`
 - **ci(deploy): preservar acesso WireGuard no firewall temporário** `[f0a15d4d]`
 
+- **fix: resolve received letter comarca consistently** `[845ba745]`
