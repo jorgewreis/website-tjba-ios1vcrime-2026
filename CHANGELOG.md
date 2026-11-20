@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0004
+
+**Data:** 2026-11-20 14:14:40 | **Commit:** `f0a15d4d` | **Tipo:** `patch`
+
+- ci(deploy): preservar acesso WireGuard no firewall temporário
+
 ## V. 1.88.0003
 
 **Data:** 2026-11-20 14:01:52 | **Commit:** `c85a9638` | **Tipo:** `patch`
@@ -7655,6 +7661,7 @@
 
 
 \n
+
 
 
 
