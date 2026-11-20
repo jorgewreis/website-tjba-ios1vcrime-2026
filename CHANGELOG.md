@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0008
+
+**Data:** 2026-11-20 15:06:06 | **Commit:** `86f0b54d` | **Tipo:** `patch`
+
+- fix(ci): use WireGuard for production deploy
+
 ## V. 1.88.0007
 
 **Data:** 2026-11-20 14:52:07 | **Commit:** `55a6dd6d` | **Tipo:** `patch`
