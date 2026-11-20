@@ -4,5 +4,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **test(REI-148): correct external student count** `[05155013]`
-
+- **test(REI-127): cover matching date with stale etag** `[20e78c24]`
+- **fix(auth): prevent stale login after password reset** `[7706055e]`
+- **fix(REI-148): deduplicate mixed user profiles consistently** `[ee13f5ef]`
