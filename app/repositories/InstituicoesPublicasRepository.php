@@ -16,7 +16,7 @@ final class InstituicoesPublicasRepository
         $this->table = $table;
     }
 
-    public function findById(string $id): ?array
+    public function findById(string $id, bool $onlyActive = false): ?array
     {
         $id = trim($id);
         if ($id === '') {
@@ -25,8 +25,8 @@ final class InstituicoesPublicasRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'SELECT `id`, `nome`, `nome_fantasia`, `cnpj`, `observacoes`, `ativo`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1',
-                $this->table
+                'SELECT `id`, `nome`, `nome_fantasia`, `cnpj`, `observacoes`, `ativo`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id%s LIMIT 1',
+                $this->table, $onlyActive ? ' AND `ativo` = 1' : ''
             )
         );
         $statement->bindValue(':id', $id);
@@ -167,6 +167,9 @@ final class InstituicoesPublicasRepository
             $value = $payload[$column];
             if ($column === 'nome') {
                 $value = $this->normalizeNomeInstituicao((string) $value);
+                if ($value === '') {
+                    throw new InvalidArgumentException('Nome da instituição é obrigatório.');
+                }
                 if ($value !== '') {
                     $existente = $this->findByNome($value);
                     if ($existente !== null && (string) $existente['id'] !== $id) {
@@ -211,7 +214,7 @@ final class InstituicoesPublicasRepository
         }
         $statement->execute();
 
-        return $statement->rowCount() > 0;
+        return $statement->rowCount() > 0 || $this->findById($id) !== null;
     }
 
     /** Nome da instituição: trim, normaliza espaços, limita 255. Permite números e símbolos (hífen, ª, º, etc.). */

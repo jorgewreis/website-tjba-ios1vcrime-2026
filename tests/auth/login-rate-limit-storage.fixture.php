@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require __DIR__ . '/sandbox-guard.php';
+
 require dirname(__DIR__, 2) . '/config/config.php';
 require dirname(__DIR__, 2) . '/app/helpers/Conection.php';
 

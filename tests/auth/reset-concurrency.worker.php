@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require __DIR__ . '/sandbox-guard.php';
+
 if ($argc !== 4) {
     fwrite(STDERR, "Uso: reset-concurrency.worker.php <token> <senha> <barreira>\n");
     exit(2);

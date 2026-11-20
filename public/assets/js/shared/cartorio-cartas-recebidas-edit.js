@@ -100,6 +100,8 @@
         const statusSelect = global.document.getElementById('filter-status');
         const observacoesInput = global.document.getElementById('filter-observacoes');
         const hiddenComarcaInput = global.document.getElementById('hidden-comarca-id');
+        const lookupStatus = global.document.getElementById('comarca-lookup-status');
+        const lookupRetry = global.document.getElementById('comarca-lookup-retry');
         const voltarBtn = global.document.getElementById('voltar-btn');
         const btnCancelarTarefa = global.document.getElementById('cancelar-tarefa-btn');
         const btnExcluirTarefa = global.document.getElementById('excluir-tarefa-btn');
@@ -138,8 +140,31 @@
             return false;
         }
 
+        let lookupVersion = 0;
+        let lookupPending = false;
+        let submitting = false;
+        let selectedCity = normalizeCidade(cidadeInput.value);
+        let selectedUf = (estadoSelect.value || '').trim().toUpperCase();
+
+        function validComarca() {
+            return !!hiddenComarcaInput && !!hiddenComarcaInput.value.trim() && !lookupPending &&
+                /^[A-Z]{2}$/.test(selectedUf) && selectedCity === normalizeCidade(cidadeInput.value) && selectedUf === (estadoSelect.value || '').trim().toUpperCase();
+        }
         function updateSalvarButton() {
-            salvarBtn.disabled = !hasChanges();
+            salvarBtn.disabled = submitting || !hasChanges() || !validComarca();
+        }
+        function showLookupStatus(message, retry) {
+            if (lookupStatus) lookupStatus.textContent = message;
+            if (lookupRetry) lookupRetry.hidden = !retry;
+        }
+        function invalidateComarca() {
+            lookupVersion++;
+            lookupPending = false;
+            selectedCity = '';
+            selectedUf = '';
+            if (hiddenComarcaInput) hiddenComarcaInput.value = '';
+            showLookupStatus('Informe a cidade e o estado e saia do campo para consultar.', false);
+            updateSalvarButton();
         }
 
         function applyCidadeFormatting() {
@@ -148,26 +173,54 @@
 
         function fetchCidadeInfo() {
             const cidade = cidadeInput.value.trim();
-            if (cidade.length < 2) return;
-            fetch(endpoints.lookupCidade || '/api/cartorio-cartas-recebidas/buscar-cidade.php?cidade=' + encodeURIComponent(cidade))
-                .then((response) => response.json())
+            const uf = (estadoSelect.value || '').trim().toUpperCase();
+            const version = ++lookupVersion;
+            if (hiddenComarcaInput) hiddenComarcaInput.value = '';
+            selectedCity = '';
+            selectedUf = '';
+            if (cidade.length < 2 || !uf) {
+                lookupPending = false;
+                showLookupStatus('Informe uma cidade com ao menos dois caracteres e selecione o estado.', false);
+                if (cidade.length >= 2 && !uf) notify('error', 'Estado obrigatório', 'Selecione o estado antes de identificar a comarca.');
+                updateSalvarButton();
+                return;
+            }
+            lookupPending = true;
+            showLookupStatus('Consultando comarca...', false);
+            updateSalvarButton();
+            const endpoint = endpoints.lookupCidade || '/api/cartorio-cartas-recebidas/buscar-cidade.php?cidade=';
+            fetch(endpoint + encodeURIComponent(cidade) + '&uf=' + encodeURIComponent(uf))
+                .then((response) => { if (!response.ok) throw new Error('Consulta indisponível'); return response.json(); })
                 .then((data) => {
-                    if (!data || !data.found) return;
-                    if (data.uf && estadoSelect) {
-                        estadoSelect.value = data.uf;
+                    if (version !== lookupVersion || normalizeCidade(cidadeInput.value) !== normalizeCidade(cidade) || (estadoSelect.value || '').trim().toUpperCase() !== uf) return;
+                    if (!data || !data.found || !data.id || String(data.uf || '').toUpperCase() !== uf) {
+                        showLookupStatus('Cidade não encontrada neste estado. Confira os dados e consulte novamente.', true);
+                        notify('error', 'Cidade não identificada', 'Confira a cidade e o estado e tente novamente.');
+                        return;
                     }
-                    const status = String(data.status_cidade || '').trim();
-                    if (status.toLowerCase() === 'agregada' && data.nome) {
+                    if (String(data.status_cidade || '').trim().toLowerCase() === 'agregada' && data.nome) {
                         cidadeInput.value = formatCidade(data.nome);
                     }
-                    if (data.id && hiddenComarcaInput) hiddenComarcaInput.value = data.id;
+                    if (hiddenComarcaInput) hiddenComarcaInput.value = data.id;
+                    selectedCity = normalizeCidade(cidadeInput.value);
+                    selectedUf = uf;
+                    showLookupStatus('Comarca identificada.', false);
                 })
-                .catch(() => {});
+                .catch(() => {
+                    if (version === lookupVersion) {
+                        showLookupStatus('Não foi possível consultar a cidade. Tente novamente.', true);
+                        notify('error', 'Consulta indisponível', 'Não foi possível identificar a comarca. Tente novamente.');
+                    }
+                })
+                .finally(() => { if (version === lookupVersion) { lookupPending = false; updateSalvarButton(); } });
         }
 
+        if (lookupRetry) lookupRetry.addEventListener('click', fetchCidadeInfo);
+        cidadeInput.addEventListener('input', invalidateComarca);
+        estadoSelect.addEventListener('change', function () { invalidateComarca(); fetchCidadeInfo(); });
         cidadeInput.addEventListener('blur', function () {
             applyCidadeFormatting();
-            fetchCidadeInfo();
+            if (!validComarca()) fetchCidadeInfo();
         });
         if (App.ProperNameHelper) {
             App.ProperNameHelper.applyOnBlur(cidadeInput, 120);
@@ -189,7 +242,7 @@
             if (payloadState.finalidade === '' || payloadState.cidade === '' || payloadState.estado === '') {
                 return notifyByKey('cartorio.cartas.validation.required.fields', {}, 'error', 'Erro', 'Finalidade, cidade e estado são obrigatórios.');
             }
-            if (!hiddenComarcaInput || !hiddenComarcaInput.value.trim()) {
+            if (!validComarca()) {
                 return notifyByKey('cartorio.cartas.validation.comarca.required', {}, 'error', 'Erro', 'Selecione uma cidade válida para que a comarca seja identificada.');
             }
 
@@ -204,7 +257,8 @@
             if (statusSelect) payload.status = payloadState.status || '';
             if (observacoesInput) payload.observacoes = payloadState.observacoes || '';
 
-            salvarBtn.disabled = true;
+            submitting = true;
+            updateSalvarButton();
             notifyByKey('cartorio.cartas.update.progress.info', {}, 'info', 'Informação', 'Atualizando dados...');
 
             fetch(endpoints.update || '/api/cartorio-cartas-recebidas/update.php', {
@@ -223,7 +277,8 @@
                 })
                 .catch(function (error) {
                     notify('error', 'Erro', error.message || 'Erro ao salvar.');
-                    salvarBtn.disabled = false;
+                    submitting = false;
+                    updateSalvarButton();
                 });
         });
 

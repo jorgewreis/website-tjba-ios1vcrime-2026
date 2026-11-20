@@ -4,11 +4,21 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['instituicoespublicasedit'], true);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/InstituicoesPublicasService.php';
 
-$connection = Conection::getInstance()->getConnection();
+try {
+    $connection = Conection::getInstance()->getConnection();
+} catch (Throwable $exception) {
+    error_log('instituicoes-publicas/update.php: falha de conexão.');
+    http_response_code(500);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $payload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($payload, true);
@@ -25,12 +35,17 @@ if ($id === '') {
 
 try {
     $service = new InstituicoesPublicasService($connection);
-    $service->update($id, $parsed);
+    if (!$service->update($id, $parsed)) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Instituição não encontrada.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao atualizar instituição: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    error_log('Instituições públicas: ' . get_class($exception));
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
 }

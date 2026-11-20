@@ -48,9 +48,14 @@ final class CejuscRegistrosService
         return $this->repository->find($id);
     }
 
-    public function create(array $payload): string
+    public function create(array $payload, string $actorId): string
     {
+        $actorId = trim($actorId);
+        if ($actorId === '') {
+            throw new InvalidArgumentException('Usuário autenticado obrigatório.');
+        }
         $data = $this->validate($payload);
+        $data['usuario_id'] = $actorId;
         if (empty($data['force_duplicate'])) {
             $duplicado = $this->repository->findDuplicateByProcessoAndParte($data['numero_processo'], $data['nome_parte']);
             if ($duplicado !== null) {
@@ -71,18 +76,29 @@ final class CejuscRegistrosService
         }
     }
 
-    public function update(string $id, array $payload): bool
+    public function update(string $id, array $payload, string $actorId): bool
     {
         if (trim($id) === '') {
             throw new InvalidArgumentException('Identificador do registro é obrigatório.');
         }
+        $actorId = trim($actorId);
+        if ($actorId === '') {
+            throw new InvalidArgumentException('Usuário autenticado obrigatório.');
+        }
         $data = $this->validate($payload);
+        $data['usuario_id'] = $actorId;
         $this->connection->beginTransaction();
         try {
+            if ($this->repository->findForUpdate($id) === null) {
+                $this->connection->rollBack();
+                return false;
+            }
             $data['nome_parte'] = $this->ensureParteVinculada($data, false);
-            $updated = $this->repository->update($id, $data);
+            if (!$this->repository->update($id, $data)) {
+                throw new RuntimeException('Não foi possível atualizar o registro CEJUSC.');
+            }
             $this->connection->commit();
-            return $updated;
+            return true;
         } catch (Throwable $error) {
             if ($this->connection->inTransaction()) {
                 $this->connection->rollBack();
@@ -120,7 +136,7 @@ final class CejuscRegistrosService
         $processo = sprintf('%s-%s.%s.%s.%s.%s', substr($digits, 0, 7), substr($digits, 7, 2), substr($digits, 9, 4), substr($digits, 13, 1), substr($digits, 14, 2), substr($digits, 16, 4));
         if (mb_strlen($classeCodigo) > 30) throw new InvalidArgumentException('O código da classe processual é inválido.');
         if (mb_strlen($classeDescricao) > 255) throw new InvalidArgumentException('A descrição da classe processual é inválida.');
-        return ['numero_processo' => $processo, 'classe_codigo' => $classeCodigo !== '' ? $classeCodigo : null, 'classe_descricao' => $classeDescricao !== '' ? $classeDescricao : null, 'nome_parte' => $parte, 'parte_id' => $parteId, 'data_envio_cejusc' => $data, 'usuario_id' => trim((string) ($payload['usuario_id'] ?? $_SESSION['id_usuario'] ?? '')), 'force_duplicate' => $forceDuplicate];
+        return ['numero_processo' => $processo, 'classe_codigo' => $classeCodigo !== '' ? $classeCodigo : null, 'classe_descricao' => $classeDescricao !== '' ? $classeDescricao : null, 'nome_parte' => $parte, 'parte_id' => $parteId, 'data_envio_cejusc' => $data, 'force_duplicate' => $forceDuplicate];
     }
 
     private function ensureParteVinculada(array $data, bool $garantirPrioridadeCejusc): string

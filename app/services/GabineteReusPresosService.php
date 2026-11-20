@@ -368,7 +368,7 @@ final class GabineteReusPresosService
             $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
         }
 
-        $processoId = $this->processosRepository->ensureProcess($numeroRaw, $classeId, null, false);
+        $processoId = $this->processosRepository->ensureProcess($numeroRaw, $classeId, null, null);
 
         if ($linkId !== '') {
             $existing = $this->procRepo->findById($linkId);
@@ -500,10 +500,23 @@ final class GabineteReusPresosService
     {
         $reuId = trim((string) ($input['reu_preso_id'] ?? ''));
         $tipo = trim((string) ($input['tipo_codigo'] ?? ''));
-        $dataMov = $this->normalizeDateOrNull($input['data_movimentacao'] ?? null);
+        $dataMov = is_string($input['data_movimentacao'] ?? null)
+            ? trim($input['data_movimentacao']) : '';
         $obs = trim((string) ($input['observacoes'] ?? ''));
         $user = trim((string) ($input['user_cadastro'] ?? ''));
 
+        if ($dataMov === '') {
+            throw new InvalidArgumentException('Data da movimentação é obrigatória.');
+        }
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $dataMov);
+        $errors = DateTimeImmutable::getLastErrors();
+        if ($date === false || $date->format('Y-m-d') !== $dataMov
+            || ($errors !== false && ($errors['warning_count'] > 0 || $errors['error_count'] > 0))) {
+            throw new InvalidArgumentException('Informe uma data de movimentação válida.');
+        }
+        if ($dataMov > date('Y-m-d')) {
+            throw new InvalidArgumentException('A data da movimentação não pode ser futura.');
+        }
         if ($reuId === '') {
             throw new InvalidArgumentException('Réu obrigatório.');
         }
@@ -517,10 +530,6 @@ final class GabineteReusPresosService
         if ($tipo === '' || !array_key_exists($tipo, self::tiposMovimentacao())) {
             throw new InvalidArgumentException('Tipo de movimentação inválido.');
         }
-        if ($dataMov === null || $dataMov === '') {
-            throw new InvalidArgumentException('Data da movimentação é obrigatória.');
-        }
-
         $links = $this->procRepo->findByReuPresoId($reuId);
         if ($links === []) {
             throw new InvalidArgumentException('Nenhum processo vinculado para registrar movimentação.');

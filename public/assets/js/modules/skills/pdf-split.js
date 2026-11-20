@@ -160,7 +160,8 @@
         status.textContent = 'Preparando o PDF para divisão.';
         try {
             await yieldUi(); checkCancel();
-            var source = await PDFLib.PDFDocument.load(await file.arrayBuffer()); checkCancel();
+            var data = await file.arrayBuffer(); checkCancel();
+            var source = await PDFLib.PDFDocument.load(data); checkCancel();
             var total = source.getPageCount();
             if (!total) throw new Error('O PDF não contém páginas.');
             var ranges = [];

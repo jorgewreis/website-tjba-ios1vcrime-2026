@@ -148,14 +148,11 @@ Diretriz atual:
 - segredos de integração;
 - dados pessoais além do necessário para suporte e auditoria.
 
-### 7.1. Observação importante sobre reset de senha
+### 7.1. Recuperação de senha e logs
 
-Quando `MAIL_DRIVER` não está configurado para SMTP, o fluxo atual de recuperação pode registrar o link de redefinição no `error_log` como fallback operacional.
+O fluxo de recuperação exige entrega de e-mail. Se a entrega falhar ou SMTP estiver indisponível, o serviço tenta invalidar o token e devolve resposta genérica; falhas de invalidação são registradas para investigação. Não há fallback autorizado que registre o link de redefinição ou token em logs. A resposta genérica não comprova entrega nem invalidação bem-sucedida.
 
-Isso é aceitável para desenvolvimento/homologação, mas deve ser tratado com cuidado:
-
-- o arquivo de log passa a conter material sensível temporário;
-- em produção, o ideal é operar com SMTP configurado e acesso restrito aos logs.
+Verifique a configuração e a disponibilidade de SMTP e os eventos de erro, que podem conter detalhes técnicos; revise e sanitize antes de compartilhar, sem copiar credenciais, destinatários, links ou tokens para registros de suporte. O fallback de auditoria é separado e não deve conter esses dados.
 
 ## 8. Retenção e governança
 

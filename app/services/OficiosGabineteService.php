@@ -74,38 +74,38 @@ final class OficiosGabineteService
             throw new InvalidArgumentException('O número do processo é obrigatório.');
         }
 
-        $processoOrigemId = null;
-        $numeroFormatado = self::NUMERO_PROCESSO_SEM_VINCULO;
-
-        if ($numeroProcesso !== '') {
-            $digits = preg_replace('/\D+/', '', $numeroProcesso);
-            if (strlen($digits) !== 20) {
-                throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
-            }
-            if (!CnjValidator::isValid($digits)) {
-                throw new InvalidArgumentException('Número do processo inválido. Verifique o dígito verificador.');
-            }
-            $numeroFormatado = $this->formatarCNJ($digits);
-
-            $classeId = null;
-            $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
-            $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-            if ($classeCodigo !== '') {
-                $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
-                $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
-            }
-            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
-        }
-
-        $tipoOficio = TextFormatter::formatProperName($tipoOficioRaw, 255);
-
-        $ano = (int) date('Y');
-
-        $criadoPor = trim((string) ($payload['criado_por'] ?? ''));
-        $criadoPor = $criadoPor !== '' ? $criadoPor : null;
-
         $this->connection->beginTransaction();
         try {
+            $processoOrigemId = null;
+            $numeroFormatado = self::NUMERO_PROCESSO_SEM_VINCULO;
+
+            if ($numeroProcesso !== '') {
+                $digits = preg_replace('/\D+/', '', $numeroProcesso);
+                if (strlen($digits) !== 20) {
+                    throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
+                }
+                if (!CnjValidator::isValid($digits)) {
+                    throw new InvalidArgumentException('Número do processo inválido. Verifique o dígito verificador.');
+                }
+                $numeroFormatado = $this->formatarCNJ($digits);
+
+                $classeId = null;
+                $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+                $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+                if ($classeCodigo !== '') {
+                    $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
+                    $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+                }
+                $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
+            }
+
+            $tipoOficio = TextFormatter::formatProperName($tipoOficioRaw, 255);
+
+            $ano = (int) date('Y');
+
+            $criadoPor = trim((string) ($payload['criado_por'] ?? ''));
+            $criadoPor = $criadoPor !== '' ? $criadoPor : null;
+
             $seq = $this->repository->nextSequencialForYear($ano);
             $id = IdGenerator::generateUniquePrefixedId(
                 $this->connection,

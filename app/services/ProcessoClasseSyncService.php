@@ -91,7 +91,7 @@ final class ProcessoClasseSyncService
         $processo = $this->processosRepository->findByNumero($digits20);
 
         if ($processo === null) {
-            $pid = $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, false);
+            $pid = $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, null);
             $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo, $numeroFormatado);
 
             return [

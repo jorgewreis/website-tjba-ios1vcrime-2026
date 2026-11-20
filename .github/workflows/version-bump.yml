@@ -38,21 +38,21 @@ jobs:
           rm -f .commit_msg.txt
 
       - name: Commit and push
+        if: steps.version_check.outputs.skip_bump != 'true'
         run: |
-          if git diff --quiet; then
-            echo "No version change to commit."
+          if [ ! -f VERSION ] || [ ! -f CHANGELOG.md ]; then
+            echo "VERSION or CHANGELOG.md missing; refusing partial version commit." >&2
+            exit 1
+          fi
+
+          git add -- VERSION CHANGELOG.md
+          if git diff --cached --quiet -- VERSION CHANGELOG.md; then
+            echo "No version artifacts changed."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          if [ -f VERSION ]; then
-            VERSION_VALUE="$(cat VERSION | tr -d '\r\n')"
-            git add VERSION
-            git commit -m "chore(version): ${VERSION_VALUE} [skip version]"
-            git push
-          else
-            echo "VERSION file not found. Skipping commit."
-            exit 1
-          fi
+          VERSION_VALUE="$(tr -d '\r\n' < VERSION)"
+          git commit -m "chore(version): ${VERSION_VALUE} [skip version]" -- VERSION CHANGELOG.md
+          git push

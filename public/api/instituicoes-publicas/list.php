@@ -4,10 +4,27 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['instituicoespublicas']);
+if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
+    http_response_code(405);
+    header('Allow: GET');
+    echo json_encode(['error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/services/InstituicoesPublicasService.php';
+require_once $basePath . '/app/helpers/InstituicoesConsultaPolicy.php';
 
-$connection = Conection::getInstance()->getConnection();
+try {
+    $connection = Conection::getInstance()->getConnection();
+} catch (Throwable $exception) {
+    error_log('instituicoes-publicas/list.php: falha de conexão.');
+    http_response_code(500);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $nome = trim($_GET['nome'] ?? '');
 $ativo = isset($_GET['ativo']) ? $_GET['ativo'] : null;
@@ -28,6 +45,7 @@ if ($ativo !== null) {
 }
 
 try {
+    if (InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''))) $filters['ativo'] = 1;
     $service = new InstituicoesPublicasService($connection);
     $listResult = $service->list($filters, $itemsPerPage, $offset);
     $totalItems = (int) ($listResult['total'] ?? 0);
@@ -47,5 +65,6 @@ try {
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao listar instituições: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    error_log('Instituições públicas: ' . get_class($exception));
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
 }

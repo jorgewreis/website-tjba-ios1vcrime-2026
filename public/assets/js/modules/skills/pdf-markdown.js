@@ -176,9 +176,10 @@
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         var data = await file.arrayBuffer(); cancelled();
         activeTask = window.pdfjsLib.getDocument({ data: data });
-        var pdf = await activeTask.promise; cancelled();
-        var output = ['# ' + file.name, ''], emptyPages = [];
+        var loadingTask = activeTask;
         try {
+            var pdf = await loadingTask.promise; cancelled();
+            var output = ['# ' + file.name, ''], emptyPages = [];
             for (var pageNum = 1; pageNum <= pdf.numPages; pageNum += 1) {
                 cancelled();
                 var page = await pdf.getPage(pageNum);
@@ -189,8 +190,10 @@
                 onProgress(pageNum, pdf.numPages);
                 await yieldUi();
             }
-        } finally { await pdf.destroy(); activeTask = null; }
-        return { text: output.join('\n').trim() + '\n', emptyPages: emptyPages };
+            return { text: output.join('\n').trim() + '\n', emptyPages: emptyPages };
+        } finally {
+            try { await loadingTask.destroy(); } finally { if (activeTask === loadingTask) activeTask = null; }
+        }
     }
     function errorMessage(error) {
         if (!error) return 'Não foi possível ler o PDF.';

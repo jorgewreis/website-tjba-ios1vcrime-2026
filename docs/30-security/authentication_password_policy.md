@@ -57,7 +57,7 @@ Política atual:
 - limite base de **5 tentativas** por janela;
 - controle por **IP** e por **CPF**;
 - bloqueio temporário **progressivo**, com aumento da duração a cada reincidência;
-- persistência em backend por meio da tabela `login_rate_limits`, com fallback defensivo em sessão quando a estrutura persistente não estiver disponível.
+- persistência em backend por meio da tabela `login_rate_limits`; quando o armazenamento está indisponível, o limitador recusa a tentativa. Não há fallback em sessão nesse caminho.
 
 Componentes principais:
 
@@ -76,7 +76,7 @@ Regras vigentes:
 - exigência de ao menos **1 letra maiúscula**, **1 minúscula**, **1 número** e **1 símbolo**;
 - armazenamento de senha apenas em formato hash;
 - proibição de reutilização da senha atual;
-- bloqueio de reutilização recente com base em `historico_senha`, quando a estrutura estiver disponível.
+- a alteração autenticada compara com a senha atual; a consulta ao histórico está desabilitada no código por `PASSWORD_HISTORY_ON_CHANGE_ENABLED=false`. Na redefinição por recuperação, o histórico é consultado se `PASSWORD_HISTORY_CHECK` estiver habilitado (padrão `1`); se a consulta falhar, o código não bloqueia com base no histórico.
 
 Essa política deve ser respeitada pelos fluxos de:
 
@@ -93,7 +93,7 @@ Fluxo vigente:
 1. o usuário informa CPF e e-mail em `public/recupera_senha.php`;
 2. o backend valida a combinação e emite um token aleatório;
 3. o token é **hasheado** antes de ser persistido em `recuperacao_senha`;
-4. o sistema envia ao usuário um **link de redefinição** com token de uso único;
+4. o sistema tenta enviar ao usuário um **link de redefinição** com token de uso único; se a entrega falhar, tenta invalidar o token e retorna resposta genérica;
 5. o link expira em **1 hora**;
 6. a nova senha é definida em `public/redefinir_senha.php`;
 7. ao concluir a redefinição, o token de recuperação é marcado como usado e a sessão anterior do usuário é invalidada.

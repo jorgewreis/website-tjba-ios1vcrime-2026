@@ -132,7 +132,7 @@ Use esta pasta se você quiser “fechar” versões oficiais em PDF (para distr
 
 A pasta `docs/modules` organiza a documentação funcional e técnica por módulo. A regra é simples e comum: **um módulo = uma pasta**, e dentro dela ficam os documentos que descrevem regras, fluxos, telas, dados e permissões daquele módulo. Isso evita que “tudo” vá para um único documento e melhora a ligação entre documentação, banco e implementação.
 
-No SGC, a abordagem por módulos é essencial porque o sistema possui Área Pública com limites rígidos e Área Restrita com módulos operacionais (Cartório, Gabinete, Audiências, Tarefas, Logs, Configurações, Produtividade, etc.). Documentar por módulo reduz o risco de expor dados indevidos e facilita garantir que cada módulo implementa logs, auditoria e regras de sigilo conforme necessário.
+No SGC, a abordagem por módulos é essencial porque o sistema possui Área Pública com limites rígidos e Área Restrita com módulos operacionais (Cartório, Gabinete, Audiências, Logs, Configurações, Produtividade, etc.). Documentar por módulo reduz o risco de expor dados indevidos e facilita garantir que cada módulo implementa logs, auditoria e regras de sigilo conforme necessário.
 
 Além disso, essa pasta é a principal fonte para derivar backlog técnico e critérios de teste. Quando você implementa um submódulo, você deveria conseguir apontar para `docs/modules/<modulo>/spec/` e verificar: escopo, regras, bordas, dados persistidos, e impacto em perfis. Essa disciplina reduz retrabalho e acelera o desenvolvimento incremental.
 
@@ -153,14 +153,14 @@ Dentro de cada módulo, use o conjunto mínimo abaixo. Você pode adicionar subp
 ## 3.2 Nomeação de módulos (dois padrões aceitos)
 A comunidade usa dois padrões principais. Você pode escolher um (e deve manter consistente):
 
-1) **Por código**: `m01-audiencias`, `m03-tarefas`, `m11-logs` (bom para rastrear com documentos e roadmap).  
-2) **Por nome**: `hearings`, `tasks`, `logs` (bom para leitura rápida e onboarding).
+1) **Por código**: `m01-audiencias`, `m04-cartorio`, `m11-logs` (bom para rastrear com documentos e roadmap).
+2) **Por nome**: `hearings`, `cartorio`, `logs` (bom para leitura rápida e onboarding).
 
-**Recomendação para o SGC:** se os documentos oficiais e o escopo já usam “m1, m3, m4…”, o padrão por código tende a reduzir ambiguidade ao longo do roadmap.
+**Recomendação para o SGC:** se os documentos oficiais e o escopo já usam “m1, m4, m11…”, o padrão por código tende a reduzir ambiguidade ao longo do roadmap.
 
 ## 3.3 Exemplo prático (estrutura de um módulo)
 ```
-docs/modules/m03-tasks/
+docs/modules/m04-cartorio/
   spec/overview.md
   flows/cartorio-standard-subtasks.md
   data/entities.md
@@ -291,7 +291,7 @@ Se você publicar PDFs de release (por exigência institucional), coloque aqui. 
 ## 8. Próxima ação sugerida (para consolidar rápido)
 
 1. Criar as subpastas vazias com arquivos `README.md` curtos explicando a finalidade de cada uma.  
-2. Definir o template de módulo (`foundation/templates/template-module.md`) e usar para pelo menos 1 módulo (ex.: Audiências ou Tarefas).  
+2. Definir o template de módulo (`foundation/templates/template-module.md`) e usar para pelo menos 1 módulo (ex.: Audiências ou Cartório).
 3. Criar 3 ADRs iniciais em `architecture/adr/` (public web root, política de sessão, logs/auditoria).  
 4. Padronizar `sources/` vs `published/` e mover PDFs conforme função.
 

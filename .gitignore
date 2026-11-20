@@ -100,11 +100,23 @@ temp/
 # Database / SQL dumps
 # =========================
 *.sql
+*.sql.gz
+*.sql.zip
+*.sql.bz2
+*.sql.xz
+*.sql.bak
+*.sql.backup
+*.sql.old
+*.sql.dump
 !docs/schema/
 !docs/schema/*.sql
-!database/migrations/20260807_create_cejusc_registros.sql
-!database/migrations/20260807_add_cejusc_classe_processual.sql
+# Migrações revisadas ficam diretamente no diretório e começam por AAAAMMDD_.
+!database/migrations/[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_*.sql
 !tests/auth/fixtures/*.sql
+# Cópias identificadas continuam ignoradas, inclusive nos diretórios liberados.
+*[Dd][Uu][Mm][Pp]*.sql
+*[Bb][Aa][Cc][Kk][Uu][Pp]*.sql
+*[Ss][Nn][Aa][Pp][Ss][Hh][Oo][Tt]*.sql
 *.sqlite
 *.sqlite3
 *.db

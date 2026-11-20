@@ -57,10 +57,40 @@ LINE="0 18 * * 4 cd \"$ROOT\" && \"$PHP_BIN\" \"$SCRIPT\" >> \"$ROOT/storage/log
 mkdir -p "$ROOT/storage/logs"
 
 TMP="$(mktemp)"
-( crontab -l 2>/dev/null | grep -vF "$MARKER" || true ) > "$TMP"
+ERR="$(mktemp)"
+FILTERED="$(mktemp)"
+trap 'rm -f "$TMP" "$ERR" "$FILTERED"' EXIT
+if LC_ALL=C crontab -l > "$TMP" 2> "$ERR"; then
+  :
+else
+  status=$?
+  # Somente a mensagem convencional de ausencia, sem outros erros, permite criar.
+  if [[ "$status" -eq 1 ]] && [[ ! -s "$TMP" ]] && [[ "$(wc -l < "$ERR")" -eq 1 ]] && grep -qxE 'no crontab for .+' "$ERR"; then
+    : > "$TMP"
+  else
+    cat "$ERR" >&2
+    echo "Erro: nao foi possivel ler o crontab; nenhuma alteracao foi instalada." >&2
+    exit 1
+  fi
+fi
+# Remova apenas linhas com horário, executável e marcador do job gerenciado.
+# Uma referência incidental ao marcador em outra tarefa deve ser preservada.
+awk -v marker="$MARKER" '
+  {
+    line = $0
+    sub(/[[:space:]]+$/, "", line)
+    managed = line ~ /^0[[:space:]]+18[[:space:]]+\*[[:space:]]+\*[[:space:]]+4[[:space:]]+cd[[:space:]]/ \
+      && line ~ /&&.*send-gabinete-reus-presos-revisao-email[.]php.*>>.*2>&1[[:space:]]/ \
+      && index(line, "send-gabinete-reus-presos-revisao-email.php") < index(line, "#") \
+      && length(line) > length(marker) \
+      && substr(line, length(line)-length(marker), 1) ~ /[[:space:]]/ \
+      && substr(line, length(line)-length(marker)+1) == marker
+    if (!managed) print $0
+  }
+' "$TMP" > "$FILTERED"
+cat "$FILTERED" > "$TMP"
 echo "$LINE" >> "$TMP"
 crontab "$TMP"
-rm -f "$TMP"
 
 echo "OK: crontab atualizado (quinta 18:00) -> $SCRIPT"
 echo "Log: $ROOT/storage/logs/reus-presos-revisao-cron.log"

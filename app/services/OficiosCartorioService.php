@@ -135,57 +135,57 @@ final class OficiosCartorioService
             throw new InvalidArgumentException('O número do processo é obrigatório.');
         }
 
-        $processoOrigemId = null;
-        $numeroFormatado = self::NUMERO_PROCESSO_SEM_VINCULO;
-        $classeId = null;
-
-        if ($numeroProcesso !== '') {
-            $digits = preg_replace('/\D+/', '', $numeroProcesso);
-            if (strlen($digits) !== 20) {
-                throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
-            }
-            if (!CnjValidator::isValid($digits)) {
-                throw new InvalidArgumentException('Número do processo inválido. Verifique o dígito verificador.');
-            }
-            $numeroFormatado = $this->formatarCNJ($digits);
-
-            $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
-            $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-            if ($classeCodigo !== '') {
-                $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
-                $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
-            }
-            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
-        }
-
-        $tipoOficio = TextFormatter::formatProperName($tipoOficioRaw, 255);
-
-        $forma = trim((string) ($payload['forma_cumprimento'] ?? ''));
-        if (!in_array($forma, ['ccm', 'cartorio'], true)) {
-            throw new InvalidArgumentException('Informe a forma de cumprimento (CCM ou pelo Cartório).');
-        }
-
-        $meioEnvio = null;
-        if ($forma === 'cartorio') {
-            $meioEnvio = trim((string) ($payload['meio_envio'] ?? ''));
-            if (!in_array($meioEnvio, self::MEIOS_VALIDOS, true)) {
-                throw new InvalidArgumentException('Selecione o meio de envio (e-mail, malote digital ou pessoalmente).');
-            }
-        }
-
-        $ano = (int) date('Y');
-        if (isset($payload['ano']) && is_numeric($payload['ano'])) {
-            $ano = (int) $payload['ano'];
-        }
-        if ($ano < 2000 || $ano > 2100) {
-            throw new InvalidArgumentException('Ano inválido.');
-        }
-
-        $criadoPor = trim((string) ($payload['criado_por'] ?? ''));
-        $criadoPor = $criadoPor !== '' ? $criadoPor : null;
-
         $this->connection->beginTransaction();
         try {
+            $processoOrigemId = null;
+            $numeroFormatado = self::NUMERO_PROCESSO_SEM_VINCULO;
+            $classeId = null;
+
+            if ($numeroProcesso !== '') {
+                $digits = preg_replace('/\D+/', '', $numeroProcesso);
+                if (strlen($digits) !== 20) {
+                    throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
+                }
+                if (!CnjValidator::isValid($digits)) {
+                    throw new InvalidArgumentException('Número do processo inválido. Verifique o dígito verificador.');
+                }
+                $numeroFormatado = $this->formatarCNJ($digits);
+
+                $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+                $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+                if ($classeCodigo !== '') {
+                    $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
+                    $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+                }
+                $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
+            }
+
+            $tipoOficio = TextFormatter::formatProperName($tipoOficioRaw, 255);
+
+            $forma = trim((string) ($payload['forma_cumprimento'] ?? ''));
+            if (!in_array($forma, ['ccm', 'cartorio'], true)) {
+                throw new InvalidArgumentException('Informe a forma de cumprimento (CCM ou pelo Cartório).');
+            }
+
+            $meioEnvio = null;
+            if ($forma === 'cartorio') {
+                $meioEnvio = trim((string) ($payload['meio_envio'] ?? ''));
+                if (!in_array($meioEnvio, self::MEIOS_VALIDOS, true)) {
+                    throw new InvalidArgumentException('Selecione o meio de envio (e-mail, malote digital ou pessoalmente).');
+                }
+            }
+
+            $ano = (int) date('Y');
+            if (isset($payload['ano']) && is_numeric($payload['ano'])) {
+                $ano = (int) $payload['ano'];
+            }
+            if ($ano < 2000 || $ano > 2100) {
+                throw new InvalidArgumentException('Ano inválido.');
+            }
+
+            $criadoPor = trim((string) ($payload['criado_por'] ?? ''));
+            $criadoPor = $criadoPor !== '' ? $criadoPor : null;
+
             $seq = $this->repository->nextSequencialForYear($ano);
             $id = IdGenerator::generateUniquePrefixedId(
                 $this->connection,

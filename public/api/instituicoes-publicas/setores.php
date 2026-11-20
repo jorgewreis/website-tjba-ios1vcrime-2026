@@ -4,10 +4,28 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['instituicoespublicas', 'partesinstituicoescreate']);
+if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
+    http_response_code(405);
+    header('Allow: GET');
+    echo json_encode(['error' => 'Método não permitido.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/repositories/InstituicoesSetoresRepository.php';
+require_once $basePath . '/app/repositories/InstituicoesPublicasRepository.php';
+require_once $basePath . '/app/helpers/InstituicoesConsultaPolicy.php';
 
-$connection = Conection::getInstance()->getConnection();
+try {
+    $connection = Conection::getInstance()->getConnection();
+} catch (Throwable $exception) {
+    error_log('instituicoes-publicas/setores.php: falha de conexão.');
+    http_response_code(500);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $instituicaoId = trim((string) ($_GET['instituicao_id'] ?? ''));
 
@@ -17,8 +35,13 @@ if ($instituicaoId === '') {
 }
 
 try {
+    $onlyActive = InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''));
+    if ($onlyActive && (new InstituicoesPublicasRepository($connection))->findById($instituicaoId, true) === null) {
+        echo json_encode(['setores' => []], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $repository = new InstituicoesSetoresRepository($connection);
-    $rows = $repository->findByInstituicaoId($instituicaoId);
+    $rows = $repository->findByInstituicaoId($instituicaoId, true);
     $setores = [];
     foreach ($rows as $row) {
         if (empty($row['ativo'])) {

@@ -33,14 +33,18 @@ final class ListExportHelper
 
         fwrite($output, "\xEF\xBB\xBF");
         ListExportPresentation::writeCsvPreamble($output, count($columns), $sessionTitle, $filterSummary, count($rows));
-        $labels = array_map(static fn (array $c): string => $c['label'], $columns);
+        $labels = array_map(static fn (array $c): string => ListExportPresentation::csvText($c['label']), $columns);
         fputcsv($output, $labels, ';');
 
         foreach ($rows as $row) {
             $line = [];
             foreach ($columns as $col) {
                 $key = $col['key'];
-                $line[] = ListExportPresentation::formatCell($key, $row[$key] ?? null);
+                $value = $row[$key] ?? null;
+                $formatted = ListExportPresentation::formatCell($key, $value);
+                // Apenas números tipados dispensam a proteção de texto.
+                $line[] = is_int($value) || is_float($value)
+                    ? $formatted : ListExportPresentation::csvText($formatted);
             }
             fputcsv($output, $line, ';');
         }

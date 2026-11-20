@@ -6,12 +6,13 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/models/Usuario.php';
-require_once $basePath . '/app/access/AccessEvaluator.php';
 require_once $basePath . '/app/access/ProfileNormalizer.php';
 require_once $basePath . '/app/helpers/UserAccessHelper.php';
 require_once $basePath . '/app/services/SalaAudienciasAtaService.php';
+require_once $basePath . '/app/helpers/SalaAudienciasInscricaoIndisponivel.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -19,17 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+ApiAccessGuard::requireAccess(['estudapainel'], true);
+
 try {
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
     if ($usuarioId === '') {
         http_response_code(401);
         echo json_encode(['success' => false, 'error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    $perfilsEfetivos = UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioId);
-    if (!AccessEvaluator::canAccessPage('estudapainel', $perfilsEfetivos)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
     $usuario = new Usuario();
@@ -53,10 +50,13 @@ try {
     $service = new SalaAudienciasAtaService(Conection::getInstance()->getConnection());
     $service->inscreverEstudante($idPauta, $usuarioId);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
+} catch (SalaAudienciasInscricaoIndisponivel $e) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Audiência indisponível.'], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Erro ao inscrever: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => false, 'error' => 'Erro ao inscrever.'], JSON_UNESCAPED_UNICODE);
 }

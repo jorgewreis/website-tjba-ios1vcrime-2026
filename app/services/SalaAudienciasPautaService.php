@@ -190,28 +190,32 @@ final class SalaAudienciasPautaService
             throw new InvalidArgumentException('Já existe audiência designada neste dia e horário. Escolha outro horário.');
         }
 
-        $classeId = null;
-        $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
-        $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-        if ($classeDescricao !== '' || $classeCodigo !== '') {
-            if ($classeCodigo === '') {
-                $classeCodigo = strtoupper(substr(md5($classeDescricao), 0, 10));
-            }
-            $classeNome = $classeDescricao !== '' ? $classeDescricao : $classeCodigo;
-            $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
-        }
-
-        $processoId = $this->processosRepository->ensureProcess($numeroProcesso, $classeId, null, false);
-        if ($this->pautaRepository->existsBlockingPautaForProcesso($processoId)) {
-            throw new InvalidArgumentException(
-                'Já existe audiência ativa para este número de processo. Só é permitido cadastrar outra quando a anterior estiver cancelada, redesignada, finalizada ou realizada.'
-            );
-        }
-        $ano = (int) date('Y');
-        $status = $this->finalizeStatusPauta(trim((string) ($payload['status'] ?? '')), 'designada');
-
         $this->connection->beginTransaction();
         try {
+            $classeId = null;
+            $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+            $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+            // O texto de fallback do DataJud representa ausência, não uma classe.
+            if (preg_match('/^classe\s+n[aã]o\s+informada$/iu', $classeDescricao) === 1) {
+                $classeDescricao = '';
+            }
+            if ($classeDescricao !== '' || $classeCodigo !== '') {
+                if ($classeCodigo === '') {
+                    $classeCodigo = strtoupper(substr(md5($classeDescricao), 0, 10));
+                }
+                $classeNome = $classeDescricao !== '' ? $classeDescricao : $classeCodigo;
+                $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+            }
+
+            $processoId = $this->processosRepository->ensureProcess($numeroProcesso, $classeId, null, null);
+            if ($this->pautaRepository->existsBlockingPautaForProcesso($processoId)) {
+                throw new InvalidArgumentException(
+                    'Já existe audiência ativa para este número de processo. Só é permitido cadastrar outra quando a anterior estiver cancelada, redesignada, finalizada ou realizada.'
+                );
+            }
+            $ano = (int) date('Y');
+            $status = $this->finalizeStatusPauta(trim((string) ($payload['status'] ?? '')), 'designada');
+
             $seq = $this->pautaRepository->nextSequencialForYear($ano);
             $id = $this->pautaRepository->insert([
                 'numero_sequencial' => $seq,

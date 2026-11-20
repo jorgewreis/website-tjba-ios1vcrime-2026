@@ -292,7 +292,7 @@
         return JSON.stringify({
             tipo: String(document.getElementById('audiencia-edit-tipo')?.value || '').trim(),
             data: String(document.getElementById('audiencia-edit-data')?.value || '').trim(),
-            hora: String(document.getElementById('audiencia-edit-hora')?.value || '').trim(),
+            hora: String(document.getElementById('audiencia-edit-hora')?.value || ((horariosEditUnresolved && String(document.getElementById('audiencia-edit-data')?.value || '').trim() === horariosEditPendingDate) ? horariosEditPendingHour : '') || '').trim(),
             localizacao: String(document.getElementById('audiencia-edit-sala')?.value || '').trim(),
             classe: String(document.getElementById('audiencia-edit-classe')?.value || '').trim(),
             status: String(document.getElementById('audiencia-edit-status')?.value || '').trim(),
@@ -350,6 +350,8 @@
             return Promise.resolve(false);
         }
         syncHiddenPautaEditId();
+        var savedDate = String(document.getElementById('audiencia-edit-data')?.value || '').trim();
+        var savedHour = String(document.getElementById('audiencia-edit-hora')?.value || '').trim();
         return fetch('/api/sala-audiencias-pauta/update.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -370,6 +372,8 @@
                 var body = res.j && typeof res.j === 'object' ? res.j : {};
                 var saved = res.ok && (body.success === true || body.success === 1 || body.success === '1');
                 if (saved) {
+                    if (savedDate !== dataOriginalPauta || savedHour !== String(window.PAUTA_HORA_FORA_GRADE || '').trim()) window.PAUTA_HORA_FORA_GRADE = '';
+                    dataOriginalPauta = savedDate;
                     initialAudienciaSnapshot = currentAudienciaSnapshot();
                     if (autoMessage) {
                         notifyByKey(
@@ -541,6 +545,47 @@
         });
     });
 
+    var pautaActionPending = false;
+    function executarAcaoPauta(url, id, actionButton, onSuccess) {
+        if (pautaActionPending) return;
+        pautaActionPending = true;
+        var restoreFocus = document.activeElement === actionButton;
+        var succeeded = false;
+        var buttons = [document.getElementById('btn-audiencia-edit-cancelar'), document.getElementById('btn-audiencia-edit-excluir')];
+        var previousDisabled = buttons.map(function (button) { return button ? button.disabled : false; });
+        buttons.forEach(function (button) { if (button) button.disabled = true; });
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
+            body: JSON.stringify({ id: id })
+        }).then(function (response) {
+            return response.json().then(function (body) {
+                if (response.ok && body && body.success === true) {
+                    succeeded = true;
+                    onSuccess();
+                    return;
+                }
+                var message = response.status === 401 ? 'Sessão expirada. Faça login novamente.' :
+                    response.status === 403 ? 'Você não tem permissão para realizar esta ação.' :
+                    'Não foi possível concluir a ação. Tente novamente.';
+                notify('error', 'Erro', message);
+            }, function () {
+                notify('error', 'Erro', 'Resposta inválida do servidor. Confira a audiência antes de tentar novamente.');
+            });
+        }).catch(function () {
+            notify('error', 'Erro', 'Não foi possível conectar. Confira a audiência antes de tentar novamente.');
+        }).finally(function () {
+            pautaActionPending = false;
+            buttons.forEach(function (button, index) { if (button) button.disabled = previousDisabled[index]; });
+            var active = document.activeElement;
+            if (!succeeded && restoreFocus && actionButton && !actionButton.disabled && actionButton.isConnected !== false &&
+                (!active || active === document.body || active === document.documentElement) && typeof actionButton.focus === 'function') {
+                actionButton.focus();
+            }
+        });
+    }
+
     document.getElementById('btn-audiencia-edit-cancelar')?.addEventListener('click', function () {
         var id = resolvePautaEditId();
         if (!id) {
@@ -548,12 +593,7 @@
             return;
         }
         syncHiddenPautaEditId();
-        fetch('/api/sala-audiencias-pauta/cancel.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ id: id })
-        }).then(function () { window.location.reload(); }).catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
+        executarAcaoPauta('/api/sala-audiencias-pauta/cancel.php', id, document.getElementById('btn-audiencia-edit-cancelar'), function () { window.location.reload(); });
     });
 
     var pautaDeleteConfirmMessage = 'Clique novamente em Excluir audiência em até 5 segundos para confirmar.';
@@ -568,14 +608,9 @@
             return;
         }
         syncHiddenPautaEditId();
-        fetch('/api/sala-audiencias-pauta/delete.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ id: id })
-        }).then(function () {
+        executarAcaoPauta('/api/sala-audiencias-pauta/delete.php', id, document.getElementById('btn-audiencia-edit-excluir'), function () {
             window.location.href = '/frame.php?page=salapauta';
-        }).catch(function () { notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.'); });
+        });
     });
 
     function syncDateMinForStatusPauta() {
@@ -756,7 +791,7 @@
         return Array.isArray(g) ? g : [];
     }
 
-    function fillHoraSelectEdit(available) {
+    function fillHoraSelectEdit(available, includeExtra) {
         var sel = document.getElementById('audiencia-edit-hora');
         if (!sel) return;
         var preserved = String(sel.value || '').trim();
@@ -774,7 +809,7 @@
             o.textContent = hm;
             sel.appendChild(o);
         });
-        if (extra && (available || []).indexOf(extra) < 0) {
+        if (includeExtra !== false && extra && (available || []).indexOf(extra) < 0) {
             var ox = document.createElement('option');
             ox.value = extra;
             ox.textContent = extra + ' (registro atual)';
@@ -784,7 +819,7 @@
         if (preserved) {
             if ((available || []).indexOf(preserved) >= 0) {
                 canKeep = true;
-            } else if (extra && preserved === extra) {
+            } else if (includeExtra !== false && extra && preserved === extra) {
                 canKeep = true;
             }
         }
@@ -802,7 +837,13 @@
         return '/api/sala-audiencias-pauta/occupied-slots.php' + q;
     }
 
+    var dataOriginalPauta = String(document.getElementById('audiencia-edit-data')?.value || '').trim();
+    var horariosEditRequest = 0;
+    var horariosEditPendingDate = '';
+    var horariosEditPendingHour = '';
+    var horariosEditUnresolved = false;
     function refreshHoraEditDisponiveis(done) {
+        var request = ++horariosEditRequest;
         var dataEl = document.getElementById('audiencia-edit-data');
         var sel = document.getElementById('audiencia-edit-hora');
         if (!dataEl || !sel) {
@@ -814,28 +855,41 @@
         var d = String(dataEl.value || '').trim();
         var grade = readGradeEdit();
         if (!d) {
-            fillHoraSelectEdit(grade);
+            horariosEditPendingDate = '';
+            horariosEditPendingHour = '';
+            horariosEditUnresolved = false;
+            fillHoraSelectEdit(grade, false);
             if (typeof done === 'function') {
                 done();
             }
             return;
         }
+        var previousHour = String(sel.value || '').trim();
+        if (!previousHour && horariosEditPendingDate === d) previousHour = horariosEditPendingHour;
+        horariosEditPendingDate = d;
+        horariosEditPendingHour = previousHour;
+        horariosEditUnresolved = true;
+        fillHoraSelectEdit([], false);
         fetch(buildUrlOccupiedSlots(d), { credentials: 'same-origin' })
             .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
             .then(function (res) {
+                if (request !== horariosEditRequest || String(dataEl.value || '').trim() !== d) return;
                 if (!res.ok || !res.j || !Array.isArray(res.j.available)) {
                     notifyByKey('audiencias.schedule.load.error', {}, 'error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Falha ao carregar horários.');
-                    fillHoraSelectEdit(grade);
+                    fillHoraSelectEdit([], false);
                     if (typeof done === 'function') {
                         done();
                     }
                     return;
                 }
-                fillHoraSelectEdit(res.j.available);
+                horariosEditUnresolved = false;
+                var allowOriginalHour = d === dataOriginalPauta;
+                fillHoraSelectEdit(res.j.available, allowOriginalHour);
+                if (res.j.available.indexOf(previousHour) >= 0 || (allowOriginalHour && previousHour === String(window.PAUTA_HORA_FORA_GRADE || '').trim())) sel.value = previousHour;
                 if (res.j.available.length === 0) {
                     var extra = String(window.PAUTA_HORA_FORA_GRADE || '').trim();
                     var cur = String(sel.value || '').trim();
-                    if (!(extra && cur === extra)) {
+                    if (!(allowOriginalHour && extra && cur === extra)) {
                         notifyByKey('audiencias.schedule.unavailable.info', {}, 'info', 'Horários', 'Não há horários livres nesta data.');
                     }
                 }
@@ -844,8 +898,9 @@
                 }
             })
             .catch(function () {
+                if (request !== horariosEditRequest || String(dataEl.value || '').trim() !== d) return;
                 notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
-                fillHoraSelectEdit(grade);
+                fillHoraSelectEdit([], false);
                 if (typeof done === 'function') {
                     done();
                 }
@@ -924,8 +979,7 @@
     updateParteAddButtonState();
     updateAlocarButtonState();
 
-    refreshHoraEditDisponiveis(function () {
-        syncDateMinForStatusPauta();
-        initialAudienciaSnapshot = currentAudienciaSnapshot();
-    });
+    syncDateMinForStatusPauta();
+    initialAudienciaSnapshot = currentAudienciaSnapshot();
+    refreshHoraEditDisponiveis();
 })();

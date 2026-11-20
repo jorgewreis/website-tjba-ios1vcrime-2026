@@ -75,7 +75,7 @@ A utilização do serviço deve observar limites de custo, preferencialmente ope
 
 Além das integrações com serviços externos, a solução expõe uma API interna, consumida pelo frontend e, opcionalmente, por clientes autorizados. Essa API é protegida por modelo de autenticação híbrida (sessão e JWT) e é tratada como parte central da arquitetura, devendo ser documentada, testada e versionada com o mesmo rigor aplicado às integrações externas.
 
-A API interna é responsável por disponibilizar, em formato programático, funcionalidades como gestão de audiências, tarefas internas, expedições, notificações, painéis de produtividade, perfis e configurações. A forma como esses recursos são expostos deve considerar tanto a estabilidade a longo prazo quanto a capacidade de evolução controlada.
+A API interna é responsável por disponibilizar, em formato programático, funcionalidades como gestão de audiências, subtarefas das rotinas existentes, notificações, painéis de produtividade, perfis e configurações. A forma como esses recursos são expostos deve considerar tanto a estabilidade a longo prazo quanto a capacidade de evolução controlada.
 
 ### 4.1 Padrão de versionamento e estrutura de endpoints
 

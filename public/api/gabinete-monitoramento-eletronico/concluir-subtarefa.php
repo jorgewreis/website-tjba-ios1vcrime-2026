@@ -6,9 +6,20 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/services/GabineteMonitoramentoEletronicoService.php';
 
-$connection = Conection::getInstance()->getConnection();
+ApiAccessGuard::requireAccess(['monitoramentogabineteedit'], true);
+
+try {
+    $connection = Conection::getInstance()->getConnection();
+} catch (Throwable $exception) {
+    error_log('gabinete-monitoramento-eletronico/concluir-subtarefa.php: falha de conexão.');
+    http_response_code(500);
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 $rawPayload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($rawPayload, true);
@@ -35,5 +46,6 @@ try {
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao concluir subtarefa: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    error_log('Monitoramento eletrônico: ' . get_class($exception));
+    echo json_encode(['error' => 'Não foi possível concluir a operação.'], JSON_UNESCAPED_UNICODE);
 }

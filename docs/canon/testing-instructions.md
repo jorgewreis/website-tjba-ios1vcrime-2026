@@ -25,23 +25,23 @@ Testes automatizados (sugestão):
 
 ## Sandbox isolado de autenticação
 
-Os testes de login e recuperação usam somente o sandbox local em `tests/auth/`.
-Eles nunca leem o `.env` raiz, usam contas `@auth-test.invalid` e capturam e-mail
-no Mailpit local. Para iniciar, executar, e remover o ambiente:
+O procedimento canônico e as evidências REI-93 estão em
+`docs/90-releases/rei-93-auth-sandbox-evidence.md`. A preparação baixa apenas
+dependências fixadas e o runner cria e remove o sandbox a cada execução:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/bootstrap.ps1 -Start
-powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/run-auth-tests.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/cleanup.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/prepare-dependencies.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/run-isolated-auth-e2e.ps1
 ```
 
-MySQL, SMTP e a interface Mailpit são publicados somente em loopback. A rede
-Docker é bridge para permitir que o PHP local alcance os serviços; ela não prova
-isolamento de egress e não deve receber relay SMTP. Mailpit aceita apenas
-destinatários sintéticos `@auth-test.invalid`.
+`bootstrap.ps1` e `run-auth-tests.ps1` permanecem aliases compatíveis do
+runner. Em interrupção externa, `cleanup.ps1` recupera somente recursos com o
+rótulo validado do sandbox; não use os entrypoints legados individuais nem o
+Compose histórico. A preparação precisa de egress para o repositório Composer;
+os contêineres de teste não têm egress.
 
-O fluxo HTTP local prova CSRF, sessão, reset e logout, mas não é evidência de
-cookie `Secure` em HTTPS, comportamento em iframe ou paridade com produção.
+Mesmo após validação futura do fluxo HTTP local, evidência de cookies `Secure`
+em HTTPS, comportamento em iframe e paridade com produção exige testes próprios.
 
 Relatar falhas em issue com passos para reproduzir, logs e URL do ambiente dev.
 

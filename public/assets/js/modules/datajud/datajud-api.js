@@ -573,21 +573,27 @@
 
 
 
-        fetch(CLASSE_READ_URL + '?numero=' + encodeURIComponent(rawDigits), {
-
-            credentials: 'same-origin',
-
-        })
-
-            .then(function (response) {
-
+        // A leitura local não pode impedir indefinidamente a consulta DataJud.
+        var localController = new AbortController();
+        var localTimer;
+        var localRead = Promise.race([
+            fetch(CLASSE_READ_URL + '?numero=' + encodeURIComponent(rawDigits), {
+                credentials: 'same-origin',
+                signal: localController.signal,
+            }).then(function (response) {
                 return response.json().then(function (body) {
-
                     return { ok: response.ok, body: body };
-
                 });
+            }),
+            new Promise(function (_, reject) {
+                localTimer = setTimeout(function () {
+                    localController.abort();
+                    reject(new Error('Tempo limite da leitura local de classe.'));
+                }, 10000);
+            }),
+        ]);
 
-            })
+        localRead
 
             .then(function (res) {
 
@@ -699,6 +705,8 @@
             })
 
             .finally(function () {
+
+                clearTimeout(localTimer);
 
                 if (DC.isStaleOperation(myOpId)) {
 

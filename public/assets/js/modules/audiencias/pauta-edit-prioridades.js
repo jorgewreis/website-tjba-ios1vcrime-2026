@@ -129,8 +129,11 @@
 
     function populateSelect() {
         if (!state) {
+            updatePrioridadeAddButtonState();
             return;
         }
+        var selected = String(selectEl.value || '');
+        var selectionAvailable = false;
         var current = {};
         (state.prioridades || []).forEach(function (x) {
             if (x && x.codigo) {
@@ -148,7 +151,14 @@
             opt.value = cod;
             opt.textContent = lab;
             selectEl.appendChild(opt);
+            if (cod === selected) {
+                selectionAvailable = true;
+            }
         });
+        if (selectionAvailable) {
+            selectEl.value = selected;
+        }
+        updatePrioridadeAddButtonState();
     }
 
     function catalogoLista() {
@@ -269,8 +279,6 @@
                 if (res.ok && res.j && res.j.success && res.j.state) {
                     applyState(res.j.state);
                     notifyByKey('audiencias.prioridade.add.success', {}, 'success', 'Sucesso', 'Prioridade registrada.');
-                    selectEl.selectedIndex = 0;
-                    updatePrioridadeAddButtonState();
                     return;
                 }
                 notify('error', 'Erro', (res.j && res.j.error) ? res.j.error : 'Não foi possível adicionar.');

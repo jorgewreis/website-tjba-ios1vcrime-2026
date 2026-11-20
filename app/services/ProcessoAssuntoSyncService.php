@@ -76,7 +76,7 @@ final class ProcessoAssuntoSyncService
         $processo = $this->processosRepository->findByNumero($digits20);
         $foiCriado = false;
         if ($processo === null) {
-            $processoId = $this->processosRepository->ensureProcess($this->formatarCnj20($digits20), null, null, false);
+            $processoId = $this->processosRepository->ensureProcess($this->formatarCnj20($digits20), null, null, null);
             $foiCriado = true;
         } else {
             $processoId = trim((string) ($processo['id'] ?? ''));

@@ -15,6 +15,7 @@ require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
 require_once __DIR__ . '/../helpers/CentralMandadosCcm.php';
+require_once __DIR__ . '/../helpers/IdempotencySchemaUnavailableException.php';
 
 final class CartasExpedidasService
 {
@@ -87,6 +88,11 @@ final class CartasExpedidasService
         return $this->repository->countByFinalidade($filters);
     }
 
+    private static function sigiloParaCriacao(array $payload): ?bool
+    {
+        return !empty($payload['nivel_sigilo']) ? true : null;
+    }
+
     public function create(array $payload): string
     {
         $processo = trim((string) ($payload['processo'] ?? $payload['numero_processo'] ?? ''));
@@ -112,7 +118,8 @@ final class CartasExpedidasService
         }
         $cidadeDestino = TextFormatter::formatProperName($cidadeDestino, 120);
 
-        if (CentralMandadosCcm::contains($cidadeDestino, $ufDestino)) {
+        if (CentralMandadosCcm::contains($cidadeDestino, $ufDestino)
+            && ($payload['confirmacao_ccm'] ?? null) !== true) {
             throw new InvalidArgumentException(CentralMandadosCcm::MESSAGE);
         }
         $cidadeDestinoNormalizada = $this->normalizeNomeCidade($cidadeDestino);
@@ -120,9 +127,29 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('O cadastro de carta expedida não é permitido para a cidade de Ilhéus (comarca de origem).');
         }
 
+        $idempotencyKey = strtolower(trim((string) ($payload['idempotency_key'] ?? '')));
+        $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+        $payloadHash = null;
+        if ($idempotencyKey !== '') {
+            if (preg_match('/^[a-f0-9]{64}$/D', $idempotencyKey) !== 1 || $usuarioCadastroId === '') {
+                throw new InvalidArgumentException('Chave de envio inválida. Atualize a página e tente novamente.');
+            }
+            try {
+                $this->repository->assertIdempotencyColumnsAvailable();
+            } catch (Throwable $exception) {
+                throw new IdempotencySchemaUnavailableException('O envio seguro está temporariamente indisponível.', 0, $exception);
+            }
+            $payloadHash = self::hashCreatePayload($payload, $digits, $usuarioCadastroId);
+            $existing = $this->repository->findByIdempotencyKey($usuarioCadastroId, $idempotencyKey);
+            if ($existing !== null) {
+                return self::resolveIdempotentResult($existing, $payloadHash);
+            }
+        }
+
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
         $classeNome = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-        $sigiloso = !empty($payload['nivel_sigilo']);
+        // Criar uma carta não autoriza retirar o sigilo de processo existente.
+        $sigiloso = self::sigiloParaCriacao($payload);
 
         if ($this->dataJudService !== null) {
             try {
@@ -143,6 +170,20 @@ final class CartasExpedidasService
         if ($classeNaoInformada) {
             $sigiloso = true;
         }
+
+        try {
+            return $this->withAtomicCreate(function () use (
+            $payload,
+            $classeNaoInformada,
+            $classeCodigo,
+            $classeNome,
+            $sigiloso,
+            $numeroFormatado,
+            $ufDestino,
+            $cidadeDestino,
+            $idempotencyKey,
+            $payloadHash
+        ): string {
 
         $tribunalSigla = 'TJBA';
         $ufOrigem = 'BA';
@@ -201,6 +242,10 @@ final class CartasExpedidasService
         if ($usuarioCadastroId !== '') {
             $row['criado_por'] = $usuarioCadastroId;
         }
+        if ($idempotencyKey !== '') {
+            $row['idempotency_key'] = $idempotencyKey;
+            $row['idempotency_payload_hash'] = $payloadHash;
+        }
 
         $this->repository->insert($row);
 
@@ -220,6 +265,87 @@ final class CartasExpedidasService
         );
 
         return $idCarta;
+        });
+        } catch (PDOException $exception) {
+            if ($idempotencyKey === '' || !self::isUniqueConstraintViolation($exception)) {
+                throw $exception;
+            }
+            // Uma requisição concorrente pode ter confirmado a mesma chave
+            // enquanto esta transação era revertida. FOR UPDATE faz leitura
+            // atual mesmo se o chamador já estiver numa transação RR.
+            $existing = $this->repository->findByIdempotencyKey($usuarioCadastroId, $idempotencyKey, true);
+            if ($existing === null) {
+                throw $exception;
+            }
+            return self::resolveIdempotentResult($existing, (string) $payloadHash);
+        }
+    }
+
+    private static function hashCreatePayload(array $payload, string $processDigits, string $userId): string
+    {
+        $canonical = [
+            'version' => 1,
+            'user_id' => $userId,
+            'process_digits' => $processDigits,
+            'finalidade' => trim((string) ($payload['finalidade'] ?? '')),
+            'prazo' => (int) preg_replace('/\D+/', '', (string) ($payload['prazo'] ?? $payload['prazo_dias'] ?? '30')),
+            'uf' => strtoupper(trim((string) ($payload['estado'] ?? $payload['uf'] ?? ''))),
+            'cidade' => TextFormatter::formatProperName((string) ($payload['cidade'] ?? ''), 120),
+            'classe_codigo' => trim((string) ($payload['classe_codigo'] ?? '')),
+            'classe_descricao' => trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? '')),
+            'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
+            'sigilo_solicitado' => !empty($payload['nivel_sigilo']) ? 1 : 0,
+        ];
+        return hash('sha256', json_encode($canonical, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+    }
+
+    /** @param array{id:string,idempotency_payload_hash:?string} $existing */
+    private static function resolveIdempotentResult(array $existing, string $payloadHash): string
+    {
+        $storedHash = trim((string) ($existing['idempotency_payload_hash'] ?? ''));
+        if ($storedHash === '' || !hash_equals($storedHash, $payloadHash)) {
+            throw new DomainException('Esta chave de envio já foi usada com outros dados. Atualize a página antes de tentar novamente.');
+        }
+        return (string) $existing['id'];
+    }
+
+    private static function isUniqueConstraintViolation(PDOException $exception): bool
+    {
+        $driverCode = $exception->errorInfo[1] ?? null;
+        return $exception->getCode() === '23000' && (int) $driverCode === 1062;
+    }
+
+    private function withAtomicCreate(callable $operation): string
+    {
+        $ownsTransaction = !$this->connection->inTransaction();
+        $savepoint = 'cartas_expedidas_create_' . bin2hex(random_bytes(8));
+        if ($ownsTransaction) {
+            $this->connection->beginTransaction();
+        } else {
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
+        }
+
+        try {
+            $id = $operation();
+            if ($ownsTransaction) {
+                $this->connection->commit();
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            return $id;
+        } catch (Throwable $exception) {
+            try {
+                if ($ownsTransaction && $this->connection->inTransaction()) {
+                    $this->connection->rollBack();
+                } elseif (!$ownsTransaction && $this->connection->inTransaction()) {
+                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                }
+            } catch (Throwable $rollbackException) {
+                throw new RuntimeException('Falha ao reverter a criação da carta expedida.', 0, $rollbackException);
+            }
+            throw $exception;
+        }
     }
 
     public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array

@@ -108,14 +108,11 @@ Nunca registrar em texto claro:
 - segredos de integração;
 - payloads sensíveis completos sem necessidade operacional.
 
-### 7.1. Exceção operacional controlada
+### 7.1. Recuperação de senha e logs
 
-No fluxo atual de redefinição de senha, se o ambiente estiver sem SMTP configurado, o sistema pode registrar o link de reset no `error_log` como fallback.
+O fluxo de recuperação exige entrega de e-mail. Se a entrega falhar ou SMTP estiver indisponível, o serviço tenta invalidar o token e devolve resposta genérica; falhas de invalidação são registradas para investigação. Não há fallback autorizado que registre o link de redefinição ou token em logs. A resposta genérica não comprova entrega nem invalidação bem-sucedida.
 
-Por isso:
-
-- esse comportamento é aceitável em desenvolvimento/homologação;
-- em produção, o recomendado é SMTP ativo e acesso altamente restrito ao `error_log`.
+Verifique a configuração e a disponibilidade de SMTP e os eventos de erro, que podem conter detalhes técnicos; revise e sanitize antes de compartilhar, sem copiar credenciais, destinatários, links ou tokens para registros de suporte. O fallback de auditoria é separado e não deve conter esses dados.
 
 ## 8. Eventos que devem merecer atenção prioritária
 

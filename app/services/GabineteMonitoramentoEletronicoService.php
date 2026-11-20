@@ -9,7 +9,6 @@ require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
-require_once __DIR__ . '/DataJudService.php';
 
 final class GabineteMonitoramentoEletronicoService
 {
@@ -19,6 +18,7 @@ final class GabineteMonitoramentoEletronicoService
     private ProcessosRepository $processosRepository;
     private ProcessosPartesRepository $processosPartesRepository;
     private ClassesRepository $classesRepository;
+    private int $savepointCounter = 0;
 
     public function __construct(PDO $connection)
     {
@@ -94,9 +94,8 @@ final class GabineteMonitoramentoEletronicoService
     }
 
     /**
-     * Garante o processo na base (sem apagar classe existente quando não há classe nova),
-     * lista réus vinculados e, se vazio, tenta sincronizar nomes do polo passivo do DataJud
-     * (partes + processos_partes), alinhado ao fluxo de cadastro do monitoramento.
+     * Consulta réus já vinculados. Nome ou polo extraídos do DataJud não comprovam
+     * identidade nem condição de réu; quando ausentes, o usuário informa manualmente.
      *
      * @return array{processo_id: string, reus: list<array{id: string, nome: string, tipo_parte: string}>}
      */
@@ -109,78 +108,23 @@ final class GabineteMonitoramentoEletronicoService
         }
         $numeroFormatado = $this->formatarCNJ($digits);
 
-        $classeIdResolved = null;
-        if ($classeCodigo !== '') {
-            $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
-            $classeIdResolved = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
-        }
-
         $existing = $this->processosRepository->findByNumero($numeroFormatado);
         if ($existing === null) {
-            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, false);
-        } else {
-            $processoId = trim((string) ($existing['id'] ?? ''));
-            if ($processoId === '') {
-                throw new RuntimeException('Processo não encontrado após consolidação.');
-            }
-            if ($classeIdResolved !== null && $classeIdResolved !== '') {
-                $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, false);
-            }
+            return ['processo_id' => '', 'reus' => [], 'mensagem' => 'Nenhum réu vinculado encontrado. Informe o nome manualmente.'];
         }
-
+        $processoId = trim((string) ($existing['id'] ?? ''));
+        if ($processoId === '') throw new RuntimeException('Processo encontrado sem identificador.');
         $reus = $this->listarReusDoProcesso($processoId);
-        if ($reus !== []) {
-            return ['processo_id' => $processoId, 'reus' => $reus];
-        }
-
-        $this->sincronizarReusPoloPassivoDataJud($processoId, $digits);
-        $reus = $this->listarReusDoProcesso($processoId);
-
-        return ['processo_id' => $processoId, 'reus' => $reus];
-    }
-
-    private function sincronizarReusPoloPassivoDataJud(string $processoId, string $digits): void
-    {
-        $basePath = dirname(__DIR__, 2);
-        $configPath = $basePath . '/public/api/datajud/config.php';
-        if (!is_file($configPath)) {
-            return;
-        }
-        $config = require $configPath;
-        $dataJud = new DataJudService($config);
-        try {
-            $data = $dataJud->searchProcesso($digits);
-        } catch (Throwable $e) {
-            return;
-        }
-        $nomes = $data['polo_passivo'] ?? [];
-        if (!is_array($nomes) || $nomes === []) {
-            return;
-        }
-        $partesRepo = new PartesRepository($this->connection);
-        $unicos = array_unique(array_map(static function ($n) {
-            return trim((string) $n);
-        }, $nomes));
-        foreach ($unicos as $nome) {
-            if ($nome === '') {
-                continue;
-            }
-            try {
-                $parteId = $partesRepo->ensureParteByNomeOuCpf($nome, null);
-                $this->processosPartesRepository->addParte(
-                    $processoId,
-                    $parteId,
-                    ProcessosPartesRepository::TIPO_REU,
-                    ProcessosPartesRepository::POLO_PASSIVO
-                );
-            } catch (Throwable $e) {
-                // Vínculo duplicado ou inconsistência: tenta as demais partes
-            }
-        }
+        $result = ['processo_id' => $processoId, 'reus' => $reus];
+        if ($reus === []) $result['mensagem'] = 'Nenhum réu vinculado encontrado. Informe o nome manualmente.';
+        return $result;
     }
 
     public function create(array $payload): string
     {
+        if ($this->connection->inTransaction()) {
+            throw new LogicException('Criação de monitoramento não pode participar de uma transação externa.');
+        }
         $numeroProcesso = trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? ''));
         if ($numeroProcesso === '') {
             throw new InvalidArgumentException('O número do processo é obrigatório.');
@@ -198,7 +142,7 @@ final class GabineteMonitoramentoEletronicoService
             $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
             $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
         }
-        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, false);
+        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
 
         $processoParteId = trim((string) ($payload['processo_parte_id'] ?? $payload['reu_processo_parte_id'] ?? ''));
         $reuId = trim((string) ($payload['reu_id'] ?? ''));
@@ -248,7 +192,10 @@ final class GabineteMonitoramentoEletronicoService
         $ano = (int) date('Y');
 
         $this->connection->beginTransaction();
+        $sequenceLockAcquired = false;
         try {
+            $this->repository->acquireYearSequenceLock($ano);
+            $sequenceLockAcquired = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
             $seq = $this->repository->nextSequencialForYear($ano);
             $id = IdGenerator::generateUniquePrefixedId(
                 $this->connection,
@@ -281,73 +228,108 @@ final class GabineteMonitoramentoEletronicoService
 
             return $id;
         } catch (\Throwable $e) {
-            $this->connection->rollBack();
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
             throw $e;
+        } finally {
+            if ($sequenceLockAcquired && !$this->repository->releaseYearSequenceLock($ano)) {
+                error_log('Monitoramento eletrônico: falha ao liberar bloqueio do sequencial anual.');
+            }
         }
     }
 
     public function concluirSubtarefa(string $subtarefaId, ?string $dataInicio, string $usuarioMovimentacaoId = ''): array
     {
-        $st = $this->subtarefasRepository->findById($subtarefaId);
-        if ($st === null) {
-            throw new InvalidArgumentException('Subtarefa não encontrada.');
-        }
-        $monId = trim((string) ($st['monitoramento_id'] ?? ''));
-        if ($monId === '') {
-            throw new InvalidArgumentException('Monitoramento não identificado.');
-        }
-        $mon = $this->repository->findById($monId);
-        if ($mon === null) {
-            throw new InvalidArgumentException('Registro não encontrado.');
-        }
-        if (($mon['status'] ?? '') === 'cancelada') {
-            throw new InvalidArgumentException('Registro cancelado.');
-        }
-        if (($mon['status'] ?? '') === 'finalizada') {
-            throw new InvalidArgumentException('Monitoramento já finalizado.');
-        }
-        $ordem = (int) ($st['ordem'] ?? 0);
-        $statusSt = (string) ($st['status'] ?? '');
-        if ($statusSt === 'concluida') {
-            throw new InvalidArgumentException('Esta subtarefa já foi concluída.');
-        }
-
-        $tipo = (string) ($st['tipo'] ?? '');
-
-        if ($tipo === GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_INICIAR) {
-            $dataInicio = trim((string) ($dataInicio ?? ''));
-            if ($dataInicio === '') {
-                throw new InvalidArgumentException('Informe a data de início do monitoramento.');
+        return $this->withinAtomicScope(function () use ($subtarefaId, $dataInicio, $usuarioMovimentacaoId): array {
+            $stInicial = $this->subtarefasRepository->findById($subtarefaId);
+            if ($stInicial === null) {
+                throw new InvalidArgumentException('Subtarefa não encontrada.');
             }
-            $d = DateTime::createFromFormat('Y-m-d', $dataInicio);
-            if ($d === false || $d->format('Y-m-d') !== $dataInicio) {
-                throw new InvalidArgumentException('Data de início inválida. Use o formato AAAA-MM-DD.');
+            $monId = trim((string) ($stInicial['monitoramento_id'] ?? ''));
+            if ($monId === '') {
+                throw new InvalidArgumentException('Monitoramento não identificado.');
             }
-            $this->subtarefasRepository->marcarConcluida($subtarefaId);
-            $s2 = $this->subtarefasRepository->findByMonitoramentoIdEOrdem($monId, 2);
-            if ($s2 !== null) {
-                $this->subtarefasRepository->atualizarStatus((string) $s2['id'], 'em_andamento');
+
+            // Ordem de lock comum a concluir/cancelar/excluir: pai e depois filhos.
+            $mon = $this->repository->findByIdForUpdate($monId);
+            if ($mon === null) {
+                throw new InvalidArgumentException('Registro não encontrado.');
             }
-            $this->repository->updateDatas($monId, $dataInicio, null, $usuarioMovimentacaoId);
-            $this->repository->updateStatus($monId, 'em_andamento', $usuarioMovimentacaoId);
-
-            return ['tarefa_principal_concluida' => false];
-        }
-
-        if ($tipo === GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_ENCERRAR) {
-            $hoje = (new DateTime('today'))->format('Y-m-d');
-            $di = trim((string) ($mon['data_inicio'] ?? ''));
-            if ($di === '') {
-                throw new InvalidArgumentException('O monitoramento ainda não foi iniciado.');
+            $st = $this->subtarefasRepository->findByIdForUpdate($subtarefaId);
+            if ($st === null || trim((string) ($st['monitoramento_id'] ?? '')) !== $monId) {
+                throw new InvalidArgumentException('Subtarefa não encontrada.');
             }
-            $this->subtarefasRepository->marcarConcluida($subtarefaId);
-            $this->repository->updateDatas($monId, $di, $hoje, $usuarioMovimentacaoId);
-            $this->repository->updateStatus($monId, 'finalizada', $usuarioMovimentacaoId);
+            if (($mon['status'] ?? '') === 'cancelada') {
+                throw new InvalidArgumentException('Registro cancelado.');
+            }
+            if (($mon['status'] ?? '') === 'finalizada') {
+                throw new InvalidArgumentException('Monitoramento já finalizado.');
+            }
+            $statusSt = (string) ($st['status'] ?? '');
+            if ($statusSt === 'concluida') {
+                throw new InvalidArgumentException('Esta subtarefa já foi concluída.');
+            }
 
-            return ['tarefa_principal_concluida' => true];
-        }
+            $tipo = (string) ($st['tipo'] ?? '');
+            if ($tipo === GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_INICIAR) {
+                $dataInicio = trim((string) ($dataInicio ?? ''));
+                if ($dataInicio === '') {
+                    throw new InvalidArgumentException('Informe a data de início do monitoramento.');
+                }
+                $d = DateTime::createFromFormat('Y-m-d', $dataInicio);
+                if ($d === false || $d->format('Y-m-d') !== $dataInicio) {
+                    throw new InvalidArgumentException('Data de início inválida. Use o formato AAAA-MM-DD.');
+                }
+                if (!$this->subtarefasRepository->marcarConcluida($subtarefaId)) {
+                    throw new RuntimeException('Subtarefa inicial não foi atualizada.');
+                }
+                $s2 = $this->subtarefasRepository->findByMonitoramentoIdEOrdem($monId, 2);
+                if ($s2 !== null) {
+                    if (!$this->subtarefasRepository->atualizarStatus((string) $s2['id'], 'em_andamento')) {
+                        throw new RuntimeException('Subtarefa final não foi ativada.');
+                    }
+                }
+                if (!$this->repository->updateDatas($monId, $dataInicio, null, $usuarioMovimentacaoId)) {
+                    throw new RuntimeException('Datas do monitoramento não foram atualizadas.');
+                }
+                if (!$this->repository->updateStatus($monId, 'em_andamento', $usuarioMovimentacaoId)) {
+                    throw new RuntimeException('Status do monitoramento não foi atualizado.');
+                }
 
-        throw new InvalidArgumentException('Tipo de subtarefa inválido.');
+                return ['tarefa_principal_concluida' => false];
+            }
+
+            if ($tipo === GabineteMonitoramentoEletronicoSubtarefasRepository::TIPO_ENCERRAR) {
+                $hoje = (new DateTime('today'))->format('Y-m-d');
+                $di = trim((string) ($mon['data_inicio'] ?? ''));
+                if ($di === '') {
+                    throw new InvalidArgumentException('O monitoramento ainda não foi iniciado.');
+                }
+                $inicio = DateTimeImmutable::createFromFormat('!Y-m-d', $di);
+                $erros = DateTimeImmutable::getLastErrors();
+                if ($inicio === false || $inicio->format('Y-m-d') !== $di
+                    || ($erros !== false && ($erros['warning_count'] > 0 || $erros['error_count'] > 0))) {
+                    throw new InvalidArgumentException('Data de início do monitoramento inválida.');
+                }
+                // Mantém REI-119: encerramento antecipado é permitido; a data
+                // operacional final não pode anteceder o início registrado.
+                $dataFinal = max($di, $hoje);
+                if (!$this->subtarefasRepository->marcarConcluida($subtarefaId)) {
+                    throw new RuntimeException('Subtarefa final não foi concluída.');
+                }
+                if (!$this->repository->updateDatas($monId, $di, $dataFinal, $usuarioMovimentacaoId)) {
+                    throw new RuntimeException('Datas finais do monitoramento não foram atualizadas.');
+                }
+                if (!$this->repository->updateStatus($monId, 'finalizada', $usuarioMovimentacaoId)) {
+                    throw new RuntimeException('Monitoramento não foi finalizado.');
+                }
+
+                return ['tarefa_principal_concluida' => true];
+            }
+
+            throw new InvalidArgumentException('Tipo de subtarefa inválido.');
+        });
     }
 
     public function cancel(string $id): bool
@@ -356,19 +338,24 @@ final class GabineteMonitoramentoEletronicoService
         if ($id === '') {
             throw new InvalidArgumentException('Identificador obrigatório.');
         }
-        $row = $this->repository->findById($id);
-        if ($row === null) {
-            throw new InvalidArgumentException('Registro não encontrado.');
-        }
-        if (($row['status'] ?? '') === 'finalizada') {
-            throw new InvalidArgumentException('Não é possível cancelar um monitoramento já finalizado.');
-        }
-        if (($row['status'] ?? '') === 'cancelada') {
-            return true;
-        }
-        $this->subtarefasRepository->deleteByMonitoramentoId($id);
+        return $this->withinAtomicScope(function () use ($id): bool {
+            $row = $this->repository->findByIdForUpdate($id);
+            if ($row === null) {
+                throw new InvalidArgumentException('Registro não encontrado.');
+            }
+            if (($row['status'] ?? '') === 'finalizada') {
+                throw new InvalidArgumentException('Não é possível cancelar um monitoramento já finalizado.');
+            }
+            if (($row['status'] ?? '') === 'cancelada') {
+                return true;
+            }
+            $this->subtarefasRepository->deleteByMonitoramentoId($id);
+            if (!$this->repository->updateStatus($id, 'cancelada')) {
+                throw new RuntimeException('Monitoramento não foi atualizado ao cancelar.');
+            }
 
-        return $this->repository->updateStatus($id, 'cancelada');
+            return true;
+        });
     }
 
     public function delete(string $id): array
@@ -377,23 +364,89 @@ final class GabineteMonitoramentoEletronicoService
         if ($id === '') {
             throw new InvalidArgumentException('Identificador obrigatório.');
         }
-        $row = $this->repository->findById($id);
-        if ($row === null) {
+        $initialRow = $this->repository->findById($id);
+        if ($initialRow === null) {
             throw new InvalidArgumentException('Registro não encontrado.');
         }
-        $ano = (int) ($row['ano'] ?? 0);
-        $seq = (int) ($row['numero_sequencial'] ?? 0);
-        $max = $this->repository->getMaxSequencialForYear($ano);
-        if ($seq !== $max || $max === 0) {
-            throw new InvalidArgumentException('Só é possível excluir o último registro criado no ano (maior número sequencial).');
+        $ano = (int) ($initialRow['ano'] ?? 0);
+        if ($ano <= 0) {
+            throw new InvalidArgumentException('Ano do registro inválido.');
         }
-        $this->subtarefasRepository->deleteByMonitoramentoId($id);
-        $deleted = $this->repository->delete($id);
+        return $this->withinAtomicScope(function () use ($id, $ano): array {
+            $row = $this->repository->findByIdForUpdate($id);
+            if ($row === null) {
+                throw new InvalidArgumentException('Registro não encontrado.');
+            }
+            if ((int) ($row['ano'] ?? 0) !== $ano) {
+                throw new RuntimeException('Ano do registro mudou durante a exclusão.');
+            }
+            $seq = (int) ($row['numero_sequencial'] ?? 0);
+            $max = $this->repository->getMaxSequencialForYear($ano);
+            if ($seq !== $max || $max === 0) {
+                throw new InvalidArgumentException('Só é possível excluir o último registro criado no ano (maior número sequencial).');
+            }
+            $this->subtarefasRepository->deleteByMonitoramentoId($id);
+            $deleted = $this->repository->delete($id);
+            if (!$deleted) {
+                throw new RuntimeException('Monitoramento não foi removido.');
+            }
 
-        return [
-            'deleted' => $deleted,
-            'message' => $deleted ? 'Registro excluído com sucesso.' : 'Nenhum registro removido.',
-        ];
+            return [
+                'deleted' => true,
+                'message' => 'Registro excluído com sucesso.',
+            ];
+        }, $ano);
+    }
+
+    /** Executa atomicamente sem confirmar/invalidar uma transação externa do chamador. */
+    private function withinAtomicScope(callable $operation, ?int $yearSequenceLock = null): mixed
+    {
+        $ownsTransaction = !$this->connection->inTransaction();
+        if ($yearSequenceLock !== null && !$ownsTransaction) {
+            throw new LogicException('Exclusão por sequencial anual não pode participar de uma transação externa.');
+        }
+        $savepoint = null;
+        if ($ownsTransaction) {
+            $this->connection->beginTransaction();
+        } else {
+            $savepoint = 'gme_transition_' . (++$this->savepointCounter);
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
+        }
+
+        $sequenceLockAcquired = false;
+        try {
+            if ($yearSequenceLock !== null) {
+                $this->repository->acquireYearSequenceLock($yearSequenceLock);
+                $sequenceLockAcquired = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
+            }
+            $result = $operation();
+            if ($ownsTransaction) {
+                $this->connection->commit();
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+
+            return $result;
+        } catch (Throwable $exception) {
+            try {
+                if ($ownsTransaction) {
+                    if ($this->connection->inTransaction()) {
+                        $this->connection->rollBack();
+                    }
+                } elseif ($savepoint !== null) {
+                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                }
+            } catch (Throwable $rollbackException) {
+                error_log('Monitoramento eletrônico: falha ao reverter transição (' . get_class($rollbackException) . ').');
+            }
+
+            throw $exception;
+        } finally {
+            if ($sequenceLockAcquired && !$this->repository->releaseYearSequenceLock((int) $yearSequenceLock)) {
+                error_log('Monitoramento eletrônico: falha ao liberar bloqueio do sequencial anual.');
+            }
+        }
     }
 
     private function formatarCNJ(string $digits): string

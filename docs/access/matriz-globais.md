@@ -23,3 +23,17 @@
 | 401, 403, 404, 500, 503 | `all_internal` | Interno com composto ou elevado |
 
 Consulte `AccessEvaluator::externoCanAccessPage` para o detalhe de partes vs processos para utilizadores externos.
+
+## Consulta de vínculos de processos e partes
+
+Decisão de Jorge em 15/11/2026 (horário da Bahia), para a API
+`processos-partes`: os perfis internos que já estejam autorizados à operação
+de consulta podem consultar seus dados mesmo quando o processo for sigiloso.
+A consulta continua condicionada à sessão válida e à autorização da operação;
+essa decisão não concede acesso a perfis externos nem amplia as permissões de
+criar, alterar ou excluir vínculos. Aplicam-se as regras de sigilo específicas
+de outras áreas e operações.
+
+Esta é uma exceção de consulta transversal no escopo descrito acima; não
+estabelece acesso geral a outros registros setoriais. A decisão documenta a
+política, sem afirmar que todos os caminhos da API foram validados.

@@ -10,6 +10,16 @@ final class ListExportPresentation
     public const HEADER_LINE_2 = 'Primeira Vara Crime da Comarca de Ilhéus';
     public const HEADER_LINE_3 = 'Sistema de Gestão do Cartório - WebApp';
 
+    /** Protege texto de interpretação como fórmula em importadores de planilha. */
+    public static function csvText(string $value): string
+    {
+        $match = preg_match('/^(?:[\x00-\x1f\x7f]|[\s\x00-\x1f\x7f]*[=+@-])/u', $value);
+        if ($match !== 0) {
+            return "'" . $value;
+        }
+        return $value;
+    }
+
     /**
      * @return list<string>
      */
@@ -59,11 +69,11 @@ final class ListExportPresentation
         fputcsv($output, array_fill(0, $n, ''), ';');
 
         $titleRow = array_fill(0, $n, '');
-        $titleRow[0] = $sessionTitle;
+        $titleRow[0] = self::csvText($sessionTitle);
         fputcsv($output, $titleRow, ';');
 
         $filterRow = array_fill(0, $n, '');
-        $filterRow[0] = $filterSummary;
+        $filterRow[0] = self::csvText($filterSummary);
         fputcsv($output, $filterRow, ';');
 
         $metaRow = array_fill(0, $n, '');

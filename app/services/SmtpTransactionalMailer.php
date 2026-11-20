@@ -65,9 +65,6 @@ final class SmtpTransactionalMailer
             $mail->isSMTP();
             $mail->Host = $host;
             $mail->Port = (int) envValue('MAIL_PORT', '587');
-            $mail->SMTPAuth = true;
-            $mail->Username = $user;
-            $mail->Password = (string) (envValue('MAIL_PASSWORD') ?? envValue('MAIL_PASS') ?? '');
 
             $encryption = strtolower(trim((string) envValue('MAIL_ENCRYPTION', '')));
             if ($encryption === '' && $mail->Port === 465) {
@@ -76,6 +73,12 @@ final class SmtpTransactionalMailer
 
             $isIsolatedAuthTest = strtolower((string) envValue('APP_ENV', '')) === 'testing'
                 && envValue('AUTH_TEST_ISOLATION') === 'isolated-auth-test';
+            $isMailpitSandbox = $isIsolatedAuthTest && $host === 'mailpit' && $mail->Port === 1025;
+            $mail->SMTPAuth = !$isMailpitSandbox;
+            if ($mail->SMTPAuth) {
+                $mail->Username = $user;
+                $mail->Password = (string) (envValue('MAIL_PASSWORD') ?? envValue('MAIL_PASS') ?? '');
+            }
             if ($encryption === 'none' && !$isIsolatedAuthTest) {
                 error_log('[' . $logContext . '] SMTP sem criptografia é permitido somente no ambiente isolado de testes.');
                 return ['ok' => false, 'sent' => false];
