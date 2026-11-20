@@ -1,6 +1,10 @@
 [CmdletBinding()]
 param()
 
+# A varredura genérica não distingue execuções ainda ativas ou outro daemon.
+# A limpeza automática permanece no runner, restrita aos IDs e rótulo da própria execução.
+throw 'Limpeza genérica suspensa: identifique os recursos e o daemon antes de qualquer remoção.'
+
 $ErrorActionPreference = 'Stop'
 $label = 'fokus.auth-e2e'
 

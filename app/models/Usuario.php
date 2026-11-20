@@ -10,6 +10,8 @@ final class Usuario
     private const LAST_ACCESS_REFRESH_SECONDS = 300;
 
     private PDO $pdo;
+    private ?string $userIdVerifiedForLogin = null;
+    private ?string $passwordHashVerifiedForLogin = null;
 
     public function __construct()
     {
@@ -22,6 +24,8 @@ final class Usuario
 
     public function autenticar(string $cpf, string $senha): array
     {
+        $this->userIdVerifiedForLogin = null;
+        $this->passwordHashVerifiedForLogin = null;
 
         $cpfNumerico = Security::normalizeCPF($cpf);
 
@@ -51,6 +55,12 @@ final class Usuario
         if (empty($usuario['cadastro_ativo'])) {
             return ['success' => false, 'inactive' => true, 'message' => 'Seu cadastro está pendente de validação. Entre em contato com a diretoria ou o administrador do sistema.'];
         }
+
+        // Keep the exact credential snapshot that was verified. Token issuance
+        // must compare it with the current hash so a concurrent reset cannot
+        // let a login validated with the old password resurrect a session.
+        $this->userIdVerifiedForLogin = (string) $usuario['id_usuario'];
+        $this->passwordHashVerifiedForLogin = (string) $usuario['senha_hash'];
 
         $perfis = $this->getPerfisUsuario($usuario['id_usuario']);
         $perfilPrincipal = $this->perfilPrincipal($perfis);
@@ -139,7 +149,15 @@ final class Usuario
         string $idUsuario,
         string $token,
         int $horasValidade
-    ): void {
+    ): bool {
+        if (
+            $this->userIdVerifiedForLogin === null
+            || $this->passwordHashVerifiedForLogin === null
+            || !hash_equals($this->userIdVerifiedForLogin, $idUsuario)
+        ) {
+            return false;
+        }
+
         $expira = date('Y-m-d H:i:s', strtotime("+{$horasValidade} hours"));
         $tokenHash = Security::hashAccessToken($token);
 
@@ -147,8 +165,14 @@ final class Usuario
             UPDATE usuarios
             SET token_acesso = ?, token_expira = ?
             WHERE id_usuario = ?
+              AND BINARY senha_hash = BINARY ?
         ");
-        $stmt->execute([$tokenHash, $expira, $idUsuario]);
+        $stmt->execute([$tokenHash, $expira, $idUsuario, $this->passwordHashVerifiedForLogin]);
+        $updated = $stmt->rowCount() === 1;
+        $this->userIdVerifiedForLogin = null;
+        $this->passwordHashVerifiedForLogin = null;
+
+        return $updated;
     }
 
     public function registrarUltimoAcesso(string $idUsuario): void

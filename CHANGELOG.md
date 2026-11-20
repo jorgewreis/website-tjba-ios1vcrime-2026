@@ -1,10 +1,145 @@
 # Changelog
 
+## V. 1.88.0015
+
+**Data:** 2026-11-20 20:58:22 | **Commit:** `7ad98b2c` | **Tipo:** `patch`
+
+- merge: reconcile REI-77 concurrency with origin/main
+
+## V. 1.88.0014
+
+**Data:** 2026-11-20 15:51:30 | **Commit:** `ae8c7d43` | **Tipo:** `patch`
+
+- fix(ci): validate installed WireGuard config only
+
+## V. 1.88.0013
+
+**Data:** 2026-11-20 15:47:19 | **Commit:** `9654ab41` | **Tipo:** `patch`
+
+- fix(ci): run WireGuard validation with explicit sudo
+
+## V. 1.88.0012
+
+**Data:** 2026-11-20 15:43:36 | **Commit:** `de7e73d2` | **Tipo:** `patch`
+
+- fix(ci): reveal sanitized WireGuard validation error
+
+## V. 1.88.0011
+
+**Data:** 2026-11-20 15:38:19 | **Commit:** `c35478b0` | **Tipo:** `patch`
+
+- chore(sync): merge latest main into deployment key fix
+
+## V. 1.88.0010
+
+**Data:** 2026-11-20 15:35:30 | **Commit:** `9a74caa2` | **Tipo:** `patch`
+
+- fix(ci): normalize WireGuard deployment key
+- fix(ci): validate WireGuard config after root install
+
+## V. 1.88.0009
+
+**Data:** 2026-11-20 15:18:50 | **Commit:** `61e43d48` | **Tipo:** `patch`
+
+- fix(ci): store WireGuard config with root permissions
+
+## V. 1.88.0008
+
+**Data:** 2026-11-20 15:06:06 | **Commit:** `86f0b54d` | **Tipo:** `patch`
+
+- fix(ci): use WireGuard for production deploy
+
+## V. 1.88.0007
+
+**Data:** 2026-11-20 14:52:07 | **Commit:** `55a6dd6d` | **Tipo:** `patch`
+
+- fix: resolve received letter comarca consistently
+
+## V. 1.88.0006
+
+**Data:** 2026-11-20 14:56:59 | **Commit:** `a082afda` | **Tipo:** `patch`
+
+- fix(footer): force credit metadata onto separate lines
+
+## V. 1.88.0005
+
+**Data:** 2026-11-20 14:46:11 | **Commit:** `7dd86e73` | **Tipo:** `patch`
+
+- fix(footer): show last successful deploy timestamp
+
+## V. 1.88.0004
+
+**Data:** 2026-11-20 14:14:40 | **Commit:** `f0a15d4d` | **Tipo:** `patch`
+
+- ci(deploy): preservar acesso WireGuard no firewall temporário
+
+## V. 1.88.0003
+
+**Data:** 2026-11-20 14:01:52 | **Commit:** `c85a9638` | **Tipo:** `patch`
+
+- ci(deploy): sincronizar firewall temporário Hostinger
+
+## V. 1.88.0002
+
+**Data:** 2026-11-20 13:52:35 | **Commit:** `bec23f45` | **Tipo:** `patch`
+
+- ci(deploy): permitir runner temporário no UFW
+
+## V. 1.88.0001
+
+**Data:** 2026-11-20 13:09:54 | **Commit:** `16c5f76d` | **Tipo:** `patch`
+
+- ci(deploy): add temporary Hostinger SSH allowlist
+
+## V. 1.87.0190
+
+**Data:** 2026-11-20 09:50:21 | **Commit:** `da820415` | **Tipo:** `patch`
+
+- test(REI-148): run mysql regressions in CI
+
+## Alteracao REI-148 - versao pendente
+
+**Data:** 2026-11-20 08:28:59 | **Commit:** `1836082a` | **Tipo:** `patch`
+
+- fix(REI-148): stabilize user pagination and counts
+
+## V. 1.87.0189
+
+**Data:** 2026-11-20 08:32:37 | **Commit:** `0707afae` | **Tipo:** `patch`
+
+- docs(REI-124): update isolated CI status
+
+## V. 1.87.0188
+
+**Data:** 2026-11-20 08:27:54 | **Commit:** `6ed7521a` | **Tipo:** `patch`
+
+- test(REI-124): isolate authentication and ata integration tests
+
+## V. 1.87.0187
+
+**Data:** 2026-11-19 21:03:50 | **Commits:** `20e78c24`, `4494e7de`, `7706055e` | **Tipo:** `patch`
+
+- test(REI-127): cover matching date with stale etag
+- test(REI-169): cover equal queue timestamps
+- fix(auth): prevent stale login after password reset
+
+## V. 1.87.0186
+
+**Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
+
+- fix(REI-120): make monitoring transitions atomic
+
+## V. 1.87.0185
+
+**Data:** 2026-11-17 11:19:22 | **Commit:** `2ab745ff` | **Tipo:** `patch`
+
+- fix(REI-159): abort guide when priority replace fails
+
 ## V. 1.87.0184
 
-**Data:** 2026-11-17 05:48:25 | **Commit:** `a673ad5d` | **Tipo:** `patch`
+**Data:** 2026-11-17 05:33:49 | **Commit:** `aea3e451` | **Tipo:** `patch`
 
-- merge: sync enrollment race handling with current main
+- merge: sync Carta atomicity with current main
 
 ## V. 1.87.0183
 
@@ -7593,3 +7728,4 @@
 
 
 \n
+
