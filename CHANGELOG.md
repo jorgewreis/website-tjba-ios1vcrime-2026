@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.87.0185
+
+**Data:** 2026-11-20 20:09:06 | **Commit:** `0e742a44` | **Tipo:** `patch`
+
+- fix(REI-149): guard disposable MySQL fixture
+
 ## V. 1.87.0184
 
 **Data:** 2026-11-17 05:33:49 | **Commit:** `aea3e451` | **Tipo:** `patch`
@@ -7598,3 +7604,4 @@
 
 
 \n
+

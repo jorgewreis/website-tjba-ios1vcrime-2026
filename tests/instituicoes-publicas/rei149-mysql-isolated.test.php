@@ -10,8 +10,13 @@ function rei149Connection(): PDO
     $user = getenv('REI149_DB_USER') ?: 'root';
     $password = getenv('REI149_DB_PASSWORD') ?: '';
     $expectedHostname = getenv('REI149_EXPECTED_DB_HOSTNAME') ?: '';
-    if ($host !== 'mysql' || $name !== 'rei149_test' || !preg_match('/^[a-f0-9]{12,64}$/', $expectedHostname)) {
-        throw new RuntimeException('Fixture exige identidade injetada pelo runner MySQL isolado.');
+    $disposable = getenv('REI149_TEST_DISPOSABLE') ?: '';
+    $repoRoot = getenv('REI149_TEST_REPO_ROOT') ?: '';
+    $marker = getenv('REI149_TEST_MARKER') ?: '';
+    if ($disposable !== '1' || getcwd() !== '/workspace' || realpath(dirname(__DIR__, 2)) !== '/workspace'
+        || $repoRoot !== '/workspace' || $host !== 'mysql' || $name !== 'rei149_test'
+        || !preg_match('/^[a-f0-9]{12,64}$/', $expectedHostname) || !preg_match('/^[a-f0-9]{32}$/', $marker)) {
+        throw new RuntimeException('Fixture exige container descartável, workdir fixo e marcador do runner.');
     }
     $pdo = new PDO(
         "mysql:host={$host};dbname={$name};charset=utf8mb4",
@@ -23,6 +28,22 @@ function rei149Connection(): PDO
     $identity = $pdo->query('SELECT @@hostname AS hostname, DATABASE() AS database_name')->fetch(PDO::FETCH_ASSOC);
     if (($identity['hostname'] ?? null) !== $expectedHostname || ($identity['database_name'] ?? null) !== $name) {
         throw new RuntimeException('Conexão não corresponde à instância MySQL descartável esperada.');
+    }
+    $tables = $pdo->query("SELECT TABLE_NAME, ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME")->fetchAll(PDO::FETCH_ASSOC);
+    $tables = array_map(static fn (array $row): array => array_change_key_case($row, CASE_LOWER), $tables);
+    $tableNames = array_map(static fn (array $row): string => strtolower((string) ($row['table_name'] ?? '')), $tables);
+    if (!in_array('rei149_test_guard', $tableNames, true)
+        || array_diff($tableNames, ['rei149_test_guard', 'instituicoes_publicas']) !== []) {
+        throw new RuntimeException('Banco recusado: tabelas inesperadas ou marcador ausente.');
+    }
+    foreach ($tables as $row) {
+        if (strcasecmp((string) ($row['engine'] ?? ''), 'InnoDB') !== 0) {
+            throw new RuntimeException('Banco recusado: todas as tabelas de fixture devem usar InnoDB.');
+        }
+    }
+    $markerRows = $pdo->query('SELECT marker FROM rei149_test_guard')->fetchAll(PDO::FETCH_COLUMN);
+    if (count($markerRows) !== 1 || !hash_equals($marker, (string) $markerRows[0])) {
+        throw new RuntimeException('Banco recusado: marcador de execução não corresponde.');
     }
     return $pdo;
 }
@@ -99,7 +120,7 @@ if (($argv[1] ?? '') === 'replace-worker') {
 }
 
 $pdo = rei149Connection();
-$pdo->exec('DROP TABLE IF EXISTS instituicoes_publicas');
+rei149Assert(!in_array('instituicoes_publicas', array_map('strtolower', $pdo->query("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_TYPE = 'BASE TABLE'")->fetchAll(PDO::FETCH_COLUMN)), true), 'Banco já contém tabela da fixture.');
 $pdo->exec(
     'CREATE TABLE instituicoes_publicas (' .
     'id VARCHAR(64) NOT NULL PRIMARY KEY, nome VARCHAR(255) NOT NULL, nome_fantasia VARCHAR(100) NULL,' .

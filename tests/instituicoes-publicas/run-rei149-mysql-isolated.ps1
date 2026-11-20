@@ -64,6 +64,7 @@ if ($LASTEXITCODE -ne 0 -or $contextInfo.Endpoints.docker.Host -ne 'npipe:////./
 }
 
 $runId = [Guid]::NewGuid().ToString('N')
+$marker = [Guid]::NewGuid().ToString('N')
 $label = 'com.fokus.rei149-mysql-test'
 $networkName = "rei149-net-$runId"
 $dbName = "rei149-mysql-$runId"
@@ -118,11 +119,15 @@ try {
     }
     if (-not $ready) { throw 'MySQL descartável não ficou pronto em 60 segundos.' }
 
+$markerSql = "CREATE TABLE rei149_test_guard (marker CHAR(32) NOT NULL PRIMARY KEY) ENGINE=InnoDB; INSERT INTO rei149_test_guard (marker) VALUES ('$marker');"
+    Invoke-DockerSafe @('exec', $dbId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'rei149_test', '-e', $markerSql) | Out-Null
+
     $phpOutput = Invoke-DockerSafe @(
         'run', '--rm', '--network', $networkName, '--cpus', '1', '--memory', '512m', '--pids-limit', '128',
         '--read-only', '--security-opt', 'no-new-privileges=true', '--tmpfs', '/tmp:rw,size=32m',
         '--mount', "type=bind,source=$repoRoot,target=/workspace,readonly", '--workdir', '/workspace',
         '--env', 'REI149_DB_HOST=mysql', '--env', 'REI149_DB_NAME=rei149_test', '--env', 'REI149_DB_USER=root', '--env', 'REI149_DB_PASSWORD=',
+        '--env', 'REI149_TEST_DISPOSABLE=1', '--env', 'REI149_TEST_REPO_ROOT=/workspace', '--env', "REI149_TEST_MARKER=$marker",
         '--env', "REI149_EXPECTED_DB_HOSTNAME=$dbHostname",
         $phpImage.Id, 'php', 'tests/instituicoes-publicas/rei149-mysql-isolated.test.php'
     )
