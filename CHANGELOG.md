@@ -1,5 +1,17 @@
 # Changelog
 
+## V. 1.87.0190
+
+**Data:** 2026-11-20 09:50:21 | **Commit:** `da820415` | **Tipo:** `patch`
+
+- test(REI-148): run mysql regressions in CI
+
+## Alteracao REI-148 - versao pendente
+
+**Data:** 2026-11-20 08:28:59 | **Commit:** `1836082a` | **Tipo:** `patch`
+
+- fix(REI-148): stabilize user pagination and counts
+
 ## V. 1.87.0189
 
 **Data:** 2026-11-20 08:32:37 | **Commit:** `0707afae` | **Tipo:** `patch`
@@ -7624,6 +7636,7 @@
 
 
 \n
+
 
 
 
