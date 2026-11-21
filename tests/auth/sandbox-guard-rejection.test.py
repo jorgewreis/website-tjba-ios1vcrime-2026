@@ -9,7 +9,8 @@ import unittest
 HERE = Path(__file__).resolve().parent
 PHP_FILES = (
     'auth-fixtures.test.php', 'config-environment-selection.test.php', 'fixture-setup.test.php',
-    'http-auth-flow.test.php', 'http-ready.test.php', 'http-reset-token.fixture.php', 'login-rate-limit.fixture.php',
+    'http-auth-flow.test.php', 'http-ready.test.php', 'rei171-login-reset-race.test.php',
+    'http-reset-token.fixture.php', 'login-rate-limit.fixture.php',
     'login-rate-limit-storage.fixture.php', 'login-rate-limit.test.php',
     'password-reset-states.test.php', 'reset-concurrency.worker.php',
     'reset-token-concurrency.test.php', 'sandbox-connectivity.test.php',
@@ -22,6 +23,35 @@ MESSAGE = 'comprovado'
 
 
 class SandboxRefusalTest(unittest.TestCase):
+    def test_generic_cleanup_refuses_before_docker(self):
+        with tempfile.TemporaryDirectory(prefix='auth-cleanup-refusal-') as temp:
+            root = Path(temp)
+            script = root / 'cleanup.ps1'
+            shutil.copyfile(HERE / 'cleanup.ps1', script)
+            fakebin = root / 'bin'
+            fakebin.mkdir()
+            marker = root / 'docker-called'
+            if os.name == 'nt':
+                (fakebin / 'docker.cmd').write_text(f'@echo called > "{marker}"\r\n', encoding='utf-8')
+            else:
+                fake = fakebin / 'docker'
+                fake.write_text(f'#!/bin/sh\necho called > "{marker}"\n', encoding='utf-8')
+                fake.chmod(0o700)
+            env = os.environ.copy()
+            env['PATH'] = str(fakebin) + os.pathsep + env.get('PATH', '')
+            powershell = shutil.which('pwsh') or shutil.which('powershell')
+            self.assertIsNotNone(powershell, 'PowerShell is required')
+            result = subprocess.run([powershell, '-NoProfile', '-NonInteractive', '-File', str(script)],
+                                    env=env, text=True, capture_output=True, timeout=15)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('suspensa', result.stderr + result.stdout)
+            self.assertFalse(marker.exists(), 'docker must not be invoked')
+
+    def test_all_php_entrypoints_are_in_refusal_matrix(self):
+        discovered = {p.name for p in HERE.glob('*.php')} - {'sandbox-guard.php'}
+        self.assertSetEqual(set(PHP_FILES), discovered,
+                            'Classifique explicitamente novos entrypoints PHP na matriz de recusa.')
+
     def test_direct_entrypoints_refuse_before_config_or_docker(self):
         with tempfile.TemporaryDirectory(prefix='auth-guard-refusal-') as temp:
             root = Path(temp)

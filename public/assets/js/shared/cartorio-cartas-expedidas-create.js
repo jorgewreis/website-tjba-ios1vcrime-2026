@@ -32,6 +32,59 @@
             ? settings.submitDelayMs
             : 0;
         const ccmConfirmed = new Set();
+        let cityLookupPending = false;
+        const pendingRequestStorageKey = 'cartorio.cartasExpedidas.pendingRequestKey';
+        let pendingRequestSignature = '';
+        let pendingRequestKey = '';
+        let pendingRequestKeyRestored = false;
+
+        try {
+            if (global.sessionStorage) {
+                const storageProbe = pendingRequestStorageKey + '.probe';
+                global.sessionStorage.setItem(storageProbe, '1');
+                global.sessionStorage.removeItem(storageProbe);
+                pendingRequestKey = String(global.sessionStorage.getItem(pendingRequestStorageKey) || '');
+                pendingRequestKeyRestored = /^[a-f0-9]{64}$/i.test(pendingRequestKey);
+                if (!pendingRequestKeyRestored) pendingRequestKey = '';
+            }
+        } catch (error) {
+            pendingRequestKey = '';
+            pendingRequestKeyRestored = false;
+        }
+
+        function resetPendingRequestState() {
+            pendingRequestSignature = '';
+            pendingRequestKey = '';
+            pendingRequestKeyRestored = false;
+        }
+
+        function clearPendingRequestKey() {
+            resetPendingRequestState();
+            try {
+                if (global.sessionStorage) global.sessionStorage.removeItem(pendingRequestStorageKey);
+            } catch (error) {
+                // A falha ao limpar não afeta uma criação confirmada; a próxima carga
+                // pode receber conflito e remover a chave antiga com segurança.
+            }
+        }
+
+        function persistPendingRequestKey() {
+            try {
+                const storage = global.sessionStorage;
+                if (!storage || !pendingRequestKey) return false;
+                storage.setItem(pendingRequestStorageKey, pendingRequestKey);
+                return String(storage.getItem(pendingRequestStorageKey) || '') === pendingRequestKey;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function newRequestKey() {
+            if (!global.crypto || typeof global.crypto.getRandomValues !== 'function') return '';
+            const bytes = new Uint8Array(32);
+            global.crypto.getRandomValues(bytes);
+            return Array.from(bytes, function (byte) { return byte.toString(16).padStart(2, '0'); }).join('');
+        }
         function confirmCcm(city, uf) {
             const key = normalizeCidadeForCompare(city) + '|' + String(uf || '').trim().toUpperCase();
             if (ccmConfirmed.has(key)) return true;
@@ -51,7 +104,7 @@
         });
         global.addEventListener('datajudClasseResolved', function (event) {
             const detail = event && event.detail ? event.detail : {};
-            if (!detail.processoInputId || detail.processoInputId === 'filter-processo') gate.setReady();
+            if (!cityLookupPending && (!detail.processoInputId || detail.processoInputId === 'filter-processo')) gate.setReady();
         });
 
         const requiredFields = [
@@ -76,9 +129,20 @@
             return true;
         }
 
+        function getSubmissionInputSnapshot() {
+            return JSON.stringify({
+                processo: helpers.getValue('filter-processo'),
+                classe: helpers.getValue('filter-classe'),
+                finalidade: helpers.getValue('filter-tipo'),
+                prazo: helpers.getValue('filter-prazo'),
+                estado: helpers.getValue('filter-estado'),
+                cidade: helpers.getValue('filter-cidade')
+            });
+        }
+
         button.addEventListener('click', async function (event) {
             event.preventDefault();
-            if (button.disabled) {
+            if (button.disabled || cityLookupPending) {
                 return;
             }
 
@@ -107,6 +171,11 @@
                 : helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
             const cityLookupEndpoint = String(settings.cityLookupEndpoint || '').trim();
             if (cityLookupEndpoint) {
+                // Fecha a guarda antes do primeiro await. Sem isso, cliques
+                // durante a consulta da cidade iniciavam múltiplos cadastros.
+                const inputSnapshot = getSubmissionInputSnapshot();
+                cityLookupPending = true;
+                gate.setSubmitting();
                 try {
                     const lookupUrl = new URL(cityLookupEndpoint, global.location.origin);
                     lookupUrl.searchParams.set('cidade', cidadeDestino);
@@ -116,8 +185,16 @@
                     if (!lookupResponse.ok) {
                         throw new Error(lookupData.error || 'Não foi possível validar a comarca de destino.');
                     }
+                    if (inputSnapshot !== getSubmissionInputSnapshot()) {
+                        feedback('Os dados do cadastro mudaram durante a validação da comarca. Confira os campos e tente novamente.', 'error');
+                        gate.setReady();
+                        return;
+                    }
                     if (lookupData.is_ccm === true || String(lookupData.status_cidade || '').trim().toUpperCase() === 'CCM') {
-                        if (!confirmCcm(cidadeDestino, estadoSelect ? estadoSelect.value : '')) return;
+                        if (!confirmCcm(cidadeDestino, estadoSelect ? estadoSelect.value : '')) {
+                            gate.setReady();
+                            return;
+                        }
                         confirmacaoCcm = true;
                         if (cidadeInput) delete cidadeInput.dataset.ccmBlocked;
                     }
@@ -125,6 +202,8 @@
                     feedback(error.message || 'Não foi possível validar a comarca de destino.', 'error');
                     gate.setError();
                     return;
+                } finally {
+                    cityLookupPending = false;
                 }
             }
 
@@ -161,11 +240,34 @@
             }, helpers.buildClassePayload({ classeValue: classeVal }));
             payload.confirmacao_ccm = confirmacaoCcm;
 
+            const requestSignature = JSON.stringify(payload);
+            if (requestSignature !== pendingRequestSignature) {
+                if (!pendingRequestKeyRestored) pendingRequestKey = newRequestKey();
+                pendingRequestSignature = requestSignature;
+                pendingRequestKeyRestored = false;
+                if (!pendingRequestKey) {
+                    resetPendingRequestState();
+                    feedback('Não foi possível guardar a chave de envio seguro nesta sessão. Ative o armazenamento da sessão e tente novamente.', 'error');
+                    gate.setError();
+                    return;
+                }
+            }
+            // Confirme a persistência em cada tentativa, inclusive após a
+            // revalidação do formulário ou quando a chave foi restaurada.
+            if (!persistPendingRequestKey()) {
+                resetPendingRequestState();
+                feedback('Não foi possível guardar a chave de envio seguro nesta sessão. Ative o armazenamento da sessão e tente novamente.', 'error');
+                gate.setError();
+                return;
+            }
+            payload.idempotency_key = pendingRequestKey;
+
             gate.setSubmitting();
             feedback('Enviando dados...', 'info', 'Informação');
 
+            let response = null;
             try {
-                const response = await fetch(settings.endpoint || '/api/cartorio-cartas-expedidas/create.php', {
+                response = await fetch(settings.endpoint || '/api/cartorio-cartas-expedidas/create.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -174,11 +276,13 @@
                 if (!response.ok) {
                     throw new Error(data.error || 'Falha ao salvar a carta expedida.');
                 }
+                clearPendingRequestKey();
                 if (submitDelayMs > 0) {
                     await new Promise(function (resolve) { setTimeout(resolve, submitDelayMs); });
                 }
                 global.location.href = settings.successRedirect || '/frame.php?page=cartasexpedidas';
             } catch (error) {
+                if (response && response.status === 409) clearPendingRequestKey();
                 feedback(error.message || 'Não foi possível cadastrar a carta expedida.', 'error');
                 gate.setInitial();
             }

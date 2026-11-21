@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/sandbox-guard.php';
+require __DIR__ . "/sandbox-guard.php";
 
 $socket = @fsockopen('app', 8080, $errno, $error, 3);
 if ($socket === false) {
