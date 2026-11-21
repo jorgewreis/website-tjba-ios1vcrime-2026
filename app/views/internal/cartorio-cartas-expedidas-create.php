@@ -299,9 +299,11 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
                     endpoint: '/api/cartorio-cartas-expedidas/buscar-cidade.php?cidade=',
                     blockCcm: true,
                     clearCcmCity: false,
-                    onCcmCity: function (city) {
+                    onCcmCity: function (city, lookupData) {
                         if (App.CartorioCartasExpedidasCreate && App.CartorioCartasExpedidasCreate.confirmCcm) {
-                            App.CartorioCartasExpedidasCreate.confirmCcm(city);
+                            var estadoSelect = document.getElementById('filter-estado');
+                            var uf = lookupData && lookupData.uf ? lookupData.uf : (estadoSelect ? estadoSelect.value : '');
+                            App.CartorioCartasExpedidasCreate.confirmCcm(city, uf);
                         }
                     },
                     maxLength: 50,

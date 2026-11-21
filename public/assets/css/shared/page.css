@@ -664,6 +664,12 @@ body.page-internal {
         background-color: #ffffff60;
     }
 
+    .footer-page .info-app.footer-credit {
+        flex-direction: column;
+        gap: 2px;
+        text-align: center;
+    }
+
     .register-dados-carta {
         display: flex;
     }

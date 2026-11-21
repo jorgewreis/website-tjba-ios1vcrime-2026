@@ -14,6 +14,7 @@ if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
 }
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/repositories/InstituicoesPublicasRepository.php';
+require_once $basePath . '/app/helpers/InstituicoesConsultaPolicy.php';
 
 try {
     $connection = Conection::getInstance()->getConnection();
@@ -35,7 +36,9 @@ if ($nome === '' || strlen($nome) < 2) {
 
 try {
     $repository = new InstituicoesPublicasRepository($connection);
-    $rows = $repository->fetchList(['nome' => $nome], $limit, 0);
+    $filters = ['nome' => $nome];
+    if (InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''))) $filters['ativo'] = 1;
+    $rows = $repository->fetchList($filters, $limit, 0);
     $instituicoes = [];
     foreach ($rows as $row) {
         $instituicoes[] = [
