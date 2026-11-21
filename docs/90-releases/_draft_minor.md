@@ -4,17 +4,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **test(REI-127): cover matching date with stale etag** `[20e78c24]`
-- **fix(auth): prevent stale login after password reset** `[7706055e]`
-- **fix(REI-89): tornar cancelamento e exclusao atomicos** `[61a3f713]`
-- **ci(deploy): add temporary Hostinger SSH allowlist** `[16c5f76d]`
-- **ci(deploy): permitir runner temporário no UFW** `[bec23f45]`
-- **ci(deploy): sincronizar firewall temporário Hostinger** `[c85a9638]`
-- **ci(deploy): preservar acesso WireGuard no firewall temporário** `[f0a15d4d]`
-- **fix(footer): show last successful deploy timestamp** `[7dd86e73]`
-- **fix(footer): force credit metadata onto separate lines** `[a082afda]`
-- **fix(ci): normalize WireGuard deployment key** `[9a74caa2]`
-- **chore(sync): merge latest main into deployment key fix** `[c35478b0]`
-- **fix(ci): reveal sanitized WireGuard validation error** `[de7e73d2]`
-- **fix(ci): run WireGuard validation with explicit sudo** `[9654ab41]`
-- **fix(ci): validate installed WireGuard config only** `[ae8c7d43]`
+- **fix(REI-89): tornar cancelamento e exclusao atomicos** `[4b32bcf4]`
+- **merge: reconcile REI-89 cartório atomicity with origin/main** `[ed57b365]`
+
