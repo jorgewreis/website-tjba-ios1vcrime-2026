@@ -10,5 +10,8 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: mbstring, pdo_sqlite
       - name: Verificar Sintaxe
         run: find . -name "*.php" -print0 | xargs -0 -n1 php -l
+      - name: Testar listagem unificada de usuários com perfis mistos
+        run: php tests/usuarios/rei148-perfis-mistos.test.php

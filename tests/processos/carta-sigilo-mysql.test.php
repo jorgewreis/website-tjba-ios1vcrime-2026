@@ -66,6 +66,11 @@ $ddl = [
 foreach ($ddl as $sql) {
     $pdo->exec($sql);
 }
+$migrationSql = file_get_contents($repoRoot . '/database/migrations/20261116_add_cartas_expedidas_idempotency.sql');
+if (!is_string($migrationSql) || trim($migrationSql) === '') {
+    throw new RuntimeException('Migração sintética de idempotência ausente ou vazia.');
+}
+$pdo->exec($migrationSql);
 
 require_once $repoRoot . '/app/services/CartasExpedidasService.php';
 require_once $repoRoot . '/app/repositories/ProcessosRepository.php';
@@ -92,11 +97,37 @@ $inputs = [
     'zero-string' => ['nivel_sigilo' => '0'],
 ];
 $service = new CartasExpedidasService($pdo);
+$expectedClassId = (new ClassesRepository($pdo))->ensureClass('CARTA-TESTE', 'Classe sintética');
+$repository = new CartasExpedidasRepository($pdo);
+$pdo->exec('ALTER TABLE cartas_expedidas DROP INDEX uq_cartas_expedidas_idempotency');
+$beforePartialSchema = [
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn(),
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn(),
+];
+try {
+    $service->create(array_merge($base, [
+        'usuario_cadastro_id' => 'USER-REI78-PARTIAL',
+        'idempotency_key' => str_repeat('c', 64),
+    ]));
+    throw new RuntimeException('Schema parcial sem índice único deveria bloquear o envio idempotente.');
+} catch (IdempotencySchemaUnavailableException $expected) {
+    if (!str_contains($expected->getPrevious()?->getMessage() ?? '', 'Índice único')) {
+        throw new RuntimeException('Falha inesperada ao detectar schema parcial.', 0, $expected);
+    }
+}
+if ($beforePartialSchema !== [
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn(),
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn(),
+]) {
+    throw new RuntimeException('Schema parcial permitiu gravação antes de bloquear a idempotência.');
+}
+$pdo->exec('ALTER TABLE cartas_expedidas ADD UNIQUE KEY uq_cartas_expedidas_idempotency (criado_por, idempotency_key)');
+$repository->assertIdempotencyColumnsAvailable();
 foreach ($inputs as $case => $extra) {
     $service->create($base + $extra);
     $row = $pdo->query("SELECT sigiloso, classe_id FROM processos WHERE id = 'PRC-EXISTING'")->fetch(PDO::FETCH_ASSOC);
-    if ($row === false || (int) $row['sigiloso'] !== 1 || $row['classe_id'] === 'CLA-OLD') {
-        throw new RuntimeException("Processo existente perdeu sigilo ou não recebeu classe no caso: $case");
+    if ($row === false || (int) $row['sigiloso'] !== 1 || $row['classe_id'] !== $expectedClassId) {
+        throw new RuntimeException("Processo existente perdeu sigilo ou não recebeu a classe esperada no caso: $case");
     }
 }
 $letterCount = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
@@ -105,10 +136,96 @@ if ($letterCount !== count($inputs) || $subtaskCount !== count($inputs) * 2) {
     throw new RuntimeException('Criação completa de cartas/subtarefas não persistiu as quantidades esperadas.');
 }
 
+$idempotentPayload = array_merge($base, [
+    'usuario_cadastro_id' => 'USER-REI78-TEST',
+    'idempotency_key' => str_repeat('a', 64),
+]);
+$idempotentId = $service->create($idempotentPayload);
+$afterFirstIdempotentCreate = [
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn(),
+    (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn(),
+];
+if ($service->create($idempotentPayload) !== $idempotentId
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $afterFirstIdempotentCreate[0]
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $afterFirstIdempotentCreate[1]) {
+    throw new RuntimeException('Retry idempotente criou registros duplicados ou retornou outra carta.');
+}
+try {
+    $service->create(array_merge($idempotentPayload, ['finalidade' => 'Finalidade diferente']));
+    throw new RuntimeException('Reutilização da chave idempotente com outro payload deveria ser recusada.');
+} catch (DomainException) {
+    // A chave fica vinculada ao conteúdo original.
+}
+if ((int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $afterFirstIdempotentCreate[0]
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $afterFirstIdempotentCreate[1]) {
+    throw new RuntimeException('Payload divergente com a mesma chave alterou registros.');
+}
+
+$concurrentKey = str_repeat('c', 64);
+$concurrentPayload = array_merge($base, [
+    'usuario_cadastro_id' => 'USER-REI78-TEST',
+    'idempotency_key' => $concurrentKey,
+]);
+$raceLetterCount = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
+$raceSubtaskCount = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn();
+$pdo->exec("CREATE TRIGGER rei78_delay_idempotent BEFORE INSERT ON cartas_expedidas FOR EACH ROW BEGIN IF NEW.idempotency_key = '" . $concurrentKey . "' THEN DO GET_LOCK('rei78-idempotency-race', 10); DO SLEEP(1); DO RELEASE_LOCK('rei78-idempotency-race'); END IF; END");
+$childCode = <<<'PHP'
+require getenv('REI88_TEST_REPO_ROOT') . '/app/services/CartasExpedidasService.php';
+$db = new PDO(getenv('REI88_MYSQL_DSN'), getenv('REI88_MYSQL_USER'), getenv('REI88_MYSQL_PASSWORD'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
+$payload = json_decode(base64_decode(getenv('REI78_RACE_PAYLOAD'), true), true, 512, JSON_THROW_ON_ERROR);
+echo (new CartasExpedidasService($db))->create($payload);
+PHP;
+$childEnvironment = [
+    'REI88_TEST_REPO_ROOT' => $repoRoot,
+    'REI88_MYSQL_DSN' => $dsn,
+    'REI88_MYSQL_USER' => $user,
+    'REI88_MYSQL_PASSWORD' => $password,
+    'REI78_RACE_PAYLOAD' => base64_encode(json_encode($concurrentPayload, JSON_THROW_ON_ERROR)),
+];
+$childPipes = [];
+$child = proc_open([PHP_BINARY, '-r', $childCode], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $childPipes, null, $childEnvironment);
+if (!is_resource($child)) {
+    $pdo->exec('DROP TRIGGER rei78_delay_idempotent');
+    throw new RuntimeException('Não foi possível iniciar a requisição concorrente sintética.');
+}
+fclose($childPipes[0]);
+$lockObserved = false;
+for ($attempt = 0; $attempt < 100; $attempt++) {
+    $lockOwner = $pdo->query("SELECT IS_USED_LOCK('rei78-idempotency-race')")->fetchColumn();
+    if ($lockOwner !== false && $lockOwner !== null) {
+        $lockObserved = true;
+        break;
+    }
+    usleep(20000);
+}
+if (!$lockObserved) {
+    proc_terminate($child);
+    stream_get_contents($childPipes[1]);
+    stream_get_contents($childPipes[2]);
+    fclose($childPipes[1]);
+    fclose($childPipes[2]);
+    proc_close($child);
+    $pdo->exec('DROP TRIGGER rei78_delay_idempotent');
+    throw new RuntimeException('A fixture não observou a primeira inserção dentro da janela de sincronização.');
+}
+$concurrentId = $service->create($concurrentPayload);
+$childId = stream_get_contents($childPipes[1]);
+$childError = stream_get_contents($childPipes[2]);
+fclose($childPipes[1]);
+fclose($childPipes[2]);
+$childExit = proc_close($child);
+$pdo->exec('DROP TRIGGER rei78_delay_idempotent');
+if ($childExit !== 0 || trim($childId) !== $concurrentId || $childError !== ''
+    || (int) $pdo->query("SELECT COUNT(*) FROM cartas_expedidas WHERE idempotency_key = '" . $concurrentKey . "'")->fetchColumn() !== 1
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $raceLetterCount + 1
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $raceSubtaskCount + 2) {
+    throw new RuntimeException('Duas requisições simultâneas com a mesma chave não retornaram uma única carta: ' . trim($childError));
+}
+
 $newCnj = '0000002-54.2020.8.05.0001';
 $service->create(array_merge($base, ['numero_processo' => $newCnj]));
 $newProcess = (new ProcessosRepository($pdo))->findByNumero($newCnj);
-if ($newProcess === null || (int) $newProcess['sigiloso'] !== 0 || $newProcess['classe_id'] === null) {
+if ($newProcess === null || (int) $newProcess['sigiloso'] !== 0 || $newProcess['classe_id'] !== $expectedClassId) {
     throw new RuntimeException('Processo novo com classe conhecida não recebeu estado não sigiloso esperado.');
 }
 
@@ -132,5 +249,43 @@ if ($explicit === null || (int) $explicit['sigiloso'] !== 1) {
     throw new RuntimeException('Nível de sigilo explicitamente restrito não foi aplicado.');
 }
 
+$beforeFailureProcess = (new ProcessosRepository($pdo))->findByNumero($existingCnj);
+$beforeFailureLetters = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
+$beforeFailureSubtasks = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn();
+$beforeFailureClasses = (int) $pdo->query('SELECT COUNT(*) FROM classes')->fetchColumn();
+$pdo->exec("CREATE TRIGGER rei88_fail_subtask BEFORE INSERT ON cartas_expedidas_subtarefas FOR EACH ROW BEGIN IF NEW.tipo = 'aguardando_devolucao' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'rei88 falha induzida na segunda subtarefa'; END IF; END");
+$failurePayload = array_merge($base, [
+    'classe_codigo' => 'REI88-ROLLBACK-CLASS',
+    'classe_descricao' => 'Classe sintética para rollback',
+    'usuario_cadastro_id' => 'USER-REI78-TEST',
+    'idempotency_key' => str_repeat('b', 64),
+]);
+try {
+    $service->create($failurePayload);
+    throw new RuntimeException('Falha induzida na subtarefa não ocorreu.');
+} catch (PDOException $exception) {
+    if (!str_contains($exception->getMessage(), 'rei88 falha induzida na segunda subtarefa')) {
+        throw $exception;
+    }
+}
+$afterFailureProcess = (new ProcessosRepository($pdo))->findByNumero($existingCnj);
+if ($beforeFailureProcess === null || $afterFailureProcess === null
+    || $afterFailureProcess['classe_id'] !== $beforeFailureProcess['classe_id']
+    || (int) $afterFailureProcess['sigiloso'] !== (int) $beforeFailureProcess['sigiloso']
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $beforeFailureLetters
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $beforeFailureSubtasks
+    || (int) $pdo->query('SELECT COUNT(*) FROM classes')->fetchColumn() !== $beforeFailureClasses
+    || (int) $pdo->query("SELECT COUNT(*) FROM cartas_expedidas WHERE idempotency_key = '" . str_repeat('b', 64) . "'")->fetchColumn() !== 0
+    || $pdo->inTransaction()) {
+    throw new RuntimeException('Falha na criação deixou processo, classe, carta, subtarefas ou transação parcial.');
+}
+$pdo->exec('DROP TRIGGER rei88_fail_subtask');
+$retryAfterRollbackId = $service->create($failurePayload);
+if ($service->create($failurePayload) !== $retryAfterRollbackId
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $beforeFailureLetters + 1
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $beforeFailureSubtasks + 2) {
+    throw new RuntimeException('Retry após rollback não foi idempotente ou criou registros duplicados.');
+}
+
 echo 'PASS CartasExpedidasService completo em MySQL/InnoDB ' . $version
-    . ': sigilo existente preservado (' . count($inputs) . ' entradas), carta/subtarefas persistidas; processo novo e classe ausente verificados.' . PHP_EOL;
+    . ': migração e retry idempotente (concorrência simultânea, payload conflitante e retry após rollback), sigilo e classe existentes preservados (' . count($inputs) . ' entradas), criação completa, processo novo/classe ausente e rollback após falha na segunda subtarefa verificados.' . PHP_EOL;

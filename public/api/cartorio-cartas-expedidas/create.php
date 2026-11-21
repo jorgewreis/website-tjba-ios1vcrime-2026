@@ -21,6 +21,14 @@ if (!is_array($parsed)) {
     $parsed = $_POST;
 }
 
+$idempotencyKey = strtolower(trim((string) ($parsed['idempotency_key'] ?? '')));
+if (preg_match('/^[a-f0-9]{64}$/D', $idempotencyKey) !== 1) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Atualize a página e tente novamente.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+$parsed['idempotency_key'] = $idempotencyKey;
+
 $usuarioCadastroId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 if ($usuarioCadastroId !== '') {
     $parsed['usuario_cadastro_id'] = $usuarioCadastroId;
@@ -49,6 +57,12 @@ try {
     echo json_encode(['id' => $newId], JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);
+    echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+} catch (IdempotencySchemaUnavailableException $exception) {
+    http_response_code(503);
+    echo json_encode(['error' => 'O cadastro seguro está temporariamente indisponível. Tente novamente em instantes.'], JSON_UNESCAPED_UNICODE);
+} catch (\DomainException $exception) {
+    http_response_code(409);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $exception) {
     http_response_code(500);

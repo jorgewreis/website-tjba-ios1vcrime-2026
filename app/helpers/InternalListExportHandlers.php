@@ -17,6 +17,7 @@ require_once __DIR__ . '/../services/SalaAudienciasAtaService.php';
 require_once __DIR__ . '/../services/PessoasService.php';
 require_once __DIR__ . '/../services/ConsultaProcessosService.php';
 require_once __DIR__ . '/../services/InstituicoesPublicasService.php';
+require_once __DIR__ . '/InstituicoesConsultaPolicy.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasAtaRepository.php';
 require_once __DIR__ . '/../repositories/PartesTelefonesRepository.php';
 require_once __DIR__ . '/../repositories/PartesInstituicoesRepository.php';
@@ -757,7 +758,8 @@ final class InternalListExportHandlers
                 'rows' => [['msg' => 'Aplique filtros na lista e exporte novamente.']],
             ];
         }
-        $filters = ['nome' => $nome, 'cpf' => $cpf, 'instituicao_id' => $inst];
+        $onlyActiveInstitutions = InstituicoesConsultaPolicy::onlyActiveForUser($userId);
+        $filters = ['nome' => $nome, 'cpf' => $cpf, 'instituicao_id' => $inst, 'somente_instituicoes_ativas' => $onlyActiveInstitutions];
         $service = new PessoasService($pdo);
         $rows = $service->list($filters, self::MAX_ROWS, 0)['rows'] ?? [];
         $telefonesRepo = new PartesTelefonesRepository($pdo);
@@ -767,7 +769,7 @@ final class InternalListExportHandlers
             $parteId = (string) ($row['id'] ?? $row['ID'] ?? '');
             if ($parteId !== '') {
                 $row['telefones'] = $telefonesRepo->findByParteId($parteId);
-                $vinculos = $vinculosInstRepo->findByParteId($parteId, true);
+                $vinculos = $vinculosInstRepo->findByParteId($parteId, true, $onlyActiveInstitutions);
                 $row['instituicoes'] = array_map(static function (array $v): array {
                     return [
                         'nome' => $v['instituicao_nome'] ?? '',
@@ -851,7 +853,9 @@ final class InternalListExportHandlers
             ];
         }
         $service = new InstituicoesPublicasService($pdo);
-        $rows = $service->list(['nome' => $nome], self::MAX_ROWS, 0)['rows'] ?? [];
+        $filters = ['nome' => $nome];
+        if (InstituicoesConsultaPolicy::onlyActiveForUser($userId)) $filters['ativo'] = 1;
+        $rows = $service->list($filters, self::MAX_ROWS, 0)['rows'] ?? [];
         $out = [];
         foreach ($rows as $r) {
             $out[] = [
@@ -939,10 +943,11 @@ final class InternalListExportHandlers
         require_once __DIR__ . '/../repositories/PartesRepository.php';
 
         $repo = new PartesInstituicoesRepository($pdo);
+        $onlyActiveInstitutions = InstituicoesConsultaPolicy::onlyActiveForUser($userId);
         if ($parteId !== '') {
-            $rows = $repo->findByParteId($parteId);
+            $rows = $repo->findByParteId($parteId, null, $onlyActiveInstitutions);
         } else {
-            $rows = $repo->findByInstituicaoId($instituicaoId);
+            $rows = $repo->findByInstituicaoId($instituicaoId, null, $onlyActiveInstitutions);
         }
 
         $pessoaNomeCtx = '';
@@ -958,7 +963,7 @@ final class InternalListExportHandlers
         $instituicaoCtx = '';
         if ($instituicaoId !== '' && $parteId === '') {
             $instSvc = new InstituicoesPublicasService($pdo);
-            $iRow = $instSvc->find($instituicaoId);
+            $iRow = $instSvc->find($instituicaoId, $onlyActiveInstitutions);
             if ($iRow !== null) {
                 $n = trim((string) ($iRow['nome'] ?? ''));
                 $s = trim((string) ($iRow['sigla'] ?? ''));

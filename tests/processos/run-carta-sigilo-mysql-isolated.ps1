@@ -4,13 +4,14 @@ param()
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $appRoot = Join-Path $repoRoot 'app'
+$migrationRoot = Join-Path $repoRoot 'database/migrations'
 $testFile = Join-Path $PSScriptRoot 'carta-sigilo-mysql.test.php'
 $mysqlImageRef = 'mysql@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902'
 $phpImageRef = 'fokus-law-linux-qa@sha256:459cc8bd25b38009a8cf9a0ef5399d131f4f2001a1376d89389f673a92de430b'
 if (Test-Path -LiteralPath (Join-Path $repoRoot '.env')) {
     throw 'Runner recusado: não execute a fixture em checkout com .env.'
 }
-foreach ($path in @($appRoot, $testFile)) {
+foreach ($path in @($appRoot, $migrationRoot, $testFile)) {
     $item = Get-Item -LiteralPath $path -Force
     if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
         throw 'Runner recusado: source com reparse point.'
@@ -20,6 +21,10 @@ $reparseItems = Get-ChildItem -LiteralPath $appRoot -Recurse -Force | Where-Obje
     $_.Attributes -band [IO.FileAttributes]::ReparsePoint
 }
 if ($reparseItems) { throw 'Runner recusado: app contém reparse point.' }
+$migrationReparseItems = Get-ChildItem -LiteralPath $migrationRoot -Recurse -Force | Where-Object {
+    $_.Attributes -band [IO.FileAttributes]::ReparsePoint
+}
+if ($migrationReparseItems) { throw 'Runner recusado: migrations contém reparse point.' }
 $envItems = Get-ChildItem -LiteralPath $appRoot -Recurse -Force | Where-Object { $_.Name -like '.env*' }
 if ($envItems) { throw 'Runner recusado: app contém arquivo de ambiente.' }
 
@@ -27,8 +32,9 @@ $contextName = (& docker context show 2>$null | Select-Object -Last 1).Trim()
 if ($LASTEXITCODE -ne 0 -or $contextName -ne 'desktop-linux') {
     throw 'Runner recusado: somente o contexto local desktop-linux é permitido.'
 }
+$dockerEndpoint = 'npipe:////./pipe/dockerDesktopLinuxEngine'
 $contextInfo = @((& docker context inspect $contextName 2>$null | ConvertFrom-Json))[0]
-if ($LASTEXITCODE -ne 0 -or $contextInfo.Endpoints.docker.Host -ne 'npipe:////./pipe/dockerDesktopLinuxEngine') {
+if ($LASTEXITCODE -ne 0 -or $contextInfo.Endpoints.docker.Host -ne $dockerEndpoint) {
     throw 'Runner recusado: endpoint do Docker não é o pipe local esperado.'
 }
 
@@ -40,11 +46,10 @@ $phpName = "fokus-rei88-php-$runId"
 $volumeName = "fokus-rei88-socket-$runId"
 $mysqlId = $null
 $phpId = $null
-$volumeCreated = $false
 $cleanupFailed = $false
 
 function Invoke-DockerSafe([string[]]$argsList) {
-    $output = & docker @argsList 2>&1
+    $output = & docker --host $dockerEndpoint @argsList 2>&1
     if ($LASTEXITCODE -ne 0) {
         throw "Docker falhou em '$($argsList[0])' (código $LASTEXITCODE): $($output -join ' ')"
     }
@@ -75,6 +80,18 @@ function Remove-OwnedContainer([string]$id) {
     }
 }
 
+function Find-OwnedContainerByName([string]$name) {
+    $raw = Invoke-DockerSafe @(
+        'ps', '-aq', '--no-trunc', '--filter', "label=$label=$runId", '--filter', "name=$name"
+    )
+    $ids = @($raw | Where-Object { $_ })
+    if ($ids.Count -gt 1) { throw 'Mais de um container corresponde ao nome descartável desta execução.' }
+    if ($ids.Count -eq 0) { return $null }
+    $item = Get-OwnedContainer ([string]$ids[0])
+    if ($item.Name -ne "/$name") { throw 'Nome do container descartável não corresponde à execução.' }
+    return [string]$item.Id
+}
+
 try {
     $mysqlImage = @((Invoke-DockerSafe @('image', 'inspect', $mysqlImageRef)) | ConvertFrom-Json)[0]
     $phpImage = @((Invoke-DockerSafe @('image', 'inspect', $phpImageRef)) | ConvertFrom-Json)[0]
@@ -82,7 +99,6 @@ try {
     if ($imageInvalid) { throw 'Imagens MySQL/PHP não correspondem aos digests aprovados.' }
 
     Invoke-DockerSafe @('volume', 'create', '--label', "$label=$runId", $volumeName) | Out-Null
-    $volumeCreated = $true
     $volumeInfo = @((Invoke-DockerSafe @('volume', 'inspect', $volumeName)) | ConvertFrom-Json)[0]
     if ($volumeInfo.Labels.$label -ne $runId) { throw 'Identidade do volume descartável não confere.' }
 
@@ -104,7 +120,8 @@ try {
     })
     $dbInvalid = $db.Image -ne $mysqlImage.Id -or $db.HostConfig.NetworkMode -ne 'none' -or $db.HostConfig.Privileged
     $dbInvalid = $dbInvalid -or $dbPortCount -ne 0 -or $dbMounts.Count -ne 1 -or $dbSocketMounts.Count -ne 1
-    $dbInvalid = $dbInvalid -or [string]::IsNullOrWhiteSpace([string]$dbTmpfs) -or $dbTmpfs -notmatch 'size=512m'
+    $dbInvalid = $dbInvalid -or [string]::IsNullOrWhiteSpace([string]$dbTmpfs)
+    $dbInvalid = $dbInvalid -or $dbTmpfs -notmatch 'size=512m'
     $dbInvalid = $dbInvalid -or @($db.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true'
     if ($dbInvalid) {
         throw 'Topologia MySQL recusada: sem rede/portas, datadir efêmero e socket exclusivo são obrigatórios.'
@@ -114,9 +131,17 @@ try {
     $ready = $false
     for ($i = 0; $i -lt 90; $i++) {
         $probe = $null
-        try { $probe = & docker exec $mysqlId mysql --protocol=socket --socket=/var/run/mysqld/mysqld.sock -uroot rei88_test -N -e 'SELECT 1' 2>$null } catch { }
-if ($LASTEXITCODE -eq 0 -and ($probe | Select-Object -Last 1).Trim() -eq '1') { $ready = $true; break }
-    Start-Sleep -Seconds 1
+        try {
+            $probe = Invoke-DockerSafe @(
+                'exec', $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock',
+                '-uroot', 'rei88_test', '-N', '-e', 'SELECT 1'
+            )
+        } catch { }
+        if ($LASTEXITCODE -eq 0 -and ($probe | Select-Object -Last 1).Trim() -eq '1') {
+            $ready = $true
+            break
+        }
+        Start-Sleep -Seconds 1
     }
     if (-not $ready) { throw 'MySQL descartável ou banco de teste não ficou pronto.' }
 
@@ -124,12 +149,13 @@ if ($LASTEXITCODE -eq 0 -and ($probe | Select-Object -Last 1).Trim() -eq '1') { 
     Invoke-DockerSafe @('exec', $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'rei88_test', '-e', $markerSql) | Out-Null
 
     $appMount = "type=bind,source=$appRoot,target=/repo/app,readonly"
+    $migrationMount = "type=bind,source=$migrationRoot,target=/repo/database/migrations,readonly"
     $testMount = "type=bind,source=$testFile,target=/test/carta-sigilo-mysql.test.php,readonly"
     $phpId = (Invoke-DockerSafe @(
         'create', '--name', $phpName, '--label', "$label=$runId", '--network', 'none',
         '--cpus', '1', '--memory', '512m', '--read-only', '--cap-drop', 'ALL',
         '--security-opt', 'no-new-privileges=true', '--tmpfs', '/tmp:rw,size=64m,noexec,nosuid,nodev',
-        '--mount', $appMount, '--mount', $testMount,
+        '--mount', $appMount, '--mount', $migrationMount, '--mount', $testMount,
         '--mount', "type=volume,source=$volumeName,target=/var/run/mysqld",
         '--env', 'REI88_TEST_DISPOSABLE=1', '--env', 'REI88_TEST_REPO_ROOT=/repo',
         '--env', "REI88_TEST_DISPOSABLE_MARKER=$marker",
@@ -140,10 +166,12 @@ if ($LASTEXITCODE -eq 0 -and ($probe | Select-Object -Last 1).Trim() -eq '1') { 
     $php = Get-OwnedContainer $phpId
     $phpMounts = @($php.Mounts)
     $phpPortCount = if ($php.HostConfig.PortBindings) { @($php.HostConfig.PortBindings.PSObject.Properties).Count } else { 0 }
-    $phpInvalid = $php.Image -ne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged -or $phpPortCount -ne 0 -or $phpMounts.Count -ne 3
+    $phpInvalid = $php.Image -ne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged
+    $phpInvalid = $phpInvalid -or $phpPortCount -ne 0 -or $phpMounts.Count -ne 4
     $phpInvalid = $phpInvalid -or -not $php.HostConfig.ReadonlyRootfs -or @($php.HostConfig.CapDrop) -notcontains 'ALL'
     $phpInvalid = $phpInvalid -or @($php.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true'
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Destination -eq '/repo/app' -and -not $_.RW }).Count -ne 1
+    $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Destination -eq '/repo/database/migrations' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Destination -eq '/test/carta-sigilo-mysql.test.php' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'volume' -and $_.Name -eq $volumeName -and $_.Destination -eq '/var/run/mysqld' }).Count -ne 1
     if ($phpInvalid) {
@@ -153,23 +181,38 @@ if ($LASTEXITCODE -eq 0 -and ($probe | Select-Object -Last 1).Trim() -eq '1') { 
     $result = Invoke-DockerSafe @('exec', $phpId, 'php', '/test/carta-sigilo-mysql.test.php')
     $result
 } finally {
+    try {
+        if ($phpId -notmatch '^[a-f0-9]{64}$') { $phpId = Find-OwnedContainerByName $phpName }
+    } catch {
+        $cleanupFailed = $true
+        Write-Warning 'Não foi possível localizar com segurança o container PHP desta execução.'
+    }
+    try {
+        if ($mysqlId -notmatch '^[a-f0-9]{64}$') { $mysqlId = Find-OwnedContainerByName $dbName }
+    } catch {
+        $cleanupFailed = $true
+        Write-Warning 'Não foi possível localizar com segurança o container MySQL desta execução.'
+    }
     Remove-OwnedContainer $phpId
     Remove-OwnedContainer $mysqlId
-    if ($volumeCreated) {
-        try {
+    try {
+        $ownedVolumes = @(Invoke-DockerSafe @('volume', 'ls', '--quiet', '--filter', "label=$label=$runId") | Where-Object { $_ })
+        if ($ownedVolumes.Count -gt 1) { throw 'Mais de um volume corresponde a esta execução.' }
+        if ($ownedVolumes.Count -eq 1) {
+            if ([string]$ownedVolumes[0] -ne $volumeName) { throw 'Nome do volume não corresponde à execução.' }
             $volumeInfo = @((Invoke-DockerSafe @('volume', 'inspect', $volumeName)) | ConvertFrom-Json)[0]
             if ($volumeInfo.Labels.$label -ne $runId) { throw 'Identidade do volume não confere.' }
             $users = Invoke-DockerSafe @('ps', '-aq', '--no-trunc', '--filter', "volume=$volumeName")
             if (@($users | Where-Object { $_ }).Count -ne 0) { throw 'Volume ainda está montado em container.' }
             Invoke-DockerSafe @('volume', 'rm', $volumeName) | Out-Null
-            $remainingVolumes = Invoke-DockerSafe @('volume', 'ls', '--quiet', '--filter', "label=$label=$runId")
-            if (@($remainingVolumes | Where-Object { $_ }).Count -ne 0) {
-                throw 'Volume etiquetado ainda existe após limpeza.'
-            }
-        } catch {
-            $cleanupFailed = $true
-            Write-Warning "Não removi volume sem comprovar a identidade e a ausência de usuários ($volumeName)."
         }
+        $remainingVolumes = Invoke-DockerSafe @('volume', 'ls', '--quiet', '--filter', "label=$label=$runId")
+        if (@($remainingVolumes | Where-Object { $_ }).Count -ne 0) {
+            throw 'Volume etiquetado ainda existe após limpeza.'
+        }
+    } catch {
+        $cleanupFailed = $true
+        Write-Warning "Não removi volume sem comprovar a identidade e a ausência de usuários ($volumeName)."
     }
     if ($cleanupFailed) { throw 'Limpeza dos recursos próprios não foi totalmente comprovada.' }
 }

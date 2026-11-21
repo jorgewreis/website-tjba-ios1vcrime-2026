@@ -14,6 +14,7 @@ if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
 }
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/services/InstituicoesPublicasService.php';
+require_once $basePath . '/app/helpers/InstituicoesConsultaPolicy.php';
 
 try {
     $connection = Conection::getInstance()->getConnection();
@@ -34,7 +35,8 @@ if ($id === '') {
 
 try {
     $service = new InstituicoesPublicasService($connection);
-    $instituicao = $service->find($id);
+    $onlyActive = InstituicoesConsultaPolicy::onlyActiveForUser((string) ($_SESSION['id_usuario'] ?? ''));
+    $instituicao = $service->find($id, $onlyActive);
     if ($instituicao === null) {
         http_response_code(404);
         echo json_encode(['error' => 'Instituição não encontrada.'], JSON_UNESCAPED_UNICODE);
