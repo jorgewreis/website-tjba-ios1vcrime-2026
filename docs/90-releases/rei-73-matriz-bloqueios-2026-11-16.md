@@ -457,3 +457,28 @@ Consulta de GitHub realizada nesta execução antes de sincronizar a branch. A P
 A inspeção do grafo encontrou `origin/main` em `4fff492b155141b0b113bd6f3ec2efb6aa73238b`, 78 commits à frente do merge-base e a branch da PR 87 commits à frente no cálculo `git rev-list --left-right --count origin/main...HEAD`. `git merge-tree` confirmou conflitos de conteúdo em `CHANGELOG.md`, `VERSION` e `docs/90-releases/_draft_minor.md`; a matriz desta PR não existe em `origin/main`. A sincronização adotou os três arquivos de release exatamente da `origin/main`, preservando a versão e as notas correntes. A matriz continua sendo a única entrega própria da PR; nenhuma alteração de código de aplicação foi feita nesta sincronização.
 
 O escopo ainda não está aceito: os cinco critérios originais continuam dependendo de inventário completo por rota/operação/perfil e validação executável; cobertura de persistência/concorrência/erro/recuperação nos fluxos críticos; fluxos autenticados e interface, ou registro verificável de indisponibilidade; conciliação sem duplicidades com confiança e impacto; e matriz atualizada com evidências. Esta reconciliação registra a divergência e o conflito mecânico, mas não transforma a leitura da matriz, lint de PHP ou estado de merge em evidência de cobertura integral. Nenhum dado judicial real, banco real, sessão autenticada, UI em navegador ou produção foi usado nesta etapa.
+
+### Reconciliação após sync e verificações locais — 2026-11-22
+
+O sync foi publicado na PR #431. O estado live verificado depois do push é OPEN, draft, sem reviews formais, `mergeable=true`, base `main` em `4fff492b155141b0b113bd6f3ec2efb6aa73238b` e HEAD `2f549ee4bc737554c24f7b483e29ee0da712c5c2`. `git diff --check origin/main...HEAD` passou. O diff da PR contém a matriz e metadados de release gerados pelo hook; o rascunho mantém tanto a pendência anterior de REI-130 (`bd3f5453`) quanto a entrada REI-73 (`e5e7e78d`).
+
+#### Verificações sintéticas executadas nesta atualização
+
+- `php -l public/api` — PASS em 154 arquivos PHP.
+- `python -B tests/api-security/feriados-trusted-post.test.py` — PASS; endpoints copiados, autenticação e serviços simulados, sem banco.
+- `python -B tests/api-security/feriados-perfis-isolado.test.py` — PASS; guardas reais, sessão sintética e SQLite temporário.
+- `python -B tests/api-security/feriados-ativos-isolado.test.py` — PASS; guardas/serviços reais sobre SQLite temporário.
+- `python -B tests/cache/toast-conditional.test.py` — PASS; endpoint copiado em servidor HTTP local e catálogo sintético.
+- `python -B tests/pauta/status-bulk-no-debug.test.py` — PASS; endpoint copiado, dependências sintéticas e servidor local, sem banco do projeto.
+
+Esses resultados cobrem fatias de feriados, cache de catálogo e filtragem de metadados do status-bulk. Não demonstram a matriz integral por rota/perfil, todos os caminhos executáveis, concorrência geral/MySQL, fluxo autenticado via browser ou controles externos.
+
+#### Inventário estático dirigido
+
+Uma varredura de marcador em `public/api/**/*.php` contou 154 arquivos: 115 com `ApiAccessGuard`, 26 com outros marcadores textuais de autenticação/autorização e 13 sem esses marcadores. A categoria é apenas triagem textual, não classificação final de autorização. Inspeção dirigida dos 13 localizou helpers incluídos e tombstones (`email_hint.php`, `datajud/config.php`, `internal-list-export/_common.php`, `mni/config.php`), endpoints cobertos por helper (`admin/feriados/{create,list,update}.php` e exports CSV/PDF), endpoints explicitamente públicos/de catálogo (`config/toast-messages.php`, `datajud/search-processo.php`, `tjba/metas-cartorio.php`), PJe de teste desabilitado por padrão (`pje-publico/search-processo.php`) e `sala-audiencias-pauta/tipos-list.php`, cuja entrada chama `listTiposAtivos()` sem verificação explícita de sessão/perfil. A intenção de acesso a esse catálogo não está decidida nesta evidência; não se afirma exposição de dado sensível. A matriz de acesso da Sala (REI-83, Concluída) já registra a ausência de verificação explícita; a REI-161 trata metadados do `status-bulk`, não resolve a política de `tipos-list`. Não foi criada issue duplicada.
+
+#### CI no SHA publicado
+
+Após o push, oito runs de workflow associados ao HEAD (`45019150178`, `45019150180`, `45019150198`, `45019150204`, `45019152856`, `45019152945`, `45019152946` e `45019152959`), totalizando dez jobs, reportaram falha. As jobs correspondentes encerraram em aproximadamente dois segundos com `runner_id=0`, `steps=[]` e `logs_url=null`; a consulta de logs retornou 404 `BlobNotFound`. Portanto, não há evidência de que os checks no GitHub tenham iniciado ou falhado por causa do código, e a causa de infraestrutura não foi determinada. O lint e os cinco testes sintéticos acima foram executados localmente; eles não transformam essas checks em verdes.
+
+**Aceite permanece incompleto.** Critérios 1–4 continuam PENDENTES por falta de inventário/validação integral, cobertura de regras/persistência/concorrência/erros/recuperação em todos os fluxos críticos, cobertura autenticada/UI, e conciliação completa de achados. O critério 5 PASSOU quanto à matriz incremental: ela registra cobertura parcial, comandos/resultados e limites, e não declara auditoria integral.
