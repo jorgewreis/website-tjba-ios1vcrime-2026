@@ -16,7 +16,6 @@ if (!bootstrapRequireTrustedPostRequest()) {
     exit;
 }
 
-$connection = Conection::getInstance()->getConnection();
 $rawPayload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($rawPayload, true);
 if (!is_array($parsed)) {
@@ -40,6 +39,7 @@ if ($entityId === '' || $targetId === '') {
 }
 
 try {
+    $connection = Conection::getInstance()->getConnection();
     $service = new GuiasService($connection);
     $service->alocarUsuarioDirecionado($entityId, $targetId, $userId);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
@@ -48,6 +48,7 @@ try {
     http_response_code(strpos($msg, 'Sem permissão') !== false ? 403 : 400);
     echo json_encode(['error' => $msg], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    error_log('cartorio-guias/alocar: erro interno (' . get_class($e) . ')');
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao alocar: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Não foi possível alocar o usuário.'], JSON_UNESCAPED_UNICODE);
 }

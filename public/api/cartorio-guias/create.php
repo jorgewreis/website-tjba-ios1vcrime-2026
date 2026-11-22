@@ -10,37 +10,19 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/GuiasService.php';
 
-$connection = Conection::getInstance()->getConnection();
-
 $payload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($payload, true);
 if (!is_array($parsed)) {
     $parsed = $_POST;
 }
 
-// #region agent log
-$logPath = dirname(__DIR__, 3) . '/debug-64730a.log';
-$logEntry = json_encode([
-    'sessionId' => '64730a',
-    'location' => 'create.php:parsed',
-    'message' => 'API received payload',
-    'data' => [
-        'payloadLen' => strlen($payload),
-        'parsedIsArray' => is_array($parsed),
-        'keys' => is_array($parsed) ? array_keys($parsed) : [],
-        'hasNumeroProcesso' => is_array($parsed) && isset($parsed['numero_processo']),
-        'hasClasseCodigo' => is_array($parsed) && isset($parsed['classe_codigo']),
-    ],
-    'timestamp' => round(microtime(true) * 1000),
-    'hypothesisId' => 'C',
-]) . "\n";
-@file_put_contents($logPath, $logEntry, FILE_APPEND | LOCK_EX);
-// #endregion
-
 $usuarioCadastroId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
-if ($usuarioCadastroId !== '') {
-    $parsed['usuario_cadastro_id'] = $usuarioCadastroId;
+if ($usuarioCadastroId === '') {
+    http_response_code(401);
+    echo json_encode(['error' => 'Usuário não autenticado.'], JSON_UNESCAPED_UNICODE);
+    exit;
 }
+$parsed['usuario_cadastro_id'] = $usuarioCadastroId;
 
 function assertCnjFormattedValue(array $input, string $key, string $fieldLabel): void
 {
@@ -58,32 +40,57 @@ function assertCnjFormattedValue(array $input, string $key, string $fieldLabel):
 
 try {
     assertCnjFormattedValue($parsed, 'numero_processo', 'Número do processo');
+    if (trim((string) ($parsed['numero_processo'] ?? '')) === '') throw new InvalidArgumentException('Número do processo é obrigatório.');
+    if (trim((string) ($parsed['parte_id'] ?? $parsed['reu_id'] ?? '')) === ''
+        && trim((string) ($parsed['denunciado'] ?? '')) === ''
+        && trim((string) ($parsed['cpf'] ?? '')) === '') throw new InvalidArgumentException('Informe ou selecione a pessoa.');
+    if (!is_string($parsed['idempotency_key'] ?? null)) throw new InvalidArgumentException('Atualize a página para enviar com segurança.');
+    $key = strtolower(trim($parsed['idempotency_key']));
+    if (preg_match('/^[a-f0-9]{64}$/D', $key) !== 1) throw new InvalidArgumentException('Atualize a página para enviar com segurança.');
+    $parsed['idempotency_key'] = $key;
+    $actorFingerprint = $parsed['actor_fingerprint'] ?? null;
+    if (!is_string($actorFingerprint) || !hash_equals(hash('sha256', $usuarioCadastroId), $actorFingerprint)) {
+        http_response_code(409);
+        echo json_encode(['error' => 'A sessão mudou durante o envio. Recarregue a página.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
 
+    $connection = Conection::getInstance()->getConnection();
     $service = new GuiasService($connection);
     $newId = $service->create($parsed);
+    $replayed = $service->wasIdempotencyReplay();
     $body = ['id' => $newId];
-    $guia = $service->find($newId);
-    if ($guia !== null && isset($guia['valor_multa']) && $guia['valor_multa'] !== '' && $guia['valor_multa'] !== null) {
-        $body['valor_multa_calculado'] = 'R$ ' . number_format((float) $guia['valor_multa'], 2, ',', '.');
+    try {
+        $guia = $service->findForCreateResponse($newId);
+        if ($guia === null && $replayed) {
+            http_response_code(410);
+            echo json_encode(['error' => 'O envio anterior foi confirmado, mas a guia não está mais disponível.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        if ($guia !== null && isset($guia['valor_multa']) && $guia['valor_multa'] !== '' && $guia['valor_multa'] !== null) {
+            $body['valor_multa_calculado'] = 'R$ ' . number_format((float) $guia['valor_multa'], 2, ',', '.');
+        }
+    } catch (\Throwable $exception) {
+        error_log('cartorio-guias/create: complemento indisponível (' . get_class($exception) . ')');
+        if ($replayed) {
+            // Sem verificar a existência da guia anterior, não informar sucesso
+            // nem descartar a chave que permite nova tentativa segura.
+            http_response_code(503);
+            echo json_encode(['error' => 'Não foi possível verificar o envio anterior. Tente novamente.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        // Nesta requisição a criação já foi confirmada; o complemento é opcional.
     }
-    // #region agent log
-    $logPath = dirname(__DIR__, 3) . '/debug-64730a.log';
-    @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'create.php:success', 'message' => 'create returned id', 'data' => ['newId' => $newId], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
-    // #endregion
     http_response_code(201);
     echo json_encode($body, JSON_UNESCAPED_UNICODE);
+} catch (\DomainException $exception) {
+    http_response_code(409);
+    echo json_encode(['error' => 'Este envio já foi usado com outros dados.'], JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
-    // #region agent log
-    $logPath = dirname(__DIR__, 3) . '/debug-64730a.log';
-    @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'create.php:catchInvalid', 'message' => $exception->getMessage(), 'data' => ['class' => get_class($exception)], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
-    // #endregion
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $exception) {
-    // #region agent log
-    $logPath = dirname(__DIR__, 3) . '/debug-64730a.log';
-    @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'create.php:catchThrowable', 'message' => $exception->getMessage(), 'data' => ['class' => get_class($exception), 'file' => $exception->getFile(), 'line' => $exception->getLine()], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
-    // #endregion
+    error_log('cartorio-guias/create: erro interno (' . get_class($exception) . ')');
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao criar guia: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Não foi possível criar a guia.'], JSON_UNESCAPED_UNICODE);
 }

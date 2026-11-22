@@ -77,6 +77,9 @@ try {
                     <!-- preenchido via JS quando houver réus -->
                 </select>
                 <input type="text" class="width-800 height-md" id="filter-denunciado" placeholder="Digite o nome completo" maxlength="255" aria-label="Nome do denunciado quando não há réus ou opção Outro">
+                <label for="filter-cpf">CPF da nova pessoa (opcional)</label>
+                <input type="text" id="filter-cpf" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00">
+                <label><input type="checkbox" id="confirmar-nova-pessoa"> Confirmo que desejo cadastrar uma nova pessoa quando não houver CPF.</label>
             </div>
             <div class="col filter">
                 <label for="filter-tipo">Tipo de guia <span class="label-hint-obrigatorio">*obrigatório</span></label>
@@ -151,7 +154,10 @@ try {
                 return;
             }
 
-            App.CartorioGuiasCreate.initialize({ alocacaoPrefix: 'guias' });
+            App.CartorioGuiasCreate.initialize({
+                alocacaoPrefix: 'guias',
+                actorFingerprint: <?= json_encode(!empty($_SESSION['id_usuario']) ? hash('sha256', trim((string) $_SESSION['id_usuario'])) : '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
+            });
         })();
     </script>
 </body>

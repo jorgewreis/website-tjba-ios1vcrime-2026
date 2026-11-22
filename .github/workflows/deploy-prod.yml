@@ -151,6 +151,13 @@ jobs:
           DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
         run: bash .github/scripts/deploy-staged-cartas-migration.sh
 
+      - name: Aplicar migration de idempotência de guias antes da publicação (PROD)
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
+        run: bash .github/scripts/deploy-staged-guias-migration.sh
+
       - name: Sync files to server (PROD)
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
