@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0016
+
+**Data:** 2026-11-22 18:48:56 | **Commit:** `c8bcdf2c` | **Tipo:** `patch`
+
+- ci: avoid duplicate PHP lint runs
+
 ## V. 1.88.0015
 
 **Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
@@ -7728,4 +7734,5 @@
 
 
 \n
+
 

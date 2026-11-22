@@ -1,5 +1,14 @@
 ﻿name: Verificação de Sintaxe PHP
-on: [push, pull_request]
+on:
+  # Pushes nas branches principais são validados diretamente. Branches com PR
+  # rodam somente no evento pull_request, evitando dois workflows por commit.
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: php-syntax-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   php-lint:
