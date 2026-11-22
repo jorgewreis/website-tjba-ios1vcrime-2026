@@ -137,7 +137,7 @@ final class AlocacaoTarefasPerfisHelper
         }
         try {
             $addSpecific($targetUsuarioId);
-        } catch (\RuntimeException $e) {
+        } catch (LimiteAlocadosException $e) {
             throw new \InvalidArgumentException($e->getMessage());
         }
     }

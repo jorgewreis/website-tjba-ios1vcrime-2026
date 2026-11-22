@@ -41,10 +41,14 @@ final class GuiasAlocadosRepository
             throw new InvalidArgumentException('guia_id e usuario_id são obrigatórios.');
         }
 
+        // Within a transaction these must be current reads: under MySQL
+        // REPEATABLE READ an earlier snapshot can predate the parent lock.
+        $currentRead = $this->connection->inTransaction() ? ' FOR UPDATE' : '';
         $existing = $this->connection->prepare(
             sprintf(
-                'SELECT `id` FROM `%s` WHERE `guia_id` = :guia_id AND `usuario_id` = :usuario_id LIMIT 1',
-                $this->table
+                'SELECT `id` FROM `%s` WHERE `guia_id` = :guia_id AND `usuario_id` = :usuario_id LIMIT 1%s',
+                $this->table,
+                $currentRead
             )
         );
         $existing->bindValue(':guia_id', $guiaId);
@@ -55,7 +59,7 @@ final class GuiasAlocadosRepository
             return (string) $row['id'];
         }
 
-        $count = $this->connection->prepare(sprintf('SELECT COUNT(*) FROM `%s` WHERE `guia_id` = :guia_id', $this->table));
+        $count = $this->connection->prepare(sprintf('SELECT COUNT(*) FROM `%s` WHERE `guia_id` = :guia_id%s', $this->table, $currentRead));
         $count->bindValue(':guia_id', $guiaId);
         $count->execute();
         if ((int) $count->fetchColumn() >= self::MAX_ALOCADOS) {

@@ -46,6 +46,10 @@
                 return;
             }
             denunciadoSelect.innerHTML = '';
+            const placeholder = global.document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Selecione uma pessoa';
+            denunciadoSelect.appendChild(placeholder);
             reus.forEach(function (reu) {
                 const option = global.document.createElement('option');
                 option.value = reu.id;
@@ -77,6 +81,10 @@
             }
 
             denunciadoSelect.innerHTML = '';
+            const placeholder = global.document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = 'Selecione uma pessoa';
+            denunciadoSelect.appendChild(placeholder);
             pessoas.forEach(function (pessoa) {
                 const option = global.document.createElement('option');
                 option.value = pessoa.id;
@@ -152,6 +160,12 @@
             });
         }
 
+        const confirmarNovaPessoa = global.document.getElementById('confirmar-nova-pessoa');
+        [denunciadoInput, global.document.getElementById('filter-cpf'), denunciadoSelect].forEach(function (element) {
+            if (element) element.addEventListener(element === denunciadoSelect ? 'change' : 'input', function () {
+                if (confirmarNovaPessoa) confirmarNovaPessoa.checked = false;
+            });
+        });
         if (denunciadoInput) {
             denunciadoInput.addEventListener('blur', function () {
                 let nome = String(denunciadoInput.value || '').trim();
