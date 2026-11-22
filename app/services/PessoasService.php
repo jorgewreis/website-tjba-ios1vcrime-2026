@@ -145,6 +145,8 @@ final class PessoasService
         }
         ParteDocumentoHelper::validarNumero($tipo, $numero);
 
+        return $this->transacaoDocumento($parteId, function () use ($parteId, $tipo, $numero): string {
+
         $existentes = $this->documentosRepository->findByParteId($parteId);
         foreach ($existentes as $doc) {
             if (ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? '')) === $tipo) {
@@ -160,6 +162,7 @@ final class PessoasService
         $this->sincronizarCpfLegado($parteId);
 
         return $newId;
+        });
     }
 
     public function deleteDocumento(string $id): bool
@@ -169,12 +172,54 @@ final class PessoasService
             return false;
         }
         $parteId = trim((string) ($row['parte_id'] ?? ''));
+        if ($parteId === '') {
+            return false;
+        }
+        return $this->transacaoDocumento($parteId, function () use ($id, $parteId): bool {
+        $atual = $this->documentosRepository->findById($id);
+        if ($atual === null || (string) ($atual['parte_id'] ?? '') !== $parteId) {
+            return false;
+        }
         $ok = $this->documentosRepository->delete($id);
         if ($ok && $parteId !== '') {
             $this->sincronizarCpfLegado($parteId);
         }
 
         return $ok;
+        });
+    }
+
+    /** Serializa alterações de documentos da mesma pessoa antes de ler ou gravar. */
+    private function transacaoDocumento(string $parteId, callable $operacao): mixed
+    {
+        if ($this->connection->inTransaction()) {
+            throw new LogicException('A alteração de documento exige transação própria.');
+        }
+        $this->connection->beginTransaction();
+        try {
+            $sql = 'SELECT `id` FROM `partes` WHERE `id` = :id';
+            if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+                $sql .= ' FOR UPDATE';
+            }
+            $stmt = $this->connection->prepare($sql);
+            $stmt->execute([':id' => $parteId]);
+            if ($stmt->fetchColumn() === false) {
+                throw new InvalidArgumentException('Pessoa não encontrada.');
+            }
+            $resultado = $operacao();
+            $this->connection->commit();
+            return $resultado;
+        } catch (Throwable $e) {
+            if ($this->connection->inTransaction()) {
+                try {
+                    $this->connection->rollBack();
+                } catch (Throwable $rollbackError) {
+                    error_log('Falha ao reverter transação de documento; estado da conexão incerto.');
+                    throw new RuntimeException('Falha ao reverter alteração de documento; estado da conexão incerto.', 0, $e);
+                }
+            }
+            throw $e;
+        }
     }
 
     public function addTelefone(string $parteId, array $row): string

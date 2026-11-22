@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0016
+
+**Data:** 2026-11-22 20:18:33 | **Commit:** `7d5b8eb9` | **Tipo:** `patch`
+
+- fix(REI-152): atomic document and legacy CPF updates
+
 ## V. 1.88.0015
 
 **Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
@@ -7728,4 +7734,5 @@
 
 
 \n
+
 
