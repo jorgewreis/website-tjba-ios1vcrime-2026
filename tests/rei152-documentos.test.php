@@ -32,4 +32,3 @@ $p->failRollback = true;
 try { $s->addDocumento('P1', ['tipo'=>'CPF','numero'=>'52998224725']); throw new Exception('falha de rollback esperada'); } catch (RuntimeException $e) { assert(str_contains($e->getMessage(), 'estado da conexão incerto')); assert($e->getPrevious() instanceof PDOException); }
 assert($p->inTransaction()); $p->failRollback = false; $p->rollBack();
 echo "REI-152: testes SQLite passaram\n";
-
