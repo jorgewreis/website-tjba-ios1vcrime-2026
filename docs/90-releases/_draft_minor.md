@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **merge: reconcile REI-130 reconciled branch with origin/main** `[bd3f5453]`
+- **fix(REI-152): atomic document and legacy CPF updates** `[7d5b8eb9]`
 
