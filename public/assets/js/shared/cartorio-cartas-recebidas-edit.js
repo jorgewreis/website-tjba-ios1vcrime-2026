@@ -143,12 +143,12 @@
         let lookupVersion = 0;
         let lookupPending = false;
         let submitting = false;
-        let validatedCity = normalizeCidade(cidadeInput.value);
-        let validatedUf = (estadoSelect.value || '').trim().toUpperCase();
+        let selectedCity = normalizeCidade(cidadeInput.value);
+        let selectedUf = (estadoSelect.value || '').trim().toUpperCase();
 
         function validComarca() {
             return !!hiddenComarcaInput && !!hiddenComarcaInput.value.trim() && !lookupPending &&
-                validatedCity === normalizeCidade(cidadeInput.value) && validatedUf === (estadoSelect.value || '').trim().toUpperCase();
+                /^[A-Z]{2}$/.test(selectedUf) && selectedCity === normalizeCidade(cidadeInput.value) && selectedUf === (estadoSelect.value || '').trim().toUpperCase();
         }
         function updateSalvarButton() {
             salvarBtn.disabled = submitting || !hasChanges() || !validComarca();
@@ -160,8 +160,8 @@
         function invalidateComarca() {
             lookupVersion++;
             lookupPending = false;
-            validatedCity = '';
-            validatedUf = '';
+            selectedCity = '';
+            selectedUf = '';
             if (hiddenComarcaInput) hiddenComarcaInput.value = '';
             showLookupStatus('Informe a cidade e o estado e saia do campo para consultar.', false);
             updateSalvarButton();
@@ -176,30 +176,42 @@
             const uf = (estadoSelect.value || '').trim().toUpperCase();
             const version = ++lookupVersion;
             if (hiddenComarcaInput) hiddenComarcaInput.value = '';
-            validatedCity = '';
-            validatedUf = '';
-            if (cidade.length < 2 || !uf) { lookupPending = false; showLookupStatus('Informe uma cidade com ao menos dois caracteres e selecione o estado.', false); updateSalvarButton(); return; }
+            selectedCity = '';
+            selectedUf = '';
+            if (cidade.length < 2 || !uf) {
+                lookupPending = false;
+                showLookupStatus('Informe uma cidade com ao menos dois caracteres e selecione o estado.', false);
+                if (cidade.length >= 2 && !uf) notify('error', 'Estado obrigatório', 'Selecione o estado antes de identificar a comarca.');
+                updateSalvarButton();
+                return;
+            }
             lookupPending = true;
             showLookupStatus('Consultando comarca...', false);
             updateSalvarButton();
             const endpoint = endpoints.lookupCidade || '/api/cartorio-cartas-recebidas/buscar-cidade.php?cidade=';
-            fetch(endpoint + encodeURIComponent(cidade) + '&uf=' + encodeURIComponent(uf))
+            fetch(endpoint + encodeURIComponent(cidade) + '&uf=' + encodeURIComponent(uf) + '&resolver_sede=1')
                 .then((response) => { if (!response.ok) throw new Error('Consulta indisponível'); return response.json(); })
                 .then((data) => {
                     if (version !== lookupVersion || normalizeCidade(cidadeInput.value) !== normalizeCidade(cidade) || (estadoSelect.value || '').trim().toUpperCase() !== uf) return;
                     if (!data || !data.found || !data.id || String(data.uf || '').toUpperCase() !== uf) {
                         showLookupStatus('Cidade não encontrada neste estado. Confira os dados e consulte novamente.', true);
+                        notify('error', 'Cidade não identificada', 'Confira a cidade e o estado e tente novamente.');
                         return;
                     }
-                    if (String(data.status_cidade || '').trim().toLowerCase() === 'agregada' && data.nome) {
+                    if (data.nome) {
                         cidadeInput.value = formatCidade(data.nome);
                     }
                     if (hiddenComarcaInput) hiddenComarcaInput.value = data.id;
-                    validatedCity = normalizeCidade(cidadeInput.value);
-                    validatedUf = uf;
+                    selectedCity = normalizeCidade(cidadeInput.value);
+                    selectedUf = uf;
                     showLookupStatus('Comarca identificada.', false);
                 })
-                .catch(() => { if (version === lookupVersion) showLookupStatus('Não foi possível consultar a cidade. Tente novamente.', true); })
+                .catch(() => {
+                    if (version === lookupVersion) {
+                        showLookupStatus('Não foi possível consultar a cidade. Tente novamente.', true);
+                        notify('error', 'Consulta indisponível', 'Não foi possível identificar a comarca. Tente novamente.');
+                    }
+                })
                 .finally(() => { if (version === lookupVersion) { lookupPending = false; updateSalvarButton(); } });
         }
 
@@ -230,7 +242,7 @@
             if (payloadState.finalidade === '' || payloadState.cidade === '' || payloadState.estado === '') {
                 return notifyByKey('cartorio.cartas.validation.required.fields', {}, 'error', 'Erro', 'Finalidade, cidade e estado são obrigatórios.');
             }
-            if (!hiddenComarcaInput || !hiddenComarcaInput.value.trim()) {
+            if (!validComarca()) {
                 return notifyByKey('cartorio.cartas.validation.comarca.required', {}, 'error', 'Erro', 'Selecione uma cidade válida para que a comarca seja identificada.');
             }
 
