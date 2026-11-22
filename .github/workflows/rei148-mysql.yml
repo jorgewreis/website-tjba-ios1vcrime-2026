@@ -1,5 +1,12 @@
 name: Usuários — MySQL isolado
-on: [push, pull_request]
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: rei148-mysql-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0017
+
+**Data:** 2026-11-22 18:56:37 | **Commit:** `f3505bac` | **Tipo:** `patch`
+
+- ci: deduplicate pull request checks
+
 ## V. 1.88.0016
 
 **Data:** 2026-11-22 18:48:56 | **Commit:** `c8bcdf2c` | **Tipo:** `patch`
@@ -7734,5 +7740,6 @@
 
 
 \n
+
 
 
