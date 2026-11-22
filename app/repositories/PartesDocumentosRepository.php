@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/ParteDocumentoHelper.php';
+require_once __DIR__ . '/../helpers/ParteDocumentoLock.php';
 
 final class PartesDocumentosRepository
 {
@@ -100,29 +101,31 @@ final class PartesDocumentosRepository
         }
         ParteDocumentoHelper::validarNumero($tipo, $numero);
 
-        $existenteOutraParte = $this->findParteIdByTipoNumero($tipo, $numero);
-        if ($existenteOutraParte !== null && $existenteOutraParte !== $parteId) {
-            throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este documento.');
-        }
+        return ParteDocumentoLock::run($this->connection, $tipo, $numero, function () use ($row, $parteId, $tipo, $numero): string {
+            $existenteOutraParte = $this->findParteIdByTipoNumero($tipo, $numero);
+            if ($existenteOutraParte !== null && $existenteOutraParte !== $parteId) {
+                throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este documento.');
+            }
 
-        $id = trim((string) ($row['id'] ?? ''));
-        if ($id === '') {
-            $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'DOC', 30);
-        }
+            $id = trim((string) ($row['id'] ?? ''));
+            if ($id === '') {
+                $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'DOC', 30);
+            }
 
-        $statement = $this->connection->prepare(
-            sprintf(
-                'INSERT INTO `%s` (`id`, `parte_id`, `tipo`, `numero`, `created_at`, `updated_at`) VALUES (:id, :parte_id, :tipo, :numero, NOW(), NOW())',
-                $this->table
-            )
-        );
-        $statement->bindValue(':id', $id);
-        $statement->bindValue(':parte_id', $parteId);
-        $statement->bindValue(':tipo', $tipo);
-        $statement->bindValue(':numero', $numero);
-        $statement->execute();
+            $statement = $this->connection->prepare(
+                sprintf(
+                    'INSERT INTO `%s` (`id`, `parte_id`, `tipo`, `numero`, `created_at`, `updated_at`) VALUES (:id, :parte_id, :tipo, :numero, NOW(), NOW())',
+                    $this->table
+                )
+            );
+            $statement->bindValue(':id', $id);
+            $statement->bindValue(':parte_id', $parteId);
+            $statement->bindValue(':tipo', $tipo);
+            $statement->bindValue(':numero', $numero);
+            $statement->execute();
 
-        return $id;
+            return $id;
+        });
     }
 
     public function delete(string $id): bool
@@ -131,10 +134,26 @@ final class PartesDocumentosRepository
         if ($id === '') {
             return false;
         }
-        $statement = $this->connection->prepare(sprintf('DELETE FROM `%s` WHERE `id` = :id LIMIT 1', $this->table));
-        $statement->bindValue(':id', $id);
-        $statement->execute();
+        $row = $this->findById($id);
+        if ($row === null) {
+            return false;
+        }
+        $type = ParteDocumentoHelper::normalizarTipo((string) ($row['tipo'] ?? ''));
+        $number = ParteDocumentoHelper::normalizarNumero($type, (string) ($row['numero'] ?? ''));
 
-        return $statement->rowCount() > 0;
+        return ParteDocumentoLock::run($this->connection, $type, $number, function () use ($id, $type, $number): bool {
+            $current = $this->findById($id);
+            if ($current === null) {
+                return false;
+            }
+            if (ParteDocumentoHelper::normalizarTipo((string) ($current['tipo'] ?? '')) !== $type
+                || ParteDocumentoHelper::normalizarNumero($type, (string) ($current['numero'] ?? '')) !== $number) {
+                throw new RuntimeException('Documento alterado durante a exclusão; tente novamente.');
+            }
+            $statement = $this->connection->prepare(sprintf('DELETE FROM `%s` WHERE `id` = :id LIMIT 1', $this->table));
+            $statement->bindValue(':id', $id);
+            $statement->execute();
+            return $statement->rowCount() > 0;
+        });
     }
 }

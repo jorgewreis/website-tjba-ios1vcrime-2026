@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0017
+
+**Data:** 2026-11-22 20:58:01 | **Commit:** `5eae284c` | **Tipo:** `patch`
+
+- fix(REI-152): serialize document identity writers
+
 ## V. 1.88.0016
 
 **Data:** 2026-11-22 20:18:33 | **Commit:** `7d5b8eb9` | **Tipo:** `patch`
@@ -7734,3 +7740,4 @@
 
 
 \n
+
