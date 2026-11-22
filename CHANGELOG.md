@@ -2,9 +2,9 @@
 
 ## V. 1.88.0015
 
-**Data:** 2026-11-20 20:11:47 | **Commit:** `a72da449` | **Tipo:** `patch`
+**Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
 
-- merge: reconcile rei149 locking update with origin/main
+- merge: reconcile REI-130 reconciled branch with origin/main
 
 ## V. 1.88.0014
 
