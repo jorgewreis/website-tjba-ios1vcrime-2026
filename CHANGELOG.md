@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0016
+
+**Data:** 2026-11-22 22:04:09 | **Commit:** `ac033adc` | **Tipo:** `patch`
+
+- test(REI-162): cobrir matriz de status e bloqueios
+
 ## V. 1.88.0015
 
 **Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
@@ -7728,4 +7734,5 @@
 
 
 \n
+
 
