@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **merge: reconcile REI-130 reconciled branch with origin/main** `[bd3f5453]`
+- **test(REI-162): cobrir matriz de status e bloqueios** `[ac033adc]`
 
