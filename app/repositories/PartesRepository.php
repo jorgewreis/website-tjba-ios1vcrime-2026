@@ -444,17 +444,16 @@ final class PartesRepository
     public function update(string $id, array $payload): bool
     {
         $id = trim($id);
-        if (!array_key_exists('cpf', $payload)) {
-            return $this->updateInterno($id, $payload);
+        if (array_key_exists('cpf', $payload)) {
+            throw new InvalidArgumentException('CPF deve ser alterado pela operação de documentos para manter o cadastro sincronizado.');
         }
-        $cpf = $this->normalizeCpf((string) $payload['cpf']);
-        return ParteDocumentoLock::run($this->connection, 'CPF', $cpf, fn(): bool => $this->updateInterno($id, $payload));
+        return $this->updateInterno($id, $payload);
     }
 
     private function updateInterno(string $id, array $payload): bool
     {
         $id = trim($id);
-        $allowed = ['cpf', 'nome_completo', 'sexo', 'data_nascimento', 'profissao'];
+        $allowed = ['nome_completo', 'sexo', 'data_nascimento', 'profissao'];
         $set = [];
         $params = [':id' => $id];
 
@@ -463,19 +462,7 @@ final class PartesRepository
                 continue;
             }
             $value = $payload[$column];
-            if ($column === 'cpf') {
-                $value = $this->normalizeCpf((string) $value);
-                $value = $value === '' ? null : $value;
-                if ($value !== null && $value !== '') {
-                    if (!Security::validarCPF($value)) {
-                        throw new InvalidArgumentException('CPF inválido. Verifique os dígitos.');
-                    }
-                    $existente = $this->findByCpf($value);
-                    if ($existente !== null && (string) $existente['id'] !== $id) {
-                        throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este CPF.');
-                    }
-                }
-            } elseif ($column === 'nome_completo') {
+            if ($column === 'nome_completo') {
                 $value = TextFormatter::formatProperName((string) $value, 255);
             } elseif ($column === 'profissao') {
                 $value = trim((string) $value);

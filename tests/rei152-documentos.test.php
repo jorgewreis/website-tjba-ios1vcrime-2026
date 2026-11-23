@@ -22,8 +22,21 @@ assert($p->query('SELECT cpf FROM partes')->fetchColumn() === '52998224725');
 $p->exec("CREATE TRIGGER fail_cpf BEFORE UPDATE OF cpf ON partes BEGIN SELECT RAISE(ABORT, 'falha simulada'); END");
 try { $s->deleteDocumento($id); throw new Exception('falha esperada'); } catch (PDOException $e) {}
 assert((int)$p->query('SELECT COUNT(*) FROM partes_documentos')->fetchColumn() === 1);
-$p->exec('DROP TRIGGER fail_cpf'); assert($s->deleteDocumento($id)); assert(!$s->deleteDocumento($id));
-assert((int)$p->query('SELECT COUNT(*) FROM partes_documentos')->fetchColumn() === 0); assert($p->query('SELECT cpf FROM partes')->fetchColumn() === null);
+$p->exec('DROP TRIGGER fail_cpf');
+if (!$s->deleteDocumento($id) || $s->deleteDocumento($id)
+    || (int)$p->query('SELECT COUNT(*) FROM partes_documentos')->fetchColumn() !== 0) {
+ throw new RuntimeException('Exclusão do documento ou segunda exclusão idempotente falhou.');
+}
+$repository = new PartesRepository($p);
+foreach ([['cpf' => '52998224725'], ['cpf' => null]] as $directCpfMutation) {
+ try { $repository->update('P1', $directCpfMutation); throw new Exception('alteração direta de CPF foi aceita'); }
+ catch (InvalidArgumentException $expected) { if (!str_contains($expected->getMessage(), 'operação de documentos')) throw $expected; }
+}
+$storedCpfAfterDirectMutation = $p->query('SELECT cpf FROM partes')->fetchColumn();
+if ($storedCpfAfterDirectMutation !== false && $storedCpfAfterDirectMutation !== null
+    || (int)$p->query('SELECT COUNT(*) FROM partes_documentos')->fetchColumn() !== 0) {
+ throw new RuntimeException('Recusa de mutação direta de CPF alterou o estado: ' . var_export($storedCpfAfterDirectMutation, true) . ' / ' . $p->query('SELECT COUNT(*) FROM partes_documentos')->fetchColumn());
+}
 $p->beginTransaction();
 try { $s->addDocumento('P1', ['tipo'=>'CPF','numero'=>'52998224725']); throw new Exception('recusa esperada'); } catch (LogicException $e) {}
 assert($p->inTransaction()); assert((int)$p->query('SELECT COUNT(*) FROM partes_documentos')->fetchColumn() === 0); $p->rollBack();
