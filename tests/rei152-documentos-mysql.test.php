@@ -55,6 +55,19 @@ $retryId = $service->addDocumento('PRT-FAIL-CASE', ['tipo' => 'CPF', 'numero' =>
 if ($retryId === '' || $pdo->query("SELECT cpf FROM partes WHERE id='PRT-FAIL-CASE'")->fetchColumn() !== '12345678909') {
     throw new RuntimeException('Retentativa após falha não persistiu documento e CPF legado.');
 }
+$partesRepository = new PartesRepository($pdo);
+foreach ([['cpf' => '52998224725'], ['cpf' => null]] as $directCpfMutation) {
+    try {
+        $partesRepository->update('PRT-FAIL-CASE', $directCpfMutation);
+        throw new RuntimeException('Alteração direta de CPF pelo repositório foi aceita.');
+    } catch (InvalidArgumentException $error) {
+        if (!str_contains($error->getMessage(), 'operação de documentos')) throw $error;
+    }
+}
+if ($pdo->query("SELECT cpf FROM partes WHERE id='PRT-FAIL-CASE'")->fetchColumn() !== '12345678909'
+    || (int)$pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE parte_id='PRT-FAIL-CASE' AND tipo='CPF' AND numero='12345678909'")->fetchColumn() !== 1) {
+    throw new RuntimeException('Recusa de mutação direta divergiu o CPF legado do documento.');
+}
 
 $runId = bin2hex(random_bytes(12));
 $barrier = sys_get_temp_dir() . '/rei152-' . $runId;
@@ -158,4 +171,4 @@ if ((int) $release->fetchColumn() !== 1) {
 
 foreach (glob($barrier . '/*') ?: [] as $path) @unlink($path);
 @rmdir($barrier);
-echo "PASS REI-152 MySQL/InnoDB: rollback, retry, conflitos CPF/RG e reconciliação do CPF legado\n";
+echo "PASS REI-152 MySQL/InnoDB: rollback, retry, mutação direta recusada, conflitos CPF/RG e reconciliação do CPF legado\n";
