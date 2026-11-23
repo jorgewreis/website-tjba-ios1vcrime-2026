@@ -2,6 +2,7 @@
 import os
 import json
 import pathlib
+import re
 import subprocess
 import tempfile
 
@@ -73,7 +74,8 @@ with tempfile.TemporaryDirectory(prefix='pauta-painel-') as tmp:
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(code, encoding='utf-8')
     env = {k: os.environ[k] for k in ('PATH', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP') if k in os.environ}
-    rendered_sections = []
+    rendered_today = []
+    rendered_minas = []
     today_pages = (len(blocked_rows) + 14) // 15
     minhas_pages = (len(registered_rows) + 14) // 15
     assert len(expected_ids) == len(statuses) * len(flag_sets) * 2
@@ -83,20 +85,34 @@ with tempfile.TemporaryDirectory(prefix='pauta-painel-') as tmp:
         page_html = result.stdout.decode('utf-8')
         hoje_start = page_html.index('id="card-audiencias-hoje-estudante"')
         minhas_start = page_html.index('id="card-minhas-inscricoes-estudante"')
+        rendered_today.append(page_html[hoje_start:minhas_start])
         if page <= minhas_pages:
-            rendered_sections.append(page_html[minhas_start:])
-        rendered_sections.append(page_html[hoje_start:minhas_start])
-    html = '\n'.join(rendered_sections)
+            rendered_minas.append(page_html[minhas_start:])
+    today_html = '\n'.join(rendered_today)
+    minhas_html = '\n'.join(rendered_minas)
+
+    def blocked_cards(section_html, row_id):
+        escaped_id = re.escape(row_id)
+        pattern = re.compile(
+            r'<div(?=[^>]*class="[^"]*\bregister-painel-estudante\b[^"]*")'
+            r'(?=[^>]*data-pauta="' + escaped_id + r'")'
+            r'[^>]*>(.*?)</div>', re.DOTALL
+        )
+        return [(match.group(0), match.group(1).strip()) for match in pattern.finditer(section_html)]
+
     for row_id, registered in expected_ids:
-        expected_count = 2 if registered else 1
-        assert html.count('data-pauta="' + row_id + '"') == expected_count, row_id
-        pos = html.index('data-pauta="' + row_id + '"')
-        row_start = html.rfind('<div', 0, pos)
-        row_end = html.index('</div>', pos) + len('</div>')
-        rendered_row = html[row_start:row_end]
-        assert 'data-indisponivel="1"' in rendered_row and 'Audiência indisponível.' in rendered_row, row_id
-        assert all(status not in rendered_row for status in statuses), row_id
-        assert all(secret not in rendered_row for secret in ('SEGREDO', '2034', '15:47', 'segredo.invalid', 'PROCESSO-SEGREDO')), row_id
+        today_cards = blocked_cards(today_html, row_id)
+        minhas_cards = blocked_cards(minhas_html, row_id)
+        assert len(today_cards) == 1, (row_id, 'today', len(today_cards))
+        assert len(minhas_cards) == (1 if registered else 0), (row_id, 'minhas', len(minhas_cards))
+        for section_name, cards in (('today', today_cards), ('minhas', minhas_cards)):
+            for rendered_row, content in cards:
+                assert 'data-indisponivel="1"' in rendered_row, (row_id, section_name)
+                assert content == '<p class="padding-x-lg padding-y-md">Audiência indisponível.</p>', (row_id, section_name, content)
+                assert not re.search(r'<a\b|\bhref\s*=', rendered_row, re.IGNORECASE), (row_id, section_name)
+                assert all(status not in rendered_row for status in statuses), (row_id, section_name)
+                assert all(secret not in rendered_row for secret in ('SEGREDO', '2034', '15:47', 'segredo.invalid', 'PROCESSO-SEGREDO')), (row_id, section_name)
+    html = today_html + '\n' + minhas_html
     assert html.count('Audiência indisponível.') >= len(statuses) * len(block_flags) * 3
     for secret in ('SEGREDO', '2034', '15:47', 'segredo.invalid', 'PROCESSO-SEGREDO',
                    'data-status-label-pauta="PAUTA-BLOQUEADA-'):
