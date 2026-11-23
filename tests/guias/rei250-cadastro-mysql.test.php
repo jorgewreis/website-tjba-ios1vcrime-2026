@@ -558,7 +558,7 @@ $db->exec("CREATE TRIGGER rei250_doc_fail BEFORE INSERT ON partes_documentos FOR
 $count=(int)$db->query('SELECT COUNT(*) FROM partes')->fetchColumn();
 try {
     try { (new GuiasService($db))->create($identity); throw new RuntimeException('Falha de documento ignorada.'); }
-    catch (RuntimeException $e) { if ($e->getMessage() !== 'Persistência do documento não confirmada.') throw $e; }
+    catch (Throwable $e) { if (!str_contains($e->getMessage(), 'REI250_DOC_FAIL') && $e->getMessage() !== 'Persistência do documento não confirmada.') throw $e; }
     if ((int)$db->query('SELECT COUNT(*) FROM partes')->fetchColumn() !== $count) throw new RuntimeException('Falha do documento não reverteu a parte.');
 } finally { $db->exec('DROP TRIGGER rei250_doc_fail'); }
 echo "PASS REI-250: escolha de homônimos, CPF ambíguo e rollback de documento.\n";
@@ -598,3 +598,89 @@ try {
     foreach ($workers as $worker) if (is_resource($worker['process'] ?? null)) { proc_terminate($worker['process']); foreach (['stdout','stderr'] as $k) if (is_resource($worker[$k])) fclose($worker[$k]); proc_close($worker['process']); }
 }
 echo "PASS REI-250: duas criações cooperantes com mesmo CPF e chaves distintas usam a mesma pessoa.\n";
+
+// Guia and the legacy ReuManager adapter must wait on the same CPF lock before
+// either path can create or reuse the identity.
+$crossCpf = '11144477735';
+$crossLockName = 'rei250_' . substr(hash('sha256', 'rei250_test:' . $crossCpf), 0, 52);
+$db->exec('CREATE TABLE rei250_crossflow_workers (worker_id VARCHAR(16) PRIMARY KEY, connection_id BIGINT NOT NULL) ENGINE=InnoDB');
+$lock = $db->prepare('SELECT GET_LOCK(?, 5)'); $lock->execute([$crossLockName]);
+if ((int)$lock->fetchColumn() !== 1) throw new RuntimeException('Fixture não obteve trava para corrida Guia/ReuManager.');
+$crossWorker = <<<'PHP'
+if (getenv('REI250_TEST_DISPOSABLE') !== '1' || !preg_match('/^[a-f0-9]{32}$/', (string)getenv('REI250_TEST_RUN_ID')) || !preg_match('/^[a-f0-9]{64}$/', (string)getenv('REI250_TEST_DISPOSABLE_MARKER'))) exit(90);
+$dsn = 'mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=rei250_test;charset=utf8mb4';
+if (getenv('REI250_MYSQL_DSN') !== $dsn || getenv('REI250_MYSQL_USER') !== 'root') exit(90);
+require_once '/repo/app/services/GuiasService.php';
+require_once '/repo/app/services/ReuManager.php';
+$pdo = new PDO($dsn, 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$runId = getenv('REI250_TEST_RUN_ID'); $marker = getenv('REI250_TEST_DISPOSABLE_MARKER');
+$guard = $pdo->prepare('SELECT COUNT(*) FROM rei250_disposable_guard WHERE run_id=? AND marker=?');
+$guard->execute([$runId, $marker]);
+if ((int)$guard->fetchColumn() !== 1 || $pdo->query('SELECT DATABASE()')->fetchColumn() !== 'rei250_test') exit(91);
+$workerId = (string)getenv('REI250_CROSSFLOW_ID');
+$connectionId = (int)$pdo->query('SELECT CONNECTION_ID()')->fetchColumn();
+$signal = $pdo->prepare('INSERT INTO rei250_crossflow_workers (worker_id,connection_id) VALUES (?,?)');
+$signal->execute([$workerId, $connectionId]);
+$reflection = new ReflectionClass(Conection::class); $singleton = $reflection->newInstanceWithoutConstructor();
+$reflection->getProperty('pdo')->setValue($singleton, $pdo); $reflection->getProperty('instance')->setValue(null, $singleton);
+try {
+    if (getenv('REI250_CROSSFLOW_MODE') === 'guide') {
+        $payload = json_decode(base64_decode((string)getenv('REI250_CROSSFLOW_PAYLOAD')), true, flags: JSON_THROW_ON_ERROR);
+        echo 'GUIDE:' . (new GuiasService($pdo))->create($payload);
+    } else {
+        $partId = (new ReuManager($pdo))->cadastrarReu('Pessoa Fluxo Cruzado', '11144477735');
+        if ($partId === null) throw new RuntimeException('ReuManager não retornou a parte.');
+        echo 'REU:' . $partId;
+    }
+} catch (Throwable $e) { fwrite(STDERR, get_class($e) . ': ' . $e->getMessage()); exit(1); }
+PHP;
+$crossWorkers = []; $crossSucceeded = false;
+try {
+    foreach (['guide','reu'] as $workerId) {
+        putenv('REI250_CROSSFLOW_ID=' . $workerId);
+        putenv('REI250_CROSSFLOW_MODE=' . $workerId);
+        $crossPayload = $keyed; $crossPayload['cpf'] = $crossCpf;
+        $crossPayload['denunciado'] = 'Pessoa Fluxo Cruzado'; $crossPayload['confirmar_nova_pessoa'] = true;
+        $crossPayload['idempotency_key'] = str_repeat($workerId === 'guide' ? '6' : '7', 64);
+        putenv('REI250_CROSSFLOW_PAYLOAD=' . base64_encode(json_encode($crossPayload, JSON_THROW_ON_ERROR)));
+        $process = proc_open([PHP_BINARY, '-r', $crossWorker], [0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']], $pipes);
+        if (!is_resource($process)) throw new RuntimeException('Falha ao iniciar fluxo cruzado ' . $workerId . '.');
+        fclose($pipes[0]); $crossWorkers[$workerId]=['process'=>$process,'stdout'=>$pipes[1],'stderr'=>$pipes[2]];
+    }
+    $deadline = microtime(true) + 4.5; $bothPending = false;
+    do {
+        $pending = $db->query("SELECT COUNT(DISTINCT t.PROCESSLIST_ID) FROM performance_schema.metadata_locks l JOIN performance_schema.threads t ON t.THREAD_ID=l.OWNER_THREAD_ID JOIN rei250_crossflow_workers w ON w.connection_id=t.PROCESSLIST_ID WHERE l.OBJECT_TYPE='USER LEVEL LOCK' AND l.OBJECT_NAME=" . $db->quote($crossLockName) . " AND l.LOCK_STATUS='PENDING'")->fetchColumn();
+        if ((int)$pending === 2) { $bothPending = true; break; }
+        usleep(20000);
+    } while (microtime(true) < $deadline);
+    if (!$bothPending) {
+        $signals = json_encode($db->query('SELECT worker_id,connection_id FROM rei250_crossflow_workers ORDER BY worker_id')->fetchAll(PDO::FETCH_ASSOC));
+        $locks = json_encode($db->query("SELECT OBJECT_TYPE,OBJECT_SCHEMA,OBJECT_NAME,LOCK_STATUS,OWNER_THREAD_ID FROM performance_schema.metadata_locks WHERE OBJECT_NAME=" . $db->quote($crossLockName))->fetchAll(PDO::FETCH_ASSOC));
+        throw new RuntimeException('Não foi comprovada a espera dos dois fluxos pelo mesmo lock CPF. sinais=' . $signals . ' locks=' . $locks);
+    }
+    $release=$db->prepare('SELECT RELEASE_LOCK(?)'); $release->execute([$crossLockName]);
+    if ((int)$release->fetchColumn() !== 1) throw new RuntimeException('Fixture não liberou trava Guia/ReuManager.');
+    $results=[];
+    foreach ($crossWorkers as $workerId=>$worker) {
+        $out=stream_get_contents($worker['stdout']); $err=stream_get_contents($worker['stderr']);
+        fclose($worker['stdout']); fclose($worker['stderr']); $code=proc_close($worker['process']); $crossWorkers[$workerId]['process']=null;
+        if ($code !== 0 || !preg_match('/^(?:GUIDE:GUI-[A-Z0-9]{26}|REU:PRT-[A-Z0-9]{26})$/D', $out)) throw new RuntimeException('Fluxo cruzado falhou: ' . $out . ' ' . $err);
+        $results[$workerId]=$out;
+    }
+    $guideId=substr($results['guide'], strlen('GUIDE:')); $reuPartId=substr($results['reu'], strlen('REU:'));
+    $guidePart=$db->prepare('SELECT parte_id FROM guias WHERE id=?'); $guidePart->execute([$guideId]);
+    $resolvedPartId=(string)$guidePart->fetchColumn();
+    $doc=$db->prepare("SELECT COUNT(*) FROM partes_documentos WHERE tipo='CPF' AND numero=? AND parte_id=?"); $doc->execute([$crossCpf,$reuPartId]);
+    $legacy=$db->prepare('SELECT COUNT(*) FROM partes WHERE id=? AND REPLACE(REPLACE(cpf,\'.\',\'\'),\'-\',\'\')=?'); $legacy->execute([$reuPartId,$crossCpf]);
+    $docsTotal=$db->prepare("SELECT COUNT(*) FROM partes_documentos WHERE tipo='CPF' AND numero=?"); $docsTotal->execute([$crossCpf]);
+    if ($resolvedPartId !== $reuPartId || (int)$doc->fetchColumn() !== 1 || (int)$legacy->fetchColumn() !== 1 || (int)$docsTotal->fetchColumn() !== 1) {
+        throw new RuntimeException('Guia/ReuManager não compartilharam uma única identidade CPF coerente.');
+    }
+    $crossSucceeded = true;
+} finally {
+    $release=$db->prepare('SELECT RELEASE_LOCK(?)'); $release->execute([$crossLockName]);
+    foreach ($crossWorkers as $worker) if (is_resource($worker['process'] ?? null)) { proc_terminate($worker['process']); foreach (['stdout','stderr'] as $k) if (is_resource($worker[$k])) fclose($worker[$k]); proc_close($worker['process']); }
+    $db->exec('DROP TABLE rei250_crossflow_workers');
+}
+if (!$crossSucceeded) throw new RuntimeException('Corrida Guia/ReuManager não foi validada.');
+echo "PASS REI-152/250: Guia e ReuManager aguardam o mesmo lock e compartilham parte/documento CPF.\n";
