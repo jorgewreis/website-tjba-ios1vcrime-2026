@@ -554,6 +554,12 @@ $identity['cpf'] = '52998224725';
 try { (new GuiasService($db))->create($identity); throw new RuntimeException('CPF ambíguo aceito.'); }
 catch (InvalidArgumentException $e) { if (!str_contains($e->getMessage(), 'mais de uma pessoa')) throw $e; }
 $db->exec("DELETE FROM partes_documentos WHERE id IN ('DOC-AMB-A','DOC-AMB-B')");
+$db->exec("INSERT INTO partes (id,cpf,nome_completo) VALUES ('PRT-CPF-LEGADO','5299/8224725','Pessoa CPF Legado')");
+$cpfLookup = new ReflectionMethod(GuiasService::class, 'buscarPartesPorCpfCanonico');
+if ($cpfLookup->invoke(new GuiasService($db), '52998224725') !== ['PRT-CPF-LEGADO']) {
+    throw new RuntimeException('CPF legado com pontuação diferente não foi associado à pessoa existente.');
+}
+$db->exec("DELETE FROM partes WHERE id='PRT-CPF-LEGADO'");
 $db->exec("CREATE TRIGGER rei250_doc_fail BEFORE INSERT ON partes_documentos FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='REI250_DOC_FAIL'");
 $count=(int)$db->query('SELECT COUNT(*) FROM partes')->fetchColumn();
 try {

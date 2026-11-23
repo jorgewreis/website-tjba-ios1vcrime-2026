@@ -30,6 +30,7 @@ $db = new CadastroGuiasSqlite();
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $db->sqliteCreateFunction('NOW', static fn(): string => '2026-11-20 00:00:00', 0);
 $db->exec('CREATE TABLE partes (id TEXT PRIMARY KEY, cpf TEXT, nome_completo TEXT NOT NULL, sexo TEXT, data_nascimento TEXT, profissao TEXT, created_at TEXT, updated_at TEXT)');
+$db->exec('CREATE TABLE partes_documentos (id TEXT PRIMARY KEY, parte_id TEXT, tipo TEXT, numero TEXT, created_at TEXT)');
 $db->exec('CREATE TABLE guias_alocados (id TEXT PRIMARY KEY, guia_id TEXT, usuario_id TEXT, tipo TEXT, created_at TEXT)');
 $db->exec('CREATE TABLE guias (id TEXT PRIMARY KEY, numero_processo TEXT, processo_id TEXT, denunciado TEXT, parte_id TEXT, tipo TEXT, etapa TEXT, status TEXT, regime TEXT, data_fato TEXT, dias_multa INTEGER, valor_multa REAL, observacoes TEXT, criado_por TEXT, atualizado_por TEXT, created_at TEXT, updated_at TEXT, user_cadastro TEXT)');
 
@@ -115,6 +116,37 @@ if ($id === '' || (int)$db->query('SELECT COUNT(*) FROM guias')->fetchColumn() !
     || (int)$db->query('SELECT COUNT(*) FROM guias_subtarefas')->fetchColumn() !== 8
     || (int)$db->query('SELECT COUNT(*) FROM processos_partes')->fetchColumn() !== 1) {
     throw new RuntimeException('Retentativa válida não persistiu conjunto esperado.');
+}
+
+// Legacy CPF formatting must resolve to the same person, and update must not
+// mutate process/person identity without synchronizing processos_partes.
+$db->exec("UPDATE partes SET cpf='5299/8224725' WHERE id=(SELECT parte_id FROM guias WHERE id=" . $db->quote($id) . ")");
+try {
+    (new GuiasService($db))->update($id, ['parte_id' => 'OUTRA-PESSOA']);
+    throw new RuntimeException('Edição alterou a pessoa vinculada à guia.');
+} catch (InvalidArgumentException $expected) {
+    if (!str_contains($expected->getMessage(), 'não pode ser alterado')) throw $expected;
+}
+try {
+    (new GuiasService($db))->update($id, ['numero_processo' => '0000002-67.2020.8.05.0001']);
+    throw new RuntimeException('Edição alterou o processo vinculado à guia.');
+} catch (InvalidArgumentException $expected) {
+    if (!str_contains($expected->getMessage(), 'não pode ser alterado')) throw $expected;
+}
+$storedIdentity = $db->query('SELECT numero_processo,processo_id,parte_id FROM guias WHERE id=' . $db->quote($id))->fetch(PDO::FETCH_ASSOC);
+$linkedIdentity = $db->query('SELECT processo_id,parte_id FROM processos_partes')->fetch(PDO::FETCH_ASSOC);
+if ($storedIdentity['parte_id'] !== $linkedIdentity['parte_id'] || $storedIdentity['processo_id'] !== $linkedIdentity['processo_id']) {
+    throw new RuntimeException('Edição recusada deixou identidade divergente.');
+}
+$db->exec("UPDATE guias SET data_fato='2020-01-01',dias_multa=1,valor_multa=123.45 WHERE id=" . $db->quote($id));
+(new GuiasService($db))->update($id, ['dias_multa' => null]);
+if ($db->query('SELECT valor_multa FROM guias WHERE id=' . $db->quote($id))->fetchColumn() !== null) {
+    throw new RuntimeException('Limpar dias-multa deixou valor de multa antigo.');
+}
+$cpfMatch = (new ReflectionMethod(GuiasService::class, 'buscarPartesPorCpfCanonico'));
+$resolvedLegacyCpf = $cpfMatch->invoke(new GuiasService($db), '52998224725');
+if ($resolvedLegacyCpf !== [$storedIdentity['parte_id']]) {
+    throw new RuntimeException('CPF legado com separador não foi normalizado corretamente.');
 }
 
 $unsafe = new CadastroGuiasFalhaRollback();

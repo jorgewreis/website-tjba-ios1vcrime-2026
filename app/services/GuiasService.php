@@ -388,9 +388,7 @@ final class GuiasService
     {
         $cpf = preg_replace('/\D+/', '', (string) ($payload['cpf'] ?? '')) ?? '';
         if ($cpf !== '') {
-            $statement = $this->connection->prepare("SELECT id FROM partes WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ? UNION SELECT parte_id FROM partes_documentos WHERE UPPER(tipo) = 'CPF' AND REPLACE(REPLACE(REPLACE(numero, '.', ''), '-', ''), ' ', '') = ?");
-            $statement->execute([$cpf, $cpf]);
-            $ids = $statement->fetchAll(PDO::FETCH_COLUMN);
+            $ids = $this->buscarPartesPorCpfCanonico($cpf);
             if (count($ids) > 1) throw new InvalidArgumentException('CPF associado a mais de uma pessoa. Corrija o cadastro antes de continuar.');
             if ($ids !== []) {
                 if ($parteId !== '' && $parteId !== (string) $ids[0]) throw new InvalidArgumentException('CPF não corresponde à pessoa selecionada.');
@@ -415,6 +413,37 @@ final class GuiasService
             if ((int) $statement->fetchColumn() !== 1) throw new RuntimeException('Persistência do documento não confirmada.');
         }
         return [$parteId, $nome];
+    }
+
+    /** @return list<string> */
+    private function buscarPartesPorCpfCanonico(string $cpf): array
+    {
+        $ids = [];
+        try {
+            $statement = $this->connection->prepare(
+                "SELECT id FROM partes WHERE REGEXP_REPLACE(COALESCE(cpf, ''), '[^0-9]', '') = ? "
+                . "UNION SELECT parte_id FROM partes_documentos WHERE UPPER(tipo) = 'CPF' "
+                . "AND REGEXP_REPLACE(COALESCE(numero, ''), '[^0-9]', '') = ?"
+            );
+            $statement->execute([$cpf, $cpf]);
+            $ids = $statement->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Throwable) {
+            // Fallback para servidores sem REGEXP_REPLACE: normaliza em PHP
+            // para manter o mesmo contrato de ParteDocumentoHelper.
+            foreach ($this->connection->query("SELECT id, cpf FROM partes WHERE cpf IS NOT NULL AND cpf <> ''")->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                if (ParteDocumentoHelper::normalizarNumero('CPF', (string) ($row['cpf'] ?? '')) === $cpf) {
+                    $ids[] = (string) $row['id'];
+                }
+            }
+            foreach ($this->connection->query("SELECT parte_id, numero FROM partes_documentos WHERE UPPER(tipo) = 'CPF'")->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                if (ParteDocumentoHelper::normalizarNumero('CPF', (string) ($row['numero'] ?? '')) === $cpf) {
+                    $ids[] = (string) $row['parte_id'];
+                }
+            }
+        }
+
+        $ids = array_values(array_unique(array_filter(array_map('strval', $ids), static fn(string $id): bool => trim($id) !== '')));
+        return $ids;
     }
 
     /** @template T @param callable():T $operation @return T */
@@ -511,7 +540,7 @@ final class GuiasService
         unset($payload['usuario_id']);
 
         $allowed = [
-            'numero_processo', 'processo_id', 'denunciado', 'parte_id', 'tipo', 'etapa', 'status',
+            'denunciado', 'tipo', 'etapa', 'status',
             'regime', 'data_fato', 'dias_multa', 'observacoes', 'user_cadastro',
         ];
         $filtered = [];
@@ -519,9 +548,6 @@ final class GuiasService
             if (array_key_exists($key, $payload)) {
                 $filtered[$key] = $payload[$key];
             }
-        }
-        if (array_key_exists('reu_id', $payload) && !array_key_exists('parte_id', $filtered)) {
-            $filtered['parte_id'] = $payload['reu_id'];
         }
         if (isset($filtered['denunciado']) && is_string($filtered['denunciado']) && $filtered['denunciado'] !== '') {
             $filtered['denunciado'] = TextFormatter::formatProperName($filtered['denunciado'], 255);
@@ -547,11 +573,13 @@ final class GuiasService
                 $filtered['dias_multa'] = (int) $dm;
             }
         }
+        // The regular editor cannot reassign the guide's process/person. Keep
+        // those identities stable instead of silently changing the guide row
+        // while leaving processo-partes relations untouched.
+        $current = $this->repository->lockForUpdate($id);
+        if ($current === null) return false;
+        $this->assertGuideIdentityUnchanged($payload, $current);
         if ($filtered === []) return false;
-
-        // Lock the parent first: false from UPDATE can also mean no column
-        // changed, so only absence of this row means the guide is missing.
-        if ($this->repository->lockForUpdate($id) === null) return false;
         if ($usuarioId !== '') {
             try {
                 $this->alocadosRepository->addAlocado($id, $usuarioId);
@@ -565,13 +593,41 @@ final class GuiasService
             if ($guia !== null && isset($guia['data_fato']) && $guia['data_fato'] !== null && $guia['data_fato'] !== ''
                 && isset($guia['dias_multa']) && (int) $guia['dias_multa'] > 0) {
                 $valorMulta = $this->calcularValorPenaMulta((string) $guia['data_fato'], (int) $guia['dias_multa']);
-                if ($valorMulta !== null) {
-                    $this->repository->update($id, ['valor_multa' => $valorMulta]);
-                }
+            } else {
+                $valorMulta = null;
             }
+            $this->repository->update($id, ['valor_multa' => $valorMulta]);
             $this->sincronizarDetalhamentoAposUpdate($id, $usuarioId);
         }
         return true;
+    }
+
+    /** @param array<string, mixed> $payload @param array<string, mixed> $current */
+    private function assertGuideIdentityUnchanged(array $payload, array $current): void
+    {
+        if (array_key_exists('numero_processo', $payload)) {
+            // Compare canonical digits without revalidating legacy rows; this
+            // editor must preserve the current identity even if old data needs
+            // a separate repair.
+            $requested = CnjValidator::onlyDigits(trim((string) $payload['numero_processo']));
+            $existing = CnjValidator::onlyDigits(trim((string) ($current['numero_processo'] ?? '')));
+            if ($requested !== $existing) {
+                throw new InvalidArgumentException('O processo da guia não pode ser alterado nesta edição.');
+            }
+        }
+
+        foreach (['processo_id' => 'processo_id', 'parte_id' => 'parte_id', 'reu_id' => 'parte_id'] as $field => $currentField) {
+            if (!array_key_exists($field, $payload)) continue;
+            $requested = trim((string) ($payload[$field] ?? ''));
+            $existing = trim((string) ($current[$currentField] ?? ''));
+            if ($requested !== $existing) {
+                throw new InvalidArgumentException('O processo ou a pessoa vinculada à guia não pode ser alterado nesta edição.');
+            }
+        }
+        if (array_key_exists('parte_id', $payload) && array_key_exists('reu_id', $payload)
+            && trim((string) ($payload['parte_id'] ?? '')) !== trim((string) ($payload['reu_id'] ?? ''))) {
+            throw new InvalidArgumentException('Os identificadores de pessoa informados são incompatíveis.');
+        }
     }
 
     /**
