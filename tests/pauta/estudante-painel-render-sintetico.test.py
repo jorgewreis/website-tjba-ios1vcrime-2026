@@ -30,16 +30,22 @@ with tempfile.TemporaryDirectory(prefix='pauta-painel-') as tmp:
     }
     statuses = ('designada', 'atrasada', 'em_andamento', 'realizada', 'finalizada', 'cancelada', 'redesignada')
     block_flags = ('processo_sigiloso', 'envolve_menor', 'qtd_menor', 'tem_prioridade_bloqueio')
+    flag_sets = [(flag,) for flag in block_flags] + [
+        ('processo_sigiloso', 'envolve_menor'),
+        ('envolve_menor', 'tem_prioridade_bloqueio'),
+        tuple(block_flags),
+    ]
     blocked_rows = []
     registered_rows = []
     expected_ids = []
-    for index, (status, flag) in enumerate(((status, flag) for status in statuses for flag in block_flags), start=1):
+    for index, (status, flags) in enumerate(((status, flags) for status in statuses for flags in flag_sets), start=1):
         for registered in (True, False):
             row_id = 'PAUTA-BLOQUEADA-' + str(index).zfill(2) + ('-I' if registered else '-N')
             row = dict(blocked, id_pauta=row_id, pauta=row_id, status=status, ja_inscrito=int(registered),
                        processo_sigiloso=0, envolve_menor=0, qtd_menor=0, tem_prioridade_bloqueio=0,
                        link_audiencia='https://segredo.invalid/' + row_id)
-            row[flag] = 1
+            for flag in flags:
+                row[flag] = 1
             blocked_rows.append(row)
             expected_ids.append((row_id, registered))
             if registered:
@@ -68,13 +74,16 @@ with tempfile.TemporaryDirectory(prefix='pauta-painel-') as tmp:
         dest.write_text(code, encoding='utf-8')
     env = {k: os.environ[k] for k in ('PATH', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP') if k in os.environ}
     rendered_sections = []
-    for page in range(1, 5):
-        page_env = dict(env, SYN_HOJE_PAGE=str(page), SYN_MINHAS_PAGE=str(min(page, 2)))
+    today_pages = (len(blocked_rows) + 14) // 15
+    minhas_pages = (len(registered_rows) + 14) // 15
+    assert len(expected_ids) == len(statuses) * len(flag_sets) * 2
+    for page in range(1, today_pages + 1):
+        page_env = dict(env, SYN_HOJE_PAGE=str(page), SYN_MINHAS_PAGE=str(min(page, minhas_pages)))
         result = subprocess.run(['php', str(base / 'render.php')], capture_output=True, env=page_env, check=True)
         page_html = result.stdout.decode('utf-8')
         hoje_start = page_html.index('id="card-audiencias-hoje-estudante"')
         minhas_start = page_html.index('id="card-minhas-inscricoes-estudante"')
-        if page <= 2:
+        if page <= minhas_pages:
             rendered_sections.append(page_html[minhas_start:])
         rendered_sections.append(page_html[hoje_start:minhas_start])
     html = '\n'.join(rendered_sections)
@@ -92,4 +101,4 @@ with tempfile.TemporaryDirectory(prefix='pauta-painel-') as tmp:
     for secret in ('SEGREDO', '2034', '15:47', 'segredo.invalid', 'PROCESSO-SEGREDO',
                    'data-status-label-pauta="PAUTA-BLOQUEADA-'):
         assert secret not in html, secret
-    print('PASS: painel SSR redige 7 status × 4 bloqueios × inscrição existente/nova')
+    print('PASS: painel SSR redige 7 status × 7 combinações de bloqueio × inscrição existente/nova (98 casos)')

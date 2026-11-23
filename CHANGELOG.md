@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0017
+
+**Data:** 2026-11-22 22:30:25 | **Commit:** `39245fc0` | **Tipo:** `patch`
+
+- test(REI-162): cover combined blocking conditions
+
 ## V. 1.88.0016
 
 **Data:** 2026-11-22 22:04:09 | **Commit:** `ac033adc` | **Tipo:** `patch`
@@ -7734,5 +7740,6 @@
 
 
 \n
+
 
 
