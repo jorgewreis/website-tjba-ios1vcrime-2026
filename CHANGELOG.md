@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0019
+
+**Data:** 2026-11-22 21:27:27 | **Commit:** `335fc25a` | **Tipo:** `patch`
+
+- chore(REI-152): remove trailing changelog blank line
+
 ## V. 1.88.0018
 
 **Data:** 2026-11-22 21:01:27 | **Commit:** `593c7346` | **Tipo:** `patch`
