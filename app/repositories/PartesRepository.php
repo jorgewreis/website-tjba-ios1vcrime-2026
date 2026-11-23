@@ -407,7 +407,12 @@ final class PartesRepository
                 return $id;
             } catch (Throwable $error) {
                 if ($ownsTransaction && $this->connection->inTransaction()) {
-                    $this->connection->rollBack();
+                    try {
+                        $this->connection->rollBack();
+                    } catch (Throwable $rollbackError) {
+                        ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                        throw new RuntimeException('Falha ao reverter cadastro da parte; estado da conexão incerto.', 0, $error);
+                    }
                 }
                 throw $error;
             }

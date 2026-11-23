@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0018
+
+**Data:** 2026-11-22 21:01:27 | **Commit:** `593c7346` | **Tipo:** `patch`
+
+- fix(REI-152): mark failed rollback connections unsafe
+
 ## V. 1.88.0017
 
 **Data:** 2026-11-22 20:58:01 | **Commit:** `5eae284c` | **Tipo:** `patch`
@@ -7740,4 +7746,5 @@
 
 
 \n
+
 

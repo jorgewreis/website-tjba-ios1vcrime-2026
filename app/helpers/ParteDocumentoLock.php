@@ -29,14 +29,14 @@ final class ParteDocumentoLock
     {
         $type = ParteDocumentoHelper::normalizarTipo($type);
         $number = ParteDocumentoHelper::normalizarNumero($type, $number);
+        if (self::isConnectionUnsafe($connection)) {
+            throw new RuntimeException('Conexão indisponível para alteração de documento.');
+        }
         if ($type === '' || $number === '' || $connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') {
             return $operation();
         }
 
         self::$locksHeld ??= new WeakMap();
-        if (self::isConnectionUnsafe($connection)) {
-            throw new RuntimeException('Conexão indisponível para alteração de documento.');
-        }
 
         $database = $connection->query('SELECT DATABASE()')->fetchColumn();
         if (!is_string($database) || $database === '') {

@@ -112,7 +112,12 @@ final class PessoasService
                 return $id;
             } catch (Throwable $e) {
                 if ($this->connection->inTransaction()) {
-                    $this->connection->rollBack();
+                    try {
+                        $this->connection->rollBack();
+                    } catch (Throwable $rollbackError) {
+                        ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                        throw new RuntimeException('Falha ao reverter cadastro da pessoa; estado da conexão incerto.', 0, $e);
+                    }
                 }
                 throw $e;
             }
@@ -238,6 +243,7 @@ final class PessoasService
                 try {
                     $this->connection->rollBack();
                 } catch (Throwable $rollbackError) {
+                ParteDocumentoLock::markConnectionUnsafe($this->connection);
                     error_log('Falha ao reverter transação de documento; estado da conexão incerto.');
                     throw new RuntimeException('Falha ao reverter alteração de documento; estado da conexão incerto.', 0, $e);
                 }
