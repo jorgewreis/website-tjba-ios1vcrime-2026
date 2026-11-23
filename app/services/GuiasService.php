@@ -16,12 +16,12 @@ require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../helpers/CartorioTarefaStatusPrincipalHelper.php';
+require_once __DIR__ . '/../helpers/ParteDocumentoLock.php';
 require_once __DIR__ . '/../helpers/GuiasCadastroTransactionalGuard.php';
 require_once __DIR__ . '/../helpers/GuiasIdempotencia.php';
 
 final class GuiasService
 {
-    private static ?WeakMap $unsafeConnections = null;
     private bool $idempotencyReplayed = false;
     private PDO $connection;
     private GuiasRepository $repository;
@@ -166,7 +166,7 @@ final class GuiasService
     public function create(array $payload): string
     {
         $this->idempotencyReplayed = false;
-        if (isset(self::$unsafeConnections[$this->connection])) throw new RuntimeException('Conexão indisponível para cadastro ou edição de guia.');
+        if (ParteDocumentoLock::isConnectionUnsafe($this->connection)) throw new RuntimeException('Conexão indisponível para cadastro ou edição de guia.');
         $numero = trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? ''));
         if (!preg_match('/^(?:\d{20}|\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})$/D', $numero)) {
             throw new InvalidArgumentException('Informe o número do processo no formato CNJ completo.');
@@ -204,36 +204,8 @@ final class GuiasService
     /** A trava coordena somente os escritores que usam este protocolo. */
     private function comTravaCpf(string $cpf, callable $operation): mixed
     {
-        if ($cpf === '' || $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') return $operation();
-        if (isset(self::$unsafeConnections[$this->connection]) || $this->connection->inTransaction()) throw new RuntimeException('Conexão indisponível para cadastro de guia.');
-        $database = $this->connection->query('SELECT DATABASE()')->fetchColumn();
-        if (!is_string($database) || $database === '') throw new RuntimeException('Banco de dados indisponível.');
-        $name = 'rei250_' . substr(hash('sha256', $database . ':' . $cpf), 0, 52);
-        try {
-            $statement = $this->connection->prepare('SELECT GET_LOCK(?, 5)');
-            $statement->execute([$name]);
-            $acquired = $statement->fetchColumn();
-        } catch (Throwable $e) {
-            // O servidor pode ter adquirido a trava mesmo sem entregar a resposta.
-            self::$unsafeConnections ??= new WeakMap();
-            self::$unsafeConnections[$this->connection] = true;
-            throw $e;
-        }
-        if ((int) $acquired !== 1) throw new RuntimeException('Não foi possível obter a trava de identificação.');
-        $failure = null; $result = null;
-        try { $result = $operation(); } catch (Throwable $e) { $failure = $e; }
-        try {
-            $statement = $this->connection->prepare('SELECT RELEASE_LOCK(?)');
-            $statement->execute([$name]);
-            if ((int) $statement->fetchColumn() !== 1) throw new RuntimeException('Liberação da trava não confirmada.');
-        } catch (Throwable $e) {
-            self::$unsafeConnections ??= new WeakMap();
-            self::$unsafeConnections[$this->connection] = true;
-            if ($failure === null) $failure = $e;
-            else error_log('GuiasService: liberação da trava de identificação não confirmada.');
-        }
-        if ($failure !== null) throw $failure;
-        return $result;
+        if ($cpf !== '' && $this->connection->inTransaction()) throw new RuntimeException('Conexão indisponível para cadastro de guia.');
+        return ParteDocumentoLock::run($this->connection, 'CPF', $cpf, $operation);
     }
 
     public function wasIdempotencyReplay(): bool { return $this->idempotencyReplayed; }
@@ -448,7 +420,7 @@ final class GuiasService
     /** @template T @param callable():T $operation @return T */
     private function executarTransacaoCadastroEdicao(callable $operation, bool $idempotency = false, bool $documentos = false): mixed
     {
-        if (isset(self::$unsafeConnections[$this->connection])) {
+        if (ParteDocumentoLock::isConnectionUnsafe($this->connection)) {
             throw new RuntimeException('Conexão indisponível para cadastro ou edição de guia.');
         }
         if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') {
@@ -465,8 +437,7 @@ final class GuiasService
                 if ($this->connection->exec('SET SESSION innodb_lock_wait_timeout = ' . $timeout) === false) throw new RuntimeException('Não foi possível restaurar timeout de linha.');
                 $restored = true;
             } catch (Throwable $e) {
-                self::$unsafeConnections ??= new WeakMap();
-                self::$unsafeConnections[$this->connection] = true;
+                ParteDocumentoLock::markConnectionUnsafe($this->connection);
                 throw $e;
             }
         };
@@ -481,8 +452,7 @@ final class GuiasService
             try {
                 if (!$restored) $restore();
             } catch (Throwable $restoreFailure) {
-                self::$unsafeConnections ??= new WeakMap();
-                self::$unsafeConnections[$this->connection] = true;
+                ParteDocumentoLock::markConnectionUnsafe($this->connection);
                 if ($failure === null) $failure = $restoreFailure;
                 else error_log('GuiasService: restauração de timeout de linha não confirmada.');
             }
@@ -507,8 +477,7 @@ final class GuiasService
                 try {
                     if (!$this->connection->rollBack()) throw new RuntimeException('Não foi possível reverter a transação de guia.');
                 } catch (Throwable $rollbackFailure) {
-                    self::$unsafeConnections ??= new WeakMap();
-                    self::$unsafeConnections[$this->connection] = true;
+                    ParteDocumentoLock::markConnectionUnsafe($this->connection);
                     throw $rollbackFailure;
                 }
                 return false;
@@ -517,8 +486,7 @@ final class GuiasService
                 if ($beforeCommit !== null) $beforeCommit();
                 if (!$this->connection->commit()) throw new RuntimeException('Não foi possível confirmar a transação de guia.');
             } catch (Throwable $commitFailure) {
-                self::$unsafeConnections ??= new WeakMap();
-                self::$unsafeConnections[$this->connection] = true;
+                ParteDocumentoLock::markConnectionUnsafe($this->connection);
                 throw $commitFailure;
             }
             return $result;
@@ -526,8 +494,7 @@ final class GuiasService
             try {
                 if ($this->connection->inTransaction() && !$this->connection->rollBack()) throw new RuntimeException('Rollback não confirmado.');
             } catch (Throwable $rollbackFailure) {
-                self::$unsafeConnections ??= new WeakMap();
-                self::$unsafeConnections[$this->connection] = true;
+                ParteDocumentoLock::markConnectionUnsafe($this->connection);
                 error_log('GuiasService: rollback não confirmado.');
             }
             throw $e;
