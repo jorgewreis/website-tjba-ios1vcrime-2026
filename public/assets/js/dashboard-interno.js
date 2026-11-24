@@ -75,6 +75,9 @@
 
   async function load(){
     const error=$('dashboard-erro');if(error)error.hidden=true;
+    const queueCard=$('dash-cartorio-queue');if(queueCard)queueCard.hidden=true;
+    ['dash-queue-guias-expedicao-row','dash-queue-guias-envio-row'].forEach(id=>{const row=$(id);if(row)row.hidden=true;});
+    set('dash-queue-guias-expedicao','—');set('dash-queue-guias-envio','—');
     const url='/api/dashboard/resumo.php';
     try{
       const response=await fetch(url,{credentials:'same-origin',headers:{Accept:'application/json'},cache:'no-store'});
@@ -102,25 +105,34 @@
       ]);
 
       const cartorioEnabled=Boolean(data.setor?.conectado)&&(data.setor?.areas||[]).includes('CARTORIO');
-      const queueCard=$('dash-cartorio-queue');
       const sectorQueues=data.setor?.filas||[];
       const queueExpedidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_expedidas','aguardando_envio'):null;
       const queueRecebidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_recebidas','devolucao'):null;
       const queueOficios=data.setor?.conectado?activeQueueCount(sectorQueues,'oficios','enviar_oficio'):null;
       const queueEditais=data.setor?.conectado?activeQueueCount(sectorQueues,'editais','certificacao_publicacao'):null;
+      const queueGuiasExpedicao=cartorioEnabled?activeQueueCount(sectorQueues,'guias','expedicao_guia'):null;
+      const queueGuiasEnvio=cartorioEnabled?activeQueueCount(sectorQueues,'guias','envio_guia'):null;
       set('dash-queue-expedidas',count(queueExpedidas));
       set('dash-queue-recebidas',count(queueRecebidas));
       set('dash-queue-oficios',count(queueOficios));
       set('dash-queue-editais',count(queueEditais));
+      set('dash-queue-guias-expedicao',count(queueGuiasExpedicao));
+      set('dash-queue-guias-envio',count(queueGuiasEnvio));
       const hasExpedidasMetric=showPositiveMetric('dash-queue-expedidas-row',queueExpedidas);
       const hasRecebidasMetric=showPositiveMetric('dash-queue-recebidas-row',queueRecebidas);
       const hasOficiosMetric=showPositiveMetric('dash-queue-oficios-row',cartorioEnabled?queueOficios:null);
       const hasEditaisMetric=showPositiveMetric('dash-queue-editais-row',queueEditais);
-      let hasAnyMetric=hasExpedidasMetric||hasRecebidasMetric||hasOficiosMetric||hasEditaisMetric;
+      const guideExpedicaoRow=$('dash-queue-guias-expedicao-row');
+      const guideEnvioRow=$('dash-queue-guias-envio-row');
+      if(guideExpedicaoRow)guideExpedicaoRow.hidden=!cartorioEnabled;
+      if(guideEnvioRow)guideEnvioRow.hidden=!cartorioEnabled;
+      let hasAnyMetric=cartorioEnabled||hasExpedidasMetric||hasRecebidasMetric||hasOficiosMetric||hasEditaisMetric;
       applyCountBadge($('dash-queue-expedidas'),queueExpedidas);
       applyCountBadge($('dash-queue-recebidas'),queueRecebidas);
       applyCountBadge($('dash-queue-oficios'),queueOficios);
       applyCountBadge($('dash-queue-editais'),queueEditais);
+      applyCountBadge($('dash-queue-guias-expedicao'),queueGuiasExpedicao);
+      applyCountBadge($('dash-queue-guias-envio'),queueGuiasEnvio);
       const overdue=data.setor?.prazos_vencidos||{};
       const overdueDays=data.setor?.prazos_vencidos_dias||{};
       [['expedidas','dash-overdue-expedidas-row','dash-overdue-expedidas'],['recebidas','dash-overdue-recebidas-row','dash-overdue-recebidas']].forEach(([key,rowId,valueId])=>{
@@ -142,6 +154,9 @@
 
       renderAlerts(data.alertas);
     }catch(error){
+      if(queueCard)queueCard.hidden=true;
+      ['dash-queue-guias-expedicao-row','dash-queue-guias-envio-row'].forEach(id=>{const row=$(id);if(row)row.hidden=true;});
+      set('dash-queue-guias-expedicao','—');set('dash-queue-guias-envio','—');
       if($('dashboard-erro')){$('dashboard-erro').textContent=error.message||'Não foi possível carregar os indicadores.';$('dashboard-erro').hidden=false;}
     }
   }
