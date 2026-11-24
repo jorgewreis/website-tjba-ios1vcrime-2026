@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/ParentRecordLock.php';
 require_once __DIR__ . '/../helpers/UserInitialsHelper.php';
 require_once __DIR__ . '/../helpers/CartorioAlocacaoTipo.php';
 
@@ -35,42 +36,25 @@ final class EditaisAlocadosRepository
             throw new InvalidArgumentException('edital_id e usuario_id são obrigatórios.');
         }
 
-        $existing = $this->connection->prepare(
-            sprintf(
+        return ParentRecordLock::run($this->connection, 'editais', $editalId, function () use ($editalId, $usuarioId, $tipo): string {
+            $existing = $this->connection->prepare(sprintf(
                 'SELECT `id` FROM `%s` WHERE `edital_id` = :edital_id AND `usuario_id` = :usuario_id LIMIT 1',
                 $this->table
-            )
-        );
-        $existing->bindValue(':edital_id', $editalId);
-        $existing->bindValue(':usuario_id', $usuarioId);
-        $existing->execute();
-        $row = $existing->fetch(PDO::FETCH_ASSOC);
-        if ($row !== false) {
-            return (string) $row['id'];
-        }
+            ));
+            $existing->execute([':edital_id' => $editalId, ':usuario_id' => $usuarioId]);
+            $row = $existing->fetch(PDO::FETCH_ASSOC);
+            if ($row !== false) return (string) $row['id'];
 
-        $id = IdGenerator::generateUniquePrefixedId(
-            $this->connection,
-            $this->table,
-            'id',
-            'EDA',
-            30
-        );
-
-        $tipoVal = CartorioAlocacaoTipo::normalizar($tipo, [self::TIPO_RULE, self::TIPO_SPECIFIC], self::TIPO_SPECIFIC);
-
-        $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `edital_id`, `usuario_id`, `tipo`, `created_at`) VALUES (:id, :edital_id, :usuario_id, :tipo, NOW())',
-            $this->table
-        );
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bindValue(':id', $id);
-        $stmt->bindValue(':edital_id', $editalId);
-        $stmt->bindValue(':usuario_id', $usuarioId);
-        $stmt->bindValue(':tipo', $tipoVal);
-        $stmt->execute();
-
-        return $id;
+            $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'EDA', 30);
+            $tipoVal = CartorioAlocacaoTipo::normalizar($tipo, [self::TIPO_RULE, self::TIPO_SPECIFIC], self::TIPO_SPECIFIC);
+            $sql = sprintf(
+                'INSERT INTO `%s` (`id`, `edital_id`, `usuario_id`, `tipo`, `created_at`) VALUES (:id, :edital_id, :usuario_id, :tipo, NOW())',
+                $this->table
+            );
+            $stmt = $this->connection->prepare($sql);
+            $stmt->execute([':id' => $id, ':edital_id' => $editalId, ':usuario_id' => $usuarioId, ':tipo' => $tipoVal]);
+            return $id;
+        });
     }
 
     public function findByEditalId(string $editalId): array

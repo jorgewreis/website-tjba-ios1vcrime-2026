@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **merge: reconcile REI-130 reconciled branch with origin/main** `[bd3f5453]`
+- **fix(REI-317): ajuste contagem de guias no dashboard** `[85d79ad0]`
 

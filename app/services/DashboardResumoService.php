@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../helpers/CartasExpedidasEstadoFluxo.php';
+
 /** Consultas agregadas usadas pelo dashboard interno. Filas contam somente subtarefas executáveis. */
 final class DashboardResumoService
 {
@@ -8,7 +10,7 @@ final class DashboardResumoService
     private const MODULES = [
         'cartas_expedidas' => ['label'=>'Cartas expedidas','table' => 'cartas_expedidas_subtarefas', 'parent' => 'cartas_expedidas', 'fk' => 'carta_expedida_id', 'route' => 'cartasexpedidas', 'types'=>['aguardando_envio'=>'Envio de carta expedida','aguardando_devolucao'=>'Cumprimento de carta expedida']],
         'cartas_recebidas' => ['label'=>'Cartas recebidas','table' => 'cartas_recebidas_subtarefas', 'parent' => 'cartas_recebidas', 'fk' => 'carta_recebida_id', 'route' => 'cartasrecebidas', 'types'=>['cumprimento'=>'Cumprimento de carta recebida','devolucao'=>'Devolução de carta recebida']],
-        'guias' => ['label'=>'Guias','table' => 'guias_subtarefas', 'parent' => 'guias', 'fk' => 'guia_id', 'route' => 'guias', 'types'=>['expedicao_guia'=>'Expedição de guia']],
+        'guias' => ['label'=>'Guias','table' => 'guias_subtarefas', 'parent' => 'guias', 'fk' => 'guia_id', 'route' => 'guias', 'types'=>['detalhamento_informacoes'=>'Detalhamento de informações','calculo_pena_multa'=>'Cálculo da pena de multa','expedicao_guia'=>'Expedição de guia','aguardando_assinatura'=>'Assinatura de guia','juntada_automatica'=>'Juntada aos autos','gerar_pdf'=>'Geração de PDF','envio_guia'=>'Envio de guia','juntada_termo_envio'=>'Juntada do termo de envio'],'orders'=>['detalhamento_informacoes'=>1,'calculo_pena_multa'=>2,'expedicao_guia'=>3,'aguardando_assinatura'=>4,'juntada_automatica'=>5,'gerar_pdf'=>6,'envio_guia'=>7,'juntada_termo_envio'=>8]],
         'editais' => ['label'=>'Editais','table' => 'editais_subtarefas', 'parent' => 'editais', 'fk' => 'edital_id', 'route' => 'editais', 'types'=>['certificacao_publicacao'=>'Publicação de edital','certificacao_decurso_prazo'=>'Decurso de prazo']],
         'oficios' => ['label'=>'Ofícios','table' => 'oficios_cartorio_subtarefas', 'parent' => 'oficios_cartorio', 'fk' => 'oficio_cartorio_id', 'route' => 'oficioscartorio', 'types'=>['enviar_oficio'=>'Envio de ofício']],
     ];
@@ -36,6 +38,7 @@ final class DashboardResumoService
         $activeAreas = $selectedArea ? [$selectedArea] : $areas;
         $includeCartorio = in_array('CARTORIO', $activeAreas, true);
         $queues = [];
+        $expedidasResumo = null;
         $total = 0;
         $hasQueueErrors = false;
         $oldest = null;
@@ -49,9 +52,11 @@ final class DashboardResumoService
         foreach(['expedidas'=>'cartas_expedidas','recebidas'=>'cartas_recebidas'] as $kind=>$table){
             try {
                 if (!$this->tableExists($table)) continue;
-                // Mesmo recorte padrão das listagens: concluídas e canceladas ficam fora.
-                $activeWhere="`status` COLLATE utf8mb4_unicode_ci NOT IN ('concluída','cancelada')";
-                $count=$this->pdo->query("SELECT COUNT(*) FROM `{$table}` WHERE {$activeWhere}");$lettersRegistered[$kind]=(int)$count->fetchColumn();
+                // Expedidas são contadas no snapshot do fluxo, também usado pela lista.
+                if ($kind === 'recebidas') {
+                    $activeWhere="`status` COLLATE utf8mb4_unicode_ci NOT IN ('concluída','cancelada')";
+                    $count=$this->pdo->query("SELECT COUNT(*) FROM `{$table}` WHERE {$activeWhere}");$lettersRegistered[$kind]=(int)$count->fetchColumn();
+                }
                 $weekly=$this->pdo->query("SELECT DATE(created_at) dia, COUNT(*) total FROM `{$table}` WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)");
                 foreach($weekly->fetchAll(PDO::FETCH_ASSOC) as $dayRow){$idx=array_search(date('d/m',strtotime((string)$dayRow['dia'])),$weeklyLabels,true);if($idx!==false)$weeklyLetters[$kind][$idx]=(int)$dayRow['total'];}
             } catch(Throwable $e) { error_log('dashboard resumo [cadastros '.$kind.']: '.$e->getMessage()); }
@@ -73,10 +78,71 @@ final class DashboardResumoService
                 try {
                     if (!$this->tableExists($meta['table']) || !$this->tableExists($meta['parent'])) { $hasQueueErrors=true; $queues[]=['key'=>$key,'label'=>$meta['label'],'count'=>null,'route'=>$meta['route'],'error'=>true]; continue; }
                     $types=array_keys($meta['types']);$marks=implode(',',array_fill(0,count($types),'?'));
-                    $stmt = $this->pdo->prepare("SELECT s.tipo,COUNT(*) total,MIN(s.updated_at) oldest FROM `{$meta['table']}` s JOIN `{$meta['parent']}` p ON p.id=s.`{$meta['fk']}` WHERE s.status='em_andamento' AND s.tipo IN ({$marks}) AND LOWER(COALESCE(p.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada') GROUP BY s.tipo");
-                    $stmt->execute($types);$moduleCount=0;
-                    foreach($stmt->fetchAll(PDO::FETCH_ASSOC) as $row){
+                    $guiasAguardandoExpedicao = null;
+                    if ($key === 'guias') {
+                        $stmtExpedicao = $this->pdo->query("SELECT COUNT(*) FROM `guias` WHERE LOWER(COALESCE(status,'')) IN ('pendente','a fazer','em_andamento','em andamento')");
+                        $guiasAguardandoExpedicao = (int) $stmtExpedicao->fetchColumn();
+                        // Validate every unresolved step, including future pending steps hidden behind the current one.
+                        $validation = $this->pdo->query("SELECT s.guia_id,s.tipo,s.ordem,s.status FROM `guias_subtarefas` s JOIN `guias` p ON p.id=s.guia_id WHERE LOWER(COALESCE(p.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada') AND (s.status IN ('pendente','em_andamento') OR COALESCE(s.status,'') NOT IN ('pendente','em_andamento','concluida','cancelada','pulada'))");
+                        $seenOrders = [];
+                        foreach ($validation->fetchAll(PDO::FETCH_ASSOC) as $step) {
+                            $status = (string) ($step['status'] ?? '');
+                            if (!in_array($status, ['pendente','em_andamento','concluida','cancelada','pulada'], true)) {
+                                throw new RuntimeException('Guia com status de etapa desconhecido.');
+                            }
+                            $type = (string) ($step['tipo'] ?? '');
+                            $order = $step['ordem'] ?? null;
+                            $expectedOrder = $meta['orders'][$type] ?? null;
+                            if ($status === 'pendente' || $status === 'em_andamento') {
+                                if ($expectedOrder === null) throw new RuntimeException('Guia com etapa ativa desconhecida.');
+                                if ($order === null || (int) $order !== $expectedOrder) throw new RuntimeException('Tipo e ordem de etapa da guia não correspondem.');
+                                $guideOrder = (string) $step['guia_id'] . ':' . (string) $order;
+                                if (isset($seenOrders[$guideOrder])) throw new RuntimeException('Guia com etapas ativas de mesma ordem.');
+                                $seenOrders[$guideOrder] = true;
+                            }
+                        }
+                    }
+                    // GuiasSubtarefasRepository treats the first pending/in-progress step as executable.
+                    $active = $key === 'guias'
+                        ? "((s.status IN ('pendente','em_andamento') AND NOT EXISTS (SELECT 1 FROM `guias_subtarefas` anterior WHERE anterior.guia_id=s.guia_id AND anterior.ordem<s.ordem AND anterior.status IN ('pendente','em_andamento'))) OR COALESCE(s.status,'') NOT IN ('pendente','em_andamento','concluida','cancelada','pulada'))"
+                        : "s.status='em_andamento'";
+                    // The repository does not define a tie-break for equal order; fail closed on ambiguity.
+                    $ambiguity = $key === 'guias' ? ",MAX((SELECT COUNT(*) FROM `guias_subtarefas` empate WHERE empate.guia_id=s.guia_id AND empate.ordem=s.ordem AND empate.status IN ('pendente','em_andamento'))) ambiguas, SUM(CASE WHEN s.ordem IS NULL THEN 1 ELSE 0 END) ordens_invalidas" : '';
+                    $orderAggregates = $key === 'guias' ? ',MIN(s.ordem) menor_ordem,MAX(s.ordem) maior_ordem' : '';
+                    $statusAggregate = $key === 'guias' ? ",SUM(CASE WHEN COALESCE(s.status,'') NOT IN ('pendente','em_andamento','concluida','cancelada','pulada') THEN 1 ELSE 0 END) statuses_invalidos" : '';
+                    // Include every guide type so an active unknown type cannot disappear from the dashboard.
+                    $typeFilter = $key === 'guias' ? '1=1' : "s.tipo IN ({$marks})";
+                    if ($key === 'cartas_expedidas') {
+                        $snapshot = $this->pdo->query(CartasExpedidasEstadoFluxo::consultaEstados(true));
+                        if ($snapshot === false) throw new RuntimeException('Consulta de cartas expedidas indisponível.');
+                        $estadosExpedidas = $snapshot->fetchAll(PDO::FETCH_ASSOC);
+                        $lettersRegistered['expedidas'] = count(array_filter($estadosExpedidas, static fn(array $estado): bool => $estado['etapa'] !== 'encerrada'));
+                        $expedidasResumo = CartasExpedidasEstadoFluxo::resumir($estadosExpedidas);
+                        if ($expedidasResumo['envios'] === null) throw new RuntimeException('Etapa efetiva de cartas expedidas indeterminada.');
+                        $moduleCount=0;
+                        $rows=[
+                            ['tipo'=>'aguardando_envio','total'=>$expedidasResumo['envios'],'oldest'=>$expedidasResumo['envio_mais_antigo']],
+                            ['tipo'=>'aguardando_devolucao','total'=>$expedidasResumo['devolucoes'],'oldest'=>null],
+                        ];
+                    } else {
+                        $stmt = $this->pdo->prepare("SELECT s.tipo,COUNT(*) total,MIN(s.updated_at) oldest{$orderAggregates}{$ambiguity}{$statusAggregate} FROM `{$meta['table']}` s JOIN `{$meta['parent']}` p ON p.id=s.`{$meta['fk']}` WHERE {$active} AND {$typeFilter} AND LOWER(COALESCE(p.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada') GROUP BY s.tipo");
+                        $stmt->execute($key === 'guias' ? [] : $types);$moduleCount=0;
+                        $rows=$stmt->fetchAll(PDO::FETCH_ASSOC);
+                    }
+                    foreach($rows as $row){
+                        if(($row['ambiguas']??0)>1)throw new RuntimeException('Guia com etapas ativas de mesma ordem.');
+                        if(($row['ordens_invalidas']??0)>0)throw new RuntimeException('Guia com etapa ativa sem ordem.');
+                        if($key==='guias'){
+                            $type=(string)($row['tipo']??'');
+                            if(!array_key_exists($type,$meta['types'])) throw new RuntimeException('Guia com etapa ativa desconhecida.');
+                            if((int)($row['statuses_invalidos']??0)>0) throw new RuntimeException('Guia com status de etapa desconhecido.');
+                            $expectedOrder=$meta['orders'][$type]??null;
+                            if($expectedOrder===null || (int)($row['menor_ordem']??0)!==$expectedOrder || (int)($row['maior_ordem']??0)!==$expectedOrder) throw new RuntimeException('Tipo e ordem de etapa da guia não correspondem.');
+                        }
+                    }
+                    foreach($rows as $row){
                         $count=(int)$row['total'];$moduleCount+=$count;$date=$row['oldest']??null;
+                        if($key==='guias'&&$row['tipo']==='expedicao_guia')$count=$guiasAguardandoExpedicao;
                         $isSending=$key==='cartas_expedidas'&&$row['tipo']==='aguardando_envio';
                         $isReturning=$key==='cartas_recebidas'&&$row['tipo']==='devolucao';
                         if($count>0&&$date&&($isSending||$isReturning)){
@@ -89,6 +155,9 @@ final class DashboardResumoService
                         }
                         if($isReturning&&$count>0)$oldestReturns=$date;
                         $queues[]=['key'=>$key,'type'=>$row['tipo'],'label'=>$meta['types'][$row['tipo']]??$key,'count'=>$count,'route'=>$meta['route']];
+                    }
+                    if($key==='guias'&&!array_filter($queues,static fn(array $queue):bool=>($queue['key']??'')==='guias'&&($queue['type']??'')==='expedicao_guia')){
+                        $queues[]=['key'=>'guias','type'=>'expedicao_guia','label'=>$meta['types']['expedicao_guia'],'count'=>$guiasAguardandoExpedicao,'route'=>$meta['route']];
                     }
                     $total += $moduleCount;
                     try { $monthStmt=$this->pdo->query("SELECT DATE_FORMAT(p.created_at,'%m/%Y') mes,COUNT(*) total FROM `{$meta['parent']}` p WHERE p.created_at >= DATE_SUB(DATE_FORMAT(CURDATE(),'%Y-%m-01'), INTERVAL 5 MONTH) GROUP BY DATE_FORMAT(p.created_at,'%Y-%m') ORDER BY DATE_FORMAT(p.created_at,'%Y-%m')"); foreach($monthStmt->fetchAll(PDO::FETCH_ASSOC) as $monthRow){$idx=array_search((string)$monthRow['mes'],$registrationLabels,true);if($idx!==false)$registrations[$idx]+=(int)$monthRow['total'];} } catch (Throwable $ignored) {}
@@ -141,11 +210,9 @@ final class DashboardResumoService
         $nearestDeadline=null;
         try {
             $deadlinesSoon=0;
-            if($this->tableExists('cartas_expedidas')&&$this->tableExists('cartas_expedidas_subtarefas')){
-                $st=$this->pdo->query("SELECT COUNT(DISTINCT c.id) total,MIN(DATE_ADD(DATE(envio.updated_at), INTERVAL c.prazo_dias DAY)) proximo FROM cartas_expedidas c JOIN cartas_expedidas_subtarefas s ON s.carta_expedida_id=c.id JOIN cartas_expedidas_subtarefas envio ON envio.carta_expedida_id=c.id AND envio.tipo='aguardando_envio' AND LOWER(envio.status) IN ('concluida','concluída') WHERE s.tipo='aguardando_devolucao' AND s.status='em_andamento' AND c.prazo_dias>0 AND DATE_ADD(DATE(envio.updated_at), INTERVAL c.prazo_dias DAY) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");
-                $deadline=$st->fetch(PDO::FETCH_ASSOC);$deadlinesSoon+=(int)($deadline['total']??0);
-                if(!empty($deadline['proximo']))$nearestDeadline=(string)$deadline['proximo'];
-            }
+            if ($expedidasResumo === null || $expedidasResumo['proximos'] === null) throw new RuntimeException('Prazos de cartas expedidas indisponíveis.');
+            $deadlinesSoon += $expedidasResumo['proximos'];
+            $nearestDeadline = $expedidasResumo['proximo_vencimento'];
             if($this->tableExists('cartas_recebidas')&&$this->tableExists('cartas_recebidas_subtarefas')){
                 $st=$this->pdo->query("SELECT COUNT(DISTINCT c.id) total,MIN(DATE_ADD(DATE(c.data_recebimento), INTERVAL c.prazo_dias DAY)) proximo FROM cartas_recebidas c JOIN cartas_recebidas_subtarefas s ON s.carta_recebida_id=c.id WHERE s.tipo='cumprimento' AND s.status='em_andamento' AND c.prazo_dias>0 AND c.data_recebimento IS NOT NULL AND DATE_ADD(DATE(c.data_recebimento), INTERVAL c.prazo_dias DAY) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");
                 $deadline=$st->fetch(PDO::FETCH_ASSOC);$deadlinesSoon+=(int)($deadline['total']??0);
@@ -156,14 +223,10 @@ final class DashboardResumoService
         $mostOverdueExpedidaDays=null;
         $mostOverdueRecebidaDays=null;
         if($includeCartorio){
-            try {
-                if($this->tableExists('cartas_expedidas')&&$this->tableExists('cartas_expedidas_subtarefas')){
-                    $st=$this->pdo->query("SELECT COUNT(DISTINCT c.id) total,MAX(DATEDIFF(CURDATE(),DATE_ADD(DATE(envio.updated_at), INTERVAL c.prazo_dias DAY))) maior_atraso FROM cartas_expedidas c JOIN cartas_expedidas_subtarefas envio ON envio.carta_expedida_id=c.id AND envio.tipo='aguardando_envio' AND LOWER(envio.status) IN ('concluida','concluída') WHERE c.prazo_dias>0 AND DATE_ADD(DATE(envio.updated_at), INTERVAL c.prazo_dias DAY)<CURDATE() AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");
-                    $overdueExpedidas=$st->fetch(PDO::FETCH_ASSOC)?:[];
-                    $overdueDeadlines['expedidas']=(int)($overdueExpedidas['total']??0);
-                    $mostOverdueExpedidaDays=isset($overdueExpedidas['maior_atraso'])?(int)$overdueExpedidas['maior_atraso']:null;
-                }
-            } catch(Throwable $e) { error_log('dashboard resumo [prazos vencidos expedidas]: '.$e->getMessage()); }
+            if ($expedidasResumo !== null) {
+                $overdueDeadlines['expedidas']=$expedidasResumo['vencidos'];
+                $mostOverdueExpedidaDays=$expedidasResumo['maior_atraso'];
+            }
             try {
                 if($this->tableExists('cartas_recebidas')&&$this->tableExists('cartas_recebidas_subtarefas')){
                     $st=$this->pdo->query("SELECT COUNT(DISTINCT c.id) total,MAX(DATEDIFF(CURDATE(),DATE_ADD(DATE(c.data_recebimento), INTERVAL c.prazo_dias DAY))) maior_atraso FROM cartas_recebidas c JOIN cartas_recebidas_subtarefas pendente ON pendente.carta_recebida_id=c.id AND pendente.tipo='cumprimento' AND pendente.status='em_andamento' WHERE c.prazo_dias>0 AND c.data_recebimento IS NOT NULL AND DATE_ADD(DATE(c.data_recebimento), INTERVAL c.prazo_dias DAY)<CURDATE() AND LOWER(COALESCE(c.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada')");
@@ -175,7 +238,7 @@ final class DashboardResumoService
         }
         $sectorQueues=$includeCartorio?$queues:[];$reportedTotal=$hasQueueErrors?null:$total;$sectorTotal=$includeCartorio?$reportedTotal:null;
         $alerts=$this->letterAlerts($oldest,$oldestLabel,$cartasEmDevolucao,$oldestReturns,$deadlinesSoon,$nearestDeadline,$mostOverdueExpedidaDays);
-        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'semana'=>['labels'=>$weeklyLabels,'expedidas'=>$weeklyLetters['expedidas'],'recebidas'=>$weeklyLetters['recebidas']]],'oficios_cadastrados'=>['ano'=>['cartorio'=>$officesRegistered['cartorio'],'gabinete'=>$officesRegistered['gabinete']],'semana'=>['labels'=>$weeklyLabels,'cartorio'=>$weeklyOffices['cartorio'],'gabinete'=>$weeklyOffices['gabinete']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'prazos_vencidos'=>$overdueDeadlines,'prazos_vencidos_dias'=>['expedidas'=>$mostOverdueExpedidaDays,'recebidas'=>$mostOverdueRecebidaDays],'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'alertas'=>$alerts,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors];
+        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'semana'=>['labels'=>$weeklyLabels,'expedidas'=>$weeklyLetters['expedidas'],'recebidas'=>$weeklyLetters['recebidas']]],'oficios_cadastrados'=>['ano'=>['cartorio'=>$officesRegistered['cartorio'],'gabinete'=>$officesRegistered['gabinete']],'semana'=>['labels'=>$weeklyLabels,'cartorio'=>$weeklyOffices['cartorio'],'gabinete'=>$weeklyOffices['gabinete']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'prazos_vencidos'=>$overdueDeadlines,'prazos_vencidos_dias'=>['expedidas'=>$mostOverdueExpedidaDays,'recebidas'=>$mostOverdueRecebidaDays],'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'alertas'=>$alerts,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors,'cartas_expedidas_inconsistencias'=>$expedidasResumo['inconsistencias']??null];
     }
 
     /** @return array{0: ?string, 1: ?string} */
