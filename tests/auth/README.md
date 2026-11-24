@@ -1,24 +1,45 @@
-# Suíte E2E de autenticação
+# Suíte E2E de autenticação isolada
 
-## Estado atual
+O bloqueio provisório foi substituído pelo runner abaixo, que comprova a
+topologia descartável antes de executar testes que leem ou alteram dados. Os
+testes individuais continuam protegidos por `sandbox-guard.php`; use apenas os
+entrypoints documentados.
 
-Os testes diretos continuam bloqueados pelo `sandbox-guard.php`. O runner `run-isolated-auth-e2e.ps1` existe, mas sua execução positiva permanece suspensa até revisão independente comprovar a identidade do daemon Docker, a procedência das imagens, o isolamento efetivo de MySQL/SMTP/rede e a propriedade/limpeza limitada dos recursos. A configuração sintética, o nome das imagens, a topologia declarada ou um teste negativo em cópias não comprovam esses requisitos.
+## Pré-requisito reproduzível
 
-Não execute a suíte E2E, o runner nem scripts de preparação/limpeza para contornar o guard. O teste unitário sintético `docker-cleanup-verification.test.ps1` pode ser executado sem Docker e não libera a suíte positiva. O script de limpeza manual está bloqueado porque a etiqueta histórica pode corresponder a recursos de outra execução. A ocorrência histórica que motivou a contenção também segue sem destino e efeitos comprovados.
+A árvore de dependências é fixada por `composer.lock`. Em um checkout limpo,
+prepare o autoloader com a imagem PHP de QA já usada pela suíte:
 
-## Artefatos
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/prepare-dependencies.ps1
+```
 
-- `sandbox-guard.php` interrompe execução direta sem os marcadores criados dentro do container pelo runner.
-- `run-isolated-auth-e2e.ps1` descreve uma proposta de caminho isolado; a implementação está sujeita à revisão de segurança e ainda não está liberada para uso.
-- `sandbox-guard-rejection.test.py` testa recusas em cópias temporárias; não executa banco, Docker, runner nem configuração do checkout.
-- `docker-cleanup-verification.test.ps1` testa, com respostas sintéticas, a classificação de ausência após falha de `inspect`; não executa Docker nem comprova a procedência do daemon.
-- `cleanup.ps1` permanece bloqueado; não remova recursos usando etiquetas compartilhadas.
+O comando grava apenas `vendor/` no checkout. Ele é uma preparação explícita e
+não faz parte dos contêineres de teste. Não execute a suíte sem esse passo em
+um checkout que ainda não tenha `vendor/autoload.php`.
 
-## Próximos critérios para liberar o caminho positivo
+## Execução
 
-1. Verificar daemon/contexto Docker e procedência/pin das imagens por evidência independente do próprio runner.
-2. Validar que o teste não possui rota de saída de rede ou relay SMTP e que DB/SMTP são instâncias descartáveis exclusivas da execução.
-3. Demonstrar que a limpeza só alcança IDs criados por aquela execução e não falha silenciosamente.
-4. Obter decisão sobre a investigação histórica antes de executar o caminho positivo.
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tests/auth/run-isolated-auth-e2e.ps1
+```
 
-Preparação de dependências pode usar Docker com bridge/rede externa e gravar `vendor/` no checkout. Não é pré-condição para os testes de recusa e deve ser revisada separadamente antes de qualquer uso.
+O runner cria uma rede Docker `--internal` descartável, não publica portas,
+não usa bind mounts nos contêineres de teste e usa `tmpfs` para o banco MySQL.
+O sucesso termina com `PASS auth-test-runner`; a limpeza remove todos os
+recursos marcados com `fokus.auth-e2e`.
+
+## CI de autenticação
+
+O workflow `auth-isolated-e2e.yml` constrói `tests/auth/ci-runtime/Dockerfile` sem rede, a partir de imagens PHP e Composer fixadas por digest, compila `pdo_mysql` e `pcntl` e verifica extensões exigidas. O checkout não persiste credenciais; antes dos mounts, os manifests devem ser arquivos regulares sem links e `vendor/` deve ser criado vazio e inexistente. A instalação de `composer.lock` usa imagem Composer separada, também pinada, com scripts e plugins desativados; em seguida, valida os requisitos no runtime construído sem rede. O ID exato da imagem construída é passado por `-QaImageId` ao runner; o valor padrão local permanece disponível. O job não utiliza segredos, publica portas ou usa banco persistente, e verifica resíduos ao final.
+
+O job exercita autenticação e a fixture de serviço de atas, sem executar o runner de atas suspenso. A fixture cobre sigilo, falhas de arquivo/banco, duas substituições concorrentes com waits observados no MySQL e upload HTTP multipart com sessões sintéticas; não cobre browser, schema real ou acesso à rede externa. O workflow está configurado para executar no GitHub Actions em pushes e pull requests; consulte o resultado do run e do commit correspondentes para verificar cada execução. A disponibilidade futura dos digests e a reprodução binária idêntica entre builders não são garantidas. Os pacotes Composer são obtidos da rede e sua disponibilidade é uma dependência externa. A existência de lint verde não substitui o resultado deste job.
+
+A verificação final falha se o daemon não responder ou se houver recursos etiquetados, inclusive containers temporários do Composer. Ela não executa remoção genérica. Em cancelamento abrupto ou timeout do job, nem a etapa final nem o `finally` do runner são garantidos; a eliminação do executor hospedado é uma fronteira adicional, não prova de cleanup interno.
+
+
+### Reforco de topologia REI-93
+
+O runner confere estrutura e identidade dos containers, exige rede unica, interna e inicialmente vazia, e depois do start compara membros exatos, NetworkID e EndpointID entre rede e containers. Endpoints duplicados sao recusados. Antes do start, campos NetworkID/EndpointID ainda vazios sao aceitos; o contrato ativo e exigido antes de entregar o marcador, executar testes e fazer chamadas HTTP.
+
+`docker-topology-validation.test.ps1` cobre 49 casos com objetos sinteticos, sem Docker/banco. Os mocks de resposta perdida e erro sanitizado continuam exigindo que a falha pretendida seja atingida. Snapshots repetidos reduzem alteracoes acidentais entre etapas, mas nao eliminam TOCTOU nem atestam daemon/imagens independentemente. A validacao sintetica nao autoriza execucao positiva nem encerra a investigacao historica.

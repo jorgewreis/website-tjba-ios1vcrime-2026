@@ -2,9 +2,9 @@
 
 ## V. 1.88.0015
 
-**Data:** 2026-11-20 21:09:49 | **Commit:** `9785783b` | **Tipo:** `patch`
+**Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
 
-- merge: reconcile REI-93 entry guards with origin/main
+- merge: reconcile REI-130 reconciled branch with origin/main
 
 ## V. 1.88.0014
 
