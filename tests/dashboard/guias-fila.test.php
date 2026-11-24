@@ -75,7 +75,7 @@ $insert->execute(['p2','pulada','calculo_pena_multa',2,'pendente','2026-01-01'])
 $result = $service->resumo('usuario', ['CARTORIO']);
 $queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
 verificar(count($queue) === 1 && $queue[0]['type'] === 'calculo_pena_multa' && $queue[0]['count'] === 1, 'Etapas puladas não bloqueiam a próxima');
-$insert->execute(['p3','pulada','expedicao_guia',2,'em_andamento','2026-01-01']);
+$insert->execute(['p3','pulada','calculo_pena_multa',2,'em_andamento','2026-01-01']);
 $result = $service->resumo('usuario', ['CARTORIO']);
 $queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
 verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && ($queue[0]['error'] ?? false), 'Empate na ordem deve tornar fila indisponível');
