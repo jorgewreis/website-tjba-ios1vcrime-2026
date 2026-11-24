@@ -75,8 +75,8 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
 
 $rawStatusCounts = $service->getStatusCounts($filters);
 $statusCounts = [
-    'aguardando_envio' => (int) ($rawStatusCounts['em_andamento'] ?? 0) + (int) ($rawStatusCounts['aguardando envio'] ?? 0),
-    'aguardando_cumprimento' => (int) ($rawStatusCounts['aguardando cumprimento'] ?? 0),
+    'aguardando_envio' => (array_key_exists('em_andamento', $rawStatusCounts) && $rawStatusCounts['em_andamento'] === null) ? null : (int) ($rawStatusCounts['em_andamento'] ?? 0) + (int) ($rawStatusCounts['aguardando envio'] ?? 0),
+    'aguardando_cumprimento' => (array_key_exists('aguardando cumprimento', $rawStatusCounts) && $rawStatusCounts['aguardando cumprimento'] === null) ? null : (int) ($rawStatusCounts['aguardando cumprimento'] ?? 0),
     'concluída' => (int) ($rawStatusCounts['concluída'] ?? 0),
     'cancelada' => (int) ($rawStatusCounts['cancelada'] ?? 0),
 ];
@@ -199,10 +199,10 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                 <select class="width-500 height-md" id="filter-status">
                     <option value="" <?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="aguardando_envio" <?php echo $statusFilter === 'aguardando_envio' ? ' selected' : ''; ?>>
-                        Aguardando envio (<?php echo (int) ($statusCounts['aguardando_envio'] ?? 0); ?>)
+                        Aguardando envio (<?php echo $statusCounts['aguardando_envio'] === null ? '—' : (int) $statusCounts['aguardando_envio']; ?>)
                     </option>
                     <option value="aguardando_cumprimento" <?php echo $statusFilter === 'aguardando_cumprimento' ? ' selected' : ''; ?>>
-                        Aguardando cumprimento (<?php echo (int) ($statusCounts['aguardando_cumprimento'] ?? 0); ?>)
+                        Aguardando cumprimento (<?php echo $statusCounts['aguardando_cumprimento'] === null ? '—' : (int) $statusCounts['aguardando_cumprimento']; ?>)
                     </option>
                     <option value="concluída" <?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>
                         Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)

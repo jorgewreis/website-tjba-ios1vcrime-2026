@@ -15,13 +15,14 @@ require_once __DIR__ . '/../../../helpers/CartasExpedidasUiCopy.php';
 require_once __DIR__ . '/../../../helpers/RegistroMetadataHelper.php';
 
 $idCarta = trim((string) ($row['IdCarta'] ?? ''));
-$st = strtolower(trim((string) ($row['Status'] ?? '')));
-$isAguardandoCumprimento = $st === 'aguardando cumprimento';
+$st = CartasExpedidasEstadoFluxo::normalizar((string) ($row['Status'] ?? ''));
+$isAguardandoCumprimento = ($row['EtapaEfetiva'] ?? '') === 'devolucao' || $st === 'aguardando cumprimento';
 /** @var list<array<string, mixed>> $allSt */
 $allSt = is_array($row['SubtarefasAll'] ?? null) ? $row['SubtarefasAll'] : [];
-$subtarefaAtivaUi = CartasExpedidasSubtarefasRepository::resolverSubtarefaAtivaPorLista($allSt);
+$fluxoInconsistente = !empty($row['FluxoInconsistente']);
+$subtarefaAtivaUi = $fluxoInconsistente ? null : CartasExpedidasSubtarefasRepository::resolverSubtarefaAtivaPorLista($allSt);
 
-$isConcluida = in_array($st, ['concluída', 'concluida', 'finalizada'], true);
+$isConcluida = in_array($st, ['concluída', 'concluida', 'finalizada'], true) || (($row['EtapaEfetiva'] ?? '') === 'encerrada' && $st !== 'cancelada');
 $isCancelada = $st === 'cancelada';
 $isTerminal = $isConcluida || $isCancelada;
 
@@ -34,7 +35,7 @@ if (!$isTerminal && $subtarefaAtivaUi !== null) {
     } else {
         $modeloEnvio = true;
     }
-} elseif (!$isTerminal) {
+} elseif (!$isTerminal && !$fluxoInconsistente && ($row['EtapaEfetiva'] ?? '') === 'envio') {
     $modeloEnvio = true;
 }
 
@@ -60,6 +61,14 @@ if ($isConcluida) {
     $mostrarContinuar = $subtarefaAtivaUi !== null;
 }
 
+if (!$isTerminal && $fluxoInconsistente) {
+    $badgePrincipalTexto = 'Etapa a conferir';
+    $badgePrincipalClasse = 'status-pending';
+    $textoEtapa = 'Etapa a conferir';
+    $classeEtapa = 'status-pending';
+    $mostrarContinuar = false;
+}
+
 $numero = trim((string) ($row['numero_processo'] ?? ''));
 $classeTexto = trim((string) ($row['bloco_processo_classe_texto'] ?? ''));
 $classeValid = empty($row['bloco_processo_classe_not']);
@@ -83,14 +92,14 @@ $prazo = trim((string) ($row['Prazo'] ?? ''));
 $prazoRestanteTexto = '';
 $prazoRestanteAlerta = false;
 $prazoDiasInt = is_numeric($prazo) ? (int) $prazo : 0;
-if ($prazoDiasInt > 0) {
+if ($prazoDiasInt > 0 && $modeloDevolucao && !$isTerminal && !$fluxoInconsistente) {
     $envioConcluidoEm = '';
     foreach ($allSt as $subtarefa) {
         if (!is_array($subtarefa)) {
             continue;
         }
-        $tipoSub = trim((string) ($subtarefa['tipo'] ?? ''));
-        $statusSub = strtolower(trim((string) ($subtarefa['status'] ?? '')));
+        $tipoSub = mb_strtolower(trim((string) ($subtarefa['tipo'] ?? '')), 'UTF-8');
+        $statusSub = CartasExpedidasEstadoFluxo::normalizar((string) ($subtarefa['status'] ?? ''));
         if ($tipoSub === CartasExpedidasSubtarefasRepository::TIPO_ENVIO
             && in_array($statusSub, ['concluida', 'concluída'], true)) {
             $envioConcluidoEm = trim((string) ($subtarefa['updated_at'] ?? ''));
@@ -131,10 +140,10 @@ if ($isConcluida) {
         if (!is_array($subtarefa)) {
             continue;
         }
-        if (trim((string) ($subtarefa['tipo'] ?? '')) !== CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO) {
+        if (mb_strtolower(trim((string) ($subtarefa['tipo'] ?? '')), 'UTF-8') !== CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO) {
             continue;
         }
-        $stSub = strtolower(trim((string) ($subtarefa['status'] ?? '')));
+        $stSub = CartasExpedidasEstadoFluxo::normalizar((string) ($subtarefa['status'] ?? ''));
         if ($stSub !== 'concluida' && $stSub !== 'concluída') {
             continue;
         }
@@ -159,7 +168,7 @@ if ($isConcluida) {
 
 $registroMetadata = RegistroMetadataHelper::fromListRow($row, 'cartas_expedidas', $registroListViewerContext, $connection);
 $editHref = trim((string) ($registroMetadata['edit_href'] ?? ''));
-$showEdit = !empty($registroMetadata['show_edit']) && $editHref !== '' && !$isAguardandoCumprimento;
+$showEdit = !empty($registroMetadata['show_edit']) && $editHref !== '' && !$isAguardandoCumprimento && !$isTerminal;
 $mostrarCopiaWhatsapp = $modeloEnvio && !$isTerminal && $numero !== '' && $destino !== '';
 $whatsappTexto = $mostrarCopiaWhatsapp
     ? $numero . ' - Carta Precatória expedida *aguardando envio* para ' . $destino
@@ -168,7 +177,7 @@ $historicoLinhas = RegistroMetadataHelper::linhasHistoricoV2CartasExpedidas($row
 $historicoRecente = $historicoLinhas !== [] ? $historicoLinhas[count($historicoLinhas) - 1] : null;
 $statusVisivelTexto = $isTerminal || $textoEtapa === '' ? $badgePrincipalTexto : $textoEtapa;
 $statusVisivelClasse = $isTerminal || $classeEtapa === '' ? $badgePrincipalClasse : $classeEtapa;
-$mostrarReiniciar = strcasecmp(trim($statusVisivelTexto),'Aguardando envio')!==0;
+$mostrarReiniciar = !$fluxoInconsistente && strcasecmp(trim($statusVisivelTexto),'Aguardando envio')!==0;
 
 $subtarefaAtivaId = $subtarefaAtivaUi !== null ? trim((string) ($subtarefaAtivaUi['id'] ?? '')) : '';
 
@@ -322,6 +331,9 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
         <div class="carta-expedida-status-group">
         <div class="register-block">
             <div class="register-block-status">
+                <?php if ($fluxoInconsistente && !$isTerminal): ?>
+                    <p class="text-warning" role="status">Não foi possível determinar a etapa desta carta. Confira o histórico antes de continuar.</p>
+                <?php endif; ?>
                 <div class="badge-status-primary <?php echo htmlspecialchars($statusVisivelClasse, ENT_QUOTES); ?>">
                     <span class="badge-status-text"><?php echo htmlspecialchars($statusVisivelTexto, ENT_QUOTES); ?></span>
                 </div>

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/CartasExpedidasEstadoFluxo.php';
 require_once __DIR__ . '/../helpers/ParentRecordLock.php';
 
 final class CartasExpedidasSubtarefasRepository
@@ -148,33 +149,7 @@ final class CartasExpedidasSubtarefasRepository
      */
     public static function resolverSubtarefaAtivaPorLista(array $rows): ?array
     {
-        $envio = null;
-        $devolucao = null;
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $tipo = trim((string) ($row['tipo'] ?? ''));
-            if (!self::isTipoAtivo($tipo)) {
-                continue;
-            }
-            if ($tipo === self::TIPO_ENVIO) {
-                $envio = $row;
-            }
-            if ($tipo === self::TIPO_DEVOLUCAO) {
-                $devolucao = $row;
-            }
-        }
-
-        if ($envio !== null && trim((string) ($envio['status'] ?? '')) !== self::STATUS_CONCLUIDA) {
-            return $envio;
-        }
-        if ($devolucao !== null && trim((string) ($devolucao['status'] ?? '')) !== self::STATUS_CONCLUIDA) {
-            return $devolucao;
-        }
-
-        return null;
+        return CartasExpedidasEstadoFluxo::classificar($rows)['subtarefa'];
     }
 
     /**
