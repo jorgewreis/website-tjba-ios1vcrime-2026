@@ -21,6 +21,10 @@ function verificar(bool $condition, string $message): void { if (!$condition) th
 $db = new DashboardSqlite('sqlite::memory:');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $db->sqliteCreateCollation('utf8mb4_unicode_ci', static fn($a, $b) => strcmp($a, $b));
+$db->exec('CREATE TABLE usuarios (id_usuario TEXT PRIMARY KEY, nome TEXT, sobrenome TEXT)');
+$db->exec('CREATE TABLE alocacoes_regras (regra TEXT PRIMARY KEY, usuario_id TEXT)');
+$db->exec("INSERT INTO usuarios VALUES ('u1','Ana','Souza'),('u2','Bruno','Lima')");
+$db->exec("INSERT INTO alocacoes_regras VALUES ('ALLOCATE-GUIAS','u1'),('ALLOCATE-CARTORIOOFICIOS','u2')");
 $modules = [
     ['cartas_expedidas','cartas_expedidas_subtarefas','carta_expedida_id'],
     ['cartas_recebidas','cartas_recebidas_subtarefas','carta_recebida_id'],
@@ -42,6 +46,14 @@ foreach ($steps as $i => $type) {
 }
 $insert->execute(['x','cancelada','detalhamento_informacoes',1,'em_andamento','2026-01-01']);
 $service = new DashboardResumoService($db);
+$result = $service->resumo('usuario', ['CARTORIO']);
+verificar(($result['setor']['responsaveis_regras'] ?? null) === ['guias'=>'Ana Souza','oficios'=>'Bruno Lima'], 'Responsáveis devem refletir as regras específicas.');
+$db->exec("UPDATE alocacoes_regras SET usuario_id='u2' WHERE regra='ALLOCATE-GUIAS'");
+$db->exec("DELETE FROM alocacoes_regras WHERE regra='ALLOCATE-CARTORIOOFICIOS'");
+$result = $service->resumo('usuario', ['CARTORIO']);
+verificar(($result['setor']['responsaveis_regras'] ?? null) === ['guias'=>'Bruno Lima'], 'Alteração e remoção de regra devem refletir no resumo seguinte.');
+$result = $service->resumo('usuario', ['GABINETE']);
+verificar(($result['setor']['responsaveis_regras'] ?? null) === [], 'Gabinete não deve receber responsáveis do Cartório.');
 $db->exec("INSERT INTO guias VALUES ('futura-invalida','em_andamento','2026-01-01')");
 $insert->execute(['f1','futura-invalida','detalhamento_informacoes',1,'em_andamento','2026-01-01']);
 $insert->execute(['f2','futura-invalida','etapa_inexistente',2,'pendente','2026-01-01']);
