@@ -8,3 +8,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 - **merge: reconcile REI-130 reconciled branch with origin/main** `[bd3f5453]`
 
+- **test(REI-136): fix concurrent pauta fixture inputs** `[e55d20f9]`
