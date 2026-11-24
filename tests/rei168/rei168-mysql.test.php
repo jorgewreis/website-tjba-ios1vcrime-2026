@@ -7,10 +7,21 @@ $marker=(string)getenv('REI168_TEST_DISPOSABLE_MARKER');
 if (!preg_match('/^[a-f0-9]{64}$/',$marker)) throw new RuntimeException('Invalid marker');
 $pdo=new PDO($dsn,'root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_EMULATE_PREPARES=>false]);
 if ($pdo->query('SELECT DATABASE()')->fetchColumn()!=='rei168_test' || !str_starts_with((string)$pdo->query('SELECT VERSION()')->fetchColumn(),'8.4.')) throw new RuntimeException('Unexpected database');
-if ($pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN)!==['rei168_test_guard'] || !hash_equals($marker,(string)$pdo->query('SELECT marker FROM rei168_test_guard')->fetchColumn())) throw new RuntimeException('Sentinel mismatch');
+$worker=($argv[1]??'')==='--race-worker';
+$expectedTables=$worker ? ['cartas_expedidas','cartas_expedidas_subtarefas','classes','comarcas','dashboard_conclusoes','processos','rei168_test_guard','tribunais','usuarios','varas'] : ['rei168_test_guard'];
+if ($pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN)!==$expectedTables || !hash_equals($marker,(string)$pdo->query('SELECT marker FROM rei168_test_guard')->fetchColumn())) throw new RuntimeException('Sentinel/schema mismatch');
 if ((string)$pdo->query('SELECT @@lower_case_table_names')->fetchColumn()!==getenv('REI168_EXPECT_LOWER_CASE')) throw new RuntimeException('Wrong case mode');
 require_once '/repo/app/services/CartasExpedidasService.php';
 require_once '/repo/app/helpers/CartasExpedidasEstadoFluxo.php';
+if ($worker) {
+    $_SESSION=['id_usuario'=>'fixture'];
+    $pdo->exec('SET SESSION innodb_lock_wait_timeout = 15');
+    echo json_encode(['ready'=>(int)$pdo->query('SELECT CONNECTION_ID()')->fetchColumn()],JSON_THROW_ON_ERROR).PHP_EOL;
+    flush();
+    $result=(new CartasExpedidasService($pdo))->concluirSubtarefa('race-s','{"race":"same-request"}');
+    echo json_encode(['result'=>$result],JSON_THROW_ON_ERROR).PHP_EOL;
+    exit(0);
+}
 $assertions=0;
 function check168(bool $ok,string $message):void { global $assertions; $assertions++; if(!$ok) throw new RuntimeException($message); }
 $schema=[
@@ -101,6 +112,85 @@ check168((int)$pdo->query('SELECT @@SESSION.lock_wait_timeout')->fetchColumn()==
 $pdo->exec('ALTER TABLE dashboard_conclusoes ENGINE=InnoDB');
 $service->concluirSubtarefa((string)$createdSteps[1]['id']);
 check168((int)$pdo->query('SELECT @@SESSION.lock_wait_timeout')->fetchColumn()===17,'Timeout restored after successful transition');
+// Two independent PHP/MySQL clients must both be observed waiting for the
+// same parent lock before release. Readiness alone is not concurrency proof.
+seed168($pdo,'race');
+$children=[]; $outputs=['','']; $errors=['','']; $exitCodes=[]; $connectionIds=[];
+$pdo->beginTransaction();
+$pdo->query("SELECT id FROM cartas_expedidas WHERE id='race' FOR UPDATE")->fetchAll();
+try {
+    for($i=0;$i<2;$i++) {
+        $pipes=[];
+        $process=proc_open([PHP_BINARY,__FILE__,'--race-worker'],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);
+        if(!is_resource($process)) throw new RuntimeException('Cannot start race worker');
+        fclose($pipes[0]); stream_set_blocking($pipes[1],false); stream_set_blocking($pipes[2],false);
+        $children[$i]=[$process,$pipes];
+    }
+    $deadline=microtime(true)+10; $observed=false;
+    do {
+        foreach($children as $i=>[$process,$pipes]) {
+            $outputs[$i].=stream_get_contents($pipes[1]); $errors[$i].=stream_get_contents($pipes[2]);
+            if(!isset($connectionIds[$i]) && str_contains($outputs[$i],"\n")) {
+                $ready=json_decode(explode("\n",$outputs[$i])[0],true,512,JSON_THROW_ON_ERROR);
+                if(!isset($ready['ready']) || !is_int($ready['ready'])) throw new RuntimeException('Invalid worker readiness');
+                $connectionIds[$i]=$ready['ready'];
+            }
+            $status=proc_get_status($process);
+            if(!$status['running']) { $exitCodes[$i]=$status['exitcode']; throw new RuntimeException('Worker ended before lock barrier: '.$errors[$i]); }
+        }
+        if(count($connectionIds)===2) {
+            $ids=implode(',',array_map('intval',$connectionIds));
+            $waiting=(int)$pdo->query("SELECT COUNT(DISTINCT t.PROCESSLIST_ID) FROM performance_schema.data_lock_waits w JOIN performance_schema.threads t ON t.THREAD_ID=w.REQUESTING_THREAD_ID WHERE t.PROCESSLIST_ID IN ($ids)")->fetchColumn();
+            if($waiting===2) { $observed=true; break; }
+        }
+        usleep(20000);
+    } while(microtime(true)<$deadline);
+    check168($observed,'Both independent clients observed blocked on parent row');
+    $pdo->commit();
+    $deadline=microtime(true)+20;
+    do {
+        $running=false;
+        foreach($children as $i=>[$process,$pipes]) {
+            $outputs[$i].=stream_get_contents($pipes[1]); $errors[$i].=stream_get_contents($pipes[2]);
+            if(isset($exitCodes[$i])) continue;
+            $status=proc_get_status($process);
+            if($status['running']) $running=true; else $exitCodes[$i]=$status['exitcode'];
+        }
+        if(!$running) break;
+        usleep(20000);
+    } while(microtime(true)<$deadline);
+    check168(count($exitCodes)===2,'Concurrent workers terminated within deadline');
+    $repeats=[];
+    foreach($children as $i=>[$process,$pipes]) {
+        $outputs[$i].=stream_get_contents($pipes[1]); $errors[$i].=stream_get_contents($pipes[2]);
+        check168($exitCodes[$i]===0 && trim($errors[$i])==='','Worker succeeded without runtime error');
+        $lines=explode("\n",trim($outputs[$i]));
+        check168(count($lines)===2,'Worker emitted ready and result');
+        $answer=json_decode($lines[1],true,512,JSON_THROW_ON_ERROR);
+        $repeats[]=$answer['result']['repeticao'];
+        check168($answer['result']['tarefa_principal_concluida']===false,'Concurrent send leaves parent open');
+    }
+    sort($repeats); check168($repeats===[false,true],'Exactly one first commit and one concurrent replay');
+} finally {
+    if($pdo->inTransaction()) $pdo->rollBack();
+    foreach($children as $i=>[$process,$pipes]) {
+        $status=proc_get_status($process);
+        if($status['running']) {
+            proc_terminate($process); $end=microtime(true)+2;
+            do { usleep(20000); $status=proc_get_status($process); } while($status['running'] && microtime(true)<$end);
+            if($status['running']) {
+                proc_terminate($process,9); $end=microtime(true)+2;
+                do { usleep(20000); $status=proc_get_status($process); } while($status['running'] && microtime(true)<$end);
+                if($status['running']) throw new RuntimeException('Worker termination could not be verified');
+            }
+        }
+        fclose($pipes[1]); fclose($pipes[2]); proc_close($process);
+    }
+}
+check168((int)$pdo->query("SELECT COUNT(*) FROM dashboard_conclusoes WHERE referencia_interna='race-s'")->fetchColumn()===1,'Concurrent send emits exactly one event');
+check168($pdo->query("SELECT status FROM cartas_expedidas WHERE id='race'")->fetchColumn()==='aguardando cumprimento','Concurrent parent advances once');
+$raceSnapshot=snapshot168($pdo); sleep(1); $retry=$service->concluirSubtarefa('race-s','{"overwrite":"forbidden"}');
+check168($retry['repeticao']===true && snapshot168($pdo)===$raceSnapshot,'Post-concurrency retry preserves timestamp data and single event');
 // Legacy ambiguity must not silently inflate totals or select an arbitrary step.
 seed168($pdo,'duplicate'); $pdo->exec("INSERT INTO cartas_expedidas_subtarefas SELECT 'duplicate-s2',carta_expedida_id,tipo,ordem,status,dados_especificos,created_at,updated_at FROM cartas_expedidas_subtarefas WHERE id='duplicate-s'");
 $rows=$pdo->query(CartasExpedidasEstadoFluxo::consultaEstados())->fetchAll(PDO::FETCH_ASSOC);

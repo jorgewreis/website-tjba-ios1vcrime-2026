@@ -14,6 +14,8 @@ O workflow `rei168-mysql.yml` exercita o código real de classificação, reposi
 - Cadastro pelo service real, recarga por nova conexao, mesmo ID antes/depois de envio e transferencia exata de contadores.
 - Recusa MyISAM real antes de gravar e restauracao de lock_wait_timeout apos recusa/sucesso.
 
+- Dois clientes PHP/MySQL simultaneos, com barreira por lock do pai e observacao em performance_schema.data_lock_waits; exatamente um evento e replay sem alterar timestamp.
+
 ## Isolamento
 
 `run-rei168-mysql-isolated.ps1` recusa execução fora do CI Linux antes de chamar Docker. Imagens base são fixadas por digest; runtime é construído sem rede e conferido por ID. Containers não têm rede nem portas publicadas. O banco usa datadir tmpfs; o único compartilhamento gravável é o volume de socket exclusivo. Código e fixture são montados somente leitura. Nenhuma configuração de aplicação, `.env` ou credencial de produção é montada. Containers e volume são identificados por rótulo/ID e a ausência após limpeza é conferida; falha de limpeza reprova o job.
