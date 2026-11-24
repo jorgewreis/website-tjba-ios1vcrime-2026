@@ -163,6 +163,52 @@ final class ComarcasRepository
         return $term === $this->normalizeNomeCidade((string) $row['nome']) || $term === $this->normalizeNomeCidade((string) ($row['cidade'] ?? ''));
     }
 
+    /** Resolve uma localidade para a comarca-sede sem escolher entre candidatos ambíguos. */
+    public function resolveSedePorCidadeUf(string $cidade, string $uf): ?array
+    {
+        $uf = strtoupper(trim($uf));
+        $term = $this->normalizeNomeCidade($cidade);
+        if (strlen($uf) !== 2 || $term === '') return null;
+        $statement = $this->connection->prepare(sprintf('SELECT `id`, `tribunal_id`, `uf`, `nome`, `cidade`, `status_cidade` FROM `%s` WHERE `uf` = :uf', $this->table));
+        $statement->execute([':uf' => $uf]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $cities = array_values(array_filter($rows, fn(array $row): bool => $this->normalizeNomeCidade((string) ($row['cidade'] ?? '')) === $term));
+        $matches = $cities ?: array_values(array_filter($rows, fn(array $row): bool => $this->normalizeNomeCidade((string) ($row['nome'] ?? '')) === $term));
+        if ($matches === []) return null;
+        if (count($matches) !== 1) throw new InvalidArgumentException('Localidade ambígua para a UF informada.');
+        return $this->sedeDaLocalidade($matches[0], $rows);
+    }
+
+    /** Valida a seleção recebida e devolve sempre o registro canônico da sede. */
+    public function resolveSedePorIdCidadeUf(string $id, string $cidade, string $uf): ?array
+    {
+        if (trim($id) === '' || trim($cidade) === '' || strlen(trim($uf)) !== 2) return null;
+        $lock = $this->connection->inTransaction() && $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+        $statement = $this->connection->prepare(sprintf('SELECT `id`, `tribunal_id`, `uf`, `nome`, `cidade`, `status_cidade` FROM `%s` WHERE `uf` = :uf%s', $this->table, $lock));
+        $statement->execute([':uf' => strtoupper(trim($uf))]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $selected = array_values(array_filter($rows, fn(array $row): bool => (string) $row['id'] === trim($id)));
+        if (count($selected) !== 1) return null;
+        $term = $this->normalizeNomeCidade($cidade);
+        if (!in_array($term, [$this->normalizeNomeCidade((string) $selected[0]['nome']), $this->normalizeNomeCidade((string) ($selected[0]['cidade'] ?? ''))], true)) return null;
+        return $this->sedeDaLocalidade($selected[0], $rows);
+    }
+
+    private function sedeDaLocalidade(array $localidade, array $rows): array
+    {
+        $nome = $this->normalizeNomeCidade((string) ($localidade['nome'] ?? ''));
+        $tribunal = (string) ($localidade['tribunal_id'] ?? '');
+        if ($nome === '' || $tribunal === '') throw new InvalidArgumentException('Comarca-sede indisponível para a localidade.');
+        $sedes = array_values(array_filter($rows, function (array $row) use ($nome, $tribunal): bool {
+            return (string) ($row['tribunal_id'] ?? '') === $tribunal
+                && $this->normalizeNomeCidade((string) ($row['nome'] ?? '')) === $nome
+                && $this->normalizeNomeCidade((string) ($row['cidade'] ?? '')) === $nome
+                && $this->normalizeNomeCidade((string) ($row['status_cidade'] ?? '')) !== 'agregada';
+        }));
+        if (count($sedes) !== 1) throw new InvalidArgumentException('Comarca-sede ausente ou ambígua para a localidade.');
+        return $sedes[0];
+    }
+
     private function normalizeNomeCidade(string $s): string
     {
         $s = trim($s);

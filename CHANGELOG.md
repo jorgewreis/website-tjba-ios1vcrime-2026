@@ -2,9 +2,9 @@
 
 ## V. 1.88.0015
 
-**Data:** 2026-11-20 20:24:13 | **Commit:** `23cf7e42` | **Tipo:** `patch`
+**Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
 
-- merge: reconcile REI-125 platform branch with origin/main
+- merge: reconcile REI-130 reconciled branch with origin/main
 
 ## V. 1.88.0014
 
