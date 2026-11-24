@@ -15,6 +15,7 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+import uuid
 from contextlib import closing
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -75,6 +76,8 @@ INSERT INTO instituicoes_setores VALUES ('SA','A','Ativo','SA',1,'',''), ('SI','
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
+    sentinel = uuid.uuid4().hex
+    (root / 'public' / (sentinel + '.txt')).write_text(sentinel, encoding='ascii')
     proc = subprocess.Popen([PHP, '-d', 'session.save_path=' + str(sessions), '-S', f'127.0.0.1:{port}', '-t', str(root / 'public')], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     def call(path, user=None):
         headers = {'Cookie': 'PHPSESSID=sess' + user} if user else {}
@@ -92,6 +95,11 @@ INSERT INTO instituicoes_setores VALUES ('SA','A','Ativo','SA',1,'',''), ('SI','
                 if proc.poll() is not None: raise RuntimeError('Servidor local encerrou')
                 time.sleep(.1)
         else: raise RuntimeError('Servidor local não iniciou')
+        if proc.poll() is not None:
+            raise RuntimeError('Servidor local encerrou durante a inicialização')
+        with urllib.request.urlopen(f'http://127.0.0.1:{port}/{sentinel}.txt', timeout=3) as response:
+            if response.read().decode('ascii') != sentinel or proc.poll() is not None:
+                raise RuntimeError('Servidor inesperado na porta selecionada')
         status, data = call('list.php?ativo=0', 'consultor')
         assert status == 200 and [x['id'] for x in data['data']] == ['A'], (status, data)
         status, data = call('get.php?id=A', 'consultor')
