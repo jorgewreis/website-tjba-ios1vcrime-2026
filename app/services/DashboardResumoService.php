@@ -73,7 +73,10 @@ final class DashboardResumoService
                 try {
                     if (!$this->tableExists($meta['table']) || !$this->tableExists($meta['parent'])) { $hasQueueErrors=true; $queues[]=['key'=>$key,'label'=>$meta['label'],'count'=>null,'route'=>$meta['route'],'error'=>true]; continue; }
                     $types=array_keys($meta['types']);$marks=implode(',',array_fill(0,count($types),'?'));
+                    $guiasAguardandoExpedicao = null;
                     if ($key === 'guias') {
+                        $stmtExpedicao = $this->pdo->query("SELECT COUNT(*) FROM `guias` WHERE LOWER(COALESCE(status,'')) IN ('pendente','a fazer','em_andamento','em andamento')");
+                        $guiasAguardandoExpedicao = (int) $stmtExpedicao->fetchColumn();
                         // Validate every unresolved step, including future pending steps hidden behind the current one.
                         $validation = $this->pdo->query("SELECT s.guia_id,s.tipo,s.ordem,s.status FROM `guias_subtarefas` s JOIN `guias` p ON p.id=s.guia_id WHERE LOWER(COALESCE(p.status,'')) NOT IN ('concluída','concluida','cancelada','finalizada') AND (s.status IN ('pendente','em_andamento') OR COALESCE(s.status,'') NOT IN ('pendente','em_andamento','concluida','cancelada','pulada'))");
                         $seenOrders = [];
@@ -120,6 +123,7 @@ final class DashboardResumoService
                     }
                     foreach($rows as $row){
                         $count=(int)$row['total'];$moduleCount+=$count;$date=$row['oldest']??null;
+                        if($key==='guias'&&$row['tipo']==='expedicao_guia')$count=$guiasAguardandoExpedicao;
                         $isSending=$key==='cartas_expedidas'&&$row['tipo']==='aguardando_envio';
                         $isReturning=$key==='cartas_recebidas'&&$row['tipo']==='devolucao';
                         if($count>0&&$date&&($isSending||$isReturning)){
@@ -132,6 +136,9 @@ final class DashboardResumoService
                         }
                         if($isReturning&&$count>0)$oldestReturns=$date;
                         $queues[]=['key'=>$key,'type'=>$row['tipo'],'label'=>$meta['types'][$row['tipo']]??$key,'count'=>$count,'route'=>$meta['route']];
+                    }
+                    if($key==='guias'&&!array_filter($queues,static fn(array $queue):bool=>($queue['key']??'')==='guias'&&($queue['type']??'')==='expedicao_guia')){
+                        $queues[]=['key'=>'guias','type'=>'expedicao_guia','label'=>$meta['types']['expedicao_guia'],'count'=>$guiasAguardandoExpedicao,'route'=>$meta['route']];
                     }
                     $total += $moduleCount;
                     try { $monthStmt=$this->pdo->query("SELECT DATE_FORMAT(p.created_at,'%m/%Y') mes,COUNT(*) total FROM `{$meta['parent']}` p WHERE p.created_at >= DATE_SUB(DATE_FORMAT(CURDATE(),'%Y-%m-01'), INTERVAL 5 MONTH) GROUP BY DATE_FORMAT(p.created_at,'%Y-%m') ORDER BY DATE_FORMAT(p.created_at,'%Y-%m')"); foreach($monthStmt->fetchAll(PDO::FETCH_ASSOC) as $monthRow){$idx=array_search((string)$monthRow['mes'],$registrationLabels,true);if($idx!==false)$registrations[$idx]+=(int)$monthRow['total'];} } catch (Throwable $ignored) {}

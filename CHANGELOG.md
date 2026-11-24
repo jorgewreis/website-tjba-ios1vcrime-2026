@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0016
+
+**Data:** 2026-11-24 20:24:07 | **Commit:** `85d79ad0` | **Tipo:** `patch`
+
+- fix(REI-317): ajuste contagem de guias no dashboard
+
 ## V. 1.88.0015
 
 **Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
@@ -7728,4 +7734,5 @@
 
 
 \n
+
 
