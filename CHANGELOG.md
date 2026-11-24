@@ -2,9 +2,9 @@
 
 ## V. 1.88.0016
 
-**Data:** 2026-11-22 08:46:05 | **Commit:** `e5e7e78d` | **Tipo:** `patch`
+**Data:** 2026-11-24 20:24:07 | **Commit:** `85d79ad0` | **Tipo:** `patch`
 
-- chore: sync REI-73 evidence branch with current main
+- fix(REI-317): ajuste contagem de guias no dashboard
 
 ## V. 1.88.0015
 
@@ -7734,4 +7734,5 @@
 
 
 \n
+
 

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/ParentRecordLock.php';
 require_once __DIR__ . '/../helpers/UserInitialsHelper.php';
 require_once __DIR__ . '/../helpers/CartorioAlocacaoTipo.php';
 
@@ -36,42 +37,25 @@ final class CartasRecebidasAlocadosRepository
             throw new InvalidArgumentException('carta_recebida_id e usuario_id são obrigatórios.');
         }
 
-        $existing = $this->connection->prepare(
-            sprintf(
+        return ParentRecordLock::run($this->connection, 'cartas_recebidas', $cartaId, function () use ($cartaId, $usuarioId, $tipo): string {
+            $existing = $this->connection->prepare(sprintf(
                 'SELECT `id` FROM `%s` WHERE `carta_recebida_id` = :carta_id AND `usuario_id` = :usuario_id LIMIT 1',
                 $this->table
-            )
-        );
-        $existing->bindValue(':carta_id', $cartaId);
-        $existing->bindValue(':usuario_id', $usuarioId);
-        $existing->execute();
-        $row = $existing->fetch(PDO::FETCH_ASSOC);
-        if ($row !== false) {
-            return (string) $row['id'];
-        }
+            ));
+            $existing->execute([':carta_id' => $cartaId, ':usuario_id' => $usuarioId]);
+            $row = $existing->fetch(PDO::FETCH_ASSOC);
+            if ($row !== false) return (string) $row['id'];
 
-        $id = IdGenerator::generateUniquePrefixedId(
-            $this->connection,
-            $this->table,
-            'id',
-            'CRA',
-            30
-        );
-
-        $tipoVal = CartorioAlocacaoTipo::normalizar($tipo, [self::TIPO_RULE, self::TIPO_ALL, self::TIPO_SPECIFIC], self::TIPO_SPECIFIC);
-
-        $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `carta_recebida_id`, `usuario_id`, `tipo`, `created_at`) VALUES (:id, :carta_recebida_id, :usuario_id, :tipo, NOW())',
-            $this->table
-        );
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bindValue(':id', $id);
-        $stmt->bindValue(':carta_recebida_id', $cartaId);
-        $stmt->bindValue(':usuario_id', $usuarioId);
-        $stmt->bindValue(':tipo', $tipoVal);
-        $stmt->execute();
-
-        return $id;
+            $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'CRA', 30);
+            $tipoVal = CartorioAlocacaoTipo::normalizar($tipo, [self::TIPO_RULE, self::TIPO_ALL, self::TIPO_SPECIFIC], self::TIPO_SPECIFIC);
+            $sql = sprintf(
+                'INSERT INTO `%s` (`id`, `carta_recebida_id`, `usuario_id`, `tipo`, `created_at`) VALUES (:id, :carta_recebida_id, :usuario_id, :tipo, NOW())',
+                $this->table
+            );
+            $stmt = $this->connection->prepare($sql);
+            $stmt->execute([':id' => $id, ':carta_recebida_id' => $cartaId, ':usuario_id' => $usuarioId, ':tipo' => $tipoVal]);
+            return $id;
+        });
     }
 
     public function findByCartaId(string $cartaId): array

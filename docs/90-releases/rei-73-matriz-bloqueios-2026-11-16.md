@@ -490,3 +490,30 @@ A revisão independente read-only conferiu o HEAD `d89dc48239276df1c663465c0400d
 No HEAD `d89dc482`, quatro workflow runs (`45020040526`, `45020040530`, `45020040442` e `45020040466`) terminaram em falha. As cinco jobs terminaram em cerca de dois segundos, com `runner_id=0`, `steps=[]` e `logs_url=null`; a consulta de logs retornou 404. Não há evidência de execução dos testes nem causa confirmada. Este resultado atualiza a observação anterior, que se referia aos runs do HEAD `2f549ee4`; não houve reexecução manual.
 
 **Limites mantidos:** a revisão independente confirma a qualidade do registro e do diff documental, mas não substitui a cobertura ainda pendente de rotas e caminhos executáveis, fluxos críticos sintéticos, autenticação/UI ou conciliação integral. Nenhuma auditoria completa é declarada.
+
+### Recorte estático de acesso — 2026-11-24
+
+Na base `4fff492b155141b0b113bd6f3ec2efb6aa73238b`, foram identificados quatro endpoints em `public/api/processos-partes/` e doze em `public/api/instituicoes-publicas/`. Busca textual confirmou chamada ao `ApiAccessGuard` nos 16: as 11 mutações passam `write=true` e as cinco leituras verificam GET explicitamente. O guard consulta autenticação, permissões de página e, em escritas, o helper de POST confiável; a presença desses controles não comprova sua aplicação adequada por registro.
+
+| Recorte | Leitura dos handlers | Evidência e pendência |
+|---|---|---|
+| Processos/partes: list, create, update, delete | Os handlers foram lidos; entregam identificadores aos métodos de repositório. O guard geral não recebe identificador de processo. Não foi encontrada checagem explícita da unidade responsável nesses quatro handlers. | Inspeção estática parcial. Conferir repositórios, controles externos e o candidato REI-69, depois verificar perfis e objetos com ambiente isolado. Não se afirma exploração. |
+| Instituições, setores e telefones | Foram inventariadas as chamadas textuais ao guard e ao método HTTP, sem leitura integral das regras de dados. | Pendente verificar escopo CONSULTOR, perfis mistos, registro e exportações; REI-70 continua formalmente bloqueada por REI-73. |
+
+O PR #431 foi observado aberto, em draft, com HEAD `e5f2d206de4e6d224270aa9f47b4ffc240e7ae12` e `mergeable=true`; essa condição não aprova o código ou os critérios da issue. Sem execução de banco ou fluxos autenticados neste recorte. Critérios 1–4 e bloqueios formais permanecem abertos.
+
+### Continuação de auditoria — 2026-11-24
+
+As observações a seguir referem-se à base `a506e4517f3dc9fcc9dd985db0b79a732a8b1878`; não são uma revisão integral da base posterior. O snapshot anterior de `mergeable=true` é histórico. Na reconciliação, a main avançou a `160fe5dd2a90686ab6391da2a318807063a13e0b` e foram resolvidos conflitos documentais no changelog e no draft, preservando a entrada de release da main.
+
+| Recorte | Evidência | Limite e encaminhamento |
+|---|---|---|
+| Processo/parte e exportação | Guard por página, sem filtro explícito por setor/sigilo na cadeia de consultas inspecionada; CSV/PDF de vínculos também consultam por ID e retornam nome/CPF. | Impacto condicionado a permissões e controles externos. Reconciliado na REI-69; falta validação por registro e sessão autenticada. |
+| Edição de polo | Repositório aceita valor inválido na edição em SQLite em memória, enquanto criação valida a lista. | REI-316; schema e modo SQL MySQL não verificados. |
+| Exportação PDF | Endpoint copiado retornou sentinela de PDOException no corpo 500 com bootstrap sintético. | Reconciliado na REI-67; não prova erro em produção. |
+| Estudantes | Sete testes sintéticos passaram para privacidade, bloqueios, renderização, HTTP e status em lote. O teste de status foi ampliado para recusas por método e dependências simuladas antes da conexão substituta. | Sem sessão real, navegador interativo, MySQL ou concorrência; REI-161/162/163 seguem abertas. |
+| Download e retenção | Com SQLite e storage temporários, main limpou ata expirada de outra pauta antes de negar download; PR #439 no HEAD `ed55d4ee` preservou-a no mesmo cenário. | Reprodução usa adaptação de `UPDATE ... LIMIT 1` para SQLite; não valida MySQL, concorrência ou manutenção real. REI-87 segue aberta. |
+| Feriados | Os testes isolados de perfis e origem passaram. O teste de feriados ativos falhava por falta de `ParentRecordLock.php` na cópia temporária; a inclusão da dependência permitiu a execução com sucesso. | SQLite e sessão sintética não comprovam MySQL ou login HTTP real. |
+| DataJud e PJe de teste | DataJud não declara guard/método no handler e devolve possível detalhe de cURL; PJe com flag desativada retorna 404 para consulta, raw e healthcheck em fixture sem rede. | REI-92 e REI-67; configuração real e controles externos não observados. |
+
+Inventário textual local identificou 154 PHP em `public/api`, com hashes conferidos na base `a506e451`. Presença textual de guard não comprova autorização. Permanecem pendentes a matriz por rota/operação/perfil, caminhos autenticados e UI, persistência, concorrência, recuperação e reconciliação integral. Nenhum dado judicial ou serviço externo foi utilizado nesta continuação. Esta matriz não conclui a REI-73 nem elimina suas relações de bloqueio.
