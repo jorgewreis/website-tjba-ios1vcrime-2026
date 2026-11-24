@@ -29,7 +29,8 @@ $modules = [
     ['oficios_cartorio','oficios_cartorio_subtarefas','oficio_cartorio_id'],
 ];
 foreach ($modules as [$parent, $child, $fk]) {
-    $db->exec("CREATE TABLE `$parent` (id TEXT PRIMARY KEY, status TEXT, created_at TEXT)");
+    $extra = $parent === 'cartas_expedidas' ? ', prazo_dias INTEGER' : '';
+    $db->exec("CREATE TABLE `$parent` (id TEXT PRIMARY KEY, status TEXT, created_at TEXT{$extra})");
     $db->exec("CREATE TABLE `$child` (id TEXT PRIMARY KEY, `$fk` TEXT, tipo TEXT, ordem INTEGER, status TEXT, updated_at TEXT)");
 }
 $db->exec("INSERT INTO guias VALUES ('aberta','em_andamento','2026-01-01'),('concluida','concluída','2026-01-01'),('cancelada','cancelada','2026-01-01')");
