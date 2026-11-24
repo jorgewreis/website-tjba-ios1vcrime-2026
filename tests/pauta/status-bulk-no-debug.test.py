@@ -14,10 +14,12 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 SOURCE = ROOT / 'public/api/sala-audiencias-pauta/status-bulk.php'
 
 
-def request(port, payload):
+def request(port, payload, headers=None, method='POST'):
+    request_headers = {'Content-Type': 'application/json'}
+    request_headers.update(headers or {})
     req = urllib.request.Request(
         f'http://127.0.0.1:{port}/api/sala-audiencias-pauta/status-bulk.php',
-        json.dumps(payload).encode(), {'Content-Type': 'application/json'}, method='POST')
+        json.dumps(payload).encode() if method == 'POST' else None, request_headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=2) as response:
             return response.status, json.load(response)
@@ -38,7 +40,7 @@ with tempfile.TemporaryDirectory(prefix='pauta-status-test-') as tmp:
     (isolated / 'debug-07d2e0.log').mkdir()
     stubs = {
         'app/helpers/Conection.php': '''<?php
-class Conection { public static function getInstance(){return new self();} public function getConnection(){return new FakeDB();} }
+class Conection { public static function getInstance(){return new self();} public function getConnection(){file_put_contents(getenv('AUDIT_DB_MARKER'), "connected\n", FILE_APPEND); return new FakeDB();} }
 class FakeDB { public function prepare($sql){if (isset($_GET['fail'])) throw new RuntimeException('sensitive synthetic error'); return new FakeStatement($sql);} }
 class FakeStatement {
   private $sql; private $bindings=[];
@@ -58,11 +60,11 @@ class FakeStatement {
   return array_values(array_filter($rows,static function($row) use ($ids){return in_array($row['id_pauta'],$ids,true);}));
 } }
 ''',
-        'app/helpers/BootstrapHelper.php': "<?php function bootstrapRequireTrustedPostRequest(){return true;} $_SESSION=['id_usuario'=>'synthetic'];",
-        'config/security.php': '<?php class Security { public static function isAuthenticated(){return true;} }',
-        'app/helpers/UsuarioPerfisAutorizacao.php': "<?php class UsuarioPerfisAutorizacao { public static function perfisDoUsuario($id){return ['ESTUDANTE'];} }",
+        'app/helpers/BootstrapHelper.php': "<?php function bootstrapRequireTrustedPostRequest(){return ($_SERVER['HTTP_X_TEST_ORIGIN']??'trusted')==='trusted';} $_SESSION=['id_usuario'=>'synthetic'];",
+        'config/security.php': "<?php class Security { public static function isAuthenticated(){return ($_SERVER['HTTP_X_TEST_AUTH']??'valid')==='valid';} }",
+        'app/helpers/UsuarioPerfisAutorizacao.php': "<?php class UsuarioPerfisAutorizacao { public static function perfisDoUsuario($id){return [$_SERVER['HTTP_X_TEST_PROFILE']??'ESTUDANTE'];} }",
         'app/models/Usuario.php': "<?php class Usuario { public function listarPerfisUsuario($id){return ['ESTUDANTE'];} }",
-        'app/access/AccessEvaluator.php': '<?php class AccessEvaluator { public static function canAccessPage($page,$profiles){return true;} }',
+        'app/access/AccessEvaluator.php': "<?php class AccessEvaluator { public static function canAccessPage($page,$profiles){return in_array('ESTUDANTE',$profiles,true);} }",
         'app/access/ProfileNormalizer.php': '<?php class ProfileNormalizer { public static function normalize($p){return $p;} public static function hasEstudante($p){return true;} }',
         'app/helpers/UserAccessHelper.php': '<?php class UserAccessHelper { public static function isUsuarioExterno($p){return true;} }',
         'app/services/SalaAudienciasAtaService.php': '<?php class SalaAudienciasAtaService { const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA=10; }',
@@ -77,6 +79,7 @@ class FakeStatement {
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
     clean_env = {key: os.environ[key] for key in ('PATH', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP') if key in os.environ}
+    clean_env['AUDIT_DB_MARKER'] = str(isolated / 'db-access')
     process = subprocess.Popen(['php', '-S', f'127.0.0.1:{port}', '-t', str(app / 'public')],
                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=clean_env)
     try:
@@ -90,6 +93,15 @@ class FakeStatement {
                 time.sleep(0.1)
         else:
             raise RuntimeError('PHP server did not start')
+        for headers, method, expected in [
+            ({}, 'GET', 405),
+            ({'X-Test-Auth': 'invalid'}, 'POST', 401),
+            ({'X-Test-Origin': 'untrusted'}, 'POST', 403),
+            ({'X-Test-Profile': 'CONSULTOR'}, 'POST', 403),
+        ]:
+            status, body = request(port, {'pautas': ['SYNTHETIC-1']}, headers, method)
+            assert status == expected and body.get('success') is False, (status, body)
+            assert not (isolated / 'db-access').exists(), 'recusa chamou conexão sintética'
         status, body = request(port, {'pautas': []})
         assert status == 200 and body == {'success': True, 'items': []}
         status, body = request(port, {'pautas': ['SYNTHETIC-1']})

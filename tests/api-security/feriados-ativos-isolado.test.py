@@ -25,7 +25,7 @@ FILES = [
     'app/services/EditaisService.php', 'app/repositories/EditaisRepository.php',
     'app/repositories/EditaisSubtarefasRepository.php', 'app/repositories/EditaisAlocadosRepository.php',
     'app/repositories/ProcessosRepository.php', 'app/repositories/ClassesRepository.php',
-    'app/helpers/IdGenerator.php', 'app/helpers/TextFormatter.php',
+    'app/helpers/IdGenerator.php', 'app/helpers/TextFormatter.php', 'app/helpers/ParentRecordLock.php',
     'app/helpers/CnjValidator.php', 'app/helpers/UserInitialsHelper.php', 'app/helpers/CartorioAlocacaoTipo.php',
     'app/helpers/OrphanSubtarefasCleaner.php', 'app/helpers/CartorioTarefaStatusPrincipalHelper.php',
     'public/api/admin/_auth_admin_diretora_json.php',
