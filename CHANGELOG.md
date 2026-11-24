@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0015
+
+**Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
+
+- merge: reconcile REI-130 reconciled branch with origin/main
+
 ## V. 1.88.0014
 
 **Data:** 2026-11-20 15:51:30 | **Commit:** `ae8c7d43` | **Tipo:** `patch`
@@ -7722,3 +7728,4 @@
 
 
 \n
+

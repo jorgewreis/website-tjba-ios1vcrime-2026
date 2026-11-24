@@ -27,18 +27,35 @@ if ($uf !== '' && !preg_match('/^[A-Z]{2}$/', $uf)) {
     echo json_encode(['error' => 'UF inválida.'], JSON_UNESCAPED_UNICODE);
     return;
 }
-$tribunalId = null;
-if ($uf !== '') {
-    $tribunal = (new TribunaisRepository($connection))->findBySigla('TJ' . $uf);
-    if ($tribunal === null) {
-        echo json_encode(['found' => false], JSON_UNESCAPED_UNICODE);
+$statusOriginal = '';
+if (($_GET['resolver_sede'] ?? '') === '1') {
+    if ($uf === '') {
+        http_response_code(400);
+        echo json_encode(['error' => 'Informe a UF para identificar a comarca-sede.'], JSON_UNESCAPED_UNICODE);
         return;
     }
-    $tribunalId = (string) $tribunal['id'];
+    try {
+        $row = $repo->resolveSedePorCidadeUf($cidade, $uf);
+        $statusOriginal = (string) ($row['status_cidade'] ?? '');
+    } catch (InvalidArgumentException $exception) {
+        http_response_code(409);
+        echo json_encode(['error' => 'Não foi possível identificar uma comarca-sede única.'], JSON_UNESCAPED_UNICODE);
+        return;
+    }
+} else {
+    $tribunalId = null;
+    if ($uf !== '') {
+        $tribunal = (new TribunaisRepository($connection))->findBySigla('TJ' . $uf);
+        if ($tribunal === null) {
+            echo json_encode(['found' => false], JSON_UNESCAPED_UNICODE);
+            return;
+        }
+        $tribunalId = (string) $tribunal['id'];
+    }
+    $row = $repo->findFirstByNomeOuCidade($cidade, $uf !== '' ? $uf : null, $tribunalId);
+    $statusOriginal = (string) ($row['status_cidade'] ?? '');
+    if ($row !== null && $uf !== '') $row = $repo->resolverSede($row);
 }
-$row = $repo->findFirstByNomeOuCidade($cidade, $uf !== '' ? $uf : null, $tribunalId);
-$statusOriginal = (string) ($row['status_cidade'] ?? '');
-if ($row !== null && $uf !== '') $row = $repo->resolverSede($row);
 
 if ($row === null) {
     echo json_encode(['found' => false], JSON_UNESCAPED_UNICODE);
