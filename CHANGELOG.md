@@ -1,15 +1,11 @@
 # Changelog
 
-## V. 1.87.0191
+## V. 1.88.0015
 
-**Data:** 2026-11-20 10:16:01 | **Commit:** `a9791a45` | **Tipo:** `patch`
+**Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
 
-- test: allow diagnostic probe time on CI
+- merge: reconcile REI-130 reconciled branch with origin/main
 
-## Alteracao REI-160 - versao pendente
-
-- fix(REI-160): rollback guide part failures
-- test(REI-160): run sqlite regressions in CI
 ## V. 1.88.0014
 
 **Data:** 2026-11-20 15:51:30 | **Commit:** `ae8c7d43` | **Tipo:** `patch`
@@ -7732,3 +7728,4 @@
 
 
 \n
+

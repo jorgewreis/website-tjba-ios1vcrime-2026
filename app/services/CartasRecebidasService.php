@@ -346,11 +346,9 @@ final class CartasRecebidasService
             if ($sede === null || $tribunal === null || (string) $sede['tribunal_id'] !== (string) $tribunal['id']) {
                 throw new InvalidArgumentException('A comarca não corresponde à cidade e ao estado informados.');
             }
-            if ((string) $sede['id'] !== $comarca) {
-                $payload['comarca_origem_id'] = (string) $sede['id'];
-                $payload['cidade_origem'] = (string) $sede['nome'];
-                $payload['uf_origem'] = strtoupper(trim((string) $sede['uf']));
-            }
+            $payload['comarca_origem_id'] = (string) $sede['id'];
+            $payload['cidade_origem'] = (string) $sede['nome'];
+            $payload['uf_origem'] = strtoupper(trim((string) $sede['uf']));
             $updated = $this->repository->update($id, $payload);
             if ($ownsTransaction) {
                 if (!$this->connection->commit()) throw new RuntimeException('Não foi possível confirmar a atualização da localidade.');
