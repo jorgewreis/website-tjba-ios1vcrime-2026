@@ -1,10 +1,10 @@
 # Changelog
 
-## V. 1.87.0187
+## V. 1.88.0015
 
-**Data:** 2026-11-19 19:12:51 | **Commit:** `9de01a71` | **Tipo:** `patch`
+**Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
 
-- fix(cartas): keep expedited letters GET read-only
+- merge: reconcile REI-130 reconciled branch with origin/main
 
 ## V. 1.88.0014
 
@@ -7728,3 +7728,4 @@
 
 
 \n
+
