@@ -124,9 +124,11 @@
       const hasEditaisMetric=showPositiveMetric('dash-queue-editais-row',queueEditais);
       const guideExpedicaoRow=$('dash-queue-guias-expedicao-row');
       const guideEnvioRow=$('dash-queue-guias-envio-row');
-      if(guideExpedicaoRow)guideExpedicaoRow.hidden=!cartorioEnabled;
-      if(guideEnvioRow)guideEnvioRow.hidden=!cartorioEnabled;
-      let hasAnyMetric=cartorioEnabled||hasExpedidasMetric||hasRecebidasMetric||hasOficiosMetric||hasEditaisMetric;
+      const hasGuideExpedicao=cartorioEnabled&&(queueGuiasExpedicao===null||showPositiveMetric(null,queueGuiasExpedicao));
+      const hasGuideEnvio=cartorioEnabled&&(queueGuiasEnvio===null||showPositiveMetric(null,queueGuiasEnvio));
+      if(guideExpedicaoRow)guideExpedicaoRow.hidden=!hasGuideExpedicao;
+      if(guideEnvioRow)guideEnvioRow.hidden=!hasGuideEnvio;
+      let hasAnyMetric=hasGuideExpedicao||hasGuideEnvio||hasExpedidasMetric||hasRecebidasMetric||hasOficiosMetric||hasEditaisMetric;
       applyCountBadge($('dash-queue-expedidas'),queueExpedidas);
       applyCountBadge($('dash-queue-recebidas'),queueRecebidas);
       applyCountBadge($('dash-queue-oficios'),queueOficios);
