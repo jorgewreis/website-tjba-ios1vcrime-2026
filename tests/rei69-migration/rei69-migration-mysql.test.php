@@ -73,6 +73,44 @@ $fullResult=$migration->migrate(false);
 if ($fullResult!==['add_column'=>false,'add_index'=>false,'add_foreign_key'=>false]
     || $pdo->query('SELECT id,id_setor_responsavel FROM processos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC)!==[['id'=>'LEGADO-SINTETICO','id_setor_responsavel'=>null]]) throw new RuntimeException('Full migration altered legacy row or did not finish');
 if ($migration->migrate(false)!==['add_column'=>false,'add_index'=>false,'add_foreign_key'=>false]) throw new RuntimeException('Full migration was not idempotent');
+// A real orphan causes failure after the missing index has been created. DDL
+// is implicitly committed: verify the surviving prefix before retrying.
+$pdo->exec('ALTER TABLE processos DROP FOREIGN KEY fk_processos_setor_responsavel, DROP INDEX idx_processos_id_setor_responsavel');
+$pdo->exec("INSERT INTO processos (id,id_setor_responsavel) VALUES ('ORFAO-SINTETICO','SETOR-SINTETICO')");
+$rowsBeforePartial=$pdo->query('SELECT id,id_setor_responsavel FROM processos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+if ($migration->preflight()!==['add_column'=>false,'add_index'=>true,'add_foreign_key'=>true]) throw new RuntimeException('Partial plan unexpected');
+$orphanRejected=false;
+try { $migration->migrate(false); }
+catch (RuntimeException $e) {
+    if ($e->getMessage()!=='Há referências a setores inexistentes; nenhuma constraint foi criada.') throw $e;
+    $orphanRejected=true;
+}
+if (!$orphanRejected) throw new RuntimeException('Orphan was accepted');
+if ($migration->preflight()!==['add_column'=>false,'add_index'=>false,'add_foreign_key'=>true]
+    || $pdo->query('SELECT id,id_setor_responsavel FROM processos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC)!==$rowsBeforePartial) throw new RuntimeException('Partial prefix or rows unexpected');
+$partialDdl=$pdo->query('SHOW CREATE TABLE processos')->fetch(PDO::FETCH_NUM)[1];
+if (!str_contains(strtolower($partialDdl),'idx_processos_id_setor_responsavel')
+    || str_contains(strtolower($partialDdl),'fk_processos_setor_responsavel')) throw new RuntimeException('Partial schema unexpected');
+$pdo->exec("INSERT INTO setores (id_setor) VALUES ('SETOR-SINTETICO')");
+if ($migration->migrate(false)!==['add_column'=>false,'add_index'=>false,'add_foreign_key'=>false]
+    || $pdo->query('SELECT id,id_setor_responsavel FROM processos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC)!==$rowsBeforePartial) throw new RuntimeException('Partial retry changed rows or failed');
+$retryDdl=$pdo->query('SHOW CREATE TABLE processos')->fetch(PDO::FETCH_NUM)[1];
+if ($migration->migrate(false)!==['add_column'=>false,'add_index'=>false,'add_foreign_key'=>false]
+    || $pdo->query('SHOW CREATE TABLE processos')->fetch(PDO::FETCH_NUM)[1]!==$retryDdl
+    || $pdo->query('SELECT id,id_setor_responsavel FROM processos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC)!==$rowsBeforePartial) throw new RuntimeException('Partial retry was not idempotent');
+
+// Reserved name on the wrong column must be rejected without any mutation.
+$pdo->exec('ALTER TABLE processos DROP FOREIGN KEY fk_processos_setor_responsavel, DROP INDEX idx_processos_id_setor_responsavel, ADD INDEX idx_processos_id_setor_responsavel (id)');
+$wrongIndexDdl=$pdo->query('SHOW CREATE TABLE processos')->fetch(PDO::FETCH_NUM)[1];
+$wrongIndexRows=$pdo->query('SELECT id,id_setor_responsavel FROM processos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+$wrongIndexRejected=false;
+try { $migration->preflight(); }
+catch (RuntimeException $e) {
+    if ($e->getMessage()!=='O índice reservado para setor responsável existe com definição incompatível.') throw $e;
+    $wrongIndexRejected=true;
+}
+if (!$wrongIndexRejected || $pdo->query('SHOW CREATE TABLE processos')->fetch(PDO::FETCH_NUM)[1]!==$wrongIndexDdl
+    || $pdo->query('SELECT id,id_setor_responsavel FROM processos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC)!==$wrongIndexRows) throw new RuntimeException('Incompatible index was accepted or altered');
 if (!hash_equals($marker,(string)$pdo->query('SELECT marker FROM rei69_pauta_test_guard')->fetchColumn())
     || !hash_equals($otherMarker,(string)$pdo->query("SELECT marker FROM `$other`.`rei69_other_guard`")->fetchColumn())) throw new RuntimeException('Sentinel changed');
 echo "PASS REI69 migration synthetic MySQL contract\n";
