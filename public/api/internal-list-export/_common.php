@@ -29,12 +29,19 @@ function internal_list_export_bootstrap(): array
         internal_list_export_http_error(400, 'Parâmetro page ausente.');
     }
 
-    $pdo = Conection::getInstance()->getConnection();
     $userPerfils = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
 
     if (!AccessEvaluator::canAccessPage($listPage, $userPerfils)) {
         internal_list_export_http_error(403, 'Acesso negado.');
     }
+
+    // Conta externa com perfil de estudante não pode exportar listas.
+    if (UserAccessHelper::isUsuarioExterno($userPerfils)
+        && ProfileNormalizer::hasEstudante(ProfileNormalizer::normalize($userPerfils))) {
+        internal_list_export_http_error(403, 'Acesso negado.');
+    }
+
+    $pdo = Conection::getInstance()->getConnection();
 
     return [
         'userId' => $userId,
