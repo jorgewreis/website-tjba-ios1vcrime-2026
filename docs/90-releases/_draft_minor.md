@@ -21,4 +21,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test: exercita alteracao distinta sob concorrencia** `[683c9e61]`
 - **test: verifica revalidacao de vinculo concorrente** `[c77e8482]`
 - **ci: diagnostica espera no vinculo** `[25c28508]`
+- **test: reconhece padding de chave innodb** `[255ab8be]`
 
