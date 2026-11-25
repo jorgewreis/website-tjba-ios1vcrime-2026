@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0031
+
+**Data:** 2026-11-25 08:38:28 | **Commit:** `ea40d821` | **Tipo:** `patch`
+
+- test: exercitar gate de cadastro REI-152 em MySQL isolado
+
 ## V. 1.88.0030
 
 **Data:** 2026-11-25 07:37:33 | **Commit:** `115dd83d` | **Tipo:** `patch`
@@ -7825,3 +7831,4 @@
 
 
 \n
+
