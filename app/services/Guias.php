@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/HelperUtils.php';
 require_once __DIR__ . '/../helpers/AuditLoggerHelper.php';
+require_once __DIR__ . '/../helpers/GuiasLegacyTransactionalGuard.php';
+require_once __DIR__ . '/../helpers/ParteDocumentoLock.php';
 require_once __DIR__ . '/ClasseManager.php';
 require_once __DIR__ . '/ProcessoManager.php';
 require_once __DIR__ . '/ReuManager.php';
@@ -156,10 +158,27 @@ class Guias
      */
     public function cadastrarGuia(array $dados): array
     {
+        if ($this->pdo->inTransaction()) {
+            return ['ok' => false, 'id' => null, 'message' => 'Não foi possível cadastrar a guia.'];
+        }
+        try {
+            return $this->comLockCpfDaGuia($dados, fn(): array => $this->cadastrarGuiaComTransacao($dados));
+        } catch (Throwable $error) {
+            error_log('Falha de coordenação no cadastro de guia: ' . get_class($error));
+            return ['ok' => false, 'id' => null, 'message' => $this->mensagemFalhaGuia('cadastrar')];
+        }
+    }
+
+    private function cadastrarGuiaComTransacao(array $dados): array
+    {
         $agora = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
         
         try {
-            $this->pdo->beginTransaction();
+            if (!$this->pdo->beginTransaction()) {
+                ParteDocumentoLock::markConnectionUnsafe($this->pdo);
+                throw new RuntimeException('Não foi possível iniciar a transação da guia.');
+            }
+            GuiasLegacyTransactionalGuard::requireTransactionalTables($this->pdo);
 
             // 1. Cadastra/atualiza a classe
             if (!empty($dados['classe_cod']) && !empty($dados['classe_desc'])) {
@@ -188,7 +207,10 @@ class Guias
                     $cpf = $dados['cpf'] ?? null;
                     $reuExistia = $this->buscarReu($reuRaw);
                     $idReu = $this->cadastrarReu($reuRaw, $cpf);
-                    if (!$reuExistia && $idReu !== null) {
+                    if ($idReu === null || trim($idReu) === '') {
+                        throw new RuntimeException('Não foi possível obter a parte informada para a guia.');
+                    }
+                    if (!$reuExistia) {
                         $reuAuto = true;
                     }
                 }
@@ -196,7 +218,9 @@ class Guias
 
             // 4. Vincula réu ao processo
             if ($idReu && !empty($dados['processo'])) {
-                $this->vincularReuProcesso($idReu, $dados['processo']);
+                if (!$this->vincularReuProcesso($idReu, $dados['processo'])) {
+                    throw new RuntimeException('Não foi possível vincular a parte ao processo da guia.');
+                }
             }
 
             // 5. Verifica se réu está preso e adiciona prioridade automaticamente
@@ -342,7 +366,7 @@ class Guias
             // 8.1 Força atualização do status da guia com base nas subtarefas recém-criadas
             $this->atualizarStatusGuiaPorSubtarefas($idGuia);
 
-            $this->pdo->commit();
+            ParteDocumentoLock::commit($this->pdo, 'cadastro da guia');
             // Auditoria: registra criação da guia
             try {
                 $userCadastro = (string)($dados['user_cadastro'] ?? 'sistema');
@@ -360,15 +384,13 @@ class Guias
             ];
 
         } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
+            $this->rollbackTransacaoGuiaAposFalha('cadastro da guia');
             error_log('Erro ao cadastrar guia: ' . $e->getMessage());
             
             return [
                 'ok' => false,
                 'id' => null,
-                'message' => 'Não foi possível cadastrar a guia.'
+                'message' => $this->mensagemFalhaGuia('cadastrar')
             ];
         }
     }
@@ -378,6 +400,23 @@ class Guias
      */
     public function atualizarGuia(array $dados): array
     {
+        $idGuia = trim((string) ($dados['id_guia'] ?? ''));
+        if ($idGuia === '') {
+            return ['ok' => false, 'message' => 'ID da guia não informado.'];
+        }
+        if ($this->pdo->inTransaction()) {
+            return ['ok' => false, 'id' => $idGuia, 'message' => 'Não foi possível atualizar a guia.'];
+        }
+        try {
+            return $this->comLockCpfDaGuia($dados, fn(): array => $this->atualizarGuiaComTransacao($dados));
+        } catch (Throwable $error) {
+            error_log('Falha de coordenação na atualização de guia: ' . get_class($error));
+            return ['ok' => false, 'id' => $idGuia, 'message' => $this->mensagemFalhaGuia('atualizar')];
+        }
+    }
+
+    private function atualizarGuiaComTransacao(array $dados): array
+    {
         $agora = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
         $idGuia = trim((string)($dados['id_guia'] ?? ''));
         if ($idGuia === '') {
@@ -385,7 +424,11 @@ class Guias
         }
 
         try {
-            $this->pdo->beginTransaction();
+            if (!$this->pdo->beginTransaction()) {
+                ParteDocumentoLock::markConnectionUnsafe($this->pdo);
+                throw new RuntimeException('Não foi possível iniciar a transação da guia.');
+            }
+            GuiasLegacyTransactionalGuard::requireTransactionalTables($this->pdo);
 
             // 1. Cadastra/atualiza a classe
             if (!empty($dados['classe_cod']) && !empty($dados['classe_desc'])) {
@@ -406,12 +449,17 @@ class Guias
                 } else {
                     $cpf = $dados['cpf'] ?? null;
                     $idReu = $this->cadastrarReu($reuRaw, $cpf);
+                    if ($idReu === null || trim($idReu) === '') {
+                        throw new RuntimeException('Não foi possível obter a parte informada para a guia.');
+                    }
                 }
             }
 
             // 4. Vincula réu ao processo
             if ($idReu && !empty($dados['processo'])) {
-                $this->vincularReuProcesso($idReu, $dados['processo']);
+                if (!$this->vincularReuProcesso($idReu, $dados['processo'])) {
+                    throw new RuntimeException('Não foi possível vincular a parte ao processo da guia.');
+                }
             }
 
             // 5. Prioridades (com regra automática de réu preso)
@@ -523,7 +571,7 @@ class Guias
             // 7.1 Força atualização do status da guia com base nas subtarefas atuais
             $this->atualizarStatusGuiaPorSubtarefas($idGuia);
 
-            $this->pdo->commit();
+            ParteDocumentoLock::commit($this->pdo, 'atualização da guia');
 
             return [
                 'ok' => true,
@@ -532,15 +580,53 @@ class Guias
             ];
 
         } catch (Throwable $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
+            $this->rollbackTransacaoGuiaAposFalha('atualização da guia');
             error_log('Erro ao atualizar guia: ' . $e->getMessage());
             return [
                 'ok' => false,
                 'id' => $idGuia,
-                'message' => 'Não foi possível atualizar a guia.'
+                'message' => $this->mensagemFalhaGuia('atualizar')
             ];
+        }
+    }
+
+    private function mensagemFalhaGuia(string $operacao): string
+    {
+        if (ParteDocumentoLock::isConnectionUnsafe($this->pdo)) {
+            return 'O resultado da operação não pôde ser confirmado. Consulte a guia antes de tentar novamente.';
+        }
+        return 'Não foi possível ' . $operacao . ' a guia.';
+    }
+
+    /** Mantém o lock CPF até o commit da transação completa da guia. */
+    private function comLockCpfDaGuia(array $dados, callable $operacao): array
+    {
+        if (ParteDocumentoLock::isConnectionUnsafe($this->pdo)) {
+            throw new RuntimeException('Conexão indisponível para alteração de guia.');
+        }
+        $reu = trim((string) ($dados['reu'] ?? ''));
+        $ehIdExistente = $reu !== '' && preg_match('/^[A-Z]{2,4}-[A-Za-z0-9\\-]+$/', $reu) === 1;
+        $cpf = trim((string) ($dados['cpf'] ?? ''));
+        if ($reu === '' || $ehIdExistente || $cpf === '') {
+            return $operacao();
+        }
+        return ParteDocumentoLock::run($this->pdo, 'CPF', $cpf, $operacao);
+    }
+
+    private function rollbackTransacaoGuiaAposFalha(string $operacao): void
+    {
+        if (!$this->pdo->inTransaction()) {
+            return;
+        }
+
+        try {
+            if (!$this->pdo->rollBack()) {
+                ParteDocumentoLock::markConnectionUnsafe($this->pdo);
+                error_log('Rollback não confirmado em ' . $operacao . '; conexão isolada.');
+            }
+        } catch (Throwable $rollbackError) {
+            ParteDocumentoLock::markConnectionUnsafe($this->pdo);
+            error_log('Falha no rollback de ' . $operacao . '; conexão isolada: ' . $rollbackError->getMessage());
         }
     }
 

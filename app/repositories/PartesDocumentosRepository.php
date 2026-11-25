@@ -65,9 +65,16 @@ final class PartesDocumentosRepository
             return null;
         }
 
+        $driver = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $numeroPredicate = $tipo === 'CPF'
+            ? '`numero` = :numero'
+            : ($driver === 'mysql'
+                ? 'BINARY UPPER(`numero`) = BINARY UPPER(:numero)'
+                : 'UPPER(`numero`) = UPPER(:numero)');
         $sql = sprintf(
-            'SELECT `parte_id` FROM `%s` WHERE `tipo` = :tipo AND `numero` = :numero',
-            $this->table
+            'SELECT `parte_id` FROM `%s` WHERE `tipo` = :tipo AND %s',
+            $this->table,
+            $numeroPredicate
         );
         if ($excluirParteId !== null && trim($excluirParteId) !== '') {
             $sql .= ' AND `parte_id` != :excluir_parte_id';

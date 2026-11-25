@@ -1,0 +1,32 @@
+name: REI-152 — MySQL descartável
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  disposable-mysql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          persist-credentials: false
+      - name: Obter imagens por digest
+        run: |
+          docker pull php@sha256:64ffb7411253121bbeb0d9eba37ce85e88d2a60d698e5debbd66bac71b20f3c2
+          docker pull composer@sha256:511d2a96fce74de098b54224d59146fb8b6a7735d4e301f16c87c062e511900d
+          docker pull mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903
+      - name: Construir runtime sem rede
+        run: docker build --network none --pull=false --iidfile "$RUNNER_TEMP/rei152-qa.id" tests/auth/ci-runtime
+      - name: Executar fixture isolada
+        shell: pwsh
+        run: |
+          $image = (Get-Content -LiteralPath "$env:RUNNER_TEMP/rei152-qa.id" -Raw).Trim()
+          ./tests/run-rei152-mysql-linux-ci.ps1 -QaImageId $image
+      - name: Verificar ausência de resíduos identificados
+        if: always()
+        run: |
+          set -euo pipefail
+          containers="$(docker ps -aq --filter label=com.fokus.rei152-isolated-test)"
+          volumes="$(docker volume ls -q --filter label=com.fokus.rei152-isolated-test)"
+          test -z "$containers"
+          test -z "$volumes"
