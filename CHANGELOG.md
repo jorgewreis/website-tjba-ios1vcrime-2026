@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0052
+
+**Data:** 2026-11-25 05:00:54 | **Commit:** `7ae1b507` | **Tipo:** `patch`
+
+- test: alinha collation da fixture
+
 ## V. 1.88.0051
 
 **Data:** 2026-11-25 04:57:54 | **Commit:** `84075230` | **Tipo:** `patch`
@@ -7944,6 +7950,7 @@
 
 
 \n
+
 
 
 
