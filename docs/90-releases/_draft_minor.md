@@ -8,4 +8,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **ci: aprimora diagnostico da prontidao mysql** `[7d82d1c2]`
 - **ci: isola configuracao da fixture de pauta** `[2705e2b2]`
 - **fix: valida schema referenciado na migracao** `[e2429053]`
+- **test: valida migracao em mysql isolado** `[ec4ffbf3]`
 
