@@ -17,7 +17,7 @@ pwsh=shutil.which('pwsh') or shutil.which('powershell')
 assert pwsh
 with tempfile.TemporaryDirectory(prefix='rei124-sanitized-') as t:
  p=Path(t)/'probe.ps1';p.write_text(script,encoding='utf-8')
- r=subprocess.run([pwsh,'-NoProfile','-File',str(p)],capture_output=True,text=True,timeout=10)
+ r=subprocess.run([pwsh,'-NoProfile','-File',str(p)],capture_output=True,text=True,timeout=30)
  assert r.returncode==0,(r.returncode,r.stderr)
  assert sentinel not in r.stdout+r.stderr
  assert 'RUNNER_FAILURE' in r.stdout

@@ -11,8 +11,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 FILES = [
-    'public/api/processos-partes/list.php', 'app/helpers/ApiAccessGuard.php',
-    'app/helpers/ProcessoSetorAuthorization.php',
+    'public/api/processos-partes/list.php', 'app/helpers/ApiAccessGuard.php', 'app/helpers/ApiErrorReporter.php',
     'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php',
     'app/helpers/IdGenerator.php', 'app/access/AccessEvaluator.php',
     'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php',

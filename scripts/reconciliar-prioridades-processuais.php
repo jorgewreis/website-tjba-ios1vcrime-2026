@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 /**
  * Job de rede de segurança: reavalia regras automáticas (menor, réu preso) em todos
  * os processos que possuem linhas em `processo_prioridades`. Violência doméstica (MP)

@@ -48,6 +48,19 @@ final class OficiosCartorioRepository
         return $row === false ? null : $row;
     }
 
+    /** Bloqueia o registro antes de validar ou remover os dados vinculados ao ofício. */
+    public function findByIdForUpdate(string $id): ?array
+    {
+        $st = $this->connection->prepare(
+            sprintf('SELECT * FROM `%s` WHERE `id` = :id LIMIT 1 FOR UPDATE', $this->table)
+        );
+        $st->bindValue(':id', trim($id));
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        $st->closeCursor();
+        return $row === false ? null : $row;
+    }
+
     /**
      * Próximo número sequencial para o ano (transação externa recomendada).
      */
@@ -69,6 +82,19 @@ final class OficiosCartorioRepository
         $st->bindValue(':ano', $ano, PDO::PARAM_INT);
         $st->execute();
         return (int) $st->fetchColumn();
+    }
+
+    /** Leitura bloqueante para validar a sequência durante a exclusão transacional. */
+    public function getMaxSequencialForYearForUpdate(int $ano): int
+    {
+        $st = $this->connection->prepare(
+            sprintf('SELECT `numero_sequencial` FROM `%s` WHERE `ano` = :ano ORDER BY `numero_sequencial` DESC LIMIT 1 FOR UPDATE', $this->table)
+        );
+        $st->bindValue(':ano', $ano, PDO::PARAM_INT);
+        $st->execute();
+        $numero = $st->fetchColumn();
+        $st->closeCursor();
+        return $numero === false ? 0 : (int) $numero;
     }
 
     public function insert(array $row): void
