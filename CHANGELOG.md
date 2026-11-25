@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0038
+
+**Data:** 2026-11-25 04:01:59 | **Commit:** `dc31205a` | **Tipo:** `patch`
+
+- ci: detalha resultado concorrente da pauta
+
 ## V. 1.88.0037
 
 **Data:** 2026-11-25 03:58:36 | **Commit:** `98382202` | **Tipo:** `patch`
@@ -7860,6 +7866,7 @@
 
 
 \n
+
 
 
 

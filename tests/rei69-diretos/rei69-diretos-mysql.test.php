@@ -4,9 +4,9 @@ declare(strict_types=1);
 $failureStage = 'setup';
 $failureDetail = 'general';
 set_exception_handler(static function (Throwable $exception) use (&$failureStage, &$failureDetail): void {
-    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check'];
+    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check'];
     $stage = in_array($failureStage, $allowed, true) ? $failureStage : 'setup';
-    $details=['general','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','finish_timeout','exit','assert'];
+    $details=['general','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
     $detail=in_array($failureDetail,$details,true) ? $failureDetail : 'general';
     fwrite(STDERR, 'REI69_DIRECT_FAILURE code=' . $stage . ' detail=' . $detail . "\n");
     exit(1);
@@ -446,7 +446,11 @@ PHP;
             if (!$state['running']) { $concurrentActive[$worker['index']]=false; fclose($worker['out']); fclose($worker['err']); proc_close($worker['proc']); }
             throw new RuntimeException('Ator excedeu prazo.');
         }
+        // Drain again after confirmed exit: output can arrive between the preceding read and proc_get_status().
+        $worker['stdout'].=stream_get_contents($worker['out']);
+        $worker['stderr'].=stream_get_contents($worker['err']);
         $concurrentActive[$worker['index']]=false; fclose($worker['out']); fclose($worker['err']); proc_close($worker['proc']);
+        if (strlen($worker['stdout'])>1048576 || strlen($worker['stderr'])>1048576) throw new RuntimeException('Saída de ator excedeu limite.');
         if ($state['exitcode']!==0) { $failureDetail='exit'; throw new RuntimeException('Ator terminou com erro.'); }
         return [$worker['stdout'],$worker['stderr']];
     };
@@ -470,13 +474,17 @@ PHP;
     foreach ($expectedProcesses['rows'] as &$row) if ($row['id']==='PRC-1') $row['id_setor_responsavel']='SET-GABINETE';
     unset($row);
     $assert($afterDenied['processos']===$expectedProcesses, 'Mudança de setor alterou outros campos de processo.');
-    $assertUnchanged = static function (array $before, array $after, array $mayChange) use ($assert): void {
+    $assertUnchanged = static function (array $before, array $after, array $mayChange) use (&$failureDetail): void {
         foreach ($before as $table=>$state) {
-            if (!array_key_exists($table,$mayChange)) { $assert($state===$after[$table], 'Mudança inesperada após concorrência.'); continue; }
-            $assert($state['schema']===$after[$table]['schema'], 'Schema mudou durante concorrência.');
+            $detail=$table==='sala_audiencias_pauta' ? 'snapshot_pauta' : 'snapshot_other';
+            if (!array_key_exists($table,$mayChange)) {
+                if ($state!==$after[$table]) { $failureDetail=$detail; throw new RuntimeException('Mudança inesperada após concorrência.'); }
+                continue;
+            }
+            if ($state['schema']!==$after[$table]['schema']) { $failureDetail=$detail; throw new RuntimeException('Schema mudou durante concorrência.'); }
             [$column,$ids]=$mayChange[$table];
             $keep=static fn(array $row): bool => !in_array((string)($row[$column] ?? ''),$ids,true);
-            $assert(array_values(array_filter($state['rows'],$keep))===array_values(array_filter($after[$table]['rows'],$keep)), 'Outra linha mudou após concorrência.');
+            if (array_values(array_filter($state['rows'],$keep))!==array_values(array_filter($after[$table]['rows'],$keep))) { $failureDetail=$detail; throw new RuntimeException('Outra linha mudou após concorrência.'); }
         }
     };
     $pdo->exec("UPDATE processos SET id_setor_responsavel='SET-CARTORIO' WHERE id='PRC-1'");
@@ -508,7 +516,13 @@ PHP;
     $failureStage='c3_finish'; $failureDetail='general';
     [$directOut,$directErr]=$finish($directFirst); [$pautaOut,$pautaErr]=$finish($pautaSecond);
     $failureStage='c3_check'; $failureDetail='general';
-    $assert(str_contains($directErr,"HTTP:200\n") && str_contains($pautaOut,"PAUTA_COMMITTED\n") && $pdo->query("SELECT tipo_parte FROM processos_partes WHERE id='VNC-1'")->fetchColumn()==='vitima', 'Ordem direta seguida de pauta falhou.');
+    $failureStage='c3_direct'; $failureDetail='general';
+    $assert(str_contains($directErr,"HTTP:200\n"), 'Operação direta não confirmou sucesso.');
+    $failureStage='c3_pauta'; $failureDetail='general';
+    $assert(str_contains($pautaOut,"PAUTA_COMMITTED\n"), 'Pauta não confirmou sucesso.');
+    $failureStage='c3_tipo'; $failureDetail='general';
+    $assert($pdo->query("SELECT tipo_parte FROM processos_partes WHERE id='VNC-1'")->fetchColumn()==='vitima', 'Tipo final não corresponde à Pauta.');
+    $failureStage='c3_snapshot'; $failureDetail='general';
     $afterDirectFirst=$snapshot($pdo); $assertUnchanged($beforeDirectFirst,$afterDirectFirst,['processos_partes'=>['id',['VNC-1']],'partes'=>['id',['PAR-1']],'sala_audiencias_pauta_parte'=>['id_parte',['PP-A']],'processo_prioridades'=>['processo_id',['PRC-1']]]);
     // Pauta owns process and pauta rows then waits for the link; direct update waits for process.
     $failureStage='c4_setup'; $failureDetail='general';
