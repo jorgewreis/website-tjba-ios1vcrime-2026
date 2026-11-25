@@ -153,6 +153,7 @@ try {
         $mysqlImage.Id, "--lower-case-table-names=$LowerCaseTableNames"
     ) | Select-Object -Last 1).Trim()
     if ($mysqlId -notmatch '^[a-f0-9]{64}$') { throw 'ID MySQL inválido.' }
+    $stage = 'mysql-created-topology'
     $db = Get-OwnedContainer $mysqlId
     $dbMounts = @($db.Mounts)
     $dbPortCount = if ($db.HostConfig.PortBindings) { @($db.HostConfig.PortBindings.PSObject.Properties).Count } else { 0 }
@@ -168,11 +169,14 @@ try {
     if ($dbInvalid) {
         throw 'Topologia MySQL recusada: sem rede/portas, datadir efêmero e socket exclusivo são obrigatórios.'
     }
+    $stage = 'mysql-start'
     Invoke-DockerSafe @('start', $mysqlId) | Out-Null
 
+    $stage = 'mysql-running-topology'
     $dbRunning = Get-OwnedContainer $mysqlId
     if (-not $dbRunning.State.Running -or $dbRunning.Image -ne $mysqlImage.Id -or $dbRunning.HostConfig.NetworkMode -ne 'none' -or $dbRunning.Mounts.Count -ne 1 -or $dbRunning.Mounts[0].Name -ne $volumeName -or $dbRunning.Mounts[0].Destination -ne '/var/run/mysqld') { throw 'Topologia MySQL mudou após start.' }
 
+    $stage = 'mysql-readiness'
     $ready = $false
     for ($i = 0; $i -lt 90; $i++) {
         $probe = $null
@@ -184,7 +188,7 @@ try {
                 '-uroot', 'rei69_pauta_test', '-N', '-e', 'SELECT 1'
             )
         } catch { }
-        if ($LASTEXITCODE -eq 0 -and ($probe | Select-Object -Last 1).Trim() -eq '1') {
+        if ($null -ne $probe -and $LASTEXITCODE -eq 0 -and ($probe | Select-Object -Last 1).Trim() -eq '1') {
             $ready = $true
             break
         }
@@ -192,6 +196,7 @@ try {
     }
     if (-not $ready) { throw 'MySQL descartável ou banco de teste não ficou pronto.' }
 
+    $stage = 'mysql-pre-sentinel-topology'
     Assert-RunningMySql
     Assert-VolumeConsumers @($mysqlId)
 
@@ -216,6 +221,7 @@ try {
         '--entrypoint', 'sleep', $phpImage.Id, '300'
     ) | Select-Object -Last 1).Trim()
     if ($phpId -notmatch '^[a-f0-9]{64}$') { throw 'ID PHP inválido.' }
+    $stage = 'php-created-topology'
     $php = Get-OwnedContainer $phpId
     $phpMounts = @($php.Mounts)
     $phpPortCount = if ($php.HostConfig.PortBindings) { @($php.HostConfig.PortBindings.PSObject.Properties).Count } else { 0 }
@@ -229,7 +235,9 @@ try {
     if ($phpInvalid) {
         throw 'Topologia PHP recusada: código somente leitura, socket próprio, sem rede/portas são obrigatórios.'
     }
+    $stage = 'php-start'
     Invoke-DockerSafe @('start', $phpId) | Out-Null
+    $stage = 'php-pre-fixture-topology'
     Assert-RunningMySql
     Assert-RunningPhp
     Assert-VolumeConsumers @($mysqlId, $phpId)
