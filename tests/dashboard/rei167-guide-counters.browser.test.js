@@ -86,6 +86,8 @@ const artifacts = fs.mkdtempSync(path.join(os.tmpdir(), 'rei167-browser-'));
         assert.equal(await page.locator('#' + id).count(), 1, 'refresh must not duplicate rows');
       }
       assert.equal(await page.locator('#dashboard-erro').isVisible(), false);
+      assert.equal(await page.locator('#dash-sector-column').isVisible(),
+        await page.locator('#dash-cartorio-queue').evaluate(el => !el.hidden), scenario + ': outer sector follows indicator state');
       assert.ok((await page.locator('main').innerText()).length > 50, 'nonblank dashboard');
       assert.equal(await page.locator('vite-error-overlay, nextjs-portal').count(), 0);
     }

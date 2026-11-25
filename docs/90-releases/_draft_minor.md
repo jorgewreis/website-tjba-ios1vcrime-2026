@@ -4,6 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-317): ajuste contagem de guias no dashboard** `[85d79ad0]`
-- **test(REI-73): verificar leitura por setor e sigilo** `[2715a1ce]`
+- **fix(REI-317): ocultar coluna de setor vazia** `[4e58cb70]`
 

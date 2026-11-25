@@ -40,7 +40,7 @@ require_once __DIR__ . '/../../access/ProfileNormalizer.php';
             <div class="dash-weekly-chart dash-offices-chart"><canvas id="dash-chart-oficios-semana" aria-label="Quantidade de ofícios cadastrados por dia nos últimos sete dias, no Cartório e no Gabinete"></canvas></div>
           </article>
         </section>
-        <section class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title">
+        <section id="dash-sector-column" class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title" hidden>
           <header><span class="column-kicker">SETOR</span><h2 id="dash-sector-title">Minha área</h2></header>
           <article id="dash-cartorio-queue" class="dash-card dash-sector-queue" hidden>
             <div class="dash-sector-metric" id="dash-queue-expedidas-row"><span><b>Cartas Expedidas</b><br>aguardando envio<span id="dash-queue-expedidas-responsaveis" class="dash-sector-responsaveis" hidden></span></span><strong id="dash-queue-expedidas">—</strong></div>

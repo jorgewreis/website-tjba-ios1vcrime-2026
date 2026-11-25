@@ -26,6 +26,8 @@ for (const id of ['dash-queue-guias-expedicao-row', 'dash-queue-guias-envio-row'
 }
 assert.match(view, /<b>Guias<\/b><br>aguardando expedição/);
 assert.match(view, /<b>Guias<\/b><br>aguardando envio/);
+assert.match(view, /<section[^>]*id="dash-sector-column"[^>]*hidden/,
+  'outer sector column starts hidden until an indicator is available');
 
 class Element {
   constructor(id = '') {
@@ -81,6 +83,8 @@ async function refresh(filasOrResponse, sector) {
   responseQueue.push(response);
   await document.ready();
   await new Promise(resolve => setImmediate(resolve));
+  assert.equal(elements.get('dash-sector-column').hidden, elements.get('dash-cartorio-queue').hidden,
+    'outer sector column must follow actual queue visibility on every refresh');
 }
 function value(id) { const el=elements.get(id); return el ? el.textContent + el.children.map(child => typeof child === 'string' ? child : child.textContent).join('') : undefined; }
 
@@ -166,6 +170,19 @@ function value(id) { const el=elements.get(id); return el ? el.textContent + el.
 
   await refresh(denied);
   assert.equal(elements.get('dash-cartorio-queue').hidden, true);
+  assert.equal(elements.get('dashboard-erro').hidden, false, 'request error stays visible outside hidden sector');
+  for (const [key,type] of [['cartas_expedidas','aguardando_envio'],['cartas_recebidas','devolucao'],['oficios','enviar_oficio'],['editais','certificacao_publicacao']]) {
+    await refresh([{key,type,count:1}]);
+    assert.equal(elements.get('dash-sector-column').hidden, false, `${key} keeps sector visible without guides`);
+  }
+  const overdueOnly = await permitted([]).json();
+  overdueOnly.setor.prazos_vencidos.expedidas = 1;
+  await refresh({ok:true,json:async()=>overdueOnly});
+  assert.equal(elements.get('dash-sector-column').hidden, false, 'overdue indicator alone keeps sector visible');
+  await refresh([{key:'guias',error:true,count:null}]);
+  assert.equal(elements.get('dash-sector-column').hidden, false, 'guide error alone remains visible');
+  await refresh([]);
+  assert.equal(elements.get('dash-sector-column').hidden, true, 'empty refresh hides outer sector again');
 
   if (runnerPayloads) {
     for (const entry of runnerPayloads) {
