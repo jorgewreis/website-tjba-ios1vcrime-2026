@@ -343,7 +343,7 @@ if (in_array(getenv('TEST_KIND'), ['update','update2'], true)) {
     $_SESSION=['id_usuario'=>$other ? 'USR-2' : 'USR-1']; $_POST=['id'=>$other ? 'VNC-5' : 'VNC-1','tipo_parte'=>'advogado'];
     register_shutdown_function(static function (): void { fwrite(STDERR, 'HTTP:' . (http_response_code() ?: 200) . "\n"); });
     require (string)getenv('TEST_ENDPOINT');
-} elseif (getenv('TEST_KIND') === 'pauta') {
+} elseif (in_array(getenv('TEST_KIND'), ['pauta','pauta_mandado'], true)) {
     $stage='pauta_connect';
     register_shutdown_function(static function (): void {
         $last=error_get_last();
@@ -368,6 +368,7 @@ if (in_array(getenv('TEST_KIND'), ['update','update2'], true)) {
         $service=new SalaAudienciasPautaService($pdo);
         $stage='pauta_runtime';
         $payload=['parte_id_global'=>'PAR-1','processo_parte_id'=>'VNC-1','nome_parte'=>'Pessoa Sintetica 1','tipo_parte'=>'vitima','maioridade'=>'maior','expedicao'=>'Não expedido','cumprimento'=>'pendente'];
+        if (getenv('TEST_KIND') === 'pauta_mandado') $payload['expedicao']='mandado';
         $result=$service->updateParte('PP-A',$payload,'USR-1');
         if (($result['ok'] ?? false)!==true) { $stage='pauta_noop'; throw new RuntimeException('Pauta synthetic update failed.'); }
         fwrite(STDOUT,"PAUTA_COMMITTED\n");
@@ -552,7 +553,7 @@ PHP;
     $beforePautaFirst=$snapshot($pdo);
     $pdo->beginTransaction(); $pdo->query("SELECT id FROM processos_partes WHERE id='VNC-1' FOR UPDATE")->fetchColumn();
     $failureStage='c4_link_wait'; $failureDetail='general';
-    $pautaFirst=$spawn('pauta'); $observe($observer,$pautaFirst,$parentId,'processos_partes');
+    $pautaFirst=$spawn('pauta_mandado'); $observe($observer,$pautaFirst,$parentId,'processos_partes');
     $failureStage='c4_direct_wait'; $failureDetail='general';
     $directSecond=$spawn('update'); $observe($observer,$directSecond,(int)$pautaFirst['id'],'processos');
     $pdo->commit();
@@ -563,7 +564,26 @@ PHP;
     [$directOut,$directErr]=$finish($directSecond);
     $failureStage='c4_check'; $failureDetail='general';
     $assert(str_contains($pautaOut,"PAUTA_COMMITTED\n") && str_contains($directErr,"HTTP:200\n") && $pdo->query("SELECT tipo_parte FROM processos_partes WHERE id='VNC-1'")->fetchColumn()==='advogado', 'Ordem pauta seguida de direta falhou.');
-    $afterPautaFirst=$snapshot($pdo); $assertUnchanged($beforePautaFirst,$afterPautaFirst,['processos_partes'=>['id',['VNC-1']],'partes'=>['id',['PAR-1']],'sala_audiencias_pauta_parte'=>['id_parte',['PP-A']],'processo_prioridades'=>['processo_id',['PRC-1']]]);
+    $afterPautaFirst=$snapshot($pdo);
+    $expectedC4=$beforePautaFirst;
+    $rowIndex=static function (array $rows, string $key, string $id): int {
+        $found=[]; foreach ($rows as $i=>$row) if (($row[$key] ?? null)===$id) $found[]=$i;
+        if (count($found)!==1) throw new RuntimeException('Linha sintética esperada ausente ou duplicada.');
+        return $found[0];
+    };
+    $pautaRow=$rowIndex($expectedC4['sala_audiencias_pauta_parte']['rows'],'id_parte','PP-A');
+    $assert($expectedC4['sala_audiencias_pauta_parte']['rows'][$pautaRow]['expedicao']==='Não expedido', 'Pré-condição de expedição anterior divergente.');
+    $expectedC4['sala_audiencias_pauta_parte']['rows'][$pautaRow]['expedicao']='mandado';
+    foreach (['processos_partes'=>['id','VNC-1'],'partes'=>['id','PAR-1']] as $table=>[$key,$id]) {
+        $beforeIndex=$rowIndex($expectedC4[$table]['rows'],$key,$id);
+        $afterIndex=$rowIndex($afterPautaFirst[$table]['rows'],$key,$id);
+        $beforeTimestamp=$expectedC4[$table]['rows'][$beforeIndex]['updated_at'];
+        $afterTimestamp=$afterPautaFirst[$table]['rows'][$afterIndex]['updated_at'];
+        $assert(is_string($beforeTimestamp) && is_string($afterTimestamp) && $afterTimestamp >= $beforeTimestamp, 'Timestamp de atualização inválido.');
+        $expectedC4[$table]['rows'][$beforeIndex]['updated_at']=$afterTimestamp;
+        if ($table==='processos_partes') $expectedC4[$table]['rows'][$beforeIndex]['tipo_parte']='advogado';
+    }
+    $assertUnchanged($expectedC4,$afterPautaFirst,['processo_prioridades'=>['processo_id',['PRC-1']]]);
     // Different process locks with one shared person: both waits must be observed and terminate.
     $failureStage='c5_setup'; $failureDetail='general';
     $beforeShared=$snapshot($pdo);
