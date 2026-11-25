@@ -11,6 +11,31 @@
 
         const settings = config || {};
         const storageKey = settings.storageKey || 'cartorio.postReloadToast';
+        let documentoPendente = false;
+        let documentoIncerto = false;
+        let documentoNavegando = false;
+
+        function atualizarBotoesDocumento() {
+            const bloqueado = documentoPendente || documentoIncerto || documentoNavegando;
+            const addButton = global.document.getElementById('add-doc-btn');
+            if (addButton) addButton.disabled = bloqueado;
+            global.document.querySelectorAll('.btn-del-doc').forEach(function (button) { button.disabled = bloqueado; });
+        }
+
+        function avisoResultadoIncerto(message) {
+            documentoIncerto = true;
+            let aviso = global.document.getElementById('documento-resultado-incerto');
+            if (!aviso) {
+                aviso = global.document.createElement('div');
+                aviso.id = 'documento-resultado-incerto';
+                aviso.setAttribute('role', 'alert');
+                aviso.className = 'card-page padding-x-md padding-y-md';
+                const anchor = global.document.getElementById('add-doc-btn');
+                (anchor && anchor.parentNode ? anchor.parentNode : global.document.body).prepend(aviso);
+            }
+            aviso.textContent = message;
+            atualizarBotoesDocumento();
+        }
 
         function getParteId() {
             return String(global.document.getElementById('parte-id')?.value || '').trim();
@@ -126,6 +151,7 @@
 
         global.document.getElementById('add-doc-btn')?.addEventListener('click', function () {
             const addButton = this;
+            if (documentoPendente || documentoIncerto || documentoNavegando) return;
             const parteId = getParteId();
             if (!parteId) {
                 common.notify('error', 'Erro', 'ID da pessoa não encontrado. Recarregue a página.');
@@ -144,36 +170,55 @@
                     return;
                 }
             }
-            addButton.disabled = true;
+            documentoPendente = true;
+            atualizarBotoesDocumento();
             common.postJson('/api/pessoas/documentos/create.php', {
                 parte_id: parteId,
                 tipo: tipo,
                 numero: numero
-            }).then(function (result) {
+            }, { requireJson: true }).then(function (result) {
                 if (result.ok && result.data && result.data.id) {
+                    documentoNavegando = true;
                     common.queuePostReloadToast('success', 'Sucesso', 'Documento adicionado com sucesso.', storageKey);
                     global.location.reload();
                     return;
                 }
-                common.notify('error', 'Erro', (result.data && result.data.error) || 'Erro ao adicionar documento.');
-                addButton.disabled = false;
+                if (result.status >= 500 || !result.data || typeof result.data !== 'object' || (!result.data.error && !result.data.id) || result.data.resultado === 'verificacao_necessaria') {
+                    avisoResultadoIncerto('Não foi possível confirmar o resultado. Recarregue e consulte os documentos antes de tentar novamente.');
+                    return;
+                } else {
+                    common.notify('error', 'Erro', (result.data && result.data.error) || 'Erro ao adicionar documento.');
+                }
             }).catch(function () {
-                common.notify('error', 'Erro', 'Erro de conexão.');
-                addButton.disabled = false;
+                avisoResultadoIncerto('Não foi possível confirmar o resultado. Recarregue e consulte os documentos antes de tentar novamente.');
+            }).finally(function () {
+                documentoPendente = false;
+                atualizarBotoesDocumento();
             });
         });
 
         global.document.querySelectorAll('.btn-del-doc').forEach(function (button) {
             button.addEventListener('click', function () {
+                if (documentoPendente || documentoIncerto || documentoNavegando) return;
                 const id = button.getAttribute('data-id');
                 if (!id) {
                     return;
                 }
-                common.postJson('/api/pessoas/documentos/delete.php', { id: id }).then(function (result) {
-                    if (result.data && result.data.deleted) {
+                documentoPendente = true;
+                atualizarBotoesDocumento();
+                common.postJson('/api/pessoas/documentos/delete.php', { id: id }, { requireJson: true }).then(function (result) {
+                    if (result.ok && result.data && result.data.deleted === true) {
+                        documentoNavegando = true;
                         common.queuePostReloadToast('success', 'Sucesso', 'Documento removido com sucesso.', storageKey);
                         global.location.reload();
+                    } else if (result.status >= 500 || !result.data || typeof result.data !== 'object' || (!result.data.error && typeof result.data.deleted !== 'boolean') || result.data.resultado === 'verificacao_necessaria') {
+                        avisoResultadoIncerto('Não foi possível confirmar o resultado. Recarregue e consulte os documentos antes de tentar novamente.');
+                    } else {
+                        common.notify('error', 'Erro', (result.data && result.data.error) || 'Erro ao excluir documento.');
                     }
+                }).catch(function () { avisoResultadoIncerto('Não foi possível confirmar o resultado. Recarregue e consulte os documentos antes de tentar novamente.'); }).finally(function () {
+                    documentoPendente = false;
+                    atualizarBotoesDocumento();
                 });
             });
         });
