@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-317): ocultar coluna de setor vazia** `[4e58cb70]`
+- **docs(REI-73): consolidar evidencias recentes da auditoria** `[4fdafd90]`
 
