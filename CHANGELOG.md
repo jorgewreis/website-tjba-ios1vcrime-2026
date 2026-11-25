@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0036
+
+**Data:** 2026-11-25 03:55:34 | **Commit:** `d5559b93` | **Tipo:** `patch`
+
+- ci: classifica falhas do ator de pauta
+
 ## V. 1.88.0035
 
 **Data:** 2026-11-25 03:52:24 | **Commit:** `0bb80dd7` | **Tipo:** `patch`
@@ -7848,6 +7854,7 @@
 
 
 \n
+
 
 
 

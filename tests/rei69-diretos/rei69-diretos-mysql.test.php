@@ -6,7 +6,7 @@ $failureDetail = 'general';
 set_exception_handler(static function (Throwable $exception) use (&$failureStage, &$failureDetail): void {
     $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check'];
     $stage = in_array($failureStage, $allowed, true) ? $failureStage : 'setup';
-    $details=['general','spawn','early_exit','early_401','early_403','early_404','early_500','connection_id','wait_query','wait_timeout','finish_timeout','exit','assert'];
+    $details=['general','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','finish_timeout','exit','assert'];
     $detail=in_array($failureDetail,$details,true) ? $failureDetail : 'general';
     fwrite(STDERR, 'REI69_DIRECT_FAILURE code=' . $stage . ' detail=' . $detail . "\n");
     exit(1);
@@ -344,14 +344,35 @@ if (in_array(getenv('TEST_KIND'), ['update','update2'], true)) {
     register_shutdown_function(static function (): void { fwrite(STDERR, 'HTTP:' . (http_response_code() ?: 200) . "\n"); });
     require (string)getenv('TEST_ENDPOINT');
 } elseif (getenv('TEST_KIND') === 'pauta') {
-    require (string)getenv('TEST_CONNECTION');
-    $pdo=Conection::getInstance()->getConnection();
-    require '/repo/app/services/SalaAudienciasPautaService.php';
-    $service=new SalaAudienciasPautaService($pdo);
-    $payload=['parte_id_global'=>'PAR-1','processo_parte_id'=>'VNC-1','nome_parte'=>'Pessoa Sintetica 1','tipo_parte'=>'vitima','maioridade'=>'maior','expedicao'=>'Não expedido','cumprimento'=>'pendente'];
-    $result=$service->updateParte('PP-A',$payload,'USR-1');
-    if (($result['ok'] ?? false)!==true) throw new RuntimeException('Pauta synthetic update failed.');
-    fwrite(STDOUT,"PAUTA_COMMITTED\n");
+    $stage='pauta_connect';
+    register_shutdown_function(static function (): void {
+        $last=error_get_last();
+        if (is_array($last) && in_array($last['type'],[E_ERROR,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR],true)) fwrite(STDERR,"PAUTA_FAILURE code=pauta_fatal\n");
+    });
+    try {
+        require (string)getenv('TEST_CONNECTION');
+        $pdo=Conection::getInstance()->getConnection();
+        $stage='pauta_require';
+        require '/repo/app/services/SalaAudienciasPautaService.php';
+        $stage='pauta_construct';
+        $service=new SalaAudienciasPautaService($pdo);
+        $stage='pauta_runtime';
+        $payload=['parte_id_global'=>'PAR-1','processo_parte_id'=>'VNC-1','nome_parte'=>'Pessoa Sintetica 1','tipo_parte'=>'vitima','maioridade'=>'maior','expedicao'=>'Não expedido','cumprimento'=>'pendente'];
+        $result=$service->updateParte('PP-A',$payload,'USR-1');
+        if (($result['ok'] ?? false)!==true) throw new RuntimeException('Pauta synthetic update failed.');
+        fwrite(STDOUT,"PAUTA_COMMITTED\n");
+    } catch (Throwable $e) {
+        if ($e instanceof PDOException) {
+            $state=strtoupper((string)$e->getCode());
+            $known=['42S22','42S02','23000','40001','HY000'];
+            $code=in_array($state,$known,true) ? 'pauta_sql_'.strtolower($state) : 'pauta_sql_other';
+        } elseif (is_a($e,'PautaVinculoSetorNegado')) $code='pauta_acl';
+        elseif ($e instanceof InvalidArgumentException) $code='pauta_invalid';
+        elseif ($e instanceof Error) $code='pauta_error';
+        else $code=$stage;
+        fwrite(STDERR,'PAUTA_FAILURE code='.$code."\n");
+        exit(1);
+    }
 } else {
     require (string)getenv('TEST_CONNECTION');
     $pdo=Conection::getInstance()->getConnection();
@@ -391,8 +412,11 @@ PHP;
         do {
             $state=$collect($worker);
             if (!$state['running']) {
+                // A última saída pode ter chegado depois da leitura anterior e antes do status de término.
+                $collect($worker);
                 $failureDetail='early_exit';
                 foreach ([401,403,404,500] as $status) if (str_contains($worker['stderr'], 'HTTP:' . $status . "\n")) { $failureDetail='early_' . $status; break; }
+                foreach (['pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_error','pauta_fatal'] as $code) if (str_contains($worker['stderr'], 'PAUTA_FAILURE code=' . $code . "\n")) { $failureDetail=$code; break; }
                 throw new RuntimeException('Ator terminou antes da espera esperada.');
             }
             $failureDetail=$worker['id']===null ? 'connection_id' : 'wait_query';
