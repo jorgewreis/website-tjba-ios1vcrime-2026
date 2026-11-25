@@ -64,11 +64,15 @@ CREATE TABLE partes_instituicoes (id TEXT, parte_id TEXT, instituicao_id TEXT, s
 INSERT INTO instituicoes_publicas VALUES ('A','Ativa','Ativa','111','OBS_ATIVA',1,'',''), ('I','Inativa','Inativa','222','OBS_INATIVA',0,'','');
 INSERT INTO instituicoes_telefones VALUES ('TA','A','fixo','111',NULL,0,1,'',''), ('TI','A','fixo','222',NULL,0,0,'','');
 INSERT INTO instituicoes_setores VALUES ('SA','A','Ativo','SA',1,'',''), ('SI','A','Inativo','SI',0,'',''), ('SX','I','Ativo em instituição inativa','SX',1,'','');
-INSERT INTO partes VALUES ('P','','Pessoa Exemplo','','','','','');
+INSERT INTO partes VALUES ('P','','Pessoa Exemplo','','','','',''),
+ ('PI','','Alfa Exemplo','','','','',''), ('PS','','Beta Exemplo','','','','',''), ('PV','','Gama Exemplo','','','','','');
 INSERT INTO partes_instituicoes VALUES ('VA','P','A','SA','PROF_ATIVA','CARGO_ATIVO','2026-01-01',NULL,NULL,1,'','',''),
  ('VI','P','I','SX','PROF_INST_INATIVA','CARGO_INST_INATIVA','2026-01-01',NULL,NULL,1,'','',''),
  ('VS','P','A','SI','PROF_SETOR_INATIVO','CARGO_SETOR_INATIVO','2026-01-01',NULL,NULL,1,'','',''),
- ('VV','P','A','SA','PROF_VINCULO_INATIVO','CARGO_VINCULO_INATIVO','2026-01-01',NULL,NULL,0,'','','');
+ ('VV','P','A','SA','PROF_VINCULO_INATIVO','CARGO_VINCULO_INATIVO','2026-01-01',NULL,NULL,0,'','',''),
+ ('VPI','PI','I','SX','PROF_INST_INATIVA','CARGO_INST_INATIVA','2026-01-01',NULL,NULL,1,'','',''),
+ ('VPS','PS','A','SI','PROF_SETOR_INATIVO','CARGO_SETOR_INATIVO','2026-01-01',NULL,NULL,1,'','',''),
+ ('VPV','PV','A','SA','PROF_VINCULO_INATIVO','CARGO_VINCULO_INATIVO','2026-01-01',NULL,NULL,0,'','','');
 ''')
         for user in ('consultor', 'misto', 'estudante'):
             db.execute('INSERT INTO usuarios VALUES (?,?,?,1)', (user, hashlib.sha256(token.encode()).hexdigest(), '2999-01-01 00:00:00'))
@@ -149,7 +153,14 @@ INSERT INTO partes_instituicoes VALUES ('VA','P','A','SA','PROF_ATIVA','CARGO_AT
             assert status == 200 and [x['id'] for x in data['pessoas']] == ['P'], (user, status, data)
             if user == 'consultor':
                 encoded = json.dumps(data, ensure_ascii=False)
-                assert not any(marker in encoded for marker in ('PROF_INST_INATIVA', 'PROF_SETOR_INATIVO', 'PROF_VINCULO_INATIVO', 'Inativa')), data
+                assert not any(marker in encoded for marker in ('PROF_INST_INATIVA', 'PROF_SETOR_INATIVO', 'PROF_VINCULO_INATIVO', 'CARGO_INST_INATIVA', 'CARGO_SETOR_INATIVO', 'CARGO_VINCULO_INATIVO', 'Inativa')), data
+        # Uma pessoa por tipo de vínculo inativo evita mascaramento pelo ativo.
+        for name, person_id, marker in [('Alfa', 'PI', 'CARGO_INST_INATIVA'),
+                                         ('Beta', 'PS', 'CARGO_SETOR_INATIVO'),
+                                         ('Gama', 'PV', 'CARGO_VINCULO_INATIVO')]:
+            status, data = call('search-by-name.php?nome=' + name, 'consultor', 'pessoas')
+            assert status == 200 and [x['id'] for x in data['pessoas']] == [person_id], (name, status, data)
+            assert marker not in json.dumps(data, ensure_ascii=False), (name, data)
         for user, expected_status in [(None, 401), ('invalida', 401), ('estudante', 403)]:
             for endpoint in ('get.php?id=P', 'list.php?nome=Pessoa', 'search-by-name.php?nome=Pessoa'):
                 status, data = call(endpoint, user, 'pessoas')
