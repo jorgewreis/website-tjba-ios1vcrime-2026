@@ -103,7 +103,22 @@ function Assert-ActiveMount([string]$id, [string]$target, [string]$fsType = '', 
             else { 'other' }
         } | Sort-Object -Unique)
         $expected = if ($fsType -eq 'tmpfs') { 'tmpfs' } else { 'any' }
-        throw ("Mount ativo não comprovado: fase={0}; destino={1}; esperado={2}; coincidencias={3}; pontos_exatos={4}; tipos={5}." -f $phase, $labels[$target], $expected, $matchedMounts.Count, $entries.Count, ($types -join ','))
+        $resolution = 'nao-aplicavel'
+        if ($target -ceq '/var/run/mysqld') {
+            $resolution = 'erro'
+            try {
+                # Diagnóstico de leitura com limite no cliente Docker. Nunca imprime saída bruta.
+                $resolved = @(& timeout -k 2s 5s docker --host $dockerEndpoint exec $id realpath -e -- /var/run/mysqld 2>&1)
+                $exitCode = $LASTEXITCODE
+                if ($exitCode -eq 124 -or $exitCode -eq 137) { $resolution = 'timeout' }
+                elseif ($exitCode -eq 0 -and $resolved.Count -eq 1 -and $resolved[0] -is [string]) {
+                    if ($resolved[0] -ceq '/var/run/mysqld') { $resolution = 'literal' }
+                    elseif ($resolved[0] -ceq '/run/mysqld') { $resolution = 'run-mysqld' }
+                    else { $resolution = 'outro' }
+                }
+            } catch { $resolution = 'erro' }
+        }
+        throw ("Mount ativo não comprovado: fase={0}; destino={1}; esperado={2}; coincidencias={3}; pontos_exatos={4}; tipos={5}; resolucao={6}." -f $phase, $labels[$target], $expected, $matchedMounts.Count, $entries.Count, ($types -join ','), $resolution)
     }
 }
 function Assert-MountSet($item, [hashtable]$expected, [string]$tmpfsPath, [string]$tmpfsOptions) {
