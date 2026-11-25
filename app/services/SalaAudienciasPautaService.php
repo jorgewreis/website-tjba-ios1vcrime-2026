@@ -15,6 +15,9 @@ require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
 require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../helpers/ProcessoBlocoListagemHelper.php';
+require_once __DIR__ . '/../helpers/ProcessoSetorAuthorization.php';
+
+final class PautaVinculoSetorNegado extends RuntimeException {}
 
 final class SalaAudienciasPautaService
 {
@@ -424,10 +427,12 @@ final class SalaAudienciasPautaService
             throw new InvalidArgumentException('Preencha os campos obrigatórios da parte.');
         }
 
-        $this->normalizeDefensorPayloadForSave($payload, $tipo);
-
         $this->connection->beginTransaction();
         try {
+            // Acquire process and user-sector locks before the pauta and any link.
+            // A pure witness without a link remains allowed even when this is false.
+            $canAlterarVinculo = ProcessoSetorAuthorization::canModifyProcess($this->connection, (string) $usuarioId, $processoId);
+            $this->assertPautaProcessoEstavel($idPauta, $processoId);
             [$tipoProcesso, $poloProcesso] = $this->mapPautaTipoToProcessoTipoEPolo($tipo);
             $isTestemunha = $tipo === 'testemunha_defesa' || $tipo === 'testemunha_denuncia';
 
@@ -456,6 +461,13 @@ final class SalaAudienciasPautaService
                 }
             }
 
+            if (!$canAlterarVinculo && (!$isTestemunha || $parteGlobalId !== '' || $processoParteId !== '' || $this->defensorPodeAlterarVinculo($payload, $tipo))) {
+                throw new PautaVinculoSetorNegado('Acesso setorial necessário para alterar vínculo do processo.');
+            }
+            if ($processoParteId !== '') {
+                $this->assertVinculoPauta($processoParteId, $processoId, $parteGlobalId);
+            }
+
             if ($parteGlobalId === '') {
                 if ($isTestemunha) {
                     $parteGlobalId = '';
@@ -482,6 +494,7 @@ final class SalaAudienciasPautaService
                         $processoParteId = $this->processosPartesRepository->addParte($processoId, $parteGlobalId, $tipoProcesso, $poloProcesso);
                     } else {
                         $processoParteId = (string) ($processoParte['id'] ?? '');
+                        $this->assertVinculoPauta($processoParteId, $processoId, $parteGlobalId);
                         $this->processosPartesRepository->update($processoParteId, [
                             'tipo_parte' => $tipoProcesso,
                             'polo' => $poloProcesso,
@@ -495,6 +508,8 @@ final class SalaAudienciasPautaService
                     ]);
                 }
             }
+
+            $this->normalizeDefensorPayloadForSave($payload, $tipo);
 
             $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
             if (($tipo === 'reu' || $tipo === 'vitima') && ($tipoDef === 'publico' || $tipoDef === 'privado')) {
@@ -532,7 +547,7 @@ final class SalaAudienciasPautaService
 
             return $idPartePauta;
         } catch (Throwable $e) {
-            $this->connection->rollBack();
+            if ($this->connection->inTransaction()) $this->connection->rollBack();
             throw $e;
         }
     }
@@ -557,10 +572,13 @@ final class SalaAudienciasPautaService
             throw new InvalidArgumentException('Preencha os campos obrigatórios da parte.');
         }
 
-        $this->normalizeDefensorPayloadForSave($payload, $tipo);
-
         $this->connection->beginTransaction();
         try {
+            $processoId = trim((string) ($parteAtual['processo'] ?? ''));
+            $idPauta = trim((string) ($parteAtual['pauta'] ?? ''));
+            $canAlterarVinculo = ProcessoSetorAuthorization::canModifyProcess($this->connection, (string) $usuarioId, $processoId);
+            $this->assertPautaProcessoEstavel($idPauta, $processoId);
+            $parteAtual = $this->carregarPartePautaBloqueada($idParte, $idPauta, $parteAtual);
             $parteGlobalId = trim((string) ($payload['parte_id_global'] ?? ''));
             if ($parteGlobalId === '') {
                 $parteGlobalId = trim((string) ($parteAtual['parte_id_global'] ?? ''));
@@ -569,9 +587,16 @@ final class SalaAudienciasPautaService
             if ($processoParteId === '') {
                 $processoParteId = trim((string) ($parteAtual['processo_parte_id'] ?? ''));
             }
-            if ($parteGlobalId === '') {
+            $isTestemunha = $tipo === 'testemunha_defesa' || $tipo === 'testemunha_denuncia';
+            if (!$canAlterarVinculo && (!$isTestemunha || $parteGlobalId !== '' || $processoParteId !== '' || $this->defensorPodeAlterarVinculo($payload, $tipo))) {
+                throw new PautaVinculoSetorNegado('Acesso setorial necessário para alterar vínculo do processo.');
+            }
+            if ($processoParteId !== '') {
+                $this->assertVinculoPauta($processoParteId, $processoId, $parteGlobalId);
+            }
+            if ($parteGlobalId === '' && !$isTestemunha) {
                 $parteGlobalId = $this->partesRepository->ensureParteByNomeOuCpf($nome, null);
-            } else {
+            } elseif ($parteGlobalId !== '') {
                 $parteGlobal = $this->partesRepository->findById($parteGlobalId);
                 if ($parteGlobal === null) {
                     throw new InvalidArgumentException('Pessoa cadastrada não encontrada.');
@@ -588,7 +613,7 @@ final class SalaAudienciasPautaService
                     'tipo_parte' => $tipoProcesso,
                     'polo' => $poloProcesso,
                 ]);
-            } else {
+            } elseif ($parteGlobalId !== '') {
                 $processoId = trim((string) ($parteAtual['processo'] ?? ''));
                 if ($processoId !== '') {
                     $vinculoAtual = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteGlobalId);
@@ -596,6 +621,7 @@ final class SalaAudienciasPautaService
                         $processoParteId = $this->processosPartesRepository->addParte($processoId, $parteGlobalId, $tipoProcesso, $poloProcesso);
                     } else {
                         $processoParteId = (string) ($vinculoAtual['id'] ?? '');
+                        $this->assertVinculoPauta($processoParteId, $processoId, $parteGlobalId);
                         $this->processosPartesRepository->update($processoParteId, [
                             'tipo_parte' => $tipoProcesso,
                             'polo' => $poloProcesso,
@@ -604,6 +630,7 @@ final class SalaAudienciasPautaService
                 }
             }
 
+            $this->normalizeDefensorPayloadForSave($payload, $tipo);
             $processoId = trim((string) ($parteAtual['processo'] ?? ''));
             $tipoDef = trim((string) ($payload['tipo_defensor'] ?? ''));
             if (($tipo === 'reu' || $tipo === 'vitima') && $processoId !== '' && ($tipoDef === 'publico' || $tipoDef === 'privado')) {
@@ -650,8 +677,67 @@ final class SalaAudienciasPautaService
                 'altered' => $ok && $houveAlteracaoRelevante,
             ];
         } catch (Throwable $e) {
-            $this->connection->rollBack();
+            if ($this->connection->inTransaction()) $this->connection->rollBack();
             throw $e;
+        }
+    }
+
+    private function defensorPodeAlterarVinculo(array $payload, string $tipo): bool
+    {
+        if ($tipo !== 'reu' && $tipo !== 'vitima') return false;
+        $kind = trim((string) ($payload['tipo_defensor'] ?? ''));
+        if ($kind !== 'publico' && $kind !== 'privado') return false;
+        $id = trim((string) ($payload['defensor_' . $kind . '_id'] ?? ''));
+        $other = trim((string) ($payload['defensor_' . $kind . '_outro'] ?? ''));
+        return ($id === 'outro' && $other !== '') || $this->isParteGlobalId($id);
+    }
+
+    private function assertPautaProcessoEstavel(string $pautaId, string $processoId): void
+    {
+        if ($pautaId === '' || $processoId === '' || !$this->connection->inTransaction()) {
+            throw new InvalidArgumentException('Audiência ou processo inválido.');
+        }
+        $lock = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+        $st = $this->connection->prepare('SELECT `processo` FROM `sala_audiencias_pauta` WHERE `id_pauta`=:id AND `ativo`=1' . $lock);
+        $st->execute([':id' => $pautaId]);
+        $current = $st->fetchColumn();
+        $st->closeCursor();
+        if ($current === false || !hash_equals($processoId, trim((string) $current))) {
+            throw new InvalidArgumentException('Audiência ou processo foi alterado.');
+        }
+    }
+
+    private function carregarPartePautaBloqueada(string $parteId, string $pautaId, array $original): array
+    {
+        $lock = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+        $st = $this->connection->prepare('SELECT `pauta`,`parte_id_global`,`processo_parte_id` FROM `sala_audiencias_pauta_parte` WHERE `id_parte`=:id AND `ativo`=1' . $lock);
+        $st->execute([':id' => $parteId]);
+        $current = $st->fetch(PDO::FETCH_ASSOC);
+        $st->closeCursor();
+        if ($current === false || trim((string) $current['pauta']) !== $pautaId
+            || trim((string) $current['parte_id_global']) !== trim((string) ($original['parte_id_global'] ?? ''))
+            || trim((string) $current['processo_parte_id']) !== trim((string) ($original['processo_parte_id'] ?? ''))) {
+            throw new InvalidArgumentException('Parte da audiência foi alterada.');
+        }
+        $fresh = $this->parteRepository->findById($parteId);
+        if ($fresh === null || trim((string) ($fresh['pauta'] ?? '')) !== $pautaId) {
+            throw new InvalidArgumentException('Parte da audiência foi alterada.');
+        }
+        return $fresh;
+    }
+
+    private function assertVinculoPauta(string $linkId, string $processoId, string $parteId): void
+    {
+        if (!$this->connection->inTransaction() || $linkId === '' || $processoId === '' || $parteId === '') {
+            throw new InvalidArgumentException('Vínculo de processo e pessoa incompatível com a audiência.');
+        }
+        $lock = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+        $st = $this->connection->prepare('SELECT `processo_id`,`parte_id` FROM `processos_partes` WHERE `id`=:id' . $lock);
+        $st->execute([':id' => $linkId]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        $st->closeCursor();
+        if ($row === false || !hash_equals($processoId, trim((string) $row['processo_id'])) || !hash_equals($parteId, trim((string) $row['parte_id']))) {
+            throw new InvalidArgumentException('Vínculo de processo e pessoa incompatível com a audiência.');
         }
     }
 
@@ -827,6 +913,7 @@ final class SalaAudienciasPautaService
         if ($v === null) {
             $this->processosPartesRepository->addParte($processoId, $defensorParteId, $tipo, $polo);
         } else {
+            $this->assertVinculoPauta((string) ($v['id'] ?? ''), $processoId, $defensorParteId);
             $this->processosPartesRepository->update((string) $v['id'], ['tipo_parte' => $tipo, 'polo' => $polo]);
         }
     }

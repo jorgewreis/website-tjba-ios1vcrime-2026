@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0027
+
+**Data:** 2026-11-25 03:06:09 | **Commit:** `2a8a30db` | **Tipo:** `patch`
+
+- test: prepara validacao isolada de vinculos de pauta
+
 ## V. 1.88.0026
 
 **Data:** 2026-11-25 02:36:07 | **Commit:** `6fd4f38f` | **Tipo:** `patch`
@@ -7794,6 +7800,7 @@
 
 
 \n
+
 
 
 
