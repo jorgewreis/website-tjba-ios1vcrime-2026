@@ -55,7 +55,7 @@ class FakeStatement {
   }
   public function fetchAll($mode){
   $base=['status'=>'designada','data_audiencia'=>'2099-01-01','hora_audiencia'=>'10:00','processo_sigiloso'=>0,'ja_inscrito'=>0,'qtd_menor'=>0,'total_inscritos_pauta'=>0,'tem_prioridade_bloqueio'=>0];
-  $rows=[array_merge($base,['id_pauta'=>'SYNTHETIC-1']),array_merge($base,['id_pauta'=>'SIG','processo_sigiloso'=>1]),array_merge($base,['id_pauta'=>'MENOR','qtd_menor'=>1,'ja_inscrito'=>1]),array_merge($base,['id_pauta'=>'PRIORIDADE','tem_prioridade_bloqueio'=>1]),array_merge($base,['id_pauta'=>'MEDIDA','tem_prioridade_bloqueio'=>1])];
+  $rows=[array_merge($base,['id_pauta'=>'SYNTHETIC-1']),array_merge($base,['id_pauta'=>'SIG','processo_sigiloso'=>1]),array_merge($base,['id_pauta'=>'MENOR','qtd_menor'=>1,'ja_inscrito'=>1]),array_merge($base,['id_pauta'=>'PRIORIDADE','tem_prioridade_bloqueio'=>1]),array_merge($base,['id_pauta'=>'MEDIDA','tem_prioridade_bloqueio'=>1]),array_merge($base,['id_pauta'=>'CAPACITY-4','total_inscritos_pauta'=>4]),array_merge($base,['id_pauta'=>'CAPACITY-5-NEW','total_inscritos_pauta'=>5]),array_merge($base,['id_pauta'=>'CAPACITY-5-ENROLLED','total_inscritos_pauta'=>5,'ja_inscrito'=>1]),array_merge($base,['id_pauta'=>'CAPACITY-6-ENROLLED','total_inscritos_pauta'=>6,'ja_inscrito'=>1])];
   $ids=array_slice(array_values($this->bindings),5);
   return array_values(array_filter($rows,static function($row) use ($ids){return in_array($row['id_pauta'],$ids,true);}));
 } }
@@ -67,7 +67,7 @@ class FakeStatement {
         'app/access/AccessEvaluator.php': "<?php class AccessEvaluator { public static function canAccessPage($page,$profiles){return in_array('ESTUDANTE',$profiles,true);} }",
         'app/access/ProfileNormalizer.php': '<?php class ProfileNormalizer { public static function normalize($p){return $p;} public static function hasEstudante($p){return true;} }',
         'app/helpers/UserAccessHelper.php': '<?php class UserAccessHelper { public static function isUsuarioExterno($p){return true;} }',
-        'app/services/SalaAudienciasAtaService.php': '<?php class SalaAudienciasAtaService { const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA=10; }',
+        'app/services/SalaAudienciasAtaService.php': '<?php class SalaAudienciasAtaService { const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA=5; }',
         'app/helpers/PrioridadesProcessuaisCatalog.php': "<?php class PrioridadesProcessuaisCatalog { static function codigosBloqueantesInscricaoEstudante(){return ['sigiloso','crianca_adolescente','violencia_domestica','medida_protetiva'];} }",
         'app/helpers/SalaAudienciasAtaSigiloHelper.php': "<?php class SalaAudienciasAtaSigiloHelper { public static function sqlProcessoSigilosoEfetivo($p,$a){return '0';} }",
     }
@@ -107,6 +107,18 @@ class FakeStatement {
         status, body = request(port, {'pautas': ['SYNTHETIC-1']})
         assert status == 200 and body['success'] is True
         assert body['items']['SYNTHETIC-1']['pode_inscrever'] is True
+        status, body = request(port, {'pautas': ['CAPACITY-4', 'CAPACITY-5-NEW', 'CAPACITY-5-ENROLLED', 'CAPACITY-6-ENROLLED']})
+        assert status == 200 and body['success'] is True
+        assert body['items']['CAPACITY-4']['pode_inscrever'] is True
+        assert body['items']['CAPACITY-4']['vagas_esgotadas'] is False
+        assert body['items']['CAPACITY-5-NEW']['pode_inscrever'] is False
+        assert body['items']['CAPACITY-5-NEW']['vagas_esgotadas'] is True
+        for key in ('CAPACITY-5-ENROLLED', 'CAPACITY-6-ENROLLED'):
+            assert body['items'][key]['ja_inscrito'] is True
+            assert body['items'][key]['vagas_esgotadas'] is True
+            assert body['items'][key]['pode_inscrever'] is False
+            assert body['items'][key]['status'] == 'designada'
+            assert 'indisponivel' not in body['items'][key]
         status, body = request(port, {'pautas': ['SYNTHETIC-1', 'SIG', 'MENOR', 'PRIORIDADE', 'MEDIDA', 'INEXISTENTE']})
         assert status == 200 and 'INEXISTENTE' not in body['items']
         for key in ('SIG', 'MENOR', 'PRIORIDADE', 'MEDIDA'):

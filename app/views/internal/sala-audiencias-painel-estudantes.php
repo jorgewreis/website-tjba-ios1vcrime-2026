@@ -432,10 +432,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     <?php if ($sigiloso): ?>
                     <span class="content-assuntos danger">Não é permitida inscrição</span>
                     <span class="content-assuntos danger">para processos sigilosos</span>
-                    <?php elseif ($lotado): ?>
-                    <span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>
                     <?php elseif ($ja): ?>
                     <span class="minor-info text-success">Voce esta inscrito.</span>
+                    <?php elseif ($lotado): ?>
+                    <span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>
                     <?php elseif ($menor): ?>
                     <span class="minor-info text-error">Inscricao indisponivel.</span>
                     <?php elseif ($prioridadeBloqueio): ?>
@@ -848,10 +848,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             wrapper.style.display = '';
             if (sigiloso) {
                 wrapper.innerHTML = '<span class="content-assuntos danger">Não é permitida inscrição</span><span class="content-assuntos danger">para processos sigilosos</span>';
-            } else if (lotado) {
-                wrapper.innerHTML = '<span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>';
             } else if (ja) {
                 wrapper.innerHTML = '<span class="minor-info text-success">Voce esta inscrito.</span>';
+            } else if (lotado) {
+                wrapper.innerHTML = '<span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>';
             } else if (menor) {
                 wrapper.innerHTML = '<span class="minor-info text-error">Proibida inscrição de estudantes.</span>';
             } else if (prioridadeBloqueio) {
