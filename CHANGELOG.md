@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0031
+
+**Data:** 2026-11-25 03:25:27 | **Commit:** `ec4ffbf3` | **Tipo:** `patch`
+
+- test: valida migracao em mysql isolado
+
 ## V. 1.88.0030
 
 **Data:** 2026-11-25 03:18:33 | **Commit:** `e2429053` | **Tipo:** `patch`
@@ -7818,6 +7824,7 @@
 
 
 \n
+
 
 
 
