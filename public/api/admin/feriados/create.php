@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 4) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/admin/feriados/create.php');
 $basePath = dirname(__DIR__, 4);
 require_once dirname(__DIR__) . '/_auth_admin_diretora_json.php';
 $connection = requireAdminOuDiretoraJson($basePath);

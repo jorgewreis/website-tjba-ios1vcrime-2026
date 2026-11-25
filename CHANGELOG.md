@@ -1,28 +1,76 @@
 # Changelog
 
+## V. 1.88.0027
+
+**Data:** 2026-11-25 05:47:53 | **Commit:** `c401ff04` | **Tipo:** `patch`
+
+- test: executa privacidade estudantil no ci
+
+## V. 1.88.0026
+
+**Data:** 2026-11-25 02:36:07 | **Commit:** `6fd4f38f` | **Tipo:** `patch`
+
+- test: verifica consulta com perfis acumulados
+
+## V. 1.88.0025
+
+**Data:** 2026-11-25 02:27:25 | **Commit:** `310da4f7` | **Tipo:** `patch`
+
+- fix: reconhece horario ocupado em pauta
+
+## V. 1.88.0024
+
+**Data:** 2026-11-25 02:25:49 | **Commit:** `bca39a53` | **Tipo:** `patch`
+
+- test: cobre consulta de horario de pauta
+
+## V. 1.88.0023
+
+**Data:** 2026-11-25 02:16:21 | **Commit:** `2d7029f2` | **Tipo:** `patch`
+
+- ci: identifica etapa em falha do laboratorio de atas
+
+## V. 1.88.0022
+
+**Data:** 2026-11-25 02:09:39 | **Commit:** `372967aa` | **Tipo:** `patch`
+
+- docs(REI-73): conciliar disposicao historica parcial
+
+## V. 1.88.0021
+
+**Data:** 2026-11-25 01:15:43 | **Commit:** `142adf8c` | **Tipo:** `patch`
+
+- docs(REI-73): conciliar operacoes e evidencias
+
+## V. 1.88.0020
+
+**Data:** 2026-11-25 00:25:25 | **Commit:** `501dd68e` | **Tipo:** `patch`
+
+- docs(REI-73): registrar evidencias incrementais
+
 ## V. 1.88.0019
 
-**Data:** 2026-11-22 21:27:27 | **Commit:** `335fc25a` | **Tipo:** `patch`
+**Data:** 2026-11-24 23:21:09 | **Commit:** `4fdafd90` | **Tipo:** `patch`
 
-- chore(REI-152): remove trailing changelog blank line
+- docs(REI-73): consolidar evidencias recentes da auditoria
 
 ## V. 1.88.0018
 
-**Data:** 2026-11-22 21:01:27 | **Commit:** `593c7346` | **Tipo:** `patch`
+**Data:** 2026-11-24 23:10:38 | **Commit:** `4e58cb70` | **Tipo:** `patch`
 
-- fix(REI-152): mark failed rollback connections unsafe
+- fix(REI-317): ocultar coluna de setor vazia
 
 ## V. 1.88.0017
 
-**Data:** 2026-11-22 20:58:01 | **Commit:** `5eae284c` | **Tipo:** `patch`
+**Data:** 2026-11-24 21:32:13 | **Commit:** `2715a1ce` | **Tipo:** `patch`
 
-- fix(REI-152): serialize document identity writers
+- test(REI-73): verificar leitura por setor e sigilo
 
 ## V. 1.88.0016
 
-**Data:** 2026-11-22 20:18:33 | **Commit:** `7d5b8eb9` | **Tipo:** `patch`
+**Data:** 2026-11-24 20:24:07 | **Commit:** `85d79ad0` | **Tipo:** `patch`
 
-- fix(REI-152): atomic document and legacy CPF updates
+- fix(REI-317): ajuste contagem de guias no dashboard
 
 ## V. 1.88.0015
 
@@ -152,6 +200,13 @@
 **Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
 
 - fix(REI-120): make monitoring transitions atomic
+
+
+## Alteracao REI-149 - versao pendente
+
+**Data:** 2026-11-20 20:09:06 | **Commit:** `0e742a44` | **Tipo:** `patch`
+
+- fix(REI-149): guard disposable MySQL fixture
 
 ## V. 1.87.0185
 
@@ -7752,4 +7807,14 @@
 
 
 \n
+
+
+
+
+
+
+
+
+
+
 

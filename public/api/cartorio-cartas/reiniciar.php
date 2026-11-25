@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-cartas/reiniciar.php');
 $basePath=dirname(__DIR__,3);
 require_once $basePath.'/config/config.php';
 require_once $basePath.'/config/security.php';
@@ -25,4 +28,4 @@ try {
     CartasReinicioService::reiniciar(Conection::getInstance()->getConnection(),trim((string)($payload['modulo']??'')),trim((string)($payload['carta_id']??'')),$userId);
     echo json_encode(['success'=>true],JSON_UNESCAPED_UNICODE);
 } catch(InvalidArgumentException $e){http_response_code(400);echo json_encode(['error'=>$e->getMessage()],JSON_UNESCAPED_UNICODE);}
-catch(Throwable $e){error_log('reiniciar carta: '.$e->getMessage());http_response_code(500);echo json_encode(['error'=>'Não foi possível reiniciar a carta.'],JSON_UNESCAPED_UNICODE);}
+catch(Throwable $e){error_log('reiniciar carta: '.ApiErrorReporter::genericMessage($e, 'public/api/cartorio-cartas/reiniciar.php'));http_response_code(500);echo json_encode(['error'=>'Não foi possível reiniciar a carta.'],JSON_UNESCAPED_UNICODE);}

@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/gabinete-reus-presos/processo-meta.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['reuspresosedit'], true);
 
@@ -76,6 +79,7 @@ try {
         'data_fato' => $dataFato,
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/gabinete-reus-presos/processo-meta.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao carregar metadados do processo.'], JSON_UNESCAPED_UNICODE);
 }

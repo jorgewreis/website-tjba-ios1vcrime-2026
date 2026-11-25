@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 4) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/admin/feriados/list.php');
 $basePath = dirname(__DIR__, 4);
 require_once dirname(__DIR__) . '/_auth_admin_diretora_json.php';
 $connection = requireAdminOuDiretoraJson($basePath);
@@ -50,5 +53,5 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao listar feriados: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao listar feriados: ' . ApiErrorReporter::genericMessage($exception, 'public/api/admin/feriados/list.php')], JSON_UNESCAPED_UNICODE);
 }

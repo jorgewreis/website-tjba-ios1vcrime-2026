@@ -14,6 +14,9 @@ jobs:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
+      - name: Verificar prontidão do MySQL
+        shell: pwsh
+        run: ./tests/usuarios/rei148-mysql-readiness.test.ps1
       - name: Obter imagens por digest
         run: |
           docker pull php@sha256:64ffb7411253121bbeb0d9eba37ce85e88d2a60d698e5debbd66bac71b20f3c2

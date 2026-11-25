@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-guias/create.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['guiascreate'], true);
 
@@ -17,25 +20,6 @@ $parsed = json_decode($payload, true);
 if (!is_array($parsed)) {
     $parsed = $_POST;
 }
-
-// #region agent log
-$logPath = dirname(__DIR__, 3) . '/debug-64730a.log';
-$logEntry = json_encode([
-    'sessionId' => '64730a',
-    'location' => 'create.php:parsed',
-    'message' => 'API received payload',
-    'data' => [
-        'payloadLen' => strlen($payload),
-        'parsedIsArray' => is_array($parsed),
-        'keys' => is_array($parsed) ? array_keys($parsed) : [],
-        'hasNumeroProcesso' => is_array($parsed) && isset($parsed['numero_processo']),
-        'hasClasseCodigo' => is_array($parsed) && isset($parsed['classe_codigo']),
-    ],
-    'timestamp' => round(microtime(true) * 1000),
-    'hypothesisId' => 'C',
-]) . "\n";
-@file_put_contents($logPath, $logEntry, FILE_APPEND | LOCK_EX);
-// #endregion
 
 $usuarioCadastroId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 if ($usuarioCadastroId !== '') {
@@ -66,24 +50,12 @@ try {
     if ($guia !== null && isset($guia['valor_multa']) && $guia['valor_multa'] !== '' && $guia['valor_multa'] !== null) {
         $body['valor_multa_calculado'] = 'R$ ' . number_format((float) $guia['valor_multa'], 2, ',', '.');
     }
-    // #region agent log
-    $logPath = dirname(__DIR__, 3) . '/debug-64730a.log';
-    @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'create.php:success', 'message' => 'create returned id', 'data' => ['newId' => $newId], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
-    // #endregion
     http_response_code(201);
     echo json_encode($body, JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
-    // #region agent log
-    $logPath = dirname(__DIR__, 3) . '/debug-64730a.log';
-    @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'create.php:catchInvalid', 'message' => $exception->getMessage(), 'data' => ['class' => get_class($exception)], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
-    // #endregion
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $exception) {
-    // #region agent log
-    $logPath = dirname(__DIR__, 3) . '/debug-64730a.log';
-    @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'create.php:catchThrowable', 'message' => $exception->getMessage(), 'data' => ['class' => get_class($exception), 'file' => $exception->getFile(), 'line' => $exception->getLine()], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
-    // #endregion
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao criar guia: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao criar guia: ' . ApiErrorReporter::genericMessage($exception, 'public/api/cartorio-guias/create.php')], JSON_UNESCAPED_UNICODE);
 }

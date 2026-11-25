@@ -4,6 +4,54 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../app/services/SalaAudienciasAtaService.php';
 require_once __DIR__ . '/../../app/helpers/SalaAudienciasInscricaoIndisponivel.php';
 
+$timezoneOriginal = date_default_timezone_get();
+try {
+    foreach (['America/Bahia', 'UTC'] as $timezone) {
+        date_default_timezone_set($timezone);
+        if (!SalaAudienciasAtaService::dataPermiteInscricaoEstudante(date('Y-m-d'))) {
+            throw new RuntimeException('A política deve permitir inscrição na data local da audiência.');
+        }
+        foreach ([date('Y-m-d', strtotime('-1 day')), date('Y-m-d', strtotime('+1 day')), ''] as $dataBloqueada) {
+            if (SalaAudienciasAtaService::dataPermiteInscricaoEstudante($dataBloqueada)) {
+                throw new RuntimeException('A política aceitou data ausente ou diferente do dia local.');
+            }
+        }
+    }
+} finally {
+    date_default_timezone_set($timezoneOriginal);
+}
+
+$agoraFixo = strtotime('2026-11-23 10:00:00');
+if ($agoraFixo === false
+    || SalaAudienciasAtaService::normalizarStatusPauta('designada', '2026-11-23', '09:59:59', $agoraFixo) !== 'atrasada'
+    || SalaAudienciasAtaService::normalizarStatusPauta('agendada', '2026-11-23', '09:59:59', $agoraFixo) !== 'atrasada'
+    || SalaAudienciasAtaService::normalizarStatusPauta('designada', '2026-11-23', '10:00:00', $agoraFixo) !== 'designada'
+    || SalaAudienciasAtaService::normalizarStatusPauta('encerrada', '2026-11-23', '09:00:00', $agoraFixo) !== 'finalizada') {
+    throw new RuntimeException('A normalização determinística do status da pauta divergiu.');
+}
+
+$agoraElegibilidade = time();
+$dataHojeElegibilidade = date('Y-m-d', $agoraElegibilidade);
+$horaFuturaElegibilidade = date('H:i:s', $agoraElegibilidade + 3600);
+$elegiveisStatus = [
+    'id_pauta' => 'pauta-status-sintetica',
+    'ja_inscrito' => 0,
+    'status' => 'designada',
+    'data_audiencia' => $dataHojeElegibilidade,
+    'hora_audiencia' => $horaFuturaElegibilidade,
+];
+if (SalaAudienciasAtaService::statusIndisponivelParaEstudanteNaoInscrito($elegiveisStatus, $agoraElegibilidade)
+    || !SalaAudienciasAtaService::statusIndisponivelParaEstudanteNaoInscrito(array_merge($elegiveisStatus, ['status' => 'em_andamento']), $agoraElegibilidade)
+    || !SalaAudienciasAtaService::statusIndisponivelParaEstudanteNaoInscrito(array_merge($elegiveisStatus, ['data_audiencia' => date('Y-m-d', strtotime('+1 day', $agoraElegibilidade))]), $agoraElegibilidade)
+    || SalaAudienciasAtaService::statusIndisponivelParaEstudanteNaoInscrito(array_merge($elegiveisStatus, ['ja_inscrito' => 1, 'status' => 'em_andamento']), $agoraElegibilidade)
+    || SalaAudienciasAtaService::statusIndisponivelParaEstudanteNaoInscrito(array_merge($elegiveisStatus, ['ja_inscrito' => 1, 'status' => 'finalizada']), $agoraElegibilidade)
+    || !SalaAudienciasAtaService::statusIndisponivelParaEstudanteNaoInscrito(array_merge($elegiveisStatus, ['total_inscritos_pauta' => 5]), $agoraElegibilidade)
+    || !SalaAudienciasAtaService::statusIndisponivelParaEstudanteNaoInscrito(array_merge($elegiveisStatus, ['total_inscritos_pauta' => 6]), $agoraElegibilidade)
+    || SalaAudienciasAtaService::statusIndisponivelParaEstudanteNaoInscrito(array_merge($elegiveisStatus, ['ja_inscrito'=>1, 'total_inscritos_pauta'=>6]), $agoraElegibilidade)) {
+    throw new RuntimeException('A elegibilidade restringiu inscritos ou expôs status/data de não inscritos.');
+}
+echo "PASS: elegibilidade por status/data redige apenas novos não inscritos e preserva inscritos\n";
+
 $db = new PDO('sqlite::memory:');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 foreach ([
