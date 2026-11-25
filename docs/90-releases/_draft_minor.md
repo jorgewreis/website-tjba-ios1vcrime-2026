@@ -23,4 +23,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **ci: diagnostica espera no vinculo** `[25c28508]`
 - **test: reconhece padding de chave innodb** `[255ab8be]`
 - **test: valida acesso com login sintetico** `[b3b3c9f9]`
+- **test: inclui novo entrypoint na recusa** `[6619340d]`
 
