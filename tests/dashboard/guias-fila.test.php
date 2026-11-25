@@ -21,6 +21,10 @@ function verificar(bool $condition, string $message): void { if (!$condition) th
 $db = new DashboardSqlite('sqlite::memory:');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $db->sqliteCreateCollation('utf8mb4_unicode_ci', static fn($a, $b) => strcmp($a, $b));
+$db->exec('CREATE TABLE usuarios (id_usuario TEXT PRIMARY KEY, nome TEXT, sobrenome TEXT)');
+$db->exec('CREATE TABLE alocacoes_regras (regra TEXT PRIMARY KEY, usuario_id TEXT)');
+$db->exec("INSERT INTO usuarios VALUES ('u1','Ana','Souza'),('u2','Bruno','Lima')");
+$db->exec("INSERT INTO alocacoes_regras VALUES ('ALLOCATE-GUIAS','u1'),('ALLOCATE-CARTORIOOFICIOS','u2')");
 $modules = [
     ['cartas_expedidas','cartas_expedidas_subtarefas','carta_expedida_id'],
     ['cartas_recebidas','cartas_recebidas_subtarefas','carta_recebida_id'],
@@ -29,10 +33,11 @@ $modules = [
     ['oficios_cartorio','oficios_cartorio_subtarefas','oficio_cartorio_id'],
 ];
 foreach ($modules as [$parent, $child, $fk]) {
-    $db->exec("CREATE TABLE `$parent` (id TEXT PRIMARY KEY, status TEXT, created_at TEXT)");
+    $extra = $parent === 'cartas_expedidas' ? ', prazo_dias INTEGER' : '';
+    $db->exec("CREATE TABLE `$parent` (id TEXT PRIMARY KEY, status TEXT, created_at TEXT{$extra})");
     $db->exec("CREATE TABLE `$child` (id TEXT PRIMARY KEY, `$fk` TEXT, tipo TEXT, ordem INTEGER, status TEXT, updated_at TEXT)");
 }
-$db->exec("INSERT INTO guias VALUES ('aberta','em_andamento','2026-01-01'),('concluida','concluída','2026-01-01'),('cancelada','cancelada','2026-01-01')");
+$db->exec("INSERT INTO guias VALUES ('aberta','em_andamento','2026-01-01'),('pendente','pendente','2026-01-01'),('concluida','concluída','2026-01-01'),('cancelada','cancelada','2026-01-01')");
 $insert = $db->prepare('INSERT INTO guias_subtarefas VALUES (?,?,?,?,?,?)');
 $steps = ['detalhamento_informacoes','calculo_pena_multa','expedicao_guia','aguardando_assinatura','juntada_automatica','gerar_pdf','envio_guia','juntada_termo_envio'];
 foreach ($steps as $i => $type) {
@@ -41,6 +46,18 @@ foreach ($steps as $i => $type) {
 }
 $insert->execute(['x','cancelada','detalhamento_informacoes',1,'em_andamento','2026-01-01']);
 $service = new DashboardResumoService($db);
+$result = $service->resumo('usuario', ['CARTORIO']);
+verificar(($result['setor']['responsaveis_regras'] ?? null) === ['guias'=>'Ana Souza','oficios'=>'Bruno Lima'], 'Responsáveis devem refletir as regras específicas.');
+verificar(($result['setor']['responsaveis_proprios'] ?? null) === ['guias'=>false,'oficios'=>false], 'Pessoa diferente não deve ser identificada como usuário ativo.');
+$result = $service->resumo('u1', ['CARTORIO']);
+verificar(($result['setor']['responsaveis_proprios'] ?? null) === ['guias'=>true,'oficios'=>false], 'Somente a regra do usuário da sessão deve ser marcada como própria.');
+$db->exec("UPDATE alocacoes_regras SET usuario_id='u2' WHERE regra='ALLOCATE-GUIAS'");
+$db->exec("DELETE FROM alocacoes_regras WHERE regra='ALLOCATE-CARTORIOOFICIOS'");
+$result = $service->resumo('usuario', ['CARTORIO']);
+verificar(($result['setor']['responsaveis_regras'] ?? null) === ['guias'=>'Bruno Lima'], 'Alteração e remoção de regra devem refletir no resumo seguinte.');
+$result = $service->resumo('usuario', ['GABINETE']);
+verificar(($result['setor']['responsaveis_regras'] ?? null) === [], 'Gabinete não deve receber responsáveis do Cartório.');
+verificar(($result['setor']['responsaveis_proprios'] ?? null) === [], 'Gabinete não deve receber identidade da regra do Cartório.');
 $db->exec("INSERT INTO guias VALUES ('futura-invalida','em_andamento','2026-01-01')");
 $insert->execute(['f1','futura-invalida','detalhamento_informacoes',1,'em_andamento','2026-01-01']);
 $insert->execute(['f2','futura-invalida','etapa_inexistente',2,'pendente','2026-01-01']);
@@ -61,10 +78,15 @@ $db->exec("DELETE FROM guias WHERE id='futura-duplicada'");
 foreach ($steps as $i => $type) {
     if ($i > 0) $db->exec("UPDATE guias_subtarefas SET status='concluida' WHERE id='a" . ($i-1) . "'");
     $result = $service->resumo('usuario', ['CARTORIO']);
-    $queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
-    verificar(count($queue) === 1 && $queue[0]['type'] === $type && $queue[0]['count'] === 1, 'Etapa executável incorreta: '.$type);
+    $queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias' && ($q['type'] ?? '') === $type));
+    verificar(count($queue) === 1 && $queue[0]['count'] === ($type === 'expedicao_guia' ? 2 : 1), 'Etapa executável incorreta: '.$type);
+    $expedicao = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias' && ($q['type'] ?? '') === 'expedicao_guia'));
+    verificar(count($expedicao) === 1 && $expedicao[0]['count'] === 2, 'O card de expedição deve contar guias pendentes/em andamento independentemente da etapa ativa.');
     verificar($result['geral']['tarefas_abertas'] === 1 && !$result['fila_parcial'], 'Total não reflete a etapa aberta');
 }
+$result = $service->resumo('usuario', ['CARTORIO']);
+$queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias' && ($q['type'] ?? '') === 'expedicao_guia'));
+verificar(count($queue) === 1 && $queue[0]['count'] === 2, 'O card de expedição deve contar todas as guias pendentes/em andamento, mesmo sem etapa de expedição ativa.');
 $db->exec("UPDATE guias_subtarefas SET status='concluida' WHERE guia_id='aberta'");
 $db->exec("UPDATE guias SET status='concluída' WHERE id='aberta'");
 $result = $service->resumo('usuario', ['CARTORIO']);
@@ -73,39 +95,39 @@ $db->exec("INSERT INTO guias VALUES ('pulada','em_andamento','2026-01-01')");
 $insert->execute(['p1','pulada','detalhamento_informacoes',1,'pulada','2026-01-01']);
 $insert->execute(['p2','pulada','calculo_pena_multa',2,'pendente','2026-01-01']);
 $result = $service->resumo('usuario', ['CARTORIO']);
-$queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
+$queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias' && ($q['type'] ?? '') === 'calculo_pena_multa'));
 verificar(count($queue) === 1 && $queue[0]['type'] === 'calculo_pena_multa' && $queue[0]['count'] === 1, 'Etapas puladas não bloqueiam a próxima');
 $insert->execute(['p3','pulada','calculo_pena_multa',2,'em_andamento','2026-01-01']);
 $result = $service->resumo('usuario', ['CARTORIO']);
 $queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
-verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && ($queue[0]['error'] ?? false), 'Empate na ordem deve tornar fila indisponível');
+verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && (bool)array_filter($queue, static fn($q) => $q['error'] ?? false), 'Empate na ordem deve tornar fila indisponível');
 $db->exec("DELETE FROM guias_subtarefas WHERE id='p3'");
 $db->exec("UPDATE guias_subtarefas SET tipo='etapa_inexistente' WHERE id='p2'");
 $result = $service->resumo('usuario', ['CARTORIO']);
 $queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
-verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && ($queue[0]['error'] ?? false), 'Tipo ativo desconhecido deve tornar fila indisponível');
+verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && (bool)array_filter($queue, static fn($q) => $q['error'] ?? false), 'Tipo ativo desconhecido deve tornar fila indisponível');
 $db->exec("UPDATE guias_subtarefas SET tipo='calculo_pena_multa' WHERE id='p2'");
 $db->exec("UPDATE guias_subtarefas SET ordem=NULL WHERE id='p2'");
 $result = $service->resumo('usuario', ['CARTORIO']);
 $queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
-verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && ($queue[0]['error'] ?? false), 'Etapa ativa sem ordem deve tornar fila indisponível');
+verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && (bool)array_filter($queue, static fn($q) => $q['error'] ?? false), 'Etapa ativa sem ordem deve tornar fila indisponível');
 $db->exec("UPDATE guias_subtarefas SET ordem=2 WHERE id='p2'");
 $db->exec("INSERT INTO guias VALUES ('ordem-invalida','em_andamento','2026-01-01')");
 $insert->execute(['o1','ordem-invalida','expedicao_guia',2,'em_andamento','2026-01-01']);
 $result = $service->resumo('usuario', ['CARTORIO']);
 $queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
-verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && ($queue[0]['error'] ?? false), 'Tipo e ordem incompatíveis devem tornar fila indisponível');
+verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && (bool)array_filter($queue, static fn($q) => $q['error'] ?? false), 'Tipo e ordem incompatíveis devem tornar fila indisponível');
 $db->exec("DELETE FROM guias_subtarefas WHERE guia_id='ordem-invalida'");
 $db->exec("DELETE FROM guias WHERE id='ordem-invalida'");
 $db->exec("INSERT INTO guias VALUES ('status-invalido','em_andamento','2026-01-01')");
 $insert->execute(['s1','status-invalido','expedicao_guia',3,'em_revisao','2026-01-01']);
 $result = $service->resumo('usuario', ['CARTORIO']);
 $queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
-verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && ($queue[0]['error'] ?? false), 'Status desconhecido deve tornar fila indisponível');
+verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && (bool)array_filter($queue, static fn($q) => $q['error'] ?? false), 'Status desconhecido deve tornar fila indisponível');
 $db->exec("DELETE FROM guias_subtarefas WHERE guia_id='status-invalido'");
 $db->exec("DELETE FROM guias WHERE id='status-invalido'");
 $db->falharGuias = true;
 $result = $service->resumo('usuario', ['CARTORIO']);
 $queue = array_values(array_filter($result['geral']['filas'], static fn($q) => ($q['key'] ?? '') === 'guias'));
-verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && ($queue[0]['error'] ?? false) && $queue[0]['count'] === null, 'Falha da fila deve tornar total indisponível');
+verificar($result['geral']['tarefas_abertas'] === null && $result['fila_parcial'] && (bool)array_filter($queue, static fn($q) => ($q['error'] ?? false) && $q['count'] === null), 'Falha da fila deve tornar total indisponível');
 echo "PASS: oito etapas, conclusão, total e falha de guias em SQLite sintético\n";

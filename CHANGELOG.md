@@ -1,5 +1,71 @@
 # Changelog
 
+## V. 1.88.0026
+
+**Data:** 2026-11-25 02:36:07 | **Commit:** `6fd4f38f` | **Tipo:** `patch`
+
+- test: verifica consulta com perfis acumulados
+
+## V. 1.88.0025
+
+**Data:** 2026-11-25 02:27:25 | **Commit:** `310da4f7` | **Tipo:** `patch`
+
+- fix: reconhece horario ocupado em pauta
+
+## V. 1.88.0024
+
+**Data:** 2026-11-25 02:25:49 | **Commit:** `bca39a53` | **Tipo:** `patch`
+
+- test: cobre consulta de horario de pauta
+
+## V. 1.88.0023
+
+**Data:** 2026-11-25 02:16:21 | **Commit:** `2d7029f2` | **Tipo:** `patch`
+
+- ci: identifica etapa em falha do laboratorio de atas
+
+## V. 1.88.0022
+
+**Data:** 2026-11-25 02:09:39 | **Commit:** `372967aa` | **Tipo:** `patch`
+
+- docs(REI-73): conciliar disposicao historica parcial
+
+## V. 1.88.0021
+
+**Data:** 2026-11-25 01:15:43 | **Commit:** `142adf8c` | **Tipo:** `patch`
+
+- docs(REI-73): conciliar operacoes e evidencias
+
+## V. 1.88.0020
+
+**Data:** 2026-11-25 00:25:25 | **Commit:** `501dd68e` | **Tipo:** `patch`
+
+- docs(REI-73): registrar evidencias incrementais
+
+## V. 1.88.0019
+
+**Data:** 2026-11-24 23:21:09 | **Commit:** `4fdafd90` | **Tipo:** `patch`
+
+- docs(REI-73): consolidar evidencias recentes da auditoria
+
+## V. 1.88.0018
+
+**Data:** 2026-11-24 23:10:38 | **Commit:** `4e58cb70` | **Tipo:** `patch`
+
+- fix(REI-317): ocultar coluna de setor vazia
+
+## V. 1.88.0017
+
+**Data:** 2026-11-24 21:32:13 | **Commit:** `2715a1ce` | **Tipo:** `patch`
+
+- test(REI-73): verificar leitura por setor e sigilo
+
+## V. 1.88.0016
+
+**Data:** 2026-11-24 20:24:07 | **Commit:** `85d79ad0` | **Tipo:** `patch`
+
+- fix(REI-317): ajuste contagem de guias no dashboard
+
 ## V. 1.88.0015
 
 **Data:** 2026-11-20 20:40:37 | **Commit:** `bd3f5453` | **Tipo:** `patch`
@@ -7728,4 +7794,14 @@
 
 
 \n
+
+
+
+
+
+
+
+
+
+
 

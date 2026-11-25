@@ -29,3 +29,5 @@ jobs:
         run: python3 -B tests/auth/rei93-lost-create-runner.test.py
       - name: Verificar topologia com objetos sinteticos
         run: pwsh -NoProfile -File tests/auth/docker-topology-validation.test.ps1
+      - name: Verificar topologia com navegador sintetico
+        run: pwsh -NoProfile -File tests/auth/rei73-browser-topology.test.ps1

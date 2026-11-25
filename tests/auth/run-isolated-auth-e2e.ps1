@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$QaImageId = '')
+param([string]$QaImageId = '', [switch]$Browser)
 
 # Deliberately has no host ports, bind mounts, or compose dependency. It is
 # opt-in: invoking this script is the only action that creates Docker resources.
@@ -8,6 +8,7 @@ $root = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $runId = [Guid]::NewGuid().ToString('N')
 $label = 'fokus.auth-e2e'
 $network = "fokus-auth-e2e-$runId"
+$browserImage = 'mcr.microsoft.com/playwright@sha256:ee15712262f017b8157421b212b12099146645f44b1bc5c0514cbbe6a229b1d0'
 $mysqlImage = 'mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903'
 $mailpitImage = 'axllent/mailpit@sha256:df6c2541907e1be6fac21f509927cf6ed771617a1f4b361ef66d97bd05593d2d'
 $qaImage = 'fokus-law-linux-qa@sha256:459cc8bd25b38009a8cf9a0ef5399d131f4f2001a1376d89389f673a92de430b'
@@ -20,7 +21,7 @@ $dockerContext = (& docker context show).Trim()
 if ($LASTEXITCODE -ne 0 -or -not $dockerContext) { throw 'Contexto Docker indisponível.' }
 $contextInfo = @((& docker context inspect $dockerContext | ConvertFrom-Json))[0]
 if ($LASTEXITCODE -ne 0 -or $contextInfo.Endpoints.docker.Host -notin @('npipe:////./pipe/dockerDesktopLinuxEngine', 'unix:///var/run/docker.sock')) { throw 'Daemon Docker não local recusado.' }
-$mysql = $mailpit = $app = $client = $null; $cleanupFailed = $false; $networkAttempted = $false; $creationPending = $false;
+$mysql = $mailpit = $app = $client = $browserContainer = $null; $cleanupFailed = $false; $networkAttempted = $false; $creationPending = $false;
 . (Join-Path $PSScriptRoot 'cleanup-owned.ps1')
 . (Join-Path $PSScriptRoot 'docker-topology-validation.ps1')
 $executionFailure = $null; $guardToken = $null
@@ -57,11 +58,19 @@ function Assert-Topology([string]$id, [string]$image, [bool]$mysqlRole, [string]
 function Assert-ActiveTopology {
     $networkOutput = D @('network','inspect',$networkId)
     $activeNetwork = Get-DockerNetworkInspectObject -Inspection ([pscustomobject]@{ ExitCode = 0; Output = $networkOutput }) -ExpectedName $network -ExpectedLabelKey $label
-    Assert-AuthDockerNetwork -Inspection $activeNetwork -ExpectedId $networkId -ExpectedName $network -LabelKey $label -RunId $runId -ExpectedMembers @($mysql,$mailpit,$app,$client)
+    $members = @($mysql,$mailpit,$app,$client)
+    if ($Browser) { $members += $browserContainer }
+    Assert-AuthDockerNetwork -Inspection $activeNetwork -ExpectedId $networkId -ExpectedName $network -LabelKey $label -RunId $runId -ExpectedMembers $members
     Assert-Topology $mysql $my.Id $true $networkId ([string]$activeNetwork.Containers.PSObject.Properties[$mysql].Value.EndpointID)
     Assert-Topology $mailpit $mp.Id $false $networkId ([string]$activeNetwork.Containers.PSObject.Properties[$mailpit].Value.EndpointID)
     Assert-Topology $app $qa.Id $false $networkId ([string]$activeNetwork.Containers.PSObject.Properties[$app].Value.EndpointID)
     Assert-Topology $client $qa.Id $false $networkId ([string]$activeNetwork.Containers.PSObject.Properties[$client].Value.EndpointID)
+    if ($Browser) {
+        Assert-Topology $browserContainer $br.Id $false $networkId ([string]$activeNetwork.Containers.PSObject.Properties[$browserContainer].Value.EndpointID)
+        $appInspection = @((D @('inspect',$app)) | ConvertFrom-Json)[0]
+        $appAliases = @($appInspection.NetworkSettings.Networks.PSObject.Properties[$network].Value.Aliases)
+        if ('app' -cnotin $appAliases -or 'auth-sandbox.test' -cnotin $appAliases) { throw 'Aliases do app divergentes.' }
+    }
 }
 function Copy-Tree([string]$source) { Assert-SafeTree $source; D @('cp',$source,"${app}:/workspace/") | Out-Null }
 function App([string[]]$a) {
@@ -91,6 +100,7 @@ try {
     foreach($item in $required) { if(-not(Test-Path -LiteralPath (Join-Path $root $item))) { throw "Fonte exigida ausente: $item" } }
     if(-not(Test-Path -LiteralPath (Join-Path $root 'vendor/autoload.php'))) { throw 'Dependências PHP ausentes: execute composer install a partir do composer.lock antes da suíte E2E.' }
     $my=@((D @('image','inspect',$mysqlImage))|ConvertFrom-Json)[0]; $qa=@((D @('image','inspect',$qaImage))|ConvertFrom-Json)[0]; $mp=@((D @('image','inspect',$mailpitImage))|ConvertFrom-Json)[0]
+    if ($Browser) { $br=@((D @('image','inspect',$browserImage))|ConvertFrom-Json)[0]; if (-not $br.Id) { throw 'Imagem local do navegador ausente.' } }
     if(-not $my.Id -or -not $qa.Id -or -not $mp.Id) { throw 'Imagens locais exigidas não estão disponíveis.' }
     $networkAttempted = $true
     $networkId = Id ((D @('network','create','--internal','--label',"$label=$runId",$network) | Select-Object -Last 1).Trim()) 'network'
@@ -106,18 +116,28 @@ try {
     $mailpit=Id ((D @('create','--label',"$label=$runId",'--network',$network,'--network-alias','mailpit',$mp.Id)|Select-Object -Last 1).Trim()) 'mailpit'
     $creationPending = $false
     $creationPending = $true
-    $app=Id ((D @('create','--label',"$label=$runId",'--network',$network,'--network-alias','app',
+    $appAliases = @('--network-alias','app')
+    if ($Browser) { $appAliases += @('--network-alias','auth-sandbox.test') }
+    $app=Id ((D (@('create','--label',"$label=$runId",'--network',$network) + $appAliases + @(
         '--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_ENV_FILE=/workspace/tests/auth/.env.test.runtime',
         '--env','DB_HOST=mysql','--env','DB_PORT=3306','--env','DB_NAME=auth_test_e2e','--env','DB_USER=root',"--env","DB_PASS=$pass",'--env','DB_CHARSET=utf8mb4',
         '--env','MAIL_DRIVER=smtp','--env','MAIL_HOST=mailpit','--env','MAIL_PORT=1025','--env','MAIL_USER=auth-test',"--env","MAIL_PASSWORD=$pass",'--env','MAIL_ENCRYPTION=none',
         '--env','MAIL_FROM_ADDRESS=no-reply@auth-test.invalid','--env','MAIL_FROM_NAME=Auth E2E','--env','APP_URL=https://auth-test.invalid',
-        '--entrypoint','sleep',$qa.Id,'600')|Select-Object -Last 1).Trim()) 'app'
+        '--entrypoint','sleep',$qa.Id,'600'))|Select-Object -Last 1).Trim()) 'app'
     $creationPending = $false
     $creationPending = $true
     $client=Id ((D @('create','--label',"$label=$runId",'--network',$network,'--network-alias','client','--entrypoint','sleep',$qa.Id,'600')|Select-Object -Last 1).Trim()) 'client'
     $creationPending = $false
+    if ($Browser) {
+        $creationPending = $true
+        $browserContainer=Id ((D @('create','--label',"$label=$runId",'--network',$network,'--network-alias','browser','--entrypoint','sleep',$br.Id,'600')|Select-Object -Last 1).Trim()) 'browser'
+        $creationPending = $false
+        Assert-Topology $browserContainer $br.Id $false
+    }
     Assert-Topology $mysql $my.Id $true; Assert-Topology $mailpit $mp.Id $false; Assert-Topology $app $qa.Id $false; Assert-Topology $client $qa.Id $false
-    foreach($id in @($mysql,$mailpit,$app,$client)) { D @('start',$id)|Out-Null }
+    $membersToStart = @($mysql,$mailpit,$app,$client)
+    if ($Browser) { $membersToStart += $browserContainer }
+    foreach($id in $membersToStart) { D @('start',$id)|Out-Null }
     Assert-ActiveTopology
     for($i=0; $i -lt 60; $i++) { & docker --context $dockerContext exec $mysql sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqladmin -h 127.0.0.1 -uroot ping --silent' 2>$null|Out-Null; if($LASTEXITCODE -eq 0){break}; Start-Sleep -Seconds 1 }; if($i -eq 60){throw 'MySQL não ficou pronto.'}
     for($i=0; $i -lt 30; $i++) { & docker --context $dockerContext exec $mailpit sh -c 'wget -qO- http://127.0.0.1:8025/api/v1/messages >/dev/null' 2>$null|Out-Null; if($LASTEXITCODE -eq 0){break}; Start-Sleep -Seconds 1 }; if($i -eq 30){throw 'Mailpit não ficou pronto.'}
@@ -145,11 +165,12 @@ try {
     Run-AppTest 'sandbox-connectivity.test.php'
     Run-AppTest 'fixture-setup.test.php'
     Run-AppTest 'auth-fixtures.test.php'
+    Run-AppTest 'rei73-instituicoes-fixture.test.php'
     Run-AppTest 'login-rate-limit.test.php'
     Run-AppTest 'rei171-login-reset-race.test.php'
     Run-AppTest 'reset-token-concurrency.test.php'
     Run-AppTest 'smtp-capture.test.php'
-    Run-AppTest 'login-rate-limit.fixture.php' @('seed')
+    if (-not $Browser) { Run-AppTest 'login-rate-limit.fixture.php' @('seed') }
     $token=(App @('php','/workspace/tests/auth/http-reset-token.fixture.php')|Select-Object -Last 1).Trim(); if($token -notmatch '^[a-f0-9]{64}$'){throw 'Token sintético inválido.'}
     D @('exec','-d',$app,'sh','-c','cd /workspace && exec php -S 0.0.0.0:8080 -t public >/tmp/auth-e2e-app.log 2>&1')|Out-Null
     for($i=0; $i -lt 30; $i++) {
@@ -160,6 +181,15 @@ try {
     }
     if($i -eq 30){throw 'Aplicação HTTP não ficou pronta.'}
     Assert-ActiveTopology
+    if ($Browser) {
+        Write-Output 'STEP navegador'
+        Assert-ActiveTopology
+        D @('cp',(Join-Path $root 'tests/auth/rei73-browser-cdp.cjs'),"${browserContainer}:/tmp/rei73-browser-cdp.cjs") | Out-Null
+        Assert-ActiveTopology
+        D @('exec',$browserContainer,'node','/tmp/rei73-browser-cdp.cjs') | Write-Output
+        Assert-ActiveTopology
+    }
+    if ($Browser) { Run-AppTest 'login-rate-limit.fixture.php' @('seed') }
     D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",'--env',"E2E_RESET_TOKEN=$token",$client,'php','tests/auth/http-auth-flow.test.php')|Write-Output
     Run-AppTest 'password-reset-states.test.php'
 } catch {
@@ -168,13 +198,13 @@ try {
     Write-Output 'RUNNER_FAILURE: verifique a última etapa STEP exibida; detalhes sensíveis omitidos.'
 } finally {
     if ($creationPending) {
-        $knownIds = @($client, $app, $mailpit, $mysql | Where-Object { $_ })
+        $knownIds = @($browserContainer, $client, $app, $mailpit, $mysql | Where-Object { $_ })
         $recovered = Recover-LostAuthCreate $dockerContext $label $runId $knownIds
         if ($recovered) { Write-Output 'Candidato único da criação sem resposta foi removido após validar rótulo.' }
         # Um pedido ainda em trânsito pode concluir após a consulta: o resultado permanece incerto.
         $cleanupFailed = $true
     }
-    foreach ($id in @($client, $app, $mailpit, $mysql)) {
+    foreach ($id in @($browserContainer, $client, $app, $mailpit, $mysql)) {
         if ($id -and $id -match '^[a-f0-9]{64}$' -and -not (Remove-OwnedAuthContainer $dockerContext $id $label $runId)) { $cleanupFailed = $true }
     }
     if ($networkAttempted -and -not (Remove-OwnedAuthNetwork $dockerContext $network $label $runId)) { $cleanupFailed = $true }

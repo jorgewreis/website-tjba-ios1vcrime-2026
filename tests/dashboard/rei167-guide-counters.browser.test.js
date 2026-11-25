@@ -26,7 +26,7 @@ const view = fs.readFileSync(viewFile, 'utf8');
 // Keep all actual HTML. Omit only PHP blocks (auth/bootstrap, shared includes,
 // and asset version expressions). This is not authenticated PHP rendering.
 const html = view.replace(/<\?php[\s\S]*?\?>/g, '');
-assert.ok(html.includes('Guias aguardando expedição'));
+assert.ok(html.includes('<b>Guias</b><br>aguardando expedição'));
 const artifacts = fs.mkdtempSync(path.join(os.tmpdir(), 'rei167-browser-'));
 
 (async () => {
@@ -69,19 +69,25 @@ const artifacts = fs.mkdtempSync(path.join(os.tmpdir(), 'rei167-browser-'));
     });
     await page.goto('http://rei167.synthetic.test/dashboard');
     assert.equal(await page.title(), 'Dashboard - Primeira Vara Crime de Ilhéus');
-    const expected = { expedicao: ['1', '0'], envio: ['0', '1'], zero: ['0', '0'], falha: ['—', '—'], gabinete: ['—', '—'] };
     async function check(scenario) {
-      const pair = expected[scenario];
-      await page.waitForFunction(({ pair, visible }) => {
+      const sector = payloads[scenario].setor;
+      const enabled = Boolean(sector.conectado) && (sector.areas || []).includes('CARTORIO');
+      const broken = (sector.filas || []).some(row => row.key === 'guias' && row.error);
+      const pair = ['expedicao_guia', 'envio_guia'].map(type => {
+        if (!enabled || broken) return '—';
+        return String((sector.filas || []).find(row => row.key === 'guias' && row.type === type)?.count || 0);
+      });
+      await page.waitForFunction(({ pair }) => {
         const ids = ['dash-queue-guias-expedicao', 'dash-queue-guias-envio'];
-        return ids.every((id, i) => document.getElementById(id).textContent === pair[i]) &&
-          document.getElementById('dash-cartorio-queue').hidden === !visible;
-      }, { pair, visible: scenario !== 'gabinete' });
-      for (const id of ['dash-queue-guias-expedicao-row', 'dash-queue-guias-envio-row']) {
-        assert.equal(await page.locator('#' + id).isVisible(), scenario !== 'gabinete', scenario + ': ' + id);
+        return ids.every((id, i) => document.getElementById(id).textContent === pair[i]);
+      }, { pair });
+      for (const [i, id] of ['dash-queue-guias-expedicao-row', 'dash-queue-guias-envio-row'].entries()) {
+        assert.equal(await page.locator('#' + id).isVisible(), enabled && (broken || Number(pair[i]) > 0), scenario + ': ' + id);
         assert.equal(await page.locator('#' + id).count(), 1, 'refresh must not duplicate rows');
       }
       assert.equal(await page.locator('#dashboard-erro').isVisible(), false);
+      assert.equal(await page.locator('#dash-sector-column').isVisible(),
+        await page.locator('#dash-cartorio-queue').evaluate(el => !el.hidden), scenario + ': outer sector follows indicator state');
       assert.ok((await page.locator('main').innerText()).length > 50, 'nonblank dashboard');
       assert.equal(await page.locator('vite-error-overlay, nextjs-portal').count(), 0);
     }
