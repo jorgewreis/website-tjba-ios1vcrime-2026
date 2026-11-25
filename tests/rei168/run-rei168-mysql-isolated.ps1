@@ -87,38 +87,53 @@ function Get-OwnedContainer([string]$id) {
     return $item
 }
 
+function Get-VerifiedSocketMountTarget([string]$id) {
+    try {
+        $resolved = @(& timeout -k 2s 5s docker --host $dockerEndpoint exec $id realpath -e -- /var/run/mysqld 2>&1)
+        $exitCode = $LASTEXITCODE
+        if ($exitCode -ne 0 -or $resolved.Count -ne 1 -or $resolved[0] -isnot [string] -or $resolved[0] -cnotin @('/var/run/mysqld', '/run/mysqld')) {
+            throw 'Resolução de socket não autorizada.'
+        }
+        $canonical = [string]$resolved[0]
+        $stats = @(& timeout -k 2s 5s docker --host $dockerEndpoint exec $id stat -Lc '%d:%i' /var/run/mysqld $canonical 2>&1)
+        if ($LASTEXITCODE -ne 0 -or $stats.Count -ne 2 -or $stats[0] -isnot [string] -or $stats[1] -isnot [string] -or $stats[0] -notmatch '^\d+:\d+$' -or $stats[0] -cne $stats[1]) {
+            throw 'Identidades do socket divergentes.'
+        }
+        return $canonical
+    } catch {
+        # Nunca propagar saída bruta de caminhos ou diagnósticos do container.
+        throw 'Resolução ou identidade de socket não comprovada.'
+    }
+}
+function Assert-MountinfoExact([string[]]$lines, [string]$target, [string]$fsType) {
+    $targetEntries = @()
+    foreach ($line in $lines) {
+        $halves = $line -split ' - '
+        if ($halves.Count -ne 2) { throw 'Formato mountinfo ambíguo.' }
+        $left = $halves[0] -split ' '
+        $right = $halves[1] -split ' '
+        if ($left.Count -lt 6 -or $right.Count -lt 3 -or $left[0] -notmatch '^\d+$' -or $left[1] -notmatch '^\d+$' -or $left[2] -notmatch '^\d+:\d+$' -or -not $left[4].StartsWith('/') -or $left[4].Contains('\') -or $right[0] -notmatch '^[a-zA-Z0-9_.-]+$') {
+            throw 'Formato ou escape de mountinfo não autorizado.'
+        }
+        if ($left[4] -ceq $target) { $targetEntries += $right[0] }
+    }
+    if ($targetEntries.Count -ne 1 -or ($fsType -ne '' -and $targetEntries[0] -cne $fsType)) {
+        throw 'Mountpoint ativo ou tipo não comprovado.'
+    }
+}
 function Assert-ActiveMount([string]$id, [string]$target, [string]$fsType = '', [string]$phase = '') {
     $labels = @{ '/var/lib/mysql'='mysql-datadir'; '/var/run/mysqld'='socket-dir'; '/tmp'='php-tmp'; '/repo/app'='php-app'; '/test/rei168-mysql.test.php'='php-fixture' }
     $phases = @('mysql-start', 'mysql-before-marker', 'php-start', 'mysql-before-fixture')
     if (-not $labels.ContainsKey($target) -or $phase -notin $phases -or $fsType -notin @('', 'tmpfs')) { throw 'Diagnóstico de mount inválido.' }
+    $actualTarget = $target
+    if ($target -ceq '/var/run/mysqld') { $actualTarget = Get-VerifiedSocketMountTarget $id }
     $lines = @(Invoke-DockerSafe @('exec', $id, 'cat', '/proc/self/mountinfo'))
-    $pattern = '\s' + [regex]::Escape($target) + '\s.*\s-\s' + $(if ($fsType) { [regex]::Escape($fsType) } else { '[^ ]+' }) + '\s'
-    $matchedMounts = @($lines | Where-Object { $_ -match $pattern })
-    if ($matchedMounts.Count -ne 1) {
-        $entries = @($lines | Where-Object { $fields = $_ -split ' '; $fields.Count -ge 6 -and $fields[4] -ceq $target })
-        $types = @($entries | ForEach-Object {
-            $halves = $_ -split ' - ', 2
-            if ($halves.Count -ne 2) { 'unparsed' }
-            elseif (($halves[1] -split ' ')[0] -ceq 'tmpfs') { 'tmpfs' }
-            else { 'other' }
-        } | Sort-Object -Unique)
+    try {
+        Assert-MountinfoExact $lines $actualTarget $fsType
+    } catch {
         $expected = if ($fsType -eq 'tmpfs') { 'tmpfs' } else { 'any' }
-        $resolution = 'nao-aplicavel'
-        if ($target -ceq '/var/run/mysqld') {
-            $resolution = 'erro'
-            try {
-                # Diagnóstico de leitura com limite no cliente Docker. Nunca imprime saída bruta.
-                $resolved = @(& timeout -k 2s 5s docker --host $dockerEndpoint exec $id realpath -e -- /var/run/mysqld 2>&1)
-                $exitCode = $LASTEXITCODE
-                if ($exitCode -eq 124 -or $exitCode -eq 137) { $resolution = 'timeout' }
-                elseif ($exitCode -eq 0 -and $resolved.Count -eq 1 -and $resolved[0] -is [string]) {
-                    if ($resolved[0] -ceq '/var/run/mysqld') { $resolution = 'literal' }
-                    elseif ($resolved[0] -ceq '/run/mysqld') { $resolution = 'run-mysqld' }
-                    else { $resolution = 'outro' }
-                }
-            } catch { $resolution = 'erro' }
-        }
-        throw ("Mount ativo não comprovado: fase={0}; destino={1}; esperado={2}; coincidencias={3}; pontos_exatos={4}; tipos={5}; resolucao={6}." -f $phase, $labels[$target], $expected, $matchedMounts.Count, $entries.Count, ($types -join ','), $resolution)
+        $resolution = if ($target -cne '/var/run/mysqld') { 'nao-aplicavel' } elseif ($actualTarget -ceq '/run/mysqld') { 'run-mysqld' } else { 'literal' }
+        throw ("Mount ativo não comprovado: fase={0}; destino={1}; esperado={2}; resolucao={3}." -f $phase, $labels[$target], $expected, $resolution)
     }
 }
 function Assert-MountSet($item, [hashtable]$expected, [string]$tmpfsPath, [string]$tmpfsOptions) {
