@@ -5,7 +5,7 @@ date_default_timezone_set('America/Bahia');
 
 // Full endpoint HTTP test against a disposable MySQL 8.4 instance.
 // Security, Usuario, profile and access classes are real. Database and sessions are synthetic.
-// Bootstrap and attendance service remain synthetic; this is not a full production integration.
+// Bootstrap and database connection remain synthetic; this is not a full production integration.
 
 function rei161Assert(bool $ok, string $message): void
 {
@@ -42,17 +42,21 @@ $db->exec("CREATE TABLE sala_audiencias_pauta_parte (id BIGINT AUTO_INCREMENT PR
 $db->exec("CREATE TABLE processo_prioridades (id BIGINT AUTO_INCREMENT PRIMARY KEY, processo_id VARCHAR(80), codigo VARCHAR(80)) ENGINE=InnoDB");
 
 $process = $db->prepare('INSERT INTO processos (id, sigiloso) VALUES (?, ?)');
-foreach ([['P-OPEN', 0], ['P-SECRET', 1], ['P-MINOR', 0], ['P-PRIORITY', 0], ['P-OBS', 0]] as [$id, $secret]) {
+foreach ([['P-OPEN', 0], ['P-SECRET', 1], ['P-MINOR', 0], ['P-PRIORITY', 0], ['P-SIG-PRIORITY', 0], ['P-CHILD-PRIORITY', 0], ['P-DV-PRIORITY', 0], ['P-NONBLOCKING', 0], ['P-OBS', 0]] as [$id, $secret]) {
     $process->execute([$id, $secret]);
 }
-$hoje = (string) getenv('REI161_TEST_TODAY');
-rei161Assert(preg_match('/^\d{4}-\d{2}-\d{2}$/D', $hoje) === 1, 'Data fixa da fixture ausente ou inválida.');
+// Use the same real Bahia clock as the service. Near midnight, wait at most
+// one minute so a run started at 23:59 does not fail just because of the date.
+while (date('H:i') === '23:59') {
+    sleep(min(30, max(1, strtotime('tomorrow') - time())));
+}
+$hoje = date('Y-m-d');
 $dataFixa = DateTimeImmutable::createFromFormat('!Y-m-d', $hoje);
 rei161Assert($dataFixa instanceof DateTimeImmutable && $dataFixa->format('Y-m-d') === $hoje, 'Data fixa da fixture não é válida.');
 $amanha = $dataFixa->modify('+1 day')->format('Y-m-d');
 $ontem = $dataFixa->modify('-1 day')->format('Y-m-d');
-$pauta = $db->prepare("INSERT INTO sala_audiencias_pauta (id_pauta, processo, status, data_audiencia, hora_audiencia, ativo, duracao_estimada_minutos) VALUES (?, ?, 'designada', ?, '13:00:00', ?, 45)");
-foreach ([['OPEN', 'P-OPEN', $hoje, 1], ['SECRET', 'P-SECRET', $hoje, 1], ['MINOR', 'P-MINOR', $hoje, 1], ['PRIORITY', 'P-PRIORITY', $hoje, 1], ['OBSERVED_OPEN', 'P-OBS', $hoje, 1], ['INACTIVE', 'P-OPEN', $hoje, 0], ['WATCH', 'P-OPEN', $hoje, 1], ['CLOSED', 'P-OPEN', $hoje, 1], ['CLOSED_ENROLLED', 'P-OPEN', $hoje, 1], ['IN_PROGRESS', 'P-OPEN', $hoje, 1], ['IN_PROGRESS_ENROLLED', 'P-OPEN', $hoje, 1], ['DONE', 'P-OPEN', $hoje, 1], ['DONE_ENROLLED', 'P-OPEN', $hoje, 1], ['FINISHED', 'P-OPEN', $hoje, 1], ['FINISHED_ENROLLED', 'P-OPEN', $hoje, 1], ['RESCHEDULED', 'P-OPEN', $hoje, 1], ['RESCHEDULED_ENROLLED', 'P-OPEN', $hoje, 1], ['POSTPONED_ALIAS', 'P-OPEN', $hoje, 1], ['CLOSED_ALIAS', 'P-OPEN', $hoje, 1], ['FUTURE', 'P-OPEN', $amanha, 1], ['FUTURE_ENROLLED', 'P-OPEN', $amanha, 1], ['PAST', 'P-OPEN', $ontem, 1], ['PAST_ENROLLED', 'P-OPEN', $ontem, 1], ['LATE', 'P-OPEN', $ontem, 1]] as [$id, $proc, $data, $active]) {
+$pauta = $db->prepare("INSERT INTO sala_audiencias_pauta (id_pauta, processo, status, data_audiencia, hora_audiencia, ativo, duracao_estimada_minutos) VALUES (?, ?, 'designada', ?, '23:59:59', ?, 45)");
+foreach ([['OPEN', 'P-OPEN', $hoje, 1], ['SECRET', 'P-SECRET', $hoje, 1], ['MINOR', 'P-MINOR', $hoje, 1], ['PRIORITY', 'P-PRIORITY', $hoje, 1], ['SIG_PRIORITY', 'P-SIG-PRIORITY', $hoje, 1], ['CHILD_PRIORITY', 'P-CHILD-PRIORITY', $hoje, 1], ['DV_PRIORITY', 'P-DV-PRIORITY', $hoje, 1], ['NONBLOCKING', 'P-NONBLOCKING', $hoje, 1], ['OBSERVED_OPEN', 'P-OBS', $hoje, 1], ['INACTIVE', 'P-OPEN', $hoje, 0], ['WATCH', 'P-OPEN', $hoje, 1], ['CLOSED', 'P-OPEN', $hoje, 1], ['CLOSED_ENROLLED', 'P-OPEN', $hoje, 1], ['IN_PROGRESS', 'P-OPEN', $hoje, 1], ['IN_PROGRESS_ENROLLED', 'P-OPEN', $hoje, 1], ['DONE', 'P-OPEN', $hoje, 1], ['DONE_ENROLLED', 'P-OPEN', $hoje, 1], ['FINISHED', 'P-OPEN', $hoje, 1], ['FINISHED_ENROLLED', 'P-OPEN', $hoje, 1], ['RESCHEDULED', 'P-OPEN', $hoje, 1], ['RESCHEDULED_ENROLLED', 'P-OPEN', $hoje, 1], ['POSTPONED_ALIAS', 'P-OPEN', $hoje, 1], ['CLOSED_ALIAS', 'P-OPEN', $hoje, 1], ['FUTURE', 'P-OPEN', $amanha, 1], ['FUTURE_ENROLLED', 'P-OPEN', $amanha, 1], ['PAST', 'P-OPEN', $ontem, 1], ['PAST_ENROLLED', 'P-OPEN', $ontem, 1], ['LATE', 'P-OPEN', $ontem, 1]] as [$id, $proc, $data, $active]) {
     $pauta->execute([$id, $proc, $data, $active]);
 }
 // Keep LATE as designada with an elapsed date; the isolated endpoint exercises its status derivation.
@@ -67,10 +71,12 @@ $part = $db->prepare("INSERT INTO sala_audiencias_pauta_parte (pauta, ativo, mai
 $part->execute();
 $priority = $db->prepare("INSERT INTO processo_prioridades (processo_id, codigo) VALUES ('P-PRIORITY', 'medida_protetiva')");
 $priority->execute();
+$db->exec("INSERT INTO processo_prioridades (processo_id, codigo) VALUES ('P-SIG-PRIORITY','sigiloso'), ('P-CHILD-PRIORITY','crianca_adolescente'), ('P-DV-PRIORITY','violencia_domestica'), ('P-NONBLOCKING','reu_preso')");
 $enroll = $db->prepare("INSERT INTO sala_audiencias_estudante_inscricao (pauta, usuario) VALUES (?, 'synthetic-student')");
 $enroll->execute(['SECRET']);
 $enroll->execute(['MINOR']);
 $enroll->execute(['PRIORITY']);
+foreach (['SIG_PRIORITY','CHILD_PRIORITY','DV_PRIORITY'] as $id) $enroll->execute([$id]);
 $enroll->execute(['OBSERVED_OPEN']);
 $enroll->execute(['CLOSED_ENROLLED']);
 $enroll->execute(['IN_PROGRESS_ENROLLED']);
@@ -92,7 +98,7 @@ foreach (['CAP4'=>4,'CAP5'=>5,'CAP6'=>6,'CAP5I'=>5,'CAP6I'=>6] as $id=>$count) {
 // Populate 60 request IDs plus 15 session-only observation IDs to exercise
 // the real MySQL statement's 80 bindings (priorities + user + derived IDs).
 $many = $db->prepare("INSERT INTO processos (id, sigiloso) VALUES (?, 0)");
-$manyPauta = $db->prepare("INSERT INTO sala_audiencias_pauta (id_pauta, processo, status, data_audiencia, hora_audiencia, ativo, duracao_estimada_minutos) VALUES (?, ?, 'designada', ?, '13:00:00', 1, 30)");
+$manyPauta = $db->prepare("INSERT INTO sala_audiencias_pauta (id_pauta, processo, status, data_audiencia, hora_audiencia, ativo, duracao_estimada_minutos) VALUES (?, ?, 'designada', ?, '23:59:59', 1, 30)");
 for ($i = 0; $i < 75; $i++) {
     $n = str_pad((string) ($i < 60 ? $i : $i - 60), 2, '0', STR_PAD_LEFT);
     $id = ($i < 60 ? 'REQ' : 'OBS') . $n;
@@ -130,23 +136,17 @@ PHP,
 <?php
 function bootstrapRequireTrustedPostRequest(): bool { return true; }
 PHP,
-    $appServices . DIRECTORY_SEPARATOR . 'SalaAudienciasAtaService.php' => <<<'PHP'
-<?php
-final class SalaAudienciasAtaService { public const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA = 5; public static function dataPermiteInscricaoEstudante(string $data): bool { $data = trim($data); $hoje = getenv('REI161_TEST_TODAY'); return $data !== '' && $data === (is_string($hoje) && $hoje !== '' ? $hoje : date('Y-m-d')); } public static function normalizarStatusPauta(string $status, string $data, string $hora, ?int $agora = null): string { $status=trim($status); if($status==='agendada')$status='designada';elseif($status==='adiada')$status='redesignada';elseif($status==='encerrada')$status='finalizada';$inicio=strtotime(trim($data).' '.trim($hora));$agoraTeste=getenv('REI161_TEST_NOW_TS');if($agoraTeste!==false&&$agoraTeste!=='')$agora=(int)$agoraTeste;return $status==='designada'&&$inicio!==false&&$inicio<($agora??time())?'atrasada':$status; } }
-PHP,
-    $appHelpers . DIRECTORY_SEPARATOR . 'PrioridadesProcessuaisCatalog.php' => <<<'PHP'
-<?php
-final class PrioridadesProcessuaisCatalog { public static function codigosBloqueantesInscricaoEstudante(): array { return ['sigiloso','crianca_adolescente','violencia_domestica','medida_protetiva']; } }
-PHP,
-    $appHelpers . DIRECTORY_SEPARATOR . 'SalaAudienciasAtaSigiloHelper.php' => <<<'PHP'
-<?php
-final class SalaAudienciasAtaSigiloHelper { public static function sqlProcessoSigilosoEfetivo(string $p='p', string $a='a'): string { return "CASE WHEN COALESCE($p.`sigiloso`,0)=1 OR EXISTS (SELECT 1 FROM `processo_prioridades` pri WHERE pri.`processo_id`=$a.`processo` AND pri.`codigo`='sigiloso') THEN 1 ELSE 0 END"; } }
-PHP,
+
 ];
 $sourceRoot = getenv('REI161_REPO_SOURCE');
 rei161Assert($sourceRoot === '/workspace', 'Raiz da aplicação sintética inválida.');
-$realFiles = ['config/security.php','app/models/Usuario.php','app/helpers/UsuarioPerfisAutorizacao.php','app/helpers/EffectiveAccessProfiles.php','app/helpers/UserAccessHelper.php','app/helpers/ApiErrorReporter.php','app/access/AccessEvaluator.php','app/access/ProfileNormalizer.php','app/access/PageAccessRegistry.php','app/access/AccessAreas.php','app/access/AccessPolicyVersion.php'];
-foreach ($realFiles as $file) rei161Assert(copy($sourceRoot . '/' . $file, $root . '/' . $file), 'Dependência real ausente: ' . $file);
+$realFiles = ['config/security.php','app/models/Usuario.php','app/helpers/UsuarioPerfisAutorizacao.php','app/helpers/EffectiveAccessProfiles.php','app/helpers/UserAccessHelper.php','app/helpers/ApiErrorReporter.php','app/access/AccessEvaluator.php','app/access/ProfileNormalizer.php','app/access/PageAccessRegistry.php','app/access/AccessAreas.php','app/access/AccessPolicyVersion.php', 'app/services/SalaAudienciasAtaService.php','app/services/SalaAudienciasAtaStorage.php','app/helpers/SalaAudienciasAtaSigiloHelper.php','app/helpers/PrioridadesProcessuaisCatalog.php','app/helpers/ProcessoBlocoListagemHelper.php','app/helpers/ClasseProcessualListagemHelper.php','app/helpers/IdGenerator.php','app/helpers/ProcessoPrioridadeOrigem.php','app/helpers/ProcessoAssuntoOrigem.php','app/helpers/RegistroMetadataHelper.php','app/repositories/SalaAudienciasPautaRepository.php','app/repositories/SalaAudienciasAtaRepository.php','app/repositories/SalaAudienciasEstudanteInscricaoRepository.php','app/repositories/ProcessoPrioridadesRepository.php','app/repositories/ProcessosRepository.php','app/repositories/ClassesRepository.php','app/repositories/ProcessoAssuntosRepository.php','app/repositories/ProcessosPartesRepository.php','app/helpers/CnjValidator.php','app/helpers/ParentRecordLock.php','app/helpers/TextFormatter.php','app/helpers/CartasExpedidasEstadoFluxo.php','app/helpers/CartasExpedidasUiCopy.php','app/helpers/CartasRecebidasUiCopy.php','app/helpers/CartorioTimelineHelper.php','app/helpers/EditaisUiCopy.php','app/helpers/OficioRegistroMetadataHelper.php','app/helpers/SalaAudienciasInscricaoIndisponivel.php','app/repositories/CartasExpedidasSubtarefasRepository.php','app/repositories/CartasRecebidasSubtarefasRepository.php','app/repositories/EditaisSubtarefasRepository.php','app/config/prioridades_processuais_catalog.php'];
+foreach ($realFiles as $file) {
+    $destination = $root . '/' . $file;
+    $directory = dirname($destination);
+    rei161Assert(is_dir($directory) || mkdir($directory, 0700, true), 'Falha ao criar diretório da dependência.');
+    rei161Assert(copy($sourceRoot . '/' . $file, $destination), 'Dependência real ausente: ' . $file);
+}
 $prepend = <<<'PHP'
 <?php
 define('SESSION_IDLE_TIMEOUT', 1800);
@@ -225,6 +225,14 @@ try {
         rei161Assert(($body['items'][$id] ?? null) === ['id_pauta'=>$id,'indisponivel'=>true], 'Pauta bloqueada expôs metadados para estudante não inscrito: ' . $id);
     }
 
+    rei161Assert((int) $db->query("SELECT COUNT(*) FROM sala_audiencias_estudante_inscricao WHERE pauta IN ('SIG_PRIORITY','CHILD_PRIORITY','DV_PRIORITY') AND usuario='synthetic-student'")->fetchColumn() === 3, 'Fixture não confirma inscrição nas três prioridades novas.');
+    rei161Assert((int) $db->query("SELECT COUNT(*) FROM sala_audiencias_estudante_inscricao WHERE pauta IN ('SIG_PRIORITY','CHILD_PRIORITY','DV_PRIORITY') AND usuario='synthetic-student-other'")->fetchColumn() === 0, 'Fixture do outro estudante contém inscrição nas prioridades novas.');
+    [$status, $body] = $request(['pautas'=>['SIG_PRIORITY','CHILD_PRIORITY','DV_PRIORITY','NONBLOCKING']]);
+    rei161Assert($status === 200 && ($body['items']['NONBLOCKING']['pode_inscrever'] ?? false) === true, 'Prioridade não bloqueante restringiu indevidamente.');
+    foreach (['SIG_PRIORITY','CHILD_PRIORITY','DV_PRIORITY'] as $id) rei161Assert(($body['items'][$id] ?? null) === ['id_pauta'=>$id,'indisponivel'=>true], 'Prioridade bloqueante real expôs metadados de inscrito: ' . $id);
+    [$status, $body] = $request(['pautas'=>['SIG_PRIORITY','CHILD_PRIORITY','DV_PRIORITY']], 'synthetic-student-other');
+    foreach (['SIG_PRIORITY','CHILD_PRIORITY','DV_PRIORITY'] as $id) rei161Assert($status === 200 && ($body['items'][$id] ?? null) === ['id_pauta'=>$id,'indisponivel'=>true], 'Prioridade bloqueante real expôs metadados de não inscrito: ' . $id);
+
     [$status, $body] = $request(['pautas'=>['CAP4','CAP5','CAP6','CAP5I','CAP6I']]);
     rei161Assert($status===200 && ($body['items']['CAP4']['pode_inscrever'] ?? false)===true, 'Capacidade 4 não permitiu inscrição.');
     foreach (['CAP5','CAP6'] as $id) rei161Assert(($body['items'][$id] ?? null)===['id_pauta'=>$id,'indisponivel'=>true], 'Pauta lotada não foi minimizada.');
@@ -250,6 +258,7 @@ try {
     [$status, $body] = $request(['pautas'=>[], 'padding'=>str_repeat('x',16385)]);
     rei161Assert($status === 413 && ($body['success'] ?? true) === false, 'Limite do corpo não foi aplicado no endpoint integrado.');
 
+    rei161Assert(date('Y-m-d') === $hoje, 'A execução atravessou a meia-noite; resultado temporal inconclusivo, repita o teste.');
     $guardCheck = $db->prepare('SELECT marker FROM rei161_runner_guard WHERE marker = ?');
     $guardCheck->execute([$marker]);
     rei161Assert(hash_equals($marker, (string) $guardCheck->fetchColumn()), 'Marcador de banco descartável não confere ao final.');
