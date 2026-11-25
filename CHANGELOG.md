@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0051
+
+**Data:** 2026-11-25 04:57:54 | **Commit:** `84075230` | **Tipo:** `patch`
+
+- ci: detalha consulta de monitoramento
+
 ## V. 1.88.0050
 
 **Data:** 2026-11-25 04:54:28 | **Commit:** `67ce5486` | **Tipo:** `patch`
@@ -7938,6 +7944,7 @@
 
 
 \n
+
 
 
 

@@ -4,9 +4,15 @@ declare(strict_types=1);
 $failureStage = 'setup';
 $failureDetail = 'general';
 set_exception_handler(static function (Throwable $exception) use (&$failureStage, &$failureDetail): void {
-    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','monitor_setup','monitor_positive','monitor_create','monitor_row','monitor_tasks','monitor_rollback','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_pauta_finish','c4_direct_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check','c6_controls','c6_prepare','c6_wait','c6_finish','c6_check'];
+    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','monitor_setup','monitor_positive','monitor_create','monitor_row','monitor_row_prepare','monitor_row_execute','monitor_row_fetch','monitor_tasks','monitor_rollback','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_pauta_finish','c4_direct_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check','c6_controls','c6_prepare','c6_wait','c6_finish','c6_check'];
+    // The positive read reports only fixed categories, never database messages or values.
+    if (in_array($failureStage, ['monitor_row_prepare','monitor_row_execute','monitor_row_fetch'], true) && $exception instanceof PDOException) {
+        $state = strtolower((string) $exception->getCode());
+        $driverCode = (int) ($exception->errorInfo[1] ?? 0);
+        $failureDetail = $driverCode === 1267 ? 'monitor_sql_collation' : (in_array($state, ['42s22','42s02','23000','40001','hy000'], true) ? 'monitor_sql_'.$state : 'monitor_sql_other');
+    }
     $stage = in_array($failureStage, $allowed, true) ? $failureStage : 'setup';
-    $details=['general','monitor_sql_42s22','monitor_sql_42s02','monitor_sql_23000','monitor_sql_40001','monitor_sql_hy000','monitor_sql_other','monitor_invalid','monitor_logic','monitor_runtime','monitor_error','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','wait_no_edge','wait_other_table','wait_other_index','wait_key_padded','wait_key_other','wait_key_null','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
+    $details=['general','monitor_sql_42s22','monitor_sql_42s02','monitor_sql_23000','monitor_sql_40001','monitor_sql_hy000','monitor_sql_other','monitor_sql_collation','monitor_invalid','monitor_logic','monitor_runtime','monitor_error','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','wait_no_edge','wait_other_table','wait_other_index','wait_key_padded','wait_key_other','wait_key_null','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
     $detail=in_array($failureDetail,$details,true) ? $failureDetail : 'general';
     fwrite(STDERR, 'REI69_DIRECT_FAILURE code=' . $stage . ' detail=' . $detail . "\n");
     exit(1);
@@ -721,10 +727,13 @@ PHP;
     } catch (LogicException $e) { $failureDetail='monitor_logic'; throw $e;
     } catch (RuntimeException $e) { $failureDetail='monitor_runtime'; throw $e;
     } catch (Throwable $e) { $failureDetail='monitor_error'; throw $e; }
-    $failureStage='monitor_row'; $failureDetail='general';
+    $failureStage='monitor_row_prepare'; $failureDetail='general';
     $q=$pdo->prepare('SELECT m.processo_id,m.criado_por,pp.parte_id,pp.processo_id AS link_processo FROM gabinete_monitoramento_eletronico m JOIN processos_partes pp ON pp.id=m.processo_parte_id WHERE m.id=?');
+    $failureStage='monitor_row_execute';
     $q->execute([$monitorId]);
-    $assert($q->fetch(PDO::FETCH_ASSOC)===['processo_id'=>'MON-P','criado_por'=>'USR-1','parte_id'=>'MON-A','link_processo'=>'MON-P'], 'Controle positivo de monitoramento falhou.');
+    $failureStage='monitor_row_fetch';
+    $row=$q->fetch(PDO::FETCH_ASSOC);
+    $assert($row===['processo_id'=>'MON-P','criado_por'=>'USR-1','parte_id'=>'MON-A','link_processo'=>'MON-P'], 'Controle positivo de monitoramento falhou.');
     $failureStage='monitor_tasks'; $failureDetail='general';
     $q=$pdo->prepare('SELECT COUNT(*) FROM gabinete_monitoramento_eletronico_subtarefas WHERE monitoramento_id=?'); $q->execute([$monitorId]);
     $assert((int)$q->fetchColumn()===2 && !$pdo->inTransaction(), 'Subtarefas ou encerramento do controle positivo falharam.');
