@@ -43,14 +43,14 @@ require_once __DIR__ . '/../../access/ProfileNormalizer.php';
         <section class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title">
           <header><span class="column-kicker">SETOR</span><h2 id="dash-sector-title">Minha área</h2></header>
           <article id="dash-cartorio-queue" class="dash-card dash-sector-queue" hidden>
-            <div class="dash-sector-metric" id="dash-queue-expedidas-row"><span><b>Cartas Expedidas</b><br>aguardando envio</span><strong id="dash-queue-expedidas">—</strong></div>
-            <div class="dash-sector-metric" id="dash-queue-recebidas-row"><span><b>Cartas Recebidas</b><br>aguardando devolução</span><strong id="dash-queue-recebidas">—</strong></div>
-            <div class="dash-sector-metric" id="dash-queue-oficios-row"><span><b>Ofícios do Cartório</b><br>aguardando envio</span><strong id="dash-queue-oficios">0</strong></div>
-            <div class="dash-sector-metric" id="dash-queue-editais-row" hidden><span><b>Editais</b><br>aguardando publicação</span><strong id="dash-queue-editais">—</strong></div>
-            <div class="dash-sector-metric" id="dash-queue-guias-expedicao-row" hidden><span><b>Guias</b><br>aguardando expedição</span><strong id="dash-queue-guias-expedicao">—</strong></div>
-            <div class="dash-sector-metric" id="dash-queue-guias-envio-row" hidden><span><b>Guias</b><br>aguardando envio</span><strong id="dash-queue-guias-envio">—</strong></div>
-            <div class="dash-sector-metric dash-sector-overdue" id="dash-overdue-expedidas-row" hidden><span><b>Cartas Expedidas</b><br>com prazo vencido</span><strong id="dash-overdue-expedidas">—</strong></div>
-            <div class="dash-sector-metric dash-sector-overdue" id="dash-overdue-recebidas-row" hidden><span><b>Cartas Recebidas</b><br>com prazo vencido</span><strong id="dash-overdue-recebidas">—</strong></div>
+            <div class="dash-sector-metric" id="dash-queue-expedidas-row"><span><b>Cartas Expedidas</b><br>aguardando envio<span id="dash-queue-expedidas-responsaveis" class="dash-sector-responsaveis" hidden></span></span><strong id="dash-queue-expedidas">—</strong></div>
+            <div class="dash-sector-metric" id="dash-queue-recebidas-row"><span><b>Cartas Recebidas</b><br>aguardando devolução<span id="dash-queue-recebidas-responsaveis" class="dash-sector-responsaveis" hidden></span></span><strong id="dash-queue-recebidas">—</strong></div>
+            <div class="dash-sector-metric" id="dash-queue-oficios-row"><span><b>Ofícios do Cartório</b><br>aguardando envio<span id="dash-queue-oficios-responsaveis" class="dash-sector-responsaveis" hidden></span></span><strong id="dash-queue-oficios">0</strong></div>
+            <div class="dash-sector-metric" id="dash-queue-editais-row" hidden><span><b>Editais</b><br>aguardando publicação<span id="dash-queue-editais-responsaveis" class="dash-sector-responsaveis" hidden></span></span><strong id="dash-queue-editais">—</strong></div>
+            <div class="dash-sector-metric" id="dash-queue-guias-expedicao-row" hidden><span><b>Guias</b><br>aguardando expedição<span id="dash-queue-guias-expedicao-responsaveis" class="dash-sector-responsaveis" hidden></span></span><strong id="dash-queue-guias-expedicao">—</strong></div>
+            <div class="dash-sector-metric" id="dash-queue-guias-envio-row" hidden><span><b>Guias</b><br>aguardando envio<span id="dash-queue-guias-envio-responsaveis" class="dash-sector-responsaveis" hidden></span></span><strong id="dash-queue-guias-envio">—</strong></div>
+            <div class="dash-sector-metric dash-sector-overdue" id="dash-overdue-expedidas-row" hidden><span><b>Cartas Expedidas</b><br>com prazo vencido<span id="dash-overdue-expedidas-responsaveis" class="dash-sector-responsaveis" hidden></span></span><strong id="dash-overdue-expedidas">—</strong></div>
+            <div class="dash-sector-metric dash-sector-overdue" id="dash-overdue-recebidas-row" hidden><span><b>Cartas Recebidas</b><br>com prazo vencido<span id="dash-overdue-recebidas-responsaveis" class="dash-sector-responsaveis" hidden></span></span><strong id="dash-overdue-recebidas">—</strong></div>
           </article>
         </section>
         <section class="dashboard-column dashboard-work" aria-labelledby="dash-work-title">

@@ -86,6 +86,19 @@ function value(id) { return elements.get(id)?.textContent; }
 
 (async () => {
   const runnerPayloads = readRunnerPayloads();
+  await refresh([{key:'guias',type:'expedicao_guia',count:2},{key:'guias',type:'envio_guia',count:1},{key:'oficios',type:'enviar_oficio',count:1}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'Ana Souza',oficios:'Bruno Lima'}});
+  for (const id of ['dash-queue-guias-expedicao-responsaveis','dash-queue-guias-envio-responsaveis']) {
+    assert.equal(value(id), 'Responsável: Ana Souza');
+    assert.equal(elements.get(id).hidden, false);
+  }
+  assert.equal(value('dash-queue-oficios-responsaveis'), 'Responsável: Bruno Lima');
+  for (const id of ['dash-queue-expedidas-responsaveis','dash-queue-recebidas-responsaveis','dash-queue-editais-responsaveis','dash-overdue-expedidas-responsaveis','dash-overdue-recebidas-responsaveis']) assert.equal(elements.get(id).hidden, true);
+  await refresh([{key:'guias',type:'expedicao_guia',count:2}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'Carla Dias'}});
+  assert.equal(value('dash-queue-guias-expedicao-responsaveis'), 'Responsável: Carla Dias');
+  assert.equal(elements.get('dash-queue-oficios-responsaveis').hidden, true);
+  await refresh([{key:'guias',type:'expedicao_guia',count:2}]);
+  assert.equal(elements.get('dash-queue-guias-expedicao-responsaveis').hidden, true);
+  assert.equal(value('dash-queue-guias-expedicao-responsaveis'), '');
   await refresh([
     {key:'guias',type:'expedicao_guia',count:2},
     {key:'cartas_expedidas',type:'aguardando_envio',count:4},

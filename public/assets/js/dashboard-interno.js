@@ -6,6 +6,12 @@
   if(window.Chart) Chart.defaults.font.family="'Google Sans', sans-serif";
 
   function set(id,value){const el=$(id);if(el)el.textContent=value;}
+  function setResponsible(id,name){
+    const el=$(id);if(!el)return;
+    const value=typeof name==='string'?name.trim():'';
+    el.textContent=value?'Responsável: '+value:'';
+    el.hidden=!value;
+  }
   function count(value){return value===null||value===undefined?'—':Number(value).toLocaleString('pt-BR');}
   function applyCountBadge(element,value){
     if(!element)return;
@@ -106,6 +112,11 @@
 
       const cartorioEnabled=Boolean(data.setor?.conectado)&&(data.setor?.areas||[]).includes('CARTORIO');
       const sectorQueues=data.setor?.filas||[];
+      const responsible=cartorioEnabled?(data.setor?.responsaveis_regras||{}):{};
+      ['dash-queue-expedidas-responsaveis','dash-queue-recebidas-responsaveis','dash-queue-editais-responsaveis','dash-overdue-expedidas-responsaveis','dash-overdue-recebidas-responsaveis'].forEach(id=>setResponsible(id,''));
+      setResponsible('dash-queue-oficios-responsaveis',responsible.oficios);
+      setResponsible('dash-queue-guias-expedicao-responsaveis',responsible.guias);
+      setResponsible('dash-queue-guias-envio-responsaveis',responsible.guias);
       const queueExpedidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_expedidas','aguardando_envio'):null;
       const queueRecebidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_recebidas','devolucao'):null;
       const queueOficios=data.setor?.conectado?activeQueueCount(sectorQueues,'oficios','enviar_oficio'):null;

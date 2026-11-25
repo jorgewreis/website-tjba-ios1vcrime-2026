@@ -236,9 +236,21 @@ final class DashboardResumoService
                 }
             } catch(Throwable $e) { error_log('dashboard resumo [prazos vencidos recebidas]: '.$e->getMessage()); }
         }
+        $responsaveisRegras = [];
+        if ($includeCartorio) {
+            try {
+                $stmt = $this->pdo->prepare('SELECT u.nome,u.sobrenome FROM alocacoes_regras r JOIN usuarios u ON u.id_usuario COLLATE utf8mb4_unicode_ci = r.usuario_id COLLATE utf8mb4_unicode_ci WHERE r.regra = ? LIMIT 1');
+                foreach (['guias'=>'ALLOCATE-GUIAS','oficios'=>'ALLOCATE-CARTORIOOFICIOS'] as $key=>$regra) {
+                    $stmt->execute([$regra]);
+                    $usuario=$stmt->fetch(PDO::FETCH_ASSOC);
+                    $nome=$usuario ? trim(trim((string)($usuario['nome']??'')) . ' ' . trim((string)($usuario['sobrenome']??''))) : '';
+                    if ($nome !== '') $responsaveisRegras[$key]=$nome;
+                }
+            } catch (Throwable $e) { error_log('dashboard resumo [responsáveis por regra]: falha interna.'); }
+        }
         $sectorQueues=$includeCartorio?$queues:[];$reportedTotal=$hasQueueErrors?null:$total;$sectorTotal=$includeCartorio?$reportedTotal:null;
         $alerts=$this->letterAlerts($oldest,$oldestLabel,$cartasEmDevolucao,$oldestReturns,$deadlinesSoon,$nearestDeadline,$mostOverdueExpedidaDays);
-        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'semana'=>['labels'=>$weeklyLabels,'expedidas'=>$weeklyLetters['expedidas'],'recebidas'=>$weeklyLetters['recebidas']]],'oficios_cadastrados'=>['ano'=>['cartorio'=>$officesRegistered['cartorio'],'gabinete'=>$officesRegistered['gabinete']],'semana'=>['labels'=>$weeklyLabels,'cartorio'=>$weeklyOffices['cartorio'],'gabinete'=>$weeklyOffices['gabinete']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'prazos_vencidos'=>$overdueDeadlines,'prazos_vencidos_dias'=>['expedidas'=>$mostOverdueExpedidaDays,'recebidas'=>$mostOverdueRecebidaDays],'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'alertas'=>$alerts,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors,'cartas_expedidas_inconsistencias'=>$expedidasResumo['inconsistencias']??null];
+        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'semana'=>['labels'=>$weeklyLabels,'expedidas'=>$weeklyLetters['expedidas'],'recebidas'=>$weeklyLetters['recebidas']]],'oficios_cadastrados'=>['ano'=>['cartorio'=>$officesRegistered['cartorio'],'gabinete'=>$officesRegistered['gabinete']],'semana'=>['labels'=>$weeklyLabels,'cartorio'=>$weeklyOffices['cartorio'],'gabinete'=>$weeklyOffices['gabinete']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'responsaveis_regras'=>$responsaveisRegras,'prazos_vencidos'=>$overdueDeadlines,'prazos_vencidos_dias'=>['expedidas'=>$mostOverdueExpedidaDays,'recebidas'=>$mostOverdueRecebidaDays],'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'alertas'=>$alerts,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors,'cartas_expedidas_inconsistencias'=>$expedidasResumo['inconsistencias']??null];
     }
 
     /** @return array{0: ?string, 1: ?string} */
