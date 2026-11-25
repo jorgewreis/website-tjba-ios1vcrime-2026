@@ -102,6 +102,10 @@
 
 - fix(ci): validate installed WireGuard config only
 
+**Data:** 2026-11-20 10:56:04 | **Commit:** `428321d6` | **Tipo:** `patch`
+
+- fix(REI-158): align IPv6 lock case
+
 ## V. 1.88.0013
 
 **Data:** 2026-11-20 15:47:19 | **Commit:** `9654ab41` | **Tipo:** `patch`
@@ -180,6 +184,30 @@
 **Data:** 2026-11-20 13:09:54 | **Commit:** `16c5f76d` | **Tipo:** `patch`
 
 - ci(deploy): add temporary Hostinger SSH allowlist
+
+## V. 1.87.0194
+
+**Data:** 2026-11-20 10:49:23 | **Commit:** `0b3d0eb5` | **Tipo:** `patch`
+
+- test(REI-158): observe HTTP admission lock
+
+## V. 1.87.0193
+
+**Data:** 2026-11-20 10:43:51 | **Commit:** `119e261f` | **Tipo:** `patch`
+
+- test: allow diagnostic probe time on CI
+
+## V. 1.87.0192
+
+**Data:** 2026-11-20 10:41:05 | **Commit:** `101c01a9` | **Tipo:** `patch`
+
+- test(REI-158): exercise concurrent HTTP logins
+
+## V. 1.87.0191
+
+**Data:** 2026-11-20 10:34:29 | **Commit:** `f95be398` | **Tipo:** `patch`
+
+- fix(REI-158): serialize login admission
 
 ## V. 1.87.0190
 

@@ -36,6 +36,9 @@ try {
     $service = new PessoasService($connection);
     $deleted = $service->deleteDocumento($id);
     echo json_encode(['deleted' => $deleted], JSON_UNESCAPED_UNICODE);
+} catch (DocumentoResultadoIncerto $exception) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Não foi possível confirmar o resultado. Consulte os documentos antes de tentar novamente.', 'resultado' => 'verificacao_necessaria', 'estado_gravacao' => $exception->estadoGravacao], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     ApiErrorReporter::logUnexpected($exception, 'public/api/pessoas/documentos/delete.php');
     http_response_code(500);
