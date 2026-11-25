@@ -31,6 +31,10 @@ try {
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+} catch (SalaAudienciasPautaSequenceLockException $e) {
+    http_response_code(503);
+    header('Retry-After: 5');
+    echo json_encode(['error' => 'O sequencial anual da pauta está ocupado. Tente novamente em instantes.'], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao criar audiência: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);

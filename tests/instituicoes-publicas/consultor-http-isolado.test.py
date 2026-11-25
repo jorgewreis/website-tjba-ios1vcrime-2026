@@ -15,6 +15,7 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+import uuid
 from contextlib import closing
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -40,7 +41,8 @@ final class Conection {
   return $p;
  }
 }''', encoding='utf-8')
-    for rel in ('instituicoes-publicas/get.php', 'instituicoes-publicas/list.php', 'instituicoes-publicas/search.php', 'instituicoes-publicas/setores.php'):
+    for rel in ('instituicoes-publicas/get.php', 'instituicoes-publicas/list.php', 'instituicoes-publicas/search.php', 'instituicoes-publicas/setores.php',
+                'pessoas/get.php', 'pessoas/list.php', 'pessoas/search-by-name.php'):
         target = root / 'public/api' / rel
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / 'public/api' / rel, target)
@@ -53,9 +55,24 @@ CREATE TABLE usuario_perfil (usuario TEXT, perfil TEXT);
 CREATE TABLE instituicoes_publicas (id TEXT, nome TEXT, nome_fantasia TEXT, cnpj TEXT, observacoes TEXT, ativo INTEGER, created_at TEXT, updated_at TEXT);
 CREATE TABLE instituicoes_telefones (id TEXT, instituicao_id TEXT, tipo TEXT, numero TEXT, ramal TEXT, principal INTEGER, ativo INTEGER, created_at TEXT, updated_at TEXT);
 CREATE TABLE instituicoes_setores (id TEXT, instituicao_id TEXT, nome_setor TEXT, sigla TEXT, ativo INTEGER, created_at TEXT, updated_at TEXT);
+CREATE TABLE partes (id TEXT, cpf TEXT, nome_completo TEXT, sexo TEXT, data_nascimento TEXT, profissao TEXT, created_at TEXT, updated_at TEXT);
+CREATE TABLE partes_documentos (id TEXT, parte_id TEXT, tipo TEXT, numero TEXT, created_at TEXT, updated_at TEXT);
+CREATE TABLE partes_telefones (id TEXT, parte_id TEXT, tipo TEXT, numero TEXT, whatsapp INTEGER, principal INTEGER, ativo INTEGER, created_at TEXT, updated_at TEXT);
+CREATE TABLE processos (id TEXT, numero_processo TEXT);
+CREATE TABLE processos_partes (id TEXT, processo_id TEXT, parte_id TEXT, tipo_parte TEXT, polo TEXT, prioridade_mulher INTEGER, prioridade_crianca_adolescente INTEGER, prioridade_idoso INTEGER, prioridade_pessoa_deficiencia INTEGER, created_at TEXT, updated_at TEXT);
+CREATE TABLE partes_instituicoes (id TEXT, parte_id TEXT, instituicao_id TEXT, setor_id TEXT, profissao TEXT, cargo_funcao TEXT, data_inclusao TEXT, data_inicio TEXT, data_fim TEXT, ativo INTEGER, observacoes TEXT, created_at TEXT, updated_at TEXT);
 INSERT INTO instituicoes_publicas VALUES ('A','Ativa','Ativa','111','OBS_ATIVA',1,'',''), ('I','Inativa','Inativa','222','OBS_INATIVA',0,'','');
 INSERT INTO instituicoes_telefones VALUES ('TA','A','fixo','111',NULL,0,1,'',''), ('TI','A','fixo','222',NULL,0,0,'','');
 INSERT INTO instituicoes_setores VALUES ('SA','A','Ativo','SA',1,'',''), ('SI','A','Inativo','SI',0,'',''), ('SX','I','Ativo em instituição inativa','SX',1,'','');
+INSERT INTO partes VALUES ('P','','Pessoa Exemplo','','','','',''),
+ ('PI','','Alfa Exemplo','','','','',''), ('PS','','Beta Exemplo','','','','',''), ('PV','','Gama Exemplo','','','','','');
+INSERT INTO partes_instituicoes VALUES ('VA','P','A','SA','PROF_ATIVA','CARGO_ATIVO','2026-01-01',NULL,NULL,1,'','',''),
+ ('VI','P','I','SX','PROF_INST_INATIVA','CARGO_INST_INATIVA','2026-01-01',NULL,NULL,1,'','',''),
+ ('VS','P','A','SI','PROF_SETOR_INATIVO','CARGO_SETOR_INATIVO','2026-01-01',NULL,NULL,1,'','',''),
+ ('VV','P','A','SA','PROF_VINCULO_INATIVO','CARGO_VINCULO_INATIVO','2026-01-01',NULL,NULL,0,'','',''),
+ ('VPI','PI','I','SX','PROF_INST_INATIVA','CARGO_INST_INATIVA','2026-01-01',NULL,NULL,1,'','',''),
+ ('VPS','PS','A','SI','PROF_SETOR_INATIVO','CARGO_SETOR_INATIVO','2026-01-01',NULL,NULL,1,'','',''),
+ ('VPV','PV','A','SA','PROF_VINCULO_INATIVO','CARGO_VINCULO_INATIVO','2026-01-01',NULL,NULL,0,'','','');
 ''')
         for user in ('consultor', 'misto', 'estudante'):
             db.execute('INSERT INTO usuarios VALUES (?,?,?,1)', (user, hashlib.sha256(token.encode()).hexdigest(), '2999-01-01 00:00:00'))
@@ -75,10 +92,12 @@ INSERT INTO instituicoes_setores VALUES ('SA','A','Ativo','SA',1,'',''), ('SI','
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
+    sentinel = uuid.uuid4().hex
+    (root / 'public' / (sentinel + '.txt')).write_text(sentinel, encoding='ascii')
     proc = subprocess.Popen([PHP, '-d', 'session.save_path=' + str(sessions), '-S', f'127.0.0.1:{port}', '-t', str(root / 'public')], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    def call(path, user=None):
+    def call(path, user=None, module='instituicoes-publicas'):
         headers = {'Cookie': 'PHPSESSID=sess' + user} if user else {}
-        req = urllib.request.Request(f'http://127.0.0.1:{port}/api/instituicoes-publicas/{path}', headers=headers)
+        req = urllib.request.Request(f'http://127.0.0.1:{port}/api/{module}/{path}', headers=headers)
         try:
             with urllib.request.urlopen(req, timeout=3) as res:
                 return res.status, json.load(res)
@@ -92,6 +111,11 @@ INSERT INTO instituicoes_setores VALUES ('SA','A','Ativo','SA',1,'',''), ('SI','
                 if proc.poll() is not None: raise RuntimeError('Servidor local encerrou')
                 time.sleep(.1)
         else: raise RuntimeError('Servidor local não iniciou')
+        if proc.poll() is not None:
+            raise RuntimeError('Servidor local encerrou durante a inicialização')
+        with urllib.request.urlopen(f'http://127.0.0.1:{port}/{sentinel}.txt', timeout=3) as response:
+            if response.read().decode('ascii') != sentinel or proc.poll() is not None:
+                raise RuntimeError('Servidor inesperado na porta selecionada')
         status, data = call('list.php?ativo=0', 'consultor')
         assert status == 200 and [x['id'] for x in data['data']] == ['A'], (status, data)
         status, data = call('get.php?id=A', 'consultor')
@@ -114,6 +138,42 @@ INSERT INTO instituicoes_setores VALUES ('SA','A','Ativo','SA',1,'',''), ('SI','
         assert call('get.php?id=A', 'estudante')[0] == 403
         assert call('get.php?id=A')[0] == 401
         assert call('get.php?id=A', 'invalida')[0] == 401
+        # Mesmo token e servidor local; o filtro de vínculos institucionais do
+        # CONSULTOR externo é diferente do perfil misto com acesso interno.
+        for user, expected in [('consultor', {'VA'}), ('misto', {'VA', 'VI', 'VS', 'VV'})]:
+            status, data = call('get.php?id=P', user, 'pessoas')
+            assert status == 200 and {x['id'] for x in data['vinculos_instituicoes']} == expected, (user, status, data)
+            status, data = call('list.php?nome=Pessoa', user, 'pessoas')
+            assert status == 200 and [x['id'] for x in data['data']] == ['P'], (user, status, data)
+            # Listagem inclui apenas vínculos ativos, inclusive para perfil misto.
+            assert data['data'][0]['total_instituicoes'] == (1 if user == 'consultor' else 3), (user, data)
+            expected_professions = {'PROF_ATIVA'} if user == 'consultor' else {'PROF_ATIVA', 'PROF_INST_INATIVA', 'PROF_SETOR_INATIVO'}
+            assert {x['profissao'] for x in data['data'][0]['instituicoes']} == expected_professions, (user, data)
+            status, data = call('search-by-name.php?nome=Pessoa', user, 'pessoas')
+            assert status == 200 and [x['id'] for x in data['pessoas']] == ['P'], (user, status, data)
+            if user == 'consultor':
+                encoded = json.dumps(data, ensure_ascii=False)
+                assert not any(marker in encoded for marker in ('PROF_INST_INATIVA', 'PROF_SETOR_INATIVO', 'PROF_VINCULO_INATIVO', 'CARGO_INST_INATIVA', 'CARGO_SETOR_INATIVO', 'CARGO_VINCULO_INATIVO', 'Inativa')), data
+        # Uma pessoa por tipo de vínculo inativo evita mascaramento pelo ativo.
+        for name, person_id, mixed_cargo, mixed_lotacao in [
+            ('Alfa', 'PI', 'CARGO_INST_INATIVA', 'Inativa'),
+            ('Beta', 'PS', 'CARGO_SETOR_INATIVO', 'Ativa'),
+            ('Gama', 'PV', '', ''),
+        ]:
+            status, data = call('search-by-name.php?nome=' + name, 'consultor', 'pessoas')
+            assert status == 200 and [x['id'] for x in data['pessoas']] == [person_id], (name, status, data)
+            pessoa = data['pessoas'][0]
+            assert (pessoa['profissao_exibicao'], pessoa['lotacao_exibicao'], pessoa['label']) == ('', '', name + ' Exemplo'), (name, data)
+            status, data = call('search-by-name.php?nome=' + name, 'misto', 'pessoas')
+            assert status == 200 and [x['id'] for x in data['pessoas']] == [person_id], (name, status, data)
+            pessoa = data['pessoas'][0]
+            label = name + ' Exemplo' + (f' ({mixed_cargo} - {mixed_lotacao})' if mixed_cargo else '')
+            assert (pessoa['profissao_exibicao'], pessoa['lotacao_exibicao'], pessoa['label']) == (mixed_cargo, mixed_lotacao, label), (name, data)
+        for user, expected_status in [(None, 401), ('invalida', 401), ('estudante', 403)]:
+            for endpoint in ('get.php?id=P', 'list.php?nome=Pessoa', 'search-by-name.php?nome=Pessoa'):
+                status, data = call(endpoint, user, 'pessoas')
+                assert status == expected_status, (user, endpoint, status, data)
+                assert 'data' not in data and 'pessoas' not in data and 'vinculos_instituicoes' not in data, (user, endpoint, data)
     finally:
         proc.terminate()
         try: proc.wait(timeout=5)
