@@ -1,5 +1,12 @@
 name: Autenticação — integração isolada
-on: [push, pull_request]
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: auth-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
