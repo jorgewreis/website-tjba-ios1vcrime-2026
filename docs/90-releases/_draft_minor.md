@@ -4,5 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **test: verifica consulta com perfis acumulados** `[6fd4f38f]`
+- **test: prepara validacao isolada de vinculos de pauta** `[2a8a30db]`
 
