@@ -1,0 +1,25 @@
+# REI-73 — matriz estática de processos-partes
+
+Base `6b47f8249fd6653585dd025cd6d3427e2baa141d`. Lidos integralmente 4/4 handlers rastreados e trechos de ProcessosPartesRepository, guard e consumidores literais. Consultada REI-69 e seus comentários recentes. Somente leitura: sem execução, banco, produto, Linear, PR ou candidata alterados. A descrição original de REI-69 refere-se ao checkout histórico `f195d596`, não ao estado atual.
+
+Todos handlers usam ApiAccessGuard que verifica Security::isAuthenticated e qualquer chave indicada. Escritas exigem POST e Origin/Referer de mesma origem; leitura restringe GET. As chaves `consultaprocessos`/`consultaprocessosedit` aceitam perfis compostos internos e elevados; `processospartescreate/list/edit` usam área Cartório, embora as alternativas dos handlers create/delete/list ampliem o conjunto para os perfis de consultas de processos. Perfis efetivos podem suprimir ADMIN operacional; externo estudante/consultor exclusivo não passa consulta de processos. Mistos seguem classificação efetiva. Autorização de página não demonstra autorização de mutação por setor responsável.
+
+| Handler | Método / guard | Operação e objeto | Consumidor literal / limites |
+|---|---|---|---|
+| `create.php:8,29-50` | POST confiável; `processospartescreate` OU `consultaprocessosedit` | IDs processo/parte, tipo, polo e flags; repositório :51-70 valida tipo/polo e existência de vínculo duplicado antes de inserir; sincroniza profissão após inserção sem TX abrangente no handler | `consulta-processos-edit.js:647`, `processos-partes-create.js:30`; REI-85 atomicidade; sem gate setorial explícito no caminho lido. |
+| `delete.php:8,13,33-43` | POST confiável; `processospartesedit` OU `consultaprocessosedit`; teste de origem repetido | ID não vazio, repositório :450-460 deleta por ID, retorna `deleted` | `consulta-processos-edit.js:510`; sem consulta ao setor/ator no caminho examinado. |
+| `list.php:8-13,27-41` | GET apenas; `consultaprocessos` OU `processosparteslist` | processo_id prevalece sobre parte_id se ambos; consultas :114-164; sem filtro de setor explícito na consulta | Nenhuma chamada HTTP literal localizada; views/export e serviços usam repositório diretamente. Decisão registrada permite leitura interna autorizada sem mesmo setor, inclusive sigiloso; não tratar ausência de ACL setorial de leitura como falha isolada. |
+| `update.php:8,29-58` | POST confiável; somente `processospartesedit` | ID e campos permitidos; se vazio retorna success antes de procurar ID; caso contrário valida vínculo existente, atualiza e sincroniza profissão sem TX abrangente no handler; repositório valida tipo, mas polo é tratado como texto no update :477-505 | `processos-partes-edit.js:29`; REI-316 cobre polo e REI-85 atomicidade; sem autorização setorial explícita. |
+
+Todos quatro tratam falha de conexão com erro genérico; exceptions inesperadas retornam mensagens genéricas. Verificar comportamento de dependências, autenticação real, schema, falhas e transações em laboratório isolado, sem assumir sucesso ou falha de testes anteriores nesta leitura.
+
+## REI-69 e evidência já registrada
+
+- REI-69 está em revisão e bloqueada por REI-73 no momento da consulta. Seu texto histórico anterior ao guard não descreve esta base; ainda demanda autorização por operação/registro e validações de aceite.
+- Comentário `47fbca13` descreve laboratório de create/update com endpoints/guard/repositório e SQLite sintético, sessão e setores simulados: operação em outro setor passou, sem comprovar autenticação, MySQL, associação real ou produção. Comentário `5435001a` relata análogo delete. Evidência anterior, não reexecutada nesta rodada.
+- Comentário `0fa8a8bc` descreve leitura por parte/processo inclusive sigiloso em SQLite sintético; `9a02430f` registra decisão Notion: leitura de internos já autorizados sem exigência de mesmo setor; criar/editar/excluir exige permissão e setor responsável explícito, ausência nega. Não impor filtro de setor à leitura por analogia.
+- Comentário `aa8924b7` registra que a candidata #438 no HEAD `a8af2d634265340d710ffd9155ddaf53088ba4c0` filtrou setores diferentes/NULL em laboratório sintético, divergindo da decisão de leitura; não foi revalidado o estado atual da PR nesta rodada. Não editar nem assumir correção da candidata.
+- Comentário `94520522` registra hipótese distinta em chamadores de `SalaAudienciasPautaService::addParte/updateParte`: identificação de vínculo recebido sem comprovação de associação processo/pessoa no caminho então lido. Trata-se de hipótese sem reprodução, não auditada integralmente nesta rodada; preservar frente da outra sessão.
+- REI-85 trata atomicidade vínculo/profissão e REI-316 validação de polo; não criar duplicatas por relação temática. A existência de guard e vínculo local não prova setor, nem teste sintético prova controle externo ou implantação.
+
+Limites: consumidores dinâmicos/externos podem existir; não auditados todos chamadores do repositório, UI autenticada, privilégios reais, banco, índices, corrida, proxy ou controles externos. Não houve alteração dos artefatos de REI-69/#438.
