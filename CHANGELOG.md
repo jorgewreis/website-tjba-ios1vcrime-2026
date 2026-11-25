@@ -1,5 +1,23 @@
 # Changelog
 
+## V. 1.88.0030
+
+**Data:** 2026-11-25 07:37:33 | **Commit:** `115dd83d` | **Tipo:** `patch`
+
+- fix(REI-329): restringir scripts de manutencao ao CLI
+
+## V. 1.88.0029
+
+**Data:** 2026-11-25 07:07:31 | **Commit:** `cadc2cf7` | **Tipo:** `patch`
+
+- fix(REI-337): restringir exportacao para estudantes externos
+
+## V. 1.88.0028
+
+**Data:** 2026-11-25 06:14:05 | **Commit:** `15bf78b6` | **Tipo:** `patch`
+
+- fix(ci): restaurar fixtures de APIs e dependencias
+
 ## V. 1.88.0027
 
 **Data:** 2026-11-25 05:47:53 | **Commit:** `c401ff04` | **Tipo:** `patch`
@@ -7807,14 +7825,3 @@
 
 
 \n
-
-
-
-
-
-
-
-
-
-
-

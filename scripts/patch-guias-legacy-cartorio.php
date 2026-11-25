@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 $root = dirname(__DIR__);
 $p = $root . '/app/services/Guias.php';
 $c = str_replace(["\r\n", "\r"], "\n", file_get_contents($p));

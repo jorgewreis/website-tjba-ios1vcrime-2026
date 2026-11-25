@@ -353,26 +353,30 @@ final class OficiosCartorioService
         if ($id === '') {
             throw new InvalidArgumentException('Identificador obrigatório.');
         }
-        $row = $this->repository->findById($id);
-        if ($row === null) {
-            throw new InvalidArgumentException('Ofício não encontrado.');
-        }
-        if (($row['status'] ?? '') === 'cancelada') {
+        return $this->executarAtomico(function () use ($id, $atualizadoPor): bool {
+            $row = $this->repository->findByIdForUpdate($id);
+            if ($row === null) {
+                throw new InvalidArgumentException('Ofício não encontrado.');
+            }
+            if (($row['status'] ?? '') === 'cancelada') {
+                return true;
+            }
+
+            require_once __DIR__ . '/../helpers/OficioRegistroMetadataHelper.php';
+            if (!OficioRegistroMetadataHelper::podeCancelarCartorio([
+                'Status' => (string) ($row['status'] ?? ''),
+            ])) {
+                throw new InvalidArgumentException(
+                    'Não é possível cancelar este ofício. Ofícios finalizados ou já cancelados não podem ser cancelados.'
+                );
+            }
+
+            $this->subtarefasRepository->deleteByOficioId($id);
+            if (!$this->repository->updateStatus($id, 'cancelada', $atualizadoPor)) {
+                throw new RuntimeException('Falha ao cancelar o ofício bloqueado.');
+            }
             return true;
-        }
-
-        require_once __DIR__ . '/../helpers/OficioRegistroMetadataHelper.php';
-        $podeCancelar = OficioRegistroMetadataHelper::podeCancelarCartorio([
-            'Status' => (string) ($row['status'] ?? ''),
-        ]);
-        if (!$podeCancelar) {
-            throw new InvalidArgumentException(
-                'Não é possível cancelar este ofício. Ofícios finalizados ou já cancelados não podem ser cancelados.'
-            );
-        }
-
-        $this->subtarefasRepository->deleteByOficioId($id);
-        return $this->repository->updateStatus($id, 'cancelada', $atualizadoPor);
+        });
     }
 
     /**
@@ -384,22 +388,61 @@ final class OficiosCartorioService
         if ($id === '') {
             throw new InvalidArgumentException('Identificador obrigatório.');
         }
-        $row = $this->repository->findById($id);
-        if ($row === null) {
-            throw new InvalidArgumentException('Ofício não encontrado.');
+        return $this->executarAtomico(function () use ($id): array {
+            $row = $this->repository->findByIdForUpdate($id);
+            if ($row === null) {
+                throw new InvalidArgumentException('Ofício não encontrado.');
+            }
+            $ano = (int) ($row['ano'] ?? 0);
+            $seq = (int) ($row['numero_sequencial'] ?? 0);
+            $max = $this->repository->getMaxSequencialForYearForUpdate($ano);
+            if ($seq !== $max || $max === 0) {
+                throw new InvalidArgumentException('Só é possível excluir o último ofício criado no ano (maior número sequencial).');
+            }
+
+            $this->subtarefasRepository->deleteByOficioId($id);
+            $this->alocadosRepository->deleteByOficioId($id);
+            if (!$this->repository->delete($id)) {
+                throw new RuntimeException('Falha ao excluir o ofício bloqueado.');
+            }
+            return [
+                'deleted' => true,
+                'message' => 'Ofício excluído com sucesso.',
+            ];
+        });
+    }
+
+    /** Executa a alteração em transação própria ou em savepoint sem encerrar a externa. */
+    private function executarAtomico(callable $operacao): mixed
+    {
+        $propria = !$this->connection->inTransaction();
+        $savepoint = $propria ? null : 'oficio_' . bin2hex(random_bytes(8));
+
+        if ($propria) {
+            $this->connection->beginTransaction();
+        } else {
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
         }
-        $ano = (int) ($row['ano'] ?? 0);
-        $seq = (int) ($row['numero_sequencial'] ?? 0);
-        $max = $this->repository->getMaxSequencialForYear($ano);
-        if ($seq !== $max || $max === 0) {
-            throw new InvalidArgumentException('Só é possível excluir o último ofício criado no ano (maior número sequencial).');
+
+        try {
+            $resultado = $operacao();
+            if ($propria) {
+                $this->connection->commit();
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            return $resultado;
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                if ($propria) {
+                    $this->connection->rollBack();
+                } else {
+                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                }
+            }
+            throw $exception;
         }
-        $this->subtarefasRepository->deleteByOficioId($id);
-        $deleted = $this->repository->delete($id);
-        return [
-            'deleted' => $deleted,
-            'message' => $deleted ? 'Ofício excluído com sucesso.' : 'Nenhum registro removido.',
-        ];
     }
 
     private function isTipoOficioAdministrativo(string $tipoOficioRaw): bool
