@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$QaImageId = '', [switch]$Browser)
+param([string]$QaImageId = '', [switch]$Browser, [switch]$Rei69Http)
 
 # Deliberately has no host ports, bind mounts, or compose dependency. It is
 # opt-in: invoking this script is the only action that creates Docker resources.
@@ -191,6 +191,7 @@ try {
     }
     if ($Browser) { Run-AppTest 'login-rate-limit.fixture.php' @('seed') }
     D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",'--env',"E2E_RESET_TOKEN=$token",$client,'php','tests/auth/http-auth-flow.test.php')|Write-Output
+    if ($Rei69Http) { Assert-ActiveTopology; Run-AppTest 'rei69-http-direct.test.php' }
     Run-AppTest 'password-reset-states.test.php'
 } catch {
     # Dados de erro do Docker, testes e servidor podem conter tokens; nunca os imprima.

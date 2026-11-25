@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0045
+
+**Data:** 2026-11-25 04:30:25 | **Commit:** `b3b3c9f9` | **Tipo:** `patch`
+
+- test: valida acesso com login sintetico
+
 ## V. 1.88.0044
 
 **Data:** 2026-11-25 04:22:26 | **Commit:** `255ab8be` | **Tipo:** `patch`
@@ -7902,6 +7908,7 @@
 
 
 \n
+
 
 
 
