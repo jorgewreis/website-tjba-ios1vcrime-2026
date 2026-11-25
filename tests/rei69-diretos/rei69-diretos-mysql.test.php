@@ -523,7 +523,24 @@ PHP;
     $failureStage='c3_tipo'; $failureDetail='general';
     $assert($pdo->query("SELECT tipo_parte FROM processos_partes WHERE id='VNC-1'")->fetchColumn()==='vitima', 'Tipo final não corresponde à Pauta.');
     $failureStage='c3_snapshot'; $failureDetail='general';
-    $afterDirectFirst=$snapshot($pdo); $assertUnchanged($beforeDirectFirst,$afterDirectFirst,['processos_partes'=>['id',['VNC-1']],'partes'=>['id',['PAR-1']],'sala_audiencias_pauta_parte'=>['id_parte',['PP-A']],'processo_prioridades'=>['processo_id',['PRC-1']]]);
+    $afterDirectFirst=$snapshot($pdo);
+    // One synthetic, active, pending person contributes zero minutes. The real
+    // post-commit sync derives exactly these four fields from the fixed schedule.
+    $pautaBefore=$beforeDirectFirst['sala_audiencias_pauta'];
+    $pautaAfter=$afterDirectFirst['sala_audiencias_pauta'];
+    $assert(count($pautaBefore['rows'])===1 && count($pautaAfter['rows'])===1
+        && $pautaBefore['rows'][0]['id_pauta']==='PA' && $pautaAfter['rows'][0]['id_pauta']==='PA', 'Fixture exige uma pauta sintética conhecida.');
+    $assert($pautaAfter['rows'][0]['data_hora_designacao']==='2030-01-01 10:00:00'
+        && $pautaAfter['rows'][0]['hora_inicio']==='10:00:00'
+        && $pautaAfter['rows'][0]['hora_fim']==='10:00:00'
+        && (string)$pautaAfter['rows'][0]['duracao_estimada_minutos']==='0', 'Sincronização não produziu os quatro valores esperados.');
+    $expected=$beforeDirectFirst;
+    $expected['sala_audiencias_pauta']['rows'][0]['data_hora_designacao']='2030-01-01 10:00:00';
+    $expected['sala_audiencias_pauta']['rows'][0]['hora_inicio']='10:00:00';
+    $expected['sala_audiencias_pauta']['rows'][0]['hora_fim']='10:00:00';
+    // Preserve the PDO integer/string representation after separately asserting zero.
+    $expected['sala_audiencias_pauta']['rows'][0]['duracao_estimada_minutos']=$pautaAfter['rows'][0]['duracao_estimada_minutos'];
+    $assertUnchanged($expected,$afterDirectFirst,['processos_partes'=>['id',['VNC-1']],'partes'=>['id',['PAR-1']],'sala_audiencias_pauta_parte'=>['id_parte',['PP-A']],'processo_prioridades'=>['processo_id',['PRC-1']]]);
     // Pauta owns process and pauta rows then waits for the link; direct update waits for process.
     $failureStage='c4_setup'; $failureDetail='general';
     $beforePautaFirst=$snapshot($pdo);
