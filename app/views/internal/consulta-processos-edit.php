@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../repositories/PartesInstituicoesRepository.php';
 require_once __DIR__ . '/../../helpers/ParteDocumentoHelper.php';
 require_once __DIR__ . '/../../services/ConsultaProcessosService.php';
 require_once __DIR__ . '/../../services/ProcessoPrioridadesService.php';
+require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 if ($id === '') { header('Location: /frame.php?page=consultaprocessos'); exit; }
@@ -18,6 +19,27 @@ $connection = Conection::getInstance()->getConnection();
 $service = new ConsultaProcessosService($connection);
 $processo = $service->get($id);
 if ($processo === null) { header('Location: /frame.php?page=consultaprocessos'); exit; }
+
+$podeAtribuirSetorResponsavel = in_array('ADMIN', ProfileNormalizer::normalize($userPerfils ?? []), true);
+$setoresResponsaveis = [];
+$setorResponsavelAtual = '';
+$erroSetorResponsavel = '';
+if ($podeAtribuirSetorResponsavel) {
+    try {
+        $stmtSetorAtual = $connection->prepare(
+            'SELECT p.`id_setor_responsavel`, s.`nome` AS `setor_nome`, s.`ativo` AS `setor_ativo` '
+            . 'FROM `processos` p LEFT JOIN `setores` s ON s.`id_setor` = p.`id_setor_responsavel` WHERE p.`id` = :id LIMIT 1'
+        );
+        $stmtSetorAtual->execute([':id' => (string) ($processo['id'] ?? '')]);
+        $rowSetorAtual = $stmtSetorAtual->fetch(PDO::FETCH_ASSOC) ?: [];
+        $setorResponsavelAtual = trim((string) ($rowSetorAtual['id_setor_responsavel'] ?? ''));
+        $stmtSetores = $connection->query('SELECT `id_setor`, `nome` FROM `setores` WHERE `ativo` = 1 ORDER BY `nome` ASC');
+        $setoresResponsaveis = $stmtSetores ? $stmtSetores->fetchAll(PDO::FETCH_ASSOC) : [];
+    } catch (Throwable $error) {
+        error_log('Não foi possível carregar setores para atribuição ADMIN (' . get_class($error) . ').');
+        $erroSetorResponsavel = 'Não foi possível carregar os setores agora.';
+    }
+}
 
 $partes = $processo['partes'] ?? [];
 $assuntosFicha = is_array($processo['assuntos'] ?? null) ? $processo['assuntos'] : [];
@@ -57,6 +79,44 @@ $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
     <div class="container-full card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">
         <input type="hidden" id="proc-id" value="<?php echo htmlspecialchars((string) ($processo['id'] ?? ''), ENT_QUOTES); ?>">
+        <?php if ($podeAtribuirSetorResponsavel): ?>
+        <section class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" aria-labelledby="responsible-sector-title">
+            <div>
+                <h2 id="responsible-sector-title">Unidade responsável</h2>
+                <p id="process-responsible-sector-current" aria-live="polite">
+                    <?php if ($erroSetorResponsavel !== ''): ?>Não foi possível verificar a unidade responsável.
+                    <?php elseif ($setorResponsavelAtual === ''): ?>Sem unidade atribuída. Mutações protegidas por unidade permanecem bloqueadas.
+                    <?php else: ?>Atribuição atual: <?php echo htmlspecialchars((string) ($rowSetorAtual['setor_nome'] ?? 'Setor não encontrado'), ENT_QUOTES); ?><?php if ((int) ($rowSetorAtual['setor_ativo'] ?? 0) !== 1): ?> (inativo)<?php endif; ?><?php endif; ?>
+                </p>
+            </div>
+            <?php if ($erroSetorResponsavel !== ''): ?>
+                <p class="no-data" role="status"><?php echo htmlspecialchars($erroSetorResponsavel, ENT_QUOTES); ?></p>
+            <?php else: ?>
+            <form id="process-responsible-sector-form" class="display-flex col col-full gap-y-md" data-process-id="<?php echo htmlspecialchars((string) ($processo['id'] ?? ''), ENT_QUOTES); ?>">
+                <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                    <div class="col">
+                        <label for="process-responsible-sector-select">Setor ativo</label>
+                        <select class="width-500 height-md" id="process-responsible-sector-select" name="setor_id">
+                            <option value="" <?php echo $setorResponsavelAtual === '' ? 'selected' : ''; ?>>Sem atribuição</option>
+                            <?php if ($setorResponsavelAtual !== '' && (int) ($rowSetorAtual['setor_ativo'] ?? 0) !== 1): ?>
+                            <option value="<?php echo htmlspecialchars($setorResponsavelAtual, ENT_QUOTES); ?>" selected disabled>Setor atual inativo — selecione um setor ativo</option>
+                            <?php endif; ?>
+                            <?php foreach ($setoresResponsaveis as $setor): ?>
+                            <option value="<?php echo htmlspecialchars((string) ($setor['id_setor'] ?? ''), ENT_QUOTES); ?>" <?php echo $setorResponsavelAtual !== '' && $setorResponsavelAtual === (string) ($setor['id_setor'] ?? '') ? 'selected' : ''; ?>><?php echo htmlspecialchars((string) ($setor['nome'] ?? ''), ENT_QUOTES); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col col-full">
+                        <label for="process-responsible-sector-reason">Justificativa obrigatória</label>
+                        <textarea class="width-700" id="process-responsible-sector-reason" name="justificativa" maxlength="500" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary height-md" id="process-responsible-sector-submit">Registrar atribuição</button>
+                </div>
+                <p id="process-responsible-sector-status" role="status" aria-live="polite"></p>
+            </form>
+            <?php endif; ?>
+        </section>
+        <?php endif; ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Classe processual</h2>
         </div>
@@ -338,6 +398,9 @@ $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
     <script src="/assets/js/modules/audiencias/pauta-edit-prioridades.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit-prioridades.js') ?: time(); ?>"></script>
     <?php endif; ?>
     <script src="/assets/js/shared/processos-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/processos-edit.js') ?: time(); ?>"></script>
+    <?php if ($podeAtribuirSetorResponsavel && $erroSetorResponsavel === ''): ?>
+    <script src="/assets/js/shared/processo-setor-responsavel.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/processo-setor-responsavel.js') ?: time(); ?>"></script>
+    <?php endif; ?>
     <script>
         window.PROCESSO_ASSUNTOS_PROCESSO_ID = <?php echo json_encode($processoIdFicha, JSON_UNESCAPED_UNICODE); ?>;
         window.PROCESSO_ASSUNTOS_INITIAL = <?php echo json_encode($assuntosFicha, JSON_UNESCAPED_UNICODE); ?>;

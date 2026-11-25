@@ -1,0 +1,76 @@
+name: REI-168 autorização HTTP sintética
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  authorization-synthetic-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Preparar PHP com SQLite
+        uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_sqlite
+          coverage: none
+      - name: Executar fixture sintética no loopback
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(realpath -e -- "$RUNNER_TEMP")" = "$RUNNER_TEMP"
+          php_original="$(realpath -e -- "$(command -v php)")"
+          test -f "$php_original" && test -x "$php_original"
+          [[ "$GITHUB_RUN_ID" =~ ^[0-9]+$ && "$GITHUB_RUN_ATTEMPT" =~ ^[0-9]+$ ]]
+          bin_dir="$RUNNER_TEMP/rei168-php-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          readonly bin_dir
+          bin_file="$bin_dir/php"
+          readonly bin_file
+          dir_identity=''
+          file_identity=''
+          cleanup() {
+            local result=$?
+            trap - EXIT
+            set +e
+            if [[ -z "$dir_identity" || -L "$bin_dir" || ! -d "$bin_dir" ]] ||
+               [[ "$(realpath -e -- "$RUNNER_TEMP")" != "$RUNNER_TEMP" ]] ||
+               [[ "$bin_dir" != "$RUNNER_TEMP/rei168-php-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" ]] ||
+               [[ "$(realpath -e -- "$bin_dir")" != "$bin_dir" ]] ||
+               [[ "$(stat -c '%d:%i' -- "$bin_dir")" != "$dir_identity" ]]; then
+              echo 'Falha ao confirmar identidade do diretório temporário.' >&2
+              exit 1
+            fi
+            if [[ -e "$bin_file" || -L "$bin_file" ]]; then
+              if [[ -z "$file_identity" || -L "$bin_file" || ! -f "$bin_file" ]] ||
+                 [[ "$(realpath -e -- "$bin_file")" != "$bin_file" ]] ||
+                 [[ "$(stat -c '%d:%i' -- "$bin_file")" != "$file_identity" ]] ||
+                 ! rm -- "$bin_file"; then
+                echo 'Falha ao confirmar ou remover o PHP temporário.' >&2
+                exit 1
+              fi
+            fi
+            if ! rmdir -- "$bin_dir" || [[ -e "$bin_dir" || -L "$bin_dir" ]]; then
+              echo 'Falha ao remover o diretório temporário.' >&2
+              exit 1
+            fi
+            exit "$result"
+          }
+          mkdir -m 700 -- "$bin_dir"
+          # EXIT não cobre cancelamento abrupto; o runner GitHub-hosted é efêmero.
+          # A checagem de identidade pressupõe host confiável e não elimina TOCTOU.
+          trap cleanup EXIT
+          dir_identity="$(stat -c '%d:%i' -- "$bin_dir")"
+          test "$(realpath -e -- "$bin_dir")" = "$bin_dir"
+          cp -- "$php_original" "$bin_dir/php"
+          file_identity="$(stat -c '%d:%i' -- "$bin_file")"
+          chmod 700 -- "$bin_dir/php"
+          test "$(realpath -e -- "$bin_dir/php")" = "$bin_dir/php"
+          cmp -- "$php_original" "$bin_dir/php"
+          export PATH="$bin_dir:$PATH"
+          export TMPDIR="$RUNNER_TEMP"
+          test "$(command -v php)" = "$bin_dir/php"
+          php -r 'if (PHP_VERSION_ID < 80200 || !extension_loaded("pdo_sqlite")) exit(1); $p = new PDO("sqlite::memory:"); if ($p->getAttribute(PDO::ATTR_DRIVER_NAME) !== "sqlite") exit(2);'
+          python3 --version
+          python3 -B tests/cartas/rei168-permissao-http-sintetica.test.py

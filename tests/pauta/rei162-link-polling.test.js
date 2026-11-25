@@ -25,7 +25,8 @@ const inscriptionWrapper = {
     style: { display: '' },
     innerHTML: '',
     getAttribute(name) { return this.attributes[name] || null; },
-    setAttribute(name, value) { this.attributes[name] = value; }
+    setAttribute(name, value) { this.attributes[name] = value; },
+    querySelector() { return null; }
 };
 const context = {
     activeElement: null,

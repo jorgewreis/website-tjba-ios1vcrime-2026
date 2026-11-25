@@ -208,7 +208,9 @@ $profissaoAtual = '';
             container.appendChild(tpl);
         });
 
+        var cadastroEmAndamentoOuIncerto = false;
         document.getElementById('cadastrar-btn').addEventListener('click', function() {
+            if (cadastroEmAndamentoOuIncerto) return;
             var nome = (document.getElementById('nome_completo').value || '').trim();
             if (!nome) {
                 if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Nome completo é obrigatório.' });
@@ -255,6 +257,7 @@ $profissaoAtual = '';
                 }
             });
 
+            cadastroEmAndamentoOuIncerto = true;
             this.disabled = true;
             var outraToken = window.PROFISSAO_SELECT_OUTRA || '__OUTRA__';
             var ps = document.getElementById('profissao_selecao');
@@ -286,19 +289,37 @@ $profissaoAtual = '';
                 credentials: 'same-origin',
                 body: JSON.stringify(payload)
             })
-            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+            .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, status: r.status, data: d }; }); })
             .then(function(result) {
                 if (result.ok && result.data.id) {
                     if (typeof showToast === 'function') showToast({ type: 'success', variant: 'full', title: 'Sucesso', message: 'Pessoa cadastrada.' });
                     window.location.href = '/frame.php?page=consultapartesedit&id=' + encodeURIComponent(result.data.id);
                 } else {
+                    if (result.status >= 500 || !result.data || typeof result.data !== 'object' || (!result.data.error && !result.data.id) || result.data.resultado === 'verificacao_necessaria') {
+                        var aviso = document.getElementById('pessoa-resultado-incerto');
+                        if (!aviso) {
+                            aviso = document.createElement('div');
+                            aviso.id = 'pessoa-resultado-incerto';
+                            aviso.setAttribute('role', 'alert');
+                            document.getElementById('cadastrar-btn').parentNode.prepend(aviso);
+                        }
+                        aviso.textContent = 'Não foi possível confirmar o resultado. Consulte o cadastro de pessoas antes de tentar novamente.';
+                        return;
+                    }
                     if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: result.data.error || 'Erro ao cadastrar.' });
+                    cadastroEmAndamentoOuIncerto = false;
                     document.getElementById('cadastrar-btn').disabled = false;
                 }
             })
             .catch(function() {
-                if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: 'Erro de conexão.' });
-                document.getElementById('cadastrar-btn').disabled = false;
+                var aviso = document.getElementById('pessoa-resultado-incerto');
+                if (!aviso) {
+                    aviso = document.createElement('div');
+                    aviso.id = 'pessoa-resultado-incerto';
+                    aviso.setAttribute('role', 'alert');
+                    document.getElementById('cadastrar-btn').parentNode.prepend(aviso);
+                }
+                aviso.textContent = 'Não foi possível confirmar o resultado. Consulte o cadastro de pessoas antes de tentar novamente.';
             });
         });
     })();
