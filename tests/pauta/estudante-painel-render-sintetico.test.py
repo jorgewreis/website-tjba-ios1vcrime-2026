@@ -82,7 +82,7 @@ with tempfile.TemporaryDirectory(prefix='pauta-painel-') as tmp:
         'app/models/Usuario.php': "<?php class Usuario {function listarPerfisUsuario($u){return ['ESTUDANTE'];}}",
         'app/access/ProfileNormalizer.php': '<?php class ProfileNormalizer {static function normalize($p){return $p;} static function hasEstudante($p){return true;}}',
         'app/helpers/UserAccessHelper.php': '<?php class UserAccessHelper {static function isUsuarioExterno($p){return true;}}',
-        'app/services/SalaAudienciasAtaService.php': "<?php class SalaAudienciasAtaService {const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA=5; function __construct($db){} function listHojeParaInscricaoEstudante($u){return " + today_php + ";} function listMinhasInscricoesEstudante($u){return " + registered_php + ";}}",
+        'app/services/SalaAudienciasAtaService.php': "<?php class SalaAudienciasAtaService {const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA=5; static function statusIndisponivelParaEstudanteNaoInscrito(array $r): bool { if (!empty($r['ja_inscrito'])) return false; return (int)($r['total_inscritos_pauta']??0)>=5 || !empty($r['vagas_esgotadas']) || ($r['status']??'')!=='designada' || ($r['data_audiencia']??'')!=='2034-03-04'; } function __construct($db){} function listHojeParaInscricaoEstudante($u){return " + today_php + ";} function listMinhasInscricoesEstudante($u){return " + registered_php + ";}}",
         'app/views/internal/_internal_head_styles.php': '<?php',
         'app/views/internal/_toast_script.php': '<?php',
         'app/views/internal/_processo_bloco_listagem.php': '<?php echo htmlspecialchars((string)($row["numero_processo"] ?? ""), ENT_QUOTES, "UTF-8");',
@@ -136,7 +136,7 @@ with tempfile.TemporaryDirectory(prefix='pauta-painel-') as tmp:
         minhas_row = minhas.get(row_id)
         assert today_row is not None, (row_id, 'today missing')
         assert (minhas_row is not None) is registered, (row_id, 'my registrations membership')
-        if flags:
+        if flags or (not registered and (status != 'designada' or total >= 5)):
             for section, rendered in (('today', today_row), ('minhas', minhas_row)):
                 if rendered is None:
                     continue
@@ -157,14 +157,9 @@ with tempfile.TemporaryDirectory(prefix='pauta-painel-') as tmp:
 
         assert 'data-indisponivel="1"' not in today_row, (row_id, 'capacity must not redact today card')
         assert 'data-indisponivel="1"' not in (minhas_row or ''), (row_id, 'capacity must not redact registration')
-        if status in terminal:
-            assert 'href="https://segredo.invalid/' not in today_row, (row_id, 'terminal today link')
-            if minhas_row:
-                assert 'href="https://segredo.invalid/' not in minhas_row, (row_id, 'terminal registered link')
-        else:
-            assert 'href="https://segredo.invalid/' + row_id + '"' in today_row, (row_id, 'today link')
-            if registered:
-                assert minhas_row is not None and 'href="https://segredo.invalid/' + row_id + '"' in minhas_row, (row_id, 'registered link')
+        assert 'href="https://segredo.invalid/' + row_id + '"' in today_row, (row_id, 'eligible link')
+        if registered:
+            assert minhas_row is not None and 'href="https://segredo.invalid/' + row_id + '"' in minhas_row, (row_id, 'registered link')
 
         if status in {'designada', 'atrasada'}:
             if registered:
