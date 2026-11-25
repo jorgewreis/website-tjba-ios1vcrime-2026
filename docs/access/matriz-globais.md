@@ -37,3 +37,18 @@ de outras áreas e operações.
 Esta é uma exceção de consulta transversal no escopo descrito acima; não
 estabelece acesso geral a outros registros setoriais. A decisão documenta a
 política, sem afirmar que todos os caminhos da API foram validados.
+
+## Consulta e alteração de assuntos de processos
+
+Decisão de Jorge em 16/11/2026 (horário da Bahia), específica à implantação da
+1ª Vara Crime: perfis internos já autorizados à operação de consulta podem ler
+assuntos de qualquer processo desta instalação, inclusive sigiloso; operações
+de alteração exigem a autorização de edição correspondente. Perfis externos
+não acessam esses endpoints. A decisão não concede acesso a outras áreas nem
+estabelece uma exceção geral ao isolamento setorial. Sincronizações DataJud só
+podem persistir lote completo cuja origem, número CNJ e ausência de sigilo
+público estejam confirmados no servidor.
+
+A implementação deve preservar a origem manual dos vínculos e limitar o
+desvínculo manual a esses vínculos. Esta regra registra a política acordada;
+testes sintéticos, autenticação real e MySQL devem ser relatados separadamente.

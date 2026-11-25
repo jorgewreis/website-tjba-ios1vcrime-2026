@@ -8,8 +8,10 @@ header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/app/repositories/ProcessosRepository.php';
 require_once $basePath . '/app/services/ProcessoClasseSyncService.php';
 
 ApiAccessGuard::requireAccess(['consultaprocessosedit'], true);
@@ -30,8 +32,39 @@ try {
         exit;
     }
 
-    $service = new ProcessoClasseSyncService(Conection::getInstance()->getConnection());
-    $result = $service->updateClasseManual($processoId, $codigo, $nome);
+    $connection = Conection::getInstance()->getConnection();
+    if ((new ProcessosRepository($connection))->findById($processoId) === null) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Processo não encontrado no cadastro local.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $usuarioId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+    if ($usuarioId === '') {
+        http_response_code(401);
+        echo json_encode(['error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if (!$connection->beginTransaction()) {
+        throw new RuntimeException('Não foi possível iniciar a atualização.');
+    }
+    try {
+        if (!ProcessoSetorAuthorization::canModifyProcess($connection, $usuarioId, $processoId, true)) {
+            $connection->rollBack();
+            http_response_code(403);
+            echo json_encode(['error' => 'Acesso negado ao processo.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        $service = new ProcessoClasseSyncService($connection);
+        $result = $service->updateClasseManual($processoId, $codigo, $nome);
+        if (!$connection->commit()) {
+            throw new RuntimeException('Não foi possível confirmar a atualização.');
+        }
+    } catch (Throwable $error) {
+        if ($connection->inTransaction()) {
+            $connection->rollBack();
+        }
+        throw $error;
+    }
 
     echo json_encode(array_merge(['success' => true], $result), JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
