@@ -4,7 +4,7 @@ declare(strict_types=1);
 $failureStage = 'setup';
 $failureDetail = 'general';
 set_exception_handler(static function (Throwable $exception) use (&$failureStage, &$failureDetail): void {
-    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_pauta_finish','c4_direct_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check'];
+    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_pauta_finish','c4_direct_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check','c6_controls','c6_prepare','c6_wait','c6_finish','c6_check'];
     $stage = in_array($failureStage, $allowed, true) ? $failureStage : 'setup';
     $details=['general','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
     $detail=in_array($failureDetail,$details,true) ? $failureDetail : 'general';
@@ -178,6 +178,7 @@ final class Conection {
         $pdo->exec("SET SESSION time_zone = '+00:00'");
         if (getenv('REI69_TEST_LOCK_TIMEOUT') === '1') $pdo->exec('SET SESSION innodb_lock_wait_timeout = 1');
         if (getenv('REI69_TEST_LOCK_TIMEOUT') === '10') $pdo->exec('SET SESSION innodb_lock_wait_timeout = 10');
+        if (getenv('TEST_RR') === '1') { $pdo->exec('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ'); if ($pdo->query('SELECT @@transaction_isolation')->fetchColumn() !== 'REPEATABLE-READ') throw new RuntimeException('Isolamento inesperado.'); }
         if (getenv('TEST_REPORT_CONNECTION') === '1') fwrite(STDERR, 'CONNECTION:' . $pdo->query('SELECT CONNECTION_ID()')->fetchColumn() . "\n");
         return $pdo;
     }
@@ -334,13 +335,14 @@ try {
     // Two connections are coordinated by InnoDB wait edges, never by elapsed sleeps alone.
     $failureStage = 'concurrency';
     $concurrentActive = [];
-    $spawn = static function (string $kind) use ($lab, &$concurrentActive, &$failureDetail): array {
+    $spawn = static function (string $kind, ?string $linkId = null) use ($lab, &$concurrentActive, &$failureDetail): array {
         $failureDetail='spawn';
         $code = <<<'PHP'
-if (in_array(getenv('TEST_KIND'), ['update','update2'], true)) {
+if (in_array(getenv('TEST_KIND'), ['update','update2','race_update','race_delete'], true)) {
     $_SERVER['REQUEST_METHOD']='POST'; $_SERVER['HTTP_HOST']='example.invalid'; $_SERVER['HTTP_ORIGIN']='http://example.invalid';
     $other=getenv('TEST_KIND')==='update2';
-    $_SESSION=['id_usuario'=>$other ? 'USR-2' : 'USR-1']; $_POST=['id'=>$other ? 'VNC-5' : 'VNC-1','tipo_parte'=>'advogado'];
+    $race=in_array(getenv('TEST_KIND'), ['race_update','race_delete'],true);
+    $_SESSION=['id_usuario'=>$other ? 'USR-2' : 'USR-1']; $_POST=['id'=>$race ? (string)getenv('TEST_LINK') : ($other ? 'VNC-5' : 'VNC-1'),'tipo_parte'=>$race ? 'defensor_publico' : 'advogado'];
     register_shutdown_function(static function (): void { fwrite(STDERR, 'HTTP:' . (http_response_code() ?: 200) . "\n"); });
     require (string)getenv('TEST_ENDPOINT');
 } elseif (in_array(getenv('TEST_KIND'), ['pauta','pauta_mandado'], true)) {
@@ -400,7 +402,8 @@ PHP;
             'REI69DIRETOS_MYSQL_PASSWORD'=>(string)getenv('REI69DIRETOS_MYSQL_PASSWORD'),
             'REI69_TEST_LOCK_TIMEOUT'=>'10', 'TEST_REPORT_CONNECTION'=>'1', 'TEST_AUTH'=>'1', 'TEST_SESSION'=>'1',
             'TEST_PROFILE'=>'SERVIDOR-CARTORIO', 'TEST_KIND'=>$kind,
-            'TEST_ENDPOINT'=>$lab.'/public/api/processos-partes/update.php', 'TEST_CONNECTION'=>$lab.'/app/helpers/Conection.php',
+            'TEST_ENDPOINT'=>$lab.'/public/api/processos-partes/'.($kind==='race_delete' ? 'delete.php' : 'update.php'), 'TEST_CONNECTION'=>$lab.'/app/helpers/Conection.php',
+            'TEST_LINK'=>$linkId ?? '', 'TEST_RR'=>in_array($kind,['race_update','race_delete'],true) ? '1' : '0',
         ];
         $pipes=[];
         $proc=proc_open([PHP_BINARY,'-r',$code], [0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']], $pipes, $lab, $environment);
@@ -415,10 +418,12 @@ PHP;
         if ($worker['id']===null && preg_match('/(?:^|\n)CONNECTION:([0-9]+)\n/', $worker['stderr'], $m)) $worker['id']=(int)$m[1];
         return proc_get_status($worker['proc']);
     };
-    $observe = static function (PDO $db, array &$worker, int $blocker, string $table) use ($collect, &$failureDetail): void {
+    $observe = static function (PDO $db, array &$worker, int $blocker, string $table, ?string $indexName=null, ?string $lockData=null) use ($collect, &$failureDetail): void {
         $failureDetail='wait_query';
         $deadline=microtime(true)+5.0;
         $sql="SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.threads r ON r.THREAD_ID=w.REQUESTING_THREAD_ID JOIN performance_schema.threads b ON b.THREAD_ID=w.BLOCKING_THREAD_ID JOIN performance_schema.data_locks l ON l.ENGINE_LOCK_ID=w.REQUESTING_ENGINE_LOCK_ID AND l.ENGINE=w.ENGINE WHERE r.PROCESSLIST_ID=? AND b.PROCESSLIST_ID=? AND l.OBJECT_SCHEMA=DATABASE() AND l.OBJECT_NAME=?";
+        $paramsSuffix=[];
+        if ($indexName!==null && $lockData!==null) { $sql.=' AND l.INDEX_NAME=? AND l.LOCK_DATA=?'; $paramsSuffix=[$indexName,$lockData]; }
         $query=$db->prepare($sql);
         do {
             $state=$collect($worker);
@@ -431,7 +436,7 @@ PHP;
                 throw new RuntimeException('Ator terminou antes da espera esperada.');
             }
             $failureDetail=$worker['id']===null ? 'connection_id' : 'wait_query';
-            if ($worker['id']!==null) { $query->execute([$worker['id'],$blocker,$table]); if ((int)$query->fetchColumn()>0) return; }
+            if ($worker['id']!==null) { $query->execute(array_merge([$worker['id'],$blocker,$table],$paramsSuffix)); if ((int)$query->fetchColumn()>0) return; }
             usleep(10000);
         } while (microtime(true)<$deadline);
         if ($worker['id']!==null) $failureDetail='wait_timeout';
@@ -598,6 +603,52 @@ PHP;
     $failureStage='c5_check'; $failureDetail='general';
     $assert(str_contains($firstErr,"HTTP:200\n") && str_contains($secondErr,"HTTP:200\n") && (int)$pdo->query("SELECT COUNT(*) FROM processos_partes WHERE id IN ('VNC-1','VNC-5') AND tipo_parte='advogado'")->fetchColumn()===2, 'Operações em processos diferentes com pessoa compartilhada falharam.');
     $afterShared=$snapshot($pdo); $assertUnchanged($beforeShared,$afterShared,['processos_partes'=>['id',['VNC-1','VNC-5']],'partes'=>['id',['PAR-1']]]);
+    // No instrumented source: A owns the link row, B performs its initial
+    // consistent read and process lock, then waits on that exact PRIMARY record.
+    $failureStage='c6_controls'; $failureDetail='general';
+    $pdo->exec('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+    $assert($pdo->query('SELECT @@transaction_isolation')->fetchColumn()==='REPEATABLE-READ', 'Isolamento de coordenação inesperado.');
+    $ids=['BR-CTRL-U','BR-CTRL-D','BR-U-MOVE','BR-U-DELETE','BR-D-MOVE','BR-D-DELETE'];
+    $insert=$pdo->prepare("INSERT INTO processos_partes (id,processo_id,parte_id,tipo_parte,polo,created_at,updated_at) VALUES (?,'PRC-1','PAR-1','vitima','ativo',NOW(),NOW())");
+    foreach ($ids as $id) $insert->execute([$id]);
+    [$controlUpdate]=$invoke('update.php','USR-1','SERVIDOR-CARTORIO',['id'=>'BR-CTRL-U','tipo_parte'=>'advogado']);
+    $query=$pdo->prepare('SELECT tipo_parte FROM processos_partes WHERE id=?'); $query->execute(['BR-CTRL-U']);
+    $assert($controlUpdate===200 && $query->fetchColumn()==='advogado', 'Controle positivo de update falhou.');
+    [$controlDelete,$controlBody]=$invoke('delete.php','USR-1','SERVIDOR-CARTORIO',['id'=>'BR-CTRL-D']);
+    $query->execute(['BR-CTRL-D']);
+    $assert($controlDelete===200 && ($controlBody['deleted'] ?? false)===true && $query->fetchColumn()===false, 'Controle positivo de delete falhou.');
+    foreach ([['race_update','BR-U-MOVE','move'], ['race_update','BR-U-DELETE','delete'], ['race_delete','BR-D-MOVE','move'], ['race_delete','BR-D-DELETE','delete']] as [$kind,$link,$action]) {
+        $failureStage='c6_prepare'; $failureDetail='general';
+        $beforeRace=$snapshot($pdo);
+        $pdo->beginTransaction();
+        $lock=$pdo->prepare('SELECT processo_id FROM processos_partes WHERE id=? FOR UPDATE');
+        $lock->execute([$link]);
+        $assert($lock->fetchColumn()==='PRC-1', 'Alvo sintético não corresponde ao processo inicial.');
+        $failureStage='c6_wait'; $failureDetail='general';
+        $racer=$spawn($kind,$link);
+        $observe($observer,$racer,$parentId,'processos_partes','PRIMARY',"'".$link."'");
+        // Expected data are constructed before COMMIT, never sampled during the race.
+        $expectedRace=$beforeRace;
+        $row=$rowIndex($expectedRace['processos_partes']['rows'],'id',$link);
+        if ($action==='move') {
+            $change=$pdo->prepare("UPDATE processos_partes SET processo_id='PRC-2' WHERE id=?");
+            $change->execute([$link]);
+            $assert($change->rowCount()===1, 'Movimentação adversária sintética falhou.');
+            $expectedRace['processos_partes']['rows'][$row]['processo_id']='PRC-2';
+        } else {
+            $change=$pdo->prepare('DELETE FROM processos_partes WHERE id=?');
+            $change->execute([$link]);
+            $assert($change->rowCount()===1, 'Remoção adversária sintética falhou.');
+            array_splice($expectedRace['processos_partes']['rows'],$row,1);
+        }
+        $pdo->commit();
+        $failureStage='c6_finish'; $failureDetail='general';
+        [$raceOut,$raceErr]=$finish($racer);
+        $failureStage='c6_check'; $failureDetail='general';
+        $result=json_decode($raceOut,true,512,JSON_THROW_ON_ERROR);
+        $assert(str_contains($raceErr,"HTTP:404\n") && $result===['error'=>'Vínculo não encontrado.'], 'Endpoint não rejeitou vínculo alterado.');
+        $assert($snapshot($pdo)===$expectedRace, 'Endpoint rejeitado gerou efeitos adicionais.');
+    }
     fwrite(STDOUT, "PASS REI69 direct endpoints synthetic MySQL regression\n");
 } finally {
     // Kill and confirm all live actors before releasing any database lock.
