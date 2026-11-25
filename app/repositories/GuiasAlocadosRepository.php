@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/ParentRecordLock.php';
 require_once __DIR__ . '/../helpers/UserInitialsHelper.php';
 require_once __DIR__ . '/../helpers/CartorioAlocacaoTipo.php';
 
@@ -41,53 +42,31 @@ final class GuiasAlocadosRepository
             throw new InvalidArgumentException('guia_id e usuario_id são obrigatórios.');
         }
 
-        // Within a transaction these must be current reads: under MySQL
-        // REPEATABLE READ an earlier snapshot can predate the parent lock.
-        $currentRead = $this->connection->inTransaction() ? ' FOR UPDATE' : '';
-        $existing = $this->connection->prepare(
-            sprintf(
-                'SELECT `id` FROM `%s` WHERE `guia_id` = :guia_id AND `usuario_id` = :usuario_id LIMIT 1%s',
-                $this->table,
-                $currentRead
-            )
-        );
-        $existing->bindValue(':guia_id', $guiaId);
-        $existing->bindValue(':usuario_id', $usuarioId);
-        $existing->execute();
-        $row = $existing->fetch(PDO::FETCH_ASSOC);
-        if ($row !== false) {
-            return (string) $row['id'];
-        }
+        return ParentRecordLock::run($this->connection, 'guias', $guiaId, function () use ($guiaId, $usuarioId, $tipo): string {
+            $existing = $this->connection->prepare(sprintf(
+                'SELECT `id` FROM `%s` WHERE `guia_id` = :guia_id AND `usuario_id` = :usuario_id LIMIT 1',
+                $this->table
+            ));
+            $existing->execute([':guia_id' => $guiaId, ':usuario_id' => $usuarioId]);
+            $row = $existing->fetch(PDO::FETCH_ASSOC);
+            if ($row !== false) return (string) $row['id'];
 
-        $count = $this->connection->prepare(sprintf('SELECT COUNT(*) FROM `%s` WHERE `guia_id` = :guia_id%s', $this->table, $currentRead));
-        $count->bindValue(':guia_id', $guiaId);
-        $count->execute();
-        if ((int) $count->fetchColumn() >= self::MAX_ALOCADOS) {
-            throw new LimiteAlocadosException('Limite de alocados por guia atingido (' . self::MAX_ALOCADOS . ').');
-        }
+            $count = $this->connection->prepare(sprintf('SELECT COUNT(*) FROM `%s` WHERE `guia_id` = :guia_id', $this->table));
+            $count->execute([':guia_id' => $guiaId]);
+            if ((int) $count->fetchColumn() >= self::MAX_ALOCADOS) {
+                throw new LimiteAlocadosException('Limite de alocados por guia atingido (' . self::MAX_ALOCADOS . ').');
+            }
 
-        $id = IdGenerator::generateUniquePrefixedId(
-            $this->connection,
-            $this->table,
-            'id',
-            'GUA',
-            30
-        );
-
-        $tipoVal = CartorioAlocacaoTipo::normalizar($tipo, [self::TIPO_RULE, self::TIPO_ALL, self::TIPO_SPECIFIC], self::TIPO_SPECIFIC);
-
-        $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `guia_id`, `usuario_id`, `tipo`, `created_at`) VALUES (:id, :guia_id, :usuario_id, :tipo, NOW())',
-            $this->table
-        );
-        $stmt = $this->connection->prepare($sql);
-        $stmt->bindValue(':id', $id);
-        $stmt->bindValue(':guia_id', $guiaId);
-        $stmt->bindValue(':usuario_id', $usuarioId);
-        $stmt->bindValue(':tipo', $tipoVal);
-        $stmt->execute();
-
-        return $id;
+            $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'GUA', 30);
+            $tipoVal = CartorioAlocacaoTipo::normalizar($tipo, [self::TIPO_RULE, self::TIPO_ALL, self::TIPO_SPECIFIC], self::TIPO_SPECIFIC);
+            $sql = sprintf(
+                'INSERT INTO `%s` (`id`, `guia_id`, `usuario_id`, `tipo`, `created_at`) VALUES (:id, :guia_id, :usuario_id, :tipo, NOW())',
+                $this->table
+            );
+            $stmt = $this->connection->prepare($sql);
+            $stmt->execute([':id' => $id, ':guia_id' => $guiaId, ':usuario_id' => $usuarioId, ':tipo' => $tipoVal]);
+            return $id;
+        });
     }
 
     public function findByGuiaId(string $guiaId): array

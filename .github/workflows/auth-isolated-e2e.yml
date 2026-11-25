@@ -1,5 +1,12 @@
 name: Autenticação — integração isolada
-on: [push, pull_request]
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+concurrency:
+  group: auth-e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -14,21 +21,30 @@ jobs:
         run: |
           docker pull php@sha256:64ffb7411253121bbeb0d9eba37ce85e88d2a60d698e5debbd66bac71b20f3c2
           docker pull composer@sha256:511d2a96fce74de098b54224d59146fb8b6a7735d4e301f16c87c062e511900d
-          docker pull composer@sha256:5248900ab8b5f7f880c2d62180e40960cd87f60149ec9a1abfd62ac72a02577c
           docker pull mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903
           docker pull axllent/mailpit@sha256:df6c2541907e1be6fac21f509927cf6ed771617a1f4b361ef66d97bd05593d2d
+          docker pull mcr.microsoft.com/playwright@sha256:ee15712262f017b8157421b212b12099146645f44b1bc5c0514cbbe6a229b1d0
       - name: Construir runtime sem rede
         run: docker build --network none --pull=false --iidfile "$RUNNER_TEMP/rei124-qa.id" -t rei124-auth-qa:ci tests/auth/ci-runtime
       - name: Instalar dependências fixadas sem scripts ou plugins
         run: |
           python3 -B tests/auth/rei124-check-composer-inputs.test.py
           python3 -B tests/auth/rei124-check-composer-inputs.py
+          stage="$(mktemp -d "$RUNNER_TEMP/rei124-composer.XXXXXXXX")"
+          trap 'rm -rf -- "$stage"' EXIT
+          mkdir "$stage/.home"
+          touch "$stage/composer.json" "$stage/composer.lock"
           docker run --rm --label fokus.auth-e2e=rei124-ci-prep --network bridge \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/workspace/.home --env COMPOSER_HOME=/workspace/.home/composer \
+            --mount "type=bind,source=$stage,target=/workspace" \
             --mount "type=bind,source=$PWD/composer.json,target=/workspace/composer.json,readonly" \
             --mount "type=bind,source=$PWD/composer.lock,target=/workspace/composer.lock,readonly" \
-            --mount "type=bind,source=$PWD/vendor,target=/workspace/vendor" --workdir /workspace \
-            composer@sha256:5248900ab8b5f7f880c2d62180e40960cd87f60149ec9a1abfd62ac72a02577c \
+            --workdir /workspace \
+            "$(cat "$RUNNER_TEMP/rei124-qa.id")" composer \
             install --no-dev --no-scripts --no-plugins --prefer-dist --no-interaction --no-progress --optimize-autoloader
+          rmdir "$PWD/vendor"
+          mv "$stage/vendor" "$PWD/vendor"
           docker run --rm --label fokus.auth-e2e=rei124-ci-prep --network none \
             --mount "type=bind,source=$PWD/composer.json,target=/workspace/composer.json,readonly" \
             --mount "type=bind,source=$PWD/composer.lock,target=/workspace/composer.lock,readonly" \
@@ -43,7 +59,7 @@ jobs:
         shell: pwsh
         run: |
           $image = (Get-Content -LiteralPath "$env:RUNNER_TEMP/rei124-qa.id" -Raw).Trim()
-          ./tests/auth/run-isolated-auth-e2e.ps1 -QaImageId $image
+          ./tests/auth/run-isolated-auth-e2e.ps1 -QaImageId $image -Browser
       - name: Verificar guardas do laboratório de atas
         run: |
           pwsh -NoProfile -File tests/ata/rei124-mount-guard.test.ps1

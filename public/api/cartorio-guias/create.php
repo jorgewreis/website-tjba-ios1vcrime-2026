@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-guias/create.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['guiascreate'], true);
 
@@ -90,7 +93,6 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $exception) {
-    error_log('cartorio-guias/create: erro interno (' . get_class($exception) . ')');
     http_response_code(500);
-    echo json_encode(['error' => 'Não foi possível criar a guia.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao criar guia: ' . ApiErrorReporter::genericMessage($exception, 'public/api/cartorio-guias/create.php')], JSON_UNESCAPED_UNICODE);
 }

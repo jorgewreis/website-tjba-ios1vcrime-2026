@@ -1,0 +1,32 @@
+[
+  {
+    "matrix": "docs/90-releases/rei-73-matriz-avulsas-exports-20261125.md",
+    "old_hash": "6b7ac9c07191ac7d993f4305c355991f9462667af6ad08792bb619026960d285",
+    "new_hash": "16770ddedae119466ff172818ed905feb89205dff3be035bab76d934e6993b16"
+  },
+  {
+    "matrix": "docs/90-releases/rei-73-matriz-cartas-recebidas-20261125.md",
+    "old_hash": "be8251bfea013d981a4cbc2998c02458b715fd71c9ac4d5363e98cede51ad7aa",
+    "new_hash": "ac2e4bde4287cb55a2999819867b37194de477c1a40c7a3e2ae968cec017131c"
+  },
+  {
+    "matrix": "docs/90-releases/rei-73-matriz-cejusc-oficios-20261125.md",
+    "old_hash": "4c5852f05e8fc8e0acea1bc5018a2352d2a40653d86acffe078f7ce0b6115b9d",
+    "new_hash": "3467fbd49fc5918a721966b6ccb40af4a7031b863f39e6e35d22c8850e861856"
+  },
+  {
+    "matrix": "docs/90-releases/rei-73-matriz-editais-20261125.md",
+    "old_hash": "b9a3e9d343cea917dabde2a3fc455cdcb1643a12c176d074b40ab4f930f919ce",
+    "new_hash": "49f3e1967149db7cbdc1e486845a1fd251b61ba226270cd5eee2a36993cd3c1e"
+  },
+  {
+    "matrix": "docs/90-releases/rei-73-matriz-datajud-mni-consulta-20261125.md",
+    "old_hash": "90ed47687106348c02c2c362c4a55f2a0fd1f0d52d2eb7a0bd1bb540a714b11b",
+    "new_hash": "89686dd375214fff6a1f964232264271a37155bc4f8463c0e6c8d1b0f00d95a9"
+  },
+  {
+    "matrix": "docs/90-releases/rei-73-matriz-processos-20261125.md",
+    "old_hash": "7407da39dbc9b19c6bd61b1fbaba02fbf2ec61c8ba7c5feaefa827436c0aaae7",
+    "new_hash": "ceae68a58e8890a22f805a60895e73b4448f2a980f96410326a6163e4f1d2a9c"
+  }
+]

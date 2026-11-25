@@ -8,6 +8,7 @@ $configRoot = Join-Path $repoRoot 'config'
 $configFile = Join-Path $repoRoot 'config/config.php'
 $securityFile = Join-Path $repoRoot 'config/security.php'
 $testFile = Join-Path $PSScriptRoot 'rei148-mysql.test.php'
+$readinessFile = Join-Path $PSScriptRoot 'rei148-mysql-readiness.ps1'
 $mysqlImageRef = 'mysql@sha256:a81d043930e51745522bd5c430961cf8286f0a23f0a9a2a6e0108f7ea71b0902'
 $phpImageRef = 'fokus-law-linux-qa@sha256:459cc8bd25b38009a8cf9a0ef5399d131f4f2001a1376d89389f673a92de430b'
 if ($CiLinux) {
@@ -20,12 +21,13 @@ if ($CiLinux) {
 if (Test-Path -LiteralPath (Join-Path $repoRoot '.env')) {
     throw 'Runner recusado: não execute a fixture em checkout com .env.'
 }
-foreach ($path in @($appRoot, $configRoot, $configFile, $securityFile, $testFile)) {
+foreach ($path in @($appRoot, $configRoot, $configFile, $securityFile, $testFile, $readinessFile)) {
     $item = Get-Item -LiteralPath $path -Force
     if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
         throw 'Runner recusado: source com reparse point.'
     }
 }
+. $readinessFile
 $repoPrefix = $repoRoot.TrimEnd([IO.Path]::DirectorySeparatorChar, [IO.Path]::AltDirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
 $resolvedConfigRoot = (Resolve-Path -LiteralPath $configRoot).Path
 if (-not $resolvedConfigRoot.StartsWith($repoPrefix, [StringComparison]::OrdinalIgnoreCase)) {
@@ -160,17 +162,15 @@ try {
 
     $ready = $false
     for ($i = 0; $i -lt 90; $i++) {
-        $probe = $null
-        try {
-            $probe = Invoke-DockerSafe @(
+        $ready = Test-Rei148MySqlReady -GetPid1 {
+            Invoke-DockerSafe @('exec', $mysqlId, 'cat', '/proc/1/comm')
+        } -ProbeSql {
+            Invoke-DockerSafe @(
                 'exec', $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock',
                 '-uroot', 'rei88_test', '-N', '-e', 'SELECT 1'
             )
-        } catch { }
-        if ($LASTEXITCODE -eq 0 -and ($probe | Select-Object -Last 1).Trim() -eq '1') {
-            $ready = $true
-            break
         }
+        if ($ready) { break }
         Start-Sleep -Seconds 1
     }
     if (-not $ready) { throw 'MySQL descartável ou banco de teste não ficou pronto.' }

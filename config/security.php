@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../app/helpers/ApiErrorReporter.php';
+
 final class Security
 {
     private const SESSION_TOKEN_KEY = 'token';
@@ -21,6 +23,17 @@ final class Security
 
     public static function isAuthenticated(): bool
     {
+        return self::authenticate(true);
+    }
+
+    /** Authenticate background polling without extending user inactivity. */
+    public static function isAuthenticatedWithoutActivity(): bool
+    {
+        return self::authenticate(false);
+    }
+
+    private static function authenticate(bool $updateActivity): bool
+    {
         if (!self::hasAuthenticatedKeys()) {
             return false;
         }
@@ -40,13 +53,13 @@ final class Security
                 return false;
             }
         } catch (Throwable $exception) {
-            error_log('Falha ao validar sessão autenticada: ' . $exception->getMessage());
+            ApiErrorReporter::logUnexpected($exception, 'config/security.php');
             return false;
         }
 
         // Mantém a janela de inatividade alinhada também para endpoints
         // que validam sessão via isAuthenticated() (ex.: APIs JSON).
-        $_SESSION[self::SESSION_LAST_ACTIVITY] = time();
+        if ($updateActivity) $_SESSION[self::SESSION_LAST_ACTIVITY] = time();
 
         return true;
     }

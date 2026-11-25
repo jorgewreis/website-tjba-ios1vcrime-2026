@@ -1,9 +1,13 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/sala-audiencias-ata/download.php');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/config/security.php';
 require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/models/Usuario.php';
 require_once $basePath . '/app/access/AccessEvaluator.php';
@@ -19,6 +23,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
+    if (!Security::isAuthenticated()) {
+        http_response_code(401);
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo 'Sessão expirada.';
+        exit;
+    }
+
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
     if ($usuarioId === '') {
         http_response_code(401);
@@ -75,6 +86,7 @@ try {
     echo $e->getMessage();
     exit;
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/sala-audiencias-ata/download.php');
     http_response_code(500);
     header('Content-Type: text/plain; charset=UTF-8');
     echo 'Erro ao baixar o arquivo.';

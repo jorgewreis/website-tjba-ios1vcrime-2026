@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-guias/update.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['guiasedit'], true);
 
@@ -49,5 +52,5 @@ try {
 } catch (\Throwable $exception) {
     error_log('cartorio-guias/update: erro interno (' . get_class($exception) . ')');
     http_response_code(500);
-    echo json_encode(['error' => 'Não foi possível atualizar a guia.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao atualizar guia: ' . ApiErrorReporter::genericMessage($exception, 'public/api/cartorio-guias/update.php')], JSON_UNESCAPED_UNICODE);
 }

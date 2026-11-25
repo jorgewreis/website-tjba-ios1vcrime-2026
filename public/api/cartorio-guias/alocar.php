@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-guias/alocar.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['guiasedit'], true);
 
@@ -50,5 +53,5 @@ try {
 } catch (Throwable $e) {
     error_log('cartorio-guias/alocar: erro interno (' . get_class($e) . ')');
     http_response_code(500);
-    echo json_encode(['error' => 'Não foi possível alocar o usuário.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao alocar: ' . ApiErrorReporter::genericMessage($e, 'public/api/cartorio-guias/alocar.php')], JSON_UNESCAPED_UNICODE);
 }

@@ -13,7 +13,6 @@ require_once __DIR__ . '/../repositories/SalarioMinimoRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
-require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../helpers/CartorioTarefaStatusPrincipalHelper.php';
 require_once __DIR__ . '/../helpers/ParteDocumentoLock.php';
@@ -707,24 +706,38 @@ final class GuiasService
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
-        $subtarefas = $this->subtarefasRepository->findByGuiaId($id);
-        $mensagensSubtarefas = [];
-        foreach ($subtarefas as $subtarefa) {
-            $tipo = trim((string) ($subtarefa['tipo'] ?? 'subtarefa'));
-            if ($tipo !== '') {
-                $mensagensSubtarefas[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $tipo) . '.';
-            }
+        if ($this->connection->inTransaction()) {
+            throw new RuntimeException('Exclusão requer conexão sem transação anterior.');
         }
-        $this->subtarefasRepository->deleteByGuiaId($id);
-        $this->alocadosRepository->deleteByGuiaId($id);
-        $deleted = $this->repository->delete($id);
-        $orfandade = OrphanSubtarefasCleaner::cleanAll($this->connection);
-        return [
-            'deleted' => $deleted,
-            'subtarefas_toasts' => $mensagensSubtarefas,
-            'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
-            'subtarefas_orfas_removidas' => array_sum($orfandade),
-        ];
+        $this->connection->beginTransaction();
+        try {
+            $lock = $this->connection->prepare('SELECT `id` FROM `guias` WHERE `id` = :id FOR UPDATE');
+            $lock->execute([':id' => $id]);
+            $exists = $lock->fetchColumn() !== false;
+            $lock->closeCursor();
+            $messages = [];
+            if ($exists) {
+                foreach ($this->subtarefasRepository->findByGuiaId($id) as $subtask) {
+                    $type = trim((string) ($subtask['tipo'] ?? 'subtarefa'));
+                    if ($type !== '') $messages[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $type) . '.';
+                }
+                $this->subtarefasRepository->deleteByGuiaId($id);
+                $this->alocadosRepository->deleteByGuiaId($id);
+                if (!$this->repository->delete($id)) {
+                    throw new RuntimeException('Não foi possível excluir a guia bloqueada.');
+                }
+            }
+            $this->connection->commit();
+            return [
+                'deleted' => $exists,
+                'subtarefas_toasts' => $messages,
+                'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
+                'subtarefas_orfas_removidas' => 0,
+            ];
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) $this->connection->rollBack();
+            throw $exception;
+        }
     }
 
     /**

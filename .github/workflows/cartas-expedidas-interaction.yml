@@ -8,6 +8,10 @@ on:
       - tests/cartas/create-double-click.test.js
       - .github/workflows/cartas-expedidas-interaction.yml
 
+concurrency:
+  group: cartas-interaction-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
