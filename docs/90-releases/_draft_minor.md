@@ -9,4 +9,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **ci: isola configuracao da fixture de pauta** `[2705e2b2]`
 - **fix: valida schema referenciado na migracao** `[e2429053]`
 - **test: valida migracao em mysql isolado** `[ec4ffbf3]`
+- **fix: restringe mutacoes diretas por unidade** `[4d397369]`
 
