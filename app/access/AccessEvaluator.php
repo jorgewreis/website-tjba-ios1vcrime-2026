@@ -55,7 +55,7 @@ final class AccessEvaluator
         if ($page === 'alterardados') {
             return true;
         }
-        if (($page === 'estudapauta' || $page === 'estudapainel') && $temEstudante) {
+        if (($page === 'estudapauta' || $page === 'estudapainel' || $page === 'estudaata') && $temEstudante) {
             return true;
         }
         if ($page === 'consultapartes' || $page === 'instituicoespublicas' || $page === 'partesinstituicoeslist') {
