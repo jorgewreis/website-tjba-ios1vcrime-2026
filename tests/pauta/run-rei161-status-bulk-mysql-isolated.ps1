@@ -20,14 +20,6 @@ if ($CiLinux) {
 }
 $runId = [Guid]::NewGuid().ToString('N')
 $label = 'com.fokus.rei161-status-bulk-mysql-test'
-try {
-    $bahiaTimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById('America/Bahia')
-} catch [System.TimeZoneNotFoundException] {
-    # Windows commonly exposes the same zone under its Windows identifier.
-    $bahiaTimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById('Bahia Standard Time')
-}
-$testToday = [System.TimeZoneInfo]::ConvertTimeFromUtc([DateTime]::UtcNow, $bahiaTimeZone).ToString('yyyy-MM-dd')
-$testNowTimestamp = [DateTimeOffset]::ParseExact("$testToday 12:00:00 -03:00", 'yyyy-MM-dd HH:mm:ss zzz', [Globalization.CultureInfo]::InvariantCulture).ToUnixTimeSeconds()
 $dbName = "fokus-rei161-mysql-$runId"
 $phpName = "fokus-rei161-php-$runId"
 $password = ([Guid]::NewGuid().ToString('N') + [Guid]::NewGuid().ToString('N')).ToLowerInvariant()
@@ -148,7 +140,7 @@ try {
     Assert-OwnedMounts $phpInfo @('/tmp')
     Invoke-DockerSafe @('exec', $phpId, 'mkdir', '-p', '/workspace/tests/pauta', '/workspace/public/api/sala-audiencias-pauta', '/workspace/app/helpers') | Out-Null
     # Only selected tracked application classes enter the disconnected PHP container.
-    foreach ($relative in @('config/security.php','app/models/Usuario.php','app/helpers/UsuarioPerfisAutorizacao.php','app/helpers/EffectiveAccessProfiles.php','app/helpers/UserAccessHelper.php','app/helpers/ApiErrorReporter.php','app/access/AccessEvaluator.php','app/access/ProfileNormalizer.php','app/access/PageAccessRegistry.php','app/access/AccessAreas.php','app/access/AccessPolicyVersion.php')) {
+    foreach ($relative in @('config/security.php','app/models/Usuario.php','app/helpers/UsuarioPerfisAutorizacao.php','app/helpers/EffectiveAccessProfiles.php','app/helpers/UserAccessHelper.php','app/helpers/ApiErrorReporter.php','app/access/AccessEvaluator.php','app/access/ProfileNormalizer.php','app/access/PageAccessRegistry.php','app/access/AccessAreas.php','app/access/AccessPolicyVersion.php', 'app/services/SalaAudienciasAtaService.php','app/services/SalaAudienciasAtaStorage.php','app/helpers/SalaAudienciasAtaSigiloHelper.php','app/helpers/PrioridadesProcessuaisCatalog.php','app/helpers/ProcessoBlocoListagemHelper.php','app/helpers/ClasseProcessualListagemHelper.php','app/helpers/IdGenerator.php','app/helpers/ProcessoPrioridadeOrigem.php','app/helpers/ProcessoAssuntoOrigem.php','app/helpers/RegistroMetadataHelper.php','app/repositories/SalaAudienciasPautaRepository.php','app/repositories/SalaAudienciasAtaRepository.php','app/repositories/SalaAudienciasEstudanteInscricaoRepository.php','app/repositories/ProcessoPrioridadesRepository.php','app/repositories/ProcessosRepository.php','app/repositories/ClassesRepository.php','app/repositories/ProcessoAssuntosRepository.php','app/repositories/ProcessosPartesRepository.php','app/helpers/CnjValidator.php','app/helpers/ParentRecordLock.php','app/helpers/TextFormatter.php','app/helpers/CartasExpedidasEstadoFluxo.php','app/helpers/CartasExpedidasUiCopy.php','app/helpers/CartasRecebidasUiCopy.php','app/helpers/CartorioTimelineHelper.php','app/helpers/EditaisUiCopy.php','app/helpers/OficioRegistroMetadataHelper.php','app/helpers/SalaAudienciasInscricaoIndisponivel.php','app/repositories/CartasExpedidasSubtarefasRepository.php','app/repositories/CartasRecebidasSubtarefasRepository.php','app/repositories/EditaisSubtarefasRepository.php','app/config/prioridades_processuais_catalog.php')) {
         $source = Join-Path $repoRoot $relative
         $item = Get-Item -LiteralPath $source -Force
         if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Dependência da aplicação é reparse point.' }
@@ -159,7 +151,7 @@ try {
     Invoke-DockerSafe @('cp', $testFile, "${phpId}:/workspace/tests/pauta/rei161-status-bulk-mysql.test.php") | Out-Null
     Invoke-DockerSafe @('cp', $endpointFile, "${phpId}:/workspace/public/api/sala-audiencias-pauta/status-bulk.php") | Out-Null
     Invoke-DockerSafe @('cp', $privacyFile, "${phpId}:/workspace/app/helpers/SalaAudienciasEstudantePrivacidade.php") | Out-Null
-    $output = Invoke-DockerSafe @('exec', '--workdir', '/workspace', '--env', 'REI161_MYSQL_DSN=mysql:host=127.0.0.1;port=3306;dbname=rei161_test;charset=utf8mb4', '--env', "REI161_MYSQL_PASSWORD=$password", '--env', "REI161_RUN_MARKER=$marker", '--env', 'REI161_REPO_SOURCE=/workspace', '--env', 'REI161_ENDPOINT_SOURCE=/workspace/public/api/sala-audiencias-pauta/status-bulk.php', '--env', 'REI161_PRIVACY_SOURCE=/workspace/app/helpers/SalaAudienciasEstudantePrivacidade.php', "--env", "REI161_TEST_TODAY=$testToday", '--env', "REI161_TEST_NOW_TS=$testNowTimestamp", $phpId, 'php', '-d', 'date.timezone=America/Bahia', '/workspace/tests/pauta/rei161-status-bulk-mysql.test.php')
+    $output = Invoke-DockerSafe @('exec', '--workdir', '/workspace', '--env', 'REI161_MYSQL_DSN=mysql:host=127.0.0.1;port=3306;dbname=rei161_test;charset=utf8mb4', '--env', "REI161_MYSQL_PASSWORD=$password", '--env', "REI161_RUN_MARKER=$marker", '--env', 'REI161_REPO_SOURCE=/workspace', '--env', 'REI161_ENDPOINT_SOURCE=/workspace/public/api/sala-audiencias-pauta/status-bulk.php', '--env', 'REI161_PRIVACY_SOURCE=/workspace/app/helpers/SalaAudienciasEstudantePrivacidade.php', $phpId, 'php', '-d', 'date.timezone=America/Bahia', '/workspace/tests/pauta/rei161-status-bulk-mysql.test.php')
     foreach ($line in $output) { ([string]$line).Replace($password, '[REDACTED]').Replace($marker, '[REDACTED]') }
 } finally {
     if ($creationPending) {
