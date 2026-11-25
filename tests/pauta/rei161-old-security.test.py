@@ -22,6 +22,7 @@ with tempfile.TemporaryDirectory(prefix='rei161-old-security-') as temp:
         p=base/name
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text('<?php', encoding='utf-8')
+    shutil.copyfile(root / 'app/helpers/ApiErrorReporter.php', base / 'app/helpers/ApiErrorReporter.php')
     (base/'config').mkdir()
     (base/'config/security.php').write_text('<?php class Security { static function isAuthenticated(){throw new RuntimeException("must not renew");} }', encoding='utf-8')
     (base/'test.php').write_text('''<?php
