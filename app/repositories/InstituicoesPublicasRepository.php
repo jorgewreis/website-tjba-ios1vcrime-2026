@@ -36,6 +36,29 @@ final class InstituicoesPublicasRepository
         return $result === false ? null : $result;
     }
 
+    /** Current locking read for updates inside a caller-owned transaction. */
+    public function findByIdForUpdate(string $id): ?array
+    {
+        $id = trim($id);
+        if ($id === '') {
+            return null;
+        }
+
+        $sql = sprintf(
+            'SELECT `id`, `nome`, `nome_fantasia`, `cnpj`, `observacoes`, `ativo`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1',
+            $this->table
+        );
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+            $sql .= ' FOR UPDATE';
+        }
+
+        $statement = $this->connection->prepare($sql);
+        $statement->execute([':id' => $id]);
+        $result = $statement->fetch(PDO::FETCH_ASSOC);
+
+        return $result === false ? null : $result;
+    }
+
     public function findByNome(string $nome): ?array
     {
         $nome = $this->normalizeNomeInstituicao($nome);

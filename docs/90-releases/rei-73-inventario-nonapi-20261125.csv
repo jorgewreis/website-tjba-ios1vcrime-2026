@@ -1,0 +1,78 @@
+commit,categoria,caminho,git_blob,marcadores_textuais_linhas
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,api-legada,api/documents.php,c5eb421e692a4096ca5556f0f3ad632d4cccf161,"sessao:22; auth:12; metodo:40; config-ou-conexao:4,77,79,81"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,api-legada,api/guia.php,71a616dfd4bd960242a815ea810be45c13c5fbab,"sessao:23; auth:13; metodo:38; config-ou-conexao:4,34,35"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,api-legada,api/guia_pdf.php,c6a949c7c03bb4a0dce856eee647aba2720cc85a,"sessao:22; auth:12; config-ou-conexao:4,37,38"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,api-legada,api/notifications.php,97af36c32bade59640dbb11eb966ea3bb83b8701,"sessao:21; auth:11; metodo:42; config-ou-conexao:4,30,48,55,57"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,api-legada,api/users.php,b88bbf973571360c2414a8fdb77331e4057a44cb,"sessao:21; auth:11; metodo:49; config-ou-conexao:4,30,35,36,60"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/_layout_login.php,547c77ca6a66a5bf5a8e469bcd095be9b05bec79,config-ou-conexao:34
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/admin/api/checkToken.php,5434858becf785c917ca5f184cf74355e7947980,auth:11; config-ou-conexao:4
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/admin/api/getPerfis.php,f38efd8abef08a14a03582feaf56b138e0059c0b,"auth:14; config-ou-conexao:4,6"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/alterar-senha.php,db36684ba9fe3bf67c2f159e2e03855f1cce0056,auth:8; config-ou-conexao:4
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/cadastra_usuario.php,22096818198d6ec12f6a991c2ccf7f8af92c3b9a,config-ou-conexao:4
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/cadastro_estudantes.php,9d6841014d7521eb45b5c5d433e70053a425edcb,config-ou-conexao:4
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/envia_mail.php,b3f31b2d30045b3f84c5abe76902fb71e58fa553,"csrf:24,26; config-ou-conexao:4"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/frame.php,e9b19ada4a2d093d3e9d8f67588e26f326c99b35,"sessao:131,137,155; auth:9,17,200; config-ou-conexao:3,8,122"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/home.php,311c9a1965aeb96ea1798a22f047f744d6e2be05,"sessao:21,29,32,72,75,78,201,202,203; auth:17,600; csrf:212,585; config-ou-conexao:2,6,35,43,113,114,116,547,548,552,1083,1085,1087,1089,1090,1091,1094,1095,1096,1099,1102,1103,1104,1107,1110,1112,1115,1119"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/index.php,870f79faadc552032c9e08ef872b147c7f252936,auth:14; csrf:8; config-ou-conexao:4
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/login.php,0583d7af6ac32db1f86a29043476043b4a482e2f,"auth:9; csrf:27,37; metodo:14; config-ou-conexao:4,7,48,49"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/logout.php,244ecf5fb80ee7a5376a4ac24097d47b571247da,"sessao:25; auth:23; csrf:15,16; metodo:10; config-ou-conexao:4"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/recupera_senha.php,2d31b0345a2a986603334613349e626ba93716af,config-ou-conexao:4
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/redefinir_senha.php,ad01984db4c291bc9b064773bebe1ab0b2cc2b7b,config-ou-conexao:4
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/views/public/alterar-senha-form.php,941bf0297613639124cd5ec335e9bf40afef2843,"auth:8; csrf:10,60,101,131; config-ou-conexao:4,146"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/views/public/cadastro-form.php,067dc157887070d61ece6e5379991b63fee0adad,config-ou-conexao:4
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/views/public/login-form.php,b8bc62bf4964daf8a39386258c4a6bf3915efb65,"auth:8; csrf:13,77; config-ou-conexao:4,18"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/views/public/recupera-form.php,b30ce4d910dedb3e8a81dc49726552910f9ef1d2,"csrf:8,63,108,155; config-ou-conexao:4"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,public-php,public/views/public/redefinir-senha-form.php,fbf8bf33267543313f030bc810b67ad95bbb4463,"csrf:34,35,58,118; metodo:33; config-ou-conexao:4"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/assert-cartorio-alocacao-chip-helper.php,964268642aaa004da5095553cbfec160e386a397,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/bump-version.ps1,f246817a09696fbd1580724611ba94c2a913dae8,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/debug-glob.php,c1ef744a5d56e197f3063ac8ebb82d6f9ad788ca,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/drop-enderecos-partes-instituicoes-tables.php,5b7813b0d0e716b5047e489f02b249ec409475ce,"config-ou-conexao:11,13,21"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/drop-medidas-protetivas-tables.php,aaeacbdd8cd100085206018da347a025904afe1c,"config-ou-conexao:11,13,22,26"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/fix-registry.php,8b81ed74930cc5fc959f6e2f3edfb1df04e6c94b,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/gen-seed-sql.php,34712195aaf1680e55fd8edc35343969a22bc39f,config-ou-conexao:26
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/install-cron-gabinete-reus-presos-revisao-email.php,1060de4089a4b9f3d6f61c26dca5bf69dc924f09,"sapi-cli:20; config-ou-conexao:32,49; crontab-ou-agendador:5,87,89,102,104,135,139,143"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/install-cron-gabinete-reus-presos-revisao-email.sh,c278a03d2c7db6b0624fffeb1e2320ab913e9c72,"config-ou-conexao:39,40; crontab-ou-agendador:2,63,68,72,93,95"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/install-cron-inactive-external-users.sh,d32ebab4d79cef7772d3b8c5ce231a45d2b18da7,"crontab-ou-agendador:7,13,14,18,26,28,42,64,68"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/link-public-overlays-to-repo.sh,120225e618066ec04823a18d5313738bda621706,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-cartas-expedidas-fluxo-2-etapas.php,d03edbbdabd718c3c3cfd2837e6f67e737c60255,"config-ou-conexao:9,13,53"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-cartas-expedidas-idempotency.php,17ceb7e156e564e78fcde00b0f70f63732250875,"config-ou-conexao:8,11,13,14,15,23,24,28,31,32,35,66,71,73,78"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-cartas-recebidas-2-subtarefas.php,539b5c5fd1b6f0ed411ed0daf861d47753a55aa2,"config-ou-conexao:10,15,20"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-cejusc.php,a29de64d9a3014a2e8dd59bacf245e3fd04c3231,"config-ou-conexao:4,6,28"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-dashboard-conclusoes.php,d655640e44d582dd149ea7e8668e45b8795d5e87,"config-ou-conexao:3,4,5"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-editais-2-subtarefas.php,201ad7842b5d5cb8269941b88d43e8ab509c4156,"config-ou-conexao:11,17,23"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-editais-data-publicacao.php,b7f26f3985d3aa729d77850831c42ce8ceb2b0c5,"config-ou-conexao:9,11"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-editais-decurso-feriados.php,18515af447a4e423a9228988ba80d4d2c1af35db,"config-ou-conexao:9,11"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-editais-tables.php,a9347104eaa2274a0d9c0db5bf34eb63915557de,"config-ou-conexao:9,11,13"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-editais-tipo-prazo.php,fa3b55d2b1c5ae928c0ab4b16d947bf292aa4a7f,"config-ou-conexao:9,11"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-gabinete-reu-preso-controle-tipo.php,4a238c5b8f0ccbd1ec1b8b1702684dc0a4dd45c5,"config-ou-conexao:4,6,8,12,18,22"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-grp-movimentacao-processo-id.php,d8c9ed202e011f1d01664e33341121a63f5190c4,"config-ou-conexao:9,11,13,15,23,25"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-grp-movimentacao-replicar-por-reu.php,fe1cc409583b604c0b9bcb8f0b0c3c60f29a21cb,"config-ou-conexao:21,25,26,28,30,51,80"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-guias-8-subtarefas.php,956b04ae86fe0db2ae045bc01017747b2a551ed8,"config-ou-conexao:10,14,19"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-partes-documentos.php,9366b2b39d0033c274d8f3b8310f833f8b3f517b,"config-ou-conexao:9,11,13"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-partes-processos-partes.php,e1e5b847bd07ac86c751b6497cac79e94e293b86,"config-ou-conexao:9,11,13"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-sala-audiencias-ata-identificador-arquivo.php,3909e9814ae12c7fd988b40b58486903cb88aaa4,"config-ou-conexao:9,11"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/migrate-usuarios-sexo.php,32ff6e6f41d2b30bbb05cf025d25b37adcd8745d,"config-ou-conexao:9,11"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/patch-apis-mirror.php,1ee1c2652780bfb72542e760dcfda42717a5f55e,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/patch-guias-legacy-cartorio.php,8dd12a9220999a93eced2efa891e7a12da53feef,"config-ou-conexao:25,26,55"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/patch-guias-legacy.php,d57cc2bc9dd09d0b192765b188e91cdfad5c634e,"config-ou-conexao:13,14,19,115"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/patch-guias-legacy2.php,1257dd341e7d1734751b0b61cf8c3229c4ab0444,"config-ou-conexao:15,16,21"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/patch-guias-service.php,e4fb969d82bc4451ae5f7c8511331a4bfb7cce30,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/patch-guias2.php,097cd7560512d5721f58d1a33c750abc0834b63e,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/patch-helper-session.php,00aeb3045c866cd6e447ae2746d897d6432c9327,sessao:16; config-ou-conexao:11
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/patch-lancamentos-repo.php,3805b9713fd16c51f2b356331857d730fb304372,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/patch-service-final.php,7ec1e1ef61bb315f7b5e01f29cba22a5c7331aa8,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/purge-inactive-external-users.php,f6b20ebdaef304ede1835fb8240e531a2f79eb2c,"sapi-cli:4; config-ou-conexao:9,13"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/reconciliar-prioridades-processuais.php,362948cc17518a700b82eb9c1a368b7a9c43490b,"config-ou-conexao:14,18,19"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/register-gabinete-reus-presos-revisao-email-schedule.ps1,79564bbdf83548aaf89123b62957c1d258fa9f36,"crontab-ou-agendador:34,37,38,39,41"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/resolve_project_root_cli.php,883a04090d0c7797640648d35e80693b09f01254,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/send-gabinete-reus-presos-revisao-email.php,442ab76789f0d3f119e63b3a12610ba794d9a053,"config-ou-conexao:23,26; envio-email:28"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,scripts,scripts/update-draft-minor.ps1,d102a0a27cc4c1b8a9a195606c874185fedbf4d0,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,tools-executaveis,tools/_replace-width-classes.php,74cfb161b7d57bd4c80e752901e3a1babbe60f72,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,tools-executaveis,tools/_revert-status-height-sm.php,c89b952be6413de50a065db0cc12cd00f7e73cf3,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,tools-executaveis,tools/ai/config.py,43292d26d36beff5c9851525bea8670c4a45f88a,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,tools-executaveis,tools/ai/ingest.py,fb0d7cc1a71f8d1e2721105ee9eba4389e14c47c,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,tools-executaveis,tools/ai/query.py,c088a87363178205c13e7e057c13c24cecb858f7,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,tools-executaveis,tools/ai/rag.py,4fe767a3112c1918c14625f4c88e65cd834d7b64,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,tools-executaveis,tools/migrate-cartorio-oficios.php,31a274396586e1741617f629441cc4c05ae59b8b,"config-ou-conexao:10,17,18,62,67,77,81,93,98,116,117,119,120,123,126,138,144,145,148,151,157,172,187,217,235,260,261,267,270,271"
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,tools-executaveis,tools/patch-internal-head-styles.php,c3cb73370eab819f0c20336c04359d2372d2d435,sem marcador pesquisado
+33baf0995ca3fb3ab22331c8c56bc1abc714accf,tools-executaveis,tools/strip-utf8-bom.php,84d046283d30c20fedb30bb1b4b7b7d5f57aa0a5,sem marcador pesquisado

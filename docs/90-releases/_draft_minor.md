@@ -4,18 +4,9 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **ci(deploy): add temporary Hostinger SSH allowlist** `[16c5f76d]`
-- **ci(deploy): permitir runner temporário no UFW** `[bec23f45]`
-- **ci(deploy): sincronizar firewall temporário Hostinger** `[c85a9638]`
-- **ci(deploy): preservar acesso WireGuard no firewall temporário** `[f0a15d4d]`
-- **fix(footer): show last successful deploy timestamp** `[7dd86e73]`
-- **fix(footer): force credit metadata onto separate lines** `[a082afda]`
-- **fix(ci): normalize WireGuard deployment key** `[9a74caa2]`
-- **chore(sync): merge latest main into deployment key fix** `[c35478b0]`
-- **fix(ci): reveal sanitized WireGuard validation error** `[de7e73d2]`
-- **fix(ci): run WireGuard validation with explicit sudo** `[9654ab41]`
-- **fix(ci): validate installed WireGuard config only** `[ae8c7d43]`
+- **test: verifica consulta com perfis acumulados** `[6fd4f38f]`
+- **test: executa privacidade estudantil no ci** `[c401ff04]`
 
-- **fix(REI-99): validate active sessions before ata downloads** `[83cdd64b]`
-- **fix(access): authorize enrolled student ata downloads** `[403cff96]`
-- **test(REI-99): exercise ata downloads over isolated HTTP** `[a9c1f040]`
+- **fix(REI-160): rollback guide part failures** `[2063ec9d]`
+- **test(REI-160): run sqlite regressions in CI** `[7cd95d0b]`
+- **test: allow diagnostic probe time on CI** `[a9791a45]`
