@@ -8,13 +8,14 @@ $workerFile = Join-Path $repoRoot 'tests/rei152-documentos-mysql-worker.php'
 $entryFile = Join-Path $repoRoot 'tests/rei152-linux-ci-entry.php'
 $gateFile = Join-Path $repoRoot 'tests/rei152-gate-alternate-mysql.test.php'
 $createFile = Join-Path $repoRoot 'tests/rei152-create-mysql.test.php'
+$cpfPortFile = Join-Path $repoRoot 'tests/rei152-cpf-port-mysql.test.php'
 $appRoot = Join-Path $repoRoot 'app'
 $mysqlImageRef = 'mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903'
 if ($QaImageId -notmatch '^sha256:[a-f0-9]{64}$') { throw 'ID da imagem QA inválido.' }
 $phpImageRef = $QaImageId
 
 if (Test-Path -LiteralPath (Join-Path $repoRoot '.env')) { throw 'Runner recusado: checkout contém .env.' }
-foreach ($path in @($appRoot, $testFile, $workerFile, $entryFile, $gateFile, $createFile)) {
+foreach ($path in @($appRoot, $testFile, $workerFile, $entryFile, $gateFile, $createFile, $cpfPortFile)) {
     $item = Get-Item -LiteralPath $path -Force
     if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Runner recusado: source contém reparse point.' }
 }
@@ -206,6 +207,7 @@ throw new RuntimeException('A fixture não permite abrir conexão pela configura
         '--mount', "type=bind,source=$entryFile,target=/repo/tests/rei152-linux-ci-entry.php,readonly",
         '--mount', "type=bind,source=$gateFile,target=/repo/tests/rei152-gate-alternate-mysql.test.php,readonly",
         '--mount', "type=bind,source=$createFile,target=/repo/tests/rei152-create-mysql.test.php,readonly",
+        '--mount', "type=bind,source=$cpfPortFile,target=/repo/tests/rei152-cpf-port-mysql.test.php,readonly",
         '--mount', "type=volume,source=$volumeName,target=/var/run/mysqld",
         '--env', 'REI152_TEST_ISOLATION=rei152-disposable-mysql',
         '--env', 'REI152_MYSQL_DSN=mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=rei152_test;charset=utf8mb4',
@@ -225,6 +227,7 @@ throw new RuntimeException('A fixture não permite abrir conexão pela configura
         '/repo/tests/rei152-linux-ci-entry.php' = @{ Type='bind'; RW=$false; Source=$entryFile }
         '/repo/tests/rei152-gate-alternate-mysql.test.php' = @{ Type='bind'; RW=$false; Source=$gateFile }
         '/repo/tests/rei152-create-mysql.test.php' = @{ Type='bind'; RW=$false; Source=$createFile }
+        '/repo/tests/rei152-cpf-port-mysql.test.php' = @{ Type='bind'; RW=$false; Source=$cpfPortFile }
         '/var/run/mysqld' = @{ Type='volume'; RW=$true; Source=$volumeName }
     } '/tmp'
     Invoke-DockerSafe @('start', $phpId) | Out-Null
@@ -237,6 +240,7 @@ throw new RuntimeException('A fixture não permite abrir conexão pela configura
         '/repo/tests/rei152-linux-ci-entry.php' = @{ Type='bind'; RW=$false; Source=$entryFile }
         '/repo/tests/rei152-gate-alternate-mysql.test.php' = @{ Type='bind'; RW=$false; Source=$gateFile }
         '/repo/tests/rei152-create-mysql.test.php' = @{ Type='bind'; RW=$false; Source=$createFile }
+        '/repo/tests/rei152-cpf-port-mysql.test.php' = @{ Type='bind'; RW=$false; Source=$cpfPortFile }
         '/var/run/mysqld' = @{ Type='volume'; RW=$true; Source=$volumeName }
     } '/tmp'
     Assert-ActiveTmpfs $phpId '/tmp'

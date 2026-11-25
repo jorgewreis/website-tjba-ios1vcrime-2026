@@ -4,16 +4,19 @@ declare(strict_types=1);
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/ParteDocumentoHelper.php';
 require_once __DIR__ . '/../helpers/ParteDocumentoLock.php';
+require_once __DIR__ . '/CpfIdentidadeRepository.php';
 
 final class PartesDocumentosRepository
 {
     private PDO $connection;
     private string $table;
+    private string $partesTable;
 
-    public function __construct(PDO $connection, string $table = 'partes_documentos')
+    public function __construct(PDO $connection, string $table = 'partes_documentos', string $partesTable = 'partes')
     {
         $this->connection = $connection;
         $this->table = $table;
+        $this->partesTable = $partesTable;
     }
 
     public function findById(string $id): ?array
@@ -109,10 +112,16 @@ final class PartesDocumentosRepository
         ParteDocumentoHelper::validarNumero($tipo, $numero);
 
         return ParteDocumentoLock::run($this->connection, $tipo, $numero, function () use ($row, $parteId, $tipo, $numero): string {
-            ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table]);
-            $existenteOutraParte = $this->findParteIdByTipoNumero($tipo, $numero);
+            ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table, $this->partesTable]);
+            if ($tipo === 'CPF') ParteDocumentoLock::assertHeld($this->connection, 'CPF', $numero);
+            $existenteOutraParte = $tipo === 'CPF'
+                ? (new CpfIdentidadeRepository($this->connection, $this->partesTable, $this->table))->findOwner($numero)
+                : $this->findParteIdByTipoNumero($tipo, $numero);
             if ($existenteOutraParte !== null && $existenteOutraParte !== $parteId) {
                 throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este documento.');
+            }
+            if ($tipo === 'CPF' && $existenteOutraParte === null) {
+                (new CpfIdentidadeRepository($this->connection, $this->partesTable, $this->table))->assertCompatible($parteId, $numero);
             }
 
             $id = trim((string) ($row['id'] ?? ''));
@@ -150,7 +159,7 @@ final class PartesDocumentosRepository
         $number = ParteDocumentoHelper::normalizarNumero($type, (string) ($row['numero'] ?? ''));
 
         return ParteDocumentoLock::run($this->connection, $type, $number, function () use ($id, $type, $number): bool {
-            ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table]);
+            ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table, $this->partesTable]);
             $current = $this->findById($id);
             if ($current === null) {
                 return false;
