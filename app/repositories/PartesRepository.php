@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/ParteDocumentoHelper.php';
+require_once __DIR__ . '/../helpers/ParteDocumentoLock.php';
 require_once __DIR__ . '/PartesDocumentosRepository.php';
 require_once __DIR__ . '/../../config/security.php';
 
@@ -358,47 +359,65 @@ final class PartesRepository
         $sexo = trim((string) ($row['sexo'] ?? ''));
         $dataNascimento = trim((string) ($row['data_nascimento'] ?? ''));
 
-        if ($cpf !== '') {
-            if (!Security::validarCPF($cpf)) {
-                throw new InvalidArgumentException('CPF inválido. Verifique os dígitos.');
+        if ($cpf !== '' && !Security::validarCPF($cpf)) {
+            throw new InvalidArgumentException('CPF inválido. Verifique os dígitos.');
+        }
+
+        return ParteDocumentoLock::run($this->connection, 'CPF', $cpf, function () use ($row, $nomeCompleto, $cpf, $sexo, $dataNascimento): string {
+            $ownsTransaction = !$this->connection->inTransaction();
+            if ($ownsTransaction && !$this->connection->beginTransaction()) {
+                throw new RuntimeException('Não foi possível iniciar o cadastro da parte.');
             }
-            $existenteCpf = $this->findByCpf($cpf);
-            if ($existenteCpf !== null) {
-                throw new InvalidArgumentException('Já existe pessoa cadastrada com este CPF.');
+            try {
+                if ($cpf !== '' && $this->findByCpf($cpf) !== null) {
+                    throw new InvalidArgumentException('Já existe pessoa cadastrada com este CPF.');
+                }
+                $id = trim((string) ($row['id'] ?? ''));
+                if ($id === '') {
+                    $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'PRT', 30);
+                }
+
+                $profissao = trim((string) ($row['profissao'] ?? ''));
+                if ($profissao !== '') {
+                    $profissao = function_exists('mb_substr') ? mb_substr($profissao, 0, 120, 'UTF-8') : substr($profissao, 0, 120);
+                } else {
+                    $profissao = null;
+                }
+
+                $statement = $this->connection->prepare(
+                    sprintf(
+                        'INSERT INTO `%s` (`id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at`) VALUES (:id, :cpf, :nome_completo, :sexo, :data_nascimento, :profissao, NOW(), NOW())',
+                        $this->table
+                    )
+                );
+                $statement->bindValue(':id', $id);
+                $statement->bindValue(':cpf', $cpf === '' ? null : $cpf);
+                $statement->bindValue(':nome_completo', $nomeCompleto);
+                $statement->bindValue(':sexo', $sexo === '' ? null : $sexo);
+                $statement->bindValue(':data_nascimento', $dataNascimento === '' ? null : $dataNascimento);
+                $statement->bindValue(':profissao', $profissao);
+                $statement->execute();
+
+                if ($cpf !== '') {
+                    $this->garantirDocumentoCpf($id, $cpf);
+                }
+
+                if ($ownsTransaction && !$this->connection->commit()) {
+                    throw new RuntimeException('Não foi possível confirmar o cadastro da parte.');
+                }
+                return $id;
+            } catch (Throwable $error) {
+                if ($ownsTransaction && $this->connection->inTransaction()) {
+                    try {
+                        $this->connection->rollBack();
+                    } catch (Throwable $rollbackError) {
+                        ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                        throw new RuntimeException('Falha ao reverter cadastro da parte; estado da conexão incerto.', 0, $error);
+                    }
+                }
+                throw $error;
             }
-        }
-
-        $id = trim((string) ($row['id'] ?? ''));
-        if ($id === '') {
-            $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'PRT', 30);
-        }
-
-        $profissao = trim((string) ($row['profissao'] ?? ''));
-        if ($profissao !== '') {
-            $profissao = function_exists('mb_substr') ? mb_substr($profissao, 0, 120, 'UTF-8') : substr($profissao, 0, 120);
-        } else {
-            $profissao = null;
-        }
-
-        $statement = $this->connection->prepare(
-            sprintf(
-                'INSERT INTO `%s` (`id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at`) VALUES (:id, :cpf, :nome_completo, :sexo, :data_nascimento, :profissao, NOW(), NOW())',
-                $this->table
-            )
-        );
-        $statement->bindValue(':id', $id);
-        $statement->bindValue(':cpf', $cpf === '' ? null : $cpf);
-        $statement->bindValue(':nome_completo', $nomeCompleto);
-        $statement->bindValue(':sexo', $sexo === '' ? null : $sexo);
-        $statement->bindValue(':data_nascimento', $dataNascimento === '' ? null : $dataNascimento);
-        $statement->bindValue(':profissao', $profissao);
-        $statement->execute();
-
-        if ($cpf !== '') {
-            $this->garantirDocumentoCpf($id, $cpf);
-        }
-
-        return $id;
+        });
     }
 
     /** Atualiza coluna legada `partes.cpf` a partir dos documentos (sem validação de duplicidade). */
@@ -409,23 +428,33 @@ final class PartesRepository
             return;
         }
         $cpfNorm = $cpf !== null && trim($cpf) !== '' ? $this->normalizeCpf($cpf) : null;
-        $limit = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' LIMIT 1' : '';
-        $statement = $this->connection->prepare(
-            sprintf('UPDATE `%s` SET `cpf` = :cpf, `updated_at` = NOW() WHERE `id` = :id%s', $this->table, $limit)
-        );
-        $statement->bindValue(':id', $parteId);
-        if ($cpfNorm === null) {
-            $statement->bindValue(':cpf', null, PDO::PARAM_NULL);
-        } else {
-            $statement->bindValue(':cpf', $cpfNorm);
-        }
-        $statement->execute();
+        ParteDocumentoLock::run($this->connection, 'CPF', $cpfNorm ?? '', function () use ($parteId, $cpfNorm): void {
+            $statement = $this->connection->prepare(
+                sprintf('UPDATE `%s` SET `cpf` = :cpf, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
+            );
+            $statement->bindValue(':id', $parteId);
+            if ($cpfNorm === null) {
+                $statement->bindValue(':cpf', null, PDO::PARAM_NULL);
+            } else {
+                $statement->bindValue(':cpf', $cpfNorm);
+            }
+            $statement->execute();
+        });
     }
 
     public function update(string $id, array $payload): bool
     {
         $id = trim($id);
-        $allowed = ['cpf', 'nome_completo', 'sexo', 'data_nascimento', 'profissao'];
+        if (array_key_exists('cpf', $payload)) {
+            throw new InvalidArgumentException('CPF deve ser alterado pela operação de documentos para manter o cadastro sincronizado.');
+        }
+        return $this->updateInterno($id, $payload);
+    }
+
+    private function updateInterno(string $id, array $payload): bool
+    {
+        $id = trim($id);
+        $allowed = ['nome_completo', 'sexo', 'data_nascimento', 'profissao'];
         $set = [];
         $params = [':id' => $id];
 
@@ -434,19 +463,7 @@ final class PartesRepository
                 continue;
             }
             $value = $payload[$column];
-            if ($column === 'cpf') {
-                $value = $this->normalizeCpf((string) $value);
-                $value = $value === '' ? null : $value;
-                if ($value !== null && $value !== '') {
-                    if (!Security::validarCPF($value)) {
-                        throw new InvalidArgumentException('CPF inválido. Verifique os dígitos.');
-                    }
-                    $existente = $this->findByCpf($value);
-                    if ($existente !== null && (string) $existente['id'] !== $id) {
-                        throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este CPF.');
-                    }
-                }
-            } elseif ($column === 'nome_completo') {
+            if ($column === 'nome_completo') {
                 $value = TextFormatter::formatProperName((string) $value, 255);
             } elseif ($column === 'profissao') {
                 $value = trim((string) $value);
@@ -492,22 +509,24 @@ final class PartesRepository
             throw new InvalidArgumentException('CPF, nome completo, sexo e data de nascimento são obrigatórios.');
         }
 
-        $existing = $this->findByCpf($cpf);
-        if ($existing !== null) {
-            $this->update((string) $existing['id'], [
+        return ParteDocumentoLock::run($this->connection, 'CPF', $cpf, function () use ($cpf, $nomeCompleto, $sexo, $dataNascimento): string {
+            $existing = $this->findByCpf($cpf);
+            if ($existing !== null) {
+                $this->update((string) $existing['id'], [
+                    'nome_completo' => $nomeCompleto,
+                    'sexo' => $sexo,
+                    'data_nascimento' => $dataNascimento,
+                ]);
+                return (string) $existing['id'];
+            }
+
+            return $this->insert([
+                'cpf' => $cpf,
                 'nome_completo' => $nomeCompleto,
                 'sexo' => $sexo,
                 'data_nascimento' => $dataNascimento,
             ]);
-            return (string) $existing['id'];
-        }
-
-        return $this->insert([
-            'cpf' => $cpf,
-            'nome_completo' => $nomeCompleto,
-            'sexo' => $sexo,
-            'data_nascimento' => $dataNascimento,
-        ]);
+        });
     }
 
     /**
@@ -530,22 +549,24 @@ final class PartesRepository
             if (!Security::validarCPF($cpfNormalized)) {
                 throw new InvalidArgumentException('CPF inválido. Verifique os dígitos.');
             }
-            $existing = $this->findByCpf($cpfNormalized);
-            if ($existing !== null) {
-                $up = ['nome_completo' => $nomeCompleto];
-                if ($profissaoNorm !== null) {
-                    $up['profissao'] = $profissaoNorm;
+            return ParteDocumentoLock::run($this->connection, 'CPF', $cpfNormalized, function () use ($nomeCompleto, $profissaoNorm, $cpfNormalized): string {
+                $existing = $this->findByCpf($cpfNormalized);
+                if ($existing !== null) {
+                    $up = ['nome_completo' => $nomeCompleto];
+                    if ($profissaoNorm !== null) {
+                        $up['profissao'] = $profissaoNorm;
+                    }
+                    $this->update((string) $existing['id'], $up);
+                    return (string) $existing['id'];
                 }
-                $this->update((string) $existing['id'], $up);
-                return (string) $existing['id'];
-            }
-            return $this->insert([
-                'nome_completo' => $nomeCompleto,
-                'cpf' => $cpfNormalized,
-                'sexo' => null,
-                'data_nascimento' => null,
-                'profissao' => $profissaoNorm,
-            ]);
+                return $this->insert([
+                    'nome_completo' => $nomeCompleto,
+                    'cpf' => $cpfNormalized,
+                    'sexo' => null,
+                    'data_nascimento' => null,
+                    'profissao' => $profissaoNorm,
+                ]);
+            });
         }
 
         $existing = $this->findByNomeCompleto($nomeCompleto);
@@ -577,15 +598,11 @@ final class PartesRepository
                 return;
             }
         }
-        try {
-            $documentosRepo->insert([
-                'parte_id' => $parteId,
-                'tipo' => 'CPF',
-                'numero' => $cpf,
-            ]);
-        } catch (Throwable) {
-            // Mantém coluna legada; documento pode já existir em migração concorrente.
-        }
+        $documentosRepo->insert([
+            'parte_id' => $parteId,
+            'tipo' => 'CPF',
+            'numero' => $cpf,
+        ]);
     }
 
     private function normalizeCpf(string $cpf): string

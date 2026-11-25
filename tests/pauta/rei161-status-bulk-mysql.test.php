@@ -4,8 +4,8 @@ declare(strict_types=1);
 date_default_timezone_set('America/Bahia');
 
 // Full endpoint HTTP test against a disposable MySQL 8.4 instance.
-// Auth/profile classes are deliberately synthetic; query, joins, bindings,
-// projection and JSON response are the real REI-161 endpoint code.
+// Security, Usuario, profile and access classes are real. Database and sessions are synthetic.
+// Bootstrap and attendance service remain synthetic; this is not a full production integration.
 
 function rei161Assert(bool $ok, string $message): void
 {
@@ -26,6 +26,15 @@ rei161Assert($db->query('SELECT DATABASE()')->fetchColumn() === 'rei161_test', '
 $runnerGuard = $db->prepare('SELECT marker FROM rei161_runner_guard WHERE marker = ?');
 $runnerGuard->execute([$marker]);
 rei161Assert(hash_equals($marker, (string) $runnerGuard->fetchColumn()), 'Marcador do runner não prova este banco descartável.');
+$db->exec("CREATE TABLE usuarios (id_usuario VARCHAR(80) PRIMARY KEY, token_acesso VARCHAR(64), token_expira DATETIME, cadastro_ativo TINYINT) ENGINE=InnoDB");
+$db->exec("CREATE TABLE usuario_perfil (usuario VARCHAR(80), perfil VARCHAR(80)) ENGINE=InnoDB");
+$token = str_repeat('a', 64);
+$insertUser = $db->prepare("INSERT INTO usuarios VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR), 1)");
+foreach (['synthetic-student', 'synthetic-student-other', 'synthetic-internal', 'synthetic-mixed', 'synthetic-consultant', 'synthetic-expired', 'synthetic-inactive', 'synthetic-invalid-token'] as $user) $insertUser->execute([$user, hash('sha256', $token)]);
+$db->exec("UPDATE usuarios SET token_expira = DATE_SUB(NOW(), INTERVAL 1 HOUR) WHERE id_usuario = 'synthetic-expired'");
+$db->exec("UPDATE usuarios SET cadastro_ativo = 0 WHERE id_usuario = 'synthetic-inactive'");
+$db->exec("UPDATE usuarios SET token_acesso = REPEAT('b', 64) WHERE id_usuario = 'synthetic-invalid-token'");
+$db->exec("INSERT INTO usuario_perfil VALUES ('synthetic-student','ESTUDANTE'), ('synthetic-student-other','ESTUDANTE'), ('synthetic-internal','CARTORIO'), ('synthetic-mixed','ESTUDANTE'), ('synthetic-mixed','CARTORIO'), ('synthetic-consultant','CONSULTOR')");
 $db->exec("CREATE TABLE processos (id VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci PRIMARY KEY, sigiloso TINYINT NOT NULL DEFAULT 0) ENGINE=InnoDB");
 $db->exec("CREATE TABLE sala_audiencias_pauta (id_pauta VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci PRIMARY KEY, processo VARCHAR(80), status VARCHAR(32), data_audiencia DATE, hora_audiencia TIME, data_hora_inicio_efetivo DATETIME NULL, data_hora_fim_efetivo DATETIME NULL, duracao_estimada_minutos INT NOT NULL DEFAULT 0, ativo TINYINT NOT NULL DEFAULT 1) ENGINE=InnoDB");
 $db->exec('CREATE TABLE sala_audiencias_estudante_inscricao (id BIGINT AUTO_INCREMENT PRIMARY KEY, pauta VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci, usuario VARCHAR(80)) ENGINE=InnoDB');
@@ -121,30 +130,6 @@ PHP,
 <?php
 function bootstrapRequireTrustedPostRequest(): bool { return true; }
 PHP,
-    $config . DIRECTORY_SEPARATOR . 'security.php' => <<<'PHP'
-<?php
-final class Security { public static function isAuthenticatedWithoutActivity(): bool { if (session_status() !== PHP_SESSION_ACTIVE) session_start(); $_SESSION['id_usuario'] = 'synthetic-student'; $_SESSION['rei161_observacoes'] ??= []; $_SESSION['rei161_observacoes'][str_repeat('b', 32)] = ['usuario'=>'synthetic-student','ids'=>['OBSERVED_OPEN'],'created'=>time()]; $_SESSION['rei161_observacoes'][str_repeat('c', 32)] = ['usuario'=>'synthetic-student','ids'=>array_map(static fn($i)=>'OBS'.str_pad((string)$i,2,'0',STR_PAD_LEFT), range(0,14)),'created'=>time()]; return true; } }
-PHP,
-    $appHelpers . DIRECTORY_SEPARATOR . 'UsuarioPerfisAutorizacao.php' => <<<'PHP'
-<?php
-final class UsuarioPerfisAutorizacao { public static function perfisDoUsuario(string $id): array { return ['ESTUDANTE']; } }
-PHP,
-    $appModels . DIRECTORY_SEPARATOR . 'Usuario.php' => <<<'PHP'
-<?php
-final class Usuario { public function listarPerfisUsuario(string $id): array { return ['ESTUDANTE']; } }
-PHP,
-    $appAccess . DIRECTORY_SEPARATOR . 'AccessEvaluator.php' => <<<'PHP'
-<?php
-final class AccessEvaluator { public static function canAccessPage(string $page, array $profiles): bool { return $page === 'estudapainel'; } }
-PHP,
-    $appAccess . DIRECTORY_SEPARATOR . 'ProfileNormalizer.php' => <<<'PHP'
-<?php
-final class ProfileNormalizer { public static function normalize(array $profiles): array { return $profiles; } public static function hasEstudante(array $profiles): bool { return in_array('ESTUDANTE', $profiles, true); } }
-PHP,
-    $appHelpers . DIRECTORY_SEPARATOR . 'UserAccessHelper.php' => <<<'PHP'
-<?php
-final class UserAccessHelper { public static function isUsuarioExterno(array $profiles): bool { return true; } }
-PHP,
     $appServices . DIRECTORY_SEPARATOR . 'SalaAudienciasAtaService.php' => <<<'PHP'
 <?php
 final class SalaAudienciasAtaService { public const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA = 5; public static function dataPermiteInscricaoEstudante(string $data): bool { $data = trim($data); $hoje = getenv('REI161_TEST_TODAY'); return $data !== '' && $data === (is_string($hoje) && $hoje !== '' ? $hoje : date('Y-m-d')); } public static function normalizarStatusPauta(string $status, string $data, string $hora, ?int $agora = null): string { $status=trim($status); if($status==='agendada')$status='designada';elseif($status==='adiada')$status='redesignada';elseif($status==='encerrada')$status='finalizada';$inicio=strtotime(trim($data).' '.trim($hora));$agoraTeste=getenv('REI161_TEST_NOW_TS');if($agoraTeste!==false&&$agoraTeste!=='')$agora=(int)$agoraTeste;return $status==='designada'&&$inicio!==false&&$inicio<($agora??time())?'atrasada':$status; } }
@@ -158,37 +143,63 @@ PHP,
 final class SalaAudienciasAtaSigiloHelper { public static function sqlProcessoSigilosoEfetivo(string $p='p', string $a='a'): string { return "CASE WHEN COALESCE($p.`sigiloso`,0)=1 OR EXISTS (SELECT 1 FROM `processo_prioridades` pri WHERE pri.`processo_id`=$a.`processo` AND pri.`codigo`='sigiloso') THEN 1 ELSE 0 END"; } }
 PHP,
 ];
+$sourceRoot = getenv('REI161_REPO_SOURCE');
+rei161Assert($sourceRoot === '/workspace', 'Raiz da aplicação sintética inválida.');
+$realFiles = ['config/security.php','app/models/Usuario.php','app/helpers/UsuarioPerfisAutorizacao.php','app/helpers/EffectiveAccessProfiles.php','app/helpers/UserAccessHelper.php','app/helpers/ApiErrorReporter.php','app/access/AccessEvaluator.php','app/access/ProfileNormalizer.php','app/access/PageAccessRegistry.php','app/access/AccessAreas.php','app/access/AccessPolicyVersion.php'];
+foreach ($realFiles as $file) rei161Assert(copy($sourceRoot . '/' . $file, $root . '/' . $file), 'Dependência real ausente: ' . $file);
+$prepend = <<<'PHP'
+<?php
+define('SESSION_IDLE_TIMEOUT', 1800);
+session_start();
+$id = $_SERVER['HTTP_X_SYNTHETIC_USER'] ?? 'synthetic-student';
+if (!in_array($id, ['synthetic-student','synthetic-student-other','synthetic-internal','synthetic-mixed','synthetic-consultant','synthetic-expired','synthetic-inactive','synthetic-invalid-token','anonymous'], true)) exit(1);
+$_SESSION = [];
+if ($id !== 'anonymous') {
+ $_SESSION['id_usuario'] = $id;
+ $_SESSION['token'] = str_repeat('a',64);
+ $_SESSION['last_activity_at'] = time() - 10;
+ $_SESSION['rei161_observacoes'][str_repeat('b',32)] = ['usuario'=>$id,'ids'=>['OBSERVED_OPEN'],'created'=>time()];
+ $_SESSION['rei161_observacoes'][str_repeat('c',32)] = ['usuario'=>$id,'ids'=>array_map(static fn($i)=>'OBS'.str_pad((string)$i,2,'0',STR_PAD_LEFT), range(0,14)),'created'=>time()];
+}
+PHP;
+rei161Assert(file_put_contents($root . '/prepend.php', $prepend) !== false, 'Falha ao criar sessão sintética.');
 foreach ($stubs as $path => $content) {
     rei161Assert(file_put_contents($path, $content) !== false, 'Falha ao criar dependência sintética.');
 }
 
-$portSocket = stream_socket_server('tcp://127.0.0.1:0', $errno, $errstr);
-rei161Assert(is_resource($portSocket), 'Não foi possível reservar porta local efêmera.');
-$address = stream_socket_get_name($portSocket, false);
-fclose($portSocket);
-$port = (int) substr((string) $address, strrpos((string) $address, ':') + 1);
-$command = [PHP_BINARY, '-d', 'date.timezone=America/Bahia', '-d', 'session.save_path=' . $sessionPath, '-d', 'session.use_strict_mode=0', '-S', '127.0.0.1:' . $port, '-t', $public];
+// Let the kernel choose and bind the port within this process, avoiding a
+// release/rebind race against an unrelated listener.
+$command = [PHP_BINARY, '-d', 'date.timezone=America/Bahia', '-d', 'auto_prepend_file=' . $root . '/prepend.php', '-d', 'session.save_path=' . $sessionPath, '-d', 'session.use_strict_mode=0', '-S', '127.0.0.1:0', '-t', $public];
 $pipes = [];
 $server = proc_open($command, [0 => ['pipe','r'], 1 => ['file', $root . '/server.out', 'a'], 2 => ['file', $root . '/server.err', 'a']], $pipes, $root, null);
 rei161Assert(is_resource($server), 'Servidor PHP sintético não iniciou.');
 
 try {
-    $ready = false;
+    $port = 0;
     for ($i = 0; $i < 50; $i++) {
-        $socket = @fsockopen('127.0.0.1', $port, $errno, $errstr, 0.1);
-        if (is_resource($socket)) { fclose($socket); $ready = true; break; }
+        $state = proc_get_status($server);
+        rei161Assert($state['running'], 'Servidor PHP sintético encerrou antes de iniciar.');
+        $log = @file_get_contents($root . '/server.err');
+        if (is_string($log) && preg_match('~Development Server \(http://127\.0\.0\.1:([0-9]{1,5})\) started~', $log, $match)) {
+            $port = (int) $match[1];
+            break;
+        }
         usleep(100000);
     }
-    rei161Assert($ready, 'Servidor PHP sintético não ficou pronto.');
+    rei161Assert($port > 0 && $port <= 65535, 'Servidor PHP não informou porta efêmera vinculada.');
     $url = 'http://127.0.0.1:' . $port . '/api/sala-audiencias-pauta/status-bulk.php';
-    $request = static function (array $payload) use ($url): array {
-        $context = stream_context_create(['http' => ['method'=>'POST','header'=>"Content-Type: application/json\r\nCookie: PHPSESSID=rei161synthetic\r\n",'content'=>json_encode($payload, JSON_UNESCAPED_UNICODE),'ignore_errors'=>true,'timeout'=>5]]);
+    $request = static function (array $payload, string $user = 'synthetic-student') use ($url): array {
+        $context = stream_context_create(['http' => ['method'=>'POST','header'=>"Content-Type: application/json\r\nCookie: PHPSESSID=rei161synthetic\r\nX-Synthetic-User: $user\r\n",'content'=>json_encode($payload, JSON_UNESCAPED_UNICODE),'ignore_errors'=>true,'timeout'=>5]]);
         $body = file_get_contents($url, false, $context);
         $status = 0;
         foreach ($http_response_header ?? [] as $header) if (preg_match('/^HTTP\/\S+\s+(\d+)/', $header, $match)) $status = (int) $match[1];
         return [$status, json_decode((string) $body, true, 512, JSON_THROW_ON_ERROR)];
     };
 
+    foreach (['anonymous'=>401,'synthetic-expired'=>401,'synthetic-inactive'=>401,'synthetic-invalid-token'=>401,'synthetic-internal'=>403,'synthetic-mixed'=>403,'synthetic-consultant'=>403] as $user=>$expected) {
+        [$status, $body] = $request(['pautas'=>['OPEN']], $user);
+        rei161Assert($status === $expected, 'Autorização incorreta para ' . $user . ': HTTP ' . $status);
+    }
     [$status, $body] = $request(['pautas'=>['OPEN','SECRET','MINOR','PRIORITY','CLOSED','CLOSED_ENROLLED','IN_PROGRESS','IN_PROGRESS_ENROLLED','DONE','DONE_ENROLLED','FINISHED','FINISHED_ENROLLED','RESCHEDULED','RESCHEDULED_ENROLLED','POSTPONED_ALIAS','CLOSED_ALIAS','FUTURE','FUTURE_ENROLLED','PAST','PAST_ENROLLED','LATE','INACTIVE','MISSING']]);
     rei161Assert($status === 200 && ($body['success'] ?? false) === true, 'Resposta HTTP/MySQL inesperada.');
     rei161Assert(isset($body['items']['OPEN']['pode_inscrever']) && $body['items']['OPEN']['pode_inscrever'] === true, 'Pauta sintética elegível não foi projetada corretamente.');
@@ -197,8 +208,22 @@ try {
     foreach (['CLOSED_ENROLLED'=>'cancelada','IN_PROGRESS_ENROLLED'=>'em_andamento','DONE_ENROLLED'=>'realizada','FINISHED_ENROLLED'=>'finalizada','RESCHEDULED_ENROLLED'=>'redesignada','POSTPONED_ALIAS'=>'redesignada','CLOSED_ALIAS'=>'finalizada','FUTURE_ENROLLED'=>'designada','PAST_ENROLLED'=>'atrasada'] as $id=>$expectedStatus) {
         rei161Assert(($body['items'][$id]['status'] ?? null) === $expectedStatus && ($body['items'][$id]['ja_inscrito'] ?? false) === true && ($body['items'][$id]['pode_inscrever'] ?? true) === false && isset($body['items'][$id]['data_audiencia']), 'Status/data removeu metadados do inscrito em ' . $id . '.');
     }
-    rei161Assert(!isset($body['items']['INACTIVE'], $body['items']['MISSING']), 'Pauta inativa/inexistente apareceu no resultado.');
+    rei161Assert(!array_key_exists('INACTIVE', $body['items']) && !array_key_exists('MISSING', $body['items']), 'Pauta inativa/inexistente apareceu no resultado.');
     rei161Assert(!str_contains(json_encode($body), 'processo_sigiloso') && !str_contains(json_encode($body), 'qtd_menor') && !str_contains(json_encode($body), 'medida_protetiva'), 'Resposta revelou atributo sensível.');
+
+    // A second student has no enrollment in the three blocked hearings.
+    // Exact equality excludes all operational metadata and sensitive indicators.
+    rei161Assert((int) $db->query("SELECT COUNT(*) FROM sala_audiencias_estudante_inscricao WHERE pauta IN ('SECRET','MINOR','PRIORITY') AND usuario='synthetic-student-other'")->fetchColumn() === 0, 'Fixture do segundo estudante contém inscrição inesperada.');
+    [$status, $body] = $request(['pautas'=>['OPEN','SECRET','MINOR','PRIORITY']], 'synthetic-student-other');
+    rei161Assert($status === 200 && ($body['success'] ?? false) === true && ($body['items']['OPEN']['pode_inscrever'] ?? false) === true, 'Segundo estudante não passou no controle elegível.');
+    $topLevelKeys = array_keys($body);
+    sort($topLevelKeys);
+    $expectedTopLevelKeys = ['completo','consultados','items','observacao_alterada','success'];
+    sort($expectedTopLevelKeys);
+    rei161Assert($topLevelKeys === $expectedTopLevelKeys, 'Resposta expôs campos extras no nível superior.');
+    foreach (['SECRET','MINOR','PRIORITY'] as $id) {
+        rei161Assert(($body['items'][$id] ?? null) === ['id_pauta'=>$id,'indisponivel'=>true], 'Pauta bloqueada expôs metadados para estudante não inscrito: ' . $id);
+    }
 
     [$status, $body] = $request(['pautas'=>['CAP4','CAP5','CAP6','CAP5I','CAP6I']]);
     rei161Assert($status===200 && ($body['items']['CAP4']['pode_inscrever'] ?? false)===true, 'Capacidade 4 não permitiu inscrição.');
