@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0029
+
+**Data:** 2026-11-25 03:13:08 | **Commit:** `2705e2b2` | **Tipo:** `patch`
+
+- ci: isola configuracao da fixture de pauta
+
 ## V. 1.88.0028
 
 **Data:** 2026-11-25 03:08:53 | **Commit:** `7d82d1c2` | **Tipo:** `patch`
@@ -7806,6 +7812,7 @@
 
 
 \n
+
 
 
 

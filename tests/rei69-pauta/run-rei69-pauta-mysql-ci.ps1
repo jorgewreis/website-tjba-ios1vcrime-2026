@@ -4,7 +4,7 @@ param([ValidateSet(0, 1)][int]$LowerCaseTableNames = 0, [switch]$CiLinux, [strin
 $ErrorActionPreference = 'Stop'
 if (-not $CiLinux -or -not $IsLinux -or $env:GITHUB_ACTIONS -ne 'true') { throw 'Somente CI Linux descartável autorizado.' }
 # GITHUB_ACTIONS is a mode check, not proof of hosted-runner provenance.
-foreach ($origin in @($PSScriptRoot, (Join-Path $PSScriptRoot '../..'))) {
+foreach ($origin in @($PSScriptRoot, (Join-Path $PSScriptRoot '../..'), (Join-Path $PSScriptRoot '../../config'))) {
     $cursor = [IO.Path]::GetFullPath($origin)
     while ($cursor) {
         $component = Get-Item -LiteralPath $cursor -Force
@@ -17,13 +17,15 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $appRoot = Join-Path $repoRoot 'app'
 
 $testFile = Join-Path $PSScriptRoot 'rei69-pauta-mysql.test.php'
+$inertConfig = Join-Path $PSScriptRoot 'inert-config.php'
+$securityConfig = Join-Path $repoRoot 'config/security.php'
 $mysqlImageRef = 'mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903'
 if ($QaImageId -notmatch '^sha256:[a-f0-9]{64}$') { throw 'ID de imagem CI explicito obrigatorio.' }
 $phpImageRef = $QaImageId
 if (Test-Path -LiteralPath (Join-Path $repoRoot '.env')) {
     throw 'Runner recusado: não execute a fixture em checkout com .env.'
 }
-foreach ($path in @($appRoot, $testFile)) {
+foreach ($path in @($appRoot, $testFile, $inertConfig, $securityConfig)) {
     $item = Get-Item -LiteralPath $path -Force
     if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
         throw 'Runner recusado: source com reparse point.'
@@ -98,8 +100,9 @@ function Assert-RunningPhp {
     $php = Get-OwnedContainer $phpId
     $ports = if ($php.HostConfig.PortBindings) { @($php.HostConfig.PortBindings.PSObject.Properties).Count } else { 0 }
     $mounts = @($php.Mounts)
-    if (-not $php.State.Running -or $php.Image -ne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged -or $ports -ne 0 -or -not $php.HostConfig.ReadonlyRootfs -or @($php.HostConfig.CapDrop) -notcontains 'ALL' -or @($php.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true' -or $mounts.Count -ne 3) { throw 'Topologia PHP pós-start inválida.' }
+    if (-not $php.State.Running -or $php.Image -ne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged -or $ports -ne 0 -or -not $php.HostConfig.ReadonlyRootfs -or @($php.HostConfig.CapDrop) -notcontains 'ALL' -or @($php.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true' -or $mounts.Count -ne 5) { throw 'Topologia PHP pós-start inválida.' }
     if (@($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $appRoot -and $_.Destination -eq '/repo/app' -and -not $_.RW }).Count -ne 1 -or @($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $testFile -and $_.Destination -eq '/test/rei69-pauta-mysql.test.php' -and -not $_.RW }).Count -ne 1 -or @($mounts | Where-Object { $_.Type -eq 'volume' -and $_.Name -eq $volumeName -and $_.Destination -eq '/var/run/mysqld' }).Count -ne 1) { throw 'Mount PHP pós-start inválido.' }
+    if (@($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $inertConfig -and $_.Destination -eq '/repo/config/config.php' -and -not $_.RW }).Count -ne 1 -or @($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $securityConfig -and $_.Destination -eq '/repo/config/security.php' -and -not $_.RW }).Count -ne 1) { throw 'Configuração sintética pós-start inválida.' }
 }
 
 function Remove-OwnedContainer([string]$id) {
@@ -213,6 +216,8 @@ try {
         '--cpus', '1', '--memory', '512m', '--read-only', '--cap-drop', 'ALL',
         '--security-opt', 'no-new-privileges=true', '--tmpfs', '/tmp:rw,size=64m,noexec,nosuid,nodev',
         '--mount', $appMount, '--mount', $testMount,
+        '--mount', "type=bind,source=$inertConfig,target=/repo/config/config.php,readonly",
+        '--mount', "type=bind,source=$securityConfig,target=/repo/config/security.php,readonly",
         '--mount', "type=volume,source=$volumeName,target=/var/run/mysqld",
         '--env', "REI69PAUTA_EXPECT_LOWER_CASE=$LowerCaseTableNames", '--env', 'REI69PAUTA_TEST_DISPOSABLE=1', '--env', 'REI69PAUTA_TEST_REPO_ROOT=/repo',
         '--env', "REI69PAUTA_TEST_DISPOSABLE_MARKER=$marker",
@@ -226,11 +231,13 @@ try {
     $phpMounts = @($php.Mounts)
     $phpPortCount = if ($php.HostConfig.PortBindings) { @($php.HostConfig.PortBindings.PSObject.Properties).Count } else { 0 }
     $phpInvalid = $php.Image -ne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged
-    $phpInvalid = $phpInvalid -or $phpPortCount -ne 0 -or $phpMounts.Count -ne 3
+    $phpInvalid = $phpInvalid -or $phpPortCount -ne 0 -or $phpMounts.Count -ne 5
     $phpInvalid = $phpInvalid -or -not $php.HostConfig.ReadonlyRootfs -or @($php.HostConfig.CapDrop) -notcontains 'ALL'
     $phpInvalid = $phpInvalid -or @($php.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true'
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $appRoot -and $_.Destination -eq '/repo/app' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $testFile -and $_.Destination -eq '/test/rei69-pauta-mysql.test.php' -and -not $_.RW }).Count -ne 1
+    $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $inertConfig -and $_.Destination -eq '/repo/config/config.php' -and -not $_.RW }).Count -ne 1
+    $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $securityConfig -and $_.Destination -eq '/repo/config/security.php' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'volume' -and $_.Name -eq $volumeName -and $_.Destination -eq '/var/run/mysqld' }).Count -ne 1
     if ($phpInvalid) {
         throw 'Topologia PHP recusada: código somente leitura, socket próprio, sem rede/portas são obrigatórios.'
@@ -245,7 +252,7 @@ try {
     $fixtureOutput = & docker --host $dockerEndpoint exec $phpId php -d 'error_log=/tmp/rei69pauta-test.log' /test/rei69-pauta-mysql.test.php 2>&1
     $fixtureExit = $LASTEXITCODE
     if ($fixtureExit -ne 0) {
-        $codes = @($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -match '^REI69_FIXTURE_FAILURE code=(setup|positive_update|positive_add|sector_denial|cross_link|defender|witness|unknown)$' })
+        $codes = @($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -match '^REI69_FIXTURE_FAILURE code=(setup|setup_env|setup_connect|setup_database|setup_sentinel|setup_require|setup_mode|setup_ddl|setup_seed_classes|setup_seed_sectors|setup_seed_domain|setup_seed_links|setup_seed_part|setup_service|positive_update|positive_add|sector_denial|cross_link|defender|witness|unknown)$' })
         if ($codes.Count -eq 1) { Write-Output $codes[0] } else { Write-Output 'REI69_FIXTURE_FAILURE code=unknown' }
         throw 'Fixture falhou.'
     }

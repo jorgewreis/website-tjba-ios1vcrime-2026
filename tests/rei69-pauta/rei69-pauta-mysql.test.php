@@ -3,29 +3,35 @@ declare(strict_types=1);
 
 $fixtureStage = 'setup';
 set_exception_handler(static function (Throwable $exception) use (&$fixtureStage): void {
-    $allowed = ['setup', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness'];
+    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness'];
     $code = in_array($fixtureStage, $allowed, true) ? $fixtureStage : 'unknown';
     fwrite(STDERR, "REI69_FIXTURE_FAILURE code=$code\n");
     exit(1);
 });
 // Fixture CI-only: no application configuration and no TCP fallback.
+$fixtureStage = 'setup_env';
 $dsn = 'mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=rei69_pauta_test;charset=utf8mb4';
 $marker = (string) getenv('REI69PAUTA_TEST_DISPOSABLE_MARKER');
 if (getenv('REI69PAUTA_TEST_DISPOSABLE') !== '1' || getenv('REI69PAUTA_TEST_REPO_ROOT') !== '/repo'
     || getenv('REI69PAUTA_MYSQL_DSN') !== $dsn || !preg_match('/^[a-f0-9]{64}$/', $marker)) {
     throw new RuntimeException('Fixture requires the dedicated CI runner.');
 }
+$fixtureStage = 'setup_connect';
 $pdo = new PDO($dsn, 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
+$fixtureStage = 'setup_database';
 if ($pdo->query('SELECT DATABASE()')->fetchColumn() !== 'rei69_pauta_test'
     || !str_starts_with((string) $pdo->query('SELECT VERSION()')->fetchColumn(), '8.4.')
     || (string) $pdo->query('SELECT @@lower_case_table_names')->fetchColumn() !== getenv('REI69PAUTA_EXPECT_LOWER_CASE')
     || $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN) !== ['rei69_pauta_test_guard']) {
     throw new RuntimeException('Unexpected database or schema.');
 }
+$fixtureStage = 'setup_sentinel';
 $guards = $pdo->query('SELECT marker FROM rei69_pauta_test_guard')->fetchAll(PDO::FETCH_COLUMN);
 if (count($guards) !== 1 || !hash_equals($marker, (string) $guards[0])) throw new RuntimeException('Sentinel mismatch.');
 // DDL below is reached only after the dedicated runner and sentinel checks.
+$fixtureStage = 'setup_require';
 require_once '/repo/app/services/SalaAudienciasPautaService.php';
+$fixtureStage = 'setup_mode';
 $pdo->exec("SET SESSION sql_mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
 $pdo->exec("SET time_zone='+00:00'");
 $ddl = [
@@ -41,21 +47,28 @@ $ddl = [
     'gabinete_reu_preso' => 'id VARCHAR(40) PRIMARY KEY,status VARCHAR(40)',
     'gabinete_reu_preso_processo' => 'id VARCHAR(40) PRIMARY KEY,processo_id VARCHAR(40),reu_preso_id VARCHAR(40),situacao VARCHAR(40)',
 ];
+$fixtureStage = 'setup_ddl';
 foreach ($ddl as $name => $columns) $pdo->exec("CREATE TABLE `$name` ($columns) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$fixtureStage = 'setup_seed_classes';
 $pdo->exec("INSERT INTO classes VALUES ('C','Classe sintetica')");
+$fixtureStage = 'setup_seed_sectors';
 $pdo->exec("INSERT INTO setores VALUES ('SA',1),('SB',1),('SI',0); INSERT INTO usuario_setor VALUES ('synthetic','SA'),('synthetic-other','SB'),('synthetic-inactive','SI')");
+$fixtureStage = 'setup_seed_domain';
 foreach (['A', 'B'] as $key) {
     $pdo->prepare("INSERT INTO processos VALUES (?,?,'C',NULL,0,NOW(),NOW(),?)")->execute([$key, 'CNJ-SINTETICO-' . $key, 'S' . $key]);
     $pdo->prepare("INSERT INTO partes VALUES (?,NULL,?,'X','2000-01-01','Sintetica',NOW(),NOW())")->execute([$key, 'Pessoa Sintetica ' . $key]);
     $pdo->prepare("INSERT INTO sala_audiencias_pauta (id_pauta,ativo,processo,numero_sequencial,ano,tipo_audiencia,data_audiencia,hora_audiencia,status) VALUES (?,1,?,1,2026,'instrucao','2030-01-01','10:00:00','designada')")->execute(['P' . $key, $key]);
 }
+$fixtureStage = 'setup_seed_links';
 foreach (['AA'=>['A','A'], 'AB'=>['A','B'], 'BA'=>['B','A'], 'BB'=>['B','B']] as $id => [$process, $person]) {
     $pdo->prepare("INSERT INTO processos_partes (id,processo_id,parte_id,tipo_parte,polo,created_at,updated_at) VALUES (?,?,?,'vitima','ativo',NOW(),NOW())")->execute([$id, $process, $person]);
 }
+$fixtureStage = 'setup_seed_part';
 $pdo->exec("INSERT INTO sala_audiencias_pauta_parte (id_parte,pauta,parte_id_global,processo_parte_id,nome_parte,tipo_parte,maioridade,expedicao,cumprimento,ativo) VALUES ('PP-A','PA','A','AA','Pessoa Sintetica A','vitima','maior','Não expedido','pendente',1)");
 function snapshot69p(PDO $pdo, array $tables): array {
     $out=[]; foreach ($tables as $table) { $rows=$pdo->query("SELECT * FROM `$table`")->fetchAll(PDO::FETCH_ASSOC); usort($rows, static fn($a,$b)=>strcmp(json_encode($a),json_encode($b))); $out[$table]=$rows; } return $out;
 }
+$fixtureStage = 'setup_service';
 $service = new SalaAudienciasPautaService($pdo);
 $tables = array_keys($ddl);
 $payload = ['parte_id_global'=>'A','processo_parte_id'=>'AA','nome_parte'=>'Pessoa Sintetica A','tipo_parte'=>'vitima','maioridade'=>'maior','expedicao'=>'Não expedido','cumprimento'=>'pendente'];
