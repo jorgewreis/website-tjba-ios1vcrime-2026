@@ -48,12 +48,16 @@ $insert->execute(['x','cancelada','detalhamento_informacoes',1,'em_andamento','2
 $service = new DashboardResumoService($db);
 $result = $service->resumo('usuario', ['CARTORIO']);
 verificar(($result['setor']['responsaveis_regras'] ?? null) === ['guias'=>'Ana Souza','oficios'=>'Bruno Lima'], 'Responsáveis devem refletir as regras específicas.');
+verificar(($result['setor']['responsaveis_proprios'] ?? null) === ['guias'=>false,'oficios'=>false], 'Pessoa diferente não deve ser identificada como usuário ativo.');
+$result = $service->resumo('u1', ['CARTORIO']);
+verificar(($result['setor']['responsaveis_proprios'] ?? null) === ['guias'=>true,'oficios'=>false], 'Somente a regra do usuário da sessão deve ser marcada como própria.');
 $db->exec("UPDATE alocacoes_regras SET usuario_id='u2' WHERE regra='ALLOCATE-GUIAS'");
 $db->exec("DELETE FROM alocacoes_regras WHERE regra='ALLOCATE-CARTORIOOFICIOS'");
 $result = $service->resumo('usuario', ['CARTORIO']);
 verificar(($result['setor']['responsaveis_regras'] ?? null) === ['guias'=>'Bruno Lima'], 'Alteração e remoção de regra devem refletir no resumo seguinte.');
 $result = $service->resumo('usuario', ['GABINETE']);
 verificar(($result['setor']['responsaveis_regras'] ?? null) === [], 'Gabinete não deve receber responsáveis do Cartório.');
+verificar(($result['setor']['responsaveis_proprios'] ?? null) === [], 'Gabinete não deve receber identidade da regra do Cartório.');
 $db->exec("INSERT INTO guias VALUES ('futura-invalida','em_andamento','2026-01-01')");
 $insert->execute(['f1','futura-invalida','detalhamento_informacoes',1,'em_andamento','2026-01-01']);
 $insert->execute(['f2','futura-invalida','etapa_inexistente',2,'pendente','2026-01-01']);
