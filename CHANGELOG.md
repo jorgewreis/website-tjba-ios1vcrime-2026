@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0020
+
+**Data:** 2026-11-25 00:25:25 | **Commit:** `501dd68e` | **Tipo:** `patch`
+
+- docs(REI-73): registrar evidencias incrementais
+
 ## V. 1.88.0019
 
 **Data:** 2026-11-24 23:21:09 | **Commit:** `4fdafd90` | **Tipo:** `patch`
@@ -7752,6 +7758,7 @@
 
 
 \n
+
 
 
 
