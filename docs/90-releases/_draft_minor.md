@@ -5,4 +5,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 ## Entradas Pendentes
 
 - **test: prepara validacao isolada de vinculos de pauta** `[2a8a30db]`
+- **ci: aprimora diagnostico da prontidao mysql** `[7d82d1c2]`
 
