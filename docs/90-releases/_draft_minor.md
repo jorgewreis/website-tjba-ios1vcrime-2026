@@ -15,4 +15,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **ci: detalha etapas do teste concorrente** `[0bb80dd7]`
 - **ci: classifica falhas do ator de pauta** `[d5559b93]`
 - **test: corrige bootstrap do ator de pauta** `[98382202]`
+- **ci: detalha resultado concorrente da pauta** `[dc31205a]`
 
