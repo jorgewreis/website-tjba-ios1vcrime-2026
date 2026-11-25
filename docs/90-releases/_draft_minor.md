@@ -8,4 +8,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **merge: reconciliar base de monitoramento** `[853a1378]`
 - **ci: diagnostica cadastro de monitoramento** `[67ce5486]`
 - **ci: detalha consulta de monitoramento** `[84075230]`
+- **test: alinha collation da fixture** `[7ae1b507]`
 
