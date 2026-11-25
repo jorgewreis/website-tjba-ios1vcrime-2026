@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0050
+
+**Data:** 2026-11-25 04:54:28 | **Commit:** `67ce5486` | **Tipo:** `patch`
+
+- ci: diagnostica cadastro de monitoramento
+
 ## V. 1.88.0049
 
 **Data:** 2026-11-25 04:49:27 | **Commit:** `853a1378` | **Tipo:** `patch`
@@ -7932,6 +7938,7 @@
 
 
 \n
+
 
 
 
