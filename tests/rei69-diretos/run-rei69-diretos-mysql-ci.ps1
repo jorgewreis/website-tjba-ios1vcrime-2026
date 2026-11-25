@@ -274,7 +274,7 @@ try {
     $fixtureOutput = & docker --host $dockerEndpoint exec $phpId php -d 'error_log=/tmp/rei69diretos-test.log' /test/rei69-diretos-mysql.test.php 2>&1
     $fixtureExit = $LASTEXITCODE
     if ($fixtureExit -ne 0) {
-        $codes = @($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -match '^REI69_DIRECT_FAILURE code=(setup|guard|positive_create|negative|rollback_create|rollback_update|positive_update|positive_delete|child_uncertain)$' })
+        $codes = @($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -match '^REI69_DIRECT_FAILURE code=(setup|guard|positive_create|negative|rollback_create|rollback_update|positive_update|positive_delete|concurrency|child_uncertain)$' })
         if ($codes.Count -eq 1) { Write-Output $codes[0] } else { Write-Output 'REI69_DIRECT_FAILURE code=setup' }
         throw 'Fixture falhou.'
     }
