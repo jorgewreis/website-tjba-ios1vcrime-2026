@@ -1,0 +1,15 @@
+name: Auditoria — inventário de módulos
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verificar inventário histórico
+        run: python3 -B tests/audit/rei73-modulos-verify.py 63eb1da4a7227e94cece467ef2d57fbd8020e416 docs/90-releases/rei-73-inventario-modulos-20261125.csv

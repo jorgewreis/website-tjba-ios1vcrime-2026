@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/processos/prioridades-list.php');
 /**
  * Lista estado de edição das prioridades do processo (catálogo, bloqueios, linhas atuais).
  */
@@ -51,5 +54,5 @@ try {
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao listar prioridades: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao listar prioridades: ' . ApiErrorReporter::genericMessage($e, 'public/api/processos/prioridades-list.php')], JSON_UNESCAPED_UNICODE);
 }

@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-cartas-expedidas/concluir-subtarefa.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['cartasexpedidasedit'], true);
 
@@ -10,7 +13,7 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/CartorioSubtarefaUsuarioSessao.php';
 require_once $basePath . '/app/services/CartasExpedidasService.php';
-require_once $basePath . '/app/services/DashboardResumoService.php';
+
 
 $connection = Conection::getInstance()->getConnection();
 
@@ -21,27 +24,26 @@ if (!is_array($parsed)) {
 }
 
 $subtarefaId = trim((string) ($parsed['subtarefa_id'] ?? $parsed['subtarefaId'] ?? $_GET['subtarefa_id'] ?? ''));
-$dadosEspecificos = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao(
-    $connection,
-    $parsed['dados_especificos'] ?? null
-);
+
 
 if ($subtarefaId === '') {
     http_response_code(400);
-    echo json_encode(['error' => 'Identificador da subtarefa é obrigatório.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Identificador da subtarefa Ã© obrigatÃ³rio.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
 try {
-    $before = DashboardResumoService::statusAnterior($connection, 'cartas_expedidas_subtarefas', $subtarefaId);
+    $dadosEspecificos = $parsed['dados_especificos'] ?? null;
+    if (is_array($dadosEspecificos)) $dadosEspecificos = json_encode($dadosEspecificos, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    if ($dadosEspecificos !== null && !is_string($dadosEspecificos)) throw new InvalidArgumentException('Dados da subtarefa inválidos.');
     $service = new CartasExpedidasService($connection);
     $resultado = $service->concluirSubtarefa($subtarefaId, $dadosEspecificos);
-    DashboardResumoService::registrarConclusao($connection, $before, 'cartas_expedidas', 'CARTORIO', trim((string)($_SESSION['id_usuario'] ?? '')));
     echo json_encode(array_merge(['success' => true], is_array($resultado) ? $resultado : []), JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $exception) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao concluir subtarefa: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    error_log('Cartas expedidas: falha ao concluir subtarefa (' . get_class($exception) . ').');
+    echo json_encode(['error' => 'NÃ£o foi possÃ­vel confirmar a conclusÃ£o. Atualize a pÃ¡gina antes de tentar novamente.'], JSON_UNESCAPED_UNICODE);
 }

@@ -137,8 +137,8 @@ final class AlocacaoTarefasPerfisHelper
         }
         try {
             $addSpecific($targetUsuarioId);
-        } catch (\RuntimeException $e) {
-            throw new \InvalidArgumentException($e->getMessage());
+        } catch (LimiteAlocadosException) {
+            throw new \InvalidArgumentException('Limite de alocações por guia atingido.');
         }
     }
 }

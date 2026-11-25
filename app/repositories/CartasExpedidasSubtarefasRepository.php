@@ -2,6 +2,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/CartasExpedidasEstadoFluxo.php';
+require_once __DIR__ . '/../helpers/ParentRecordLock.php';
 
 final class CartasExpedidasSubtarefasRepository
 {
@@ -58,28 +60,22 @@ final class CartasExpedidasSubtarefasRepository
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
         }
 
-        $id = IdGenerator::generateUniquePrefixedId(
-            $this->connection,
-            $this->table,
-            'id',
-            'CES',
-            30
-        );
-
-        $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `carta_expedida_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at`) VALUES (:id, :carta_expedida_id, :tipo, :ordem, :status, :dados_especificos, NOW(), NOW())',
-            $this->table
-        );
-        $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':id', $id);
-        $statement->bindValue(':carta_expedida_id', $cartaId);
-        $statement->bindValue(':tipo', $tipo);
-        $statement->bindValue(':ordem', $ordem, PDO::PARAM_INT);
-        $statement->bindValue(':status', $status);
-        $statement->bindValue(':dados_especificos', $dadosJson);
-        $statement->execute();
-
-        return $id;
+        return ParentRecordLock::run($this->connection, 'cartas_expedidas', $cartaId, function () use ($cartaId, $tipo, $ordem, $status, $dadosJson): string {
+            $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'CES', 30);
+            $sql = sprintf(
+                'INSERT INTO `%s` (`id`, `carta_expedida_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at`) VALUES (:id, :carta_expedida_id, :tipo, :ordem, :status, :dados_especificos, NOW(), NOW())',
+                $this->table
+            );
+            $statement = $this->connection->prepare($sql);
+            $statement->bindValue(':id', $id);
+            $statement->bindValue(':carta_expedida_id', $cartaId);
+            $statement->bindValue(':tipo', $tipo);
+            $statement->bindValue(':ordem', $ordem, PDO::PARAM_INT);
+            $statement->bindValue(':status', $status);
+            $statement->bindValue(':dados_especificos', $dadosJson);
+            $statement->execute();
+            return $id;
+        });
     }
 
     public function findByCartaId(string $cartaId): array
@@ -153,33 +149,7 @@ final class CartasExpedidasSubtarefasRepository
      */
     public static function resolverSubtarefaAtivaPorLista(array $rows): ?array
     {
-        $envio = null;
-        $devolucao = null;
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $tipo = trim((string) ($row['tipo'] ?? ''));
-            if (!self::isTipoAtivo($tipo)) {
-                continue;
-            }
-            if ($tipo === self::TIPO_ENVIO) {
-                $envio = $row;
-            }
-            if ($tipo === self::TIPO_DEVOLUCAO) {
-                $devolucao = $row;
-            }
-        }
-
-        if ($envio !== null && trim((string) ($envio['status'] ?? '')) !== self::STATUS_CONCLUIDA) {
-            return $envio;
-        }
-        if ($devolucao !== null && trim((string) ($devolucao['status'] ?? '')) !== self::STATUS_CONCLUIDA) {
-            return $devolucao;
-        }
-
-        return null;
+        return CartasExpedidasEstadoFluxo::classificar($rows)['subtarefa'];
     }
 
     /**

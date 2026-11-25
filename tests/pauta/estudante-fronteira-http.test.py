@@ -3,7 +3,7 @@ import json, os, pathlib, shutil, socket, subprocess, tempfile, time, urllib.err
 root = pathlib.Path(__file__).resolve().parents[2]
 with tempfile.TemporaryDirectory(prefix='pauta-privacidade-') as tmp:
     base = pathlib.Path(tmp)
-    for name in ('public/api/sala-audiencias-ata/inscrever.php', 'public/api/sala-audiencias-ata/download.php', 'app/helpers/SalaAudienciasInscricaoIndisponivel.php', 'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php'):
+    for name in ('public/api/sala-audiencias-ata/inscrever.php', 'public/api/sala-audiencias-ata/download.php', 'app/helpers/SalaAudienciasInscricaoIndisponivel.php', 'app/helpers/ApiErrorReporter.php', 'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php'):
         dest = base / name; dest.parent.mkdir(parents=True, exist_ok=True); shutil.copyfile(root / name, dest)
     stubs = {
       'app/helpers/Conection.php': "<?php $_SESSION=['id_usuario'=>'sintetico']; function appIsHttpsRequest(): bool {return false;} class Conection {static function getInstance(){return new self;} function getConnection(){return null;}}",
