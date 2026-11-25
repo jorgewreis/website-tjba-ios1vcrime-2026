@@ -24,5 +24,7 @@ jobs:
       - name: Verificar acesso sintético a instituições e vínculos
         run: |
           python3 -B tests/instituicoes-publicas/http-boundary-audit.test.py
+          python3 -B tests/instituicoes-publicas/rei337-export-guard-http.test.py
+          python3 -B tests/instituicoes-publicas/rei337-session-http.test.py
           python3 -B tests/instituicoes-publicas/consultor-http-isolado.test.py
           python3 -B tests/processos-partes/lista-isolada.test.py
