@@ -12,4 +12,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: restringe mutacoes diretas por unidade** `[4d397369]`
 - **test: valida mutacoes diretas com mysql isolado** `[1f30930d]`
 - **test: exercita concorrencia de vinculos** `[e539b8e0]`
+- **ci: detalha etapas do teste concorrente** `[0bb80dd7]`
 
