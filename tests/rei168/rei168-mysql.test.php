@@ -83,10 +83,23 @@ foreach(['parent','event'] as $failure) {
 }
 seed168($pdo,'missing-return','em_andamento',null); $r=$service->concluirSubtarefa('missing-return-s');
 check168(count($subs->findByCartaId('missing-return'))===2,'Missing future return created atomically');
+// Verify each connection again before exercising service writes in the disposable schema.
+$assertTarget168 = static function (PDO $connection) use ($marker): void {
+    $expected=['cartas_expedidas','cartas_expedidas_subtarefas','classes','comarcas','dashboard_conclusoes','processos','rei168_test_guard','tribunais','usuarios','varas'];
+    if ($connection->query('SELECT DATABASE()')->fetchColumn() !== 'rei168_test'
+        || !str_starts_with((string)$connection->query('SELECT VERSION()')->fetchColumn(), '8.4.')
+        || $connection->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN) !== $expected
+        || !hash_equals($marker, (string)$connection->query('SELECT marker FROM rei168_test_guard')->fetchColumn())
+        || (string)$connection->query('SELECT @@lower_case_table_names')->fetchColumn() !== getenv('REI168_EXPECT_LOWER_CASE')) {
+        throw new RuntimeException('Disposable connection identity rejected');
+    }
+};
+$assertTarget168($pdo);
 // Register using the actual service, then reload through new instances/connections.
 $baseline=CartasExpedidasEstadoFluxo::resumir($pdo->query(CartasExpedidasEstadoFluxo::consultaEstados())->fetchAll(PDO::FETCH_ASSOC));
 $created=$service->create(['numero_processo'=>'0000001-69.2020.8.05.0001','estado'=>'SP','cidade'=>'Campinas','classe_codigo'=>'SYNTHETIC','classe_descricao'=>'Classe sintetica','finalidade'=>'Cadastro sintetico REI168','prazo'=>'30','usuario_cadastro_id'=>'fixture']);
 $reload=new PDO($dsn,'root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_EMULATE_PREPARES=>false]);
+$assertTarget168($reload);
 $reloadService=new CartasExpedidasService($reload); $reloadSubs=new CartasExpedidasSubtarefasRepository($reload);
 check168($reloadService->find($created)!==null,'Actual create persisted same ID on reload');
 $createdSteps=$reloadSubs->findByCartaId($created);
@@ -95,7 +108,7 @@ $createdSummary=CartasExpedidasEstadoFluxo::resumir($reload->query(CartasExpedid
 check168($createdSummary['envios']===$baseline['envios']+1 && $createdSummary['devolucoes']===$baseline['devolucoes'],'Create increments only send queue');
 $createdList=$reloadService->listCartas(['status'=>'aguardando_envio'],100,0);
 check168(in_array($created,array_column($createdList['rows'],'IdCarta'),true),'Created ID belongs to send list');
-$sendId=(string)$createdSteps[0]['id']; $reloadService->concluirSubtarefa($sendId);
+$sendId=(string)$createdSteps[0]['id']; $assertTarget168($reload); $reloadService->concluirSubtarefa($sendId);
 $sentSummary=CartasExpedidasEstadoFluxo::resumir($pdo->query(CartasExpedidasEstadoFluxo::consultaEstados())->fetchAll(PDO::FETCH_ASSOC));
 check168($sentSummary['envios']===$baseline['envios'] && $sentSummary['devolucoes']===$baseline['devolucoes']+1,'Send transfers once between counters');
 $sentList=$service->listCartas(['status'=>'aguardando_cumprimento'],100,0);
@@ -227,4 +240,43 @@ try {
 } finally {
     $pdo->exec('DROP TABLE rei73_pauta_slot_fixture');
 }
+// Classe: native prepares must bind distinct placeholders in every repository query.
+// Same guarded connection and verified disposable marker; no additional DDL or external data.
+check168(hash_equals($marker, (string)$pdo->query('SELECT marker FROM rei168_test_guard')->fetchColumn()), 'Class fixture marker remains valid');
+check168((int)$pdo->getAttribute(PDO::ATTR_EMULATE_PREPARES) === 0, 'Native prepares enabled for class fixture');
+$pdo->exec("INSERT INTO classes (id,codigo,nome) VALUES ('FILTER-C1','SYN-CLASS','Classe Sintetica Filtro'),('FILTER-C2','OTHER-CLASS','Outra Classe Sintetica')");
+$pdo->exec("INSERT INTO processos (id,numero_processo,classe_id) VALUES ('FILTER-P1','FILTER-PROC-1','FILTER-C1'),('FILTER-P2','FILTER-PROC-2','FILTER-C2')");
+seed168($pdo,'filter-a','em_andamento','pendente','2030-01-03 00:00:00');
+seed168($pdo,'filter-b','em_andamento','pendente','2030-01-02 00:00:00');
+seed168($pdo,'filter-c','concluida','pendente','2030-01-01 00:00:00','aguardando cumprimento');
+seed168($pdo,'filter-d','em_andamento','pendente','2030-01-04 00:00:00');
+$pdo->exec("UPDATE cartas_expedidas SET processo_origem_id='FILTER-P1', finalidade='Finalidade Filtro' WHERE id IN ('filter-a','filter-b','filter-c')");
+$pdo->exec("UPDATE cartas_expedidas SET processo_origem_id='FILTER-P2', finalidade='Finalidade Filtro' WHERE id='filter-d'");
+$pdo->exec("UPDATE cartas_expedidas SET finalidade='Finalidade Alternativa' WHERE id='filter-c'");
+$checkClasseMethods = static function (array $filters, array $expectedIds, array $expectedStatus, array $expectedClasses, array $expectedFinalidades) use ($repo): void {
+    $rows=$repo->fetchList($filters,100,0); $ordered=array_column($rows,'IdCarta'); $ids=$ordered; sort($ids); sort($expectedIds);
+    check168($ids===$expectedIds,'Class filtered list');
+    check168($repo->count($filters)===count($expectedIds),'Class filtered count');
+    $status=$repo->countByStatus($filters);
+    $expectedStatus += ['em_andamento'=>0,'aguardando envio'=>0,'aguardando cumprimento'=>0,'concluída'=>0,'cancelada'=>0];
+    ksort($status); ksort($expectedStatus); check168($status===$expectedStatus,'Class filtered complete status map');
+    $classes=$repo->countByClasse($filters); ksort($classes); ksort($expectedClasses);
+    check168($classes===$expectedClasses,'Class filtered grouping');
+    $finalidades=$repo->countByFinalidade($filters); ksort($finalidades); ksort($expectedFinalidades);
+    check168($finalidades===$expectedFinalidades,'Class filtered purpose grouping');
+    $pages=[]; for($offset=0;$offset<count($expectedIds);$offset++) $pages=array_merge($pages,array_column($repo->fetchList($filters,1,$offset),'IdCarta'));
+    check168($pages===$ordered,'Class filtered pagination preserves list order');
+    check168($repo->fetchList($filters,1,count($expectedIds))===[],'Class pagination end');
+};
+$snapshotClasse168 = static fn(): array => [snapshot168($pdo), $pdo->query('SELECT * FROM classes ORDER BY id')->fetchAll(PDO::FETCH_ASSOC), $pdo->query('SELECT * FROM processos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC)];
+$fixtureBefore=$snapshotClasse168();
+foreach (['SYN-CLASS','Classe Sintetica Filtro'] as $classe) {
+    $checkClasseMethods(['classe'=>$classe], ['filter-a','filter-b','filter-c'], ['em_andamento'=>2,'aguardando cumprimento'=>1], ['Classe Sintetica Filtro'=>3], ['Finalidade Filtro'=>2,'Finalidade Alternativa'=>1]);
+    $checkClasseMethods(['classe'=>$classe,'status'=>'aguardando_envio','finalidade'=>'Finalidade Filtro','processo'=>'filter-'], ['filter-a','filter-b'], ['em_andamento'=>2], ['Classe Sintetica Filtro'=>2], ['Finalidade Filtro'=>2]);
+    $checkClasseMethods(['classe'=>$classe,'status'=>'aguardando_cumprimento','finalidade'=>'Finalidade Alternativa','processo'=>'filter-c'], ['filter-c'], ['aguardando cumprimento'=>1], ['Classe Sintetica Filtro'=>1], ['Finalidade Alternativa'=>1]);
+    $checkClasseMethods(['classe'=>$classe,'status'=>'aguardando_envio','finalidade'=>'Finalidade Filtro','processo'=>'nao-existe'], [], [], [], []);
+}
+$checkClasseMethods(['classe'=>'CLASSE-INEXISTENTE'], [], [], [], []);
+$checkClasseMethods(['processo'=>'filter-'], ['filter-a','filter-b','filter-c','filter-d'], ['em_andamento'=>3,'aguardando cumprimento'=>1], ['Classe Sintetica Filtro'=>3,'Outra Classe Sintetica'=>1], ['Finalidade Filtro'=>3,'Finalidade Alternativa'=>1]);
+check168($snapshotClasse168()===$fixtureBefore,'Class filter reads preserve state including classes and processos');
 echo json_encode(['suite'=>'REI168 MySQL 8.4 synthetic','assertions'=>$assertions,'case_mode'=>getenv('REI168_EXPECT_LOWER_CASE'),'result'=>'PASS'],JSON_THROW_ON_ERROR).PHP_EOL;

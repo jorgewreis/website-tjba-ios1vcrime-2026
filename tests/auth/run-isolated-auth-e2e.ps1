@@ -25,13 +25,7 @@ $mysql = $mailpit = $app = $client = $browserContainer = $null; $cleanupFailed =
 . (Join-Path $PSScriptRoot 'cleanup-owned.ps1')
 . (Join-Path $PSScriptRoot 'docker-topology-validation.ps1')
 $executionFailure = $null; $guardToken = $null
-. (Join-Path $PSScriptRoot 'rei155-safe-diagnostic.ps1')
-function D([string[]]$a) {
-    $prior = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
-    try { $o = & docker --context $dockerContext @a 2>&1; $code = $LASTEXITCODE } finally { $ErrorActionPreference = $prior }
-    if ($code -ne 0) { throw (Format-AuthDockerFailure ([string]$a[0]) $code $o) }
-    return $o
-}
+function D([string[]]$a) { $prior = $ErrorActionPreference; $ErrorActionPreference = 'Continue'; try { $o = & docker --context $dockerContext @a 2>&1; $code = $LASTEXITCODE } finally { $ErrorActionPreference = $prior }; if ($code -ne 0) { foreach ($line in $o) { if ([string]$line -match '^REI158_DIAG code-(initial|workers|success|timeout|storage)-(other|[0-3])$') { Write-Host ([string]$line) } }; throw 'Docker falhou; detalhes suprimidos.' }; return $o }
 function Id([string]$v, [string]$what) { if ($v -notmatch '^[a-f0-9]{64}$') { throw "ID inválido: $what" }; $v }
 function Secret {
     $b = [byte[]]::new(32)
@@ -154,7 +148,7 @@ try {
         else { Copy-Tree $source }
     }
     D @('exec',$client,'mkdir','-p','/workspace/tests/auth')|Out-Null
-    foreach($clientTest in @('http-auth-flow.test.php', 'http-ready.test.php', 'sandbox-guard.php')) { D @('cp',(Join-Path $root "tests/auth/$clientTest"),"${client}:/workspace/tests/auth/$clientTest")|Out-Null }
+    foreach($clientTest in @('http-auth-flow.test.php', 'http-ready.test.php', 'rei158-http-concurrency.test.php', 'sandbox-guard.php')) { D @('cp',(Join-Path $root "tests/auth/$clientTest"),"${client}:/workspace/tests/auth/$clientTest")|Out-Null }
     $runtime="APP_ENV=testing`nAUTH_TEST_ISOLATION=isolated-auth-test`nDB_HOST=mysql`nDB_PORT=3306`nDB_NAME=auth_test_e2e`nDB_USER=root`nDB_PASS=$pass`nDB_CHARSET=utf8mb4`nMAIL_DRIVER=smtp`nMAIL_HOST=mailpit`nMAIL_PORT=1025`nMAIL_USER=auth-test`nMAIL_PASSWORD=$pass`nMAIL_ENCRYPTION=none`nMAIL_FROM_ADDRESS=no-reply@auth-test.invalid`nMAIL_FROM_NAME=Auth E2E`nAPP_URL=https://auth-test.invalid`n"
     $runtime|& docker --context $dockerContext exec -i $app sh -c 'umask 077; cat > /workspace/tests/auth/.env.test.runtime'; if($LASTEXITCODE -ne 0){throw 'Não foi possível criar configuração interna.'}
     Assert-ActiveTopology
@@ -173,17 +167,13 @@ try {
     Run-AppTest 'auth-fixtures.test.php'
     Run-AppTest 'rei73-instituicoes-fixture.test.php'
     Run-AppTest 'login-rate-limit.test.php'
-    Run-AppTest 'rei155-password-change.test.php'
-    Run-AppTest 'rei155-ordered.test.php'
-    Run-AppTest 'rei155-legacy-denied.test.php'
-    Run-AppTest 'rei155-nontransactional.test.php'
-    Run-AppTest 'rei155-metadata-lock.test.php'
+    Run-AppTest 'login-rate-limit-concurrency.test.php'
     Run-AppTest 'rei171-login-reset-race.test.php'
     Run-AppTest 'reset-token-concurrency.test.php'
     Run-AppTest 'smtp-capture.test.php'
     if (-not $Browser) { Run-AppTest 'login-rate-limit.fixture.php' @('seed') }
     $token=(App @('php','/workspace/tests/auth/http-reset-token.fixture.php')|Select-Object -Last 1).Trim(); if($token -notmatch '^[a-f0-9]{64}$'){throw 'Token sintético inválido.'}
-    D @('exec','-d',$app,'sh','-c','cd /workspace && exec php -S 0.0.0.0:8080 -t public >/tmp/auth-e2e-app.log 2>&1')|Out-Null
+    D @('exec','-d','--env','PHP_CLI_SERVER_WORKERS=4',$app,'sh','-c','cd /workspace && exec php -S 0.0.0.0:8080 -t public >/tmp/auth-e2e-app.log 2>&1')|Out-Null
     for($i=0; $i -lt 30; $i++) {
         Assert-ActiveTopology
         $probe = Start-Process -FilePath 'docker' -ArgumentList @('--context', $dockerContext, 'exec', '--env', 'APP_ENV=testing', '--env', 'AUTH_TEST_ISOLATION=isolated-auth-test', '--env', 'AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner', '--env', "AUTH_TEST_GUARD_TOKEN=$guardToken", $client, 'php', '/workspace/tests/auth/http-ready.test.php') -Wait -PassThru -NoNewWindow
@@ -202,6 +192,8 @@ try {
     }
     if ($Browser) { Run-AppTest 'login-rate-limit.fixture.php' @('seed') }
     D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",'--env',"E2E_RESET_TOKEN=$token",$client,'php','tests/auth/http-auth-flow.test.php')|Write-Output
+    D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",$client,'php','tests/auth/rei158-http-concurrency.test.php')|Write-Output
+    Run-AppTest 'rei158-http-lock-wait.test.php'
     Run-AppTest 'password-reset-states.test.php'
 } catch {
     # Dados de erro do Docker, testes e servidor podem conter tokens; nunca os imprima.

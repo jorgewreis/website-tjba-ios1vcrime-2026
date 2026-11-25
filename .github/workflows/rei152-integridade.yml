@@ -1,0 +1,70 @@
+name: REI-152 integridade documental
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rei152-integridade-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  transacoes-sinteticas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Preparar PHP com SQLite
+        uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite
+          coverage: none
+      - name: Verificar transações e resultados incertos sintéticos
+        run: |
+          php -d zend.assertions=1 -d assert.exception=1 tests/rei152-documentos.test.php
+          php tests/rei152-resultado-incerto.test.php
+          php tests/rei152-create-gate.test.php
+          php tests/guias/rei152-resultado-coordenacao.test.php
+
+  interface-sintetica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Verificar avisos e serialização no DOM simulado
+        run: node tests/rei152-resultado-incerto-dom.test.cjs
+
+  mysql-descartavel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Obter imagens por digest
+        run: |
+          docker pull php@sha256:64ffb7411253121bbeb0d9eba37ce85e88d2a60d698e5debbd66bac71b20f3c2
+          docker pull composer@sha256:511d2a96fce74de098b54224d59146fb8b6a7735d4e301f16c87c062e511900d
+          docker pull mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903
+      - name: Construir runtime sem rede
+        run: docker build --network none --pull=false --iidfile "$RUNNER_TEMP/rei152-qa.id" tests/auth/ci-runtime
+      - name: Executar laboratório MySQL isolado
+        shell: pwsh
+        run: |
+          $image = (Get-Content -LiteralPath "$env:RUNNER_TEMP/rei152-qa.id" -Raw).Trim()
+          ./tests/run-rei152-mysql-linux-ci.ps1 -QaImageId $image
+      - name: Verificar ausência de resíduos identificados
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(docker ps -aq --filter label=com.fokus.rei152-isolated-test)"
+          test -z "$(docker volume ls -q --filter label=com.fokus.rei152-isolated-test)"

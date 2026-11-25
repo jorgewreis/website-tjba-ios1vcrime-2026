@@ -12,7 +12,7 @@ class TestPdo152 extends PDO {
 $p = new TestPdo152('sqlite::memory:'); $p->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $p->sqliteCreateFunction('NOW', fn() => '2026-01-01', 0);
 $p->sqliteCreateFunction('FIELD', fn(...$args) => 1, -1);
-$p->exec('CREATE TABLE partes (id TEXT PRIMARY KEY, cpf TEXT, updated_at TEXT); CREATE TABLE partes_documentos (id TEXT PRIMARY KEY, parte_id TEXT, tipo TEXT, numero TEXT, created_at TEXT, updated_at TEXT); INSERT INTO partes VALUES (\'P1\',NULL,NULL)');
+$p->exec('CREATE TABLE partes (id TEXT PRIMARY KEY, cpf TEXT, nome_completo TEXT, sexo TEXT, data_nascimento TEXT, profissao TEXT, created_at TEXT, updated_at TEXT); CREATE TABLE partes_documentos (id TEXT PRIMARY KEY, parte_id TEXT, tipo TEXT, numero TEXT, created_at TEXT, updated_at TEXT); INSERT INTO partes (id, cpf) VALUES (\'P1\',NULL)');
 $s = new PessoasService($p);
 $p->exec("CREATE TRIGGER fail_cpf BEFORE UPDATE OF cpf ON partes BEGIN SELECT RAISE(ABORT, 'falha simulada'); END");
 try { $s->addDocumento('P1', ['tipo'=>'CPF','numero'=>'52998224725']); throw new Exception('falha esperada'); } catch (PDOException $e) {}

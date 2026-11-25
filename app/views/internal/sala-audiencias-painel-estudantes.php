@@ -838,6 +838,19 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 .replace(/'/g, '&#39;');
         }
         function renderInscricaoUI(wrapper, item) {
+            var priorButton = wrapper.querySelector('.btn-inscrever-ata');
+            var priorButtonHadFocus = !!priorButton && document.activeElement === priorButton;
+            var wrapperHadFocus = document.activeElement === wrapper;
+            function focusAvailabilityState() {
+                if (!priorButtonHadFocus) return;
+                wrapper.setAttribute('role', 'status');
+                wrapper.setAttribute('tabindex', '-1');
+                wrapper.focus();
+            }
+            wrapper.__inscricaoLatestItem = item;
+            wrapper.__renderInscricaoState = function (latestItem) {
+                renderInscricaoUI(wrapper, latestItem || wrapper.__inscricaoLatestItem);
+            };
             var lotado = !!item.vagas_esgotadas;
             var ja = !!item.ja_inscrito;
             var sigiloso = !!item.processo_sigiloso;
@@ -846,9 +859,39 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             var pode = !!item.pode_inscrever;
             var pauta = String(item.id_pauta || wrapper.getAttribute('data-inscricao-ui') || '').trim();
             var status = statusForItem(item);
+            if (wrapper.getAttribute('data-inscricao-pendente') === '1') {
+                wrapper.style.display = '';
+                wrapper.removeAttribute('role');
+                wrapper.removeAttribute('tabindex');
+                var pendingButton = wrapper.querySelector('.btn-inscrever-ata');
+                if (!pendingButton) {
+                    wrapper.innerHTML = '<button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="' + escapeHtml(pauta) + '" aria-disabled="true" aria-busy="true" aria-live="polite">Inscrição em andamento…</button>';
+                    pendingButton = wrapper.querySelector('.btn-inscrever-ata');
+                }
+                if (pendingButton) {
+                    pendingButton.setAttribute('data-pauta', pauta);
+                    pendingButton.setAttribute('aria-disabled', 'true');
+                    pendingButton.setAttribute('aria-busy', 'true');
+                    pendingButton.setAttribute('aria-live', 'polite');
+                    pendingButton.textContent = 'Inscrição em andamento…';
+                }
+                return;
+            }
             if (status && status !== 'designada' && status !== 'atrasada') {
                 wrapper.style.display = 'none';
+                wrapper.innerHTML = '';
+                if (priorButtonHadFocus && wrapper.previousElementSibling) {
+                    wrapper.previousElementSibling.setAttribute('tabindex', '-1');
+                    wrapper.previousElementSibling.setAttribute('role', 'status');
+                    wrapper.previousElementSibling.setAttribute('aria-label', 'Inscrições indisponíveis para esta pauta');
+                    wrapper.previousElementSibling.focus();
+                }
                 return;
+            }
+            if (wrapper.previousElementSibling) {
+                wrapper.previousElementSibling.removeAttribute('tabindex');
+                wrapper.previousElementSibling.removeAttribute('role');
+                wrapper.previousElementSibling.removeAttribute('aria-label');
             }
             wrapper.style.display = '';
             if (sigiloso) {
@@ -859,12 +902,29 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 wrapper.innerHTML = '<span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>';
             } else if (menor) {
                 wrapper.innerHTML = '<span class="minor-info text-error">Proibida inscrição de estudantes.</span>';
+                focusAvailabilityState();
             } else if (prioridadeBloqueio) {
                 wrapper.innerHTML = '<span class="minor-info text-error">Inscricao indisponivel.</span>';
+                focusAvailabilityState();
             } else if (pode && pauta) {
-                wrapper.innerHTML = '<button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="' + escapeHtml(pauta) + '">Inscrever-me</button>';
+                var eligibleButton = wrapper.querySelector('.btn-inscrever-ata');
+                if (!eligibleButton) {
+                    wrapper.innerHTML = '<button type="button" class="btn btn-primary btn-inscrever-ata" data-pauta="' + escapeHtml(pauta) + '">Inscrever-me</button>';
+                    eligibleButton = wrapper.querySelector('.btn-inscrever-ata');
+                }
+                if (eligibleButton) {
+                    eligibleButton.setAttribute('data-pauta', pauta);
+                    eligibleButton.removeAttribute('aria-disabled');
+                    eligibleButton.removeAttribute('aria-busy');
+                    eligibleButton.removeAttribute('aria-live');
+                    eligibleButton.textContent = 'Inscrever-me';
+                    wrapper.removeAttribute('role');
+                    wrapper.removeAttribute('tabindex');
+                    if (wrapperHadFocus) eligibleButton.focus();
+                }
             } else {
                 wrapper.innerHTML = '<span class="minor-info">Inscricao indisponivel.</span>';
+                focusAvailabilityState();
             }
         }
         function renderVagas(item) {

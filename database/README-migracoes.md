@@ -141,7 +141,31 @@ Adiciona a coluna `link_audiencia` (`VARCHAR(1000) NULL`) em
 `sala_audiencias_pauta`. Usada para registrar o link da audiência
 quando a localização for `Virtual - Audin`.
 
-## 9. Ordem sugerida por cenário
+## 9. Unidade responsável pelo processo
+
+O script `scripts/migrate-process-responsible-sector.php` adiciona
+`processos.id_setor_responsavel` como referência nullable para
+`setores.id_setor`, com índice e chave estrangeira. Ele não infere nem
+preenche unidades de processos existentes. Pode ser reaplicado com
+`--apply`; o script valida a estrutura e preserva atribuições gravadas.
+O workflow `.github/workflows/deploy-prod.yml` o executa antes de
+sincronizar os arquivos da aplicação.
+
+Ao criar a chave estrangeira, o script mantém `foreign_key_checks` ativo e
+usa `ALGORITHM=COPY, LOCK=SHARED` para que o InnoDB valide as referências
+durante a operação, sem permitir escritas concorrentes em `processos`.
+Essa etapa reconstrói a tabela e pode bloquear gravações pelo tempo da cópia;
+antes de executá-la em produção, verifique volume e espaço disponível e programe
+uma janela operacional compatível. O preflight `--dry-run` não estima duração.
+
+Enquanto `id_setor_responsavel` estiver nulo, operações protegidas por
+unidade devem negar mutações. Os fluxos atuais de criação de processos
+não atribuem setor automaticamente; processos existentes e novos só
+podem habilitar essas mutações depois de atribuição explícita por fonte
+autorizada. Perfil, módulo de origem, classe e CNJ não substituem esse
+vínculo.
+
+## 10. Ordem sugerida por cenário
 
 ### Nova instalação em ambiente já existente da aplicação
 
@@ -166,6 +190,6 @@ quando a localização for `Virtual - Audin`.
 2. Se existir `processoPrioridades`, executar `php database/migrations/run_processo_prioridades_unificacao_data.php`.
 3. Tratar `20260330_processoPrioridades.sql` apenas como referência histórica.
 
-## 10. Estado dos arquivos
+## 11. Estado dos arquivos
 
 A lista rastreada e a observação do checkout local estão no [inventário REI-97](../docs/10-architecture/migracoes-inventario-rei97.md). Use `git ls-files database/migrations` no commit candidato para atualizar o inventário; presença no disco ou em outro checkout não demonstra versionamento nem aplicação.
