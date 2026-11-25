@@ -132,24 +132,23 @@
 .legend-dot { width:7px; height:7px; border-radius:50%; }
 .legend-purple { background:#7950ad; }
 .legend-mint { background:#4f9f88; }
-.dash-sector-queue { margin-top:10px; padding:0 14px; border-color:#efedf3; background:#fff; }
+.dash-sector-queue { display:grid; grid-auto-rows:minmax(76px,1fr); gap:6px; margin-top:10px; padding:10px 14px; border-color:#efedf3; background:#fff; }
 .dash-sector-queue[hidden] { display:none; }
 .dash-sector-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding-bottom:12px; border-bottom:1px solid #efedf3; }
 .dash-sector-heading strong { display:block; margin-top:3px; color:#40374b; font-size:14px; font-weight:650; }
 .dash-sector-mark { display:flex; align-items:center; justify-content:center; width:29px; height:29px; border-radius:9px; color:#6842a0; background:#eee8f8; font-size:12px; font-weight:700; }
-.dash-sector-metric { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:14px 0; border-bottom:1px solid #efedf3; }
+.dash-sector-metric { display:flex; align-items:center; justify-content:space-between; gap:10px; min-width:0; padding:10px 9px; border:1px solid #efedf3; border-radius:9px; background:#fff; }
 .dash-sector-metric[hidden] { display:none; }
 .dash-sector-metric span { color:#575160; font-size:11px; line-height:1.4; }
 .dash-sector-metric span b { font-weight:700; }
 .dash-sector-metric .dash-sector-responsaveis { display:block; margin-top:2px; overflow-wrap:anywhere; }
 .dash-sector-metric .dash-sector-responsaveis[hidden] { display:none; }
 .dash-sector-metric .dash-responsible-icon { display:inline-block; width:12px; height:12px; margin-right:4px; vertical-align:-2px; }
-.dash-sector-metric.dash-own-mint, .dash-sector-metric.dash-own-purple, .dash-sector-metric.dash-own-warning, .dash-sector-metric.dash-own-danger { padding:13px 9px; border:1px solid; border-radius:9px; }
 .dash-sector-metric.dash-own-mint { background:#e8f5ef; border-color:#287c68; }
 .dash-sector-metric.dash-own-purple { background:#f1ecf8; border-color:#62418f; }
 .dash-sector-metric.dash-own-warning { background:#fff2db; border-color:#a26d22; }
 .dash-sector-metric.dash-own-danger { background:#fbe9e7; border-color:#a73535; }
-.dash-sector-metric strong { display:flex; align-items:center; justify-content:center; min-width:36px; height:34px; padding:0 8px; border-radius:10px; color:#62418f; background:#f1ecf8; font-size:12px; font-weight:700; }
+.dash-sector-metric strong { display:flex; flex:0 0 auto; align-items:center; justify-content:center; min-width:36px; height:34px; padding:0 8px; border-radius:10px; color:#62418f; background:#f1ecf8; font-size:12px; font-weight:700; }
 .dash-sector-footnote { display:block; padding-top:10px; color:#858091; font-size:10px; }
 .dash-production-summary { padding:12px 14px; background:#fff; }
 .dash-production-period { padding:3px 6px!important; border-radius:6px; color:#81798d!important; background:#f7f5fa; font-size:9px!important; white-space:nowrap; }
