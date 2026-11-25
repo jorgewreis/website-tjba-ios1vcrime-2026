@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0035
+
+**Data:** 2026-11-25 03:52:24 | **Commit:** `0bb80dd7` | **Tipo:** `patch`
+
+- ci: detalha etapas do teste concorrente
+
 ## V. 1.88.0034
 
 **Data:** 2026-11-25 03:48:23 | **Commit:** `e539b8e0` | **Tipo:** `patch`
@@ -7842,6 +7848,7 @@
 
 
 \n
+
 
 
 

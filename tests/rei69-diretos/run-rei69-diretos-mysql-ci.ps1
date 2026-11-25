@@ -274,8 +274,8 @@ try {
     $fixtureOutput = & docker --host $dockerEndpoint exec $phpId php -d 'error_log=/tmp/rei69diretos-test.log' /test/rei69-diretos-mysql.test.php 2>&1
     $fixtureExit = $LASTEXITCODE
     if ($fixtureExit -ne 0) {
-        $codes = @($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -match '^REI69_DIRECT_FAILURE code=(setup|guard|positive_create|negative|rollback_create|rollback_update|positive_update|positive_delete|concurrency|child_uncertain)$' })
-        if ($codes.Count -eq 1) { Write-Output $codes[0] } else { Write-Output 'REI69_DIRECT_FAILURE code=setup' }
+        $codes = @($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -match '^REI69_DIRECT_FAILURE code=(setup|guard|positive_create|negative|rollback_create|rollback_update|positive_update|positive_delete|concurrency|child_uncertain|c1_setup|c1_wait|c1_finish|c1_check|c2_setup|c2_person_wait|c2_sector_wait|c2_finish|c2_check|c3_setup|c3_person_wait|c3_pauta_wait|c3_finish|c3_check|c4_setup|c4_link_wait|c4_direct_wait|c4_finish|c4_check|c5_setup|c5_first_wait|c5_second_wait|c5_finish|c5_check) detail=(general|spawn|early_exit|early_401|early_403|early_404|early_500|connection_id|wait_query|wait_timeout|finish_timeout|exit|assert)$' })
+        if ($codes.Count -eq 1) { Write-Output $codes[0] } else { Write-Output 'REI69_DIRECT_FAILURE code=setup detail=general' }
         throw 'Fixture falhou.'
     }
     if (@($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -eq 'PASS REI69 direct endpoints synthetic MySQL regression' }).Count -ne 1) { throw 'Fixture não confirmou marcador de sucesso.' }

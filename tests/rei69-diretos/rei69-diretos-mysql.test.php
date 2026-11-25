@@ -2,10 +2,13 @@
 declare(strict_types=1);
 
 $failureStage = 'setup';
-set_exception_handler(static function (Throwable $exception) use (&$failureStage): void {
-    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain'];
+$failureDetail = 'general';
+set_exception_handler(static function (Throwable $exception) use (&$failureStage, &$failureDetail): void {
+    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check'];
     $stage = in_array($failureStage, $allowed, true) ? $failureStage : 'setup';
-    fwrite(STDERR, 'REI69_DIRECT_FAILURE code=' . $stage . "\n");
+    $details=['general','spawn','early_exit','early_401','early_403','early_404','early_500','connection_id','wait_query','wait_timeout','finish_timeout','exit','assert'];
+    $detail=in_array($failureDetail,$details,true) ? $failureDetail : 'general';
+    fwrite(STDERR, 'REI69_DIRECT_FAILURE code=' . $stage . ' detail=' . $detail . "\n");
     exit(1);
 });
 if (getenv('REI69DIRETOS_TEST_DISPOSABLE') !== '1') {
@@ -105,6 +108,7 @@ $pdo->exec("INSERT INTO classes VALUES ('C','Classe sintetica')");
 $pdo->exec("INSERT INTO setores (id_setor,ativo) VALUES ('SET-CARTORIO',1),('SET-GABINETE',1),('SET-INATIVO',0)");
 $pdo->exec("INSERT INTO usuario_setor (usuario,setor) VALUES ('USR-1','SET-CARTORIO'),('USR-2','SET-GABINETE'),('USR-4','SET-INATIVO')");
 $pdo->exec("INSERT INTO processos (id,numero_processo,id_setor_responsavel) VALUES ('PRC-1','CNJ-SINTETICO-1','SET-CARTORIO'),('PRC-2','CNJ-SINTETICO-2','SET-GABINETE'),('PRC-3','CNJ-SINTETICO-3',NULL),('PRC-4','CNJ-SINTETICO-4','SET-INATIVO')");
+$pdo->exec("UPDATE processos SET classe_id='C', sigiloso=0, created_at=NOW() WHERE id IN ('PRC-1','PRC-2','PRC-3','PRC-4')");
 $pdo->exec("INSERT INTO partes (id,nome_completo,cpf,sexo,data_nascimento,profissao,created_at,updated_at) VALUES ('PAR-1','Pessoa Sintética 1','00000000000','X','2000-01-01','Réu','2026-01-01 00:00:00','2026-01-01 00:00:00'),('PAR-2','Pessoa Sintética 2','00000000001','X','2000-01-01','Advogada anterior','2026-01-01 00:00:00','2026-01-01 00:00:00')");
 $pdo->exec("INSERT INTO processos_partes (id,processo_id,parte_id,tipo_parte,polo,created_at,updated_at) VALUES ('VNC-1','PRC-1','PAR-1','reu','passivo',NOW(),NOW()),('VNC-2','PRC-2','PAR-2','vitima','ativo',NOW(),NOW()),('VNC-3','PRC-3','PAR-1','testemunha','ativo',NOW(),NOW()),('VNC-4','PRC-4','PAR-1','reu','passivo',NOW(),NOW()),('VNC-5','PRC-2','PAR-1','reu','passivo',NOW(),NOW())");
 
@@ -269,8 +273,8 @@ PHP;
     $body = $stdout === '' ? [] : json_decode($stdout, true, 512, JSON_THROW_ON_ERROR);
     return [(int) $statusText, is_array($body) ? $body : []];
 };
-$assert = static function (bool $condition, string $message): void {
-    if (!$condition) throw new RuntimeException($message);
+$assert = static function (bool $condition, string $message) use (&$failureDetail): void {
+    if (!$condition) { $failureDetail='assert'; throw new RuntimeException($message); }
 };
 try {
     $failureStage = 'negative';
@@ -330,7 +334,8 @@ try {
     // Two connections are coordinated by InnoDB wait edges, never by elapsed sleeps alone.
     $failureStage = 'concurrency';
     $concurrentActive = [];
-    $spawn = static function (string $kind) use ($lab, &$concurrentActive): array {
+    $spawn = static function (string $kind) use ($lab, &$concurrentActive, &$failureDetail): array {
+        $failureDetail='spawn';
         $code = <<<'PHP'
 if (in_array(getenv('TEST_KIND'), ['update','update2'], true)) {
     $_SERVER['REQUEST_METHOD']='POST'; $_SERVER['HTTP_HOST']='example.invalid'; $_SERVER['HTTP_ORIGIN']='http://example.invalid';
@@ -378,19 +383,27 @@ PHP;
         if ($worker['id']===null && preg_match('/(?:^|\n)CONNECTION:([0-9]+)\n/', $worker['stderr'], $m)) $worker['id']=(int)$m[1];
         return proc_get_status($worker['proc']);
     };
-    $observe = static function (PDO $db, array &$worker, int $blocker, string $table) use ($collect): void {
+    $observe = static function (PDO $db, array &$worker, int $blocker, string $table) use ($collect, &$failureDetail): void {
+        $failureDetail='wait_query';
         $deadline=microtime(true)+5.0;
         $sql="SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.threads r ON r.THREAD_ID=w.REQUESTING_THREAD_ID JOIN performance_schema.threads b ON b.THREAD_ID=w.BLOCKING_THREAD_ID JOIN performance_schema.data_locks l ON l.ENGINE_LOCK_ID=w.REQUESTING_ENGINE_LOCK_ID AND l.ENGINE=w.ENGINE WHERE r.PROCESSLIST_ID=? AND b.PROCESSLIST_ID=? AND l.OBJECT_SCHEMA=DATABASE() AND l.OBJECT_NAME=?";
         $query=$db->prepare($sql);
         do {
             $state=$collect($worker);
-            if (!$state['running']) throw new RuntimeException('Ator terminou antes da espera esperada.');
+            if (!$state['running']) {
+                $failureDetail='early_exit';
+                foreach ([401,403,404,500] as $status) if (str_contains($worker['stderr'], 'HTTP:' . $status . "\n")) { $failureDetail='early_' . $status; break; }
+                throw new RuntimeException('Ator terminou antes da espera esperada.');
+            }
+            $failureDetail=$worker['id']===null ? 'connection_id' : 'wait_query';
             if ($worker['id']!==null) { $query->execute([$worker['id'],$blocker,$table]); if ((int)$query->fetchColumn()>0) return; }
             usleep(10000);
         } while (microtime(true)<$deadline);
+        if ($worker['id']!==null) $failureDetail='wait_timeout';
         throw new RuntimeException('Espera InnoDB identificada não observada no prazo.');
     };
-    $finish = static function (array &$worker) use ($collect, &$concurrentActive): array {
+    $finish = static function (array &$worker) use ($collect, &$concurrentActive, &$failureDetail): array {
+        $failureDetail='finish_timeout';
         $deadline=microtime(true)+8.0;
         do { $state=$collect($worker); if (!$state['running']) break; usleep(10000); } while (microtime(true)<$deadline);
         if ($state['running']) {
@@ -400,18 +413,22 @@ PHP;
             throw new RuntimeException('Ator excedeu prazo.');
         }
         $concurrentActive[$worker['index']]=false; fclose($worker['out']); fclose($worker['err']); proc_close($worker['proc']);
-        if ($state['exitcode']!==0) throw new RuntimeException('Ator terminou com erro.');
+        if ($state['exitcode']!==0) { $failureDetail='exit'; throw new RuntimeException('Ator terminou com erro.'); }
         return [$worker['stdout'],$worker['stderr']];
     };
+    $failureStage='c1_setup'; $failureDetail='general';
     $observer=new PDO($dsn,'root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_EMULATE_PREPARES=>false]);
     $parentId=(int)$pdo->query('SELECT CONNECTION_ID()')->fetchColumn();
     $beforeConcurrent=$snapshot($pdo);
     $pdo->beginTransaction();
     $pdo->exec("UPDATE processos SET id_setor_responsavel='SET-GABINETE' WHERE id='PRC-1'");
+    $failureStage='c1_wait'; $failureDetail='general';
     $worker=$spawn('update');
     $observe($observer,$worker,$parentId,'processos');
     $pdo->commit();
+    $failureStage='c1_finish'; $failureDetail='general';
     [$out,$err]=$finish($worker);
+    $failureStage='c1_check'; $failureDetail='general';
     $assert(str_contains($err,"HTTP:404\n") && $pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-1'")->fetchColumn()==='SET-GABINETE', 'Update não reavaliou setor após espera.');
     $afterDenied=$snapshot($pdo);
     foreach ($beforeConcurrent as $table => $stateBefore) if ($table !== 'processos') $assert($stateBefore===$afterDenied[$table], 'Update negado após espera produziu efeitos.');
@@ -430,41 +447,61 @@ PHP;
     };
     $pdo->exec("UPDATE processos SET id_setor_responsavel='SET-CARTORIO' WHERE id='PRC-1'");
     // Hold person so the endpoint owns process lock while waiting for its real profession update.
+    $failureStage='c2_setup'; $failureDetail='general';
     $beforeInverse=$snapshot($pdo);
     $pdo->beginTransaction(); $pdo->query("SELECT id FROM partes WHERE id='PAR-1' FOR UPDATE")->fetchColumn();
+    $failureStage='c2_person_wait'; $failureDetail='general';
     $updater=$spawn('update'); $observe($observer,$updater,$parentId,'partes');
+    $failureStage='c2_sector_wait'; $failureDetail='general';
     $changer=$spawn('sector'); $observe($observer,$changer,(int)$updater['id'],'processos');
     $pdo->commit();
+    $failureStage='c2_finish'; $failureDetail='general';
     [$updateOut,$updateErr]=$finish($updater); [$sectorOut,$sectorErr]=$finish($changer);
+    $failureStage='c2_check'; $failureDetail='general';
     $assert(str_contains($updateErr,"HTTP:200\n") && str_contains($sectorOut,"SECTOR_COMMITTED\n"), 'Serialização inversa não completou.');
     $assert($pdo->query("SELECT tipo_parte FROM processos_partes WHERE id='VNC-1'")->fetchColumn()==='advogado' && $pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-1'")->fetchColumn()==='SET-GABINETE', 'Estado serializado final divergente.');
     $afterInverse=$snapshot($pdo); $assertUnchanged($beforeInverse,$afterInverse,['processos'=>['id',['PRC-1']],'processos_partes'=>['id',['VNC-1']],'partes'=>['id',['PAR-1']]]);
     // Direct update owns process then waits for person; Pauta must wait for that same process.
     $pdo->exec("UPDATE processos SET id_setor_responsavel='SET-CARTORIO' WHERE id='PRC-1'");
+    $failureStage='c3_setup'; $failureDetail='general';
     $beforeDirectFirst=$snapshot($pdo);
     $pdo->beginTransaction(); $pdo->query("SELECT id FROM partes WHERE id='PAR-1' FOR UPDATE")->fetchColumn();
+    $failureStage='c3_person_wait'; $failureDetail='general';
     $directFirst=$spawn('update'); $observe($observer,$directFirst,$parentId,'partes');
+    $failureStage='c3_pauta_wait'; $failureDetail='general';
     $pautaSecond=$spawn('pauta'); $observe($observer,$pautaSecond,(int)$directFirst['id'],'processos');
     $pdo->commit();
+    $failureStage='c3_finish'; $failureDetail='general';
     [$directOut,$directErr]=$finish($directFirst); [$pautaOut,$pautaErr]=$finish($pautaSecond);
+    $failureStage='c3_check'; $failureDetail='general';
     $assert(str_contains($directErr,"HTTP:200\n") && str_contains($pautaOut,"PAUTA_COMMITTED\n") && $pdo->query("SELECT tipo_parte FROM processos_partes WHERE id='VNC-1'")->fetchColumn()==='vitima', 'Ordem direta seguida de pauta falhou.');
     $afterDirectFirst=$snapshot($pdo); $assertUnchanged($beforeDirectFirst,$afterDirectFirst,['processos_partes'=>['id',['VNC-1']],'partes'=>['id',['PAR-1']],'sala_audiencias_pauta_parte'=>['id_parte',['PP-A']],'processo_prioridades'=>['processo_id',['PRC-1']]]);
     // Pauta owns process and pauta rows then waits for the link; direct update waits for process.
+    $failureStage='c4_setup'; $failureDetail='general';
     $beforePautaFirst=$snapshot($pdo);
     $pdo->beginTransaction(); $pdo->query("SELECT id FROM processos_partes WHERE id='VNC-1' FOR UPDATE")->fetchColumn();
+    $failureStage='c4_link_wait'; $failureDetail='general';
     $pautaFirst=$spawn('pauta'); $observe($observer,$pautaFirst,$parentId,'processos_partes');
+    $failureStage='c4_direct_wait'; $failureDetail='general';
     $directSecond=$spawn('update'); $observe($observer,$directSecond,(int)$pautaFirst['id'],'processos');
     $pdo->commit();
+    $failureStage='c4_finish'; $failureDetail='general';
     [$pautaOut,$pautaErr]=$finish($pautaFirst); [$directOut,$directErr]=$finish($directSecond);
+    $failureStage='c4_check'; $failureDetail='general';
     $assert(str_contains($pautaOut,"PAUTA_COMMITTED\n") && str_contains($directErr,"HTTP:200\n") && $pdo->query("SELECT tipo_parte FROM processos_partes WHERE id='VNC-1'")->fetchColumn()==='advogado', 'Ordem pauta seguida de direta falhou.');
     $afterPautaFirst=$snapshot($pdo); $assertUnchanged($beforePautaFirst,$afterPautaFirst,['processos_partes'=>['id',['VNC-1']],'partes'=>['id',['PAR-1']],'sala_audiencias_pauta_parte'=>['id_parte',['PP-A']],'processo_prioridades'=>['processo_id',['PRC-1']]]);
     // Different process locks with one shared person: both waits must be observed and terminate.
+    $failureStage='c5_setup'; $failureDetail='general';
     $beforeShared=$snapshot($pdo);
     $pdo->beginTransaction(); $pdo->query("SELECT id FROM partes WHERE id='PAR-1' FOR UPDATE")->fetchColumn();
+    $failureStage='c5_first_wait'; $failureDetail='general';
     $firstProcess=$spawn('update'); $observe($observer,$firstProcess,$parentId,'partes');
+    $failureStage='c5_second_wait'; $failureDetail='general';
     $secondProcess=$spawn('update2'); $observe($observer,$secondProcess,$parentId,'partes');
     $pdo->commit();
+    $failureStage='c5_finish'; $failureDetail='general';
     [$firstOut,$firstErr]=$finish($firstProcess); [$secondOut,$secondErr]=$finish($secondProcess);
+    $failureStage='c5_check'; $failureDetail='general';
     $assert(str_contains($firstErr,"HTTP:200\n") && str_contains($secondErr,"HTTP:200\n") && (int)$pdo->query("SELECT COUNT(*) FROM processos_partes WHERE id IN ('VNC-1','VNC-5') AND tipo_parte='advogado'")->fetchColumn()===2, 'Operações em processos diferentes com pessoa compartilhada falharam.');
     $afterShared=$snapshot($pdo); $assertUnchanged($beforeShared,$afterShared,['processos_partes'=>['id',['VNC-1','VNC-5']],'partes'=>['id',['PAR-1']]]);
     fwrite(STDOUT, "PASS REI69 direct endpoints synthetic MySQL regression\n");
