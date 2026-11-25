@@ -36,7 +36,7 @@ with tempfile.TemporaryDirectory(prefix='processos-partes-lista-') as directory,
     write('config/security.php', '''<?php
 final class Security { public static function isAuthenticated(): bool { return getenv('TEST_AUTH') === '1'; } }''')
     write('app/helpers/UsuarioPerfisAutorizacao.php', '''<?php
-final class UsuarioPerfisAutorizacao { public static function perfisDoUsuario(string $id): array { return [getenv('TEST_PROFILE')]; } }''')
+final class UsuarioPerfisAutorizacao { public static function perfisDoUsuario(string $id): array { return explode(',', getenv('TEST_PROFILE')); } }''')
     write('app/helpers/Conection.php', '''<?php
 final class Conection {
     public static function getInstance(): self { return new self(); }
@@ -87,26 +87,27 @@ require getenv('TEST_ENDPOINT');'''
         return int(result.stderr.rsplit('HTTP:', 1)[-1] or 200), json.loads(result.stdout)
 
     before = list(db.execute('SELECT * FROM processos_partes ORDER BY id'))
-    for profile, auth, expected in [('SERVIDOR-CARTORIO', False, 401),
+    cartorio_profile = 'SERVIDOR,CARTORIO'
+    for profile, auth, expected in [(cartorio_profile, False, 401),
                                     ('ESTUDANTE', True, 403), ('SERVIDOR', True, 403)]:
         for process_id in ('P1', 'P3'):
             status, body = invoke({'processo_id': process_id}, profile, auth)
             assert status == expected and 'data' not in body, (status, body)
-    status, body = invoke({'processo_id': 'P1'}, 'SERVIDOR-CARTORIO')
+    status, body = invoke({'processo_id': 'P1'}, cartorio_profile)
     assert status == 200 and [r['id'] for r in body['data']] == ['L1'], body
-    status, body = invoke({'parte_id': 'B'}, 'SERVIDOR-CARTORIO')
-    assert status == 200 and [r['id'] for r in body['data']] == ['L2'], body
-    # Leitura por perfil interno autorizado independe do setor responsável,
-    # inclusive em processos sigilosos. A regra setorial de mutação é distinta.
-    for process_id, expected_ids in [('P1', ['L1']), ('P2', ['L2', 'L3']), ('P3', ['L4']),
-                                     ('P4', ['L5']), ('P5', ['L6']), ('P6', ['L7'])]:
-        status, body = invoke({'processo_id': process_id}, 'SERVIDOR-CARTORIO')
+    status, body = invoke({'parte_id': 'B'}, cartorio_profile)
+    assert status == 200 and body['data'] == [], body
+    # A leitura por Cartório exige setor responsável ativo e lotação do usuário.
+    # Processos sem setor ou atribuídos a outra unidade não devem vazar vínculos.
+    for process_id, expected_ids in [('P1', ['L1']), ('P2', []), ('P3', []),
+                                     ('P4', ['L5']), ('P5', []), ('P6', [])]:
+        status, body = invoke({'processo_id': process_id}, cartorio_profile)
         assert status == 200 and sorted(r['id'] for r in body['data']) == expected_ids, (process_id, body)
-    status, body = invoke({'parte_id': 'A'}, 'SERVIDOR-CARTORIO')
-    assert status == 200 and sorted(r['id'] for r in body['data']) == ['L1', 'L3', 'L4', 'L5', 'L6', 'L7'], body
-    status, body = invoke({}, 'SERVIDOR-CARTORIO')
+    status, body = invoke({'parte_id': 'A'}, cartorio_profile)
+    assert status == 200 and sorted(r['id'] for r in body['data']) == ['L1', 'L5'], body
+    status, body = invoke({}, cartorio_profile)
     assert status == 400 and 'data' not in body, (status, body)
-    status, body = invoke({'processo_id': 'P1'}, 'SERVIDOR-CARTORIO', method='POST')
+    status, body = invoke({'processo_id': 'P1'}, cartorio_profile, method='POST')
     assert status == 405 and 'data' not in body, (status, body)
     assert list(db.execute('SELECT * FROM processos_partes ORDER BY id')) == before
     print('PASS leitura isolada por processo e parte (SQLite; identidade simulada)')
