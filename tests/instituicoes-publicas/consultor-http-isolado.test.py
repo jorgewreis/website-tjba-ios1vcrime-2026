@@ -155,12 +155,20 @@ INSERT INTO partes_instituicoes VALUES ('VA','P','A','SA','PROF_ATIVA','CARGO_AT
                 encoded = json.dumps(data, ensure_ascii=False)
                 assert not any(marker in encoded for marker in ('PROF_INST_INATIVA', 'PROF_SETOR_INATIVO', 'PROF_VINCULO_INATIVO', 'CARGO_INST_INATIVA', 'CARGO_SETOR_INATIVO', 'CARGO_VINCULO_INATIVO', 'Inativa')), data
         # Uma pessoa por tipo de vínculo inativo evita mascaramento pelo ativo.
-        for name, person_id, marker in [('Alfa', 'PI', 'CARGO_INST_INATIVA'),
-                                         ('Beta', 'PS', 'CARGO_SETOR_INATIVO'),
-                                         ('Gama', 'PV', 'CARGO_VINCULO_INATIVO')]:
+        for name, person_id, mixed_cargo, mixed_lotacao in [
+            ('Alfa', 'PI', 'CARGO_INST_INATIVA', 'Inativa'),
+            ('Beta', 'PS', 'CARGO_SETOR_INATIVO', 'Ativa'),
+            ('Gama', 'PV', '', ''),
+        ]:
             status, data = call('search-by-name.php?nome=' + name, 'consultor', 'pessoas')
             assert status == 200 and [x['id'] for x in data['pessoas']] == [person_id], (name, status, data)
-            assert marker not in json.dumps(data, ensure_ascii=False), (name, data)
+            pessoa = data['pessoas'][0]
+            assert (pessoa['profissao_exibicao'], pessoa['lotacao_exibicao'], pessoa['label']) == ('', '', name + ' Exemplo'), (name, data)
+            status, data = call('search-by-name.php?nome=' + name, 'misto', 'pessoas')
+            assert status == 200 and [x['id'] for x in data['pessoas']] == [person_id], (name, status, data)
+            pessoa = data['pessoas'][0]
+            label = name + ' Exemplo' + (f' ({mixed_cargo} - {mixed_lotacao})' if mixed_cargo else '')
+            assert (pessoa['profissao_exibicao'], pessoa['lotacao_exibicao'], pessoa['label']) == (mixed_cargo, mixed_lotacao, label), (name, data)
         for user, expected_status in [(None, 401), ('invalida', 401), ('estudante', 403)]:
             for endpoint in ('get.php?id=P', 'list.php?nome=Pessoa', 'search-by-name.php?nome=Pessoa'):
                 status, data = call(endpoint, user, 'pessoas')
