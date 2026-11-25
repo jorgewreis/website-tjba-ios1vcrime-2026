@@ -26,6 +26,9 @@ try {
     $newId = $service->create($parsed);
     http_response_code(201);
     echo json_encode(['id' => $newId], JSON_UNESCAPED_UNICODE);
+} catch (DocumentoResultadoIncerto $exception) {
+    http_response_code(500);
+    echo json_encode(['error' => 'Não foi possível confirmar o resultado. Consulte o cadastro antes de tentar novamente.', 'resultado' => 'verificacao_necessaria', 'estado_gravacao' => $exception->estadoGravacao], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);

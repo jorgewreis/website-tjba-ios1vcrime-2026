@@ -368,6 +368,9 @@ final class PartesRepository
                 throw new RuntimeException('Não foi possível iniciar o cadastro da parte.');
             }
             try {
+                if ($cpf !== '') {
+                    ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table]);
+                }
                 if ($cpf !== '' && $this->findByCpf($cpf) !== null) {
                     throw new InvalidArgumentException('Já existe pessoa cadastrada com este CPF.');
                 }
@@ -401,14 +404,16 @@ final class PartesRepository
                     $this->garantirDocumentoCpf($id, $cpf);
                 }
 
-                if ($ownsTransaction && !$this->connection->commit()) {
-                    throw new RuntimeException('Não foi possível confirmar o cadastro da parte.');
+                if ($ownsTransaction) {
+                    ParteDocumentoLock::commit($this->connection, 'cadastro da parte');
                 }
                 return $id;
             } catch (Throwable $error) {
                 if ($ownsTransaction && $this->connection->inTransaction()) {
                     try {
-                        $this->connection->rollBack();
+                        if (!$this->connection->rollBack()) {
+                            throw new RuntimeException('Rollback do cadastro da parte retornou false.');
+                        }
                     } catch (Throwable $rollbackError) {
                         ParteDocumentoLock::markConnectionUnsafe($this->connection);
                         throw new RuntimeException('Falha ao reverter cadastro da parte; estado da conexão incerto.', 0, $error);
@@ -419,14 +424,35 @@ final class PartesRepository
         });
     }
 
-    /** Atualiza coluna legada `partes.cpf` a partir dos documentos (sem validação de duplicidade). */
+    /** Atualiza a coluna legada `partes.cpf` a partir dos documentos dentro de uma transação. */
     public function setCpfLegado(string $parteId, ?string $cpf): void
     {
         $parteId = trim($parteId);
         if ($parteId === '') {
             return;
         }
+        if (!$this->connection->inTransaction()) {
+            throw new LogicException('A sincronização do CPF legado exige transação com a parte bloqueada.');
+        }
+        ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table]);
         $cpfNorm = $cpf !== null && trim($cpf) !== '' ? $this->normalizeCpf($cpf) : null;
+        $selectCurrentCpf = sprintf('SELECT `cpf` FROM `%s` WHERE `id` = :id LIMIT 1', $this->table);
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+            $selectCurrentCpf .= ' FOR UPDATE';
+        }
+        $currentCpfStatement = $this->connection->prepare($selectCurrentCpf);
+        $currentCpfStatement->execute([':id' => $parteId]);
+        $currentCpf = $currentCpfStatement->fetchColumn();
+        $currentCpfNorm = $currentCpf === false || $currentCpf === null
+            ? null
+            : $this->normalizeCpf((string) $currentCpf);
+        if ($currentCpfNorm === '') {
+            $currentCpfNorm = null;
+        }
+        if ($currentCpf === false || $currentCpfNorm === $cpfNorm) {
+            return;
+        }
+
         ParteDocumentoLock::run($this->connection, 'CPF', $cpfNorm ?? '', function () use ($parteId, $cpfNorm): void {
             $statement = $this->connection->prepare(
                 sprintf('UPDATE `%s` SET `cpf` = :cpf, `updated_at` = NOW() WHERE `id` = :id LIMIT 1', $this->table)
