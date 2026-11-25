@@ -50,7 +50,7 @@ $searchPath = '/api/instituicoes-publicas/search.php?nome=Sintetica';
 $anonymousSearch = req($searchPath);
 $anonymousBody = json_decode($anonymousSearch['body'], true);
 ok($anonymousSearch['status'] === 401 && is_array($anonymousBody) && !array_key_exists('instituicoes', $anonymousBody)
-    && !str_contains($anonymousSearch['body'], 'Sintetica'), 'consulta anônima não foi recusada');
+    && !str_contains($anonymousSearch['body'], 'Sintetica') && !str_contains($anonymousSearch['body'], 'INS-SYNTHETIC-'), 'consulta anônima não foi recusada');
 $adminSearch = req($searchPath, 'GET', [], $session);
 $adminItems = json_decode($adminSearch['body'], true)['instituicoes'] ?? [];
 $adminIds = array_column($adminItems, 'id'); sort($adminIds);
@@ -67,7 +67,7 @@ foreach ([['258.369.147-37', 'CONSULTOR'], ['147.258.369-82', 'ESTUDANTE']] as [
     } else {
         $deniedBody = json_decode($profileSearch['body'], true);
         ok($profileSearch['status'] === 403 && is_array($deniedBody) && !array_key_exists('instituicoes', $deniedBody)
-            && !str_contains($profileSearch['body'], 'Sintetica'), 'perfil estudante acessou instituições');
+            && !str_contains($profileSearch['body'], 'Sintetica') && !str_contains($profileSearch['body'], 'INS-SYNTHETIC-'), 'perfil estudante acessou instituições');
     }
 }
 $home = req('/home.php', 'GET', [], $session); $logoutCsrf = csrf($home['body']);
