@@ -1,5 +1,17 @@
 # Changelog
 
+## V. 1.88.0023
+
+**Data:** 2026-11-25 02:16:21 | **Commit:** `2d7029f2` | **Tipo:** `patch`
+
+- ci: identifica etapa em falha do laboratorio de atas
+
+## V. 1.88.0022
+
+**Data:** 2026-11-25 02:09:39 | **Commit:** `372967aa` | **Tipo:** `patch`
+
+- docs(REI-73): conciliar disposicao historica parcial
+
 ## V. 1.88.0021
 
 **Data:** 2026-11-25 01:15:43 | **Commit:** `142adf8c` | **Tipo:** `patch`
@@ -7764,6 +7776,8 @@
 
 
 \n
+
+
 
 
 
