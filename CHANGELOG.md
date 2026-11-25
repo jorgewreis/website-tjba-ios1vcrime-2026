@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0033
+
+**Data:** 2026-11-25 03:40:53 | **Commit:** `1f30930d` | **Tipo:** `patch`
+
+- test: valida mutacoes diretas com mysql isolado
+
 ## V. 1.88.0032
 
 **Data:** 2026-11-25 03:31:39 | **Commit:** `4d397369` | **Tipo:** `patch`
@@ -7830,6 +7836,7 @@
 
 
 \n
+
 
 
 
