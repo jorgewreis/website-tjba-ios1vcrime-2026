@@ -23,6 +23,17 @@ O princípio fundamental de segurança interna é o **Isolamento por Setor**. Te
 
 Esta regra impede a "navegação lateral" dentro do sistema. Mesmo que um usuário mal-intencionado tente manipular IDs na URL ou forçar chamadas de API, o sistema deve validar se o registro solicitado pertence ao mesmo escopo de lotação resolvido para o usuário em `usuario_setor` / `setores`.
 
+### Exceção delimitada — assuntos de processos da 1ª Vara Crime
+
+Para os endpoints de assuntos desta implantação, aplica-se a decisão de
+16/11/2026 registrada em `docs/access/matriz-globais.md`: perfis internos que
+já tenham acesso à operação podem consultar e alterar assuntos inclusive em
+processos sigilosos, com leitura e escrita sujeitas às respectivas permissões.
+Perfis externos permanecem negados. Esta autorização é específica à operação
+de assuntos e não remove o isolamento setorial dos demais registros. A
+sincronização só persiste resposta DataJud obtida no servidor e confirmada
+como completa, correspondente ao CNJ solicitado e explicitamente sem sigilo.
+
 ### Regras Técnicas de Implementação
 
 - **Filtro SQL Obrigatório:** Toda consulta sensível deve aplicar o isolamento por setor usando a estratégia compatível com o módulo, normalmente por `JOIN`/`WHERE` sobre `usuario_setor`, `setores` ou coluna setorial equivalente.
