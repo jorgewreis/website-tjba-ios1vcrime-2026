@@ -39,8 +39,10 @@ if (!is_string($marker) || !hash_equals($expectedMarker, $marker)) {
     throw new RuntimeException('Recusado: sentinela do runner não corresponde à execução corrente.');
 }
 $fixtureTables = ['cartas_expedidas_subtarefas', 'cartas_expedidas', 'varas', 'comarcas', 'tribunais', 'processos', 'classes'];
-register_shutdown_function(static function () use ($pdo, $fixtureTables): void {
+register_shutdown_function(static function () use ($pdo, $fixtureTables, $expectedMarker): void {
     try {
+        $guard = $pdo->query('SELECT marker FROM rei88_test_guard LIMIT 1')->fetchColumn();
+        if ($pdo->query('SELECT DATABASE()')->fetchColumn() !== 'rei88_test' || !is_string($guard) || !hash_equals($expectedMarker, $guard)) { throw new RuntimeException('Sentinela não conferiu na limpeza.'); }
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
         foreach ($fixtureTables as $table) {
             $pdo->exec('DROP TABLE IF EXISTS `' . $table . '`');
@@ -95,6 +97,7 @@ $inputs = [
     'false' => ['nivel_sigilo' => false],
     'zero' => ['nivel_sigilo' => 0],
     'zero-string' => ['nivel_sigilo' => '0'],
+    'true' => ['nivel_sigilo' => true],
 ];
 $service = new CartasExpedidasService($pdo);
 $expectedClassId = (new ClassesRepository($pdo))->ensureClass('CARTA-TESTE', 'Classe sintética');
@@ -172,6 +175,8 @@ $pdo->exec("CREATE TRIGGER rei78_delay_idempotent BEFORE INSERT ON cartas_expedi
 $childCode = <<<'PHP'
 require getenv('REI88_TEST_REPO_ROOT') . '/app/services/CartasExpedidasService.php';
 $db = new PDO(getenv('REI88_MYSQL_DSN'), getenv('REI88_MYSQL_USER'), getenv('REI88_MYSQL_PASSWORD'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
+$guard = $db->query('SELECT marker FROM rei88_test_guard LIMIT 1')->fetchColumn();
+if ($db->query('SELECT DATABASE()')->fetchColumn() !== 'rei88_test' || !is_string($guard) || !hash_equals((string) getenv('REI88_TEST_DISPOSABLE_MARKER'), $guard)) { throw new RuntimeException('Worker recusado: banco ou sentinela não conferem.'); }
 $payload = json_decode(base64_decode(getenv('REI78_RACE_PAYLOAD'), true), true, 512, JSON_THROW_ON_ERROR);
 echo (new CartasExpedidasService($db))->create($payload);
 PHP;
@@ -180,6 +185,7 @@ $childEnvironment = [
     'REI88_MYSQL_DSN' => $dsn,
     'REI88_MYSQL_USER' => $user,
     'REI88_MYSQL_PASSWORD' => $password,
+    'REI88_TEST_DISPOSABLE_MARKER' => $expectedMarker,
     'REI78_RACE_PAYLOAD' => base64_encode(json_encode($concurrentPayload, JSON_THROW_ON_ERROR)),
 ];
 $childPipes = [];
@@ -245,15 +251,78 @@ $explicitPayload = array_merge($base, [
 ]);
 $service->create($explicitPayload);
 $explicit = (new ProcessosRepository($pdo))->findByNumero('0000004-24.2020.8.05.0001');
-if ($explicit === null || (int) $explicit['sigiloso'] !== 1) {
-    throw new RuntimeException('Nível de sigilo explicitamente restrito não foi aplicado.');
+if ($explicit === null || (int) $explicit['sigiloso'] !== 0 || $pdo->inTransaction()) {
+    throw new RuntimeException('Carta alterou sigilo de processo existente ou não confirmou a transação.');
 }
 
+// Sucesso com classe ausente deve preservar ambos os valores existentes.
+foreach ([[$existingCnj, 1], ['0000004-24.2020.8.05.0001', 0]] as [$cnj, $expectedSigilo]) {
+    $beforeLetters = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
+    $beforeSubtasks = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn();
+    $payload = array_merge($base, ['numero_processo' => $cnj, 'nivel_sigilo' => 1]);
+    unset($payload['classe_codigo'], $payload['classe_descricao']);
+    $letterId = $service->create($payload);
+    $process = (new ProcessosRepository($pdo))->findByNumero($cnj);
+    $letter = $pdo->prepare('SELECT processo_origem_id FROM cartas_expedidas WHERE id = ?');
+    $letter->execute([$letterId]);
+    if ($process === null || (int) $process['sigiloso'] !== $expectedSigilo
+        || $letter->fetchColumn() !== $process['id'] || $pdo->inTransaction()
+        || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $beforeLetters + 1
+        || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $beforeSubtasks + 2) {
+        throw new RuntimeException('Sucesso com classe ausente não preservou sigilo e gravações da carta.');
+    }
+}
+
+// Processo novo continua aceitando o sigilo solicitado, com classe informada.
+$newRestrictedCnj = '0000005-09.2020.8.05.0001';
+$beforeLetters = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
+$beforeSubtasks = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn();
+$newRestrictedLetter = $service->create(array_merge($base, ['numero_processo' => $newRestrictedCnj, 'nivel_sigilo' => 1]));
+$newRestricted = (new ProcessosRepository($pdo))->findByNumero($newRestrictedCnj);
+$letter = $pdo->prepare('SELECT processo_origem_id FROM cartas_expedidas WHERE id = ?');
+$letter->execute([$newRestrictedLetter]);
+if ($newRestricted === null || (int) $newRestricted['sigiloso'] !== 1
+    || $newRestricted['classe_id'] !== $expectedClassId || $letter->fetchColumn() !== $newRestricted['id']
+    || $pdo->inTransaction() || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $beforeLetters + 1
+    || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $beforeSubtasks + 2) {
+    throw new RuntimeException('Processo novo com sigilo solicitado ou carta não foi confirmado.');
+}
+
+$matrix = static function (bool $failure) use ($pdo, $service, $base, $existingCnj): void {
+    $repository = new ProcessosRepository($pdo);
+    foreach ([0, 1] as $initial) foreach ([null, 0, 1] as $level) foreach ([true, false] as $withClass) {
+        $pdo->exec("UPDATE processos SET sigiloso = $initial WHERE id = 'PRC-EXISTING'");
+        $before = $repository->findByNumero($existingCnj);
+        $letters = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
+        $subtasks = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn();
+        $payload = $base;
+        if ($level !== null) { $payload['nivel_sigilo'] = $level; }
+        if (!$withClass) { unset($payload['classe_codigo'], $payload['classe_descricao']); }
+        try {
+            $id = $service->create($payload);
+            if ($failure) { throw new RuntimeException('Falha induzida não ocorreu.'); }
+        } catch (PDOException $exception) {
+            if (!$failure || !str_contains($exception->getMessage(), 'rei88 falha induzida na segunda subtarefa')) { throw $exception; }
+        }
+        $after = $repository->findByNumero($existingCnj);
+        if ($before === null || $after === null || (int) $after['sigiloso'] !== $initial || $pdo->inTransaction()
+            || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $letters + ($failure ? 0 : 1)
+            || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $subtasks + ($failure ? 0 : 2)
+            || ($failure && $before !== $after)) { throw new RuntimeException('Matriz de sigilo, transação ou rollback falhou.'); }
+        if (!$failure) {
+            $stmt = $pdo->prepare('SELECT processo_origem_id FROM cartas_expedidas WHERE id = ?');
+            $stmt->execute([$id]);
+            if ($stmt->fetchColumn() !== $after['id']) { throw new RuntimeException('Carta vinculada a processo incorreto.'); }
+        }
+    }
+};
+$matrix(false);
 $beforeFailureProcess = (new ProcessosRepository($pdo))->findByNumero($existingCnj);
 $beforeFailureLetters = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
 $beforeFailureSubtasks = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn();
 $beforeFailureClasses = (int) $pdo->query('SELECT COUNT(*) FROM classes')->fetchColumn();
 $pdo->exec("CREATE TRIGGER rei88_fail_subtask BEFORE INSERT ON cartas_expedidas_subtarefas FOR EACH ROW BEGIN IF NEW.tipo = 'aguardando_devolucao' THEN SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'rei88 falha induzida na segunda subtarefa'; END IF; END");
+$matrix(true);
 $failurePayload = array_merge($base, [
     'classe_codigo' => 'REI88-ROLLBACK-CLASS',
     'classe_descricao' => 'Classe sintética para rollback',

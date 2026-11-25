@@ -146,7 +146,7 @@ final class CartasExpedidasService
 
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
         $classeNome = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-        // Criar uma carta não autoriza retirar o sigilo de processo existente.
+        // O sigilo calculado inicializa apenas processos novos.
         $sigiloso = self::sigiloParaCriacao($payload);
 
         if ($this->dataJudService !== null) {
@@ -164,7 +164,7 @@ final class CartasExpedidasService
             || $this->normalizeClasseLabel($classeNome) === 'classe nao informada'
             || $this->normalizeClasseLabel($classeCodigo) === 'classe nao informada';
 
-        // Quando a API não retorna a classe (ex.: processo sigiloso), permite cadastro e marca o processo como sigiloso
+        // Sem classe, um processo novo é inicializado como sigiloso.
         if ($classeNaoInformada) {
             $sigiloso = true;
         }
@@ -196,7 +196,7 @@ final class CartasExpedidasService
         if (!$classeNaoInformada && $classeCodigo !== '') {
             $classeId = $this->classesRepository->ensureClass((string) $classeCodigo, $classeNome !== '' ? TextFormatter::formatProperName((string) $classeNome, 200) : (string) $classeCodigo);
         }
-        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, $sigiloso);
+        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, $sigiloso, true);
 
         $tribunalDestinoSigla = 'TJ' . $ufDestino;
         $tribunalDestinoId = $this->tribunaisRepository->ensureTribunal($tribunalDestinoSigla, 'Tribunal de Justiça do Estado');
