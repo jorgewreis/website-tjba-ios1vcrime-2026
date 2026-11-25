@@ -201,6 +201,13 @@
 
 - fix(REI-120): make monitoring transitions atomic
 
+
+## Alteracao REI-149 - versao pendente
+
+**Data:** 2026-11-20 20:09:06 | **Commit:** `0e742a44` | **Tipo:** `patch`
+
+- fix(REI-149): guard disposable MySQL fixture
+
 ## V. 1.87.0185
 
 **Data:** 2026-11-17 11:19:22 | **Commit:** `2ab745ff` | **Tipo:** `patch`
