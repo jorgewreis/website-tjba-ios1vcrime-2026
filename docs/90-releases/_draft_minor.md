@@ -24,4 +24,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test: reconhece padding de chave innodb** `[255ab8be]`
 - **test: valida acesso com login sintetico** `[b3b3c9f9]`
 - **test: inclui novo entrypoint na recusa** `[6619340d]`
+- **test: valida retomada parcial de migracao** `[ea9d739b]`
 
