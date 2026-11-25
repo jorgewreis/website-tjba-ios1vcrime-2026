@@ -346,13 +346,13 @@ final class SalaAudienciasAtaService
                 throw new InvalidArgumentException('Audiência não encontrada.');
             }
 
-        $dataAud = trim((string) ($pauta['data_audiencia'] ?? ''));
-        if ($dataAud === '') {
-            throw new InvalidArgumentException('Data da audiência inválida.');
-        }
-        if (!self::dataPermiteInscricaoEstudante($dataAud)) {
-            throw new InvalidArgumentException('Inscrição só é permitida no dia da audiência.');
-        }
+            // Load the pauta only after acquiring its row lock. This keeps the
+            // lock as the transaction's first read while providing the current
+            // status and date for the eligibility checks below.
+            $pauta = $this->pautaRepository->findById($idPauta);
+            if ($pauta === null) {
+                throw new InvalidArgumentException('Audiência não encontrada.');
+            }
 
             $st = trim((string) ($pauta['status'] ?? ''));
             if ($st === 'agendada') {
