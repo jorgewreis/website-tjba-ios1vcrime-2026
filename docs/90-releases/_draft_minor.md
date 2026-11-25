@@ -4,7 +4,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **test(REI-88): verify carta sigilo on MySQL** `[db68261e]`
-- **merge: sync Carta sigilo fixture with current main** `[322b49a6]`
-- **merge: reconcile REI-88 carta sigilo test with origin/main** `[cfcc1097]`
+- **test: verifica consulta com perfis acumulados** `[6fd4f38f]`
 

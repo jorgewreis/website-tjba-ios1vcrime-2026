@@ -189,7 +189,7 @@
             showLookupStatus('Consultando comarca...', false);
             updateSalvarButton();
             const endpoint = endpoints.lookupCidade || '/api/cartorio-cartas-recebidas/buscar-cidade.php?cidade=';
-            fetch(endpoint + encodeURIComponent(cidade) + '&uf=' + encodeURIComponent(uf))
+            fetch(endpoint + encodeURIComponent(cidade) + '&uf=' + encodeURIComponent(uf) + '&resolver_sede=1')
                 .then((response) => { if (!response.ok) throw new Error('Consulta indisponível'); return response.json(); })
                 .then((data) => {
                     if (version !== lookupVersion || normalizeCidade(cidadeInput.value) !== normalizeCidade(cidade) || (estadoSelect.value || '').trim().toUpperCase() !== uf) return;
@@ -198,7 +198,7 @@
                         notify('error', 'Cidade não identificada', 'Confira a cidade e o estado e tente novamente.');
                         return;
                     }
-                    if (String(data.status_cidade || '').trim().toLowerCase() === 'agregada' && data.nome) {
+                    if (data.nome) {
                         cidadeInput.value = formatCidade(data.nome);
                     }
                     if (hiddenComarcaInput) hiddenComarcaInput.value = data.id;
