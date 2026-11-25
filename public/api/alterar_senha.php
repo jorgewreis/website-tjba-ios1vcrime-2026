@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 2) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/alterar_senha.php');
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../../app/helpers/bootstrap.php';
@@ -62,7 +65,7 @@ try {
         echo json_encode(['success' => false, 'message' => $resultado['message'] ?? 'Não foi possível alterar a senha.']);
     }
 } catch (Throwable $e) {
-    error_log('alterar_senha API: ' . $e->getMessage());
+    error_log('alterar_senha API: ' . ApiErrorReporter::genericMessage($e, 'public/api/alterar_senha.php'));
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Erro interno. Tente novamente mais tarde.']);
 }

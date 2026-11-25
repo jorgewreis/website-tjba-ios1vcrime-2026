@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-editais/list.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['editais'], false);
 
@@ -51,6 +54,7 @@ try {
 
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/cartorio-editais/list.php');
     http_response_code(500);
     echo json_encode([
         'error' => 'Erro ao buscar editais.',

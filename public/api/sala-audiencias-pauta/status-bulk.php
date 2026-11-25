@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/sala-audiencias-pauta/status-bulk.php');
 header('Content-Type: application/json; charset=UTF-8');
 header('Cache-Control: no-store');
 
@@ -208,6 +211,7 @@ try {
     }
     echo json_encode(['success' => true, 'items' => (object) $items, 'completo' => true, 'consultados' => $ids, 'observacao_alterada' => $observacaoAlterada], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/sala-audiencias-pauta/status-bulk.php');
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Erro ao consultar status.'], JSON_UNESCAPED_UNICODE);
 }

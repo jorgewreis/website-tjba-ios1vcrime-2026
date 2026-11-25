@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/pessoas/search-by-name.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['consultapartes'], false);
 
@@ -199,6 +202,7 @@ try {
 
     echo json_encode(['pessoas' => $pessoas], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/pessoas/search-by-name.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao buscar.', 'pessoas' => []], JSON_UNESCAPED_UNICODE);
 }

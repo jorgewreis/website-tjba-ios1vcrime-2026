@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/datajud/search-processo.php');
 header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Origin: *');
 
@@ -33,14 +36,8 @@ try {
 } catch (InvalidArgumentException $e) {
     respond(['error' => $e->getMessage()], 400);
 } catch (RuntimeException $e) {
-    $msg = $e->getMessage();
-    $status = 502;
-    if (str_contains($msg, 'não encontrado')) {
-        $status = 404;
-    } elseif (str_contains($msg, 'Não autorizado')) {
-        $status = 502;
-    }
-    respond(['error' => $msg], $status);
+    $message = ApiErrorReporter::genericMessage($e, 'public/api/datajud/search-processo.php');
+    respond(['error' => $message], 502);
 }
 
 $sigiloRestrito = !empty($data['sigilo_restrito']);
