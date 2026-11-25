@@ -141,6 +141,8 @@
 .dash-sector-metric[hidden] { display:none; }
 .dash-sector-metric span { color:#575160; font-size:11px; line-height:1.4; }
 .dash-sector-metric span b { font-weight:700; }
+.dash-sector-metric .dash-sector-responsaveis { display:block; margin-top:2px; overflow-wrap:anywhere; }
+.dash-sector-metric .dash-sector-responsaveis[hidden] { display:none; }
 .dash-sector-metric strong { display:flex; align-items:center; justify-content:center; min-width:36px; height:34px; padding:0 8px; border-radius:10px; color:#62418f; background:#f1ecf8; font-size:12px; font-weight:700; }
 .dash-sector-footnote { display:block; padding-top:10px; color:#858091; font-size:10px; }
 .dash-production-summary { padding:12px 14px; background:#fff; }
