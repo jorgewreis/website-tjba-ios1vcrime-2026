@@ -1,10 +1,22 @@
 # Changelog
 
-## V. 1.88.0047
+## V. 1.88.0049
+
+**Data:** 2026-11-25 04:49:27 | **Commit:** `853a1378` | **Tipo:** `patch`
+
+- merge: reconciliar base de monitoramento
+
+## V. 1.88.0048
 
 **Data:** 2026-11-25 04:47:04 | **Commit:** `959b24b2` | **Tipo:** `patch`
 
 - fix: transaciona cadastro de monitoramento
+
+## V. 1.88.0047
+
+**Data:** 2026-11-25 04:43:59 | **Commit:** `ea9d739b` | **Tipo:** `patch`
+
+- test: valida retomada parcial de migracao
 
 ## V. 1.88.0046
 
@@ -7920,6 +7932,7 @@
 
 
 \n
+
 
 
 
