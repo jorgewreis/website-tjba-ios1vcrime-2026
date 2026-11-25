@@ -1,0 +1,21 @@
+name: Guias — testes SQLite isolados
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  guias-sqlite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Obter runtime PHP fixado
+        run: docker pull php@sha256:64ffb7411253121bbeb0d9eba37ce85e88d2a60d698e5debbd66bac71b20f3c2
+      - name: Testar propagação e atomicidade em memória
+        run: |
+          set -euo pipefail
+          docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+            --mount "type=bind,source=$PWD,target=/repo,readonly" --workdir /repo \
+            php@sha256:64ffb7411253121bbeb0d9eba37ce85e88d2a60d698e5debbd66bac71b20f3c2 \
+            sh -ec 'php -r '\''if (PHP_VERSION_ID < 80200 || !extension_loaded("pdo_sqlite") || !extension_loaded("mbstring")) { exit(1); }'\''; php tests/guias/rei160-reu-propagation.test.php; php tests/guias/prioridades-atomicidade.test.php'
