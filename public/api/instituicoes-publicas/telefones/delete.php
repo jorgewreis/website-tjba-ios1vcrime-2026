@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 4) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/instituicoes-publicas/telefones/delete.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -46,6 +49,7 @@ try {
     $removed = $service->deleteTelefone($id);
     echo json_encode(['deleted' => $removed], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/instituicoes-publicas/telefones/delete.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao excluir telefone.'], JSON_UNESCAPED_UNICODE);
 }

@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-editais/reconciliar.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['editaisedit'], true);
 
@@ -25,6 +28,7 @@ try {
     http_response_code(400);
     echo json_encode(['success' => false, 'error' => 'Lista de editais inválida ou acima do limite permitido.'], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/cartorio-editais/reconciliar.php');
     http_response_code(500);
     echo json_encode([
         'success' => false,

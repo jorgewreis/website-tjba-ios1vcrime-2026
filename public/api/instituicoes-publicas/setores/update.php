@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 4) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/instituicoes-publicas/setores/update.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -48,6 +51,7 @@ try {
     $service->updateSetor($id, $data);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/instituicoes-publicas/setores/update.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao atualizar setor.'], JSON_UNESCAPED_UNICODE);
 }

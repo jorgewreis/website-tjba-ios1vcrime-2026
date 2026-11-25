@@ -15,6 +15,58 @@ final class SalaAudienciasAtaService
     /** Limite definido pela magistratura: no máximo este número de estudantes inscritos por audiência. */
     public const MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA = 5;
 
+    public static function dataPermiteInscricaoEstudante(string $dataAudiencia): bool
+    {
+        $dataAudiencia = trim($dataAudiencia);
+        return $dataAudiencia !== '' && $dataAudiencia === date('Y-m-d');
+    }
+
+    public static function normalizarStatusPauta(string $status, string $dataAudiencia, string $horaAudiencia, ?int $agoraTimestamp = null): string
+    {
+        $status = trim($status);
+        if ($status === 'agendada') {
+            $status = 'designada';
+        } elseif ($status === 'adiada') {
+            $status = 'redesignada';
+        } elseif ($status === 'encerrada') {
+            $status = 'finalizada';
+        }
+
+        $inicio = strtotime(trim($dataAudiencia) . ' ' . trim($horaAudiencia));
+        if ($status === 'designada' && $inicio !== false && $inicio < ($agoraTimestamp ?? time())) {
+            return 'atrasada';
+        }
+
+        return $status;
+    }
+
+    /**
+     * A elegibilidade operacional restringe apenas novas inscrições; privacidade é avaliada separadamente.
+     *
+     * @param array<string, mixed> $row
+     */
+    public static function statusIndisponivelParaEstudanteNaoInscrito(array $row, ?int $agoraTimestamp = null): bool
+    {
+        if ((int) ($row['ja_inscrito'] ?? 0) === 1 || !empty($row['ja_inscrito'])) {
+            return false;
+        }
+
+        if ((int) ($row['total_inscritos_pauta'] ?? 0) >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA
+            || !empty($row['vagas_esgotadas'])) {
+            return true;
+        }
+
+        $status = self::normalizarStatusPauta(
+            (string) ($row['status'] ?? ''),
+            (string) ($row['data_audiencia'] ?? ''),
+            (string) ($row['hora_audiencia'] ?? ''),
+            $agoraTimestamp
+        );
+
+        return $status !== 'designada'
+            || !self::dataPermiteInscricaoEstudante((string) ($row['data_audiencia'] ?? ''));
+    }
+
     /**
      * Audiências com data anterior a (hoje − N dias) e sem PDF ainda dentro do prazo de download
      * não entram na lista de atas (interno e página estudaata); inscrições seguem visíveis no painel com “Documento expirado”.
@@ -85,6 +137,20 @@ final class SalaAudienciasAtaService
             $temPrioridadeBloqueio = (int) ($row['tem_prioridade_bloqueio'] ?? 0) !== 0;
             $total = (int) ($row['total_inscritos_pauta'] ?? 0);
             $jaInscrito = (int) ($row['ja_inscrito'] ?? 0) === 1;
+            $status = self::normalizarStatusPauta(
+                (string) ($row['status'] ?? ''),
+                (string) ($row['data_audiencia'] ?? ''),
+                (string) ($row['hora_audiencia'] ?? '')
+            );
+            $dataPermiteInscricao = self::dataPermiteInscricaoEstudante((string) ($row['data_audiencia'] ?? ''));
+            if (self::statusIndisponivelParaEstudanteNaoInscrito($row)) {
+                $out[] = [
+                    'id_pauta' => trim((string) ($row['id_pauta'] ?? '')),
+                    'indisponivel' => true,
+                ];
+                continue;
+            }
+            $row['status'] = $status;
             $row['vagas_esgotadas'] = $total >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
             $row['processo_sigiloso'] = $processoSigiloso;
             $row['envolve_menor'] = $envolveMenor;
@@ -92,13 +158,21 @@ final class SalaAudienciasAtaService
             $row['ja_inscrito'] = $jaInscrito;
             $row['pode_inscrever'] = !$jaInscrito
                 && !$row['vagas_esgotadas']
+                && $status === 'designada'
+                && $dataPermiteInscricao
                 && !$processoSigiloso
                 && !$envolveMenor
                 && !$temPrioridadeBloqueio;
             $out[] = $row;
         }
 
-        return $this->enrichRowsBlocoProcesso($out);
+        $enriched = $this->enrichRowsBlocoProcesso($out);
+        foreach ($out as $index => $row) {
+            if (!empty($row['indisponivel'])) {
+                $enriched[$index] = $row;
+            }
+        }
+        return $enriched;
     }
 
     /**
@@ -280,8 +354,7 @@ final class SalaAudienciasAtaService
         if ($dataAud === '') {
             throw new InvalidArgumentException('Data da audiência inválida.');
         }
-        $hoje = date('Y-m-d');
-        if ($dataAud !== $hoje) {
+        if (!self::dataPermiteInscricaoEstudante($dataAud)) {
             throw new InvalidArgumentException('Inscrição só é permitida no dia da audiência.');
         }
 

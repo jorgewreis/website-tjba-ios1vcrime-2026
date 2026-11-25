@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/mni/consultar-processo.php');
 /**
  * Endpoint HTTP fino que delega para MniService (que, por sua vez, encapsula MniClient).
  *
@@ -108,7 +111,7 @@ try {
 } catch (Throwable $e) {
     http_response_code(500);
     echo json_encode([
-        'error' => 'Falha interna ao consultar MNI: ' . $e->getMessage(),
+        'error' => 'Falha interna ao consultar MNI: ' . ApiErrorReporter::genericMessage($e, 'public/api/mni/consultar-processo.php'),
         'kind'  => 'unknown',
     ], JSON_UNESCAPED_UNICODE);
 }
