@@ -4,7 +4,7 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **merge: reconcile REI-130 reconciled branch with origin/main** `[bd3f5453]`
+- **test: verifica consulta com perfis acumulados** `[6fd4f38f]`
 
 - **fix(REI-160): rollback guide part failures** `[2063ec9d]`
 - **test(REI-160): run sqlite regressions in CI** `[7cd95d0b]`
