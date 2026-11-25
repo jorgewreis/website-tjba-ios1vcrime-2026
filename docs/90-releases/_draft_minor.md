@@ -14,4 +14,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test: exercita concorrencia de vinculos** `[e539b8e0]`
 - **ci: detalha etapas do teste concorrente** `[0bb80dd7]`
 - **ci: classifica falhas do ator de pauta** `[d5559b93]`
+- **test: corrige bootstrap do ator de pauta** `[98382202]`
 
