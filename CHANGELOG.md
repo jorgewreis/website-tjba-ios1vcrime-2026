@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0040
+
+**Data:** 2026-11-25 04:08:37 | **Commit:** `6fb1cabe` | **Tipo:** `patch`
+
+- ci: distingue atores em teste de concorrencia
+
 ## V. 1.88.0039
 
 **Data:** 2026-11-25 04:05:25 | **Commit:** `91f0c777` | **Tipo:** `patch`
@@ -7872,6 +7878,7 @@
 
 
 \n
+
 
 
 

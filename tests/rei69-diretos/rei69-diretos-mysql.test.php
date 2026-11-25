@@ -4,9 +4,9 @@ declare(strict_types=1);
 $failureStage = 'setup';
 $failureDetail = 'general';
 set_exception_handler(static function (Throwable $exception) use (&$failureStage, &$failureDetail): void {
-    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check'];
+    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_pauta_finish','c4_direct_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check'];
     $stage = in_array($failureStage, $allowed, true) ? $failureStage : 'setup';
-    $details=['general','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
+    $details=['general','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
     $detail=in_array($failureDetail,$details,true) ? $failureDetail : 'general';
     fwrite(STDERR, 'REI69_DIRECT_FAILURE code=' . $stage . ' detail=' . $detail . "\n");
     exit(1);
@@ -369,7 +369,7 @@ if (in_array(getenv('TEST_KIND'), ['update','update2'], true)) {
         $stage='pauta_runtime';
         $payload=['parte_id_global'=>'PAR-1','processo_parte_id'=>'VNC-1','nome_parte'=>'Pessoa Sintetica 1','tipo_parte'=>'vitima','maioridade'=>'maior','expedicao'=>'Não expedido','cumprimento'=>'pendente'];
         $result=$service->updateParte('PP-A',$payload,'USR-1');
-        if (($result['ok'] ?? false)!==true) throw new RuntimeException('Pauta synthetic update failed.');
+        if (($result['ok'] ?? false)!==true) { $stage='pauta_noop'; throw new RuntimeException('Pauta synthetic update failed.'); }
         fwrite(STDOUT,"PAUTA_COMMITTED\n");
     } catch (Throwable $e) {
         if ($e instanceof PDOException) {
@@ -426,7 +426,7 @@ PHP;
                 $collect($worker);
                 $failureDetail='early_exit';
                 foreach ([401,403,404,500] as $status) if (str_contains($worker['stderr'], 'HTTP:' . $status . "\n")) { $failureDetail='early_' . $status; break; }
-                foreach (['pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_error','pauta_fatal'] as $code) if (str_contains($worker['stderr'], 'PAUTA_FAILURE code=' . $code . "\n")) { $failureDetail=$code; break; }
+                foreach (['pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal'] as $code) if (str_contains($worker['stderr'], 'PAUTA_FAILURE code=' . $code . "\n")) { $failureDetail=$code; break; }
                 throw new RuntimeException('Ator terminou antes da espera esperada.');
             }
             $failureDetail=$worker['id']===null ? 'connection_id' : 'wait_query';
@@ -451,7 +451,13 @@ PHP;
         $worker['stderr'].=stream_get_contents($worker['err']);
         $concurrentActive[$worker['index']]=false; fclose($worker['out']); fclose($worker['err']); proc_close($worker['proc']);
         if (strlen($worker['stdout'])>1048576 || strlen($worker['stderr'])>1048576) throw new RuntimeException('Saída de ator excedeu limite.');
-        if ($state['exitcode']!==0) { $failureDetail='exit'; throw new RuntimeException('Ator terminou com erro.'); }
+        if ($state['exitcode']!==0) {
+            $failureDetail='exit';
+            foreach (['pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal'] as $code) {
+                if (str_contains($worker['stderr'], 'PAUTA_FAILURE code=' . $code . "\n")) { $failureDetail=$code; break; }
+            }
+            throw new RuntimeException('Ator terminou com erro.');
+        }
         return [$worker['stdout'],$worker['stderr']];
     };
     $failureStage='c1_setup'; $failureDetail='general';
@@ -551,7 +557,10 @@ PHP;
     $directSecond=$spawn('update'); $observe($observer,$directSecond,(int)$pautaFirst['id'],'processos');
     $pdo->commit();
     $failureStage='c4_finish'; $failureDetail='general';
-    [$pautaOut,$pautaErr]=$finish($pautaFirst); [$directOut,$directErr]=$finish($directSecond);
+    $failureStage='c4_pauta_finish'; $failureDetail='general';
+    [$pautaOut,$pautaErr]=$finish($pautaFirst);
+    $failureStage='c4_direct_finish'; $failureDetail='general';
+    [$directOut,$directErr]=$finish($directSecond);
     $failureStage='c4_check'; $failureDetail='general';
     $assert(str_contains($pautaOut,"PAUTA_COMMITTED\n") && str_contains($directErr,"HTTP:200\n") && $pdo->query("SELECT tipo_parte FROM processos_partes WHERE id='VNC-1'")->fetchColumn()==='advogado', 'Ordem pauta seguida de direta falhou.');
     $afterPautaFirst=$snapshot($pdo); $assertUnchanged($beforePautaFirst,$afterPautaFirst,['processos_partes'=>['id',['VNC-1']],'partes'=>['id',['PAR-1']],'sala_audiencias_pauta_parte'=>['id_parte',['PP-A']],'processo_prioridades'=>['processo_id',['PRC-1']]]);
