@@ -36,7 +36,7 @@ with tempfile.TemporaryDirectory(prefix='processos-partes-lista-') as directory,
     write('config/security.php', '''<?php
 final class Security { public static function isAuthenticated(): bool { return getenv('TEST_AUTH') === '1'; } }''')
     write('app/helpers/UsuarioPerfisAutorizacao.php', '''<?php
-final class UsuarioPerfisAutorizacao { public static function perfisDoUsuario(string $id): array { return explode(',', getenv('TEST_PROFILE')); } }''')
+final class UsuarioPerfisAutorizacao { public static function perfisDoUsuario(string $id): array { return [getenv('TEST_PROFILE')]; } }''')
     write('app/helpers/Conection.php', '''<?php
 final class Conection {
     public static function getInstance(): self { return new self(); }
@@ -87,7 +87,7 @@ require getenv('TEST_ENDPOINT');'''
         return int(result.stderr.rsplit('HTTP:', 1)[-1] or 200), json.loads(result.stdout)
 
     before = list(db.execute('SELECT * FROM processos_partes ORDER BY id'))
-    cartorio_profile = 'SERVIDOR,CARTORIO'
+    cartorio_profile = 'SERVIDOR-CARTORIO'
     for profile, auth, expected in [(cartorio_profile, False, 401),
                                     ('ESTUDANTE', True, 403), ('SERVIDOR', True, 403)]:
         for process_id in ('P1', 'P3'):
