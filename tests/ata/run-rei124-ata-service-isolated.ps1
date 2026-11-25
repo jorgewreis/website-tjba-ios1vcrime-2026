@@ -79,8 +79,9 @@ try {
     Invoke-DockerSafe @('start', $mysqlId) | Out-Null
     $ready = $false
     $diagnosticStage = 'mysql-prontidao'
+    # O servidor temporario de inicializacao usa socket; aguarde TCP no namespace isolado.
     for ($i = 0; $i -lt 90; $i++) {
-        try { Invoke-DockerSafe @('exec', '--env', "MYSQL_PWD=$password", $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'rei124ata_test', '-N', '-e', 'SELECT 1') | Out-Null; $ready = $true; break } catch { Start-Sleep -Seconds 1 }
+        try { Invoke-DockerSafe @('exec', '--env', "MYSQL_PWD=$password", $mysqlId, 'mysql', '--protocol=TCP', '--host=127.0.0.1', '-uroot', 'rei124ata_test', '-N', '-e', 'SELECT 1') | Out-Null; $ready = $true; break } catch { Start-Sleep -Seconds 1 }
     }
     if (-not $ready) { throw 'MySQL 8.4 descartÃ¡vel nÃ£o iniciou.' }
     $diagnosticStage = 'mysql-sentinela'

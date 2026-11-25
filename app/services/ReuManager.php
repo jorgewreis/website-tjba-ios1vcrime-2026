@@ -46,11 +46,16 @@ class ReuManager
      */
     public function cadastrarReu(string $nome, ?string $cpf = null): ?string
     {
-        try {
-            return $this->partesRepository->ensureParteByNomeOuCpf($nome, $cpf);
-        } catch (Throwable $e) {
+        if (trim($nome) === '') {
             return null;
         }
+
+        $idParte = trim($this->partesRepository->ensureParteByNomeOuCpf($nome, $cpf));
+        if ($idParte === '') {
+            throw new RuntimeException('O cadastro da parte não retornou um identificador.');
+        }
+
+        return $idParte;
     }
 
     /**
@@ -94,21 +99,26 @@ class ReuManager
         if ($idReu === '' || $numeroProcesso === '') {
             return false;
         }
-        try {
-            $processoId = $this->processosRepository->ensureProcess($numeroProcesso, null, null, null);
-            $existente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $idReu);
-            if ($existente !== null) {
-                return true;
-            }
-            $this->processosPartesRepository->addParte(
-                $processoId,
-                $idReu,
-                ProcessosPartesRepository::TIPO_SENTENCIADO,
-                ProcessosPartesRepository::POLO_PASSIVO
-            );
-            return true;
-        } catch (Throwable $e) {
-            return false;
+        $processoId = trim($this->processosRepository->ensureProcess($numeroProcesso, null, null, null));
+        if ($processoId === '') {
+            throw new RuntimeException('A preparação do processo não retornou um identificador.');
         }
+
+        $existente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $idReu);
+        if ($existente !== null) {
+            return true;
+        }
+
+        $idVinculo = trim($this->processosPartesRepository->addParte(
+            $processoId,
+            $idReu,
+            ProcessosPartesRepository::TIPO_SENTENCIADO,
+            ProcessosPartesRepository::POLO_PASSIVO
+        ));
+        if ($idVinculo === '') {
+            throw new RuntimeException('O vínculo da parte ao processo não retornou um identificador.');
+        }
+
+        return true;
     }
 }

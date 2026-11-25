@@ -1,4 +1,9 @@
 <?php
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
 $path = dirname(__DIR__) . '/app/services/ProdutividadeService.php';
 $c = file_get_contents($path);
 $c = str_replace("\r\n", "\n", $c);

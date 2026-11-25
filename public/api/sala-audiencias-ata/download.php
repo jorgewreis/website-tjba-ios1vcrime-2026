@@ -7,6 +7,7 @@ ApiErrorReporter::register('public/api/sala-audiencias-ata/download.php');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/config/security.php';
 require_once $basePath . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once $basePath . '/app/models/Usuario.php';
 require_once $basePath . '/app/access/AccessEvaluator.php';
@@ -22,6 +23,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
+    if (!Security::isAuthenticated()) {
+        http_response_code(401);
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo 'Sessão expirada.';
+        exit;
+    }
+
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
     if ($usuarioId === '') {
         http_response_code(401);

@@ -14,7 +14,7 @@ import urllib.request
 root = Path(__file__).resolve().parents[2]
 with tempfile.TemporaryDirectory(prefix='rei161-idle-http-') as temp:
     base = Path(temp)
-    for name in ('config/security.php', 'public/api/sala-audiencias-pauta/status-bulk.php', 'app/helpers/SalaAudienciasEstudantePrivacidade.php'):
+    for name in ('config/security.php', 'public/api/sala-audiencias-pauta/status-bulk.php', 'app/helpers/SalaAudienciasEstudantePrivacidade.php', 'app/helpers/ApiErrorReporter.php'):
         dest = base / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(root / name, dest)
