@@ -4,7 +4,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix: harden workflow transitions and reset tokens** `[e8ffdbad]`
-- **fix(REI-90): rollback nested completion atomically** `[62e34dc7]`
-- **merge: reconcile five legacy fixes with origin/main** `[b9061324]`
+- **test: verifica consulta com perfis acumulados** `[6fd4f38f]`
+- **test: executa privacidade estudantil no ci** `[c401ff04]`
 

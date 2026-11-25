@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/internal-list-export/csv.php');
 require_once __DIR__ . '/_common.php';
 require_once dirname(__DIR__, 3) . '/app/helpers/ListExportFilterSummary.php';
 
@@ -14,6 +17,6 @@ try {
     $code = str_contains($msg, 'gestão') ? 403 : 400;
     internal_list_export_http_error($code, $msg);
 } catch (Throwable $e) {
-    error_log('internal-list-export csv: ' . $e->getMessage());
+    error_log('internal-list-export csv: ' . ApiErrorReporter::genericMessage($e, 'public/api/internal-list-export/csv.php'));
     internal_list_export_http_error(500, 'Erro ao exportar CSV.');
 }

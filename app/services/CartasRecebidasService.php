@@ -11,7 +11,6 @@ require_once __DIR__ . '/../repositories/ComarcasRepository.php';
 require_once __DIR__ . '/../repositories/VarasRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
-require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartasRecebidasUiCopy.php';
 
 final class CartasRecebidasService
@@ -407,11 +406,9 @@ final class CartasRecebidasService
             if ($sede === null || $tribunal === null || (string) $sede['tribunal_id'] !== (string) $tribunal['id']) {
                 throw new InvalidArgumentException('A comarca não corresponde à cidade e ao estado informados.');
             }
-            if ((string) $sede['id'] !== $comarca) {
-                $payload['comarca_origem_id'] = (string) $sede['id'];
-                $payload['cidade_origem'] = (string) $sede['nome'];
-                $payload['uf_origem'] = strtoupper(trim((string) $sede['uf']));
-            }
+            $payload['comarca_origem_id'] = (string) $sede['id'];
+            $payload['cidade_origem'] = (string) $sede['nome'];
+            $payload['uf_origem'] = strtoupper(trim((string) $sede['uf']));
             $updated = $this->repository->update($id, $payload);
             if ($ownsTransaction) {
                 if (!$this->connection->commit()) throw new RuntimeException('Não foi possível confirmar a atualização da localidade.');
@@ -449,24 +446,38 @@ final class CartasRecebidasService
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
-        $subtarefas = $this->subtarefasRepository->findByCartaId($id);
-        $mensagensSubtarefas = [];
-        foreach ($subtarefas as $subtarefa) {
-            $tipo = trim((string) ($subtarefa['tipo'] ?? 'subtarefa'));
-            if ($tipo !== '') {
-                $mensagensSubtarefas[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $tipo) . '.';
-            }
+        if ($this->connection->inTransaction()) {
+            throw new RuntimeException('Exclusão requer conexão sem transação anterior.');
         }
-        $this->subtarefasRepository->deleteByCartaId($id);
-        $this->alocadosRepository->deleteByCartaId($id);
-        $deleted = $this->repository->delete($id);
-        $orfandade = OrphanSubtarefasCleaner::cleanAll($this->connection);
-        return [
-            'deleted' => $deleted,
-            'subtarefas_toasts' => $mensagensSubtarefas,
-            'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
-            'subtarefas_orfas_removidas' => array_sum($orfandade),
-        ];
+        $this->connection->beginTransaction();
+        try {
+            $lock = $this->connection->prepare('SELECT `id` FROM `cartas_recebidas` WHERE `id` = :id FOR UPDATE');
+            $lock->execute([':id' => $id]);
+            $exists = $lock->fetchColumn() !== false;
+            $lock->closeCursor();
+            $messages = [];
+            if ($exists) {
+                foreach ($this->subtarefasRepository->findByCartaId($id) as $subtask) {
+                    $type = trim((string) ($subtask['tipo'] ?? 'subtarefa'));
+                    if ($type !== '') $messages[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $type) . '.';
+                }
+                $this->subtarefasRepository->deleteByCartaId($id);
+                $this->alocadosRepository->deleteByCartaId($id);
+                if (!$this->repository->delete($id)) {
+                    throw new RuntimeException('Não foi possível excluir a carta recebida bloqueada.');
+                }
+            }
+            $this->connection->commit();
+            return [
+                'deleted' => $exists,
+                'subtarefas_toasts' => $messages,
+                'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
+                'subtarefas_orfas_removidas' => 0,
+            ];
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) $this->connection->rollBack();
+            throw $exception;
+        }
     }
 
     public function find(string $id): ?array

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/ParentRecordLock.php';
 
 final class EditaisSubtarefasRepository
 {
@@ -63,28 +64,22 @@ final class EditaisSubtarefasRepository
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
         }
 
-        $id = IdGenerator::generateUniquePrefixedId(
-            $this->connection,
-            $this->table,
-            'id',
-            'EDS',
-            30
-        );
-
-        $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `edital_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at`) VALUES (:id, :edital_id, :tipo, :ordem, :status, :dados_especificos, NOW(), NOW())',
-            $this->table
-        );
-        $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':id', $id);
-        $statement->bindValue(':edital_id', $editalId);
-        $statement->bindValue(':tipo', $tipo);
-        $statement->bindValue(':ordem', $ordem, PDO::PARAM_INT);
-        $statement->bindValue(':status', $status);
-        $statement->bindValue(':dados_especificos', $dadosJson);
-        $statement->execute();
-
-        return $id;
+        return ParentRecordLock::run($this->connection, 'editais', $editalId, function () use ($editalId, $tipo, $ordem, $status, $dadosJson): string {
+            $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'EDS', 30);
+            $sql = sprintf(
+                'INSERT INTO `%s` (`id`, `edital_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at`) VALUES (:id, :edital_id, :tipo, :ordem, :status, :dados_especificos, NOW(), NOW())',
+                $this->table
+            );
+            $statement = $this->connection->prepare($sql);
+            $statement->bindValue(':id', $id);
+            $statement->bindValue(':edital_id', $editalId);
+            $statement->bindValue(':tipo', $tipo);
+            $statement->bindValue(':ordem', $ordem, PDO::PARAM_INT);
+            $statement->bindValue(':status', $status);
+            $statement->bindValue(':dados_especificos', $dadosJson);
+            $statement->execute();
+            return $id;
+        });
     }
 
     public function findByEditalId(string $editalId): array
