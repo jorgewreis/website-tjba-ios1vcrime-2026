@@ -10,4 +10,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix: valida schema referenciado na migracao** `[e2429053]`
 - **test: valida migracao em mysql isolado** `[ec4ffbf3]`
 - **fix: restringe mutacoes diretas por unidade** `[4d397369]`
+- **test: valida mutacoes diretas com mysql isolado** `[1f30930d]`
 
