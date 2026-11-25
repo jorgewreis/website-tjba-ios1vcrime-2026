@@ -310,7 +310,7 @@ final class SalaAudienciasPautaRepository
         }
         $sql = sprintf(
             'SELECT 1 FROM `%s` WHERE `ativo` = 1 AND `status` IN (:designada, :legacy_agendada)
-             AND `data_audiencia` = :data AND TIME(`hora_audiencia`) = TIME(:hora)',
+             AND `data_audiencia` = :data AND TIME(`hora_audiencia`) = TIME(CAST(:hora AS CHAR))',
             $this->table
         );
         $exceptIdPauta = $exceptIdPauta !== null ? trim($exceptIdPauta) : '';
@@ -322,7 +322,7 @@ final class SalaAudienciasPautaRepository
         $st->bindValue(':designada', 'designada');
         $st->bindValue(':legacy_agendada', 'agendada');
         $st->bindValue(':data', $dataAudiencia);
-        $st->bindValue(':hora', $horaAudiencia);
+        $st->bindValue(':hora', $horaAudiencia, PDO::PARAM_STR);
         if ($exceptIdPauta !== '') {
             $st->bindValue(':exc', $exceptIdPauta);
         }

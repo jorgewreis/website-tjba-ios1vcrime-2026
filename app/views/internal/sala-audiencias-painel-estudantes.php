@@ -338,18 +338,18 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
         <?php foreach ($hojePageRows as $row):
             $idPautaRaw = trim((string) ($row['id_pauta'] ?? ''));
             $idPauta = htmlspecialchars($idPautaRaw, ENT_QUOTES, 'UTF-8');
-            if (SalaAudienciasEstudantePrivacidade::indisponivel($row)): ?>
+            $ja = !empty($row['ja_inscrito']);
+            $statusRow = painelEstudanteStatusExibicao($row);
+            $statusIndisponivel = SalaAudienciasAtaService::statusIndisponivelParaEstudanteNaoInscrito($row);
+            if (SalaAudienciasEstudantePrivacidade::indisponivel($row) || !empty($row['indisponivel']) || $statusIndisponivel): ?>
         <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo $idPauta; ?>" data-indisponivel="1"><p class="padding-x-lg padding-y-md">Audiência indisponível.</p></div>
         <?php continue; endif;
             $pode = !empty($row['pode_inscrever']);
-            $ja = !empty($row['ja_inscrito']);
             $lotado = !empty($row['vagas_esgotadas']);
             $sigiloso = !empty($row['processo_sigiloso']);
             $menor = !empty($row['envolve_menor']);
             $prioridadeBloqueio = !empty($row['tem_prioridade_bloqueio']);
             $totalIns = (int) ($row['total_inscritos_pauta'] ?? 0);
-            $statusRow = trim((string) ($row['status'] ?? ''));
-            $statusRow = painelEstudanteStatusExibicao($row);
             $labelsStatusAud = [
                 'designada' => 'Aguardando início',
                 'atrasada' => 'Atrasada',
@@ -385,7 +385,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 $horaExibicao = painelEstudanteHoraEncerramento($fimEfetivoRaw);
             }
             $duracaoExibicaoHoje = painelEstudanteDuracaoReal($inicioEfetivoRaw, $fimEfetivoRaw);
-            $linkVisivelHoje = $linkAudienciaHoje !== '' && !$statusFinalHoje && !$sigiloso;
+            $linkVisivelHoje = $linkAudienciaHoje !== '' && (!$statusFinalHoje || $ja) && !$sigiloso;
             ?>
         <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo $idPauta; ?>">
             <div class="register-line<?php echo $statusFinalHoje ? ' is-inactive' : ''; ?><?php echo $linhaEmAndamentoHoje ? ' is-current' : ''; ?>">
@@ -411,6 +411,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                                     data-inicio="<?php echo htmlspecialchars((string) ($row['data_hora_inicio_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                                     data-fim="<?php echo htmlspecialchars((string) ($row['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                                     data-duracao-estimada="<?php echo (int) ($row['duracao_estimada_minutos'] ?? 0); ?>"
+                                    data-ja-inscrito="<?php echo $ja ? '1' : '0'; ?>"
                                 >
                                     <span class="js-time-label"><?php echo htmlspecialchars($rotuloHoraHoje, ENT_QUOTES, 'UTF-8'); ?></span> <span class="js-time-lines"><strong><?php echo htmlspecialchars($horaExibicao, ENT_QUOTES, 'UTF-8'); ?></strong></span>
                                 </span>
@@ -432,10 +433,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     <?php if ($sigiloso): ?>
                     <span class="content-assuntos danger">Não é permitida inscrição</span>
                     <span class="content-assuntos danger">para processos sigilosos</span>
-                    <?php elseif ($lotado): ?>
-                    <span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>
                     <?php elseif ($ja): ?>
                     <span class="minor-info text-success">Voce esta inscrito.</span>
+                    <?php elseif ($lotado): ?>
+                    <span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>
                     <?php elseif ($menor): ?>
                     <span class="minor-info text-error">Inscricao indisponivel.</span>
                     <?php elseif ($prioridadeBloqueio): ?>
@@ -546,7 +547,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             if (filter_var($linkAudienciaMinhas, FILTER_VALIDATE_URL) === false) {
                 $linkAudienciaMinhas = '';
             }
-            $linkVisivelMinhas = $linkAudienciaMinhas !== '' && !$statusFinalMinhas;
+            $linkVisivelMinhas = $linkAudienciaMinhas !== '';
             ?>
         <div class="display-flex col col-full register register-painel-estudante border-bottom" data-pauta="<?php echo htmlspecialchars($idPautaMinhasRaw, ENT_QUOTES, 'UTF-8'); ?>">
             <div class="register-line<?php echo $statusFinalMinhas ? ' is-inactive' : ''; ?><?php echo $linhaEmAndamentoMinhas ? ' is-current' : ''; ?>">
@@ -573,6 +574,7 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                                     data-inicio="<?php echo htmlspecialchars((string) ($m['data_hora_inicio_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                                     data-fim="<?php echo htmlspecialchars((string) ($m['data_hora_fim_efetivo'] ?? ''), ENT_QUOTES, 'UTF-8'); ?>"
                                     data-duracao-estimada="<?php echo (int) ($m['duracao_estimada_minutos'] ?? 0); ?>"
+                                    data-ja-inscrito="1"
                                 >
                                     <span class="js-time-label"><?php echo htmlspecialchars($rotuloHoraMinhas, ENT_QUOTES, 'UTF-8'); ?></span> <span class="js-time-lines"><strong><?php echo htmlspecialchars($dataHoraMinhas, ENT_QUOTES, 'UTF-8'); ?></strong></span>
                                 </span>
@@ -750,10 +752,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 || status === 'finalizada'
                 || status === 'realizada';
         }
-        function renderAudienceLinkState(pauta, terminal) {
+        function renderAudienceLinkState(pauta, terminal, jaInscrito) {
             document.querySelectorAll('[data-audience-link-pauta]').forEach(function (linkEl) {
                 if (String(linkEl.getAttribute('data-audience-link-pauta') || '').trim() !== pauta) return;
-                linkEl.style.display = terminal ? 'none' : '';
+                linkEl.style.display = terminal && !jaInscrito ? 'none' : '';
             });
         }
         function renderTimeBlock(block, item, allItems) {
@@ -780,7 +782,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     : (status === 'em_andamento' ? 'Iniciada às:' : (includeDate ? 'Data e hora:' : 'Previsão:'));
             }
             var pauta = String(block.getAttribute('data-pauta') || '').trim();
-            renderAudienceLinkState(pauta, finalizada);
+            var jaInscrito = typeof item.ja_inscrito === 'boolean'
+                ? item.ja_inscrito
+                : String(block.getAttribute('data-ja-inscrito') || '') === '1';
+            renderAudienceLinkState(pauta, finalizada, jaInscrito);
             var durationBlock = block.parentElement ? block.parentElement.querySelector('[data-duration-pauta="' + pauta.replace(/"/g, '\\"') + '"]') : null;
             if (durationBlock) {
                 durationBlock.style.display = finalizada ? '' : 'none';
@@ -891,13 +896,10 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             wrapper.style.display = '';
             if (sigiloso) {
                 wrapper.innerHTML = '<span class="content-assuntos danger">Não é permitida inscrição</span><span class="content-assuntos danger">para processos sigilosos</span>';
-                focusAvailabilityState();
-            } else if (lotado) {
-                wrapper.innerHTML = '<span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>';
-                focusAvailabilityState();
             } else if (ja) {
                 wrapper.innerHTML = '<span class="minor-info text-success">Voce esta inscrito.</span>';
-                focusAvailabilityState();
+            } else if (lotado) {
+                wrapper.innerHTML = '<span class="content-assuntos danger">Não é permitida mais nenhuma inscrição</span>';
             } else if (menor) {
                 wrapper.innerHTML = '<span class="minor-info text-error">Proibida inscrição de estudantes.</span>';
                 focusAvailabilityState();
@@ -972,7 +974,27 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                 }
             });
         }
+        // Normaliza respostas legadas antes de guardá-las ou renderizá-las.
+        // Isto remove dados do DOM, não desfaz a entrega já feita pela rede.
+        function normalizePollingItem(id, item) {
+            function flagActive(name) {
+                if (!Object.prototype.hasOwnProperty.call(item, name)) return false;
+                var value = item[name];
+                if (value === false || value === 0 || value === '0') return false;
+                return true; // true/1/'1' e qualquer tipo inesperado falham fechados.
+            }
+            var enrolled = item.ja_inscrito === true || item.ja_inscrito === 1 || item.ja_inscrito === '1';
+            if (flagActive('indisponivel') || flagActive('processo_sigiloso') ||
+                flagActive('envolve_menor') || flagActive('tem_prioridade_bloqueio') ||
+                flagActive('qtd_menor') || (flagActive('vagas_esgotadas') && !enrolled)) {
+                return { id_pauta: id, indisponivel: true };
+            }
+            return item;
+        }
         function applyUpdates(items) {
+            var normalized = {};
+            Object.keys(items).forEach(function (id) { if (items[id]) normalized[id] = normalizePollingItem(id, items[id]); });
+            items = normalized;
             Object.keys(items).forEach(function (id) {
                 if (!items[id] || !items[id].indisponivel) return;
                 document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (register) {
@@ -1054,7 +1076,8 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     hora_audiencia: block.getAttribute('data-hora-audiencia') || '',
                     data_hora_inicio_efetivo: block.getAttribute('data-inicio') || '',
                     data_hora_fim_efetivo: block.getAttribute('data-fim') || '',
-                    duracao_estimada_minutos: block.getAttribute('data-duracao-estimada') || '0'
+                    duracao_estimada_minutos: block.getAttribute('data-duracao-estimada') || '0',
+                    ja_inscrito: String(block.getAttribute('data-ja-inscrito') || '') === '1'
                 };
             });
             return out;
@@ -1087,7 +1110,8 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
                     status: block.getAttribute('data-status') || '',
                     data_hora_inicio_efetivo: block.getAttribute('data-inicio') || '',
                     data_hora_fim_efetivo: block.getAttribute('data-fim') || '',
-                    duracao_estimada_minutos: block.getAttribute('data-duracao-estimada') || '0'
+                    duracao_estimada_minutos: block.getAttribute('data-duracao-estimada') || '0',
+                    ja_inscrito: String(block.getAttribute('data-ja-inscrito') || '') === '1'
                 };
                 out.push({
                     id: pautaId,
@@ -1106,72 +1130,91 @@ function painelEstudanteDataHoraPorStatus(string $statusRaw, string $dataAud, st
             if (!root || !window.TimelineDayRuler) return;
             window.TimelineDayRuler.render(root, buildTimelineItems(overrides), { studentPanel: true });
         }
+        // Only accept complete, typed payloads; old/sensitive flags are
+        // normalized before this check. Never merge partial responses with DOM.
+        function validPollingItem(id, item) {
+            if (!item || typeof item !== 'object' || Array.isArray(item) || item.id_pauta !== id) return false;
+            if (item.indisponivel === true) return Object.keys(item).length === 2;
+            var strings = ['status','data_audiencia','hora_audiencia','data_hora_inicio_efetivo','data_hora_fim_efetivo'];
+            var bools = ['ja_inscrito','vagas_esgotadas','pode_inscrever'];
+            var known = ['id_pauta','duracao_estimada_minutos','total_inscritos_pauta'].concat(strings, bools);
+            return Object.keys(item).every(function (key) { return known.indexOf(key) !== -1; }) &&
+                strings.every(function (key) { return typeof item[key] === 'string'; }) &&
+                bools.every(function (key) { return typeof item[key] === 'boolean'; }) &&
+                Number.isInteger(item.duracao_estimada_minutos) && item.duracao_estimada_minutos >= 0 &&
+                Number.isInteger(item.total_inscritos_pauta) && item.total_inscritos_pauta >= 0;
+        }
+        function redactPollingItems(ids) {
+            var redacted = {};
+            ids.forEach(function (id) {
+                redacted[id] = {id_pauta: id, indisponivel: true};
+                latestItemsById[id] = redacted[id];
+            });
+            applyUpdates(redacted);
+        }
         var statusRequestInFlight = false;
         function refreshStatusAndTime() {
             if (statusRequestInFlight) return;
             var pautas = collectPautas();
             if (!pautas.length) return;
             statusRequestInFlight = true;
-            fetch('/api/sala-audiencias-pauta/status-bulk.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
+            var controller = typeof AbortController === 'function' ? new AbortController() : null;
+            var timer;
+            var deadline = new Promise(function (_, reject) {
+                timer = setTimeout(function () { if (controller) controller.abort(); reject(new Error('timeout')); }, 8000);
+            });
+            var request = Promise.resolve().then(function () { return fetch('/api/sala-audiencias-pauta/status-bulk.php', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+                signal: controller ? controller.signal : undefined,
                 body: JSON.stringify({ pautas: pautas })
-            })
-                .then(function (r) {
-                    return r.json().then(function (j) {
-                        return { ok: r.ok, body: j || {} };
-                    });
-                })
-                .then(function (res) {
-                    if (!res.ok || res.body.success !== true || res.body.completo !== true ||
-                        !Array.isArray(res.body.consultados) || !res.body.items ||
-                        typeof res.body.items !== 'object' || Array.isArray(res.body.items)) return;
-                    var consultados = res.body.consultados.map(String);
-                    if (consultados.length !== pautas.length || new Set(consultados).size !== pautas.length ||
-                        pautas.some(function (id) { return consultados.indexOf(id) === -1; }) ||
-                        Object.keys(res.body.items).some(function (id) {
-                            var item = res.body.items[id];
-                            return pautas.indexOf(id) === -1 || !item || typeof item !== 'object' ||
-                                String(item.id_pauta || '') !== id;
-                        })) return;
-                    pautas.forEach(function (id) {
-                        if (Object.prototype.hasOwnProperty.call(res.body.items, id)) return;
-                        delete latestItemsById[id];
-                        document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (row) {
-                            if (String(row.getAttribute('data-pauta') || '').trim() !== id) return;
-                            if (row.contains(document.activeElement)) {
-                                var section = row.closest('.card-page');
-                                var destination = section && section.querySelector('h2');
-                                if (destination) destination.focus();
-                            }
-                            row.remove();
-                        });
-                    });
-                    ['card-audiencias-hoje-estudante', 'card-minhas-inscricoes-estudante'].forEach(function (sectionId) {
-                        var section = document.getElementById(sectionId);
-                        if (!section) return;
-                        var empty = section.querySelector('.js-painel-empty');
-                        if (empty) empty.hidden = !!section.querySelector('.register.register-painel-estudante[data-pauta]');
-                    });
-                    Object.keys(res.body.items).forEach(function (id) {
-                        var item = res.body.items[id];
-                        if (item.indisponivel) {
-                            latestItemsById[id] = {id_pauta: id, indisponivel: true};
-                        } else {
-                            latestItemsById[id] = Object.assign({}, latestItemsById[id] || {}, item);
+            }); }).then(function (r) { return r.json().then(function (j) { return {ok:r.ok, body:j}; }); });
+            Promise.race([request, deadline]).then(function (res) {
+                if (!res.ok || !res.body || res.body.success !== true || res.body.completo !== true ||
+                    !Array.isArray(res.body.consultados) || !res.body.items ||
+                    typeof res.body.items !== 'object' || Array.isArray(res.body.items)) throw new Error('snapshot');
+                var consultados = res.body.consultados;
+                if (consultados.length !== pautas.length || new Set(consultados).size !== pautas.length ||
+                    consultados.some(function (id) { return typeof id !== 'string' || pautas.indexOf(id) === -1; }) ||
+                    Object.keys(res.body.items).some(function (id) { return pautas.indexOf(id) === -1; })) throw new Error('snapshot');
+                var safeItems = {};
+                Object.keys(res.body.items).forEach(function (id) {
+                    var raw = res.body.items[id];
+                    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || raw.id_pauta !== id) throw new Error('item');
+                    var item = normalizePollingItem(id, raw);
+                    if (!validPollingItem(id, item)) throw new Error('item');
+                    safeItems[id] = item;
+                });
+                // Only a fully validated complete snapshot proves absence.
+                pautas.forEach(function (id) {
+                    if (Object.prototype.hasOwnProperty.call(safeItems, id)) return;
+                    delete latestItemsById[id];
+                    document.querySelectorAll('.register.register-painel-estudante[data-pauta]').forEach(function (row) {
+                        if (String(row.getAttribute('data-pauta') || '').trim() !== id) return;
+                        if (row.contains(document.activeElement)) {
+                            var section = row.closest('.card-page');
+                            var destination = section && section.querySelector('h2');
+                            if (destination) destination.focus();
                         }
+                        row.remove();
                     });
-                    var precisaRecarregar = false;
-                    document.querySelectorAll('.register.register-painel-estudante[data-pauta][data-indisponivel="1"]').forEach(function (row) {
-                        var id = String(row.getAttribute('data-pauta') || '').trim();
-                        if (res.body.items[id] && !res.body.items[id].indisponivel) precisaRecarregar = true;
-                    });
-                    if (precisaRecarregar) { window.location.reload(); return; }
-                    applyUpdates(res.body.items);
-                })
-                .catch(function () { /* erro silencioso de polling */ })
-                .finally(function () { statusRequestInFlight = false; });
+                });
+                ['card-audiencias-hoje-estudante','card-minhas-inscricoes-estudante'].forEach(function (sectionId) {
+                    var section = document.getElementById(sectionId);
+                    if (!section) return;
+                    var empty = section.querySelector('.js-painel-empty');
+                    if (empty) empty.hidden = !!section.querySelector('.register.register-painel-estudante[data-pauta]');
+                });
+                var precisaRecarregar = false;
+                document.querySelectorAll('.register.register-painel-estudante[data-pauta][data-indisponivel="1"]').forEach(function (row) {
+                    var id = String(row.getAttribute('data-pauta') || '').trim();
+                    if (safeItems[id] && !safeItems[id].indisponivel) precisaRecarregar = true;
+                });
+                Object.keys(safeItems).forEach(function (id) { latestItemsById[id] = safeItems[id]; });
+                if (precisaRecarregar) { window.location.reload(); return; }
+                applyUpdates(safeItems);
+            }).catch(function () {
+                redactPollingItems(pautas);
+            }).finally(function () { clearTimeout(timer); statusRequestInFlight = false; });
         }
         var latestItemsById = buildCurrentItemsFromDom();
         var pollTimer = null;

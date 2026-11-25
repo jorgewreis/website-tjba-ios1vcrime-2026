@@ -52,11 +52,21 @@ final class Conection {
         prioridade_mulher INTEGER, prioridade_crianca_adolescente INTEGER, prioridade_idoso INTEGER,
         prioridade_pessoa_deficiencia INTEGER, created_at TEXT, updated_at TEXT);
       CREATE TABLE partes(id TEXT, nome_completo TEXT, cpf TEXT, sexo TEXT, data_nascimento TEXT);
-      CREATE TABLE processos(id TEXT, numero_processo TEXT);
-      INSERT INTO processos VALUES ('P1','001'),('P2','002');
+      CREATE TABLE processos(id TEXT, numero_processo TEXT, id_setor_responsavel TEXT, sigiloso INTEGER);
+      CREATE TABLE setores(id_setor TEXT, ativo INTEGER);
+      CREATE TABLE usuario_setor(usuario TEXT, setor TEXT);
+      INSERT INTO setores VALUES ('S1',1),('S2',1);
+      INSERT INTO usuario_setor VALUES ('synthetic','S1');
+      INSERT INTO processos VALUES ('P1','001','S1',0),('P2','002','S2',1),('P3','003',NULL,1),
+        ('P4','004','S1',1),('P5','005','S2',0),('P6','006',NULL,0);
       INSERT INTO partes VALUES ('A','Pessoa A','000','X','2000-01-01'),('B','Pessoa B','111','X','2000-01-01');
       INSERT INTO processos_partes VALUES ('L1','P1','A','reu','passivo',0,0,0,0,'2026','2026'),
-        ('L2','P2','B','vitima','ativo',0,0,0,0,'2026','2026');
+        ('L2','P2','B','vitima','ativo',0,0,0,0,'2026','2026'),
+        ('L3','P2','A','vitima','ativo',0,0,0,0,'2026','2026'),
+        ('L4','P3','A','vitima','ativo',0,0,0,0,'2026','2026'),
+        ('L5','P4','A','reu','passivo',0,0,0,0,'2026','2026'),
+        ('L6','P5','A','reu','passivo',0,0,0,0,'2026','2026'),
+        ('L7','P6','A','reu','passivo',0,0,0,0,'2026','2026');
     ''')
     db.commit()
 
@@ -78,12 +88,21 @@ require getenv('TEST_ENDPOINT');'''
     before = list(db.execute('SELECT * FROM processos_partes ORDER BY id'))
     for profile, auth, expected in [('SERVIDOR-CARTORIO', False, 401),
                                     ('ESTUDANTE', True, 403), ('SERVIDOR', True, 403)]:
-        status, body = invoke({'processo_id': 'P1'}, profile, auth)
-        assert status == expected and 'data' not in body, (status, body)
+        for process_id in ('P1', 'P3'):
+            status, body = invoke({'processo_id': process_id}, profile, auth)
+            assert status == expected and 'data' not in body, (status, body)
     status, body = invoke({'processo_id': 'P1'}, 'SERVIDOR-CARTORIO')
     assert status == 200 and [r['id'] for r in body['data']] == ['L1'], body
     status, body = invoke({'parte_id': 'B'}, 'SERVIDOR-CARTORIO')
     assert status == 200 and [r['id'] for r in body['data']] == ['L2'], body
+    # Leitura por perfil interno autorizado independe do setor responsável,
+    # inclusive em processos sigilosos. A regra setorial de mutação é distinta.
+    for process_id, expected_ids in [('P1', ['L1']), ('P2', ['L2', 'L3']), ('P3', ['L4']),
+                                     ('P4', ['L5']), ('P5', ['L6']), ('P6', ['L7'])]:
+        status, body = invoke({'processo_id': process_id}, 'SERVIDOR-CARTORIO')
+        assert status == 200 and sorted(r['id'] for r in body['data']) == expected_ids, (process_id, body)
+    status, body = invoke({'parte_id': 'A'}, 'SERVIDOR-CARTORIO')
+    assert status == 200 and sorted(r['id'] for r in body['data']) == ['L1', 'L3', 'L4', 'L5', 'L6', 'L7'], body
     status, body = invoke({}, 'SERVIDOR-CARTORIO')
     assert status == 400 and 'data' not in body, (status, body)
     status, body = invoke({'processo_id': 'P1'}, 'SERVIDOR-CARTORIO', method='POST')
