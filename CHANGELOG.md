@@ -98,88 +98,33 @@
 
 ## V. 1.88.0014
 
-**Data:** 2026-11-20 15:51:30 | **Commit:** `ae8c7d43` | **Tipo:** `patch`
+**Data:** 2026-11-20 10:56:04 | **Commit:** `428321d6` | **Tipo:** `patch`
 
-- fix(ci): validate installed WireGuard config only
+- fix(REI-158): align IPv6 lock case
 
-## V. 1.88.0013
+## V. 1.87.0194
 
-**Data:** 2026-11-20 15:47:19 | **Commit:** `9654ab41` | **Tipo:** `patch`
+**Data:** 2026-11-20 10:49:23 | **Commit:** `0b3d0eb5` | **Tipo:** `patch`
 
-- fix(ci): run WireGuard validation with explicit sudo
+- test(REI-158): observe HTTP admission lock
 
-## V. 1.88.0012
+## V. 1.87.0193
 
-**Data:** 2026-11-20 15:43:36 | **Commit:** `de7e73d2` | **Tipo:** `patch`
+**Data:** 2026-11-20 10:43:51 | **Commit:** `119e261f` | **Tipo:** `patch`
 
-- fix(ci): reveal sanitized WireGuard validation error
+- test: allow diagnostic probe time on CI
 
-## V. 1.88.0011
+## V. 1.87.0192
 
-**Data:** 2026-11-20 15:38:19 | **Commit:** `c35478b0` | **Tipo:** `patch`
+**Data:** 2026-11-20 10:41:05 | **Commit:** `101c01a9` | **Tipo:** `patch`
 
-- chore(sync): merge latest main into deployment key fix
+- test(REI-158): exercise concurrent HTTP logins
 
-## V. 1.88.0010
+## V. 1.87.0191
 
-**Data:** 2026-11-20 15:35:30 | **Commit:** `9a74caa2` | **Tipo:** `patch`
+**Data:** 2026-11-20 10:34:29 | **Commit:** `f95be398` | **Tipo:** `patch`
 
-- fix(ci): normalize WireGuard deployment key
-- fix(ci): validate WireGuard config after root install
-
-## V. 1.88.0009
-
-**Data:** 2026-11-20 15:18:50 | **Commit:** `61e43d48` | **Tipo:** `patch`
-
-- fix(ci): store WireGuard config with root permissions
-
-## V. 1.88.0008
-
-**Data:** 2026-11-20 15:06:06 | **Commit:** `86f0b54d` | **Tipo:** `patch`
-
-- fix(ci): use WireGuard for production deploy
-
-## V. 1.88.0007
-
-**Data:** 2026-11-20 14:52:07 | **Commit:** `55a6dd6d` | **Tipo:** `patch`
-
-- fix: resolve received letter comarca consistently
-
-## V. 1.88.0006
-
-**Data:** 2026-11-20 14:56:59 | **Commit:** `a082afda` | **Tipo:** `patch`
-
-- fix(footer): force credit metadata onto separate lines
-
-## V. 1.88.0005
-
-**Data:** 2026-11-20 14:46:11 | **Commit:** `7dd86e73` | **Tipo:** `patch`
-
-- fix(footer): show last successful deploy timestamp
-
-## V. 1.88.0004
-
-**Data:** 2026-11-20 14:14:40 | **Commit:** `f0a15d4d` | **Tipo:** `patch`
-
-- ci(deploy): preservar acesso WireGuard no firewall temporário
-
-## V. 1.88.0003
-
-**Data:** 2026-11-20 14:01:52 | **Commit:** `c85a9638` | **Tipo:** `patch`
-
-- ci(deploy): sincronizar firewall temporário Hostinger
-
-## V. 1.88.0002
-
-**Data:** 2026-11-20 13:52:35 | **Commit:** `bec23f45` | **Tipo:** `patch`
-
-- ci(deploy): permitir runner temporário no UFW
-
-## V. 1.88.0001
-
-**Data:** 2026-11-20 13:09:54 | **Commit:** `16c5f76d` | **Tipo:** `patch`
-
-- ci(deploy): add temporary Hostinger SSH allowlist
+- fix(REI-158): serialize login admission
 
 ## V. 1.87.0190
 
