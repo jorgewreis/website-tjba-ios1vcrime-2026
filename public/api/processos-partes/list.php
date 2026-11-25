@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/processos-partes/list.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -71,10 +74,7 @@ try {
     }
     echo json_encode(['data' => $rows], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
-    if ($connection->inTransaction()) {
-        $connection->rollBack();
-    }
-    error_log('processos-partes: falha ao listar vínculos.');
+    ApiErrorReporter::logUnexpected($e, 'public/api/processos-partes/list.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao listar vínculos.'], JSON_UNESCAPED_UNICODE);
 }

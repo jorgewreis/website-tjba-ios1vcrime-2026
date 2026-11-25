@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/tjba/metas-cartorio.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 const COD_CNJ_COMARCA = 2146;
@@ -33,7 +36,7 @@ try {
         'metas' => $metas,
     ]);
 } catch (RuntimeException $e) {
-    respond(['error' => $e->getMessage()], 502);
+    respond(['error' => ApiErrorReporter::genericMessage($e, 'public/api/tjba/metas-cartorio.php')], 502);
 }
 
 function fetchJson(string $url): array

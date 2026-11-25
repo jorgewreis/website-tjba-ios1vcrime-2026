@@ -5,8 +5,11 @@ require_once __DIR__ . '/../../app/helpers/SalaAudienciasEstudantePrivacidade.ph
 $db = new PDO('sqlite::memory:');
 $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $db->sqliteCreateFunction('NOW', fn() => '2026-01-01 00:00:00');
-$db->sqliteCreateFunction('CURDATE', fn() => date('Y-m-d'));
+$db->sqliteCreateFunction('CURDATE', fn() => date('Y-m-d', strtotime('+1 day')));
+date_default_timezone_set('America/Bahia');
 $today = date('Y-m-d');
+$dbTodaySimulado = date('Y-m-d', strtotime('+1 day'));
+if ($dbTodaySimulado === $today) throw new RuntimeException('A fixture deve simular o descompasso de data entre PHP e MySQL.');
 foreach ([
     'CREATE TABLE sala_audiencias_estudante_inscricao (id TEXT, pauta TEXT, usuario TEXT, created_at TEXT)',
     'CREATE TABLE sala_audiencias_pauta (id_pauta TEXT, ativo INTEGER, processo TEXT, tipo_audiencia TEXT, data_audiencia TEXT, hora_audiencia TEXT, status TEXT, data_hora_inicio_efetivo TEXT, data_hora_fim_efetivo TEXT, duracao_estimada_minutos INTEGER, localizacao TEXT, link_audiencia TEXT)',
@@ -34,4 +37,4 @@ $medidaHoje=array_values(array_filter($hojeRows, static fn(array $row): bool => 
 if (count($medidaHoje) !== 1 || !SalaAudienciasEstudantePrivacidade::indisponivel($medidaHoje[0])) {
     throw new RuntimeException('Pauta com medida_protetiva não foi bloqueada na listagem do painel.');
 }
-echo "PASS: inscrições bloqueadas permanecem visíveis apenas para redigir, inclusive com ata expirada\n";
+echo "PASS: privacy redaction and Bahia-local today query remain stable when simulated MySQL CURDATE differs\n";

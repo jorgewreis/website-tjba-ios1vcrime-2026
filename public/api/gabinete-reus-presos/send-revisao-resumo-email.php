@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/gabinete-reus-presos/send-revisao-resumo-email.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['reuspresosedit'], true);
 
@@ -46,6 +49,7 @@ try {
         'message' => (string) $result['message'],
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/gabinete-reus-presos/send-revisao-resumo-email.php');
     http_response_code(500);
     echo json_encode([
         'success' => false,

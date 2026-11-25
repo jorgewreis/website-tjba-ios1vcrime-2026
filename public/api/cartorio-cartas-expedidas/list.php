@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-cartas-expedidas/list.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['cartasexpedidas'], false);
 
@@ -45,6 +48,6 @@ try {
 } catch (\Throwable $exception) {
     http_response_code(500);
     echo json_encode([
-        'error' => 'Erro ao buscar cartas expedidas: ' . $exception->getMessage(),
+        'error' => 'Erro ao buscar cartas expedidas: ' . ApiErrorReporter::genericMessage($exception, 'public/api/cartorio-cartas-expedidas/list.php'),
     ], JSON_UNESCAPED_UNICODE);
 }

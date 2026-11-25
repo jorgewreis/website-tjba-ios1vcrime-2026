@@ -21,6 +21,7 @@ if (preg_match('/^[a-f0-9]{64}$/', $expectedMarker) !== 1) {
 $user = getenv('REI88_MYSQL_USER') ?: 'root';
 $password = getenv('REI88_MYSQL_PASSWORD') ?: '';
 $pdo = new PDO($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
+$pdoSecondConnection = new PDO($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
 $dbName = (string) $pdo->query('SELECT DATABASE()')->fetchColumn();
 $version = (string) $pdo->query('SELECT VERSION()')->fetchColumn();
 $versionComment = (string) $pdo->query('SELECT @@version_comment')->fetchColumn();
@@ -40,8 +41,13 @@ if (!is_string($marker) || !hash_equals($expectedMarker, $marker)) {
 }
 
 $fixtureTables = ['sala_audiencias_pauta_parte', 'sala_audiencias_pauta', 'processos', 'classes'];
-register_shutdown_function(static function () use ($pdo, $fixtureTables, $expectedMarker): void {
+register_shutdown_function(static function () use ($pdo, $pdoSecondConnection, $fixtureTables, $expectedMarker): void {
     try {
+        foreach ([$pdoSecondConnection, $pdo] as $connection) {
+            if ($connection->inTransaction()) {
+                $connection->rollBack();
+            }
+        }
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
         foreach ($fixtureTables as $table) {
             $pdo->exec('DROP TABLE IF EXISTS `' . $table . '`');
@@ -71,6 +77,7 @@ foreach ($ddl as $sql) {
 }
 
 require_once $repoRoot . '/app/services/SalaAudienciasPautaService.php';
+require_once $repoRoot . '/app/repositories/SalaAudienciasPautaRepository.php';
 
 $futureDate = static fn (): string => (new DateTimeImmutable('today +10 days'))->format('Y-m-d');
 $basePayload = [
@@ -98,6 +105,7 @@ $snapshot = static function (PDO $db) use ($allRows): array {
 };
 $reset = static function (PDO $db): void {
     $db->exec('DROP TRIGGER IF EXISTS rei88_fail_after_pauta_insert');
+    $db->exec('DROP TRIGGER IF EXISTS rei136_delay_sequence_insert');
     $db->exec('SET FOREIGN_KEY_CHECKS = 0');
     foreach (['sala_audiencias_pauta_parte', 'sala_audiencias_pauta', 'processos', 'classes'] as $table) {
         $db->exec('TRUNCATE TABLE `' . $table . '`');
@@ -181,6 +189,10 @@ try {
 $assert($snapshot($pdo) === $before, 'Rollback de processo novo deixou processo, classe ou pauta.');
 $assert(!$pdo->inTransaction(), 'Transação permaneceu aberta após rollback de processo novo.');
 fwrite(STDOUT, "PASS processo novo com falha: rollback removeu processo, classe e pauta.\n");
+$failureReleaseProbe = new SalaAudienciasPautaSequenceLock($pdoSecondConnection);
+$failureReleaseProbe->acquire((int) date('Y'), 0);
+$assert($failureReleaseProbe->release(), 'Falha da transação deixou o lock anual retido.');
+fwrite(STDOUT, "PASS falha transacional: segunda conexão readquiriu o lock anual.\n");
 
 // Processo novo com fluxo aceito deve persistir o processo, sua classe e a pauta relacionada.
 $reset($pdo);
@@ -201,4 +213,229 @@ $assert($newPautaRow !== false && $newPautaRow['processo'] === $newProcessRow['i
 $assert(!$pdo->inTransaction(), 'Fluxo aceito deixou transação aberta.');
 fwrite(STDOUT, "PASS processo novo: fluxo aceito persistiu processo, classe e pauta.\n");
 
-echo "PASS 5 cenários SalaAudienciasPautaService::create() (MySQL/InnoDB sintético).\n";
+// Duas sessões independentes comprovam contenção do lock e leitura do MAX após
+// o commit anterior, sem depender de uma constraint que a fixture não modela.
+$reset($pdo);
+$seedExistingProcess($pdo, $basePayload['numero_processo']);
+$year = (int) date('Y');
+$firstLock = new SalaAudienciasPautaSequenceLock($pdo);
+$secondLock = new SalaAudienciasPautaSequenceLock($pdoSecondConnection);
+$firstLock->acquire($year, 0);
+$timedOut = false;
+try {
+    $secondLock->acquire($year, 0);
+} catch (SalaAudienciasPautaSequenceLockException $exception) {
+    $timedOut = true;
+}
+$assert($timedOut, 'A segunda conexão não respeitou a contenção/timeout do lock anual.');
+
+$repositoryFirst = new SalaAudienciasPautaRepository($pdo);
+$pdo->beginTransaction();
+$firstSequence = $repositoryFirst->nextSequencialForYear($year);
+$insertFixturePauta = static function (PDO $db, int $sequence, string $id, string $time) use ($year, $futureDate): void {
+    $statement = $db->prepare(
+        "INSERT INTO sala_audiencias_pauta (id_pauta, numero_sequencial, ano, processo, tipo_audiencia, data_audiencia, hora_audiencia, localizacao, status, ativo) VALUES (:id, :sequence, :year, 'PRC-EXISTENTE', 'Instrucao', :date, :time, 'Sala sintetica', 'designada', 1)"
+    );
+    $statement->execute([
+        ':id' => $id,
+        ':sequence' => $sequence,
+        ':year' => $year,
+        ':date' => $futureDate(),
+        ':time' => $time,
+    ]);
+};
+$insertFixturePauta($pdo, $firstSequence, 'SAP-LOCK-1', '09:00:00');
+$pdo->commit();
+$assert($firstLock->release(), 'A primeira conexão não liberou o lock após commit.');
+
+$secondLock->acquire($year, 0);
+$pdoSecondConnection->beginTransaction();
+$secondSequence = (new SalaAudienciasPautaRepository($pdoSecondConnection))->nextSequencialForYear($year);
+$assert($secondSequence === $firstSequence + 1, 'A segunda conexão não observou o sequencial confirmado pela primeira.');
+$insertFixturePauta($pdoSecondConnection, $secondSequence, 'SAP-LOCK-2', '09:15:00');
+$pdoSecondConnection->commit();
+$assert($secondLock->release(), 'A segunda conexão não liberou o lock após commit.');
+$assert(
+    (int) $pdo->query('SELECT COUNT(DISTINCT numero_sequencial) FROM sala_audiencias_pauta')->fetchColumn() === 2,
+    'As duas sessões persistiram sequenciais repetidos.'
+);
+fwrite(STDOUT, "PASS duas conexões MySQL: contenção, timeout, sequência única e liberação após commit/falha.\n");
+
+// A falha ao abrir uma transação aninhada não pode reverter a transação do chamador.
+$reset($pdo);
+$seedExistingProcess($pdo, $basePayload['numero_processo']);
+$pdo->beginTransaction();
+$pdo->exec("INSERT INTO classes (id, codigo, nome) VALUES ('CLA-EXTERNA', 'EXTERNA', 'Transação externa')");
+try {
+    (new SalaAudienciasPautaService($pdo))->create($basePayload, null);
+    throw new RuntimeException('A transação externa deveria impedir beginTransaction() do serviço.');
+} catch (PDOException $exception) {
+    $assert($pdo->inTransaction(), 'A falha ao iniciar transação reverteu a transação externa.');
+}
+$externalTransactionLockProbe = new SalaAudienciasPautaSequenceLock($pdoSecondConnection);
+$externalTransactionLockProbe->acquire($year, 0);
+$assert($externalTransactionLockProbe->release(), 'Falha ao iniciar transação deixou o lock anual retido.');
+$pdo->commit();
+$assert(
+    (int) $pdo->query("SELECT COUNT(*) FROM classes WHERE id = 'CLA-EXTERNA'")->fetchColumn() === 1,
+    'A transação do chamador não pôde ser confirmada após a falha do serviço.'
+);
+fwrite(STDOUT, "PASS transação externa: falha do serviço preservou a transação do chamador e liberou o lock.\n");
+
+// Duas chamadas reais e simultâneas ao serviço usam processos e conexões próprias.
+// O trigger amplia a janela entre MAX+1 e INSERT para tornar a corrida reproduzível
+// caso a serialização seja removida; nenhum dado fora do fixture é utilizado.
+$reset($pdo);
+$seedExistingProcess($pdo, '0000003-39.2020.8.05.0001');
+$pdo->exec(
+    'CREATE TRIGGER rei136_delay_sequence_insert BEFORE INSERT ON sala_audiencias_pauta '
+    . 'FOR EACH ROW BEGIN DO SLEEP(2); END'
+);
+$workerDirectory = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'rei136-' . bin2hex(random_bytes(12));
+if (!mkdir($workerDirectory, 0700)) {
+    throw new RuntimeException('Não foi possível criar diretório temporário dos workers.');
+}
+$workerPath = $workerDirectory . DIRECTORY_SEPARATOR . 'create-pauta.php';
+$startPath = $workerDirectory . DIRECTORY_SEPARATOR . 'start';
+$workerScript = <<<'PHP'
+<?php
+declare(strict_types=1);
+require_once getenv('REI88_TEST_REPO_ROOT') . '/app/services/SalaAudienciasPautaService.php';
+$pdo = new PDO(
+    getenv('REI88_MYSQL_DSN'),
+    getenv('REI88_MYSQL_USER') ?: 'root',
+    getenv('REI88_MYSQL_PASSWORD') ?: '',
+    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]
+);
+file_put_contents(getenv('REI136_READY_FILE'), 'ready', LOCK_EX);
+$deadline = microtime(true) + 15;
+while (!is_file(getenv('REI136_START_FILE')) && microtime(true) < $deadline) {
+    usleep(10000);
+}
+if (!is_file(getenv('REI136_START_FILE'))) {
+    fwrite(STDERR, "Timeout aguardando início simultâneo.\n");
+    exit(2);
+}
+try {
+    $id = (new SalaAudienciasPautaService($pdo))->create(
+        json_decode(getenv('REI136_PAYLOAD'), true, 512, JSON_THROW_ON_ERROR),
+        null
+    );
+    file_put_contents(getenv('REI136_RESULT_FILE'), json_encode(['id' => $id], JSON_THROW_ON_ERROR), LOCK_EX);
+} catch (Throwable $exception) {
+    file_put_contents(
+        getenv('REI136_RESULT_FILE'),
+        json_encode(['error' => get_class($exception) . ': ' . $exception->getMessage()], JSON_THROW_ON_ERROR),
+        LOCK_EX
+    );
+    exit(1);
+}
+PHP;
+if (file_put_contents($workerPath, $workerScript, LOCK_EX) === false) {
+    throw new RuntimeException('Não foi possível gravar worker temporário.');
+}
+$workerPayloads = [
+    array_replace($basePayload, [
+        'numero_processo' => '0000003-39.2020.8.05.0001',
+        'hora_audiencia' => '09:10',
+    ]),
+    array_replace($basePayload, [
+        'numero_processo' => '0000004-24.2020.8.05.0001',
+        'hora_audiencia' => '09:20',
+    ]),
+];
+$workers = [];
+$workerResults = [];
+try {
+    foreach ($workerPayloads as $index => $payload) {
+        $readyPath = $workerDirectory . DIRECTORY_SEPARATOR . 'ready-' . $index;
+        $resultPath = $workerDirectory . DIRECTORY_SEPARATOR . 'result-' . $index;
+        $stdoutPath = $workerDirectory . DIRECTORY_SEPARATOR . 'stdout-' . $index;
+        $stderrPath = $workerDirectory . DIRECTORY_SEPARATOR . 'stderr-' . $index;
+        $environment = getenv();
+        if (!is_array($environment)) {
+            $environment = [];
+        }
+        $environment += [
+            'REI88_TEST_REPO_ROOT' => $repoRoot,
+            'REI88_MYSQL_DSN' => $dsn,
+            'REI88_MYSQL_USER' => $user,
+            'REI88_MYSQL_PASSWORD' => $password,
+        ];
+        $environment['REI136_READY_FILE'] = $readyPath;
+        $environment['REI136_START_FILE'] = $startPath;
+        $environment['REI136_RESULT_FILE'] = $resultPath;
+        $environment['REI136_PAYLOAD'] = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        $process = proc_open(
+            [PHP_BINARY, $workerPath],
+            [
+                0 => ['file', '/dev/null', 'r'],
+                1 => ['file', $stdoutPath, 'a'],
+                2 => ['file', $stderrPath, 'a'],
+            ],
+            $pipes,
+            $workerDirectory,
+            $environment
+        );
+        if (!is_resource($process)) {
+            throw new RuntimeException('Não foi possível iniciar worker concorrente.');
+        }
+        $workers[] = ['process' => $process, 'resultPath' => $resultPath, 'stderrPath' => $stderrPath];
+    }
+
+    $readyDeadline = microtime(true) + 15;
+    do {
+        $allReady = true;
+        foreach (array_keys($workerPayloads) as $index) {
+            $allReady = $allReady && is_file($workerDirectory . DIRECTORY_SEPARATOR . 'ready-' . $index);
+        }
+        if (!$allReady) {
+            usleep(10000);
+        }
+    } while (!$allReady && microtime(true) < $readyDeadline);
+    $assert($allReady, 'As duas conexões concorrentes não ficaram prontas a tempo.');
+    if (file_put_contents($startPath, 'start', LOCK_EX) === false) {
+        throw new RuntimeException('Não foi possível liberar a barreira dos workers.');
+    }
+
+    foreach ($workers as $worker) {
+        $exitCode = proc_close($worker['process']);
+        $resultText = is_file($worker['resultPath']) ? file_get_contents($worker['resultPath']) : false;
+        $workerResult = is_string($resultText) ? json_decode($resultText, true, 512, JSON_THROW_ON_ERROR) : null;
+        $workerResults[] = $workerResult;
+        $stderr = is_file($worker['stderrPath']) ? trim((string) file_get_contents($worker['stderrPath'])) : '';
+        $assert(
+            $exitCode === 0,
+            'Worker concorrente falhou (exit=' . $exitCode . ', resultado=' . json_encode($workerResult, JSON_UNESCAPED_UNICODE) . ', stderr=' . $stderr . ').'
+        );
+    }
+} finally {
+    foreach ($workers as $worker) {
+        if (is_resource($worker['process'])) {
+            proc_terminate($worker['process']);
+            proc_close($worker['process']);
+        }
+    }
+    foreach (glob($workerDirectory . DIRECTORY_SEPARATOR . '*') ?: [] as $path) {
+        if (is_file($path) && !is_link($path)) {
+            unlink($path);
+        }
+    }
+    if (is_dir($workerDirectory) && !is_link($workerDirectory)) {
+        rmdir($workerDirectory);
+    }
+}
+$createdIds = array_values(array_filter(array_map(
+    static fn ($result): string => is_array($result) ? (string) ($result['id'] ?? '') : '',
+    $workerResults
+)));
+$assert(count($createdIds) === 2, 'As chamadas concorrentes não retornaram dois IDs de pauta.');
+$sequenceQuery = $pdo->prepare(
+    'SELECT numero_sequencial FROM sala_audiencias_pauta WHERE id_pauta IN (?, ?) ORDER BY numero_sequencial'
+);
+$sequenceQuery->execute($createdIds);
+$concurrentSequences = array_map('intval', $sequenceQuery->fetchAll(PDO::FETCH_COLUMN));
+$assert($concurrentSequences === [1, 2], 'Duas chamadas concorrentes ao serviço não receberam sequenciais 1 e 2.');
+fwrite(STDOUT, "PASS concorrência real: duas chamadas simultâneas a create() persistiram sequenciais distintos.\n");
+
+echo "PASS 8 cenários SalaAudienciasPautaService::create() (MySQL/InnoDB sintético).\n";
