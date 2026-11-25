@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/ParentRecordLock.php';
 
 final class GuiasSubtarefasRepository
 {
@@ -51,28 +52,22 @@ final class GuiasSubtarefasRepository
             throw new InvalidArgumentException('Tipo e ordem inválidos.');
         }
 
-        $id = IdGenerator::generateUniquePrefixedId(
-            $this->connection,
-            $this->table,
-            'id',
-            'GUS',
-            30
-        );
-
-        $sql = sprintf(
-            'INSERT INTO `%s` (`id`, `guia_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at`) VALUES (:id, :guia_id, :tipo, :ordem, :status, :dados_especificos, NOW(), NOW())',
-            $this->table
-        );
-        $statement = $this->connection->prepare($sql);
-        $statement->bindValue(':id', $id);
-        $statement->bindValue(':guia_id', $guiaId);
-        $statement->bindValue(':tipo', $tipo);
-        $statement->bindValue(':ordem', $ordem, PDO::PARAM_INT);
-        $statement->bindValue(':status', $status);
-        $statement->bindValue(':dados_especificos', $dadosJson);
-        $statement->execute();
-
-        return $id;
+        return ParentRecordLock::run($this->connection, 'guias', $guiaId, function () use ($guiaId, $tipo, $ordem, $status, $dadosJson): string {
+            $id = IdGenerator::generateUniquePrefixedId($this->connection, $this->table, 'id', 'GUS', 30);
+            $sql = sprintf(
+                'INSERT INTO `%s` (`id`, `guia_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at`) VALUES (:id, :guia_id, :tipo, :ordem, :status, :dados_especificos, NOW(), NOW())',
+                $this->table
+            );
+            $statement = $this->connection->prepare($sql);
+            $statement->bindValue(':id', $id);
+            $statement->bindValue(':guia_id', $guiaId);
+            $statement->bindValue(':tipo', $tipo);
+            $statement->bindValue(':ordem', $ordem, PDO::PARAM_INT);
+            $statement->bindValue(':status', $status);
+            $statement->bindValue(':dados_especificos', $dadosJson);
+            $statement->execute();
+            return $id;
+        });
     }
 
     public function findByGuiaId(string $guiaId): array

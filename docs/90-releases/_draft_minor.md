@@ -4,12 +4,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-155): invalidate reset links on password change** `[beb5d477]`
-- **test(REI-155): include diagnostics in sandbox fixture** `[a56a90fb]`
-- **test(REI-155): verify ordered reset races** `[7cf2f8ff]`
-- **test(REI-155): guard ordered race entrypoints** `[bc981db7]`
-- **test(REI-155): verify issuance and password race** `[e0058088]`
-- **test: allow diagnostic probe time on CI** `[5da1149f]`
-- **fix(REI-155): allow optional password history schema** `[1c6528bd]`
-- **merge: reconcile REI-155 with origin/main** `[5f901af9]`
+- **test: verifica consulta com perfis acumulados** `[6fd4f38f]`
+- **test: executa privacidade estudantil no ci** `[c401ff04]`
 

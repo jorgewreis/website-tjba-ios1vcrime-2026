@@ -16,9 +16,9 @@ args = args[2:]
 if args[:2] == ['image','inspect']:
  print(json.dumps([{'Id':'sha256:'+'d'*64}])); sys.exit(0)
 if args[:2] == ['network','create']:
- s['label'] = args[args.index('--label')+1].split('=',1)[1]; statefile.write_text(json.dumps(s)); print('e'*64); sys.exit(0)
+ s['label'] = args[args.index('--label')+1].split('=',1)[1]; s['network'] = args[-1]; statefile.write_text(json.dumps(s)); print('e'*64); sys.exit(0)
 if args[:2] == ['network','inspect']:
- print(json.dumps([{'Id':'e'*64,'Internal':True,'Labels':{'fokus.auth-e2e':s['label']},'Containers':{}}])); sys.exit(0)
+ print(json.dumps([{'Id':'e'*64,'Name':s['network'],'Internal':True,'Labels':{'fokus.auth-e2e':s['label']},'Containers':{}}])); sys.exit(0)
 if args[:2] == ['network','rm']:
  s['network_removed']=True
  if scenario == 'late': s['late_container_exists']=True
@@ -42,7 +42,7 @@ class LostCreateRunner(unittest.TestCase):
  def test_lost_create_remains_failure_and_removes_only_unique_owner(self):
   with tempfile.TemporaryDirectory(prefix='rei93-runner-fake-') as temp:
    root=Path(temp); auth=root/'tests'/'auth'; auth.mkdir(parents=True)
-   for name in ['run-isolated-auth-e2e.ps1','cleanup-owned.ps1','rei155-safe-diagnostic.ps1']: shutil.copyfile(HERE/name,auth/name)
+   for name in ['run-isolated-auth-e2e.ps1','cleanup-owned.ps1','docker-topology-validation.ps1']: shutil.copyfile(HERE/name,auth/name)
    for name in ['app','config','public','vendor','services']: (root/name).mkdir()
    (root/'vendor'/'autoload.php').write_text('<?php',encoding='utf8')
    fake=root/'bin';fake.mkdir(); script=fake/'fake_docker.py';script.write_text(FAKE,encoding='utf8')

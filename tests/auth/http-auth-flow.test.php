@@ -67,7 +67,62 @@ $invalid = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12
 ok(!responseSuccess($invalid['body']), 'login com CSRF inválido foi aceito');
 $login = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12345','csrf_token'=>$loginCsrf], $loginCookie);
 ok(responseSuccess($login['body']), 'login válido não autenticou: ' . substr($login['body'], 0, 500)); $session = sessionCookie($login['headers']);
+
+// Consultas reais após login, com instituições e usuários exclusivamente sintéticos.
+$searchPath = '/api/instituicoes-publicas/search.php?nome=Sintetica';
+$anonymousSearch = req($searchPath);
+$anonymousBody = json_decode($anonymousSearch['body'], true);
+ok($anonymousSearch['status'] === 401 && is_array($anonymousBody) && !array_key_exists('instituicoes', $anonymousBody)
+    && !str_contains($anonymousSearch['body'], 'Sintetica') && !str_contains($anonymousSearch['body'], 'INS-SYNTHETIC-'), 'consulta anônima não foi recusada');
+$adminSearch = req($searchPath, 'GET', [], $session);
+$adminItems = json_decode($adminSearch['body'], true)['instituicoes'] ?? [];
+$adminIds = array_column($adminItems, 'id'); sort($adminIds);
+ok($adminSearch['status'] === 200 && $adminIds === ['INS-SYNTHETIC-ACTIVE', 'INS-SYNTHETIC-INACTIVE'], 'consulta interna não retornou instituições sintéticas esperadas');
+$inactivePath = '/api/instituicoes-publicas/list.php?nome=Sintetica&ativo=0';
+$adminInactive = req($inactivePath, 'GET', [], $session);
+$adminInactiveData = json_decode($adminInactive['body'], true);
+ok($adminInactive['status'] === 200 && is_array($adminInactiveData) && array_column($adminInactiveData['data'] ?? [], 'id') === ['INS-SYNTHETIC-INACTIVE'], 'filtro de inativas interno divergiu');
+foreach ([['258.369.147-37', 'CONSULTOR'], ['314.159.265-90', 'MISTO'], ['147.258.369-82', 'ESTUDANTE']] as [$cpf, $role]) {
+    $profileForm = req('/views/public/login-form.php');
+    $profileLogin = req('/login.php', 'POST', ['cpf'=>$cpf, 'senha'=>'Sintetica!12345', 'csrf_token'=>csrf($profileForm['body'])], sessionCookie($profileForm['headers']));
+    ok(responseSuccess($profileLogin['body']), 'login sintético falhou para ' . $role);
+    $profileSession = sessionCookie($profileLogin['headers']);
+    $profileSearch = req($searchPath, 'GET', [], $profileSession);
+    if ($role === 'CONSULTOR') {
+        $profileIds = array_column(json_decode($profileSearch['body'], true)['instituicoes'] ?? [], 'id');
+        ok($profileSearch['status'] === 200 && $profileIds === ['INS-SYNTHETIC-ACTIVE'], 'consulta externa não restringiu instituições ativas');
+        $inactiveList = req($inactivePath, 'GET', [], $profileSession);
+        $inactiveData = json_decode($inactiveList['body'], true);
+        ok($inactiveList['status'] === 200 && is_array($inactiveData) && array_column($inactiveData['data'] ?? [], 'id') === ['INS-SYNTHETIC-ACTIVE']
+            && !str_contains($inactiveList['body'], 'INS-SYNTHETIC-INACTIVE'), 'filtro consultor incluiu instituição inativa');
+    } elseif ($role === 'MISTO') {
+        $profileIds = array_column(json_decode($profileSearch['body'], true)['instituicoes'] ?? [], 'id');
+        sort($profileIds);
+        ok($profileSearch['status'] === 200 && $profileIds === ['INS-SYNTHETIC-ACTIVE', 'INS-SYNTHETIC-INACTIVE'], 'perfil misto não preservou a consulta interna');
+        $inactiveList = req($inactivePath, 'GET', [], $profileSession);
+        $inactiveData = json_decode($inactiveList['body'], true);
+        ok($inactiveList['status'] === 200 && is_array($inactiveData) && array_column($inactiveData['data'] ?? [], 'id') === ['INS-SYNTHETIC-INACTIVE'], 'filtro de inativas do perfil misto divergiu');
+    } else {
+        $deniedBody = json_decode($profileSearch['body'], true);
+        ok($profileSearch['status'] === 403 && is_array($deniedBody) && !array_key_exists('instituicoes', $deniedBody)
+            && !str_contains($profileSearch['body'], 'Sintetica') && !str_contains($profileSearch['body'], 'INS-SYNTHETIC-'), 'perfil estudante acessou instituições');
+    }
+}
 $home = req('/home.php', 'GET', [], $session); $logoutCsrf = csrf($home['body']);
+// Exercise the real password-change endpoint and real session on the runner's
+// disposable database, then restore the synthetic password for later cases.
+$changeForm = req('/views/public/alterar-senha-form.php', 'GET', [], $session);
+ok($changeForm['status'] === 200, 'formulário autenticado de troca de senha indisponível');
+$changeCsrf = csrf($changeForm['body']);
+$changeFields = ['csrf_token' => $changeCsrf, 'senha_atual' => 'Ativo!12345', 'nova_senha' => 'NovaSenha!45678', 'confirmar_senha' => 'NovaSenha!45678'];
+$badCsrfChange = req('/api/alterar_senha.php', 'POST', array_merge($changeFields, ['csrf_token' => 'invalid']), $session, true);
+ok($badCsrfChange['status'] === 403 && !responseSuccess($badCsrfChange['body']), 'troca com CSRF inválido não foi recusada');
+$badCurrentChange = req('/api/alterar_senha.php', 'POST', array_merge($changeFields, ['senha_atual' => 'senha-incorreta']), $session, true);
+ok($badCurrentChange['status'] === 422 && !responseSuccess($badCurrentChange['body']), 'troca com senha atual incorreta não foi recusada');
+$change = req('/api/alterar_senha.php', 'POST', $changeFields, $session, true);
+ok($change['status'] === 200 && responseSuccess($change['body']), 'troca de senha autenticada falhou');
+$restore = req('/api/alterar_senha.php', 'POST', ['csrf_token' => $changeCsrf, 'senha_atual' => 'NovaSenha!45678', 'nova_senha' => 'Ativo!12345', 'confirmar_senha' => 'Ativo!12345'], $session, true);
+ok($restore['status'] === 200 && responseSuccess($restore['body']), 'restauração da senha sintética falhou');
 $badLogout = req('/logout.php', 'POST', ['csrf_token'=>'invalid'], $session); ok($badLogout['status'] === 403, 'logout com CSRF inválido não retornou 403');
 $logout = req('/logout.php', 'POST', ['csrf_token'=>$logoutCsrf], $session); ok($logout['status'] === 302, 'logout válido não redirecionou');
 $closed = req('/home.php', 'GET', [], $session); ok(in_array($closed['status'], [302,401,403], true), 'sessão encerrada acessou área autenticada');

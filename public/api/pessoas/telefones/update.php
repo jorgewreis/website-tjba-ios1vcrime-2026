@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 4) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/pessoas/telefones/update.php');
 require_once dirname(__DIR__, 4) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['consultapartesedit', 'partesinstituicoesedit', 'partesinstituicoescreate'], true);
 
@@ -31,6 +34,7 @@ try {
     $service->updateTelefone($id, $parsed);
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/pessoas/telefones/update.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao atualizar telefone.'], JSON_UNESCAPED_UNICODE);
 }
