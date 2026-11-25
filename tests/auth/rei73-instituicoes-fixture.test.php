@@ -22,8 +22,10 @@ $profile = $pdo->prepare('INSERT INTO usuario_perfil (id_usu_perfil, usuario, pe
 foreach ([
     ['USR-33333333333333333333333333', 'Consultor Sintetico', 'consultor@auth-test.invalid', '258.369.147-37', 'USP-33333333333333333333333333', 'CONSULTOR'],
     ['USR-44444444444444444444444444', 'Estudante Sintetico', 'estudante@auth-test.invalid', '147.258.369-82', 'USP-44444444444444444444444444', 'ESTUDANTE'],
+    ['USR-55555555555555555555555555', 'Perfil Misto Sintetico', 'misto@auth-test.invalid', '314.159.265-90', 'USP-55555555555555555555555555', 'CONSULTOR'],
 ] as [$id, $name, $email, $cpf, $profileId, $role]) {
     $user->execute([$id, $name, $email, $cpf, Security::hashPassword('Sintetica!12345')]);
     $profile->execute([$profileId, $id, $role]);
 }
+$profile->execute(['USP-66666666666666666666666666', 'USR-55555555555555555555555555', 'SERVIDOR-CARTORIO']);
 echo "PASS rei73-instituicoes-fixture\n";

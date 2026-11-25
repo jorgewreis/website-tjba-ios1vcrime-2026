@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0026
+
+**Data:** 2026-11-25 02:36:07 | **Commit:** `6fd4f38f` | **Tipo:** `patch`
+
+- test: verifica consulta com perfis acumulados
+
 ## V. 1.88.0025
 
 **Data:** 2026-11-25 02:27:25 | **Commit:** `310da4f7` | **Tipo:** `patch`
@@ -7788,6 +7794,7 @@
 
 
 \n
+
 
 
 

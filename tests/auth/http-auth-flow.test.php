@@ -55,7 +55,11 @@ $adminSearch = req($searchPath, 'GET', [], $session);
 $adminItems = json_decode($adminSearch['body'], true)['instituicoes'] ?? [];
 $adminIds = array_column($adminItems, 'id'); sort($adminIds);
 ok($adminSearch['status'] === 200 && $adminIds === ['INS-SYNTHETIC-ACTIVE', 'INS-SYNTHETIC-INACTIVE'], 'consulta interna não retornou instituições sintéticas esperadas');
-foreach ([['258.369.147-37', 'CONSULTOR'], ['147.258.369-82', 'ESTUDANTE']] as [$cpf, $role]) {
+$inactivePath = '/api/instituicoes-publicas/list.php?nome=Sintetica&ativo=0';
+$adminInactive = req($inactivePath, 'GET', [], $session);
+$adminInactiveData = json_decode($adminInactive['body'], true);
+ok($adminInactive['status'] === 200 && is_array($adminInactiveData) && array_column($adminInactiveData['data'] ?? [], 'id') === ['INS-SYNTHETIC-INACTIVE'], 'filtro de inativas interno divergiu');
+foreach ([['258.369.147-37', 'CONSULTOR'], ['314.159.265-90', 'MISTO'], ['147.258.369-82', 'ESTUDANTE']] as [$cpf, $role]) {
     $profileForm = req('/views/public/login-form.php');
     $profileLogin = req('/login.php', 'POST', ['cpf'=>$cpf, 'senha'=>'Sintetica!12345', 'csrf_token'=>csrf($profileForm['body'])], sessionCookie($profileForm['headers']));
     ok(responseSuccess($profileLogin['body']), 'login sintético falhou para ' . $role);
@@ -64,6 +68,17 @@ foreach ([['258.369.147-37', 'CONSULTOR'], ['147.258.369-82', 'ESTUDANTE']] as [
     if ($role === 'CONSULTOR') {
         $profileIds = array_column(json_decode($profileSearch['body'], true)['instituicoes'] ?? [], 'id');
         ok($profileSearch['status'] === 200 && $profileIds === ['INS-SYNTHETIC-ACTIVE'], 'consulta externa não restringiu instituições ativas');
+        $inactiveList = req($inactivePath, 'GET', [], $profileSession);
+        $inactiveData = json_decode($inactiveList['body'], true);
+        ok($inactiveList['status'] === 200 && is_array($inactiveData) && array_column($inactiveData['data'] ?? [], 'id') === ['INS-SYNTHETIC-ACTIVE']
+            && !str_contains($inactiveList['body'], 'INS-SYNTHETIC-INACTIVE'), 'filtro consultor incluiu instituição inativa');
+    } elseif ($role === 'MISTO') {
+        $profileIds = array_column(json_decode($profileSearch['body'], true)['instituicoes'] ?? [], 'id');
+        sort($profileIds);
+        ok($profileSearch['status'] === 200 && $profileIds === ['INS-SYNTHETIC-ACTIVE', 'INS-SYNTHETIC-INACTIVE'], 'perfil misto não preservou a consulta interna');
+        $inactiveList = req($inactivePath, 'GET', [], $profileSession);
+        $inactiveData = json_decode($inactiveList['body'], true);
+        ok($inactiveList['status'] === 200 && is_array($inactiveData) && array_column($inactiveData['data'] ?? [], 'id') === ['INS-SYNTHETIC-INACTIVE'], 'filtro de inativas do perfil misto divergiu');
     } else {
         $deniedBody = json_decode($profileSearch['body'], true);
         ok($profileSearch['status'] === 403 && is_array($deniedBody) && !array_key_exists('instituicoes', $deniedBody)
