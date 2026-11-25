@@ -44,6 +44,32 @@ $invalid = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12
 ok(!responseSuccess($invalid['body']), 'login com CSRF inválido foi aceito');
 $login = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12345','csrf_token'=>$loginCsrf], $loginCookie);
 ok(responseSuccess($login['body']), 'login válido não autenticou: ' . substr($login['body'], 0, 500)); $session = sessionCookie($login['headers']);
+
+// Consultas reais após login, com instituições e usuários exclusivamente sintéticos.
+$searchPath = '/api/instituicoes-publicas/search.php?nome=Sintetica';
+$anonymousSearch = req($searchPath);
+$anonymousBody = json_decode($anonymousSearch['body'], true);
+ok($anonymousSearch['status'] === 401 && is_array($anonymousBody) && !array_key_exists('instituicoes', $anonymousBody)
+    && !str_contains($anonymousSearch['body'], 'Sintetica'), 'consulta anônima não foi recusada');
+$adminSearch = req($searchPath, 'GET', [], $session);
+$adminItems = json_decode($adminSearch['body'], true)['instituicoes'] ?? [];
+$adminIds = array_column($adminItems, 'id'); sort($adminIds);
+ok($adminSearch['status'] === 200 && $adminIds === ['INS-SYNTHETIC-ACTIVE', 'INS-SYNTHETIC-INACTIVE'], 'consulta interna não retornou instituições sintéticas esperadas');
+foreach ([['258.369.147-37', 'CONSULTOR'], ['147.258.369-82', 'ESTUDANTE']] as [$cpf, $role]) {
+    $profileForm = req('/views/public/login-form.php');
+    $profileLogin = req('/login.php', 'POST', ['cpf'=>$cpf, 'senha'=>'Sintetica!12345', 'csrf_token'=>csrf($profileForm['body'])], sessionCookie($profileForm['headers']));
+    ok(responseSuccess($profileLogin['body']), 'login sintético falhou para ' . $role);
+    $profileSession = sessionCookie($profileLogin['headers']);
+    $profileSearch = req($searchPath, 'GET', [], $profileSession);
+    if ($role === 'CONSULTOR') {
+        $profileIds = array_column(json_decode($profileSearch['body'], true)['instituicoes'] ?? [], 'id');
+        ok($profileSearch['status'] === 200 && $profileIds === ['INS-SYNTHETIC-ACTIVE'], 'consulta externa não restringiu instituições ativas');
+    } else {
+        $deniedBody = json_decode($profileSearch['body'], true);
+        ok($profileSearch['status'] === 403 && is_array($deniedBody) && !array_key_exists('instituicoes', $deniedBody)
+            && !str_contains($profileSearch['body'], 'Sintetica'), 'perfil estudante acessou instituições');
+    }
+}
 $home = req('/home.php', 'GET', [], $session); $logoutCsrf = csrf($home['body']);
 // Exercise the real password-change endpoint and real session on the runner's
 // disposable database, then restore the synthetic password for later cases.
