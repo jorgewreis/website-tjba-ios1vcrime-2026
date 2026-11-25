@@ -42,6 +42,7 @@ with tempfile.TemporaryDirectory(prefix='pauta-status-test-') as tmp:
     helper = app / 'app/helpers/SalaAudienciasEstudantePrivacidade.php'
     helper.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT / 'app/helpers/SalaAudienciasEstudantePrivacidade.php', helper)
+    shutil.copyfile(ROOT / 'app/helpers/ApiErrorReporter.php', helper.parent / 'ApiErrorReporter.php')
     # A directory at the old diagnostic path simulates an unwritable log target.
     (isolated / 'debug-07d2e0.log').mkdir()
     stubs = {
