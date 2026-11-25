@@ -114,11 +114,13 @@
             return response.text().then(function (text) {
                 let data = {};
                 try {
+                    if (settings.requireJson && !text) throw new Error('Resposta JSON vazia.');
                     data = text ? JSON.parse(text) : {};
                 } catch (error) {
+                    if (settings.requireJson) throw error;
                     data = {};
                 }
-                return { ok: response.ok, data: data };
+                return { ok: response.ok, status: response.status, data: data };
             });
         });
     }

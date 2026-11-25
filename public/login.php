@@ -47,22 +47,45 @@ $clientIp = Security::getClientIp();
 
 $pdo = Conection::getInstance()->getConnection();
 $rateLimiter = new LoginRateLimiter($pdo);
+$usuario = new Usuario();
 try {
-    $limitStatus = $rateLimiter->canAttempt($normalizedCpf, $clientIp);
+    $attempt = $rateLimiter->withLoginAttemptLock(
+        $normalizedCpf,
+        $clientIp,
+        static function () use ($rateLimiter, $usuario, $cpf, $senha, $normalizedCpf, $clientIp): array {
+            $limitStatus = $rateLimiter->canAttempt($normalizedCpf, $clientIp);
+            if (($limitStatus['allowed'] ?? false) !== true) {
+                return ['limit_status' => $limitStatus, 'result' => null];
+            }
+
+            $result = $usuario->autenticar($cpf, $senha);
+            if (($result['success'] ?? false) !== true) {
+                $limitStatus = $rateLimiter->registerFailure($normalizedCpf, $clientIp);
+            } else {
+                $rateLimiter->clear($normalizedCpf, $clientIp);
+            }
+
+            return ['limit_status' => $limitStatus, 'result' => $result];
+        }
+    );
 } catch (Throwable $exception) {
-    error_log('LoginRateLimiter: falha ao consultar armazenamento: ' . $exception->getMessage());
+    error_log('LoginRateLimiter: falha ao serializar tentativa ou registrar resultado: ' . get_class($exception));
     http_response_code(503);
     echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
     exit;
 }
 
-if (($limitStatus['allowed'] ?? false) !== true) {
-    if (!$rateLimiter->isStorageAvailable()) {
-        http_response_code(503);
-        echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
-        exit;
-    }
+if (!$rateLimiter->isStorageAvailable()) {
+    http_response_code(503);
+    echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
+    exit;
+}
 
+/** @var array{allowed:bool,message:?string,retryAfter:int} $limitStatus */
+$limitStatus = $attempt['limit_status'];
+/** @var array<string,mixed>|null $resultado */
+$resultado = $attempt['result'];
+if ($resultado === null) {
     echo json_encode([
         'success' => false,
         'message' => $limitStatus['message'] ?? 'Muitas tentativas de login. Tente novamente mais tarde.'
@@ -70,25 +93,7 @@ if (($limitStatus['allowed'] ?? false) !== true) {
     exit;
 }
 
-$usuario = new Usuario();
-$resultado = $usuario->autenticar($cpf, $senha);
-
 if (($resultado['success'] ?? false) !== true) {
-    try {
-        $limitStatus = $rateLimiter->registerFailure($normalizedCpf, $clientIp);
-    } catch (Throwable $exception) {
-        error_log('LoginRateLimiter: falha ao registrar tentativa: ' . $exception->getMessage());
-        http_response_code(503);
-        echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
-        exit;
-    }
-
-    if (!$rateLimiter->isStorageAvailable()) {
-        http_response_code(503);
-        echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
-        exit;
-    }
-
     $message = !empty($resultado['inactive']) && !empty($resultado['message'])
         ? $resultado['message']
         : 'CPF ou senha inválidos.';
@@ -101,21 +106,6 @@ if (($resultado['success'] ?? false) !== true) {
         'success' => false,
         'message' => $message
     ]);
-    exit;
-}
-
-try {
-    $rateLimiter->clear($normalizedCpf, $clientIp);
-} catch (Throwable $exception) {
-    error_log('LoginRateLimiter: falha ao limpar tentativas: ' . $exception->getMessage());
-    http_response_code(503);
-    echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
-    exit;
-}
-
-if (!$rateLimiter->isStorageAvailable()) {
-    http_response_code(503);
-    echo json_encode(['success' => false, 'message' => 'Login temporariamente indisponível. Tente novamente mais tarde.']);
     exit;
 }
 

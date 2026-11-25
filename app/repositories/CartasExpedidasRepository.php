@@ -357,8 +357,9 @@ final class CartasExpedidasRepository
 
         $coll = self::COLLATION;
         if (isset($filters['classe']) && $filters['classe'] !== '') {
-            $clauses[] = "(cl.`codigo` COLLATE {$coll} = :classe OR cl.`nome` COLLATE {$coll} = :classe)";
-            $params[':classe'] = trim($filters['classe']);
+            $clauses[] = "(cl.`codigo` COLLATE {$coll} = :classe_codigo OR cl.`nome` COLLATE {$coll} = :classe_nome)";
+            $params[':classe_codigo'] = trim($filters['classe']);
+            $params[':classe_nome'] = trim($filters['classe']);
         }
 
         if (isset($filters['finalidade']) && $filters['finalidade'] !== '') {

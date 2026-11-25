@@ -81,6 +81,26 @@ final class SalaAudienciasPautaRepository
         return $row === false ? null : $row;
     }
 
+    /**
+     * Locks only the pauta row used to serialize student registrations.
+     * Call as the first statement after beginning the transaction: under
+     * InnoDB REPEATABLE READ this avoids creating a stale consistent-read
+     * snapshot before waiting for another registration transaction.
+     */
+    public function lockForStudentRegistration(string $id): bool
+    {
+        $sql = sprintf('SELECT `id_pauta` FROM `%s` WHERE `id_pauta` = :id FOR UPDATE', $this->table);
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+            // SQLite test harnesses have no FOR UPDATE syntax/row locks.
+            $sql = sprintf('SELECT `id_pauta` FROM `%s` WHERE `id_pauta` = :id', $this->table);
+        }
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':id', $id);
+        $st->execute();
+
+        return $st->fetchColumn() !== false;
+    }
+
     public function update(string $id, array $row): bool
     {
         $setLink = $this->hasLinkAudienciaColumn() ? ',`link_audiencia`=:link_audiencia' : '';

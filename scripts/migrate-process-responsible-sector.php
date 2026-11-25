@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit;
+}
+
 /**
  * Add the nullable process -> responsible sector reference used by REI-69.
  * Existing processes are intentionally left unassigned; no process data is

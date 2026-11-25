@@ -29,7 +29,9 @@ final class ParteDocumentoHelper
             return preg_replace('/\D+/', '', $numero) ?? '';
         }
 
-        return preg_replace('/\s+/', '', $numero) ?? '';
+        // Non-CPF identifiers are case-insensitive business keys. Canonicalize
+        // before persistence and lock construction so ABC and abc share one key.
+        return strtoupper(preg_replace('/\s+/', '', $numero) ?? '');
     }
 
     public static function validarNumero(string $tipo, string $numeroNormalizado): void
