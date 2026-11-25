@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/HelperUtils.php';
 require_once __DIR__ . '/../helpers/AuditLoggerHelper.php';
+require_once __DIR__ . '/../helpers/GuiasLegacyTransactionalGuard.php';
 require_once __DIR__ . '/ClasseManager.php';
 require_once __DIR__ . '/ProcessoManager.php';
 require_once __DIR__ . '/ReuManager.php';
@@ -157,9 +158,15 @@ class Guias
     public function cadastrarGuia(array $dados): array
     {
         $agora = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
-        
+
+        if ($this->pdo->inTransaction()) {
+            return ['ok' => false, 'id' => null, 'message' => 'Não foi possível cadastrar a guia.'];
+        }
         try {
-            $this->pdo->beginTransaction();
+            if (!$this->pdo->beginTransaction()) {
+                throw new RuntimeException('Não foi possível iniciar a transação de guia.');
+            }
+            GuiasLegacyTransactionalGuard::requireTransactionalTables($this->pdo);
 
             // 1. Cadastra/atualiza a classe
             if (!empty($dados['classe_cod']) && !empty($dados['classe_desc'])) {
@@ -188,7 +195,10 @@ class Guias
                     $cpf = $dados['cpf'] ?? null;
                     $reuExistia = $this->buscarReu($reuRaw);
                     $idReu = $this->cadastrarReu($reuRaw, $cpf);
-                    if (!$reuExistia && $idReu !== null) {
+                    if ($idReu === null || trim($idReu) === '') {
+                        throw new RuntimeException('Não foi possível obter a parte informada para a guia.');
+                    }
+                    if (!$reuExistia) {
                         $reuAuto = true;
                     }
                 }
@@ -196,7 +206,9 @@ class Guias
 
             // 4. Vincula réu ao processo
             if ($idReu && !empty($dados['processo'])) {
-                $this->vincularReuProcesso($idReu, $dados['processo']);
+                if (!$this->vincularReuProcesso($idReu, $dados['processo'])) {
+                    throw new RuntimeException('Não foi possível vincular a parte ao processo da guia.');
+                }
             }
 
             // 5. Verifica se réu está preso e adiciona prioridade automaticamente
@@ -342,7 +354,9 @@ class Guias
             // 8.1 Força atualização do status da guia com base nas subtarefas recém-criadas
             $this->atualizarStatusGuiaPorSubtarefas($idGuia);
 
-            $this->pdo->commit();
+            if (!$this->pdo->commit()) {
+                throw new RuntimeException('Não foi possível confirmar a transação de guia.');
+            }
             // Auditoria: registra criação da guia
             try {
                 $userCadastro = (string)($dados['user_cadastro'] ?? 'sistema');
@@ -384,8 +398,14 @@ class Guias
             return ['ok' => false, 'message' => 'ID da guia não informado.'];
         }
 
+        if ($this->pdo->inTransaction()) {
+            return ['ok' => false, 'id' => $idGuia, 'message' => 'Não foi possível atualizar a guia.'];
+        }
         try {
-            $this->pdo->beginTransaction();
+            if (!$this->pdo->beginTransaction()) {
+                throw new RuntimeException('Não foi possível iniciar a transação de guia.');
+            }
+            GuiasLegacyTransactionalGuard::requireTransactionalTables($this->pdo);
 
             // 1. Cadastra/atualiza a classe
             if (!empty($dados['classe_cod']) && !empty($dados['classe_desc'])) {
@@ -406,12 +426,17 @@ class Guias
                 } else {
                     $cpf = $dados['cpf'] ?? null;
                     $idReu = $this->cadastrarReu($reuRaw, $cpf);
+                    if ($idReu === null || trim($idReu) === '') {
+                        throw new RuntimeException('Não foi possível obter a parte informada para a guia.');
+                    }
                 }
             }
 
             // 4. Vincula réu ao processo
             if ($idReu && !empty($dados['processo'])) {
-                $this->vincularReuProcesso($idReu, $dados['processo']);
+                if (!$this->vincularReuProcesso($idReu, $dados['processo'])) {
+                    throw new RuntimeException('Não foi possível vincular a parte ao processo da guia.');
+                }
             }
 
             // 5. Prioridades (com regra automática de réu preso)
@@ -523,7 +548,9 @@ class Guias
             // 7.1 Força atualização do status da guia com base nas subtarefas atuais
             $this->atualizarStatusGuiaPorSubtarefas($idGuia);
 
-            $this->pdo->commit();
+            if (!$this->pdo->commit()) {
+                throw new RuntimeException('Não foi possível confirmar a transação de guia.');
+            }
 
             return [
                 'ok' => true,

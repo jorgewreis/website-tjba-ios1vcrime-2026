@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0028
+
+**Data:** 2026-11-25 06:14:05 | **Commit:** `15bf78b6` | **Tipo:** `patch`
+
+- fix(ci): restaurar fixtures de APIs e dependencias
+
 ## V. 1.88.0027
 
 **Data:** 2026-11-25 05:47:53 | **Commit:** `c401ff04` | **Tipo:** `patch`
@@ -7807,14 +7813,3 @@
 
 
 \n
-
-
-
-
-
-
-
-
-
-
-
