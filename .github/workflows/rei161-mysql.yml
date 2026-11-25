@@ -1,0 +1,32 @@
+name: REI-161 status-bulk MySQL isolado
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  status-bulk-mysql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Obter imagens por digest
+        run: |
+          docker pull php@sha256:64ffb7411253121bbeb0d9eba37ce85e88d2a60d698e5debbd66bac71b20f3c2
+          docker pull composer@sha256:511d2a96fce74de098b54224d59146fb8b6a7735d4e301f16c87c062e511900d
+          docker pull mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903
+      - name: Construir runtime isolado
+        run: |
+          docker build --network none --pull=false --label "com.fokus.rei161-ci-run=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --iidfile "$RUNNER_TEMP/rei161-qa.id" tests/auth/ci-runtime
+      - name: Validar endpoint com perfis reais e MySQL descartável
+        shell: pwsh
+        run: |
+          $image = (Get-Content -LiteralPath "$env:RUNNER_TEMP/rei161-qa.id" -Raw).Trim()
+          ./tests/pauta/run-rei161-status-bulk-mysql-isolated.ps1 -CiLinux -QaImageId $image
+      - name: Verificar resíduos
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(docker ps -aq --filter label=com.fokus.rei161-status-bulk-mysql-test)"
+          test -z "$(docker volume ls -q --filter label=com.fokus.rei161-status-bulk-mysql-test)"

@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/ProfissaoValidator.php';
 require_once __DIR__ . '/../helpers/ParteDocumentoHelper.php';
+require_once __DIR__ . '/../helpers/ParteDocumentoLock.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/PartesDocumentosRepository.php';
 require_once __DIR__ . '/../repositories/PartesTelefonesRepository.php';
@@ -69,47 +70,58 @@ final class PessoasService
 
     public function create(array $payload): string
     {
-        $this->connection->beginTransaction();
-        try {
-            $documentosPayload = $this->normalizarDocumentosPayload($payload);
-            if ($documentosPayload === [] && !empty($payload['cpf'])) {
-                $cpfUnico = ParteDocumentoHelper::normalizarNumero('CPF', (string) $payload['cpf']);
-                if ($cpfUnico !== '') {
-                    ParteDocumentoHelper::validarNumero('CPF', $cpfUnico);
-                    $documentosPayload = [['tipo' => 'CPF', 'numero' => $cpfUnico]];
-                }
+        $documentosPayload = $this->normalizarDocumentosPayload($payload);
+        if ($documentosPayload === [] && !empty($payload['cpf'])) {
+            $cpfUnico = ParteDocumentoHelper::normalizarNumero('CPF', (string) $payload['cpf']);
+            if ($cpfUnico !== '') {
+                ParteDocumentoHelper::validarNumero('CPF', $cpfUnico);
+                $documentosPayload = [['tipo' => 'CPF', 'numero' => $cpfUnico]];
             }
+        }
 
-            $id = $this->partesRepository->insert([
-                'cpf' => '',
-                'nome_completo' => $payload['nome_completo'] ?? '',
-                'sexo' => $payload['sexo'] ?? '',
-                'data_nascimento' => $payload['data_nascimento'] ?? '',
-                'profissao' => $this->resolverProfissaoParaPayload($payload, null),
-            ]);
+        return ParteDocumentoLock::runMany($this->connection, $documentosPayload, function () use ($payload, $documentosPayload): string {
+            if (!$this->connection->beginTransaction()) {
+                throw new RuntimeException('Não foi possível iniciar o cadastro da pessoa.');
+            }
+            try {
+                $id = $this->partesRepository->insert([
+                    'cpf' => '',
+                    'nome_completo' => $payload['nome_completo'] ?? '',
+                    'sexo' => $payload['sexo'] ?? '',
+                    'data_nascimento' => $payload['data_nascimento'] ?? '',
+                    'profissao' => $this->resolverProfissaoParaPayload($payload, null),
+                ]);
 
-            $this->persistirDocumentos($id, $documentosPayload);
+                $this->persistirDocumentos($id, $documentosPayload);
 
-            $telefones = $payload['telefones'] ?? [];
-            if (is_array($telefones)) {
-                foreach ($telefones as $tel) {
-                    $numero = trim((string) ($tel['numero'] ?? ''));
-                    if ($numero !== '') {
-                        $this->telefonesRepository->insert([
-                            'parte_id' => $id,
-                            'tipo' => trim((string) ($tel['tipo'] ?? '')) ?: null,
-                            'numero' => $numero,
-                        ]);
+                $telefones = $payload['telefones'] ?? [];
+                if (is_array($telefones)) {
+                    foreach ($telefones as $tel) {
+                        $numero = trim((string) ($tel['numero'] ?? ''));
+                        if ($numero !== '') {
+                            $this->telefonesRepository->insert([
+                                'parte_id' => $id,
+                                'tipo' => trim((string) ($tel['tipo'] ?? '')) ?: null,
+                                'numero' => $numero,
+                            ]);
+                        }
                     }
                 }
-            }
 
-            $this->connection->commit();
-            return $id;
-        } catch (Throwable $e) {
-            $this->connection->rollBack();
-            throw $e;
-        }
+                $this->connection->commit();
+                return $id;
+            } catch (Throwable $e) {
+                if ($this->connection->inTransaction()) {
+                    try {
+                        $this->connection->rollBack();
+                    } catch (Throwable $rollbackError) {
+                        ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                        throw new RuntimeException('Falha ao reverter cadastro da pessoa; estado da conexão incerto.', 0, $e);
+                    }
+                }
+                throw $e;
+            }
+        });
     }
 
     public function update(string $id, array $payload): bool
@@ -145,21 +157,28 @@ final class PessoasService
         }
         ParteDocumentoHelper::validarNumero($tipo, $numero);
 
-        $existentes = $this->documentosRepository->findByParteId($parteId);
-        foreach ($existentes as $doc) {
-            if (ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? '')) === $tipo) {
-                throw new InvalidArgumentException('Esta pessoa já possui documento do tipo ' . $tipo . '.');
-            }
-        }
+        return ParteDocumentoLock::run(
+            $this->connection,
+            $tipo,
+            $numero,
+            fn(): string => $this->transacaoDocumento($parteId, function () use ($parteId, $tipo, $numero): string {
+                $existentes = $this->documentosRepository->findByParteId($parteId);
+                foreach ($existentes as $doc) {
+                    if (ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? '')) === $tipo) {
+                        throw new InvalidArgumentException('Esta pessoa já possui documento do tipo ' . $tipo . '.');
+                    }
+                }
 
-        $newId = $this->documentosRepository->insert([
-            'parte_id' => $parteId,
-            'tipo' => $tipo,
-            'numero' => $numero,
-        ]);
-        $this->sincronizarCpfLegado($parteId);
+                $newId = $this->documentosRepository->insert([
+                    'parte_id' => $parteId,
+                    'tipo' => $tipo,
+                    'numero' => $numero,
+                ]);
+                $this->sincronizarCpfLegado($parteId);
 
-        return $newId;
+                return $newId;
+            })
+        );
     }
 
     public function deleteDocumento(string $id): bool
@@ -169,12 +188,68 @@ final class PessoasService
             return false;
         }
         $parteId = trim((string) ($row['parte_id'] ?? ''));
-        $ok = $this->documentosRepository->delete($id);
-        if ($ok && $parteId !== '') {
-            $this->sincronizarCpfLegado($parteId);
+        $tipo = ParteDocumentoHelper::normalizarTipo((string) ($row['tipo'] ?? ''));
+        $numero = ParteDocumentoHelper::normalizarNumero($tipo, (string) ($row['numero'] ?? ''));
+        if ($parteId === '' || $tipo === '' || $numero === '') {
+            return false;
         }
+        return ParteDocumentoLock::run(
+            $this->connection,
+            $tipo,
+            $numero,
+            fn(): bool => $this->transacaoDocumento($parteId, function () use ($id, $parteId, $tipo, $numero): bool {
+                $atual = $this->documentosRepository->findById($id);
+                if ($atual === null || (string) ($atual['parte_id'] ?? '') !== $parteId) {
+                    return false;
+                }
+                if (ParteDocumentoHelper::normalizarTipo((string) ($atual['tipo'] ?? '')) !== $tipo
+                    || ParteDocumentoHelper::normalizarNumero($tipo, (string) ($atual['numero'] ?? '')) !== $numero) {
+                    throw new RuntimeException('Documento alterado durante a exclusão; tente novamente.');
+                }
+                $ok = $this->documentosRepository->delete($id);
+                if ($ok) {
+                    $this->sincronizarCpfLegado($parteId);
+                }
 
-        return $ok;
+                return $ok;
+            })
+        );
+    }
+
+    /** Serializa alterações de documentos da mesma pessoa antes de ler ou gravar. */
+    private function transacaoDocumento(string $parteId, callable $operacao): mixed
+    {
+        if ($this->connection->inTransaction()) {
+            throw new LogicException('A alteração de documento exige transação própria.');
+        }
+        if (!$this->connection->beginTransaction()) {
+            throw new RuntimeException('Não foi possível iniciar a alteração do documento.');
+        }
+        try {
+            $sql = 'SELECT `id` FROM `partes` WHERE `id` = :id';
+            if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+                $sql .= ' FOR UPDATE';
+            }
+            $stmt = $this->connection->prepare($sql);
+            $stmt->execute([':id' => $parteId]);
+            if ($stmt->fetchColumn() === false) {
+                throw new InvalidArgumentException('Pessoa não encontrada.');
+            }
+            $resultado = $operacao();
+            $this->connection->commit();
+            return $resultado;
+        } catch (Throwable $e) {
+            if ($this->connection->inTransaction()) {
+                try {
+                    $this->connection->rollBack();
+                } catch (Throwable $rollbackError) {
+                ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                    error_log('Falha ao reverter transação de documento; estado da conexão incerto.');
+                    throw new RuntimeException('Falha ao reverter alteração de documento; estado da conexão incerto.', 0, $e);
+                }
+            }
+            throw $e;
+        }
     }
 
     public function addTelefone(string $parteId, array $row): string

@@ -1,4 +1,9 @@
 <?php
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
 $root = dirname(__DIR__);
 $msgs = [
     'cartorio-guias' => ['Guia cancelada.', 'Guia excluída.'],

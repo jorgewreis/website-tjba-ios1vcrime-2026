@@ -1,4 +1,9 @@
 <?php
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
 $p = dirname(__DIR__) . '/app/services/Guias.php';
 $c = str_replace(["\r\n", "\r"], "\n", file_get_contents($p));
 $c = str_replace(
