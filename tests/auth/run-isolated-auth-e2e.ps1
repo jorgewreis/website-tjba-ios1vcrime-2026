@@ -25,7 +25,7 @@ $mysql = $mailpit = $app = $client = $browserContainer = $null; $cleanupFailed =
 . (Join-Path $PSScriptRoot 'cleanup-owned.ps1')
 . (Join-Path $PSScriptRoot 'docker-topology-validation.ps1')
 $executionFailure = $null; $guardToken = $null
-function D([string[]]$a) { $prior = $ErrorActionPreference; $ErrorActionPreference = 'Continue'; try { $o = & docker --context $dockerContext @a 2>&1; $code = $LASTEXITCODE } finally { $ErrorActionPreference = $prior }; if ($code -ne 0) { foreach ($line in $o) { if ([string]$line -match '^REI158_DIAG code-(initial|workers|success|timeout|storage)-(other|[0-3])$') { Write-Host ([string]$line) } }; throw 'Docker falhou; detalhes suprimidos.' }; return $o }
+function D([string[]]$a) { $prior = $ErrorActionPreference; $ErrorActionPreference = 'Continue'; try { $o = & docker --context $dockerContext @a 2>&1; $code = $LASTEXITCODE } finally { $ErrorActionPreference = $prior }; if ($code -ne 0) { foreach ($line in $o) { if ([string]$line -match '^REI158_DIAG code-(initial|workers|success|timeout|storage)-(other|[0-3])$' -or [string]$line -match '^AUTH_FIXTURE_DIAG stage=(initial|clear|register|count) class=(PDOException|RuntimeException|InvalidArgumentException|Throwable) sqlstate=(none|[A-Z0-9]{5}) native=(none|[0-9]{1,5})$') { Write-Host ([string]$line) } }; throw 'Docker falhou; detalhes suprimidos.' }; return $o }
 function Id([string]$v, [string]$what) { if ($v -notmatch '^[a-f0-9]{64}$') { throw "ID inválido: $what" }; $v }
 function Secret {
     $b = [byte[]]::new(32)
