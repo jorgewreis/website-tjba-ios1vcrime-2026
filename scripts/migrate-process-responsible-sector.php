@@ -61,7 +61,7 @@ final class ProcessResponsibleSectorMigration
         $foreignKeys = $this->foreignKeys($database);
         $targetForeignKeys = [];
         foreach ($foreignKeys as $foreignKey) {
-            if ($foreignKey['COLUMN_NAME'] === self::PROCESS_COLUMN) {
+            if (strcasecmp((string) $foreignKey['COLUMN_NAME'], self::PROCESS_COLUMN) === 0) {
                 $targetForeignKeys[] = $foreignKey;
             }
         }
@@ -77,7 +77,7 @@ final class ProcessResponsibleSectorMigration
             if (count($constraintRows) !== 1) {
                 throw new RuntimeException('A constraint de setor responsável existente é composta e incompatível.');
             }
-            $this->assertCompatibleForeignKey($targetForeignKeys[0]);
+            $this->assertCompatibleForeignKey($targetForeignKeys[0], $database);
         }
 
         return [
@@ -174,7 +174,7 @@ final class ProcessResponsibleSectorMigration
 
     private function assertChar30PrimaryKey(?array $column, array $indexes, string $label): void
     {
-        $primaryIndex = $indexes['PRIMARY'] ?? null;
+        $primaryIndex = $indexes['primary'] ?? null;
         if ($column === null
             || strtolower((string) $column['DATA_TYPE']) !== 'char'
             || (int) $column['CHARACTER_MAXIMUM_LENGTH'] !== 30
@@ -184,7 +184,9 @@ final class ProcessResponsibleSectorMigration
             || strtolower((string) $column['COLLATION_NAME']) !== 'utf8mb4_unicode_ci'
             || $primaryIndex === null
             || (int) $primaryIndex['non_unique'] !== 0
-            || $primaryIndex['columns'] !== [self::SECTOR_COLUMN]
+            || count($primaryIndex['columns']) !== 1
+            || !is_string($primaryIndex['columns'][0])
+            || strcasecmp($primaryIndex['columns'][0], self::SECTOR_COLUMN) !== 0
             || $primaryIndex['sub_parts'] !== [null]) {
             throw new RuntimeException($label . ' não corresponde ao contrato CHAR(30) utf8mb4_unicode_ci e PRIMARY KEY.');
         }
@@ -213,7 +215,8 @@ final class ProcessResponsibleSectorMigration
         $statement->execute([':schema' => $database, ':table' => $table]);
         $indexes = [];
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $name = (string) $row['INDEX_NAME'];
+            // Index and column names are case-insensitive in MySQL.
+            $name = strtolower((string) $row['INDEX_NAME']);
             $indexes[$name] ??= ['non_unique' => (int) $row['NON_UNIQUE'], 'columns' => [], 'sub_parts' => []];
             $indexes[$name]['columns'][] = $row['COLUMN_NAME'] === null ? null : (string) $row['COLUMN_NAME'];
             $indexes[$name]['sub_parts'][] = $row['SUB_PART'] === null ? null : (int) $row['SUB_PART'];
@@ -224,14 +227,17 @@ final class ProcessResponsibleSectorMigration
     private function isUsableIndex(array $index): bool
     {
         return (int) $index['non_unique'] === 1
-            && ($index['columns'][0] ?? null) === self::PROCESS_COLUMN
+            && is_string($index['columns'][0] ?? null)
+            && strcasecmp($index['columns'][0], self::PROCESS_COLUMN) === 0
             && ($index['sub_parts'][0] ?? null) === null;
     }
 
     private function isExactTargetIndex(array $index): bool
     {
         return (int) $index['non_unique'] === 1
-            && $index['columns'] === [self::PROCESS_COLUMN]
+            && count($index['columns']) === 1
+            && is_string($index['columns'][0])
+            && strcasecmp($index['columns'][0], self::PROCESS_COLUMN) === 0
             && $index['sub_parts'] === [null];
     }
 
@@ -239,7 +245,7 @@ final class ProcessResponsibleSectorMigration
     private function foreignKeys(string $database): array
     {
         $statement = $this->connection->prepare(
-            'SELECT k.CONSTRAINT_NAME, k.COLUMN_NAME, k.REFERENCED_TABLE_NAME, k.REFERENCED_COLUMN_NAME, '
+            'SELECT k.CONSTRAINT_NAME, k.COLUMN_NAME, k.REFERENCED_TABLE_SCHEMA, k.REFERENCED_TABLE_NAME, k.REFERENCED_COLUMN_NAME, '
             . 'r.DELETE_RULE, r.UPDATE_RULE '
             . 'FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE k '
             . 'JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS r '
@@ -252,10 +258,19 @@ final class ProcessResponsibleSectorMigration
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    private function assertCompatibleForeignKey(array $foreignKey): void
+    private function assertCompatibleForeignKey(array $foreignKey, string $database): void
     {
-        if ($foreignKey['REFERENCED_TABLE_NAME'] !== self::SECTOR_TABLE
-            || $foreignKey['REFERENCED_COLUMN_NAME'] !== self::SECTOR_COLUMN
+        $mode = $this->connection->query('SELECT @@lower_case_table_names')->fetchColumn();
+        if (!is_numeric($mode) || !in_array((int) $mode, [0, 1, 2], true)) {
+            throw new RuntimeException('Modo de nomes de tabelas não reconhecido.');
+        }
+        $referencedSchema = (string) ($foreignKey['REFERENCED_TABLE_SCHEMA'] ?? '');
+        $sameSchema = (int) $mode === 0 ? $referencedSchema === $database : strcasecmp($referencedSchema, $database) === 0;
+        $referencedTable = (string) ($foreignKey['REFERENCED_TABLE_NAME'] ?? '');
+        $sameTable = (int) $mode === 0 ? $referencedTable === self::SECTOR_TABLE : strcasecmp($referencedTable, self::SECTOR_TABLE) === 0;
+        if (!$sameSchema
+            || !$sameTable
+            || strcasecmp((string) ($foreignKey['REFERENCED_COLUMN_NAME'] ?? ''), self::SECTOR_COLUMN) !== 0
             || !in_array(strtoupper($foreignKey['DELETE_RULE']), ['RESTRICT', 'NO ACTION'], true)
             || !in_array(strtoupper($foreignKey['UPDATE_RULE']), ['RESTRICT', 'NO ACTION'], true)) {
             throw new RuntimeException('A referência existente de setor responsável não corresponde à política esperada.');
@@ -274,6 +289,10 @@ final class ProcessResponsibleSectorMigration
 }
 
 if (isset($_SERVER['SCRIPT_FILENAME']) && realpath((string) $_SERVER['SCRIPT_FILENAME']) === __FILE__) {
+    if (PHP_SAPI !== 'cli') {
+        http_response_code(403);
+        exit;
+    }
     require_once dirname(__DIR__) . '/app/helpers/Conection.php';
     try {
         $arguments = array_slice($argv ?? [], 1);

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0030
+
+**Data:** 2026-11-25 03:18:33 | **Commit:** `e2429053` | **Tipo:** `patch`
+
+- fix: valida schema referenciado na migracao
+
 ## V. 1.88.0029
 
 **Data:** 2026-11-25 03:13:08 | **Commit:** `2705e2b2` | **Tipo:** `patch`
@@ -7812,6 +7818,7 @@
 
 
 \n
+
 
 
 
