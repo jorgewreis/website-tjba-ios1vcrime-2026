@@ -198,4 +198,33 @@ $summary=CartasExpedidasEstadoFluxo::resumir($rows,new DateTimeImmutable('2026-1
 check168($summary['envios']===null && $summary['devolucoes']===null && $summary['inconsistencias']===1,'Ambiguous aggregate unavailable');
 $before=snapshot168($pdo); try { $service->concluirSubtarefa('duplicate-s'); throw new LogicException('duplicate accepted'); } catch(InvalidArgumentException $e) {}
 check168(snapshot168($pdo)===$before,'Duplicate transition refused without mutation');
+// The race workers have been joined above; they require the original exact schema.
+// Use a dedicated table after their teardown to exercise native MySQL TIME binds.
+require_once '/repo/app/repositories/SalaAudienciasPautaRepository.php';
+$pdo->exec('CREATE TABLE rei73_pauta_slot_fixture (id_pauta VARCHAR(30) PRIMARY KEY, ativo TINYINT NOT NULL, status VARCHAR(32) NOT NULL, data_audiencia DATE NOT NULL, hora_audiencia TIME NOT NULL) ENGINE=InnoDB');
+try {
+    $insertSlot=$pdo->prepare('INSERT INTO rei73_pauta_slot_fixture (id_pauta,ativo,status,data_audiencia,hora_audiencia) VALUES (?,?,?,?,?)');
+    foreach ([
+        ['designada',1,'designada','2030-01-10','10:00:00'],
+        ['legacy',1,'agendada','2030-01-10','11:00:00'],
+        ['cancelada',1,'cancelada','2030-01-10','12:00:00'],
+        ['redesignada',1,'redesignada','2030-01-10','13:00:00'],
+        ['realizada',1,'realizada','2030-01-10','14:00:00'],
+        ['inativa',0,'designada','2030-01-10','15:00:00'],
+        ['outra-data',1,'designada','2030-01-11','16:00:00'],
+    ] as $row) $insertSlot->execute($row);
+    $slots=new SalaAudienciasPautaRepository($pdo,'rei73_pauta_slot_fixture');
+    check168($slots->existsActiveSlotEm('2030-01-10','10:00'),'Designada reserves HH:MM');
+    check168($slots->existsActiveSlotEm('2030-01-10','10:00:00'),'Designada reserves HH:MM:SS');
+    check168($slots->existsActiveSlotEm('2030-01-10','11:00:00'),'Legacy agendada reserves slot');
+    foreach (['12:00:00','13:00:00','14:00:00','15:00:00','16:00:00','17:00:00'] as $hour) {
+        check168(!$slots->existsActiveSlotEm('2030-01-10',$hour),'Released, inactive, other-date and free slots are available: '.$hour);
+    }
+    check168($slots->existsActiveSlotEm('2030-01-11','16:00:00'),'Same hour on its own date is occupied');
+    check168(!$slots->existsActiveSlotEm('2030-01-10','10:00:00','designada'),'Editing own slot excludes that row');
+    check168($slots->existsActiveSlotEm('2030-01-10','10:00:00','legacy'),'Excluding another row preserves conflict');
+    check168(!$slots->existsActiveSlotEm('','10:00:00') && !$slots->existsActiveSlotEm('2030-01-10',''),'Empty input has no occupied slot');
+} finally {
+    $pdo->exec('DROP TABLE rei73_pauta_slot_fixture');
+}
 echo json_encode(['suite'=>'REI168 MySQL 8.4 synthetic','assertions'=>$assertions,'case_mode'=>getenv('REI168_EXPECT_LOWER_CASE'),'result'=>'PASS'],JSON_THROW_ON_ERROR).PHP_EOL;
