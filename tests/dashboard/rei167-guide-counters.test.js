@@ -38,7 +38,7 @@ class Element {
     };
   }
   append(...elements) { this.children.push(...elements); }
-  replaceChildren(...elements) { this.children = [...elements]; }
+  replaceChildren(...elements) { this.textContent = ''; this.children = [...elements]; }
   querySelectorAll(selector) { return selector === ':scope > .dash-sector-metric' ? this.children.filter(e => e.className.includes('dash-sector-metric')) : []; }
   querySelector(selector) { return selector === 'strong' ? this.strong || null : null; }
 }
@@ -58,7 +58,7 @@ for (const [rowId, strongId] of [
 let responseQueue = [];
 const document = {
   getElementById: id => elements.get(id) || null,
-  createElement: () => new Element(),
+  createElement: tag => { const el = new Element(); el.tagName = tag.toUpperCase(); return el; },
   addEventListener: (event, callback) => { if (event === 'DOMContentLoaded') document.ready = callback; }
 };
 const window = {};
@@ -82,19 +82,22 @@ async function refresh(filasOrResponse, sector) {
   await document.ready();
   await new Promise(resolve => setImmediate(resolve));
 }
-function value(id) { return elements.get(id)?.textContent; }
+function value(id) { const el=elements.get(id); return el ? el.textContent + el.children.map(child => typeof child === 'string' ? child : child.textContent).join('') : undefined; }
 
 (async () => {
   const runnerPayloads = readRunnerPayloads();
   await refresh([{key:'guias',type:'expedicao_guia',count:2},{key:'guias',type:'envio_guia',count:1},{key:'oficios',type:'enviar_oficio',count:1}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'Ana Souza',oficios:'Bruno Lima'}});
   for (const id of ['dash-queue-guias-expedicao-responsaveis','dash-queue-guias-envio-responsaveis']) {
-    assert.equal(value(id), 'Responsável: Ana Souza');
+    assert.equal(value(id), 'Responsável: Ana');
+    assert.equal(elements.get(id).children[1].tagName, 'B');
     assert.equal(elements.get(id).hidden, false);
   }
-  assert.equal(value('dash-queue-oficios-responsaveis'), 'Responsável: Bruno Lima');
+  assert.equal(value('dash-queue-oficios-responsaveis'), 'Responsável: Bruno');
   for (const id of ['dash-queue-expedidas-responsaveis','dash-queue-recebidas-responsaveis','dash-queue-editais-responsaveis','dash-overdue-expedidas-responsaveis','dash-overdue-recebidas-responsaveis']) assert.equal(elements.get(id).hidden, true);
+  await refresh([{key:'guias',type:'expedicao_guia',count:2}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'  Érica   da Silva  '}});
+  assert.equal(value('dash-queue-guias-expedicao-responsaveis'), 'Responsável: Érica');
   await refresh([{key:'guias',type:'expedicao_guia',count:2}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'Carla Dias'}});
-  assert.equal(value('dash-queue-guias-expedicao-responsaveis'), 'Responsável: Carla Dias');
+  assert.equal(value('dash-queue-guias-expedicao-responsaveis'), 'Responsável: Carla');
   assert.equal(elements.get('dash-queue-oficios-responsaveis').hidden, true);
   await refresh([{key:'guias',type:'expedicao_guia',count:2}]);
   assert.equal(elements.get('dash-queue-guias-expedicao-responsaveis').hidden, true);

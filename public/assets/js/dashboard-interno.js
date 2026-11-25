@@ -8,8 +8,13 @@
   function set(id,value){const el=$(id);if(el)el.textContent=value;}
   function setResponsible(id,name){
     const el=$(id);if(!el)return;
-    const value=typeof name==='string'?name.trim():'';
-    el.textContent=value?'Responsável: '+value:'';
+    const value=typeof name==='string'?name.trim().split(/\s+/u)[0]:'';
+    el.replaceChildren();
+    if(value){
+      const firstName=document.createElement('b');
+      firstName.textContent=value;
+      el.append('Responsável: ',firstName);
+    }
     el.hidden=!value;
   }
   function count(value){return value===null||value===undefined?'—':Number(value).toLocaleString('pt-BR');}
