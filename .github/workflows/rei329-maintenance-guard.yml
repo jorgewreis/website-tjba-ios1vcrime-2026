@@ -1,0 +1,19 @@
+name: REI-329 maintenance guard
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  guards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PHP CLI and CGI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y php-cli php-cgi
+          command -v php
+          command -v php-cgi
+      - name: Check maintenance scripts
+        run: python3 tests/rei329/test_maintenance_guards.py

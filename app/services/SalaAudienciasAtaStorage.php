@@ -42,6 +42,9 @@ final class NativeSalaAudienciasAtaStorage implements SalaAudienciasAtaStorage
 
     public function deleteFile(string $path): bool
     {
-        return !is_file($path) || @unlink($path);
+        if (!file_exists($path) && !is_link($path)) {
+            return true;
+        }
+        return @unlink($path);
     }
 }
