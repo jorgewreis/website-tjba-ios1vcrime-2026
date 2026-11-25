@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0053
+
+**Data:** 2026-11-25 05:20:19 | **Commit:** `967dab39` | **Tipo:** `patch`
+
+- test: investiga criacao concorrente de cnj
+
 ## V. 1.88.0052
 
 **Data:** 2026-11-25 05:00:54 | **Commit:** `7ae1b507` | **Tipo:** `patch`
@@ -7950,6 +7956,7 @@
 
 
 \n
+
 
 
 

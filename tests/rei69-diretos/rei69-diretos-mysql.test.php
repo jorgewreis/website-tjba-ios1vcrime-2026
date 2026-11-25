@@ -4,7 +4,7 @@ declare(strict_types=1);
 $failureStage = 'setup';
 $failureDetail = 'general';
 set_exception_handler(static function (Throwable $exception) use (&$failureStage, &$failureDetail): void {
-    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','monitor_setup','monitor_positive','monitor_create','monitor_row','monitor_row_prepare','monitor_row_execute','monitor_row_fetch','monitor_tasks','monitor_rollback','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_pauta_finish','c4_direct_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check','c6_controls','c6_prepare','c6_wait','c6_finish','c6_check'];
+    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','monitor_setup','monitor_positive','monitor_create','monitor_row','monitor_row_prepare','monitor_row_execute','monitor_row_fetch','monitor_tasks','monitor_rollback','cnj_setup','cnj_wait_a','cnj_wait_b','cnj_finish','cnj_check','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_pauta_finish','c4_direct_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check','c6_controls','c6_prepare','c6_wait','c6_finish','c6_check'];
     // The positive read reports only fixed categories, never database messages or values.
     if (in_array($failureStage, ['monitor_row_prepare','monitor_row_execute','monitor_row_fetch'], true) && $exception instanceof PDOException) {
         $state = strtolower((string) $exception->getCode());
@@ -66,7 +66,7 @@ if (!is_string($marker) || !hash_equals($expectedMarker, $marker)) {
 }
 
 $childUncertain = false;
-$fixtureTables = ['gabinete_monitoramento_eletronico_subtarefas', 'gabinete_monitoramento_eletronico', 'sala_audiencias_pauta_parte', 'sala_audiencias_pauta', 'processo_prioridades', 'gabinete_reu_preso_processo', 'gabinete_reu_preso', 'classes', 'processos_partes', 'sync_log', 'logs_sistema', 'partes', 'processos', 'usuario_setor', 'setores'];
+$fixtureTables = ['rei69_cnj_gate', 'gabinete_monitoramento_eletronico_subtarefas', 'gabinete_monitoramento_eletronico', 'sala_audiencias_pauta_parte', 'sala_audiencias_pauta', 'processo_prioridades', 'gabinete_reu_preso_processo', 'gabinete_reu_preso', 'classes', 'processos_partes', 'sync_log', 'logs_sistema', 'partes', 'processos', 'usuario_setor', 'setores'];
 register_shutdown_function(static function () use ($pdo, $fixtureTables, $expectedMarker, &$childUncertain): void {
     if ($childUncertain) { return; }
     try {
@@ -351,6 +351,31 @@ if (in_array(getenv('TEST_KIND'), ['update','update2','race_update','race_delete
     $_SESSION=['id_usuario'=>$other ? 'USR-2' : 'USR-1']; $_POST=['id'=>$race ? (string)getenv('TEST_LINK') : ($other ? 'VNC-5' : 'VNC-1'),'tipo_parte'=>$race ? 'defensor_publico' : 'advogado'];
     register_shutdown_function(static function (): void { fwrite(STDERR, 'HTTP:' . (http_response_code() ?: 200) . "\n"); });
     require (string)getenv('TEST_ENDPOINT');
+} elseif (in_array(getenv('TEST_KIND'), ['cnj_formatted','cnj_digits'], true)) {
+    try {
+        $dsn=(string)getenv('REI69DIRETOS_MYSQL_DSN');
+        $marker=(string)getenv('REI69DIRETOS_TEST_DISPOSABLE_MARKER');
+        if ($dsn !== 'mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=rei69_diretos_test;charset=utf8mb4'
+            || getenv('REI69DIRETOS_MYSQL_USER') !== 'root' || (string)getenv('REI69DIRETOS_MYSQL_PASSWORD') !== ''
+            || preg_match('/^[a-f0-9]{64}$/D',$marker)!==1) throw new RuntimeException('Guard');
+        $pdo=new PDO($dsn,'root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_EMULATE_PREPARES=>false]);
+        $actual=$pdo->query('SELECT marker FROM rei69_diretos_test_guard LIMIT 1')->fetchColumn();
+        if ($pdo->query('SELECT DATABASE()')->fetchColumn() !== 'rei69_diretos_test' || !is_string($actual) || !hash_equals($marker,$actual)) throw new RuntimeException('Guard');
+        $pdo->exec("SET SESSION sql_mode = 'STRICT_ALL_TABLES'");
+        $pdo->exec("SET SESSION time_zone = '+00:00'");
+        $pdo->exec('SET SESSION innodb_lock_wait_timeout = 10');
+        fwrite(STDERR,'CONNECTION:'.$pdo->query('SELECT CONNECTION_ID()')->fetchColumn()."\n");
+        require '/repo/app/repositories/ProcessosRepository.php';
+        $digits=(string)getenv('TEST_LINK');
+        if (preg_match('/^[0-9]{20}$/D',$digits)!==1) throw new RuntimeException('Input');
+        $numero=getenv('TEST_KIND')==='cnj_digits' ? $digits : substr($digits,0,7).'-'.substr($digits,7,2).'.'.substr($digits,9,4).'.'.substr($digits,13,1).'.'.substr($digits,14,2).'.'.substr($digits,16,4);
+        $id=(new ProcessosRepository($pdo))->ensureProcess($numero, null, null, null);
+        if ($id==='') throw new RuntimeException('ID');
+        fwrite(STDOUT,"CNJ_COMMITTED\n");
+    } catch (Throwable $e) {
+        fwrite(STDERR,"CNJ_FAILURE code=actor\n");
+        exit(1);
+    }
 } elseif (in_array(getenv('TEST_KIND'), ['pauta','pauta_mandado'], true)) {
     $stage='pauta_connect';
     register_shutdown_function(static function (): void {
@@ -704,6 +729,41 @@ PHP;
         $assert(str_contains($raceErr,"HTTP:404\n") && $result===['error'=>'Vínculo não encontrado.'], 'Endpoint não rejeitou vínculo alterado.');
         $assert($snapshot($pdo)===$expectedRace, 'Endpoint rejeitado gerou efeitos adicionais.');
     }
+    // Diagnostic only: synthetic schema has no CNJ uniqueness. The BEFORE
+    // INSERT trigger holds both real repository calls after their lookup.
+    $failureStage='cnj_setup'; $failureDetail='general';
+    require_once '/repo/app/helpers/CnjValidator.php';
+    $uniqueNumberIndexes=$pdo->query("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='processos' AND column_name='numero_processo' AND non_unique=0")->fetchColumn();
+    $assert((int)$uniqueNumberIndexes===0, 'Fixture CNJ deve ser sem índice único por número.');
+    $pdo->exec('CREATE TABLE rei69_cnj_gate (id INT PRIMARY KEY) ENGINE=InnoDB');
+    $pdo->exec('INSERT INTO rei69_cnj_gate (id) VALUES (1)');
+    $pdo->exec('CREATE TRIGGER rei69_cnj_barrier BEFORE INSERT ON processos FOR EACH ROW BEGIN DECLARE gate_id INT; SELECT id INTO gate_id FROM rei69_cnj_gate WHERE id=1 FOR UPDATE; END');
+    $base='0000004'.'20208050001';
+    for ($i=0;$i<100;$i++) { $cnjDigits=substr($base,0,7).str_pad((string)$i,2,'0',STR_PAD_LEFT).substr($base,7); if (CnjValidator::isValid($cnjDigits)) break; }
+    $assert(CnjValidator::isValid($cnjDigits), 'CNJ de concorrência inválido.');
+    $cnjBefore=$snapshot($pdo);
+    $pdo->beginTransaction();
+    $pdo->query('SELECT id FROM rei69_cnj_gate WHERE id=1 FOR UPDATE')->fetchColumn();
+    $cnjA=$spawn('cnj_digits',$cnjDigits); $cnjB=$spawn('cnj_formatted',$cnjDigits);
+    $failureStage='cnj_wait_a'; $failureDetail='general';
+    $observe($observer,$cnjA,$parentId,'rei69_cnj_gate');
+    $failureStage='cnj_wait_b'; $failureDetail='general';
+    $observe($observer,$cnjB,$parentId,'rei69_cnj_gate');
+    $pdo->commit();
+    $failureStage='cnj_finish'; $failureDetail='general';
+    [$cnjOutA]=$finish($cnjA); [$cnjOutB]=$finish($cnjB);
+    $assert($cnjOutA==="CNJ_COMMITTED\n" && $cnjOutB==="CNJ_COMMITTED\n", 'Atores CNJ não confirmaram inserções.');
+    $failureStage='cnj_check'; $failureDetail='general';
+    $cnjAfter=$snapshot($pdo);
+    foreach ($cnjBefore as $table=>$before) if ($table!=='processos') $assert($cnjAfter[$table]===$before, 'Outra tabela foi alterada.');
+    $q=$pdo->prepare("SELECT id,numero_processo FROM processos WHERE REGEXP_REPLACE(numero_processo,'[^0-9]','')=? ORDER BY id");
+    $q->execute([$cnjDigits]); $cnjRows=$q->fetchAll(PDO::FETCH_ASSOC);
+    $assert(count($cnjRows)===2 && $cnjRows[0]['id']!==$cnjRows[1]['id'] && $cnjRows[0]['numero_processo']===$cnjRows[1]['numero_processo'], 'Duplicidade CNJ não reproduzida.');
+    $assert(count($cnjAfter['processos']['rows'])===count($cnjBefore['processos']['rows'])+2 && $cnjAfter['processos']['schema']===$cnjBefore['processos']['schema'], 'Efeitos de processo divergentes.');
+    $oldIds=array_column($cnjBefore['processos']['rows'],'id');
+    $preserved=array_values(array_filter($cnjAfter['processos']['rows'],static fn(array $row): bool => in_array($row['id'],$oldIds,true)));
+    $assert($preserved===$cnjBefore['processos']['rows'], 'Processos anteriores foram alterados.');
+    $pdo->exec('DROP TRIGGER rei69_cnj_barrier');
     // Real monitoring create uses this same isolated MySQL schema. Only atomicity
     // is under test here; sector policy and all concurrent writers remain open.
     $failureStage='monitor_setup'; $failureDetail='general';
