@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/BootstrapHelper.php';
+require_once __DIR__ . '/ApiErrorReporter.php';
 require_once __DIR__ . '/../../config/security.php';
 require_once __DIR__ . '/../access/AccessEvaluator.php';
 require_once __DIR__ . '/UsuarioPerfisAutorizacao.php';
@@ -29,7 +30,7 @@ final class ApiAccessGuard
                 }
             }
         } catch (Throwable $exception) {
-            error_log('Falha ao verificar autorização de API: ' . $exception->getMessage());
+            ApiErrorReporter::logUnexpected($exception, 'app/helpers/ApiAccessGuard.php');
             self::reject(500, 'Não foi possível verificar o acesso.');
         }
 

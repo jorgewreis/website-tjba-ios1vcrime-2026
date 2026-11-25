@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ENDPOINT = 'public/api/processos/prioridades-remove.php'
 ADD_ENDPOINT = 'public/api/processos/prioridades-add.php'
 REAL_FILES = [
-    ENDPOINT, ADD_ENDPOINT, 'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php',
+    ENDPOINT, ADD_ENDPOINT, 'app/helpers/ApiErrorReporter.php', 'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php',
     'app/helpers/UserAccessHelper.php', 'app/access/AccessEvaluator.php',
     'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php',
     'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php',

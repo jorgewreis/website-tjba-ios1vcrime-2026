@@ -8,13 +8,13 @@ Os totais grandes de cartas ativas usam o mesmo recorte padrão das listagens: e
 
 ## Filas
 
-Uma fila conta subtarefas com `status = em_andamento`, associadas a um registro principal que não esteja concluído, cancelado ou finalizado. Subtarefas futuras em `pendente`, etapas concluídas e canceladas ficam fora da contagem. A fila é separada pelo tipo da etapa:
+Uma fila conta subtarefas executáveis associadas a um registro principal que não esteja concluído, cancelado ou finalizado. Para Cartas, Editais e Ofícios, executável significa `status = em_andamento`. Para Guias, conta-se a primeira etapa da sequência com `status = pendente` ou `em_andamento`; etapas anteriores concluídas, canceladas ou puladas não bloqueiam a próxima. Etapas futuras ficam fora da contagem. Tipos, ordem e estados inválidos, empate na ordem ou erro de consulta tornam a fila e o total de tarefas indisponíveis, em vez de exibir um resumo parcial incorreto. A fila é separada pelo tipo da etapa:
 
 | Módulo | Etapas incluídas |
 | --- | --- |
 | Cartas Expedidas | envio; cumprimento/devolução |
 | Cartas Recebidas | cumprimento; devolução |
-| Guias | expedição de guia |
+| Guias | detalhamento; cálculo da pena/multa; expedição; assinatura; juntada; geração de PDF; envio; juntada do termo de envio |
 | Editais | publicação; decurso de prazo |
 | Ofícios do Cartório | envio de ofício |
 

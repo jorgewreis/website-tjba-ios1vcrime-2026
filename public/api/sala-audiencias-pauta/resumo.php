@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/sala-audiencias-pauta/resumo.php');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
@@ -108,6 +111,6 @@ try {
 } catch (InvalidArgumentException $e) {
     $resumoErroPlain(400, $e->getMessage());
 } catch (Throwable $e) {
-    error_log('sala-audiencias-pauta/resumo: ' . $e->getMessage());
+    error_log('sala-audiencias-pauta/resumo: ' . ApiErrorReporter::genericMessage($e, 'public/api/sala-audiencias-pauta/resumo.php'));
     $resumoErroPlain(500, 'Erro ao gerar resumo da audiência.');
 }

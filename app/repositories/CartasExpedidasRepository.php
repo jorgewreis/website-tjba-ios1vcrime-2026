@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/CartasExpedidasEstadoFluxo.php';
 
 final class CartasExpedidasRepository
 {
@@ -70,10 +71,12 @@ final class CartasExpedidasRepository
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce', false);
         $fromClause = $this->buildFromClause();
+        $states = CartasExpedidasEstadoFluxo::consultaEstados();
+        $effectiveStatus = CartasExpedidasEstadoFluxo::expressaoStatus();
         $sql = sprintf(
-            'SELECT ce.`status` AS `Status`, COUNT(*) AS total FROM %s %s GROUP BY ce.`status`',
-            $fromClause,
-            $whereClause ? 'WHERE ' . $whereClause : ''
+            'SELECT %s AS `Status`, COUNT(*) AS total FROM %s JOIN (%s) fluxo ON fluxo.id=ce.id %s GROUP BY %s',
+            $effectiveStatus, $fromClause, $states,
+            $whereClause ? 'WHERE ' . $whereClause : '', $effectiveStatus
         );
         $statement = $this->connection->prepare($sql);
         foreach ($params as $name => $value) {
@@ -90,6 +93,11 @@ final class CartasExpedidasRepository
             $summary[$status] = $summary[$status] ?? 0;
         }
 
+        if (($summary['indeterminada'] ?? 0) > 0) {
+            $summary['em_andamento'] = null;
+            $summary['aguardando envio'] = null;
+            $summary['aguardando cumprimento'] = null;
+        }
         return $summary;
     }
 
@@ -368,27 +376,16 @@ final class CartasExpedidasRepository
 
         if (isset($filters['status']) && $filters['status'] !== '') {
             $statusVal = trim($filters['status']);
-            if ($statusVal === 'aguardando_envio') {
-                $statusList = ['em_andamento', 'aguardando envio'];
-                $placeholders = [];
-                foreach ($statusList as $i => $s) {
-                    $key = ':status_' . $i;
-                    $placeholders[] = $prefix . "`status` COLLATE {$coll} = {$key}";
-                    $params[$key] = $s;
-                }
-                $clauses[] = '(' . implode(' OR ', $placeholders) . ')';
-            } elseif ($statusVal === 'aguardando_cumprimento') {
-                $clauses[] = $prefix . "`status` COLLATE {$coll} = :status";
-                $params[':status'] = 'aguardando cumprimento';
-            } else {
-                $clauses[] = $prefix . "`status` COLLATE {$coll} = :status";
-                $params[':status'] = $statusVal;
-            }
+            $mapped = ['aguardando_envio'=>'em_andamento','aguardando envio'=>'em_andamento',
+                'aguardando_cumprimento'=>'aguardando cumprimento','concluida'=>'concluída'];
+            $states = CartasExpedidasEstadoFluxo::consultaEstados();
+            $effectiveStatus = CartasExpedidasEstadoFluxo::expressaoStatus();
+            $clauses[] = "EXISTS (SELECT 1 FROM ({$states}) fluxo WHERE fluxo.id={$prefix}`id` AND ({$effectiveStatus})=:status_efetivo)";
+            $params[':status_efetivo'] = $mapped[$statusVal] ?? $statusVal;
         } elseif ($excludeConcluidaCanceladaQuandoStatusVazio) {
-            // Por padrão não listar Concluída e Cancelada; usuário escolhe no filtro se quiser ver.
-            $clauses[] = $prefix . "`status` COLLATE {$coll} NOT IN (:status_exclude_1, :status_exclude_2)";
-            $params[':status_exclude_1'] = 'concluída';
-            $params[':status_exclude_2'] = 'cancelada';
+            // Fluxos ambíguos permanecem na lista geral para reconciliação explícita.
+            $states = CartasExpedidasEstadoFluxo::consultaEstados();
+            $clauses[] = "EXISTS (SELECT 1 FROM ({$states}) fluxo WHERE fluxo.id={$prefix}`id` AND fluxo.etapa<>'encerrada')";
         }
 
         return [implode(' AND ', $clauses), $params];

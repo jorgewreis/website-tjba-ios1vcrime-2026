@@ -266,10 +266,11 @@ final class SalaAudienciasEstudanteInscricaoRepository
             LEFT JOIN `classes` cl ON cl.`id` = p.`classe_id`
             LEFT JOIN `' . $this->table . '` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = :u
             WHERE a.`ativo` = 1
-              AND a.`data_audiencia` = CURDATE()
+              AND a.`data_audiencia` = :hoje
         ', $linkAudienciaSelect, $marcadoresPrioridadeBloqueio);
         $st = $this->connection->prepare($sql);
         $st->bindValue(':u', $idUsuario);
+        $st->bindValue(':hoje', date('Y-m-d'));
         foreach ($codigosPrioridadeBloqueio as $i => $codigo) {
             $st->bindValue(':prioridade_bloqueio_' . $i, $codigo);
         }

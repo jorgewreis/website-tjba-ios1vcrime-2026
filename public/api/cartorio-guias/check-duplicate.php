@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-guias/check-duplicate.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['guias'], false);
 
@@ -32,6 +35,7 @@ try {
     $exists = $service->existsGuiaComMesmoProcessoDenunciadoTipo($numeroProcesso, $denunciado, $tipo);
     echo json_encode(['exists' => $exists], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/cartorio-guias/check-duplicate.php');
     http_response_code(500);
     echo json_encode(['exists' => false, 'error' => 'Erro ao verificar duplicidade.'], JSON_UNESCAPED_UNICODE);
 }
