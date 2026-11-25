@@ -350,8 +350,18 @@ if (in_array(getenv('TEST_KIND'), ['update','update2'], true)) {
         if (is_array($last) && in_array($last['type'],[E_ERROR,E_PARSE,E_CORE_ERROR,E_COMPILE_ERROR],true)) fwrite(STDERR,"PAUTA_FAILURE code=pauta_fatal\n");
     });
     try {
-        require (string)getenv('TEST_CONNECTION');
-        $pdo=Conection::getInstance()->getConnection();
+        $dsn=(string)getenv('REI69DIRETOS_MYSQL_DSN');
+        $marker=(string)getenv('REI69DIRETOS_TEST_DISPOSABLE_MARKER');
+        if ($dsn !== 'mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=rei69_diretos_test;charset=utf8mb4'
+            || getenv('REI69DIRETOS_MYSQL_USER') !== 'root' || (string)getenv('REI69DIRETOS_MYSQL_PASSWORD') !== ''
+            || preg_match('/^[a-f0-9]{64}$/D',$marker)!==1) throw new RuntimeException('Conexão sintética inválida.');
+        $pdo=new PDO($dsn,'root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_EMULATE_PREPARES=>false]);
+        $actual=$pdo->query('SELECT marker FROM rei69_diretos_test_guard LIMIT 1')->fetchColumn();
+        if ($pdo->query('SELECT DATABASE()')->fetchColumn() !== 'rei69_diretos_test' || !is_string($actual) || !hash_equals($marker,$actual)) throw new RuntimeException('Sentinela inválida.');
+        $pdo->exec("SET SESSION sql_mode = 'STRICT_ALL_TABLES'");
+        $pdo->exec("SET SESSION time_zone = '+00:00'");
+        $pdo->exec('SET SESSION innodb_lock_wait_timeout = 10');
+        fwrite(STDERR,'CONNECTION:'.$pdo->query('SELECT CONNECTION_ID()')->fetchColumn()."\n");
         $stage='pauta_require';
         require '/repo/app/services/SalaAudienciasPautaService.php';
         $stage='pauta_construct';

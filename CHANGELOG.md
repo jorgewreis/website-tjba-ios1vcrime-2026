@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0037
+
+**Data:** 2026-11-25 03:58:36 | **Commit:** `98382202` | **Tipo:** `patch`
+
+- test: corrige bootstrap do ator de pauta
+
 ## V. 1.88.0036
 
 **Data:** 2026-11-25 03:55:34 | **Commit:** `d5559b93` | **Tipo:** `patch`
@@ -7854,6 +7860,7 @@
 
 
 \n
+
 
 
 
