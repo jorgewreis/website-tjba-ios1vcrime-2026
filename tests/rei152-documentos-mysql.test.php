@@ -70,18 +70,18 @@ if (getenv('REI152_CI_REQUIRED') === '1'
         || $user !== 'root' || $password !== '' || !preg_match('/^[a-f0-9]{64}$/D', (string) getenv('REI152_CI_MARKER')))) {
     throw new RuntimeException('Identidade CI da fixture recusada.');
 }
-$pdo = new PDO($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
-if (getenv('REI152_CI_REQUIRED') === '1') {
+function rei152AssertCiConnection(PDO $connection): void
+{
+    if (getenv('REI152_CI_REQUIRED') !== '1') return;
     $marker = (string) getenv('REI152_CI_MARKER');
-    if ($dsn !== 'mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=rei152_test;charset=utf8mb4'
-        || $user !== 'root' || $password !== '' || !preg_match('/^[a-f0-9]{64}$/D', $marker)) {
-        throw new RuntimeException('Identidade CI da fixture recusada.');
-    }
-    $tokens = $pdo->query('SELECT token FROM `_sandbox_proof`')->fetchAll(PDO::FETCH_COLUMN);
+    if (!preg_match('/^[a-f0-9]{64}$/D', $marker)) throw new RuntimeException('Identidade CI da fixture recusada.');
+    $tokens = $connection->query('SELECT token FROM `_sandbox_proof`')->fetchAll(PDO::FETCH_COLUMN);
     if (count($tokens) !== 1 || !hash_equals($marker, (string) $tokens[0])) {
         throw new RuntimeException('Marcador CI da fixture recusado.');
     }
 }
+$pdo = new PDO($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+rei152AssertCiConnection($pdo);
 $database = (string) $pdo->query('SELECT DATABASE()')->fetchColumn();
 if ($database !== 'rei152_test') {
     throw new RuntimeException('Banco descartável inesperado.');
@@ -249,6 +249,7 @@ if (!$service->deleteDocumento($divergentRg)
 $pdo->exec("INSERT INTO partes (id, cpf, nome_completo) VALUES ('PRT-SNAPSHOT', '70000000003', 'Pessoa sintética snapshot')");
 $pdo->exec("INSERT INTO partes_documentos (id, parte_id, tipo, numero) VALUES ('DOC-SNAPSHOT-CPF', 'PRT-SNAPSHOT', 'CPF', '70000000003')");
 $snapshotPdo = new Rei152SnapshotPdo($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+rei152AssertCiConnection($snapshotPdo);
 $snapshotPdo->beforeFirstLockName = static function () use ($pdo): void {
     ParteDocumentoLock::runMany($pdo, [
         ['tipo' => 'CPF', 'numero' => '70000000003'],
@@ -619,7 +620,9 @@ $verifyPublicGuideRollbackFailure = static function (string $operation, string $
         // Cover every resource acquisition and side effect with the cleanup below.
         $pdo->exec("CREATE TRIGGER `$trigger` BEFORE " . ($operation === 'create' ? 'INSERT' : 'UPDATE') . " ON guia FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='rei152 falha na guia'");
         $faultPdo = new Rei152RollbackFaultPdo($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+        rei152AssertCiConnection($faultPdo);
         $observer = new PDO($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+        rei152AssertCiConnection($observer);
         $lockProbe = $observer->prepare('SELECT GET_LOCK(?, 0)');
         $releaseObserver = $observer->prepare('SELECT RELEASE_LOCK(?)');
 
@@ -824,6 +827,7 @@ if ((int) $release->fetchColumn() !== 1) {
 }
 
 $unsafePdo = new PDO($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+rei152AssertCiConnection($unsafePdo);
 $unsafeDatabase = (string) $unsafePdo->query('SELECT DATABASE()')->fetchColumn();
 $unsafeCpf = '98765432100';
 $unsafeLockName = 'rei250_' . substr(hash('sha256', $unsafeDatabase . ':' . $unsafeCpf), 0, 52);
@@ -841,6 +845,7 @@ if (!$activeTransactionRejected || !$unsafePdo->inTransaction() || !ParteDocumen
     throw new RuntimeException('Lock documental foi liberado ou a conexão não foi isolada com transação ativa.');
 }
 $observer = new PDO($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+rei152AssertCiConnection($observer);
 $lockProbe = $observer->prepare('SELECT GET_LOCK(?, 0)');
 $lockProbe->execute([$unsafeLockName]);
 if ((int) $lockProbe->fetchColumn() !== 0) {

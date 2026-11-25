@@ -161,17 +161,21 @@ class Guias
         if ($this->pdo->inTransaction()) {
             return ['ok' => false, 'id' => null, 'message' => 'Não foi possível cadastrar a guia.'];
         }
+        $resultado = null;
         try {
-            return $this->comLockCpfDaGuia($dados, fn(): array => $this->cadastrarGuiaComTransacao($dados));
+            return $this->comLockCpfDaGuia($dados, function () use ($dados, &$resultado): array {
+                return $resultado = $this->cadastrarGuiaComTransacao($dados);
+            });
         } catch (Throwable $error) {
             error_log('Falha de coordenação no cadastro de guia: ' . get_class($error));
-            return ['ok' => false, 'id' => null, 'message' => $this->mensagemFalhaGuia('cadastrar')];
+            return $this->resultadoFalhaCoordenacao('cadastrar', null, $resultado);
         }
     }
 
     private function cadastrarGuiaComTransacao(array $dados): array
     {
         $agora = (new DateTime('now', new DateTimeZone('America/Bahia')))->format('Y-m-d H:i:s');
+        $idGuia = null;
         
         try {
             if (!$this->pdo->beginTransaction()) {
@@ -387,11 +391,17 @@ class Guias
             $this->rollbackTransacaoGuiaAposFalha('cadastro da guia');
             error_log('Erro ao cadastrar guia: ' . $e->getMessage());
             
-            return [
+            $resposta = [
                 'ok' => false,
                 'id' => null,
                 'message' => $this->mensagemFalhaGuia('cadastrar')
             ];
+            if (ParteDocumentoLock::isConnectionUnsafe($this->pdo)) {
+                $resposta['resultado'] = 'verificacao_necessaria';
+                $resposta['estado_gravacao'] = 'nao_confirmada';
+                if (is_string($idGuia) && $idGuia !== '') $resposta['id_referencia'] = $idGuia;
+            }
+            return $resposta;
         }
     }
 
@@ -407,11 +417,14 @@ class Guias
         if ($this->pdo->inTransaction()) {
             return ['ok' => false, 'id' => $idGuia, 'message' => 'Não foi possível atualizar a guia.'];
         }
+        $resultado = null;
         try {
-            return $this->comLockCpfDaGuia($dados, fn(): array => $this->atualizarGuiaComTransacao($dados));
+            return $this->comLockCpfDaGuia($dados, function () use ($dados, &$resultado): array {
+                return $resultado = $this->atualizarGuiaComTransacao($dados);
+            });
         } catch (Throwable $error) {
             error_log('Falha de coordenação na atualização de guia: ' . get_class($error));
-            return ['ok' => false, 'id' => $idGuia, 'message' => $this->mensagemFalhaGuia('atualizar')];
+            return $this->resultadoFalhaCoordenacao('atualizar', $idGuia, $resultado);
         }
     }
 
@@ -582,12 +595,40 @@ class Guias
         } catch (Throwable $e) {
             $this->rollbackTransacaoGuiaAposFalha('atualização da guia');
             error_log('Erro ao atualizar guia: ' . $e->getMessage());
-            return [
+            $resposta = [
                 'ok' => false,
                 'id' => $idGuia,
                 'message' => $this->mensagemFalhaGuia('atualizar')
             ];
+            if (ParteDocumentoLock::isConnectionUnsafe($this->pdo)) {
+                $resposta['resultado'] = 'verificacao_necessaria';
+                $resposta['estado_gravacao'] = 'nao_confirmada';
+                $resposta['id_referencia'] = $idGuia;
+            }
+            return $resposta;
         }
+    }
+
+    private function resultadoFalhaCoordenacao(string $operacao, ?string $id, ?array $resultado): array
+    {
+        $resposta = ['ok' => false, 'id' => $id, 'message' => 'Não foi possível ' . $operacao . ' a guia.'];
+        if ($resultado === null) {
+            return $resposta;
+        }
+        if (($resultado['ok'] ?? false) === true) {
+            $resposta['resultado'] = 'verificacao_necessaria';
+            $resposta['estado_gravacao'] = 'confirmada';
+            $resposta['message'] = 'A gravação foi confirmada, mas não foi possível confirmar o encerramento da operação. Consulte a guia antes de tentar novamente.';
+            if (!empty($resultado['id'])) $resposta['id_referencia'] = $resultado['id'];
+            return $resposta;
+        }
+        if (($resultado['resultado'] ?? '') === 'verificacao_necessaria') {
+            $resposta['resultado'] = 'verificacao_necessaria';
+            $resposta['estado_gravacao'] = 'nao_confirmada';
+            $resposta['message'] = $this->mensagemFalhaGuia($operacao);
+            if (!empty($resultado['id_referencia'])) $resposta['id_referencia'] = $resultado['id_referencia'];
+        }
+        return $resposta;
     }
 
     private function mensagemFalhaGuia(string $operacao): string
@@ -626,7 +667,7 @@ class Guias
             }
         } catch (Throwable $rollbackError) {
             ParteDocumentoLock::markConnectionUnsafe($this->pdo);
-            error_log('Falha no rollback de ' . $operacao . '; conexão isolada: ' . $rollbackError->getMessage());
+            error_log('Falha no rollback de ' . $operacao . '; conexão isolada: ' . get_class($rollbackError));
         }
     }
 
