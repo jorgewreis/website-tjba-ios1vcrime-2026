@@ -8,7 +8,7 @@ BASE_SHA=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).
 EVIDENCE=Path(tempfile.mkdtemp(prefix='rei70-http-boundary-evidence-'))
 ENDPOINTS=['create.php','update.php','get.php','list.php','search.php','setores.php','setores/create.php','setores/update.php','setores/delete.php','telefones/create.php','telefones/update.php','telefones/delete.php']
 READS=['get.php','list.php','search.php','setores.php']
-REAL=['app/helpers/ApiAccessGuard.php','app/helpers/BootstrapHelper.php','app/helpers/UserAccessHelper.php','app/helpers/InstituicoesConsultaPolicy.php','app/access/AccessEvaluator.php','app/access/ProfileNormalizer.php','app/access/PageAccessRegistry.php','app/access/AccessAreas.php','app/access/AccessPolicyVersion.php']
+REAL=['app/helpers/ApiErrorReporter.php','app/helpers/ApiAccessGuard.php','app/helpers/BootstrapHelper.php','app/helpers/UserAccessHelper.php','app/helpers/InstituicoesConsultaPolicy.php','app/access/AccessEvaluator.php','app/access/ProfileNormalizer.php','app/access/PageAccessRegistry.php','app/access/AccessAreas.php','app/access/AccessPolicyVersion.php']
 with tempfile.TemporaryDirectory(prefix='rei70-http-boundary-') as temp:
  root=Path(temp)
  def put(name,data):
