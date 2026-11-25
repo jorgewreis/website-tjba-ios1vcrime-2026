@@ -193,6 +193,19 @@ final class ParteDocumentoLock
         return $result;
     }
 
+    /** Exige lock da identidade obtido nesta conexão antes da transação. */
+    public static function assertHeld(PDO $connection, string $type, string $number): void
+    {
+        if (self::isConnectionUnsafe($connection)) throw new RuntimeException('Conexão indisponível para alteração de documento.');
+        $type = ParteDocumentoHelper::normalizarTipo($type);
+        $number = ParteDocumentoHelper::normalizarNumero($type, $number);
+        if ($type === '' || $number === '') throw new LogicException('Identidade documental inválida.');
+        if ($connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') return;
+        $name = self::lockName($connection, $type, $number);
+        $held = self::$locksHeld[$connection] ?? [];
+        if (!isset($held[$name])) throw new LogicException('Lock documental deve ser obtido antes da transação.');
+    }
+
     private static function lockName(PDO $connection, string $type, string $number): string
     {
         $database = $connection->query('SELECT DATABASE()')->fetchColumn();

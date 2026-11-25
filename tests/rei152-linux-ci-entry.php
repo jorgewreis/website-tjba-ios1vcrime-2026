@@ -20,3 +20,4 @@ $db = null;
 require __DIR__ . '/rei152-documentos-mysql.test.php';
 require __DIR__ . '/rei152-gate-alternate-mysql.test.php';
 require __DIR__ . '/rei152-create-mysql.test.php';
+require __DIR__ . '/rei152-cpf-port-mysql.test.php';

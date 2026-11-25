@@ -136,15 +136,30 @@
         }
 
         setSyncBusy(button, true);
-        fetch('/api/processos/datajud-sync.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'same-origin',
-            body: JSON.stringify({ numero: numero })
-        })
-            .then(function (response) {
+        function postSync(url) {
+            return fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({ numero: numero })
+            }).then(function (response) {
                 return response.json().then(function (body) {
                     return { ok: response.ok, body: body };
+                });
+            });
+        }
+
+        postSync('/api/processos/datajud-sync.php')
+            .then(function (result) {
+                if (!result.body || result.body.code !== 'acesso_setorial_obrigatorio') {
+                    return result;
+                }
+
+                // A rota combinada só grava assuntos com acesso ao setor responsável.
+                // A rota exclusiva de classe continua coberta pela política REI-76.
+                return postSync('/api/processos/classe-sync.php').then(function (classResult) {
+                    classResult.classOnly = true;
+                    return classResult;
                 });
             })
             .then(function (result) {
@@ -156,7 +171,9 @@
                 queuePostReloadToast(
                     'success',
                     'Sucesso',
-                    String(result.body.message || 'Dados do processo sincronizados com sucesso.')
+                    result.classOnly
+                        ? 'Classe sincronizada. Os assuntos não foram atualizados porque a operação exige acesso ao setor responsável.'
+                        : String(result.body.message || 'Dados do processo sincronizados com sucesso.')
                 );
                 window.location.reload();
             })

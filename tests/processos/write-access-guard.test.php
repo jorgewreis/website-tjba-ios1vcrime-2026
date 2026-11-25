@@ -19,6 +19,7 @@ try {
         $put($path, file_get_contents($source . '/' . $path));
     }
     $put('app/helpers/AutoloadHelper.php', '<?php');
+    $put('app/repositories/ProcessosRepository.php', '<?php final class ProcessosRepository {}');
     $put('app/helpers/Conection.php', '<?php function appIsHttpsRequest(): bool { return false; } final class Conection { public static function getInstance(): self { throw new RuntimeException("DB_SENTINEL"); } }');
     $put('config/security.php', '<?php final class Security { public static function isAuthenticated(): bool { return getenv("TEST_AUTH") === "1"; } }');
     $put('app/helpers/UsuarioPerfisAutorizacao.php', '<?php final class UsuarioPerfisAutorizacao { public static function perfisDoUsuario(string $id): array { return [getenv("TEST_PROFILE")]; } }');

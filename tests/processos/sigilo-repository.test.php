@@ -47,6 +47,12 @@ $repo->ensureProcess($cnj, null, null, false);
 expectSigilo($db, $id, 0, 'alteração explícita para falso');
 $repo->ensureProcess($cnj, null, null, true);
 expectSigilo($db, $id, 1, 'alteração explícita para verdadeiro');
+$repo->ensureProcess($cnj, null, null, false, true);
+expectSigilo($db, $id, 1, 'preservar existente verdadeiro apesar de falso');
+$repo->ensureProcess($cnj, null, null, false);
+$repo->ensureProcess($cnj, null, null, true, true);
+expectSigilo($db, $id, 0, 'preservar existente falso apesar de verdadeiro');
+$repo->ensureProcess($cnj, null, null, true);
 
 $db->beginTransaction();
 $repo->ensureProcess($cnj, 'CLASSE-TESTE', null, false);
@@ -59,6 +65,9 @@ if ($stmt->fetchColumn() !== null) {
 }
 
 $otherCnj = '0000002-54.2020.8.05.0001';
+$newId = $repo->ensureProcess($otherCnj, null, null, true, true);
+expectSigilo($db, $newId, 1, 'novo processo com preservação de existente');
+$db->exec("DELETE FROM processos WHERE numero_processo = '0000002-54.2020.8.05.0001'");
 $db->beginTransaction();
 $newId = $repo->ensureProcess($otherCnj);
 expectSigilo($db, $newId, 0, 'novo processo com sigilo omitido');

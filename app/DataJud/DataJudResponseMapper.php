@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../helpers/CnjValidator.php';
+
 /**
  * Formatação única da resposta DataJud (Elasticsearch _source → payload da API interna).
  */
@@ -30,11 +32,39 @@ final class DataJudResponseMapper
         return true;
     }
 
+    /** Sincronizações exigem prova explícita de que o registro não tem sigilo. */
+    public static function isAusenciaSigiloExplicitamenteInformada($nivelSigilo): bool
+    {
+        if (is_int($nivelSigilo)) {
+            return $nivelSigilo === 0;
+        }
+        if (!is_string($nivelSigilo)) {
+            return false;
+        }
+        $nivelSigilo = trim($nivelSigilo);
+        return preg_match('/^0+$/', $nivelSigilo) === 1
+            || preg_match('/sem\s*sigilo/iu', $nivelSigilo) === 1;
+    }
+
     /**
      * @return array<string, mixed>
      */
     public static function mapSourceToPayload(array $source, string $numeroDigitos, bool $redactSigilo): array
     {
+        $estadoAssuntos = array_key_exists('assuntos', $source)
+            ? (is_array($source['assuntos']) && $source['assuntos'] === [] ? 'vazio' : 'presente')
+            : 'ausente';
+        $assuntosCompletos = self::assuntosSaoCompletos($source['assuntos'] ?? null);
+        if ($estadoAssuntos === 'ausente') {
+            $assuntos = [];
+        } else {
+            try {
+                $assuntos = self::formatarAssuntos($source['assuntos']);
+            } catch (RuntimeException $exception) {
+                // Partial metadata remains readable, but is never eligible for sync.
+                $assuntos = self::formatarAssuntosParciais($source['assuntos']);
+            }
+        }
         $poloPassivo = self::extractPartNamesFromPolos($source);
         $movimentos = self::formatarMovimentos($source['movimentos'] ?? []);
 
@@ -47,7 +77,9 @@ final class DataJudResponseMapper
             'numero' => $source['numeroProcesso'] ?? $numeroDigitos,
             'tribunal' => $source['tribunal'] ?? null,
             'classe' => self::formatarClasse($source),
-            'assuntos' => self::formatarAssuntos($source['assuntos'] ?? []),
+            'assuntos' => $assuntos,
+            'assuntos_estado' => $estadoAssuntos,
+            'assuntos_completos' => $assuntosCompletos,
             'prioridades' => self::formatarPrioridades($source['prioridade'] ?? []),
             'polo_passivo' => $poloPassivo,
             'movimentos' => $movimentos,
@@ -60,6 +92,8 @@ final class DataJudResponseMapper
             'ultima_atualizacao' => $source['dataHoraUltimaAtualizacao'] ?? null,
             'id' => $source['id'] ?? null,
             'sigilo_restrito' => $redactSigilo,
+            'sigilo_ausencia_verificada' => self::isAusenciaSigiloExplicitamenteInformada($source['nivelSigilo'] ?? null),
+            'fonte_confirmada_para_sincronizacao' => self::fonteConfirmadaParaSincronizacao($source, $numeroDigitos),
             'sigilo_mensagem' => $redactSigilo ? self::MSG_TOAST_SIGILO_PUBLICO : null,
         ];
     }
@@ -77,6 +111,8 @@ final class DataJudResponseMapper
             'tribunal' => null,
             'classe' => ['codigo' => null, 'descricao' => null],
             'assuntos' => [],
+            'assuntos_estado' => 'indisponivel',
+            'assuntos_completos' => false,
             'prioridades' => [],
             'polo_passivo' => [],
             'movimentos' => [],
@@ -90,6 +126,9 @@ final class DataJudResponseMapper
             'id' => null,
             'indisponivel_na_base_publica' => true,
             'sigilo_restrito' => false,
+            'sigilo_ausencia_verificada' => false,
+            'resultado_unico_verificado' => false,
+            'fonte_confirmada_para_sincronizacao' => false,
             'sigilo_mensagem' => self::MSG_TOAST_SIGILO_PUBLICO,
         ];
     }
@@ -116,48 +155,13 @@ final class DataJudResponseMapper
      */
     public static function formatarAssuntos($assuntos): array
     {
-        if (empty($assuntos) || !is_array($assuntos)) {
-            return [];
+        if (!is_array($assuntos) || !array_is_list($assuntos)) {
+            throw new RuntimeException('Resposta de assuntos do DataJud inválida.');
         }
 
         $lista = [];
         foreach ($assuntos as $item) {
-            if (is_string($item)) {
-                $desc = trim($item);
-                if ($desc !== '') {
-                    $lista[] = ['codigo' => null, 'descricao' => $desc];
-                }
-                continue;
-            }
-
-            if (!is_array($item)) {
-                continue;
-            }
-
-            $codigo = trim((string) ($item['codigo'] ?? $item['codigoAssunto'] ?? $item['numAssunto'] ?? ''));
-            $desc = trim((string) ($item['descricaoAssunto'] ?? $item['descricao'] ?? $item['nome'] ?? ''));
-            if ($desc !== '') {
-                $lista[] = ['codigo' => $codigo !== '' ? $codigo : null, 'descricao' => $desc];
-                continue;
-            }
-
-            foreach ($item as $sub) {
-                if (is_string($sub)) {
-                    $nestedDesc = trim($sub);
-                    if ($nestedDesc !== '') {
-                        $lista[] = ['codigo' => $codigo !== '' ? $codigo : null, 'descricao' => $nestedDesc];
-                    }
-                    continue;
-                }
-                if (!is_array($sub)) {
-                    continue;
-                }
-                $nestedCodigo = trim((string) ($sub['codigo'] ?? $sub['codigoAssunto'] ?? $sub['numAssunto'] ?? $codigo));
-                $nestedDesc = trim((string) ($sub['descricaoAssunto'] ?? $sub['descricao'] ?? $sub['nome'] ?? ''));
-                if ($nestedDesc !== '') {
-                    $lista[] = ['codigo' => $nestedCodigo !== '' ? $nestedCodigo : null, 'descricao' => $nestedDesc];
-                }
-            }
+            self::extrairAssunto($item, '', $lista, 0);
         }
 
         $unicos = [];
@@ -170,6 +174,114 @@ final class DataJudResponseMapper
         }
 
         return array_values($unicos);
+    }
+
+    private static function assuntosSaoCompletos($assuntos): bool
+    {
+        if (!is_array($assuntos) || !array_is_list($assuntos) || $assuntos === []) {
+            return false;
+        }
+        try {
+            return self::formatarAssuntos($assuntos) !== [];
+        } catch (RuntimeException $exception) {
+            return false;
+        }
+    }
+
+    /** @return list<array{codigo: ?string, descricao: string}> */
+    private static function formatarAssuntosParciais($assuntos): array
+    {
+        if (!is_array($assuntos) || !array_is_list($assuntos)) {
+            return [];
+        }
+        $lista = [];
+        foreach ($assuntos as $item) {
+            if (is_string($item)) {
+                $descricao = trim($item);
+                if ($descricao !== '') $lista[] = ['codigo' => null, 'descricao' => $descricao];
+                continue;
+            }
+            if (!is_array($item) || array_is_list($item)) continue;
+            try {
+                $codigo = self::campoAssunto($item, ['codigo', 'codigoAssunto', 'numAssunto']);
+                $descricao = self::campoAssunto($item, ['descricaoAssunto', 'descricao', 'nome']);
+            } catch (RuntimeException $exception) {
+                continue;
+            }
+            if ($descricao !== '') {
+                $lista[] = ['codigo' => $codigo !== '' ? $codigo : null, 'descricao' => $descricao];
+                continue;
+            }
+            foreach (['assunto', 'assuntos'] as $childKey) {
+                if (!array_key_exists($childKey, $item) || !is_array($item[$childKey])) continue;
+                $children = array_is_list($item[$childKey]) ? $item[$childKey] : [$item[$childKey]];
+                $nested = self::formatarAssuntosParciais($children);
+                foreach ($nested as $entry) {
+                    $lista[] = [
+                        'codigo' => $entry['codigo'] ?? ($codigo !== '' ? $codigo : null),
+                        'descricao' => $entry['descricao'],
+                    ];
+                }
+            }
+        }
+        return $lista;
+    }
+
+    private static function fonteConfirmadaParaSincronizacao(array $source, string $numeroDigitos): bool
+    {
+        $numero = $source['numeroProcesso'] ?? null;
+        return is_string($numero)
+            && CnjValidator::onlyDigits($numero) === $numeroDigitos
+            && self::isAusenciaSigiloExplicitamenteInformada($source['nivelSigilo'] ?? null);
+    }
+
+    /** @param mixed $item @param list<array{codigo: string, descricao: string}> $lista */
+    private static function extrairAssunto($item, string $codigoPai, array &$lista, int $profundidade): void
+    {
+        if (!is_array($item) || array_is_list($item) || $profundidade > 8) {
+            throw new RuntimeException('Resposta de assuntos do DataJud inválida.');
+        }
+        $inicio = count($lista);
+        $codigo = self::campoAssunto($item, ['codigo', 'codigoAssunto', 'numAssunto']);
+        $codigo = $codigo !== '' ? $codigo : $codigoPai;
+        $descricao = self::campoAssunto($item, ['descricaoAssunto', 'descricao', 'nome']);
+        if ($descricao !== '') {
+            self::validarCodigoAssunto($codigo);
+            $lista[] = ['codigo' => $codigo, 'descricao' => $descricao];
+        }
+        foreach ($item as $chave => $valor) {
+            if ($chave === 'assunto' || $chave === 'assuntos') {
+                if (!is_array($valor) || $valor === []) throw new RuntimeException('Resposta de assuntos do DataJud inválida.');
+                $filhos = array_is_list($valor) ? $valor : [$valor];
+                foreach ($filhos as $filho) self::extrairAssunto($filho, $codigo, $lista, $profundidade + 1);
+            } elseif (is_array($valor) || is_object($valor)) {
+                // Estruturas não reconhecidas podem conter outro assunto; não as descarte.
+                throw new RuntimeException('Resposta de assuntos do DataJud inválida.');
+            }
+            // Metadados escalares não reconhecidos não são interpretados como assuntos.
+        }
+        if (count($lista) === $inicio) throw new RuntimeException('Resposta de assuntos do DataJud inválida.');
+    }
+
+    /** @param array<string, mixed> $item @param list<string> $nomes */
+    private static function campoAssunto(array $item, array $nomes): string
+    {
+        foreach ($nomes as $nome) {
+            if (!array_key_exists($nome, $item) || $item[$nome] === null) continue;
+            $valor = $item[$nome];
+            if (!is_string($valor) && !is_int($valor)) {
+                throw new RuntimeException('Resposta de assuntos do DataJud inválida.');
+            }
+            return trim((string) $valor);
+        }
+        return '';
+    }
+
+    private static function validarCodigoAssunto(string $codigo): void
+    {
+        if (!preg_match('/^(?=.*[1-9])[0-9]+$/D', $codigo)) {
+            throw new RuntimeException('Resposta de assuntos do DataJud inválida.');
+        }
     }
 
     /**
