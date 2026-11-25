@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0017
+
+**Data:** 2026-11-24 21:32:13 | **Commit:** `2715a1ce` | **Tipo:** `patch`
+
+- test(REI-73): verificar leitura por setor e sigilo
+
 ## V. 1.88.0016
 
 **Data:** 2026-11-24 20:24:07 | **Commit:** `85d79ad0` | **Tipo:** `patch`
