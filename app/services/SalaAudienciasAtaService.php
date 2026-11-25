@@ -333,39 +333,65 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Dados inválidos.');
         }
 
-        $pauta = $this->pautaRepository->findById($idPauta);
-        if ($pauta === null) {
-            throw new InvalidArgumentException('Audiência não encontrada.');
-        }
-        $this->assertPautaDisponivelParaEstudante($idPauta, $pauta);
-        if ($this->inscricaoRepository->exists($idPauta, $usuarioId)) {
-            throw new InvalidArgumentException('Você já está inscrito nesta audiência.');
+        // This service owns the transaction so the row lock is guaranteed to
+        // be the first database statement in it. A caller-owned transaction
+        // could already have established a REPEATABLE READ snapshot.
+        if ($this->connection->inTransaction()) {
+            throw new LogicException('A inscrição deve iniciar sua própria transação.');
         }
 
-        $st = trim((string) ($pauta['status'] ?? ''));
-        if ($st === 'agendada') {
-            $st = 'designada';
-        }
-        if ($st !== 'designada') {
-            throw new InvalidArgumentException('Inscrição só é permitida para audiências designadas.');
-        }
+        $this->connection->beginTransaction();
+        try {
+            if (!$this->pautaRepository->lockForStudentRegistration($idPauta)) {
+                throw new InvalidArgumentException('Audiência não encontrada.');
+            }
 
-        $dataAud = trim((string) ($pauta['data_audiencia'] ?? ''));
-        if ($dataAud === '') {
-            throw new InvalidArgumentException('Data da audiência inválida.');
-        }
-        if (!self::dataPermiteInscricaoEstudante($dataAud)) {
-            throw new InvalidArgumentException('Inscrição só é permitida no dia da audiência.');
-        }
+            // Load the pauta only after acquiring its row lock. This keeps the
+            // lock as the transaction's first read while providing the current
+            // status and date for the eligibility checks below.
+            $pauta = $this->pautaRepository->findById($idPauta);
+            if ($pauta === null) {
+                throw new InvalidArgumentException('Audiência não encontrada.');
+            }
 
-        $totalInscritos = $this->inscricaoRepository->countInscritosPorPauta($idPauta);
-        if ($totalInscritos >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA) {
-            throw new InvalidArgumentException(
-                'O limite de ' . self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA . ' estudantes por audiência foi atingido. Não é possível efetuar novas inscrições.'
-            );
-        }
+            $st = trim((string) ($pauta['status'] ?? ''));
+            if ($st === 'agendada') {
+                $st = 'designada';
+            }
+            if ($st !== 'designada') {
+                throw new InvalidArgumentException('Inscrição só é permitida para audiências designadas.');
+            }
 
-        $this->inscricaoRepository->insert($idPauta, $usuarioId);
+            $dataAud = trim((string) ($pauta['data_audiencia'] ?? ''));
+            if ($dataAud === '') {
+                throw new InvalidArgumentException('Data da audiência inválida.');
+            }
+            $hoje = date('Y-m-d');
+            if ($dataAud !== $hoje) {
+                throw new InvalidArgumentException('Inscrição só é permitida no dia da audiência.');
+            }
+
+            $this->assertPautaDisponivelParaEstudante($idPauta, $pauta);
+
+            if ($this->inscricaoRepository->exists($idPauta, $usuarioId)) {
+                throw new InvalidArgumentException('Você já está inscrito nesta audiência.');
+            }
+
+            $totalInscritos = $this->inscricaoRepository->countInscritosPorPauta($idPauta);
+            if ($totalInscritos >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA) {
+                throw new InvalidArgumentException(
+                    'O limite de ' . self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA . ' estudantes por audiência foi atingido. Não é possível efetuar novas inscrições.'
+                );
+            }
+
+            $this->inscricaoRepository->insert($idPauta, $usuarioId);
+            $this->connection->commit();
+        } catch (Throwable $e) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            throw $e;
+        }
     }
 
     private function assertPautaDisponivelParaEstudante(string $idPauta, array $pauta): void

@@ -21,7 +21,7 @@ final class AssuntosRepository
     }
 
     /** Retorna o id do assunto (existente ou recém-criado). */
-    public function ensureAssunto(string $codigo, string $descricao): string
+    public function ensureAssunto(string $codigo, string $descricao, bool $forUpdate = false): string
     {
         $codigo = self::normalizeCodigo($codigo);
         if ($codigo === '') {
@@ -33,7 +33,7 @@ final class AssuntosRepository
             $descricaoNormalizada = $codigo;
         }
 
-        $existing = $this->findByCodigo($codigo);
+        $existing = $this->findByCodigo($codigo, $forUpdate);
         if ($existing !== null) {
             $id = (string) ($existing['id'] ?? '');
             $descricaoAtual = trim((string) ($existing['descricao'] ?? ''));
@@ -66,7 +66,7 @@ final class AssuntosRepository
         return $id;
     }
 
-    public function findByCodigo(string $codigo): ?array
+    public function findByCodigo(string $codigo, bool $forUpdate = false): ?array
     {
         $codigo = self::normalizeCodigo($codigo);
         if ($codigo === '') {
@@ -74,7 +74,7 @@ final class AssuntosRepository
         }
 
         $statement = $this->connection->prepare(
-            sprintf('SELECT `id`, `codigo`, `descricao`, `created_at`, `updated_at` FROM `%s` WHERE `codigo` = :codigo LIMIT 1', $this->table)
+            sprintf('SELECT `id`, `codigo`, `descricao`, `created_at`, `updated_at` FROM `%s` WHERE `codigo` = :codigo LIMIT 1%s', $this->table, $forUpdate ? ' FOR UPDATE' : '')
         );
         $statement->bindValue(':codigo', $codigo);
         $statement->execute();

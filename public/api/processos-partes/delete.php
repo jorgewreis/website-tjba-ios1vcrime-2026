@@ -12,6 +12,7 @@ ApiAccessGuard::requireAccess(['processospartesedit', 'consultaprocessosedit'], 
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/repositories/ProcessosPartesRepository.php';
+require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 
 if (!bootstrapRequireTrustedPostRequest()) {
     http_response_code(403);
@@ -41,8 +42,33 @@ if ($id === '') {
 }
 
 try {
+    $connection->beginTransaction();
+    $processId = ProcessoSetorAuthorization::findProcessIdByLink($connection, $id);
+    if ($processId === null) {
+        $connection->commit();
+        http_response_code(404);
+        echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if (!ProcessoSetorAuthorization::canModifyProcess(
+        $connection,
+        trim((string) ($_SESSION['id_usuario'] ?? '')),
+        $processId
+    )) {
+        $connection->rollBack();
+        http_response_code(404);
+        echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if (!ProcessoSetorAuthorization::linkBelongsToProcess($connection, $id, $processId)) {
+        $connection->rollBack();
+        http_response_code(404);
+        echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $repository = new ProcessosPartesRepository($connection);
     $removed = $repository->delete($id);
+    $connection->commit();
     echo json_encode(['deleted' => $removed], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     ApiErrorReporter::logUnexpected($exception, 'public/api/processos-partes/delete.php');

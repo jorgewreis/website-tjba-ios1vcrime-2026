@@ -10,9 +10,13 @@ class CartasExpedidasAlocadosRepository { public function __construct(PDO $db) {
 class ClassesRepository { public function __construct(PDO $db) {} public function ensureClass(...$args): string { return 'CLA-SYNTHETIC'; } }
 class TribunaisRepository {
     private int $calls = 0;
+    public static $beforeFailure = null;
     public function __construct(PDO $db) {}
     public function ensureTribunal(...$args): string {
-        if (++$this->calls === 2) { throw new RuntimeException('STOP_AFTER_PROCESS'); }
+        if (++$this->calls === 2) {
+            if (self::$beforeFailure !== null) { (self::$beforeFailure)(); }
+            throw new RuntimeException('STOP_AFTER_PROCESS');
+        }
         return 'TRI-SYNTHETIC';
     }
 }
@@ -76,4 +80,44 @@ if ($afterOuterRollback === null || $afterOuterRollback['classe_id'] !== null ||
     throw new RuntimeException('O savepoint anterior do chamador foi substituído pela criação da carta.');
 }
 $db->rollBack();
+
+// Inspeciona a gravação dentro da transação antes de provocar rollback.
+// Não prova commit do serviço, concorrência ou comportamento MySQL.
+foreach ([0, 1] as $initial) {
+    foreach ([true, false] as $withClass) {
+        foreach ([null, false, true] as $requested) {
+            $db = new ProcessosSqlite();
+            $repo = new ProcessosRepository($db);
+            $id = $repo->ensureProcess($existingCnj, null, null, (bool) $initial);
+            $payload = $base;
+            if (!$withClass) { unset($payload['classe_codigo'], $payload['classe_descricao']); }
+            if ($requested !== null) { $payload['nivel_sigilo'] = $requested; }
+            $observed = false;
+            TribunaisRepository::$beforeFailure = static function () use ($db, $id, $initial, &$observed): void {
+                expectSigilo($db, $id, $initial, 'carta preserva processo existente antes do rollback');
+                $observed = true;
+            };
+            try { (new CartasExpedidasService($db))->create($payload); throw new RuntimeException('Não atingiu a sentinela.'); }
+            catch (RuntimeException $e) { if ($e->getMessage() !== 'STOP_AFTER_PROCESS') { throw $e; } }
+            if (!$observed || $db->inTransaction()) { throw new RuntimeException('Observação ou rollback ausente.'); }
+            expectSigilo($db, $id, $initial, 'processo existente após rollback');
+        }
+    }
+}
+foreach ([[true, false, 0], [true, true, 1], [false, false, 1]] as [$withClass, $requested, $expected]) {
+    $db = new ProcessosSqlite();
+    $repo = new ProcessosRepository($db);
+    $payload = array_merge($base, ['numero_processo' => $newCnj, 'nivel_sigilo' => $requested]);
+    if (!$withClass) { unset($payload['classe_codigo'], $payload['classe_descricao']); }
+    $observed = false;
+    TribunaisRepository::$beforeFailure = static function () use ($repo, $newCnj, $expected, &$observed): void {
+        $process = $repo->findByNumero($newCnj);
+        if ($process === null || (int) $process['sigiloso'] !== $expected) { throw new RuntimeException('Sigilo inicial incorreto.'); }
+        $observed = true;
+    };
+    try { (new CartasExpedidasService($db))->create($payload); throw new RuntimeException('Não atingiu a sentinela.'); }
+    catch (RuntimeException $e) { if ($e->getMessage() !== 'STOP_AFTER_PROCESS') { throw $e; } }
+    if (!$observed || $repo->findByNumero($newCnj) !== null || $db->inTransaction()) { throw new RuntimeException('Rollback do processo novo falhou.'); }
+}
+TribunaisRepository::$beforeFailure = null;
 echo "PASS create de carta e sigilo (SQLite em memória; periféricos simulados)\n";

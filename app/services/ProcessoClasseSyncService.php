@@ -74,7 +74,7 @@ final class ProcessoClasseSyncService
      *
      * @return array{action: 'noop'|'updated'|'created', processo_id: string, classe_id: string}
      */
-    public function syncFromDataJud(string $digits20, string $codigoRaw, string $descricaoRaw): array
+    public function syncFromDataJud(string $digits20, string $codigoRaw, string $descricaoRaw, bool $requireExistingProcess = false): array
     {
         $digits20 = CnjValidator::digits20OrThrow($digits20);
 
@@ -83,12 +83,15 @@ final class ProcessoClasseSyncService
             throw new InvalidArgumentException('Código da classe inválido.');
         }
 
+        $numeroFormatado = $this->formatarCnj20($digits20);
+        $processo = $this->processosRepository->findByNumero($digits20);
+        if ($requireExistingProcess && $processo === null) {
+            throw new InvalidArgumentException('Processo não encontrado no cadastro local.');
+        }
+
         $desc = trim($descricaoRaw);
         $nome = $desc !== '' ? TextFormatter::formatProperName($desc, 200) : $codigo;
         $classeIdResolved = $this->classesRepository->ensureClass($codigo, $nome);
-
-        $numeroFormatado = $this->formatarCnj20($digits20);
-        $processo = $this->processosRepository->findByNumero($digits20);
 
         if ($processo === null) {
             $pid = $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, null);

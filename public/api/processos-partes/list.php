@@ -9,6 +9,7 @@ header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['consultaprocessos', 'processosparteslist'], false);
+require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 if (strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
     http_response_code(405);
     header('Allow: GET');
@@ -30,16 +31,46 @@ try {
 $processoId = trim((string) ($_GET['processo_id'] ?? ''));
 $parteId = trim((string) ($_GET['parte_id'] ?? ''));
 
+if ($processoId === '' && $parteId === '') {
+    http_response_code(400);
+    echo json_encode(['error' => 'Informe processo_id ou parte_id.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 try {
+    if (!$connection->beginTransaction()) {
+        throw new RuntimeException('Não foi possível iniciar a consulta.');
+    }
     $repository = new ProcessosPartesRepository($connection);
     if ($processoId !== '') {
         $rows = $repository->findByProcessoId($processoId);
     } elseif ($parteId !== '') {
         $rows = $repository->findByParteId($parteId);
-    } else {
-        http_response_code(400);
-        echo json_encode(['error' => 'Informe processo_id ou parte_id.'], JSON_UNESCAPED_UNICODE);
-        exit;
+    }
+
+    $userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+    $allowedByProcess = [];
+    foreach ($rows as $row) {
+        $rowProcessId = trim((string) ($row['processo_id'] ?? ''));
+        if ($rowProcessId === '') {
+            continue;
+        }
+        if (!array_key_exists($rowProcessId, $allowedByProcess)) {
+            $allowedByProcess[$rowProcessId] = ProcessoSetorAuthorization::canAccessProcess(
+                $connection,
+                $userId,
+                $rowProcessId,
+                false
+            );
+        }
+    }
+    $rows = array_values(array_filter($rows, static function (array $row) use ($allowedByProcess): bool {
+        $rowProcessId = trim((string) ($row['processo_id'] ?? ''));
+        return $rowProcessId !== '' && ($allowedByProcess[$rowProcessId] ?? false);
+    }));
+
+    if (!$connection->commit()) {
+        throw new RuntimeException('Não foi possível concluir a consulta.');
     }
     echo json_encode(['data' => $rows], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
