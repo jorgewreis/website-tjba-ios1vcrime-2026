@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0018
+
+**Data:** 2026-11-24 23:10:38 | **Commit:** `4e58cb70` | **Tipo:** `patch`
+
+- fix(REI-317): ocultar coluna de setor vazia
+
 ## V. 1.88.0017
 
 **Data:** 2026-11-24 21:32:13 | **Commit:** `2715a1ce` | **Tipo:** `patch`
@@ -7740,5 +7746,6 @@
 
 
 \n
+
 
 

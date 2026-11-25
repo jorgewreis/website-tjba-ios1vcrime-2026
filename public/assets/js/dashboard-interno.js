@@ -99,6 +99,7 @@
   async function load(){
     const error=$('dashboard-erro');if(error)error.hidden=true;
     const queueCard=$('dash-cartorio-queue');if(queueCard)queueCard.hidden=true;
+    const sectorColumn=$('dash-sector-column');if(sectorColumn)sectorColumn.hidden=true;
     ['dash-queue-guias-expedicao-row','dash-queue-guias-envio-row'].forEach(id=>{const row=$(id);if(row)row.hidden=true;});
     set('dash-queue-guias-expedicao','—');set('dash-queue-guias-envio','—');
     const url='/api/dashboard/resumo.php';
@@ -179,6 +180,7 @@
       });
       sortSectorMetrics();
       if(queueCard)queueCard.hidden=!cartorioEnabled||!hasAnyMetric;
+      if(sectorColumn)sectorColumn.hidden=!cartorioEnabled||!hasAnyMetric;
 
       const modules=data.usuario?.modules||[];
       set('dash-done-expedidas',count(moduleTotal(modules,'cartas_expedidas')));
@@ -189,6 +191,7 @@
       renderAlerts(data.alertas);
     }catch(error){
       if(queueCard)queueCard.hidden=true;
+      if(sectorColumn)sectorColumn.hidden=true;
       ['dash-queue-guias-expedicao-row','dash-queue-guias-envio-row'].forEach(id=>{const row=$(id);if(row)row.hidden=true;});
       set('dash-queue-guias-expedicao','—');set('dash-queue-guias-envio','—');
       if($('dashboard-erro')){$('dashboard-erro').textContent=error.message||'Não foi possível carregar os indicadores.';$('dashboard-erro').hidden=false;}
