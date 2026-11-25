@@ -65,9 +65,16 @@ final class PartesDocumentosRepository
             return null;
         }
 
+        $driver = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $numeroPredicate = $tipo === 'CPF'
+            ? '`numero` = :numero'
+            : ($driver === 'mysql'
+                ? 'BINARY UPPER(`numero`) = BINARY UPPER(:numero)'
+                : 'UPPER(`numero`) = UPPER(:numero)');
         $sql = sprintf(
-            'SELECT `parte_id` FROM `%s` WHERE `tipo` = :tipo AND `numero` = :numero',
-            $this->table
+            'SELECT `parte_id` FROM `%s` WHERE `tipo` = :tipo AND %s',
+            $this->table,
+            $numeroPredicate
         );
         if ($excluirParteId !== null && trim($excluirParteId) !== '') {
             $sql .= ' AND `parte_id` != :excluir_parte_id';
@@ -102,6 +109,7 @@ final class PartesDocumentosRepository
         ParteDocumentoHelper::validarNumero($tipo, $numero);
 
         return ParteDocumentoLock::run($this->connection, $tipo, $numero, function () use ($row, $parteId, $tipo, $numero): string {
+            ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table]);
             $existenteOutraParte = $this->findParteIdByTipoNumero($tipo, $numero);
             if ($existenteOutraParte !== null && $existenteOutraParte !== $parteId) {
                 throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este documento.');
@@ -142,6 +150,7 @@ final class PartesDocumentosRepository
         $number = ParteDocumentoHelper::normalizarNumero($type, (string) ($row['numero'] ?? ''));
 
         return ParteDocumentoLock::run($this->connection, $type, $number, function () use ($id, $type, $number): bool {
+            ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table]);
             $current = $this->findById($id);
             if ($current === null) {
                 return false;
