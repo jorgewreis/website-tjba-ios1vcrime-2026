@@ -36,3 +36,10 @@ O workflow `auth-isolated-e2e.yml` constrói `tests/auth/ci-runtime/Dockerfile` 
 O job exercita autenticação e a fixture de serviço de atas, sem executar o runner de atas suspenso. A fixture cobre sigilo, falhas de arquivo/banco, duas substituições concorrentes com waits observados no MySQL e upload HTTP multipart com sessões sintéticas; não cobre browser, schema real ou acesso à rede externa. O workflow está configurado para executar no GitHub Actions em pushes e pull requests; consulte o resultado do run e do commit correspondentes para verificar cada execução. A disponibilidade futura dos digests e a reprodução binária idêntica entre builders não são garantidas. Os pacotes Composer são obtidos da rede e sua disponibilidade é uma dependência externa. A existência de lint verde não substitui o resultado deste job.
 
 A verificação final falha se o daemon não responder ou se houver recursos etiquetados, inclusive containers temporários do Composer. Ela não executa remoção genérica. Em cancelamento abrupto ou timeout do job, nem a etapa final nem o `finally` do runner são garantidos; a eliminação do executor hospedado é uma fronteira adicional, não prova de cleanup interno.
+
+
+### Reforco de topologia REI-93
+
+O runner confere estrutura e identidade dos containers, exige rede unica, interna e inicialmente vazia, e depois do start compara membros exatos, NetworkID e EndpointID entre rede e containers. Endpoints duplicados sao recusados. Antes do start, campos NetworkID/EndpointID ainda vazios sao aceitos; o contrato ativo e exigido antes de entregar o marcador, executar testes e fazer chamadas HTTP.
+
+`docker-topology-validation.test.ps1` cobre 49 casos com objetos sinteticos, sem Docker/banco. Os mocks de resposta perdida e erro sanitizado continuam exigindo que a falha pretendida seja atingida. Snapshots repetidos reduzem alteracoes acidentais entre etapas, mas nao eliminam TOCTOU nem atestam daemon/imagens independentemente. A validacao sintetica nao autoriza execucao positiva nem encerra a investigacao historica.

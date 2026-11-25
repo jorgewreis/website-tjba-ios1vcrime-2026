@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/dashboard/resumo.php');
 require_once dirname(__DIR__, 3) . '/config/config.php';
 require_once dirname(__DIR__, 3) . '/config/security.php';
 require_once dirname(__DIR__, 3) . '/app/helpers/bootstrap.php';
@@ -26,4 +29,4 @@ try {
     $result=(new DashboardResumoService(Conection::getInstance()->getConnection()))->resumo($userId,$areas,$selected);
     echo json_encode($result,JSON_UNESCAPED_UNICODE|JSON_INVALID_UTF8_SUBSTITUTE);
 } catch (InvalidArgumentException $e) { http_response_code(403); echo json_encode(['error'=>$e->getMessage()],JSON_UNESCAPED_UNICODE); }
-catch (Throwable $e) { error_log('dashboard resumo: '.$e->getMessage()); http_response_code(500); echo json_encode(['error'=>'Não foi possível carregar os indicadores.'],JSON_UNESCAPED_UNICODE); }
+catch (Throwable $e) { error_log('dashboard resumo: '.ApiErrorReporter::genericMessage($e, 'public/api/dashboard/resumo.php')); http_response_code(500); echo json_encode(['error'=>'Não foi possível carregar os indicadores.'],JSON_UNESCAPED_UNICODE); }

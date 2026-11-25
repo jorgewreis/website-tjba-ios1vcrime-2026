@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 4) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/pessoas/documentos/delete.php');
 require_once dirname(__DIR__, 4) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['consultapartesedit', 'partesinstituicoesedit', 'partesinstituicoescreate'], true);
 
@@ -34,6 +37,7 @@ try {
     $deleted = $service->deleteDocumento($id);
     echo json_encode(['deleted' => $deleted], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/pessoas/documentos/delete.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao excluir documento.'], JSON_UNESCAPED_UNICODE);
 }

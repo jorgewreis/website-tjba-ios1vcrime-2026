@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/ApiErrorReporter.php';
 
 final class Conection
 {
@@ -27,12 +28,8 @@ final class Conection
         try {
             $this->pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
         } catch (PDOException $e) {
-            error_log('Erro de conexão com o banco: ' . $e->getMessage());
-            $msg = 'Erro interno de conexão com o banco de dados.';
-            if (PHP_SAPI === 'cli') {
-                $msg .= ' ' . $e->getMessage() . ' (host=' . DB_HOST . ':' . DB_PORT . ', db=' . DB_NAME . ')';
-            }
-            throw new RuntimeException($msg);
+            ApiErrorReporter::logUnexpected($e, 'app/helpers/Conection.php');
+            throw new RuntimeException('Erro interno de conexão com o banco de dados.', 0, $e);
         }
     }
 
