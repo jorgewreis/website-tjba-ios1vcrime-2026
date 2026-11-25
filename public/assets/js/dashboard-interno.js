@@ -6,7 +6,30 @@
   if(window.Chart) Chart.defaults.font.family="'Google Sans', sans-serif";
 
   function set(id,value){const el=$(id);if(el)el.textContent=value;}
+  function setResponsible(id,name,isOwn){
+    const el=$(id);if(!el)return;
+    const value=typeof name==='string'?name.trim().split(/\s+/u)[0]:'';
+    el.replaceChildren();
+    if(value){
+      const icon=document.createElement('img');
+      icon.src='/assets/img/dashboard-responsavel.svg';
+      icon.alt='';
+      icon.className='dash-responsible-icon';
+      const firstName=document.createElement('b');
+      firstName.textContent=isOwn?'você':value;
+      el.append(icon,'Responsável: ',firstName);
+    }
+    el.hidden=!value;
+  }
   function count(value){return value===null||value===undefined?'—':Number(value).toLocaleString('pt-BR');}
+  function highlightResponsible(rowId,badgeId,isOwn){
+    const row=$(rowId),badge=$(badgeId);if(!row)return;
+    const classes=['dash-own-mint','dash-own-purple','dash-own-warning','dash-own-danger'];
+    row.classList.remove(...classes);
+    if(!isOwn||!badge)return;
+    const tier=countBadgeClasses.findIndex(name=>badge.classList.contains(name));
+    if(tier>=0)row.classList.add(classes[tier]);
+  }
   function applyCountBadge(element,value){
     if(!element)return;
     element.classList.remove(...countBadgeClasses);
@@ -76,6 +99,7 @@
   async function load(){
     const error=$('dashboard-erro');if(error)error.hidden=true;
     const queueCard=$('dash-cartorio-queue');if(queueCard)queueCard.hidden=true;
+    const sectorColumn=$('dash-sector-column');if(sectorColumn)sectorColumn.hidden=true;
     ['dash-queue-guias-expedicao-row','dash-queue-guias-envio-row'].forEach(id=>{const row=$(id);if(row)row.hidden=true;});
     set('dash-queue-guias-expedicao','—');set('dash-queue-guias-envio','—');
     const url='/api/dashboard/resumo.php';
@@ -106,6 +130,12 @@
 
       const cartorioEnabled=Boolean(data.setor?.conectado)&&(data.setor?.areas||[]).includes('CARTORIO');
       const sectorQueues=data.setor?.filas||[];
+      const responsible=cartorioEnabled?(data.setor?.responsaveis_regras||{}):{};
+      const own=cartorioEnabled?(data.setor?.responsaveis_proprios||{}):{};
+      ['dash-queue-expedidas-responsaveis','dash-queue-recebidas-responsaveis','dash-queue-editais-responsaveis','dash-overdue-expedidas-responsaveis','dash-overdue-recebidas-responsaveis'].forEach(id=>setResponsible(id,''));
+      setResponsible('dash-queue-oficios-responsaveis',responsible.oficios,own.oficios===true);
+      setResponsible('dash-queue-guias-expedicao-responsaveis',responsible.guias,own.guias===true);
+      setResponsible('dash-queue-guias-envio-responsaveis',responsible.guias,own.guias===true);
       const queueExpedidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_expedidas','aguardando_envio'):null;
       const queueRecebidas=data.setor?.conectado?activeQueueCount(sectorQueues,'cartas_recebidas','devolucao'):null;
       const queueOficios=data.setor?.conectado?activeQueueCount(sectorQueues,'oficios','enviar_oficio'):null;
@@ -135,6 +165,9 @@
       applyCountBadge($('dash-queue-editais'),queueEditais);
       applyCountBadge($('dash-queue-guias-expedicao'),queueGuiasExpedicao);
       applyCountBadge($('dash-queue-guias-envio'),queueGuiasEnvio);
+      highlightResponsible('dash-queue-oficios-row','dash-queue-oficios',own.oficios===true&&!!responsible.oficios);
+      highlightResponsible('dash-queue-guias-expedicao-row','dash-queue-guias-expedicao',own.guias===true&&!!responsible.guias);
+      highlightResponsible('dash-queue-guias-envio-row','dash-queue-guias-envio',own.guias===true&&!!responsible.guias);
       const overdue=data.setor?.prazos_vencidos||{};
       const overdueDays=data.setor?.prazos_vencidos_dias||{};
       [['expedidas','dash-overdue-expedidas-row','dash-overdue-expedidas'],['recebidas','dash-overdue-recebidas-row','dash-overdue-recebidas']].forEach(([key,rowId,valueId])=>{
@@ -147,6 +180,7 @@
       });
       sortSectorMetrics();
       if(queueCard)queueCard.hidden=!cartorioEnabled||!hasAnyMetric;
+      if(sectorColumn)sectorColumn.hidden=!cartorioEnabled||!hasAnyMetric;
 
       const modules=data.usuario?.modules||[];
       set('dash-done-expedidas',count(moduleTotal(modules,'cartas_expedidas')));
@@ -157,6 +191,7 @@
       renderAlerts(data.alertas);
     }catch(error){
       if(queueCard)queueCard.hidden=true;
+      if(sectorColumn)sectorColumn.hidden=true;
       ['dash-queue-guias-expedicao-row','dash-queue-guias-envio-row'].forEach(id=>{const row=$(id);if(row)row.hidden=true;});
       set('dash-queue-guias-expedicao','—');set('dash-queue-guias-envio','—');
       if($('dashboard-erro')){$('dashboard-erro').textContent=error.message||'Não foi possível carregar os indicadores.';$('dashboard-erro').hidden=false;}

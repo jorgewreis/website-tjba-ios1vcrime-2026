@@ -4,5 +4,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-317): ajuste contagem de guias no dashboard** `[85d79ad0]`
+- **test: verifica consulta com perfis acumulados** `[6fd4f38f]`
+- **test: executa privacidade estudantil no ci** `[c401ff04]`
 

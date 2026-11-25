@@ -1,0 +1,37 @@
+name: REI-161 privacidade de estudantes
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  synthetic-student-privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Preparar PHP com SQLite
+        uses: shivammathur/setup-php@d52fc211a0436f8839a587b3b5b8efddab4744ea # v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, pdo_sqlite
+          coverage: none
+      - name: Serviço e privacidade em SQLite sintético
+        run: |
+          php tests/pauta/estudante-service-bloqueios.test.php
+          php tests/pauta/estudante-inscricoes-privacidade.test.php
+      - name: Renderização e fronteiras HTTP simuladas
+        run: |
+          python3 -B tests/pauta/estudante-painel-render-sintetico.test.py
+          python3 -B tests/pauta/estudante-atas-render-sintetico.test.py
+          python3 -B tests/pauta/status-bulk-no-debug.test.py
+          python3 -B tests/pauta/rei161-poll-idle-auth.test.py
+          python3 -B tests/pauta/rei161-poll-idle-http.test.py
+          python3 -B tests/pauta/rei161-old-security.test.py
+      - name: Polling e links com DOM simulado
+        run: |
+          node tests/pauta/rei106-poll.test.js
+          node tests/pauta/rei161-atas-poll.test.js
+          node tests/pauta/rei161-painel-dia-consumer.test.js
+          node tests/pauta/rei161-painel-estudantes-indisponivel.test.js
+          node tests/pauta/rei162-link-polling.test.js

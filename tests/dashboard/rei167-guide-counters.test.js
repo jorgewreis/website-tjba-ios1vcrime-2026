@@ -26,6 +26,8 @@ for (const id of ['dash-queue-guias-expedicao-row', 'dash-queue-guias-envio-row'
 }
 assert.match(view, /<b>Guias<\/b><br>aguardando expedição/);
 assert.match(view, /<b>Guias<\/b><br>aguardando envio/);
+assert.match(view, /<section[^>]*id="dash-sector-column"[^>]*hidden/,
+  'outer sector column starts hidden until an indicator is available');
 
 class Element {
   constructor(id = '') {
@@ -38,7 +40,7 @@ class Element {
     };
   }
   append(...elements) { this.children.push(...elements); }
-  replaceChildren(...elements) { this.children = [...elements]; }
+  replaceChildren(...elements) { this.textContent = ''; this.children = [...elements]; }
   querySelectorAll(selector) { return selector === ':scope > .dash-sector-metric' ? this.children.filter(e => e.className.includes('dash-sector-metric')) : []; }
   querySelector(selector) { return selector === 'strong' ? this.strong || null : null; }
 }
@@ -58,7 +60,7 @@ for (const [rowId, strongId] of [
 let responseQueue = [];
 const document = {
   getElementById: id => elements.get(id) || null,
-  createElement: () => new Element(),
+  createElement: tag => { const el = new Element(); el.tagName = tag.toUpperCase(); return el; },
   addEventListener: (event, callback) => { if (event === 'DOMContentLoaded') document.ready = callback; }
 };
 const window = {};
@@ -81,11 +83,39 @@ async function refresh(filasOrResponse, sector) {
   responseQueue.push(response);
   await document.ready();
   await new Promise(resolve => setImmediate(resolve));
+  assert.equal(elements.get('dash-sector-column').hidden, elements.get('dash-cartorio-queue').hidden,
+    'outer sector column must follow actual queue visibility on every refresh');
 }
-function value(id) { return elements.get(id)?.textContent; }
+function value(id) { const el=elements.get(id); return el ? el.textContent + el.children.map(child => typeof child === 'string' ? child : child.textContent).join('') : undefined; }
 
 (async () => {
   const runnerPayloads = readRunnerPayloads();
+  await refresh([{key:'guias',type:'expedicao_guia',count:2},{key:'guias',type:'envio_guia',count:1},{key:'oficios',type:'enviar_oficio',count:1}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'Ana Souza',oficios:'Bruno Lima'}});
+  for (const id of ['dash-queue-guias-expedicao-responsaveis','dash-queue-guias-envio-responsaveis']) {
+    assert.equal(value(id), 'Responsável: Ana');
+    assert.equal(elements.get(id).children[0].tagName, 'IMG');
+    assert.equal(elements.get(id).children[2].tagName, 'B');
+    assert.equal(elements.get(id).hidden, false);
+  }
+  assert.equal(value('dash-queue-oficios-responsaveis'), 'Responsável: Bruno');
+  for (const [count,tier] of [[1,'mint'],[4,'purple'],[10,'warning'],[11,'danger']]) {
+    await refresh([{key:'guias',type:'expedicao_guia',count}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'Ana Souza'},responsaveis_proprios:{guias:true}});
+    assert.equal(value('dash-queue-guias-expedicao-responsaveis'), 'Responsável: você');
+    assert.equal(elements.get('dash-queue-guias-expedicao-row').classList.contains('dash-own-'+tier), true);
+    for (const other of ['mint','purple','warning','danger'].filter(x=>x!==tier)) assert.equal(elements.get('dash-queue-guias-expedicao-row').classList.contains('dash-own-'+other), false);
+  }
+  await refresh([{key:'guias',type:'expedicao_guia',count:2}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'Ana Souza'},responsaveis_proprios:{guias:false}});
+  assert.equal(value('dash-queue-guias-expedicao-responsaveis'), 'Responsável: Ana');
+  assert.equal(elements.get('dash-queue-guias-expedicao-row').classList.contains('dash-own-mint'), false);
+  for (const id of ['dash-queue-expedidas-responsaveis','dash-queue-recebidas-responsaveis','dash-queue-editais-responsaveis','dash-overdue-expedidas-responsaveis','dash-overdue-recebidas-responsaveis']) assert.equal(elements.get(id).hidden, true);
+  await refresh([{key:'guias',type:'expedicao_guia',count:2}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'  Érica   da Silva  '}});
+  assert.equal(value('dash-queue-guias-expedicao-responsaveis'), 'Responsável: Érica');
+  await refresh([{key:'guias',type:'expedicao_guia',count:2}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'Carla Dias'}});
+  assert.equal(value('dash-queue-guias-expedicao-responsaveis'), 'Responsável: Carla');
+  assert.equal(elements.get('dash-queue-oficios-responsaveis').hidden, true);
+  await refresh([{key:'guias',type:'expedicao_guia',count:2}]);
+  assert.equal(elements.get('dash-queue-guias-expedicao-responsaveis').hidden, true);
+  assert.equal(value('dash-queue-guias-expedicao-responsaveis'), '');
   await refresh([
     {key:'guias',type:'expedicao_guia',count:2},
     {key:'cartas_expedidas',type:'aguardando_envio',count:4},
@@ -140,6 +170,19 @@ function value(id) { return elements.get(id)?.textContent; }
 
   await refresh(denied);
   assert.equal(elements.get('dash-cartorio-queue').hidden, true);
+  assert.equal(elements.get('dashboard-erro').hidden, false, 'request error stays visible outside hidden sector');
+  for (const [key,type] of [['cartas_expedidas','aguardando_envio'],['cartas_recebidas','devolucao'],['oficios','enviar_oficio'],['editais','certificacao_publicacao']]) {
+    await refresh([{key,type,count:1}]);
+    assert.equal(elements.get('dash-sector-column').hidden, false, `${key} keeps sector visible without guides`);
+  }
+  const overdueOnly = await permitted([]).json();
+  overdueOnly.setor.prazos_vencidos.expedidas = 1;
+  await refresh({ok:true,json:async()=>overdueOnly});
+  assert.equal(elements.get('dash-sector-column').hidden, false, 'overdue indicator alone keeps sector visible');
+  await refresh([{key:'guias',error:true,count:null}]);
+  assert.equal(elements.get('dash-sector-column').hidden, false, 'guide error alone remains visible');
+  await refresh([]);
+  assert.equal(elements.get('dash-sector-column').hidden, true, 'empty refresh hides outer sector again');
 
   if (runnerPayloads) {
     for (const entry of runnerPayloads) {

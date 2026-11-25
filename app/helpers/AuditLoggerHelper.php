@@ -10,6 +10,7 @@ class AuditLogger
      */
     public static function log(PDO $pdo, string $user, string $action, array $context = []): void
     {
+        require_once __DIR__ . '/ApiErrorReporter.php';
         $ctxJson = json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if ($ctxJson === false) $ctxJson = '{}';
 
@@ -20,10 +21,8 @@ class AuditLogger
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$id, $user, $action, $ctxJson, $created]);
         } catch (Throwable $e) {
-            // ignore erros de inserção, mas registra no error_log
-            error_log('AuditLogger insert failed: ' . $e->getMessage());
-            // fallback: registrar no error_log
-            error_log(sprintf('AUDIT [%s] user=%s action=%s context=%s', date('c'), $user, $action, $ctxJson));
+            // Ignore insertion errors while recording only sanitized metadata.
+            ApiErrorReporter::logUnexpected($e, 'app/helpers/AuditLoggerHelper.php');
         }
     }
 }
