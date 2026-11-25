@@ -371,6 +371,12 @@ final class SalaAudienciasAtaService
                 throw new InvalidArgumentException('Inscrição só é permitida no dia da audiência.');
             }
 
+            $this->assertPautaDisponivelParaEstudante($idPauta, $pauta);
+
+            if ($this->inscricaoRepository->exists($idPauta, $usuarioId)) {
+                throw new InvalidArgumentException('Você já está inscrito nesta audiência.');
+            }
+
             $totalInscritos = $this->inscricaoRepository->countInscritosPorPauta($idPauta);
             if ($totalInscritos >= self::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA) {
                 throw new InvalidArgumentException(
