@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0025
+
+**Data:** 2026-11-25 02:27:25 | **Commit:** `310da4f7` | **Tipo:** `patch`
+
+- fix: reconhece horario ocupado em pauta
+
 ## V. 1.88.0024
 
 **Data:** 2026-11-25 02:25:49 | **Commit:** `bca39a53` | **Tipo:** `patch`
@@ -7782,6 +7788,7 @@
 
 
 \n
+
 
 
 
