@@ -30,11 +30,11 @@ $db->exec("CREATE TABLE usuarios (id_usuario VARCHAR(80) PRIMARY KEY, token_aces
 $db->exec("CREATE TABLE usuario_perfil (usuario VARCHAR(80), perfil VARCHAR(80)) ENGINE=InnoDB");
 $token = str_repeat('a', 64);
 $insertUser = $db->prepare("INSERT INTO usuarios VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 1 HOUR), 1)");
-foreach (['synthetic-student', 'synthetic-internal', 'synthetic-mixed', 'synthetic-consultant', 'synthetic-expired', 'synthetic-inactive', 'synthetic-invalid-token'] as $user) $insertUser->execute([$user, hash('sha256', $token)]);
+foreach (['synthetic-student', 'synthetic-student-other', 'synthetic-internal', 'synthetic-mixed', 'synthetic-consultant', 'synthetic-expired', 'synthetic-inactive', 'synthetic-invalid-token'] as $user) $insertUser->execute([$user, hash('sha256', $token)]);
 $db->exec("UPDATE usuarios SET token_expira = DATE_SUB(NOW(), INTERVAL 1 HOUR) WHERE id_usuario = 'synthetic-expired'");
 $db->exec("UPDATE usuarios SET cadastro_ativo = 0 WHERE id_usuario = 'synthetic-inactive'");
 $db->exec("UPDATE usuarios SET token_acesso = REPEAT('b', 64) WHERE id_usuario = 'synthetic-invalid-token'");
-$db->exec("INSERT INTO usuario_perfil VALUES ('synthetic-student','ESTUDANTE'), ('synthetic-internal','CARTORIO'), ('synthetic-mixed','ESTUDANTE'), ('synthetic-mixed','CARTORIO'), ('synthetic-consultant','CONSULTOR')");
+$db->exec("INSERT INTO usuario_perfil VALUES ('synthetic-student','ESTUDANTE'), ('synthetic-student-other','ESTUDANTE'), ('synthetic-internal','CARTORIO'), ('synthetic-mixed','ESTUDANTE'), ('synthetic-mixed','CARTORIO'), ('synthetic-consultant','CONSULTOR')");
 $db->exec("CREATE TABLE processos (id VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci PRIMARY KEY, sigiloso TINYINT NOT NULL DEFAULT 0) ENGINE=InnoDB");
 $db->exec("CREATE TABLE sala_audiencias_pauta (id_pauta VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci PRIMARY KEY, processo VARCHAR(80), status VARCHAR(32), data_audiencia DATE, hora_audiencia TIME, data_hora_inicio_efetivo DATETIME NULL, data_hora_fim_efetivo DATETIME NULL, duracao_estimada_minutos INT NOT NULL DEFAULT 0, ativo TINYINT NOT NULL DEFAULT 1) ENGINE=InnoDB");
 $db->exec('CREATE TABLE sala_audiencias_estudante_inscricao (id BIGINT AUTO_INCREMENT PRIMARY KEY, pauta VARCHAR(80) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci, usuario VARCHAR(80)) ENGINE=InnoDB');
@@ -152,7 +152,7 @@ $prepend = <<<'PHP'
 define('SESSION_IDLE_TIMEOUT', 1800);
 session_start();
 $id = $_SERVER['HTTP_X_SYNTHETIC_USER'] ?? 'synthetic-student';
-if (!in_array($id, ['synthetic-student','synthetic-internal','synthetic-mixed','synthetic-consultant','synthetic-expired','synthetic-inactive','synthetic-invalid-token','anonymous'], true)) exit(1);
+if (!in_array($id, ['synthetic-student','synthetic-student-other','synthetic-internal','synthetic-mixed','synthetic-consultant','synthetic-expired','synthetic-inactive','synthetic-invalid-token','anonymous'], true)) exit(1);
 $_SESSION = [];
 if ($id !== 'anonymous') {
  $_SESSION['id_usuario'] = $id;
@@ -210,6 +210,20 @@ try {
     }
     rei161Assert(!array_key_exists('INACTIVE', $body['items']) && !array_key_exists('MISSING', $body['items']), 'Pauta inativa/inexistente apareceu no resultado.');
     rei161Assert(!str_contains(json_encode($body), 'processo_sigiloso') && !str_contains(json_encode($body), 'qtd_menor') && !str_contains(json_encode($body), 'medida_protetiva'), 'Resposta revelou atributo sensível.');
+
+    // A second student has no enrollment in the three blocked hearings.
+    // Exact equality excludes all operational metadata and sensitive indicators.
+    rei161Assert((int) $db->query("SELECT COUNT(*) FROM sala_audiencias_estudante_inscricao WHERE pauta IN ('SECRET','MINOR','PRIORITY') AND usuario='synthetic-student-other'")->fetchColumn() === 0, 'Fixture do segundo estudante contém inscrição inesperada.');
+    [$status, $body] = $request(['pautas'=>['OPEN','SECRET','MINOR','PRIORITY']], 'synthetic-student-other');
+    rei161Assert($status === 200 && ($body['success'] ?? false) === true && ($body['items']['OPEN']['pode_inscrever'] ?? false) === true, 'Segundo estudante não passou no controle elegível.');
+    $topLevelKeys = array_keys($body);
+    sort($topLevelKeys);
+    $expectedTopLevelKeys = ['completo','consultados','items','observacao_alterada','success'];
+    sort($expectedTopLevelKeys);
+    rei161Assert($topLevelKeys === $expectedTopLevelKeys, 'Resposta expôs campos extras no nível superior.');
+    foreach (['SECRET','MINOR','PRIORITY'] as $id) {
+        rei161Assert(($body['items'][$id] ?? null) === ['id_pauta'=>$id,'indisponivel'=>true], 'Pauta bloqueada expôs metadados para estudante não inscrito: ' . $id);
+    }
 
     [$status, $body] = $request(['pautas'=>['CAP4','CAP5','CAP6','CAP5I','CAP6I']]);
     rei161Assert($status===200 && ($body['items']['CAP4']['pode_inscrever'] ?? false)===true, 'Capacidade 4 não permitiu inscrição.');
