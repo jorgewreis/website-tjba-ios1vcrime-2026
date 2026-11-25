@@ -135,65 +135,64 @@ final class GabineteMonitoramentoEletronicoService
         }
         $numeroFormatado = $this->formatarCNJ($digits);
 
-        $classeId = null;
-        $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
-        $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-        if ($classeCodigo !== '') {
-            $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
-            $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
-        }
-        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
-
-        $processoParteId = trim((string) ($payload['processo_parte_id'] ?? $payload['reu_processo_parte_id'] ?? ''));
-        $reuId = trim((string) ($payload['reu_id'] ?? ''));
-        if ($processoParteId === '' && $reuId !== '') {
-            $partesRepo = new PartesRepository($this->connection);
-            $parte = $partesRepo->findById($reuId);
-            if ($parte === null) {
-                throw new InvalidArgumentException('Réu informado não foi encontrado no cadastro de partes.');
-            }
-            $vinculoExistente = $this->processosPartesRepository->findByProcessoAndParte($processoOrigemId, $reuId);
-            if ($vinculoExistente !== null) {
-                $processoParteId = (string) ($vinculoExistente['id'] ?? '');
-            } else {
-                $processoParteId = $this->processosPartesRepository->addParte(
-                    $processoOrigemId,
-                    $reuId,
-                    ProcessosPartesRepository::TIPO_REU,
-                    ProcessosPartesRepository::POLO_PASSIVO
-                );
-            }
-        }
-        $modoOutro = ($processoParteId === '' || $processoParteId === 'outro');
-        $complemento = trim((string) ($payload['reu_complemento'] ?? ''));
-
-        $reuNomeExibicao = '';
-        if ($modoOutro) {
-            if ($complemento === '') {
-                throw new InvalidArgumentException('Informe o nome do réu ou complemento quando não houver seleção na lista.');
-            }
-            $reuNomeExibicao = TextFormatter::formatProperName($complemento, 500);
-            $processoParteId = '';
-        } else {
-            $pp = $this->processosPartesRepository->findById($processoParteId);
-            if ($pp === null || (string) ($pp['processo_id'] ?? '') !== $processoOrigemId) {
-                throw new InvalidArgumentException('Réu selecionado não pertence ao processo informado.');
-            }
-            $baseNome = trim((string) ($pp['nome_completo'] ?? ''));
-            $reuNomeExibicao = $baseNome !== '' ? TextFormatter::formatProperName($baseNome, 500) : 'Réu';
-            if ($complemento !== '') {
-                $reuNomeExibicao .= ' — ' . TextFormatter::formatProperName($complemento, 500);
-            }
-        }
-
-        $complementoStore = $complemento !== '' ? TextFormatter::formatProperName($complemento, 500) : null;
-        $processoParteIdNull = $modoOutro ? null : $processoParteId;
-
         $ano = (int) date('Y');
-
         $this->connection->beginTransaction();
         $sequenceLockAcquired = false;
         try {
+            $classeId = null;
+            $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+            $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+            if ($classeCodigo !== '') {
+                $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
+                $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+            }
+            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
+
+            $processoParteId = trim((string) ($payload['processo_parte_id'] ?? $payload['reu_processo_parte_id'] ?? ''));
+            $reuId = trim((string) ($payload['reu_id'] ?? ''));
+            if ($processoParteId === '' && $reuId !== '') {
+                $partesRepo = new PartesRepository($this->connection);
+                $parte = $partesRepo->findById($reuId);
+                if ($parte === null) {
+                    throw new InvalidArgumentException('Réu informado não foi encontrado no cadastro de partes.');
+                }
+                $vinculoExistente = $this->processosPartesRepository->findByProcessoAndParte($processoOrigemId, $reuId);
+                if ($vinculoExistente !== null) {
+                    $processoParteId = (string) ($vinculoExistente['id'] ?? '');
+                } else {
+                    $processoParteId = $this->processosPartesRepository->addParte(
+                        $processoOrigemId,
+                        $reuId,
+                        ProcessosPartesRepository::TIPO_REU,
+                        ProcessosPartesRepository::POLO_PASSIVO
+                    );
+                }
+            }
+            $modoOutro = ($processoParteId === '' || $processoParteId === 'outro');
+            $complemento = trim((string) ($payload['reu_complemento'] ?? ''));
+
+            $reuNomeExibicao = '';
+            if ($modoOutro) {
+                if ($complemento === '') {
+                    throw new InvalidArgumentException('Informe o nome do réu ou complemento quando não houver seleção na lista.');
+                }
+                $reuNomeExibicao = TextFormatter::formatProperName($complemento, 500);
+                $processoParteId = '';
+            } else {
+                $pp = $this->processosPartesRepository->findById($processoParteId);
+                if ($pp === null || (string) ($pp['processo_id'] ?? '') !== $processoOrigemId) {
+                    throw new InvalidArgumentException('Réu selecionado não pertence ao processo informado.');
+                }
+                $baseNome = trim((string) ($pp['nome_completo'] ?? ''));
+                $reuNomeExibicao = $baseNome !== '' ? TextFormatter::formatProperName($baseNome, 500) : 'Réu';
+                if ($complemento !== '') {
+                    $reuNomeExibicao .= ' — ' . TextFormatter::formatProperName($complemento, 500);
+                }
+            }
+
+            $complementoStore = $complemento !== '' ? TextFormatter::formatProperName($complemento, 500) : null;
+            $processoParteIdNull = $modoOutro ? null : $processoParteId;
+
             $this->repository->acquireYearSequenceLock($ano);
             $sequenceLockAcquired = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
             $seq = $this->repository->nextSequencialForYear($ano);

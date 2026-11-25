@@ -44,7 +44,7 @@ final class GabineteMonitoramentoEletronicoService {
 }
 PHP);
     $cases = [
-        'create.php' => [['nome' => 'sintetico'], 'create', 201],
+        'create.php' => [['nome' => 'sintetico', 'usuario_cadastro_id' => 'forged-user'], 'create', 201],
         'concluir-subtarefa.php' => [['subtarefa_id' => 'SUB1', 'data_inicio' => '2024-01-01'], 'concluir', 200],
         'cancel.php' => [['id' => 'MON1'], 'cancel', 200],
         'delete.php' => [['id' => 'MON1'], 'delete', 200],
@@ -62,7 +62,7 @@ PHP);
             throw new RuntimeException("Falha no despacho {$endpoint}: {$err} {$out}");
         }
         $actual = json_decode((string) file_get_contents($record), true, 512, JSON_THROW_ON_ERROR);
-        if ($actual[0] !== $method || ($method === 'concluir' && $actual[1][2] !== 'synthetic-user')) {
+        if ($actual[0] !== $method || ($method === 'concluir' && $actual[1][2] !== 'synthetic-user') || ($method === 'create' && ($actual[1][0]['usuario_cadastro_id'] ?? null) !== 'synthetic-user')) {
             throw new RuntimeException("Argumentos incorretos em {$endpoint}.");
         }
         unlink($record);

@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0047
+
+**Data:** 2026-11-25 04:47:04 | **Commit:** `959b24b2` | **Tipo:** `patch`
+
+- fix: transaciona cadastro de monitoramento
+
 ## V. 1.88.0046
 
 **Data:** 2026-11-25 04:32:42 | **Commit:** `6619340d` | **Tipo:** `patch`
@@ -7914,6 +7920,7 @@
 
 
 \n
+
 
 
 
