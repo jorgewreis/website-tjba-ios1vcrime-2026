@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-cartas-expedidas/sync-processo-datajud.php');
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
+ApiAccessGuard::requireAccess(['cartasexpedidasedit'], true);
+
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -176,18 +181,8 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (RuntimeException $e) {
-    if ($autorizacaoSetorialNegada) {
-        http_response_code(403);
-        echo json_encode(['error' => 'Acesso ao processo não autorizado.', 'code' => 'acesso_setorial_obrigatorio'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    if ($escritaIniciada) {
-        http_response_code(409);
-        echo json_encode(['error' => 'Não foi possível confirmar a sincronização.', 'code' => 'sincronizacao_resultado_indeterminado'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
-    http_response_code($fonteDataJudValidada ? 500 : 502);
-    echo json_encode(['error' => $fonteDataJudValidada ? 'Não foi possível sincronizar os dados do processo.' : 'Não foi possível consultar o DataJud.'], JSON_UNESCAPED_UNICODE);
+    http_response_code(502);
+    echo json_encode(['error' => ApiErrorReporter::genericMessage($e, 'public/api/cartorio-cartas-expedidas/sync-processo-datajud.php')], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     if ($autorizacaoSetorialNegada) {
         http_response_code(403);
@@ -200,5 +195,5 @@ try {
         exit;
     }
     http_response_code(500);
-    echo json_encode(['error' => 'Não foi possível sincronizar os dados do processo.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao sincronizar dados do processo: ' . ApiErrorReporter::genericMessage($e, 'public/api/cartorio-cartas-expedidas/sync-processo-datajud.php')], JSON_UNESCAPED_UNICODE);
 }

@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/processos/assunto-read.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -49,5 +52,5 @@ try {
 } catch (Throwable $e) {
     error_log('processos/assunto-read.php: falha interna.');
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao consultar assuntos do processo.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao consultar assuntos do processo: ' . ApiErrorReporter::genericMessage($e, 'public/api/processos/assunto-read.php')], JSON_UNESCAPED_UNICODE);
 }

@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/processos/classe-read.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -51,5 +54,5 @@ try {
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Não foi possível consultar o processo.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao consultar processo: ' . ApiErrorReporter::genericMessage($e, 'public/api/processos/classe-read.php')], JSON_UNESCAPED_UNICODE);
 }

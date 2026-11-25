@@ -20,7 +20,7 @@ try {
         $put($path, file_get_contents($source . '/' . $path));
     }
     foreach ([
-        'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php',
+        'app/helpers/ApiErrorReporter.php', 'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php',
         'app/access/AccessEvaluator.php', 'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php',
         'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php',
     ] as $path) $put($path, file_get_contents($source . '/' . $path));

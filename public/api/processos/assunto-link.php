@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/processos/assunto-link.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -81,5 +84,5 @@ try {
     }
     error_log('processos/assunto-link.php: falha interna.');
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao vincular assunto.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao vincular assunto: ' . ApiErrorReporter::genericMessage($e, 'public/api/processos/assunto-link.php')], JSON_UNESCAPED_UNICODE);
 }

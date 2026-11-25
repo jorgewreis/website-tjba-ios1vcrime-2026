@@ -4,5 +4,6 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **merge: reconcile REI-130 reconciled branch with origin/main** `[bd3f5453]`
+- **test: verifica consulta com perfis acumulados** `[6fd4f38f]`
+- **test: executa privacidade estudantil no ci** `[c401ff04]`
 
