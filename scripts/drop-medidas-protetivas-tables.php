@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit;
+}
+
 /**
  * Remove tabelas do submódulo Medidas Protetivas (cartório) e a regra ALLOCATE-MEDIDASPROTETIVAS.
  *

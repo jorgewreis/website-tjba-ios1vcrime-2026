@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit;
+}
+
+
 $configuredRoot = getenv('CARTAS_PROJECT_ROOT');
 $root = is_string($configuredRoot) && trim($configuredRoot) !== ''
     ? realpath($configuredRoot)
