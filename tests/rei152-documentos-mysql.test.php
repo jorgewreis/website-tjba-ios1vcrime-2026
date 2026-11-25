@@ -611,8 +611,8 @@ $verifyPublicGuideRollbackFailure = static function (string $operation, string $
     $lockProbe = null;
     $releaseObserver = null;
     $releaseFault = null;
-    $failureObserved = false;
     $observerOwnsLock = false;
+    $applicationOwnsLock = false;
     $applicationLockReleased = false;
     $operationError = null;
     $cleanupErrors = [];
@@ -644,22 +644,27 @@ $verifyPublicGuideRollbackFailure = static function (string $operation, string $
         if ($operation === 'update') {
             $guideData['id_guia'] = $guideId;
         }
-        try {
-            $service = new Guias($faultPdo);
-            $result = $operation === 'create'
-                ? $service->cadastrarGuia($guideData)
-                : $service->atualizarGuia($guideData);
-            if (is_array($result) && !empty($result['ok'])) {
-                throw new RuntimeException('A fixture de rollback inseguro não deveria confirmar a guia.');
-            }
-        } catch (RuntimeException $error) {
-            $failureObserved = str_contains($error->getMessage(), 'Transação documental ainda ativa');
-            if (!$failureObserved) {
-                throw $error;
-            }
+        $service = new Guias($faultPdo);
+        $result = $operation === 'create'
+            ? $service->cadastrarGuia($guideData)
+            : $service->atualizarGuia($guideData);
+        $connectionId = (int) $faultPdo->query('SELECT CONNECTION_ID()')->fetchColumn();
+        $ownerCheck = $pdo->prepare('SELECT IS_USED_LOCK(?)');
+        $ownerCheck->execute([$lockName]);
+        $ownerId = $ownerCheck->fetchColumn();
+        $applicationOwnsLock = $connectionId > 0 && $ownerId !== null && $ownerId !== false && (int) $ownerId === $connectionId;
+        if (($result['ok'] ?? null) !== false
+            || ($result['resultado'] ?? null) !== 'verificacao_necessaria'
+            || ($result['estado_gravacao'] ?? null) !== 'nao_confirmada'
+            || !is_string($result['id_referencia'] ?? null)
+            || trim($result['id_referencia']) === ''
+            || ($operation === 'update' && $result['id_referencia'] !== $guideId)
+            || ($operation === 'create' && ($result['id'] ?? null) !== null)
+            || !str_contains((string) ($result['message'] ?? ''), 'Consulte a guia antes de tentar novamente')) {
+            throw new RuntimeException('Fluxo público não retornou resultado incerto e referência para consulta.');
         }
 
-        if (!$failureObserved || !$faultPdo->inTransaction() || !ParteDocumentoLock::isConnectionUnsafe($faultPdo)) {
+        if (!$applicationOwnsLock || !$faultPdo->inTransaction() || !ParteDocumentoLock::isConnectionUnsafe($faultPdo)) {
             throw new RuntimeException('Fluxo público não isolou a conexão ou não preservou a transação após falha de rollback.');
         }
         $lockProbe->execute([$lockName]);
@@ -680,6 +685,7 @@ $verifyPublicGuideRollbackFailure = static function (string $operation, string $
             throw new RuntimeException('Não foi possível liberar o lock CPF após rollback manual da fixture.');
         }
         $applicationLockReleased = true;
+        $applicationOwnsLock = false;
         $lockProbe->execute([$lockName]);
         if ((int) $lockProbe->fetchColumn() !== 1) {
             throw new RuntimeException('Lock CPF não foi liberado após limpeza manual da conexão insegura.');
@@ -720,14 +726,15 @@ $verifyPublicGuideRollbackFailure = static function (string $operation, string $
             }
 
             if ($faultPdo instanceof PDO) {
-                if (!$applicationLockReleased) {
+                if ($applicationOwnsLock && !$applicationLockReleased) {
                     try {
                         $releaseFault = $faultPdo->prepare('SELECT RELEASE_LOCK(?)');
                         $releaseFault->execute([$lockName]);
                         $releaseResult = (int) $releaseFault->fetchColumn();
-                        if ($failureObserved && $releaseResult !== 1) {
+                        if ($releaseResult !== 1) {
                             throw new RuntimeException('Cleanup não liberou o lock CPF mantido após falha de rollback.');
                         }
+                        $applicationOwnsLock = false;
                     } catch (Throwable $cleanupError) {
                         $cleanupErrors[] = 'liberação do lock CPF: ' . get_class($cleanupError);
                         error_log('REI-152 fixture: ' . end($cleanupErrors));
