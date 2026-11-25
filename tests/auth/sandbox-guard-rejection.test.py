@@ -10,6 +10,9 @@ HERE = Path(__file__).resolve().parent
 PHP_FILES = (
     'auth-fixtures.test.php', 'config-environment-selection.test.php', 'fixture-setup.test.php',
     'http-auth-flow.test.php', 'http-ready.test.php', 'rei158-http-concurrency.test.php', 'rei158-http-lock-wait.test.php',
+    'rei155-concurrency.worker.php', 'rei155-ordered.worker.php', 'rei155-legacy-denied.test.php',
+    'rei155-password-change.test.php', 'rei155-ordered.test.php', 'rei155-metadata-lock.test.php',
+    'rei155-nontransactional.test.php',
     'rei171-login-reset-race.test.php', 'rei73-instituicoes-fixture.test.php',
     'http-reset-token.fixture.php', 'login-rate-limit.fixture.php',
     'login-rate-limit-storage.fixture.php', 'login-rate-limit.test.php', 'login-rate-limit-concurrency.test.php',
