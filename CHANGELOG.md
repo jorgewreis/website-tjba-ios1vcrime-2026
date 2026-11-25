@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0021
+
+**Data:** 2026-11-25 01:15:43 | **Commit:** `142adf8c` | **Tipo:** `patch`
+
+- docs(REI-73): conciliar operacoes e evidencias
+
 ## V. 1.88.0020
 
 **Data:** 2026-11-25 00:25:25 | **Commit:** `501dd68e` | **Tipo:** `patch`
@@ -7758,6 +7764,7 @@
 
 
 \n
+
 
 
 
