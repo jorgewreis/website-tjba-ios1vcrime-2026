@@ -22,4 +22,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test: verifica revalidacao de vinculo concorrente** `[c77e8482]`
 - **ci: diagnostica espera no vinculo** `[25c28508]`
 - **test: reconhece padding de chave innodb** `[255ab8be]`
+- **test: valida acesso com login sintetico** `[b3b3c9f9]`
 
