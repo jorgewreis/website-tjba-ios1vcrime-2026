@@ -1,4 +1,9 @@
 <?php
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
 $base = dirname(__DIR__);
 $registry = require $base . '/app/config/cartorio-produtividade-registry.php';
 
