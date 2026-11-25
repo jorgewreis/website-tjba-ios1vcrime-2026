@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0019
+
+**Data:** 2026-11-24 23:21:09 | **Commit:** `4fdafd90` | **Tipo:** `patch`
+
+- docs(REI-73): consolidar evidencias recentes da auditoria
+
 ## V. 1.88.0018
 
 **Data:** 2026-11-24 23:10:38 | **Commit:** `4e58cb70` | **Tipo:** `patch`
@@ -7746,6 +7752,7 @@
 
 
 \n
+
 
 
 
