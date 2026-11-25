@@ -2,11 +2,31 @@
 param([ValidateSet(0, 1)][int]$LowerCaseTableNames = 0, [switch]$CiLinux, [string]$QaImageId)
 
 $ErrorActionPreference = 'Stop'
-if (-not $CiLinux -or -not $IsLinux -or $env:GITHUB_ACTIONS -ne 'true') { throw 'Somente CI Linux descartável autorizado.' }
+if (-not $CiLinux -or -not $IsLinux -or $env:GITHUB_ACTIONS -ne 'true' -or $env:CI -ne 'true' -or $env:RUNNER_OS -ne 'Linux' -or $env:RUNNER_ENVIRONMENT -ne 'github-hosted') { throw 'Somente runner GitHub-hosted Linux descartável autorizado.' }
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $appRoot = Join-Path $repoRoot 'app'
 
 $testFile = Join-Path $PSScriptRoot 'rei168-mysql.test.php'
+function Get-VerifiedSource([string]$path) {
+    if (-not [IO.Path]::IsPathRooted($path) -or -not (Test-Path -LiteralPath $path)) { throw 'Origem de bind indisponível.' }
+    $full = [IO.Path]::GetFullPath($path).TrimEnd('/')
+    $real = (& realpath -e -- $full 2>$null | Select-Object -Last 1)
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($real) -or $full -cne $real) { throw 'Origem de bind contém link ou não é canônica.' }
+    $cursor = $full
+    while ($cursor -and $cursor -ne '/') {
+        $entry = Get-Item -LiteralPath $cursor -Force
+        if ($entry.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Origem ou ancestral de bind contém link.' }
+        $cursor = [IO.Path]::GetDirectoryName($cursor)
+    }
+    return $real
+}
+$repoRoot = Get-VerifiedSource $repoRoot
+$appRoot = Get-VerifiedSource $appRoot
+$testFile = Get-VerifiedSource $testFile
+$workspace = Get-VerifiedSource ([string]$env:GITHUB_WORKSPACE)
+if ($repoRoot -cne $workspace -or -not $appRoot.StartsWith($workspace + '/', [StringComparison]::Ordinal) -or -not $testFile.StartsWith($workspace + '/', [StringComparison]::Ordinal)) {
+    throw 'Origens não pertencem ao workspace CI esperado.'
+}
 $mysqlImageRef = 'mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903'
 if ($QaImageId -notmatch '^sha256:[a-f0-9]{64}$') { throw 'ID de imagem CI explicito obrigatorio.' }
 $phpImageRef = $QaImageId
@@ -65,6 +85,79 @@ function Get-OwnedContainer([string]$id) {
         throw 'Identidade do container não corresponde a esta execução.'
     }
     return $item
+}
+
+function Get-VerifiedSocketMountTarget([string]$id) {
+    try {
+        $resolved = @(& timeout -k 2s 5s docker --host $dockerEndpoint exec $id realpath -e -- /var/run/mysqld 2>&1)
+        $exitCode = $LASTEXITCODE
+        if ($exitCode -ne 0 -or $resolved.Count -ne 1 -or $resolved[0] -isnot [string] -or $resolved[0] -cnotin @('/var/run/mysqld', '/run/mysqld')) {
+            throw 'Resolução de socket não autorizada.'
+        }
+        $canonical = [string]$resolved[0]
+        $stats = @(& timeout -k 2s 5s docker --host $dockerEndpoint exec $id stat -Lc '%d:%i' /var/run/mysqld $canonical 2>&1)
+        if ($LASTEXITCODE -ne 0 -or $stats.Count -ne 2 -or $stats[0] -isnot [string] -or $stats[1] -isnot [string] -or $stats[0] -notmatch '^\d+:\d+$' -or $stats[0] -cne $stats[1]) {
+            throw 'Identidades do socket divergentes.'
+        }
+        return $canonical
+    } catch {
+        # Nunca propagar saída bruta de caminhos ou diagnósticos do container.
+        throw 'Resolução ou identidade de socket não comprovada.'
+    }
+}
+function Assert-MountinfoExact([string[]]$lines, [string]$target, [string]$fsType) {
+    $targetEntries = @()
+    foreach ($line in $lines) {
+        $halves = $line -split ' - '
+        if ($halves.Count -ne 2) { throw 'Formato mountinfo ambíguo.' }
+        $left = $halves[0] -split ' '
+        $right = $halves[1] -split ' '
+        if ($left.Count -lt 6 -or $right.Count -lt 3 -or $left[0] -notmatch '^\d+$' -or $left[1] -notmatch '^\d+$' -or $left[2] -notmatch '^\d+:\d+$' -or -not $left[4].StartsWith('/') -or $left[4].Contains('\') -or $right[0] -notmatch '^[a-zA-Z0-9_.-]+$') {
+            throw 'Formato ou escape de mountinfo não autorizado.'
+        }
+        if ($left[4] -ceq $target) { $targetEntries += $right[0] }
+    }
+    if ($targetEntries.Count -ne 1 -or ($fsType -ne '' -and $targetEntries[0] -cne $fsType)) {
+        throw 'Mountpoint ativo ou tipo não comprovado.'
+    }
+}
+function Assert-ActiveMount([string]$id, [string]$target, [string]$fsType = '', [string]$phase = '') {
+    $labels = @{ '/var/lib/mysql'='mysql-datadir'; '/var/run/mysqld'='socket-dir'; '/tmp'='php-tmp'; '/repo/app'='php-app'; '/test/rei168-mysql.test.php'='php-fixture' }
+    $phases = @('mysql-start', 'mysql-before-marker', 'php-start', 'mysql-before-fixture')
+    if (-not $labels.ContainsKey($target) -or $phase -notin $phases -or $fsType -notin @('', 'tmpfs')) { throw 'Diagnóstico de mount inválido.' }
+    $actualTarget = $target
+    if ($target -ceq '/var/run/mysqld') { $actualTarget = Get-VerifiedSocketMountTarget $id }
+    $lines = @(Invoke-DockerSafe @('exec', $id, 'cat', '/proc/self/mountinfo'))
+    try {
+        Assert-MountinfoExact $lines $actualTarget $fsType
+    } catch {
+        $expected = if ($fsType -eq 'tmpfs') { 'tmpfs' } else { 'any' }
+        $resolution = if ($target -cne '/var/run/mysqld') { 'nao-aplicavel' } elseif ($actualTarget -ceq '/run/mysqld') { 'run-mysqld' } else { 'literal' }
+        throw ("Mount ativo não comprovado: fase={0}; destino={1}; esperado={2}; resolucao={3}." -f $phase, $labels[$target], $expected, $resolution)
+    }
+}
+function Assert-MountSet($item, [hashtable]$expected, [string]$tmpfsPath, [string]$tmpfsOptions) {
+    $mounts = @($item.Mounts)
+    if ($mounts.Count -ne $expected.Count) { throw 'Quantidade de mounts divergente.' }
+    foreach ($entry in $expected.GetEnumerator()) {
+        $found = @($mounts | Where-Object { $_.Destination -ceq $entry.Key })
+        $declared = @($item.HostConfig.Mounts | Where-Object { $_.Target -ceq $entry.Key })
+        if ($found.Count -ne 1 -or $declared.Count -ne 1) { throw 'Mount ausente ou duplicado.' }
+        $mount = $found[0]; $spec = $entry.Value; $declaration = $declared[0]
+        if ($mount.Type -cne $spec.Type -or [bool]$mount.RW -ne [bool]$spec.RW -or $declaration.Type -cne $spec.Type -or [bool]$declaration.ReadOnly -ne (-not [bool]$spec.RW)) { throw 'Tipo ou modo de mount divergente.' }
+        if ($spec.Type -eq 'bind') {
+            if ((Get-VerifiedSource ([string]$mount.Source)) -cne $spec.Source -or (Get-VerifiedSource ([string]$declaration.Source)) -cne $spec.Source) { throw 'Origem efetiva ou declarada de bind divergente.' }
+        } else {
+            if ($mount.Name -cne $volumeName -or $declaration.Source -cne $volumeName -or -not [IO.Path]::IsPathRooted([string]$mount.Source) -or [string]$mount.Source -cne [string]$volumeInfo.Mountpoint) { throw 'Volume de socket não corresponde ao volume identificado.' }
+        }
+    }
+    $tmpfs = $item.HostConfig.Tmpfs
+    if (-not $tmpfs -or @($tmpfs.PSObject.Properties).Count -ne 1 -or [string]$tmpfs.$tmpfsPath -cne $tmpfsOptions) { throw 'Declaração tmpfs divergente.' }
+}
+function Get-SocketDirIdentity([string]$id) {
+    $identity = (Invoke-DockerSafe @('exec', $id, 'stat', '-Lc', '%d:%i', '/var/run/mysqld') | Select-Object -Last 1).Trim()
+    if ($identity -notmatch '^\d+:\d+$') { throw 'Identidade de diretório de socket indisponível.' }
+    return $identity
 }
 
 function Remove-OwnedContainer([string]$id) {
@@ -131,7 +224,15 @@ try {
     if ($dbInvalid) {
         throw 'Topologia MySQL recusada: sem rede/portas, datadir efêmero e socket exclusivo são obrigatórios.'
     }
+    $dbExpected = @{ '/var/run/mysqld' = @{ Type='volume'; RW=$true; Source=$volumeName } }
+    Assert-MountSet $db $dbExpected '/var/lib/mysql' 'rw,size=512m'
     Invoke-DockerSafe @('start', $mysqlId) | Out-Null
+    $db = Get-OwnedContainer $mysqlId
+    if (-not $db.State.Running -or $db.Image -cne $mysqlImage.Id -or $db.HostConfig.NetworkMode -ne 'none' -or $db.HostConfig.Privileged -or @($db.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true' -or ($db.HostConfig.PortBindings -and @($db.HostConfig.PortBindings.PSObject.Properties).Count -gt 0)) { throw 'Topologia MySQL ativa divergente.' }
+    Assert-MountSet $db $dbExpected '/var/lib/mysql' 'rw,size=512m'
+    Assert-ActiveMount $mysqlId '/var/lib/mysql' 'tmpfs' 'mysql-start'
+    Assert-ActiveMount $mysqlId '/var/run/mysqld' '' 'mysql-start'
+    $mysqlSocketIdentity = Get-SocketDirIdentity $mysqlId
 
     $ready = $false
     for ($i = 0; $i -lt 90; $i++) {
@@ -150,8 +251,20 @@ try {
     }
     if (-not $ready) { throw 'MySQL descartável ou banco de teste não ficou pronto.' }
 
+    # Revalidar ambiente e banco vazio imediatamente antes do primeiro DDL da fixture.
+    $db = Get-OwnedContainer $mysqlId
+    if (-not $db.State.Running) { throw 'MySQL não está ativo.' }
+    Assert-MountSet $db $dbExpected '/var/lib/mysql' 'rw,size=512m'
+    Assert-ActiveMount $mysqlId '/var/lib/mysql' 'tmpfs' 'mysql-before-marker'
+    Assert-ActiveMount $mysqlId '/var/run/mysqld' '' 'mysql-before-marker'
+    $identitySql = "SELECT CONCAT(DATABASE(),'|',VERSION(),'|',@@datadir,'|',@@socket,'|',@@lower_case_table_names); SHOW TABLES;"
+    $identity = @(Invoke-DockerSafe @('exec', $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'rei168_test', '-N', '-B', '-e', $identitySql) | Where-Object { $_ })
+    if ($identity.Count -ne 1 -or $identity[0] -notmatch ("^rei168_test\|8\.4\.[^|]+\|/var/lib/mysql/\|/var/run/mysqld/mysqld\.sock\|" + $LowerCaseTableNames + '$')) { throw 'Identidade, versão ou schema vazio do MySQL não comprovados.' }
+
     $markerSql = "CREATE TABLE rei168_test_guard (marker CHAR(64) NOT NULL PRIMARY KEY) ENGINE=InnoDB; INSERT INTO rei168_test_guard (marker) VALUES ('$marker');"
     Invoke-DockerSafe @('exec', $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'rei168_test', '-e', $markerSql) | Out-Null
+    $markerRead = @(Invoke-DockerSafe @('exec', $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'rei168_test', '-N', '-B', '-e', 'SELECT marker FROM rei168_test_guard; SHOW TABLES;') | Where-Object { $_ })
+    if ($markerRead.Count -ne 2 -or $markerRead[0] -cne $marker -or $markerRead[1] -cne 'rei168_test_guard') { throw 'Marker ou schema inicial não conferem.' }
 
     $appMount = "type=bind,source=$appRoot,target=/repo/app,readonly"
     $testMount = "type=bind,source=$testFile,target=/test/rei168-mysql.test.php,readonly"
@@ -182,7 +295,28 @@ try {
     if ($phpInvalid) {
         throw 'Topologia PHP recusada: código somente leitura, socket próprio, sem rede/portas são obrigatórios.'
     }
+    $phpExpected = @{
+        '/repo/app' = @{ Type='bind'; RW=$false; Source=$appRoot }
+        '/test/rei168-mysql.test.php' = @{ Type='bind'; RW=$false; Source=$testFile }
+        '/var/run/mysqld' = @{ Type='volume'; RW=$true; Source=$volumeName }
+    }
+    Assert-MountSet $php $phpExpected '/tmp' 'rw,size=64m,noexec,nosuid,nodev'
     Invoke-DockerSafe @('start', $phpId) | Out-Null
+    $php = Get-OwnedContainer $phpId
+    if (-not $php.State.Running -or $php.Image -cne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged -or -not $php.HostConfig.ReadonlyRootfs -or @($php.HostConfig.CapDrop) -notcontains 'ALL' -or @($php.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true' -or ($php.HostConfig.PortBindings -and @($php.HostConfig.PortBindings.PSObject.Properties).Count -gt 0)) { throw 'Topologia PHP ativa divergente.' }
+    Assert-MountSet $php $phpExpected '/tmp' 'rw,size=64m,noexec,nosuid,nodev'
+    Assert-ActiveMount $phpId '/tmp' 'tmpfs' 'php-start'
+    Assert-ActiveMount $phpId '/repo/app' '' 'php-start'
+    Assert-ActiveMount $phpId '/test/rei168-mysql.test.php' '' 'php-start'
+    Assert-ActiveMount $phpId '/var/run/mysqld' '' 'php-start'
+    if ((Get-SocketDirIdentity $phpId) -cne $mysqlSocketIdentity -or (Get-SocketDirIdentity $mysqlId) -cne $mysqlSocketIdentity) { throw 'Diretórios de socket ativos não correspondem.' }
+    $db = Get-OwnedContainer $mysqlId
+    if (-not $db.State.Running) { throw 'MySQL não está ativo antes da fixture.' }
+    Assert-MountSet $db $dbExpected '/var/lib/mysql' 'rw,size=512m'
+    Assert-ActiveMount $mysqlId '/var/lib/mysql' 'tmpfs' 'mysql-before-fixture'
+    Assert-ActiveMount $mysqlId '/var/run/mysqld' '' 'mysql-before-fixture'
+    $markerRead = @(Invoke-DockerSafe @('exec', $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'rei168_test', '-N', '-B', '-e', 'SELECT marker FROM rei168_test_guard; SHOW TABLES;') | Where-Object { $_ })
+    if ($markerRead.Count -ne 2 -or $markerRead[0] -cne $marker -or $markerRead[1] -cne 'rei168_test_guard') { throw 'Marker ou schema divergiram antes da fixture.' }
     $result = Invoke-DockerSafe @('exec', $phpId, 'php', '-d', 'error_log=/tmp/rei168-test.log', '/test/rei168-mysql.test.php')
     $result
 } finally {
