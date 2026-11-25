@@ -35,8 +35,8 @@ function internal_list_export_bootstrap(): array
         internal_list_export_http_error(403, 'Acesso negado.');
     }
 
-    // Conta externa com perfil de estudante não pode exportar listas.
-    if (UserAccessHelper::isUsuarioExterno($userPerfils)
+    // A visualização da pauta estudantil não autoriza sua exportação por estudante externo.
+    if ($listPage === 'estudapauta' && UserAccessHelper::isUsuarioExterno($userPerfils)
         && ProfileNormalizer::hasEstudante(ProfileNormalizer::normalize($userPerfils))) {
         internal_list_export_http_error(403, 'Acesso negado.');
     }

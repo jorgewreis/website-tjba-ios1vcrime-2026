@@ -54,7 +54,7 @@ with tempfile.TemporaryDirectory(prefix='rei337-export-') as temp:
             ('estudapauta', 'ADMIN,ESTUDANTE', 200),
             ('estudapauta', 'SERVIDOR-AUDIENCIAS,ESTUDANTE', 403),
             ('consultapartes', 'SERVIDOR-CARTORIO,ESTUDANTE', 200),
-            ('consultapartes', 'ESTUDANTE,CONSULTOR', 403),
+            ('consultapartes', 'ESTUDANTE,CONSULTOR', 200),
             ('consultapartes', 'CONSULTOR', 200),
             ('estudapauta', '', 403),
         ]
