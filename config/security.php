@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../app/helpers/ApiErrorReporter.php';
+
 final class Security
 {
     private const SESSION_TOKEN_KEY = 'token';
@@ -51,7 +53,7 @@ final class Security
                 return false;
             }
         } catch (Throwable $exception) {
-            error_log('Falha ao validar sessão autenticada: ' . $exception->getMessage());
+            ApiErrorReporter::logUnexpected($exception, 'config/security.php');
             return false;
         }
 
