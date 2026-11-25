@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/gabinete-oficios/create.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -51,5 +54,5 @@ try {
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao registrar ofício: ' . $exception->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao registrar ofício: ' . ApiErrorReporter::genericMessage($exception, 'public/api/gabinete-oficios/create.php')], JSON_UNESCAPED_UNICODE);
 }

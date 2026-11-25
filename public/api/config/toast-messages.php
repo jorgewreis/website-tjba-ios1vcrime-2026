@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/config/toast-messages.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? ''));

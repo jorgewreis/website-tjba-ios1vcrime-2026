@@ -12,10 +12,11 @@ require_once __DIR__ . '/../repositories/CartasExpedidasAlocadosRepository.php';
 require_once __DIR__ . '/DataJudService.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
-require_once __DIR__ . '/../helpers/OrphanSubtarefasCleaner.php';
 require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
 require_once __DIR__ . '/../helpers/CentralMandadosCcm.php';
 require_once __DIR__ . '/../helpers/IdempotencySchemaUnavailableException.php';
+require_once __DIR__ . '/../helpers/CartasExpedidasConclusionTransaction.php';
+require_once __DIR__ . '/../helpers/CartasExpedidasEstadoFluxo.php';
 
 final class CartasExpedidasService
 {
@@ -51,8 +52,14 @@ final class CartasExpedidasService
         foreach ($rows as $i => $row) {
             $idCarta = (string) ($row['IdCarta'] ?? '');
             if ($idCarta !== '') {
-                $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByCartaId($idCarta);
-                $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByCartaId($idCarta);
+                $all = $this->subtarefasRepository->findByCartaId($idCarta);
+                $flow = CartasExpedidasEstadoFluxo::classificar($all, (string) ($row['Status'] ?? ''));
+                $rows[$i]['Subtarefas'] = $flow['subtarefa'] !== null ? [$flow['subtarefa']] : [];
+                $rows[$i]['SubtarefasAll'] = $all;
+                $rows[$i]['EtapaEfetiva'] = $flow['etapa'];
+                $rows[$i]['DiagnosticoFluxo'] = $flow['diagnostico'];
+                $rows[$i]['FluxoInconsistente'] = $flow['etapa'] === 'indeterminada';
+                $rows[$i]['FluxoDiagnostico'] = $flow['diagnostico'];
             } else {
                 $rows[$i]['Subtarefas'] = [];
                 $rows[$i]['SubtarefasAll'] = [];
@@ -339,61 +346,110 @@ final class CartasExpedidasService
         }
     }
 
+    /** Owns its commit: callers must not wrap this HTTP operation in another transaction. */
     public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
     {
-        $dadosJson = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao($this->connection, $dadosJson);
-
-        $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
-        if ($subtarefa === null) {
-            throw new InvalidArgumentException('Subtarefa não encontrada.');
-        }
-
-        $ordem = (int) ($subtarefa['ordem'] ?? 0);
-        $cartaId = trim((string) ($subtarefa['carta_expedida_id'] ?? ''));
-        $tipoSubtarefaAtual = trim((string) ($subtarefa['tipo'] ?? ''));
-
-        if ($cartaId === '') {
-            throw new InvalidArgumentException('Carta da subtarefa não identificada.');
-        }
-
-        if (!CartasExpedidasSubtarefasRepository::isOrdemAtiva($ordem)
-            || !CartasExpedidasSubtarefasRepository::isTipoAtivo($tipoSubtarefaAtual)) {
-            throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual. Atualize a página.');
-        }
-
-        $this->subtarefasRepository->marcarConcluidaComDados($subtarefaId, $dadosJson);
-
-        $proximaOrdem = $this->subtarefasRepository->obterProximaOrdem($ordem);
-        if ($proximaOrdem !== null) {
-            $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
-            $existente = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, $proximaOrdem);
-            if ($existente === null) {
-                $this->subtarefasRepository->create($cartaId, $proximoTipo, $proximaOrdem, 'pendente', null);
-            } else {
-                $statusProx = trim((string) ($existente['status'] ?? ''));
-                if ($statusProx !== 'concluida') {
-                    $this->subtarefasRepository->atualizarStatus((string) ($existente['id'] ?? ''), 'pendente');
+        return $this->withAtomicConclusion(function () use ($subtarefaId, $dadosJson): array {
+            // Locator only. All decisions below use current locking reads.
+            $locator = $this->checkedStatement('SELECT carta_expedida_id FROM cartas_expedidas_subtarefas WHERE id = :id', [':id' => $subtarefaId]);
+            $cartaId = $locator->fetchColumn();
+            $locator->closeCursor();
+            if (!$cartaId) throw new InvalidArgumentException('Subtarefa não encontrada.');
+            $parent = $this->checkedStatement('SELECT * FROM cartas_expedidas WHERE id = :id FOR UPDATE', [':id' => $cartaId]);
+            $carta = $parent->fetch(PDO::FETCH_ASSOC);
+            $parent->closeCursor();
+            if (!$carta) throw new InvalidArgumentException('Carta não encontrada.');
+            $tasks = $this->checkedStatement('SELECT * FROM cartas_expedidas_subtarefas WHERE carta_expedida_id = :id ORDER BY ordem, id FOR UPDATE', [':id' => $cartaId]);
+            $rows = $tasks->fetchAll(PDO::FETCH_ASSOC);
+            $tasks->closeCursor();
+            $byOrder = [];
+            $target = null;
+            foreach ($rows as $row) {
+                $row['tipo'] = mb_strtolower(trim((string) $row['tipo']), 'UTF-8');
+                if (!CartasExpedidasSubtarefasRepository::isTipoAtivo($row['tipo'])) continue;
+                $row['status'] = str_replace('concluída', 'concluida', mb_strtolower(trim((string) $row['status']), 'UTF-8'));
+                $order = (int) $row['ordem'];
+                if (!CartasExpedidasSubtarefasRepository::isOrdemAtiva($order)
+                    || CartasExpedidasSubtarefasRepository::tipoPorOrdem($order) !== $row['tipo']
+                    || isset($byOrder[$order])
+                    || !in_array($row['status'], ['pendente', 'em_andamento', 'concluida'], true)) {
+                    throw new InvalidArgumentException('Fluxo de subtarefas inconsistente; revise a carta.');
                 }
+                $byOrder[$order] = $row;
+                if ($row['id'] === $subtarefaId) $target = $row;
             }
-            $this->repository->update($cartaId, ['status' => 'aguardando cumprimento']);
-            return ['tarefa_principal_concluida' => false];
+            if (!$target || !isset($byOrder[1])) throw new InvalidArgumentException('Subtarefa de envio ausente ou subtarefa indisponível.');
+            $carta['status'] = mb_strtolower(trim((string) $carta['status']), 'UTF-8');
+            $terminal = in_array($carta['status'], ['concluída', 'concluida', 'finalizada'], true);
+            if ($target['status'] === 'concluida') {
+                return ['tarefa_principal_concluida' => $terminal, 'repeticao' => true];
+            }
+            if ($terminal || $carta['status'] === 'cancelada') throw new InvalidArgumentException('Carta indisponível para conclusão.');
+            $order = (int) $target['ordem'];
+            if ($order === 2 && $byOrder[1]['status'] !== 'concluida') throw new InvalidArgumentException('Conclua o envio antes da devolução.');
+            if ($order === 1 && isset($byOrder[2]) && $byOrder[2]['status'] === 'concluida') throw new InvalidArgumentException('Devolução concluída antes do envio; revise a carta.');
+            $data = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao($this->connection, $dadosJson);
+            $sql = 'UPDATE cartas_expedidas_subtarefas SET status = :status, updated_at = NOW()';
+            $params = [':status' => 'concluida', ':id' => $subtarefaId];
+            if ($data !== null) { $sql .= ', dados_especificos = :dados'; $params[':dados'] = $data; }
+            $this->checkedStatement($sql . ' WHERE id = :id', $params);
+            if ($order === 1 && !isset($byOrder[2])) {
+                $this->checkedStatement('INSERT INTO cartas_expedidas_subtarefas (id,carta_expedida_id,tipo,ordem,status,created_at,updated_at) VALUES (:id,:carta,:tipo,2,:status,NOW(),NOW())', [
+                    ':id' => 'CES-' . strtoupper(bin2hex(random_bytes(13))), ':carta' => $cartaId,
+                    ':tipo' => CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO, ':status' => 'pendente',
+                ]);
+            }
+            $this->checkedStatement('UPDATE cartas_expedidas SET status = :status, updated_at = NOW() WHERE id = :id', [':status' => $order === 1 ? 'aguardando cumprimento' : 'concluída', ':id' => $cartaId]);
+            $userId = trim((string) ($_SESSION['id_usuario'] ?? ''));
+            if ($userId !== '') {
+                $this->checkedStatement('INSERT INTO dashboard_conclusoes (id,usuario_id,modulo,area,referencia_interna,concluido_em) VALUES (UUID(),:usuario,:modulo,:area,:referencia,NOW())', [
+                    ':usuario' => $userId, ':modulo' => 'cartas_expedidas', ':area' => 'CARTORIO', ':referencia' => $subtarefaId,
+                ]);
+            }
+            $result = ['tarefa_principal_concluida' => $order === 2, 'repeticao' => false];
+            if ($order === 2) $result['tarefa_principal_mensagem'] = 'Tarefa principal concluída automaticamente: carta expedida do processo ' . ($carta['numero_processo_origem'] ?? 'não informado') . '.';
+            return $result;
+        });
+    }
+
+    private function checkedStatement(string $sql, array $params): PDOStatement
+    {
+        $statement = $this->connection->prepare($sql);
+        if ($statement === false || !$statement->execute($params)) throw new RuntimeException('Operação da carta expedida não confirmada.');
+        return $statement;
+    }
+
+    private function withAtomicConclusion(callable $operation): array
+    {
+        CartasExpedidasConclusionTransaction::assertUsable($this->connection);
+        if ($this->connection->inTransaction()) throw new RuntimeException('Conclusão requer conexão sem transação anterior.');
+        try {
+            if (!$this->connection->beginTransaction()) throw new RuntimeException('Não foi possível iniciar a transação.');
+        } catch (Throwable $exception) {
+            CartasExpedidasConclusionTransaction::markUnsafe($this->connection);
+            throw $exception;
         }
-
-        $this->repository->update($cartaId, ['status' => 'concluída']);
-        $carta = $this->repository->find($cartaId);
-        $processo = trim((string) ($carta['numero_processo_origem'] ?? ''));
-        $finalidade = trim((string) ($carta['finalidade'] ?? ''));
-        $cidade = trim((string) ($carta['cidade_destino'] ?? ''));
-        $uf = trim((string) ($carta['uf_destino'] ?? ''));
-        $msg = 'Tarefa principal concluída automaticamente: carta expedida do processo '
-            . ($processo !== '' ? $processo : 'não informado')
-            . ' (' . ($finalidade !== '' ? $finalidade : 'finalidade não informada')
-            . ' para ' . (($cidade !== '' ? $cidade : 'comarca não informada') . ($uf !== '' ? '/' . $uf : '')) . ').';
-
-        return [
-            'tarefa_principal_concluida' => true,
-            'tarefa_principal_mensagem' => $msg,
-        ];
+        try {
+            CartasExpedidasConclusionTransaction::requireInnoDb($this->connection);
+            $result = $operation();
+            try {
+                if (!$this->connection->commit()) throw new RuntimeException('Commit da conclusão não confirmado.');
+            } catch (Throwable $exception) {
+                CartasExpedidasConclusionTransaction::markUnsafe($this->connection);
+                throw $exception;
+            }
+            return $result;
+        } catch (Throwable $exception) {
+            try {
+                if (!$this->connection->inTransaction() || !$this->connection->rollBack()) {
+                    CartasExpedidasConclusionTransaction::markUnsafe($this->connection);
+                }
+            } catch (Throwable $rollbackFailure) {
+                CartasExpedidasConclusionTransaction::markUnsafe($this->connection);
+                error_log('CartasExpedidasService: rollback não confirmado.');
+            }
+            throw $exception;
+        }
     }
 
     private function normalizeTribunalSigla(string $sigla): string
@@ -517,24 +573,38 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
-        $subtarefas = $this->subtarefasRepository->findByCartaId($id);
-        $mensagensSubtarefas = [];
-        foreach ($subtarefas as $subtarefa) {
-            $tipo = trim((string) ($subtarefa['tipo'] ?? 'subtarefa'));
-            if ($tipo !== '') {
-                $mensagensSubtarefas[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $tipo) . '.';
-            }
+        if ($this->connection->inTransaction()) {
+            throw new RuntimeException('Exclusão requer conexão sem transação anterior.');
         }
-        $this->subtarefasRepository->deleteByCartaId($id);
-        $this->alocadosRepository->deleteByCartaId($id);
-        $deleted = $this->repository->delete($id);
-        $orfandade = OrphanSubtarefasCleaner::cleanAll($this->connection);
-        return [
-            'deleted' => $deleted,
-            'subtarefas_toasts' => $mensagensSubtarefas,
-            'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
-            'subtarefas_orfas_removidas' => array_sum($orfandade),
-        ];
+        $this->connection->beginTransaction();
+        try {
+            $lock = $this->connection->prepare('SELECT `id` FROM `cartas_expedidas` WHERE `id` = :id FOR UPDATE');
+            $lock->execute([':id' => $id]);
+            $exists = $lock->fetchColumn() !== false;
+            $lock->closeCursor();
+            $messages = [];
+            if ($exists) {
+                foreach ($this->subtarefasRepository->findByCartaId($id) as $subtask) {
+                    $type = trim((string) ($subtask['tipo'] ?? 'subtarefa'));
+                    if ($type !== '') $messages[] = 'Subtarefa excluída: ' . str_replace('_', ' ', $type) . '.';
+                }
+                $this->subtarefasRepository->deleteByCartaId($id);
+                $this->alocadosRepository->deleteByCartaId($id);
+                if (!$this->repository->delete($id)) {
+                    throw new RuntimeException('Não foi possível excluir a carta expedida bloqueada.');
+                }
+            }
+            $this->connection->commit();
+            return [
+                'deleted' => $exists,
+                'subtarefas_toasts' => $messages,
+                'tarefa_toast' => 'Tarefa principal excluída com sucesso.',
+                'subtarefas_orfas_removidas' => 0,
+            ];
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) $this->connection->rollBack();
+            throw $exception;
+        }
     }
 
     public function find(string $id): ?array
@@ -553,27 +623,24 @@ final class CartasExpedidasService
         if ($cartaId === '') {
             throw new InvalidArgumentException('Identificador da carta é obrigatório.');
         }
-        if ($this->repository->find($cartaId) === null) {
-            throw new InvalidArgumentException('Carta expedida não encontrada.');
-        }
-        $existentes = $this->subtarefasRepository->findByCartaId($cartaId);
-        if (count($existentes) > 0) {
-            throw new InvalidArgumentException('Esta carta já possui subtarefas.');
-        }
-        $this->subtarefasRepository->create(
-            $cartaId,
-            CartasExpedidasSubtarefasRepository::TIPO_ENVIO,
-            CartasExpedidasSubtarefasRepository::ORDEM_ENVIO,
-            'em_andamento',
-            null
-        );
-        $this->subtarefasRepository->create(
-            $cartaId,
-            CartasExpedidasSubtarefasRepository::TIPO_DEVOLUCAO,
-            CartasExpedidasSubtarefasRepository::ORDEM_DEVOLUCAO,
-            'pendente',
-            null
-        );
-        $this->repository->update($cartaId, ['status' => 'em_andamento']);
+        $this->withAtomicConclusion(function () use ($cartaId): array {
+            $parent = $this->checkedStatement('SELECT id, status FROM cartas_expedidas WHERE id = :id FOR UPDATE', [':id' => $cartaId]);
+            $carta = $parent->fetch(PDO::FETCH_ASSOC);
+            $parent->closeCursor();
+            if (!$carta) throw new InvalidArgumentException('Carta expedida não encontrada.');
+            if (in_array(mb_strtolower(trim((string) $carta['status']), 'UTF-8'), ['concluída', 'concluida', 'finalizada', 'cancelada'], true)) throw new InvalidArgumentException('Carta indisponível para manutenção.');
+            $tasks = $this->checkedStatement('SELECT id FROM cartas_expedidas_subtarefas WHERE carta_expedida_id = :id ORDER BY ordem, id FOR UPDATE', [':id' => $cartaId]);
+            $exists = $tasks->fetchColumn() !== false;
+            $tasks->closeCursor();
+            if ($exists) throw new InvalidArgumentException('Esta carta já possui subtarefas.');
+            foreach ([1 => 'em_andamento', 2 => 'pendente'] as $order => $status) {
+                $this->checkedStatement('INSERT INTO cartas_expedidas_subtarefas (id,carta_expedida_id,tipo,ordem,status,created_at,updated_at) VALUES (:id,:carta,:tipo,:ordem,:status,NOW(),NOW())', [
+                    ':id' => 'CES-' . strtoupper(bin2hex(random_bytes(13))), ':carta' => $cartaId,
+                    ':tipo' => CartasExpedidasSubtarefasRepository::tipoPorOrdem($order), ':ordem' => $order, ':status' => $status,
+                ]);
+            }
+            $this->checkedStatement('UPDATE cartas_expedidas SET status = :status, updated_at = NOW() WHERE id = :id', [':status' => 'em_andamento', ':id' => $cartaId]);
+            return [];
+        });
     }
 }

@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/gabinete-reus-presos/archive.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -34,7 +37,7 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
-    error_log('API error (public/api/gabinete-reus-presos/archive.php): ' . $exception->getMessage());
+    error_log('API error (public/api/gabinete-reus-presos/archive.php): ' . ApiErrorReporter::genericMessage($exception, 'public/api/gabinete-reus-presos/archive.php'));
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao arquivar.'], JSON_UNESCAPED_UNICODE);
 }

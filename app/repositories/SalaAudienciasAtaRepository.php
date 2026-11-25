@@ -65,33 +65,53 @@ final class SalaAudienciasAtaRepository
     public function fetchExpiredBeforeNow(): array
     {
         $sql = sprintf(
-            'SELECT * FROM `%s` WHERE `expires_at` <= NOW() AND TRIM(COALESCE(`arquivo_relativo`, \'\')) <> \'\'',
+            'SELECT `id_ata` FROM `%s` WHERE `expires_at` <= NOW() AND TRIM(COALESCE(`arquivo_relativo`, \'\')) <> \'\' ORDER BY `expires_at` ASC LIMIT 100',
             $this->table
         );
         $st = $this->connection->query($sql);
         if ($st === false) {
-            return [];
+            throw new RuntimeException('Não foi possível consultar a fila de retenção de atas.');
         }
 
         return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
+    /** Revalida e bloqueia a linha candidata dentro da transação de retenção. */
+    public function findExpiredByIdForUpdate(string $idAta): ?array
+    {
+        $idAta = trim($idAta);
+        if ($idAta === '' || !$this->connection->inTransaction()) {
+            throw new LogicException('A busca bloqueada de ata expirada requer transação e identificador.');
+        }
+        $sql = sprintf(
+            'SELECT `id_ata`,`arquivo_relativo`,`expires_at` FROM `%s` WHERE `id_ata`=:id AND `expires_at` <= NOW() AND TRIM(COALESCE(`arquivo_relativo`, \'\')) <> \'\' LIMIT 1 FOR UPDATE',
+            $this->table
+        );
+        $st = $this->connection->prepare($sql);
+        $st->bindValue(':id', $idAta);
+        $st->execute();
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row === false ? null : $row;
     }
 
     /**
      * Após o prazo de download: remove referência ao arquivo no disco (já tratada no serviço) e zera campos do PDF,
      * mantendo o registro para não reabrir a tarefa de upload na listagem.
      */
-    public function clearArquivoAposExpiracaoRetencao(string $idAta): bool
+    public function clearArquivoAposExpiracaoRetencao(string $idAta, string $arquivoRelativo, string $expiresAt): bool
     {
         $idAta = trim($idAta);
-        if ($idAta === '') {
+        if ($idAta === '' || $arquivoRelativo === '' || $expiresAt === '' || !$this->connection->inTransaction()) {
             return false;
         }
         $sql = sprintf(
-            'UPDATE `%s` SET `arquivo_relativo` = \'\', `tamanho_bytes` = 0 WHERE `id_ata` = :id LIMIT 1',
+            'UPDATE `%s` SET `arquivo_relativo` = \'\', `tamanho_bytes` = 0 WHERE `id_ata` = :id AND `arquivo_relativo` = :rel AND `expires_at` = :expires AND `expires_at` <= NOW() LIMIT 1',
             $this->table
         );
         $st = $this->connection->prepare($sql);
         $st->bindValue(':id', $idAta);
+        $st->bindValue(':rel', $arquivoRelativo);
+        $st->bindValue(':expires', $expiresAt);
         $st->execute();
 
         return $st->rowCount() > 0;

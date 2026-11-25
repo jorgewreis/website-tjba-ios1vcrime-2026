@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/sala-audiencias-pauta/prioridades-remove.php');
 /**
  * @deprecated Preferir POST /api/processos/prioridades-remove.php com processo_id + codigo.
  */
@@ -42,5 +45,5 @@ try {
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Erro ao remover prioridade: ' . $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Erro ao remover prioridade: ' . ApiErrorReporter::genericMessage($e, 'public/api/sala-audiencias-pauta/prioridades-remove.php')], JSON_UNESCAPED_UNICODE);
 }

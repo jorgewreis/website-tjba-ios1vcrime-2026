@@ -17,8 +17,21 @@ $db->exec("INSERT INTO partes_instituicoes VALUES ('v1','p1','i1',NULL,NULL,NULL
 $service = new InstituicoesPublicasService($db);
 assert($service->update('missing', ['nome'=>'X']) === false);
 assert($service->update('i1', ['nome'=>'Instituicao']) === true);
+assert($service->update('i1', ['nome'=>'Instituicao Atualizada']) === true);
+assert($db->query("SELECT nome FROM instituicoes_publicas WHERE id='i1'")->fetchColumn() === 'Instituicao Atualizada');
+$db->beginTransaction();
+assert($service->update('i1', ['nome'=>'Alteração Externa']) === true);
+assert($db->inTransaction());
+$db->rollBack();
+assert($db->query("SELECT nome FROM instituicoes_publicas WHERE id='i1'")->fetchColumn() === 'Instituicao Atualizada');
+$db->beginTransaction();
 try { $service->update('i1', ['nome'=>'   ']); throw new RuntimeException('nome vazio aceito'); } catch (InvalidArgumentException $e) { assert(str_contains($e->getMessage(),'obrigatório')); }
-assert($db->query("SELECT nome FROM instituicoes_publicas WHERE id='i1'")->fetchColumn() === 'Instituicao');
+assert($db->inTransaction());
+$db->rollBack();
+assert($db->query("SELECT nome FROM instituicoes_publicas WHERE id='i1'")->fetchColumn() === 'Instituicao Atualizada');
+try { $service->update('i1', ['nome'=>'   ']); throw new RuntimeException('nome vazio aceito'); } catch (InvalidArgumentException $e) { assert(str_contains($e->getMessage(),'obrigatório')); }
+assert(!$db->inTransaction());
+assert($db->query("SELECT nome FROM instituicoes_publicas WHERE id='i1'")->fetchColumn() === 'Instituicao Atualizada');
 $repo = new PartesInstituicoesRepository($db);
 assert($repo->update('missing', ['ativo'=>1]) === false);
 assert($repo->update('v1', ['ativo'=>1]) === true);

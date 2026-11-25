@@ -43,6 +43,22 @@ if ($total === 0) {
 }
 $offset = ($pageNumber - 1) * $itemsPerPage;
 $rowsPage = array_slice($minhasRows, $offset, $itemsPerPage);
+$observadas = [];
+foreach ($rowsPage as $entry) {
+    if (SalaAudienciasEstudantePrivacidade::indisponivel($entry)) {
+        $id = trim((string) ($entry['pauta'] ?? ''));
+        if ($id !== '') $observadas[] = $id;
+    }
+}
+$observacaoToken = '';
+if ($observadas && $podeInscricaoComoEstudante && $userId !== '') {
+    $observacoes = is_array($_SESSION['rei161_observacoes'] ?? null) ? $_SESSION['rei161_observacoes'] : [];
+    $observacoes = array_filter($observacoes, static fn($entry): bool => is_array($entry) && (int)($entry['created'] ?? 0) >= time() - 3600);
+    $observacoes = array_slice($observacoes, -15, null, true);
+    $observacaoToken = bin2hex(random_bytes(16));
+    $observacoes[$observacaoToken] = ['usuario' => $userId, 'ids' => array_values(array_unique($observadas)), 'created' => time()];
+    $_SESSION['rei161_observacoes'] = $observacoes;
+}
 $displayedCount = count($rowsPage);
 $startItem = $displayedCount > 0 ? $offset + 1 : 0;
 $endItem = $displayedCount > 0 ? $offset + $displayedCount : 0;
@@ -99,11 +115,11 @@ if ($totalPages > 0) {
         </div>
     </div>
 
-    <div class="container-full card-page">
+    <div class="container-full card-page" data-observacao="<?php echo htmlspecialchars($observacaoToken, ENT_QUOTES, 'UTF-8'); ?>">
 
         <div class="card-title">
             <div class="display-flex col col-fit justify-start">
-                <h1 class="title-page" style="color: var(--color-primary-active);">Atas de Audiências</h1>
+                <h1 class="title-page" tabindex="-1" style="color: var(--color-primary-active);">Atas de Audiências</h1>
             </div>
             <div class="display-flex row row-fit justify-end align-center gap-x-md gap-y-md flex-wrap">
 
@@ -125,6 +141,9 @@ if ($totalPages > 0) {
                 <span class="padding-y-md major-info">Total: <?php echo (int) $total; ?> <?php echo htmlspecialchars($documentsLabel); ?></span>
             </div>
         </div>
+        <div id="rei161-lista-alterada" role="status" aria-live="polite" hidden>
+            <span id="rei161-lista-mensagem">Há uma atualização na lista.</span> <button type="button" id="rei161-atualizar-lista">Atualizar lista</button>
+        </div>
 
         <?php if (count($rowsPage) === 0): ?>
         <div class="display-flex col col-full register border-bottom">
@@ -137,7 +156,7 @@ if ($totalPages > 0) {
         <?php $processo_bloco_variant = 'estudantes'; ?>
         <?php foreach ($rowsPage as $m):
             if (SalaAudienciasEstudantePrivacidade::indisponivel($m)): ?>
-        <div class="display-flex col col-full register border-bottom"><p class="padding-x-lg padding-y-md">Audiência indisponível.</p></div>
+        <div class="display-flex col col-full register border-bottom" data-inicial-indisponivel="1"><p class="padding-x-lg padding-y-md">Audiência indisponível.</p></div>
         <?php continue; endif;
             $arquivoRelEst = trim((string) ($m['arquivo_relativo'] ?? ''));
             $expira = trim((string) ($m['expires_at'] ?? ''));
@@ -231,6 +250,158 @@ if ($totalPages > 0) {
         </div>
     </div>
     <?php include __DIR__ . '/_copy_process_script.php'; ?>
+    <script>
+    (function () {
+        var requestInFlight = false;
+        function rows() {
+            return Array.prototype.slice.call(document.querySelectorAll('.register[data-pauta]'));
+        }
+        function pautaIds(registers) {
+            return Array.from(new Set(registers.map(function (row) {
+                return String(row.getAttribute('data-pauta') || '').trim();
+            }).filter(Boolean)));
+        }
+        function renderUnavailable(row) {
+            moveFocusToTitle(row);
+            row.innerHTML = '<p class="padding-x-lg padding-y-md">Audiência indisponível.</p>';
+            row.setAttribute('data-indisponivel', '1');
+        }
+        function renderUnverified(row) {
+            moveFocusToTitle(row);
+            row.innerHTML = '<p class="padding-x-lg padding-y-md">Não foi possível verificar a disponibilidade. Atualize a página.</p>';
+            row.setAttribute('data-indisponivel', 'unknown');
+        }
+        function moveFocusToTitle(row) {
+            if (!row.contains(document.activeElement)) return;
+            var title = document.querySelector('.card-page .card-title h1');
+            if (title) title.focus();
+        }
+        function showNotice(message) {
+            var notice = document.getElementById('rei161-lista-alterada');
+            var label = document.getElementById('rei161-lista-mensagem');
+            if (label) label.textContent = message;
+            if (notice) notice.hidden = false;
+        }
+        // Remove legacy sensitive payloads from the rendered card; this does
+        // not retract any information already delivered over the network.
+        function normalizeItem(id, item) {
+            function active(name) {
+                if (!Object.prototype.hasOwnProperty.call(item, name)) return false;
+                var value = item[name];
+                return !(value === false || value === 0 || value === '0');
+            }
+            var enrolled = item.ja_inscrito === true || item.ja_inscrito === 1 || item.ja_inscrito === '1';
+            if (active('indisponivel') || active('processo_sigiloso') || active('envolve_menor') ||
+                active('qtd_menor') || active('tem_prioridade_bloqueio') || !enrolled) {
+                return {id_pauta:id, indisponivel:true};
+            }
+            return item;
+        }
+        function validItem(id, item) {
+            if (!item || typeof item !== 'object' || Array.isArray(item) || item.id_pauta !== id) return false;
+            if (item.indisponivel === true) return Object.keys(item).length === 2;
+            var strings = ['status','data_audiencia','hora_audiencia','data_hora_inicio_efetivo','data_hora_fim_efetivo'];
+            var bools = ['ja_inscrito','vagas_esgotadas','pode_inscrever'];
+            var known = ['id_pauta','duracao_estimada_minutos','total_inscritos_pauta'].concat(strings, bools);
+            return Object.keys(item).every(function (key) { return known.indexOf(key) !== -1; }) &&
+                strings.every(function (key) { return typeof item[key] === 'string'; }) &&
+                bools.every(function (key) { return typeof item[key] === 'boolean'; }) &&
+                Number.isInteger(item.duracao_estimada_minutos) && item.duracao_estimada_minutos >= 0 &&
+                Number.isInteger(item.total_inscritos_pauta) && item.total_inscritos_pauta >= 0;
+        }
+        function refreshAvailability() {
+            if (requestInFlight) return;
+            var registers = rows();
+            var ids = pautaIds(registers);
+            var container = document.querySelector('.card-page');
+            var watch = container ? String(container.getAttribute('data-observacao') || '') : '';
+            if (!ids.length && !watch) return;
+            requestInFlight = true;
+            var controller = typeof AbortController === 'function' ? new AbortController() : null;
+            var timer;
+            var deadline = new Promise(function (_, reject) {
+                timer = setTimeout(function () {
+                    if (controller) controller.abort();
+                    reject(new Error('availability request timed out'));
+                }, 8000);
+            });
+            var request = Promise.resolve().then(function () {
+                return fetch('/api/sala-audiencias-pauta/status-bulk.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'same-origin',
+                    signal: controller ? controller.signal : undefined,
+                    body: JSON.stringify({ pautas: ids, observacao: watch })
+                });
+            }).then(function (response) {
+                return response.json().then(function (body) {
+                    return { ok: response.ok, body: body || {} };
+                });
+            });
+            Promise.race([request, deadline]).then(function (result) {
+                var body = result.body;
+                if (!result.ok || body.success !== true || body.completo !== true ||
+                    !Array.isArray(body.consultados) || !body.items || typeof body.items !== 'object' ||
+                    Array.isArray(body.items) || (watch && typeof body.observacao_alterada !== 'boolean')) throw new Error('availability snapshot incomplete');
+                var consulted = body.consultados;
+                if (consulted.length !== ids.length || new Set(consulted).size !== ids.length ||
+                    ids.some(function (id) { return consulted.indexOf(id) === -1; }) ||
+                    consulted.some(function (id) { return typeof id !== 'string'; }) ||
+                    Object.keys(body.items).some(function (id) {
+                        return ids.indexOf(id) === -1 || !body.items[id] ||
+                            String(body.items[id].id_pauta || '') !== id;
+                    })) throw new Error('availability snapshot mismatch');
+
+                var safeItems = {};
+                Object.keys(body.items).forEach(function (id) {
+                    var raw = body.items[id];
+                    if (!raw || typeof raw !== 'object' || Array.isArray(raw) || raw.id_pauta !== id) throw new Error('invalid item');
+                    var item = normalizeItem(id, raw);
+                    if (!validItem(id, item)) throw new Error('invalid item');
+                    safeItems[id] = item;
+                });
+
+                if (body.observacao_alterada === true) {
+                    showNotice('Há uma atualização na lista.');
+                }
+
+                var changed = false;
+                registers.forEach(function (row) {
+                    var id = String(row.getAttribute('data-pauta') || '').trim();
+                    var item = safeItems[id];
+                    if (!item) {
+                        renderUnavailable(row);
+                        return;
+                    }
+                    if (item.indisponivel === true) {
+                        renderUnavailable(row);
+                        return;
+                    }
+                    if (row.hasAttribute('data-indisponivel')) changed = true;
+                });
+                if (changed) {
+                    showNotice('Há uma atualização na lista.');
+                }
+            }).catch(function () {
+                registers.forEach(function (row) {
+                    if (row.getAttribute('data-indisponivel') === '1') return;
+                    renderUnverified(row);
+                });
+                if (watch) showNotice('Não foi possível verificar a lista. Atualize a página.');
+            }).finally(function () {
+                clearTimeout(timer);
+                requestInFlight = false;
+            });
+        }
+        var updateButton = document.getElementById('rei161-atualizar-lista');
+        if (updateButton) updateButton.addEventListener('click', function () { window.location.reload(); });
+        refreshAvailability();
+        window.setInterval(refreshAvailability, 30000);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) refreshAvailability();
+        });
+    })();
+    </script>
 
 </body>
 </html>
