@@ -104,7 +104,7 @@ const enrollmentEnd = source.indexOf('\n        function renderVagas(', enrollme
 assert(enrollmentStart >= 0 && enrollmentEnd > enrollmentStart);
 context.statusForItem = () => 'designada';
 vm.runInContext(source.slice(enrollmentStart, enrollmentEnd), context);
-const wrapper = { innerHTML: '', style: {}, getAttribute: () => 'SYN' };
+const wrapper = { innerHTML: '', style: {}, getAttribute: () => 'SYN', querySelector: () => null };
 context.renderInscricaoUI(wrapper, { id_pauta:'SYN', ja_inscrito:true, vagas_esgotadas:true });
 assert.match(wrapper.innerHTML, /Voce esta inscrito/);
 assert.doesNotMatch(wrapper.innerHTML, /Não é permitida mais nenhuma inscrição/);
