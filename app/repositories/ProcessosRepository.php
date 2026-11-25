@@ -19,7 +19,7 @@ final class ProcessosRepository
     }
 
     /** Retorna o id do processo (existente ou recém-criado). numero_processo formatado (ex. CNJ); classe_id opcional (null = classe não informada); data_fato e sigiloso opcionais. */
-    public function ensureProcess(string $numeroProcesso, ?string $classeId = null, ?string $dataFato = null, ?bool $sigiloso = null): string
+    public function ensureProcess(string $numeroProcesso, ?string $classeId = null, ?string $dataFato = null, ?bool $sigiloso = null, bool $preservarSigiloExistente = false): string
     {
         $digits = CnjValidator::digits20OrThrow($numeroProcesso);
 
@@ -27,7 +27,7 @@ final class ProcessosRepository
 
         $existing = $this->findByDigits($digits);
         if ($existing !== null) {
-            $this->updateIfNeeded($existing['id'], $classeId, $dataFato, $sigiloso);
+            $this->updateIfNeeded($existing['id'], $classeId, $dataFato, $preservarSigiloExistente ? null : $sigiloso);
             return (string) $existing['id'];
         }
 
