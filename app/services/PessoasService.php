@@ -185,12 +185,13 @@ final class PessoasService
                     }
                 }
 
+                $cpfAnterior = $tipo === 'CPF' ? ($this->partesRepository->findById($parteId)['cpf'] ?? null) : null;
                 $newId = $this->documentosRepository->insert([
                     'parte_id' => $parteId,
                     'tipo' => $tipo,
                     'numero' => $numero,
                 ]);
-                $this->sincronizarCpfLegado($parteId);
+                if ($tipo === 'CPF') $this->sincronizarCpfLegado($parteId, $cpfAnterior);
 
                 return $newId;
             }
@@ -219,9 +220,23 @@ final class PessoasService
                     || ParteDocumentoHelper::normalizarNumero($tipo, (string) ($atual['numero'] ?? '')) !== $numero) {
                     throw new RuntimeException('Documento alterado durante a exclusão; tente novamente.');
                 }
+                $cpfAnterior = null;
+                if ($tipo === 'CPF') {
+                    $parte = $this->partesRepository->findById($parteId);
+                    if ($parte === null) throw new InvalidArgumentException('Pessoa não encontrada.');
+                    $cpfAnterior = $parte['cpf'] ?? null;
+                    $legado = ParteDocumentoHelper::normalizarNumero('CPF', (string) ($cpfAnterior ?? ''));
+                    $cpfs = [];
+                    foreach ($this->documentosRepository->findByParteId($parteId) as $documento) {
+                        if (ParteDocumentoHelper::normalizarTipo((string) ($documento['tipo'] ?? '')) === 'CPF') $cpfs[] = $documento;
+                    }
+                    if (count($cpfs) !== 1 || ($legado !== '' && $legado !== $numero)) {
+                        throw new InvalidArgumentException('CPF divergente ou ambíguo; cadastro requer reconciliação.');
+                    }
+                }
                 $ok = $this->documentosRepository->delete($id);
-                if ($ok) {
-                    $this->sincronizarCpfLegado($parteId);
+                if ($ok && $tipo === 'CPF') {
+                    $this->sincronizarCpfLegado($parteId, $cpfAnterior);
                 }
 
                 return $ok;
@@ -563,14 +578,14 @@ final class PessoasService
                 'numero' => $doc['numero'],
             ]);
         }
-        $this->sincronizarCpfLegado($parteId);
+        $this->sincronizarCpfLegado($parteId, null);
     }
 
-    private function sincronizarCpfLegado(string $parteId): void
+    private function sincronizarCpfLegado(string $parteId, ?string $cpfAnterior): void
     {
         $documentos = $this->documentosRepository->findByParteId($parteId);
         $cpf = ParteDocumentoHelper::resolverCpfParaColunaLegada($documentos);
-        $this->partesRepository->setCpfLegado($parteId, $cpf);
+        $this->partesRepository->setCpfLegado($parteId, $cpf, $cpfAnterior);
     }
 
     private function canonProfissaoParaComparacao(?string $valor): string

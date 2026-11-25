@@ -251,6 +251,32 @@ if (!$service->deleteDocumento($rgForCpfHolder)
     || (int)$pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE parte_id='PRT-FAIL-CASE' AND tipo='RG'")->fetchColumn() !== 0) {
     throw new RuntimeException('Exclusão de RG em pessoa com CPF legado pontuado não preservou o CPF legado.');
 }
+// Chamadas diretas ao setter não podem limpar sem lock do CPF anterior,
+// nem enquanto o documento correspondente ainda estiver presente.
+$pdo->beginTransaction();
+try {
+    (new PartesRepository($pdo))->setCpfLegado('PRT-FAIL-CASE', null, '12345678909');
+    throw new RuntimeException('Limpeza direta sem lock deveria falhar.');
+} catch (LogicException $error) {
+    if (!str_contains($error->getMessage(), 'Lock documental')) throw $error;
+} finally {
+    $pdo->rollBack();
+}
+ParteDocumentoLock::run($pdo, 'CPF', '12345678909', static function () use ($pdo): void {
+    $pdo->beginTransaction();
+    try {
+        (new PartesRepository($pdo))->setCpfLegado('PRT-FAIL-CASE', null, '12345678909');
+        throw new RuntimeException('Limpeza direta com documento presente deveria falhar.');
+    } catch (InvalidArgumentException $error) {
+        if (!str_contains($error->getMessage(), 'ainda presente')) throw $error;
+    } finally {
+        $pdo->rollBack();
+    }
+});
+if ($pdo->query("SELECT cpf FROM partes WHERE id='PRT-FAIL-CASE'")->fetchColumn() !== '123.456.789-09'
+    || (int)$pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE id='$retryId' AND tipo='CPF'")->fetchColumn() !== 1) {
+    throw new RuntimeException('Limpeza direta recusada alterou representações.');
+}
 $pdo->exec("CREATE TRIGGER rei152_delete_cpf_doc_fail BEFORE UPDATE ON partes FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='rei152 falha exclusao cpf'");
 try {
     $service->deleteDocumento($retryId);
@@ -274,27 +300,25 @@ if ($retryId === '') throw new RuntimeException('Fixture não restaurou CPF para
 $pdo->exec("INSERT INTO partes (id, cpf, nome_completo) VALUES ('PRT-DIVERGENT', NULL, 'Pessoa sintética')");
 $pdo->exec("INSERT INTO partes_documentos (id, parte_id, tipo, numero) VALUES ('DOC-DIVERGENT-CPF', 'PRT-DIVERGENT', 'CPF', '70000000001')");
 $divergentRg = $service->addDocumento('PRT-DIVERGENT', ['tipo' => 'RG', 'numero' => 'RG-DIVERGENT']);
-if ($pdo->query("SELECT cpf FROM partes WHERE id='PRT-DIVERGENT'")->fetchColumn() !== '70000000001') {
-    throw new RuntimeException('Inclusão de RG não reconciliou CPF documental e legado nulo.');
+if ($pdo->query("SELECT cpf FROM partes WHERE id='PRT-DIVERGENT'")->fetchColumn() !== null) {
+    throw new RuntimeException('Inclusão de RG alterou CPF legado nulo.');
 }
 $pdo->exec("UPDATE partes SET cpf='70000000002' WHERE id='PRT-DIVERGENT'");
-$pdo->exec("CREATE TRIGGER rei152_delete_cpf_fail BEFORE UPDATE ON partes FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='rei152 falha exclusao'");
+if (!$service->deleteDocumento($divergentRg)
+    || $pdo->query("SELECT cpf FROM partes WHERE id='PRT-DIVERGENT'")->fetchColumn() !== '70000000002'
+    || (int) $pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE parte_id='PRT-DIVERGENT' AND tipo='RG'")->fetchColumn() !== 0
+    || (int) $pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE id='DOC-DIVERGENT-CPF' AND numero='70000000001'")->fetchColumn() !== 1) {
+    throw new RuntimeException('Exclusão de RG não preservou CPF legado e documental divergentes.');
+}
 try {
-    $service->deleteDocumento($divergentRg);
-    throw new RuntimeException('Falha de sincronização deveria reverter exclusão.');
-} catch (PDOException $error) {
-    if (!str_contains($error->getMessage(), 'rei152 falha exclusao')) throw $error;
-} finally {
-    $pdo->exec('DROP TRIGGER rei152_delete_cpf_fail');
+    $service->deleteDocumento('DOC-DIVERGENT-CPF');
+    throw new RuntimeException('Exclusão de CPF divergente deveria ser recusada.');
+} catch (InvalidArgumentException $error) {
+    if (!str_contains($error->getMessage(), 'reconciliação')) throw $error;
 }
 if ($pdo->query("SELECT cpf FROM partes WHERE id='PRT-DIVERGENT'")->fetchColumn() !== '70000000002'
-    || (int) $pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE parte_id='PRT-DIVERGENT' AND tipo='RG'")->fetchColumn() !== 1) {
-    throw new RuntimeException('Falha injetada após excluir RG não foi revertida.');
-}
-if (!$service->deleteDocumento($divergentRg)
-    || $pdo->query("SELECT cpf FROM partes WHERE id='PRT-DIVERGENT'")->fetchColumn() !== '70000000001'
-    || (int) $pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE parte_id='PRT-DIVERGENT' AND tipo='RG'")->fetchColumn() !== 0) {
-    throw new RuntimeException('Exclusão de RG não reconciliou CPF documental e legado divergente.');
+    || (int) $pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE id='DOC-DIVERGENT-CPF' AND numero='70000000001'")->fetchColumn() !== 1) {
+    throw new RuntimeException('Recusa de CPF divergente alterou representações.');
 }
 $pdo->exec("INSERT INTO partes (id, cpf, nome_completo) VALUES ('PRT-SNAPSHOT', '70000000003', 'Pessoa sintética snapshot')");
 $pdo->exec("INSERT INTO partes_documentos (id, parte_id, tipo, numero) VALUES ('DOC-SNAPSHOT-CPF', 'PRT-SNAPSHOT', 'CPF', '70000000003')");
