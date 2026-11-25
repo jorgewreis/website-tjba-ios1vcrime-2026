@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-editais/delete.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['editaisedit'], true);
 
@@ -43,5 +46,6 @@ try {
 } catch (\InvalidArgumentException $exception) {
     ApiJsonResponse::send(['error' => $exception->getMessage()], 400);
 } catch (\Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/cartorio-editais/delete.php');
     ApiJsonResponse::send(['error' => 'Erro ao excluir edital.'], 500);
 }

@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/gabinete-reus-presos/save-processo.php');
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
 ApiAccessGuard::requireAccess(['reuspresosedit'], true);
 
@@ -27,6 +30,7 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
+    ApiErrorReporter::logUnexpected($exception, 'public/api/gabinete-reus-presos/save-processo.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao salvar vínculo.'], JSON_UNESCAPED_UNICODE);
 }

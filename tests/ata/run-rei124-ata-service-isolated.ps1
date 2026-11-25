@@ -32,10 +32,11 @@ $mysqlId = $null
 $phpId = $null
 $cleanupFailed = $false
 $creationPending = $false
+$diagnosticStage = 'preparacao'
 
 function Invoke-DockerSafe([string[]]$arguments) {
     $output = & docker --host $dockerHost @arguments 2>&1
-    if ($LASTEXITCODE -ne 0) { throw "Docker falhou em $($arguments[0]); detalhes suprimidos." }
+    if ($LASTEXITCODE -ne 0) { throw "Docker falhou na etapa $diagnosticStage (codigo $LASTEXITCODE); detalhes suprimidos." }
     return $output
 }
 
@@ -77,12 +78,15 @@ try {
     if ($mysqlInfo.Config.Labels.$label -ne $runId -or $mysqlInfo.HostConfig.NetworkMode -ne 'none' -or @($mysqlInfo.HostConfig.PortBindings.PSObject.Properties).Count -ne 0 -or $mysqlInfo.HostConfig.Privileged -or -not $mysqlInfo.HostConfig.Tmpfs.PSObject.Properties['/var/lib/mysql']) { throw 'Topologia MySQL descartÃ¡vel recusada.' }
     Invoke-DockerSafe @('start', $mysqlId) | Out-Null
     $ready = $false
+    $diagnosticStage = 'mysql-prontidao'
     for ($i = 0; $i -lt 90; $i++) {
         try { Invoke-DockerSafe @('exec', '--env', "MYSQL_PWD=$password", $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'rei124ata_test', '-N', '-e', 'SELECT 1') | Out-Null; $ready = $true; break } catch { Start-Sleep -Seconds 1 }
     }
     if (-not $ready) { throw 'MySQL 8.4 descartÃ¡vel nÃ£o iniciou.' }
+    $diagnosticStage = 'mysql-sentinela'
     Invoke-DockerSafe @('exec', '--env', "MYSQL_PWD=$password", $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'rei124ata_test', '-e', "CREATE TABLE rei124ata_test_guard (marker CHAR(64) NOT NULL PRIMARY KEY) ENGINE=InnoDB; INSERT INTO rei124ata_test_guard VALUES ('$marker');") | Out-Null
 
+    $diagnosticStage = 'php-preparacao'
     $appMount = "type=bind,source=$appRoot,target=/repo/app,readonly"
     $testMount = "type=bind,source=$testFile,target=/repo/tests/ata/rei124-ata-service-mysql.test.php,readonly"
     $httpMount = "type=bind,source=$httpFile,target=/repo/tests/ata/rei124-ata-http-mysql.test.php,readonly"
@@ -96,9 +100,13 @@ try {
     if ($phpInfo.Config.Labels.$label -ne $runId -or $phpInfo.HostConfig.NetworkMode -ne "container:$mysqlId" -or @($phpInfo.HostConfig.PortBindings.PSObject.Properties).Count -ne 0 -or -not $phpInfo.HostConfig.ReadonlyRootfs -or @($phpInfo.HostConfig.CapDrop) -notcontains 'ALL') { throw 'Topologia PHP descartavel recusada.' }
     Assert-Rei124AtaMounts $phpInfo
     Invoke-DockerSafe @('start', $phpId) | Out-Null
+    $diagnosticStage = 'php-servico'
     Invoke-DockerSafe @('exec', '--env', 'REI124ATA_TEST_DISPOSABLE=1', '--env', "REI124ATA_TEST_MARKER=$marker", '--env', 'REI124ATA_MYSQL_DSN=mysql:host=127.0.0.1;dbname=rei124ata_test;charset=utf8mb4', '--env', 'REI124ATA_MYSQL_USER=root', '--env', "REI124ATA_MYSQL_PASSWORD=$password", $phpId, 'php', '/repo/tests/ata/rei124-ata-service-mysql.test.php')
+    $diagnosticStage = 'php-http-setup'
     Invoke-DockerSafe @('exec', $phpId, 'php', '/repo/tests/ata/rei124-ata-http-mysql.test.php', 'setup')
+    $diagnosticStage = 'php-http-servidor'
     Invoke-DockerSafe @('exec', '-d', $phpId, 'php', '-d', 'display_errors=0', '-S', '127.0.0.1:18766', '-t', '/repo/public') | Out-Null
+    $diagnosticStage = 'php-http-check'
     Invoke-DockerSafe @('exec', $phpId, 'php', '/repo/tests/ata/rei124-ata-http-mysql.test.php', 'check')
 } finally {
     if ($creationPending) {
