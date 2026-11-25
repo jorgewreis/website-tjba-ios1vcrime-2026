@@ -85,9 +85,10 @@ require getenv('TEST_ENDPOINT');'''
             raise AssertionError(result.stderr)
         return int(result.stderr.rsplit('HTTP:', 1)[-1] or 200), json.loads(result.stdout)
 
-    before = list(db.execute('SELECT * FROM processos_partes ORDER BY id'))
+    tables = ('processos_partes', 'partes', 'processos', 'setores', 'usuario_setor')
+    before = {table: list(db.execute(f'SELECT * FROM {table} ORDER BY 1, 2')) for table in tables}
     for profile, auth, expected in [('SERVIDOR-CARTORIO', False, 401),
-                                    ('ESTUDANTE', True, 403), ('SERVIDOR', True, 403)]:
+                                    ('ESTUDANTE', True, 403), ('CONSULTOR', True, 403), ('SERVIDOR', True, 403)]:
         for process_id in ('P1', 'P3'):
             status, body = invoke({'processo_id': process_id}, profile, auth)
             assert status == expected and 'data' not in body, (status, body)
@@ -107,5 +108,5 @@ require getenv('TEST_ENDPOINT');'''
     assert status == 400 and 'data' not in body, (status, body)
     status, body = invoke({'processo_id': 'P1'}, 'SERVIDOR-CARTORIO', method='POST')
     assert status == 405 and 'data' not in body, (status, body)
-    assert list(db.execute('SELECT * FROM processos_partes ORDER BY id')) == before
+    assert {table: list(db.execute(f'SELECT * FROM {table} ORDER BY 1, 2')) for table in tables} == before
     print('PASS leitura isolada por processo e parte (SQLite; identidade simulada)')

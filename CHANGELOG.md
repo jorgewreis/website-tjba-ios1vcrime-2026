@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0032
+
+**Data:** 2026-11-25 03:31:39 | **Commit:** `4d397369` | **Tipo:** `patch`
+
+- fix: restringe mutacoes diretas por unidade
+
 ## V. 1.88.0031
 
 **Data:** 2026-11-25 03:25:27 | **Commit:** `ec4ffbf3` | **Tipo:** `patch`
@@ -7824,6 +7830,7 @@
 
 
 \n
+
 
 
 

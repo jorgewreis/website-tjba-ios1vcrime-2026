@@ -26,6 +26,10 @@ jobs:
         run: docker build --network none --pull=false --iidfile "$RUNNER_TEMP/rei69-pauta-qa.id" tests/auth/ci-runtime
       - name: Verificar contrato de metadados sem banco
         run: php tests/rei69-pauta/migration-preflight-contract.test.php
+      - name: Verificar leitura e mutações com SQLite sintético
+        run: |
+          python3 -B tests/processos-partes/lista-isolada.test.py
+          python3 -B tests/processos-partes/mutacoes-unidade-isoladas.test.py
       - name: Exercitar vínculos em MySQL descartável
         shell: pwsh
         run: |
