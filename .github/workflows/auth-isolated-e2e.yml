@@ -23,12 +23,21 @@ jobs:
         run: |
           python3 -B tests/auth/rei124-check-composer-inputs.test.py
           python3 -B tests/auth/rei124-check-composer-inputs.py
+          stage="$(mktemp -d "$RUNNER_TEMP/rei124-composer.XXXXXXXX")"
+          trap 'rm -rf -- "$stage"' EXIT
+          mkdir "$stage/.home"
+          touch "$stage/composer.json" "$stage/composer.lock"
           docker run --rm --label fokus.auth-e2e=rei124-ci-prep --network bridge \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/workspace/.home --env COMPOSER_HOME=/workspace/.home/composer \
+            --mount "type=bind,source=$stage,target=/workspace" \
             --mount "type=bind,source=$PWD/composer.json,target=/workspace/composer.json,readonly" \
             --mount "type=bind,source=$PWD/composer.lock,target=/workspace/composer.lock,readonly" \
-            --mount "type=bind,source=$PWD/vendor,target=/workspace/vendor" --workdir /workspace \
+            --workdir /workspace \
             "$(cat "$RUNNER_TEMP/rei124-qa.id")" composer \
             install --no-dev --no-scripts --no-plugins --prefer-dist --no-interaction --no-progress --optimize-autoloader
+          rmdir "$PWD/vendor"
+          mv "$stage/vendor" "$PWD/vendor"
           docker run --rm --label fokus.auth-e2e=rei124-ci-prep --network none \
             --mount "type=bind,source=$PWD/composer.json,target=/workspace/composer.json,readonly" \
             --mount "type=bind,source=$PWD/composer.lock,target=/workspace/composer.lock,readonly" \
