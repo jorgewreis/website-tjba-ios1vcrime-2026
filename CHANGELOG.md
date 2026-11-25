@@ -1,5 +1,41 @@
 # Changelog
 
+## V. 1.88.0053
+
+**Data:** 2026-11-25 05:20:19 | **Commit:** `967dab39` | **Tipo:** `patch`
+
+- test: investiga criacao concorrente de cnj
+
+## V. 1.88.0052
+
+**Data:** 2026-11-25 05:00:54 | **Commit:** `7ae1b507` | **Tipo:** `patch`
+
+- test: alinha collation da fixture
+
+## V. 1.88.0051
+
+**Data:** 2026-11-25 04:57:54 | **Commit:** `84075230` | **Tipo:** `patch`
+
+- ci: detalha consulta de monitoramento
+
+## V. 1.88.0050
+
+**Data:** 2026-11-25 04:54:28 | **Commit:** `67ce5486` | **Tipo:** `patch`
+
+- ci: diagnostica cadastro de monitoramento
+
+## V. 1.88.0049
+
+**Data:** 2026-11-25 04:49:27 | **Commit:** `853a1378` | **Tipo:** `patch`
+
+- merge: reconciliar base de monitoramento
+
+## V. 1.88.0048
+
+**Data:** 2026-11-25 04:47:04 | **Commit:** `959b24b2` | **Tipo:** `patch`
+
+- fix: transaciona cadastro de monitoramento
+
 ## V. 1.88.0047
 
 **Data:** 2026-11-25 04:43:59 | **Commit:** `ea9d739b` | **Tipo:** `patch`
@@ -7920,6 +7956,11 @@
 
 
 \n
+
+
+
+
+
 
 
 
