@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/instituicoes-publicas/search.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -49,6 +52,7 @@ try {
     }
     echo json_encode(['instituicoes' => $instituicoes], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/instituicoes-publicas/search.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao buscar.', 'instituicoes' => []], JSON_UNESCAPED_UNICODE);
 }

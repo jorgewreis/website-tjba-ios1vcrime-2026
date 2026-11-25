@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/cartorio-cejusc/list.php');
 header('Content-Type: application/json; charset=UTF-8');
 $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/config/security.php';
@@ -18,4 +21,5 @@ try {
     $result = (new CejuscRegistrosService(Conection::getInstance()->getConnection()))->list($filters, $perPage, ($page - 1) * $perPage);
     $total = (int) $result['total'];
     echo json_encode(['data' => $result['rows'], 'pagination' => ['total' => $total, 'page' => $page, 'per_page' => $perPage, 'total_pages' => $total > 0 ? (int) ceil($total / $perPage) : 0], 'filters' => $filters], JSON_UNESCAPED_UNICODE);
-} catch (Throwable $e) { http_response_code(500); echo json_encode(['error' => 'Erro ao buscar registros CEJUSC.'], JSON_UNESCAPED_UNICODE); }
+} catch (Throwable $e) {
+    ApiErrorReporter::logUnexpected($e, 'public/api/cartorio-cejusc/list.php'); http_response_code(500); echo json_encode(['error' => 'Erro ao buscar registros CEJUSC.'], JSON_UNESCAPED_UNICODE); }

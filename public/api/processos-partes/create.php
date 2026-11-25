@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/processos-partes/create.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
@@ -78,8 +81,7 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
-    if ($connection->inTransaction()) $connection->rollBack();
-    error_log('processos-partes: falha ao vincular parte.');
+    ApiErrorReporter::logUnexpected($exception, 'public/api/processos-partes/create.php');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao vincular parte ao processo.'], JSON_UNESCAPED_UNICODE);
 }

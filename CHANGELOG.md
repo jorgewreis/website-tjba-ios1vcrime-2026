@@ -1,166 +1,10 @@
 # Changelog
 
-## V. 1.88.0053
-
-**Data:** 2026-11-25 05:20:19 | **Commit:** `967dab39` | **Tipo:** `patch`
-
-- test: investiga criacao concorrente de cnj
-
-## V. 1.88.0052
-
-**Data:** 2026-11-25 05:00:54 | **Commit:** `7ae1b507` | **Tipo:** `patch`
-
-- test: alinha collation da fixture
-
-## V. 1.88.0051
-
-**Data:** 2026-11-25 04:57:54 | **Commit:** `84075230` | **Tipo:** `patch`
-
-- ci: detalha consulta de monitoramento
-
-## V. 1.88.0050
-
-**Data:** 2026-11-25 04:54:28 | **Commit:** `67ce5486` | **Tipo:** `patch`
-
-- ci: diagnostica cadastro de monitoramento
-
-## V. 1.88.0049
-
-**Data:** 2026-11-25 04:49:27 | **Commit:** `853a1378` | **Tipo:** `patch`
-
-- merge: reconciliar base de monitoramento
-
-## V. 1.88.0048
-
-**Data:** 2026-11-25 04:47:04 | **Commit:** `959b24b2` | **Tipo:** `patch`
-
-- fix: transaciona cadastro de monitoramento
-
-## V. 1.88.0047
-
-**Data:** 2026-11-25 04:43:59 | **Commit:** `ea9d739b` | **Tipo:** `patch`
-
-- test: valida retomada parcial de migracao
-
-## V. 1.88.0046
-
-**Data:** 2026-11-25 04:32:42 | **Commit:** `6619340d` | **Tipo:** `patch`
-
-- test: inclui novo entrypoint na recusa
-
-## V. 1.88.0045
-
-**Data:** 2026-11-25 04:30:25 | **Commit:** `b3b3c9f9` | **Tipo:** `patch`
-
-- test: valida acesso com login sintetico
-
-## V. 1.88.0044
-
-**Data:** 2026-11-25 04:22:26 | **Commit:** `255ab8be` | **Tipo:** `patch`
-
-- test: reconhece padding de chave innodb
-
-## V. 1.88.0043
-
-**Data:** 2026-11-25 04:18:52 | **Commit:** `25c28508` | **Tipo:** `patch`
-
-- ci: diagnostica espera no vinculo
-
-## V. 1.88.0042
-
-**Data:** 2026-11-25 04:15:53 | **Commit:** `c77e8482` | **Tipo:** `patch`
-
-- test: verifica revalidacao de vinculo concorrente
-
-## V. 1.88.0041
-
-**Data:** 2026-11-25 04:11:46 | **Commit:** `683c9e61` | **Tipo:** `patch`
-
-- test: exercita alteracao distinta sob concorrencia
-
-## V. 1.88.0040
-
-**Data:** 2026-11-25 04:08:37 | **Commit:** `6fb1cabe` | **Tipo:** `patch`
-
-- ci: distingue atores em teste de concorrencia
-
-## V. 1.88.0039
-
-**Data:** 2026-11-25 04:05:25 | **Commit:** `91f0c777` | **Tipo:** `patch`
-
-- test: verifica horario derivado na pauta
-
-## V. 1.88.0038
-
-**Data:** 2026-11-25 04:01:59 | **Commit:** `dc31205a` | **Tipo:** `patch`
-
-- ci: detalha resultado concorrente da pauta
-
-## V. 1.88.0037
-
-**Data:** 2026-11-25 03:58:36 | **Commit:** `98382202` | **Tipo:** `patch`
-
-- test: corrige bootstrap do ator de pauta
-
-## V. 1.88.0036
-
-**Data:** 2026-11-25 03:55:34 | **Commit:** `d5559b93` | **Tipo:** `patch`
-
-- ci: classifica falhas do ator de pauta
-
-## V. 1.88.0035
-
-**Data:** 2026-11-25 03:52:24 | **Commit:** `0bb80dd7` | **Tipo:** `patch`
-
-- ci: detalha etapas do teste concorrente
-
-## V. 1.88.0034
-
-**Data:** 2026-11-25 03:48:23 | **Commit:** `e539b8e0` | **Tipo:** `patch`
-
-- test: exercita concorrencia de vinculos
-
-## V. 1.88.0033
-
-**Data:** 2026-11-25 03:40:53 | **Commit:** `1f30930d` | **Tipo:** `patch`
-
-- test: valida mutacoes diretas com mysql isolado
-
-## V. 1.88.0032
-
-**Data:** 2026-11-25 03:31:39 | **Commit:** `4d397369` | **Tipo:** `patch`
-
-- fix: restringe mutacoes diretas por unidade
-
-## V. 1.88.0031
-
-**Data:** 2026-11-25 03:25:27 | **Commit:** `ec4ffbf3` | **Tipo:** `patch`
-
-- test: valida migracao em mysql isolado
-
-## V. 1.88.0030
-
-**Data:** 2026-11-25 03:18:33 | **Commit:** `e2429053` | **Tipo:** `patch`
-
-- fix: valida schema referenciado na migracao
-
-## V. 1.88.0029
-
-**Data:** 2026-11-25 03:13:08 | **Commit:** `2705e2b2` | **Tipo:** `patch`
-
-- ci: isola configuracao da fixture de pauta
-
-## V. 1.88.0028
-
-**Data:** 2026-11-25 03:08:53 | **Commit:** `7d82d1c2` | **Tipo:** `patch`
-
-- ci: aprimora diagnostico da prontidao mysql
-
 ## V. 1.88.0027
 
-**Data:** 2026-11-25 03:06:09 | **Commit:** `2a8a30db` | **Tipo:** `patch`
+**Data:** 2026-11-25 05:47:53 | **Commit:** `c401ff04` | **Tipo:** `patch`
 
-- test: prepara validacao isolada de vinculos de pauta
+- test: executa privacidade estudantil no ci
 
 ## V. 1.88.0026
 
@@ -356,6 +200,13 @@
 **Data:** 2026-11-17 11:56:15 | **Commit:** `49415bce` | **Tipo:** `patch`
 
 - fix(REI-120): make monitoring transitions atomic
+
+
+## Alteracao REI-149 - versao pendente
+
+**Data:** 2026-11-20 20:09:06 | **Commit:** `0e742a44` | **Tipo:** `patch`
+
+- fix(REI-149): guard disposable MySQL fixture
 
 ## V. 1.87.0185
 
