@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0030
+
+**Data:** 2026-11-25 07:37:33 | **Commit:** `115dd83d` | **Tipo:** `patch`
+
+- fix(REI-329): restringir scripts de manutencao ao CLI
+
 ## V. 1.88.0029
 
 **Data:** 2026-11-25 07:07:31 | **Commit:** `cadc2cf7` | **Tipo:** `patch`
