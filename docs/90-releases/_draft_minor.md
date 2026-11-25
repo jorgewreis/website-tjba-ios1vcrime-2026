@@ -17,4 +17,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test: corrige bootstrap do ator de pauta** `[98382202]`
 - **ci: detalha resultado concorrente da pauta** `[dc31205a]`
 - **test: verifica horario derivado na pauta** `[91f0c777]`
+- **ci: distingue atores em teste de concorrencia** `[6fb1cabe]`
 
