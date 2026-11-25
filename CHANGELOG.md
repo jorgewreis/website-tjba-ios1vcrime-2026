@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0044
+
+**Data:** 2026-11-25 04:22:26 | **Commit:** `255ab8be` | **Tipo:** `patch`
+
+- test: reconhece padding de chave innodb
+
 ## V. 1.88.0043
 
 **Data:** 2026-11-25 04:18:52 | **Commit:** `25c28508` | **Tipo:** `patch`
@@ -7896,6 +7902,7 @@
 
 
 \n
+
 
 
 

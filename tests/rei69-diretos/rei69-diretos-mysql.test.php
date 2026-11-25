@@ -418,12 +418,24 @@ PHP;
         if ($worker['id']===null && preg_match('/(?:^|\n)CONNECTION:([0-9]+)\n/', $worker['stderr'], $m)) $worker['id']=(int)$m[1];
         return proc_get_status($worker['proc']);
     };
-    $observe = static function (PDO $db, array &$worker, int $blocker, string $table, ?string $indexName=null, ?string $lockData=null) use ($collect, &$failureDetail): void {
+    $verifiedChar30=false;
+    $matchesPrimaryLock=static function (mixed $data, string $expected): bool {
+        if (!is_string($data) || preg_match('/^[A-Z0-9-]{1,30}$/D',$expected)!==1 || strlen($data)<2
+            || $data[0]!=="'" || substr($data,-1)!=="'") return false;
+        $inner=substr($data,1,-1);
+        if (strlen($inner)>30 || preg_match('/^[A-Z0-9-]+ *$/D',$inner)!==1) return false;
+        return rtrim($inner,' ')===$expected;
+    };
+    $observe = static function (PDO $db, array &$worker, int $blocker, string $table, ?string $indexName=null, ?string $lockData=null) use ($collect, &$failureDetail, &$verifiedChar30, $matchesPrimaryLock): void {
         $failureDetail='wait_query';
         $deadline=microtime(true)+5.0;
         $sql="SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.threads r ON r.THREAD_ID=w.REQUESTING_THREAD_ID JOIN performance_schema.threads b ON b.THREAD_ID=w.BLOCKING_THREAD_ID JOIN performance_schema.data_locks l ON l.ENGINE_LOCK_ID=w.REQUESTING_ENGINE_LOCK_ID AND l.ENGINE=w.ENGINE WHERE r.PROCESSLIST_ID=? AND b.PROCESSLIST_ID=? AND l.OBJECT_SCHEMA=DATABASE() AND l.OBJECT_NAME=?";
         $paramsSuffix=[];
-        if ($indexName!==null && $lockData!==null) { $sql.=' AND l.INDEX_NAME=? AND l.LOCK_DATA=?'; $paramsSuffix=[$indexName,$lockData]; }
+        if ($indexName!==null || $lockData!==null) {
+            if (!$verifiedChar30 || $table!=='processos_partes' || $indexName!=='PRIMARY' || $lockData===null) throw new RuntimeException('Chave de teste não validada.');
+            $sql=str_replace('SELECT COUNT(*)','SELECT l.LOCK_DATA',$sql);
+            $sql.=' AND l.INDEX_NAME=?'; $paramsSuffix=[$indexName];
+        }
         $query=$db->prepare($sql);
         do {
             $state=$collect($worker);
@@ -436,7 +448,11 @@ PHP;
                 throw new RuntimeException('Ator terminou antes da espera esperada.');
             }
             $failureDetail=$worker['id']===null ? 'connection_id' : 'wait_query';
-            if ($worker['id']!==null) { $query->execute(array_merge([$worker['id'],$blocker,$table],$paramsSuffix)); if ((int)$query->fetchColumn()>0) return; }
+            if ($worker['id']!==null) {
+                $query->execute(array_merge([$worker['id'],$blocker,$table],$paramsSuffix));
+                if ($indexName===null) { if ((int)$query->fetchColumn()>0) return; }
+                else foreach ($query->fetchAll(PDO::FETCH_COLUMN) as $data) if ($matchesPrimaryLock($data,$lockData)) return;
+            }
             usleep(10000);
         } while (microtime(true)<$deadline);
         if ($worker['id']!==null) {
@@ -455,7 +471,7 @@ PHP;
                     $actual=$edge['LOCK_DATA'] ?? null;
                     $failureDetail=$actual===null ? 'wait_key_null' : 'wait_key_other';
                     if (is_string($actual) && strlen($actual)>=2 && $actual[0]==="'" && substr($actual,-1)==="'"
-                        && rtrim(substr($actual,1,-1),' ')===trim($lockData,"'")) $failureDetail='wait_key_padded';
+                        && rtrim(substr($actual,1,-1),' ')===$lockData) $failureDetail='wait_key_padded';
                     break;
                 }
             }
@@ -626,6 +642,19 @@ PHP;
     // No instrumented source: A owns the link row, B performs its initial
     // consistent read and process lock, then waits on that exact PRIMARY record.
     $failureStage='c6_controls'; $failureDetail='general';
+    $column=$pdo->query("SELECT DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,CHARACTER_SET_NAME,COLLATION_NAME,COLUMN_KEY FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='processos_partes' AND COLUMN_NAME='id'")->fetchAll(PDO::FETCH_ASSOC);
+    $primary=$pdo->query("SELECT COLUMN_NAME,SEQ_IN_INDEX,SUB_PART FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='processos_partes' AND INDEX_NAME='PRIMARY' ORDER BY SEQ_IN_INDEX")->fetchAll(PDO::FETCH_ASSOC);
+    $assert(count($column)===1 && strtolower((string)$column[0]['DATA_TYPE'])==='char' && (int)$column[0]['CHARACTER_MAXIMUM_LENGTH']===30
+        && strtolower((string)$column[0]['CHARACTER_SET_NAME'])==='utf8mb4' && strtolower((string)$column[0]['COLLATION_NAME'])==='utf8mb4_unicode_ci'
+        && strtoupper((string)$column[0]['COLUMN_KEY'])==='PRI' && count($primary)===1 && $primary[0]['COLUMN_NAME']==='id'
+        && (int)$primary[0]['SEQ_IN_INDEX']===1 && $primary[0]['SUB_PART']===null, 'Metadados da chave sintética divergentes.');
+    $verifiedChar30=true;
+    $assert($matchesPrimaryLock("'BR-U-MOVE                     '",'BR-U-MOVE')
+        && $matchesPrimaryLock("'BR-U-MOVE'",'BR-U-MOVE')
+        && !$matchesPrimaryLock("'BR-U-MOVEX                    '",'BR-U-MOVE')
+        && !$matchesPrimaryLock("' BR-U-MOVE'",'BR-U-MOVE')
+        && !$matchesPrimaryLock("'BR-U-MOVE X'",'BR-U-MOVE')
+        && !$matchesPrimaryLock(null,'BR-U-MOVE'), 'Comparação da chave sintética inválida.');
     $pdo->exec('SET SESSION TRANSACTION ISOLATION LEVEL REPEATABLE READ');
     $assert($pdo->query('SELECT @@transaction_isolation')->fetchColumn()==='REPEATABLE-READ', 'Isolamento de coordenação inesperado.');
     $ids=['BR-CTRL-U','BR-CTRL-D','BR-U-MOVE','BR-U-DELETE','BR-D-MOVE','BR-D-DELETE'];
@@ -646,7 +675,7 @@ PHP;
         $assert($lock->fetchColumn()==='PRC-1', 'Alvo sintético não corresponde ao processo inicial.');
         $failureStage='c6_wait'; $failureDetail='general';
         $racer=$spawn($kind,$link);
-        $observe($observer,$racer,$parentId,'processos_partes','PRIMARY',"'".$link."'");
+        $observe($observer,$racer,$parentId,'processos_partes','PRIMARY',$link);
         // Expected data are constructed before COMMIT, never sampled during the race.
         $expectedRace=$beforeRace;
         $row=$rowIndex($expectedRace['processos_partes']['rows'],'id',$link);
