@@ -269,6 +269,7 @@ final class PessoasService
             throw new RuntimeException('Não foi possível iniciar a alteração do documento.');
         }
         try {
+            ParteDocumentoLock::requireTransactionalTables($this->connection);
             $sql = 'SELECT `id` FROM `partes` WHERE `id` = :id';
             if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
                 $sql .= ' FOR UPDATE';

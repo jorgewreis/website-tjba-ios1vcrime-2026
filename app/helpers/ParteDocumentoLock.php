@@ -24,6 +24,66 @@ final class ParteDocumentoLock
         self::$unsafeConnections[$connection] = true;
     }
 
+    /** Confere os motores sob metadata locks retidos até o encerramento da transação. */
+    /** @param list<string> $additionalTables Tabelas efetivamente usadas pelos repositórios. */
+    public static function requireTransactionalTables(PDO $connection, array $additionalTables = []): void
+    {
+        $tables = array_values(array_unique(array_merge(['partes', 'partes_documentos'], $additionalTables)));
+        foreach ($tables as $table) {
+            if (!is_string($table) || preg_match('/\A[a-zA-Z0-9_]+\z/D', $table) !== 1) {
+                throw new InvalidArgumentException('Nome de tabela documental inválido.');
+            }
+        }
+        if (self::isConnectionUnsafe($connection) || !$connection->inTransaction()) {
+            throw new LogicException('Alteração de documentos requer transação disponível.');
+        }
+        $driver = $connection->getAttribute(PDO::ATTR_DRIVER_NAME);
+        if ($driver === 'sqlite') return;
+        if ($driver !== 'mysql') throw new RuntimeException('Banco sem suporte transacional para documentos.');
+        $timeoutStatement = $connection->query('SELECT @@SESSION.lock_wait_timeout');
+        if ($timeoutStatement === false) throw new RuntimeException('Timeout de metadados indisponível.');
+        $timeout = $timeoutStatement->fetchColumn();
+        $timeoutStatement->closeCursor();
+        if (!is_numeric($timeout) || (int) $timeout < 1) throw new RuntimeException('Timeout de metadados inválido.');
+        try {
+            if ($connection->exec('SET SESSION lock_wait_timeout = ' . min(2, (int) $timeout)) === false) {
+                throw new RuntimeException('Não foi possível limitar timeout de metadados.');
+            }
+        } catch (Throwable $error) {
+            self::markConnectionUnsafe($connection);
+            throw $error;
+        }
+        try {
+            foreach ($tables as $table) {
+                $read = $connection->query('SELECT 1 FROM `' . $table . '` LIMIT 0');
+                if ($read === false) throw new RuntimeException('Tabela documental indisponível.');
+                $read->closeCursor();
+            }
+            $caseMode = (string) $connection->query('SELECT @@lower_case_table_names')->fetchColumn();
+            if (!in_array($caseMode, ['0', '1', '2'], true)) throw new RuntimeException('Política de nomes de tabelas indisponível.');
+            $predicate = $caseMode === '0' ? 'BINARY TABLE_NAME = BINARY ?' : 'BINARY LOWER(TABLE_NAME) = BINARY LOWER(?)';
+            $schema = $caseMode === '0' ? 'BINARY TABLE_SCHEMA = BINARY DATABASE()' : 'BINARY LOWER(TABLE_SCHEMA) = BINARY LOWER(DATABASE())';
+            $query = $connection->prepare('SELECT ENGINE FROM information_schema.TABLES WHERE ' . $schema . ' AND ' . $predicate . ' AND TABLE_TYPE = ?');
+            foreach ($tables as $table) {
+                if (!$query->execute([$table, 'BASE TABLE'])) throw new RuntimeException('Motor documental indisponível.');
+                $engine = $query->fetchColumn();
+                $query->closeCursor();
+                if (!is_string($engine) || strcasecmp($engine, 'InnoDB') !== 0) {
+                    throw new RuntimeException('Alteração documental exige tabelas InnoDB.');
+                }
+            }
+        } finally {
+            try {
+                if ($connection->exec('SET SESSION lock_wait_timeout = ' . (int) $timeout) === false) {
+                    throw new RuntimeException('Não foi possível restaurar timeout de metadados.');
+                }
+            } catch (Throwable $error) {
+                self::markConnectionUnsafe($connection);
+                throw $error;
+            }
+        }
+    }
+
     public static function commit(PDO $connection, string $operation): void
     {
         try {

@@ -109,6 +109,7 @@ final class PartesDocumentosRepository
         ParteDocumentoHelper::validarNumero($tipo, $numero);
 
         return ParteDocumentoLock::run($this->connection, $tipo, $numero, function () use ($row, $parteId, $tipo, $numero): string {
+            ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table]);
             $existenteOutraParte = $this->findParteIdByTipoNumero($tipo, $numero);
             if ($existenteOutraParte !== null && $existenteOutraParte !== $parteId) {
                 throw new InvalidArgumentException('Já existe outra pessoa cadastrada com este documento.');
@@ -149,6 +150,7 @@ final class PartesDocumentosRepository
         $number = ParteDocumentoHelper::normalizarNumero($type, (string) ($row['numero'] ?? ''));
 
         return ParteDocumentoLock::run($this->connection, $type, $number, function () use ($id, $type, $number): bool {
+            ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table]);
             $current = $this->findById($id);
             if ($current === null) {
                 return false;

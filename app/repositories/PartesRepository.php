@@ -368,6 +368,7 @@ final class PartesRepository
                 throw new RuntimeException('Não foi possível iniciar o cadastro da parte.');
             }
             try {
+                ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table]);
                 if ($cpf !== '' && $this->findByCpf($cpf) !== null) {
                     throw new InvalidArgumentException('Já existe pessoa cadastrada com este CPF.');
                 }
@@ -431,6 +432,7 @@ final class PartesRepository
         if (!$this->connection->inTransaction()) {
             throw new LogicException('A sincronização do CPF legado exige transação com a parte bloqueada.');
         }
+        ParteDocumentoLock::requireTransactionalTables($this->connection, [$this->table]);
         $cpfNorm = $cpf !== null && trim($cpf) !== '' ? $this->normalizeCpf($cpf) : null;
         $selectCurrentCpf = sprintf('SELECT `cpf` FROM `%s` WHERE `id` = :id LIMIT 1', $this->table);
         if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {

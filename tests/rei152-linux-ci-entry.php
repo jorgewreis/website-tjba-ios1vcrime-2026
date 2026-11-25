@@ -18,3 +18,4 @@ if ($tables !== ['_sandbox_proof'] || count($tokens) !== 1 || !hash_equals($mark
 }
 $db = null;
 require __DIR__ . '/rei152-documentos-mysql.test.php';
+require __DIR__ . '/rei152-gate-alternate-mysql.test.php';
