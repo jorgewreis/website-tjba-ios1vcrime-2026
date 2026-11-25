@@ -1,5 +1,11 @@
 {
     "require": {
+        "ext-curl": "*",
+        "ext-iconv": "*",
+        "ext-mbstring": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-simplexml": "*",
         "dompdf/dompdf": "^3.1.6",
         "phpmailer/phpmailer": "^6.9"
     }

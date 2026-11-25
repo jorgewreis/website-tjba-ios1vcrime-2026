@@ -27,7 +27,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-if (!Security::isAuthenticated()) {
+// During a non-atomic rollout the endpoint can arrive before the shared
+// Security method. Fail closed without silently renewing inactivity.
+if (!method_exists(Security::class, 'isAuthenticatedWithoutActivity')) {
+    http_response_code(503);
+    echo json_encode(['success' => false, 'error' => 'Serviço temporariamente indisponível.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+if (!Security::isAuthenticatedWithoutActivity()) {
     http_response_code(401);
     echo json_encode(['success' => false, 'error' => 'Sessão expirada. Faça login novamente.'], JSON_UNESCAPED_UNICODE);
     exit;
@@ -65,8 +72,21 @@ try {
         exit;
     }
 
-    $payload = json_decode(file_get_contents('php://input') ?: '{}', true);
+    // The student dashboard can show two independently paginated groups of 15.
+    // Keep headroom while bounding both the request and the derived SQL table.
+    $body = file_get_contents('php://input', false, null, 0, 16385);
+    if ($body === false || strlen($body) > 16384) {
+        http_response_code(413);
+        echo json_encode(['success' => false, 'error' => 'Solicitação muito grande.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $payload = json_decode($body ?: '{}', true);
     $idsRaw = isset($payload['pautas']) && is_array($payload['pautas']) ? $payload['pautas'] : [];
+    if (count($idsRaw) > 60) {
+        http_response_code(413);
+        echo json_encode(['success' => false, 'error' => 'Quantidade de pautas excedida.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     $ids = [];
     foreach ($idsRaw as $id) {
         $v = trim((string) $id);
@@ -75,16 +95,33 @@ try {
         }
     }
     $ids = array_keys($ids);
-    if (count($ids) === 0) {
+    $observadas = [];
+    $token = is_string($payload['observacao'] ?? null) ? $payload['observacao'] : '';
+    if ($token !== '') {
+        $entry = preg_match('/^[a-f0-9]{32}$/', $token) ? ($_SESSION['rei161_observacoes'][$token] ?? null) : null;
+        if (!is_array($entry) || ($entry['usuario'] ?? null) !== $usuarioId || !is_int($entry['created'] ?? null)
+            || $entry['created'] < time() - 3600 || $entry['created'] > time() || !is_array($entry['ids'] ?? null)
+            || count($entry['ids']) === 0 || count($entry['ids']) > 15) {
+            http_response_code(409);
+            echo json_encode(['success' => false, 'error' => 'Atualize a página para verificar a lista.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        foreach ($entry['ids'] as $id) {
+            if (!is_string($id) || !preg_match('/^[A-Za-z0-9_-]{1,80}$/', $id)) throw new RuntimeException('Observação inválida.');
+            $observadas[$id] = true;
+        }
+    }
+    $consultaIds = array_values(array_unique(array_merge($ids, array_keys($observadas))));
+    if (count($consultaIds) === 0) {
         echo json_encode(['success' => true, 'items' => []], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
     $pdo = Conection::getInstance()->getConnection();
-    $marks = implode(',', array_fill(0, count($ids), '?'));
+    $consultas = implode(' UNION ALL ', array_fill(0, count($consultaIds), 'SELECT ? AS consulta_id'));
     $codigosPrioridadeBloqueio = PrioridadesProcessuaisCatalog::codigosBloqueantesInscricaoEstudante();
     $marksPrioridade = implode(',', array_fill(0, count($codigosPrioridadeBloqueio), '?'));
-    $sql = "SELECT a.`id_pauta`, a.`status`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
+    $sql = "SELECT req.`consulta_id`, a.`id_pauta`, a.`status`, a.`data_audiencia`, a.`hora_audiencia`, a.`data_hora_inicio_efetivo`, a.`data_hora_fim_efetivo`, a.`duracao_estimada_minutos`,
                    " . SalaAudienciasAtaSigiloHelper::sqlProcessoSigilosoEfetivo('p', 'a') . " AS `processo_sigiloso`,
                    CASE WHEN i.`id` IS NOT NULL THEN 1 ELSE 0 END AS `ja_inscrito`,
                    (SELECT COUNT(*) FROM `sala_audiencias_pauta_parte` pp WHERE pp.`pauta` = a.`id_pauta` AND pp.`ativo` = 1 AND pp.`maioridade` = 'menor') AS `qtd_menor`,
@@ -97,7 +134,8 @@ try {
             FROM `sala_audiencias_pauta` a
             LEFT JOIN `processos` p ON p.`id` = a.`processo`
             LEFT JOIN `sala_audiencias_estudante_inscricao` i ON i.`pauta` = a.`id_pauta` AND i.`usuario` = ?
-            WHERE a.`ativo` = 1 AND a.`id_pauta` IN ($marks)";
+            INNER JOIN ($consultas) req ON a.`id_pauta` = req.`consulta_id`
+            WHERE a.`ativo` = 1";
     $st = $pdo->prepare($sql);
     if ($st === false) {
         throw new RuntimeException('Falha ao preparar consulta.');
@@ -107,7 +145,7 @@ try {
     }
     $indiceUsuario = count($codigosPrioridadeBloqueio) + 1;
     $st->bindValue($indiceUsuario, $usuarioId);
-    foreach ($ids as $i => $id) {
+    foreach ($consultaIds as $i => $id) {
         $st->bindValue($indiceUsuario + $i + 1, $id);
     }
     if (!$st->execute()) {
@@ -119,34 +157,39 @@ try {
     }
 
     $items = [];
+    $solicitadas = array_fill_keys($ids, true);
+    $observacaoAlterada = false;
     $agoraStatusTs = time();
     foreach ($rows as $r) {
-        $id = trim((string) ($r['id_pauta'] ?? ''));
+        $id = trim((string) ($r['consulta_id'] ?? ''));
         if ($id === '') {
             continue;
         }
-        $status = trim((string) ($r['status'] ?? ''));
-        if ($status === 'agendada') {
-            $status = 'designada';
-        } elseif ($status === 'adiada') {
-            $status = 'redesignada';
-        } elseif ($status === 'encerrada') {
-            $status = 'finalizada';
+        if (isset($observadas[$id]) && (int) ($r['ja_inscrito'] ?? 0) === 1 && !SalaAudienciasEstudantePrivacidade::indisponivel($r)) {
+            $observacaoAlterada = true;
         }
-        $horarioDesignadoTs = strtotime(trim((string) ($r['data_audiencia'] ?? '') . ' ' . (string) ($r['hora_audiencia'] ?? '')));
-        if ($status === 'designada' && $horarioDesignadoTs !== false && $horarioDesignadoTs < $agoraStatusTs) {
-            $status = 'atrasada';
-        }
+        // IDs kept only in the session must never appear in the response.
+        if (!isset($solicitadas[$id])) continue;
+        $status = SalaAudienciasAtaService::normalizarStatusPauta(
+            (string) ($r['status'] ?? ''),
+            (string) ($r['data_audiencia'] ?? ''),
+            (string) ($r['hora_audiencia'] ?? ''),
+            $agoraStatusTs
+        );
         $totalIns = (int) ($r['total_inscritos_pauta'] ?? 0);
         $jaInscrito = (int) ($r['ja_inscrito'] ?? 0) === 1;
         $sigiloso = (int) ($r['processo_sigiloso'] ?? 0) !== 0;
         $envolveMenor = (int) ($r['qtd_menor'] ?? 0) > 0;
         $temPrioridadeBloqueio = (int) ($r['tem_prioridade_bloqueio'] ?? 0) !== 0;
-        if (SalaAudienciasEstudantePrivacidade::indisponivel($r)) {
+        $vagasEsgotadas = $totalIns >= SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
+        // Elegibilidade controla apenas novas inscrições. Quem já se inscreveu
+        // continua vendo a pauta e o acesso correspondente em qualquer status.
+        $statusPermiteInscricao = $status === 'designada';
+        $dataPermiteInscricao = SalaAudienciasAtaService::dataPermiteInscricaoEstudante((string) ($r['data_audiencia'] ?? ''));
+        if (SalaAudienciasEstudantePrivacidade::indisponivel($r) || (!$jaInscrito && ($vagasEsgotadas || !$statusPermiteInscricao || !$dataPermiteInscricao))) {
             $items[$id] = SalaAudienciasEstudantePrivacidade::respostaIndisponivel($id);
             continue;
         }
-        $vagasEsgotadas = $totalIns >= SalaAudienciasAtaService::MAX_ESTUDANTES_INSCRITOS_POR_AUDIENCIA;
         $podeInscrever = !$jaInscrito
             && !$vagasEsgotadas
             && !$sigiloso
@@ -166,7 +209,7 @@ try {
             'pode_inscrever' => $podeInscrever,
         ];
     }
-    echo json_encode(['success' => true, 'items' => (object) $items, 'completo' => true, 'consultados' => $ids], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['success' => true, 'items' => (object) $items, 'completo' => true, 'consultados' => $ids, 'observacao_alterada' => $observacaoAlterada], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     ApiErrorReporter::logUnexpected($e, 'public/api/sala-audiencias-pauta/status-bulk.php');
     http_response_code(500);
