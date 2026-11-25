@@ -36,6 +36,36 @@ final class Rei152RollbackFaultPdo extends PDO
     }
 }
 
+/** Falhas sintéticas sem alterar o comportamento do servidor MySQL. */
+final class Rei152CommitReleaseFaultPdo extends PDO
+{
+    public bool $failRelease = false;
+    public bool $throwAfterCommit = false;
+    public bool $commitSucceeded = false;
+    public bool $releaseFaultInjected = false;
+
+    public function prepare(string $query, array $options = []): PDOStatement|false
+    {
+        if ($this->failRelease && $query === 'SELECT RELEASE_LOCK(?)') {
+            $this->failRelease = false;
+            $this->releaseFaultInjected = true;
+            throw new RuntimeException('falha de liberação sintética');
+        }
+        return parent::prepare($query, $options);
+    }
+
+    public function commit(): bool
+    {
+        $result = parent::commit();
+        $this->commitSucceeded = $result;
+        if ($result && $this->throwAfterCommit) {
+            $this->throwAfterCommit = false;
+            throw new RuntimeException('resposta de commit sinteticamente perdida');
+        }
+        return $result;
+    }
+}
+
 /** Pausa determinística entre a leitura do snapshot e a aquisição do primeiro lock. */
 final class Rei152SnapshotPdo extends PDO
 {
@@ -221,6 +251,26 @@ if (!$service->deleteDocumento($rgForCpfHolder)
     || (int)$pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE parte_id='PRT-FAIL-CASE' AND tipo='RG'")->fetchColumn() !== 0) {
     throw new RuntimeException('Exclusão de RG em pessoa com CPF legado pontuado não preservou o CPF legado.');
 }
+$pdo->exec("CREATE TRIGGER rei152_delete_cpf_doc_fail BEFORE UPDATE ON partes FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT='rei152 falha exclusao cpf'");
+try {
+    $service->deleteDocumento($retryId);
+    throw new RuntimeException('Falha de sincronização deveria reverter exclusão do CPF.');
+} catch (PDOException $error) {
+    if (!str_contains($error->getMessage(), 'rei152 falha exclusao cpf')) throw $error;
+} finally {
+    $pdo->exec('DROP TRIGGER rei152_delete_cpf_doc_fail');
+}
+if ($pdo->query("SELECT cpf FROM partes WHERE id='PRT-FAIL-CASE'")->fetchColumn() !== '123.456.789-09'
+    || (int) $pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE id='$retryId' AND tipo='CPF' AND numero='12345678909'")->fetchColumn() !== 1) {
+    throw new RuntimeException('Falha na exclusão do CPF não preservou ambas as representações.');
+}
+if (!$service->deleteDocumento($retryId) || $service->deleteDocumento($retryId)
+    || $pdo->query("SELECT cpf FROM partes WHERE id='PRT-FAIL-CASE'")->fetchColumn() !== null
+    || (int) $pdo->query("SELECT COUNT(*) FROM partes_documentos WHERE id='$retryId'")->fetchColumn() !== 0) {
+    throw new RuntimeException('Retry ou repetição da exclusão de CPF deixou representações inconsistentes.');
+}
+$retryId = $service->addDocumento('PRT-FAIL-CASE', ['tipo' => 'CPF', 'numero' => '12345678909']);
+if ($retryId === '') throw new RuntimeException('Fixture não restaurou CPF para os cenários seguintes.');
 $pdo->exec("INSERT INTO partes (id, cpf, nome_completo) VALUES ('PRT-DIVERGENT', NULL, 'Pessoa sintética')");
 $pdo->exec("INSERT INTO partes_documentos (id, parte_id, tipo, numero) VALUES ('DOC-DIVERGENT-CPF', 'PRT-DIVERGENT', 'CPF', '70000000001')");
 $divergentRg = $service->addDocumento('PRT-DIVERGENT', ['tipo' => 'RG', 'numero' => 'RG-DIVERGENT']);
@@ -803,6 +853,84 @@ foreach (['false', 'throw'] as $rollbackFault) {
 foreach (['false', 'throw'] as $rollbackFault) {
     $verifyPublicGuideRollbackFailure('update', $rollbackFault);
     echo "PASS REI-152: Guias::atualizarGuia conserva lock após rollBack() {$rollbackFault}.\n";
+}
+
+$verifyCommitRelease = static function (string $operation, string $fault) use ($dsn, $user, $password, $pdo, $database, $makeFreshCpf): void {
+    $cpf = $makeFreshCpf();
+    $guideId = 'REI152-' . strtoupper($operation) . '-' . strtoupper($fault);
+    $lockName = 'rei250_' . substr(hash('sha256', $database . ':' . $cpf), 0, 52);
+    $faultPdo = new Rei152CommitReleaseFaultPdo($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+    rei152AssertCiConnection($faultPdo);
+    $faultConnectionId = (int) $faultPdo->query('SELECT CONNECTION_ID()')->fetchColumn();
+    $ownerQuery = $pdo->prepare('SELECT IS_USED_LOCK(?)');
+    try {
+        if ($operation === 'update') {
+            $pdo->prepare("INSERT INTO guia (id_guia,tipo,processo,parte_id,etapa,status,regime,data_fato,dias_multa,observacoes,data_cadastro,data_atualizacao,user_cadastro) VALUES (?, 'Teste inicial', '', NULL, 'Teste', 'Não iniciada', '', NULL, NULL, NULL, NOW(), NOW(), 'fixture')")->execute([$guideId]);
+        }
+        $faultPdo->failRelease = $fault === 'release';
+        $faultPdo->throwAfterCommit = $fault === 'commit';
+        $guideData = [
+            'tipo' => 'Teste sintético REI-152', 'processo' => '',
+            'reu' => 'Pessoa sintética commit ' . $operation . ' ' . $fault,
+            'cpf' => $cpf, 'etapa' => 'Teste', 'status' => 'Não iniciada',
+            'dias_multa' => '', 'user_cadastro' => 'rei152-fixture',
+        ];
+        if ($operation === 'update') $guideData['id_guia'] = $guideId;
+        $service = new Guias($faultPdo);
+        $result = $operation === 'create' ? $service->cadastrarGuia($guideData) : $service->atualizarGuia($guideData);
+        $reference = $result['id_referencia'] ?? null;
+        $expectedState = $fault === 'release' ? 'confirmada' : 'nao_confirmada';
+        if (!$faultPdo->commitSucceeded || $faultPdo->inTransaction() || !ParteDocumentoLock::isConnectionUnsafe($faultPdo)
+            || ($result['ok'] ?? null) !== false || ($result['resultado'] ?? null) !== 'verificacao_necessaria'
+            || ($result['estado_gravacao'] ?? null) !== $expectedState || !is_string($reference) || $reference === ''
+            || ($operation === 'create' && ($result['id'] ?? null) !== null)
+            || ($operation === 'update' && ($reference !== $guideId || ($result['id'] ?? null) !== $guideId))
+            || !str_contains((string) ($result['message'] ?? ''), 'Consulte a guia antes de tentar novamente')) {
+            throw new RuntimeException('Contrato público de commit/liberação incertos divergiu.');
+        }
+        if (($fault === 'release' && !$faultPdo->releaseFaultInjected) || ($fault === 'commit' && $faultPdo->throwAfterCommit)) {
+            throw new RuntimeException('Falha de fixture esperada não foi injetada.');
+        }
+        $ownerQuery->execute([$lockName]);
+        $owner = $ownerQuery->fetchColumn();
+        if (($fault === 'release' && (int) $owner !== $faultConnectionId)
+            || ($fault === 'commit' && $owner !== null && $owner !== false)) {
+            throw new RuntimeException('Posse do lock após commit/liberação divergiu.');
+        }
+        $persisted = $pdo->prepare('SELECT COUNT(*) FROM guia WHERE id_guia=? AND parte_id IN (SELECT id FROM partes WHERE cpf=?)');
+        $persisted->execute([$reference, $cpf]);
+        if ((int) $persisted->fetchColumn() !== 1) {
+            throw new RuntimeException('Observador não encontrou a guia confirmada pelo MySQL sintético.');
+        }
+        // No cenário de commit, o servidor confirmou, mas a aplicação não recebeu a confirmação.
+        echo "PASS REI-152: {$operation} preserva referência após falha sintética de {$fault}.\n";
+    } finally {
+        $faultPdo->failRelease = false;
+        try {
+            if ($faultPdo->inTransaction() && !$faultPdo->rollBack()) {
+                throw new RuntimeException('Rollback da fixture retornou false.');
+            }
+            if ($faultPdo->inTransaction()) {
+                throw new RuntimeException('Transação da fixture permanece ativa após rollback.');
+            }
+        } catch (Throwable $cleanupError) {
+            $service = null;
+            $faultPdo = null;
+            throw new RuntimeException('Cleanup inseguro: conexão fechada sem liberar lock manualmente.', 0, $cleanupError);
+        }
+        $ownerQuery->execute([$lockName]);
+        $owner = $ownerQuery->fetchColumn();
+        if ($faultConnectionId > 0 && $owner !== null && $owner !== false && (int) $owner === $faultConnectionId) {
+            $release = $faultPdo->prepare('SELECT RELEASE_LOCK(?)');
+            $release->execute([$lockName]);
+            if ((int) $release->fetchColumn() !== 1) throw new RuntimeException('Falha ao liberar lock sintético após teste.');
+        }
+        $service = null;
+        $faultPdo = null;
+    }
+};
+foreach (['create', 'update'] as $operation) {
+    foreach (['release', 'commit'] as $fault) $verifyCommitRelease($operation, $fault);
 }
 
 $rg = 'REI152-RG-001';
