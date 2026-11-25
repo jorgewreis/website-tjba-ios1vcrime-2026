@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0046
+
+**Data:** 2026-11-25 04:32:42 | **Commit:** `6619340d` | **Tipo:** `patch`
+
+- test: inclui novo entrypoint na recusa
+
 ## V. 1.88.0045
 
 **Data:** 2026-11-25 04:30:25 | **Commit:** `b3b3c9f9` | **Tipo:** `patch`
@@ -7908,6 +7914,7 @@
 
 
 \n
+
 
 
 
