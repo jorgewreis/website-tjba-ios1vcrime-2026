@@ -356,5 +356,134 @@ if ($service->create($failurePayload) !== $retryAfterRollbackId
     throw new RuntimeException('Retry após rollback não foi idempotente ou criou registros duplicados.');
 }
 
+// Duas conexões independentes exercitam somente a persistência. A operação de
+// edição é SQL sintético: não demonstra autorização nem o endpoint de edição.
+$raceCode = <<<'PHP'
+require getenv('REI88_TEST_REPO_ROOT') . '/app/services/CartasExpedidasService.php';
+$db = new PDO(getenv('REI88_MYSQL_DSN'), getenv('REI88_MYSQL_USER'), getenv('REI88_MYSQL_PASSWORD'), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
+$guard = $db->query('SELECT marker FROM rei88_test_guard LIMIT 1')->fetchColumn();
+if ($db->query('SELECT DATABASE()')->fetchColumn() !== 'rei88_test' || !is_string($guard) || !hash_equals((string) getenv('REI88_TEST_DISPOSABLE_MARKER'), $guard)) { throw new RuntimeException('Worker recusado: sentinela ou banco divergentes.'); }
+$id = (int) $db->query('SELECT CONNECTION_ID()')->fetchColumn();
+echo "READY $id\n"; flush();
+if (trim((string) fgets(STDIN)) !== 'GO') { throw new RuntimeException('Barreira inicial inválida.'); }
+$db->beginTransaction();
+if (getenv('REI88_RACE_ROLE') === 'editor') {
+    $target = getenv('REI88_RACE_TARGET');
+    if ($target !== '0' && $target !== '1') { throw new RuntimeException('Valor sintético inválido.'); }
+    $update = $db->prepare('UPDATE processos SET sigiloso = ? WHERE id = ?');
+    $update->execute([(int) $target, 'PRC-EXPLICIT']);
+    if ($update->rowCount() !== 1) { throw new RuntimeException('Edição sintética não alterou o processo.'); }
+} elseif (getenv('REI88_RACE_ROLE') === 'carta') {
+    $payload = json_decode(base64_decode(getenv('REI88_RACE_PAYLOAD'), true), true, 512, JSON_THROW_ON_ERROR);
+    $carta = (new CartasExpedidasService($db))->create($payload);
+} else { throw new RuntimeException('Papel inválido.'); }
+echo "LOCKED\n"; flush();
+if (trim((string) fgets(STDIN)) !== 'COMMIT') { throw new RuntimeException('Barreira de commit inválida.'); }
+$db->commit();
+echo 'DONE ' . ($carta ?? '-') . "\n"; flush();
+PHP;
+$racePayload = array_merge($base, ['numero_processo' => '0000004-24.2020.8.05.0001', 'nivel_sigilo' => 1]);
+$raceEnv = [
+    'REI88_TEST_REPO_ROOT' => $repoRoot, 'REI88_MYSQL_DSN' => $dsn,
+    'REI88_MYSQL_USER' => $user, 'REI88_MYSQL_PASSWORD' => $password,
+    'REI88_TEST_DISPOSABLE_MARKER' => $expectedMarker,
+    'REI88_RACE_PAYLOAD' => base64_encode(json_encode($racePayload, JSON_THROW_ON_ERROR)),
+];
+$readLine = static function (array &$workers, int $index): string {
+    $deadline = hrtime(true) + 20_000_000_000;
+    while (hrtime(true) < $deadline) {
+        $newline = strpos($workers[$index]['stdout'], "\n");
+        if ($newline !== false) {
+            $line = substr($workers[$index]['stdout'], 0, $newline);
+            $workers[$index]['stdout'] = substr($workers[$index]['stdout'], $newline + 1);
+            return trim($line);
+        }
+        $read = [];
+        foreach ($workers as $worker) foreach ([1, 2] as $fd) {
+            if (is_resource($worker['pipes'][$fd]) && !feof($worker['pipes'][$fd])) { $read[] = $worker['pipes'][$fd]; }
+        }
+        if (!$read) { throw new RuntimeException('Workers encerraram antes da barreira.'); }
+        $write = null; $except = null;
+        if (stream_select($read, $write, $except, 0, 200000) === false) { throw new RuntimeException('Erro ao observar workers.'); }
+        foreach ($workers as &$worker) foreach ([1 => 'stdout', 2 => 'stderr'] as $fd => $key) {
+            if (!in_array($worker['pipes'][$fd], $read, true)) { continue; }
+            $chunk = fread($worker['pipes'][$fd], 8192);
+            if ($chunk === false) { throw new RuntimeException('Erro ao ler worker.'); }
+            $worker[$key] .= $chunk;
+            if (strlen($worker[$key]) > 65536) { throw new RuntimeException('Saída excessiva de worker.'); }
+        }
+        unset($worker);
+    }
+    throw new RuntimeException('Timeout aguardando linha completa de worker.');
+};
+foreach ([0, 1] as $targetSigilo) foreach ([['editor', 'carta'], ['carta', 'editor']] as [$firstRole, $secondRole]) {
+    $initialSigilo = 1 - $targetSigilo;
+    $pdo->exec("UPDATE processos SET sigiloso = $initialSigilo WHERE id = 'PRC-EXPLICIT'");
+    $beforeLetters = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn();
+    $beforeSubtasks = (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn();
+    $workers = [];
+    try {
+        foreach ([$firstRole, $secondRole] as $role) {
+            $pipes = [];
+            $proc = proc_open([PHP_BINARY, '-r', $raceCode], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, null, $raceEnv + ['REI88_RACE_ROLE' => $role, 'REI88_RACE_TARGET' => (string) $targetSigilo]);
+            if (!is_resource($proc)) { throw new RuntimeException('Falha ao iniciar worker concorrente.'); }
+            stream_set_blocking($pipes[1], false); stream_set_blocking($pipes[2], false);
+            $workers[] = ['proc' => $proc, 'pipes' => $pipes, 'stdout' => '', 'stderr' => ''];
+            $ready = $readLine($workers, count($workers) - 1);
+            if (!preg_match('/^READY ([0-9]+)$/D', $ready, $matches)) { throw new RuntimeException('Worker sem identidade de conexão.'); }
+            $workers[count($workers) - 1]['connection'] = (int) $matches[1];
+        }
+        if ($workers[0]['connection'] === $workers[1]['connection']) { throw new RuntimeException('Conexões não são independentes.'); }
+        fwrite($workers[0]['pipes'][0], "GO\n"); fflush($workers[0]['pipes'][0]);
+        if ($readLine($workers, 0) !== 'LOCKED') { throw new RuntimeException('Primeiro worker não concluiu escrita.'); }
+        fwrite($workers[1]['pipes'][0], "GO\n"); fflush($workers[1]['pipes'][0]);
+        $waitQuery = $pdo->prepare("SELECT COUNT(*) FROM performance_schema.data_lock_waits w JOIN performance_schema.threads requesting ON requesting.THREAD_ID = w.REQUESTING_THREAD_ID JOIN performance_schema.threads blocking ON blocking.THREAD_ID = w.BLOCKING_THREAD_ID JOIN performance_schema.data_locks locked ON locked.ENGINE = w.ENGINE AND locked.ENGINE_LOCK_ID = w.BLOCKING_ENGINE_LOCK_ID WHERE requesting.PROCESSLIST_ID = ? AND blocking.PROCESSLIST_ID = ? AND locked.OBJECT_SCHEMA = 'rei88_test' AND locked.OBJECT_NAME = 'processos' AND locked.INDEX_NAME = 'PRIMARY' AND locked.LOCK_TYPE = 'RECORD' AND locked.LOCK_DATA = ?");
+        $waitObserved = false;
+        for ($attempt = 0; $attempt < 200; $attempt++) {
+            foreach ($workers as &$worker) {
+                $stderr = fread($worker['pipes'][2], 8192);
+                if ($stderr === false) { throw new RuntimeException('Erro ao drenar stderr.'); }
+                $worker['stderr'] .= $stderr;
+                if (strlen($worker['stderr']) > 65536) { throw new RuntimeException('Stderr excessivo de worker.'); }
+            }
+            unset($worker);
+            $waitQuery->execute([$workers[1]['connection'], $workers[0]['connection'], "'PRC-EXPLICIT'"]);
+            if ((int) $waitQuery->fetchColumn() > 0) { $waitObserved = true; break; }
+            usleep(25000);
+        }
+        if (!$waitObserved) { throw new RuntimeException('Espera InnoDB entre as conexões não foi observada.'); }
+        fwrite($workers[0]['pipes'][0], "COMMIT\n"); fflush($workers[0]['pipes'][0]);
+        if (!str_starts_with($readLine($workers, 0), 'DONE ')) { throw new RuntimeException('Primeiro commit não confirmado.'); }
+        if ($readLine($workers, 1) !== 'LOCKED') { throw new RuntimeException('Segundo worker não avançou após commit.'); }
+        fwrite($workers[1]['pipes'][0], "COMMIT\n"); fflush($workers[1]['pipes'][0]);
+        if (!str_starts_with($readLine($workers, 1), 'DONE ')) { throw new RuntimeException('Segundo commit não confirmado.'); }
+        $final = (new ProcessosRepository($pdo))->findByNumero('0000004-24.2020.8.05.0001');
+        if ($final === null || (int) $final['sigiloso'] !== $targetSigilo
+            || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas')->fetchColumn() !== $beforeLetters + 1
+            || (int) $pdo->query('SELECT COUNT(*) FROM cartas_expedidas_subtarefas')->fetchColumn() !== $beforeSubtasks + 2) {
+            throw new RuntimeException('Estado final da disputa sintética divergente.');
+        }
+    } finally {
+        $cleanupFailed = false;
+        foreach ($workers as $worker) {
+            fclose($worker['pipes'][0]);
+            $status = proc_get_status($worker['proc']);
+            if ($status['running']) { proc_terminate($worker['proc']); }
+            $deadline = hrtime(true) + 2_000_000_000;
+            do { $status = proc_get_status($worker['proc']); if (!$status['running']) { break; } usleep(20000); } while (hrtime(true) < $deadline);
+            if ($status['running']) {
+                proc_terminate($worker['proc'], 9);
+                $deadline = hrtime(true) + 2_000_000_000;
+                do { $status = proc_get_status($worker['proc']); if (!$status['running']) { break; } usleep(20000); } while (hrtime(true) < $deadline);
+            }
+            foreach ([1, 2] as $fd) { fclose($worker['pipes'][$fd]); }
+            if ($status['running']) { $cleanupFailed = true; continue; }
+            proc_close($worker['proc']);
+        }
+        if ($cleanupFailed) { throw new RuntimeException('Encerramento dos workers não confirmado.'); }
+    }
+}
+
 echo 'PASS CartasExpedidasService completo em MySQL/InnoDB ' . $version
     . ': migração e retry idempotente (concorrência simultânea, payload conflitante e retry após rollback), sigilo e classe existentes preservados (' . count($inputs) . ' entradas), criação completa, processo novo/classe ausente e rollback após falha na segunda subtarefa verificados.' . PHP_EOL;
+
