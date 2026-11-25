@@ -1,4 +1,9 @@
 <?php
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
 $base = dirname(__DIR__);
 $path = $base . '/app/repositories/ProdutividadeLancamentosRepository.php';
 $c = file_get_contents($path);

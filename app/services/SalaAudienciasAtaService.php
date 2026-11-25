@@ -114,8 +114,6 @@ final class SalaAudienciasAtaService
         $limit = max(1, min(200, $limit));
         $offset = max(0, $offset);
 
-        $this->purgeAtasExpiradas();
-
         $dias = self::LISTAGEM_ATAS_OCULTAR_APOS_DIAS_SEM_DOWNLOAD;
 
         $rows = $this->ataRepository->listRealizadasComAta($limit, $offset, $dias);
@@ -182,8 +180,6 @@ final class SalaAudienciasAtaService
      */
     public function listMinhasInscricoesEstudante(string $usuarioId): array
     {
-        $this->purgeAtasExpiradas();
-
         return $this->enrichRowsBlocoProcesso($this->inscricaoRepository->listInscricoesVisiveisParaUsuario($usuarioId));
     }
 
@@ -210,8 +206,6 @@ final class SalaAudienciasAtaService
         if ($st !== 'realizada' && $st !== 'finalizada') {
             throw new InvalidArgumentException('Só é permitido enviar ata para audiência com status Realizada ou Finalizada.');
         }
-
-        $this->purgeAtasExpiradas();
 
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
             throw new InvalidArgumentException('Falha no envio do arquivo.');
@@ -416,8 +410,6 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Dados inválidos.');
         }
 
-        $this->purgeAtasExpiradas();
-
         if (!$this->inscricaoRepository->exists($idPauta, $usuarioId)) {
             throw new InvalidArgumentException('Acesso negado: inscrição não encontrada.');
         }
@@ -466,8 +458,6 @@ final class SalaAudienciasAtaService
             throw new InvalidArgumentException('Dados inválidos.');
         }
 
-        $this->purgeAtasExpiradas();
-
         $pauta = $this->pautaRepository->findById($idPauta);
         if ($pauta === null) {
             throw new InvalidArgumentException('Audiência não encontrada.');
@@ -506,28 +496,82 @@ final class SalaAudienciasAtaService
      * Remove o PDF do disco após o prazo de download e zera a referência no banco, mantendo a linha da ata
      * para a audiência não voltar à fila de “pendente de envio”.
      *
-     * @return int número de atas processadas (arquivo removido + registro atualizado)
+     * @return array{processed: int, failed: int} itens processados e itens que precisam de nova tentativa
      */
-    public function purgeAtasExpiradas(): int
+    public function purgeAtasExpiradas(): array
     {
+        if ($this->connection->inTransaction()) {
+            throw new LogicException('A retenção de atas não pode executar dentro de transação alheia.');
+        }
         $rows = $this->ataRepository->fetchExpiredBeforeNow();
-        $basePath = dirname(__DIR__, 2);
         $n = 0;
+        $failed = 0;
         foreach ($rows as $row) {
-            $rel = trim((string) ($row['arquivo_relativo'] ?? ''));
-            if ($rel !== '') {
-                $full = $basePath . DIRECTORY_SEPARATOR . 'storage' . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rel);
-                if (is_file($full)) {
-                    @unlink($full);
-                }
-            }
             $idAta = trim((string) ($row['id_ata'] ?? ''));
-            if ($idAta !== '' && $this->ataRepository->clearArquivoAposExpiracaoRetencao($idAta)) {
+            if ($idAta === '') {
+                continue;
+            }
+            try {
+                $this->connection->beginTransaction();
+                $locked = $this->ataRepository->findExpiredByIdForUpdate($idAta);
+                if ($locked === null) {
+                    $this->connection->commit();
+                    continue;
+                }
+
+                $rel = trim((string) ($locked['arquivo_relativo'] ?? ''));
+                $expiresAt = trim((string) ($locked['expires_at'] ?? ''));
+                $full = $this->resolveExpiredAtaPath($rel);
+                if ($full === null) {
+                    throw new RuntimeException('Caminho de ata expirada inválido ou fora do storage.');
+                }
+
+                if (is_file($full) || is_link($full)) {
+                    if (!$this->ataStorage->deleteFile($full)) {
+                        throw new RuntimeException('Falha ao remover arquivo de ata expirada.');
+                    }
+                } elseif (file_exists($full)) {
+                    throw new RuntimeException('O caminho expirado não é um arquivo regular.');
+                }
+
+                if (!$this->ataRepository->clearArquivoAposExpiracaoRetencao($idAta, $rel, $expiresAt)) {
+                    throw new RuntimeException('A referência da ata expirada mudou durante a retenção.');
+                }
+                $this->connection->commit();
                 $n++;
+            } catch (Throwable $e) {
+                if ($this->connection->inTransaction()) {
+                    $this->connection->rollBack();
+                }
+                $safeId = substr(hash('sha256', $idAta), 0, 12);
+                error_log('[SalaAudienciasAtaService::purgeAtasExpiradas] Falha item=' . $safeId . ' tipo=' . get_class($e));
+                $failed++;
             }
         }
 
-        return $n;
+        return ['processed' => $n, 'failed' => $failed];
+    }
+
+    private function resolveExpiredAtaPath(string $relative): ?string
+    {
+        if (preg_match('~\\Asala-audiencias-atas/[A-Za-z0-9][A-Za-z0-9._-]*\\.pdf\\z~', $relative) !== 1) {
+            return null;
+        }
+        $root = realpath($this->ataStorage->rootPath());
+        if ($root === false) {
+            return null;
+        }
+        $expectedDirectory = $root . DIRECTORY_SEPARATOR . 'sala-audiencias-atas';
+        if (is_link($expectedDirectory) || !is_dir($expectedDirectory)) {
+            return null;
+        }
+        $resolvedDirectory = realpath($expectedDirectory);
+        $normalize = static fn (string $path): string => DIRECTORY_SEPARATOR === '\\' ? strtolower($path) : $path;
+        if ($resolvedDirectory === false || $normalize($resolvedDirectory) !== $normalize($expectedDirectory)) {
+            return null;
+        }
+        $filename = substr($relative, strlen('sala-audiencias-atas/'));
+        return $resolvedDirectory . DIRECTORY_SEPARATOR . $filename;
     }
 
     /**
