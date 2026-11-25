@@ -11,6 +11,7 @@ with tempfile.TemporaryDirectory(prefix='rei161-idle-') as temp:
     (base / 'config').mkdir()
     (base / 'app/helpers').mkdir(parents=True)
     shutil.copyfile(root / 'config/security.php', base / 'config/security.php')
+    shutil.copyfile(root / 'app/helpers/ApiErrorReporter.php', base / 'app/helpers/ApiErrorReporter.php')
     (base / 'app/helpers/Conection.php').write_text('''<?php
 class Conection { static function getInstance(){return new self;} function getConnection(){return new FakeDb;} }
 class FakeDb { function prepare($sql){return new FakeStatement;} }
