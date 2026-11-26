@@ -588,6 +588,64 @@ final class PessoasService
         $this->partesRepository->setCpfLegado($parteId, $cpf, $cpfAnterior);
     }
 
+    /**
+     * Serializa números de documento globalmente no MySQL, inclusive quando duas
+     * requisições tentam vinculá-los a partes diferentes. O lock envolve o commit
+     * da transação que grava o documento, evitando depender de índice ausente no
+     * checkout. SQLite segue sem lock advisory para os testes unitários locais.
+     *
+     * @param list<array{tipo: string, numero: string}> $documentos
+     */
+    private function withDocumentNumberLocks(array $documentos, callable $operation): mixed
+    {
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql' || $documentos === []) {
+            return $operation();
+        }
+
+        $lockNames = [];
+        foreach ($documentos as $documento) {
+            $tipo = ParteDocumentoHelper::normalizarTipo((string) ($documento['tipo'] ?? ''));
+            $numero = ParteDocumentoHelper::normalizarNumero($tipo, (string) ($documento['numero'] ?? ''));
+            if ($tipo === '' || $numero === '') {
+                continue;
+            }
+            $lockNames[] = 'pd_' . substr(hash('sha256', $tipo . "\0" . $numero), 0, 60);
+        }
+        $lockNames = array_values(array_unique($lockNames));
+        sort($lockNames, SORT_STRING);
+        if ($lockNames === []) {
+            return $operation();
+        }
+
+        $acquired = [];
+        try {
+            $acquire = $this->connection->prepare('SELECT GET_LOCK(:lock_name, 10)');
+            foreach ($lockNames as $lockName) {
+                $acquire->execute([':lock_name' => $lockName]);
+                if ((int) $acquire->fetchColumn() !== 1) {
+                    throw new RuntimeException('Não foi possível reservar o documento para gravação. Tente novamente.');
+                }
+                $acquired[] = $lockName;
+            }
+
+            return $operation();
+        } finally {
+            if ($acquired !== []) {
+                $release = $this->connection->prepare('SELECT RELEASE_LOCK(:lock_name)');
+                foreach (array_reverse($acquired) as $lockName) {
+                    try {
+                        $release->execute([':lock_name' => $lockName]);
+                        if ((int) $release->fetchColumn() !== 1) {
+                            error_log('liberar bloqueio de documento: lock não pertencia à conexão atual');
+                        }
+                    } catch (Throwable $releaseError) {
+                        error_log('liberar bloqueio de documento: ' . $releaseError->getMessage());
+                    }
+                }
+            }
+        }
+    }
+
     private function canonProfissaoParaComparacao(?string $valor): string
     {
         $t = trim((string) $valor);

@@ -24,8 +24,34 @@ if ($LASTEXITCODE -ne 0 -or $contextInfo.Endpoints.docker.Host -notin @('npipe:/
 $mysql = $mailpit = $app = $client = $browserContainer = $null; $cleanupFailed = $false; $networkAttempted = $false; $creationPending = $false;
 . (Join-Path $PSScriptRoot 'cleanup-owned.ps1')
 . (Join-Path $PSScriptRoot 'docker-topology-validation.ps1')
-$executionFailure = $null; $guardToken = $null
-function D([string[]]$a) { $prior = $ErrorActionPreference; $ErrorActionPreference = 'Continue'; try { $o = & docker --context $dockerContext @a 2>&1; $code = $LASTEXITCODE } finally { $ErrorActionPreference = $prior }; if ($code -ne 0) { foreach ($line in $o) { if ([string]$line -match '^REI158_DIAG code-(initial|workers|success|timeout|storage)-(other|[0-3])$') { Write-Host ([string]$line) } }; throw 'Docker falhou; detalhes suprimidos.' }; return $o }
+$executionFailure = $null; $guardToken = $null; $script:failurePhase = 'setup'
+function D([string[]]$a) {
+    $prior = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try { $o = & docker --context $dockerContext @a 2>&1; $code = $LASTEXITCODE }
+    finally { $ErrorActionPreference = $prior }
+    if ($code -ne 0) {
+        $safePatterns = @(
+            'REI158_DIAG code-(?:initial|workers|success|timeout|storage)-(?:other|[0-3])',
+            'AUTH_FIXTURE_DIAG stage=(?:initial|clear|register|count) class=(?:PDOException|RuntimeException|InvalidArgumentException|Throwable) sqlstate=(?:none|[A-Z0-9]{5}) native=(?:none|[0-9]{1,5})',
+            'HTTP_DIAG: (?:unknown|login|institution_access|profile_access|password_change|logout_race|http_rate_limit|password_reset|reset_token_mail|reset_shell|reset_invalid_csrf|reset_valid_stage|reset_staged_form|legacy_reset_link|password_update|password_login|reset_mail|mail_json|response_json) (?:PDOException|JsonException|RuntimeException|InvalidArgumentException|Error|TypeError|ValueError|Throwable) code=-?[0-9]{1,5}',
+            'HTTP_FAIL phase=reset_valid_stage status=[0-9]{1,3}',
+            'HTTP_FAIL phase=(?:unknown|login|institution_access|profile_access|password_change|logout_race|http_rate_limit|password_reset|reset_token_mail|reset_shell|reset_invalid_csrf|reset_valid_stage|reset_staged_form|legacy_reset_link|password_update|password_login|reset_mail|mail_json|response_json)',
+            'FAIL navegador etapa=(?:init|browser-start|websocket|cdp-setup|form|invalid-login|valid-login)',
+            'DIAG navegador: (?:net::ERR_(?:NAME_NOT_RESOLVED|CONNECTION_REFUSED|CONNECTION_CLOSED|BLOCKED_BY_CLIENT|ADDRESS_UNREACHABLE|ABORTED)|erro de rede nao classificado)',
+            'DIAG navegador: bloqueado \{"http":(?:true|false),"app":(?:true|false),"port":(?:true|false)\}',
+            'DIAG navegador: login status=(?:none|[0-9]{3}) exceptions=[0-9]{1,4} flags=\{"message":(?:true|false),"visible":(?:true|false),"enabled":(?:true|false)\}'
+        )
+        foreach ($line in $o) {
+            foreach ($pattern in $safePatterns) {
+                $match = [regex]::Match([string]$line, $pattern)
+                if ($match.Success) { Write-Host $match.Value; break }
+            }
+        }
+        throw 'Docker falhou; detalhes suprimidos.'
+    }
+    return $o
+}
 function Id([string]$v, [string]$what) { if ($v -notmatch '^[a-f0-9]{64}$') { throw "ID inválido: $what" }; $v }
 function Secret {
     $b = [byte[]]::new(32)
@@ -74,11 +100,14 @@ function Assert-ActiveTopology {
 }
 function Copy-Tree([string]$source) { Assert-SafeTree $source; D @('cp',$source,"${app}:/workspace/") | Out-Null }
 function App([string[]]$a) {
+    $script:failurePhase = 'app-command-topology'
     Assert-ActiveTopology
     $dockerArgs = @('exec','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_ENV_FILE=/workspace/tests/auth/.env.test.runtime','--env','AUTH_TEST_MAILPIT_URL=http://mailpit:8025','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner',"--env","AUTH_TEST_GUARD_TOKEN=$guardToken",$app) + $a
+    $script:failurePhase = 'app-command-execution'
     return D $dockerArgs
 }
 function Run-AppTest([string]$testFile, [string[]]$arguments = @()) {
+    $script:failurePhase = 'app-test-topology'
     Assert-ActiveTopology
     Write-Output "STEP $testFile"
     if ($testFile -eq 'password-reset-states.test.php') {
@@ -91,9 +120,12 @@ function Run-AppTest([string]$testFile, [string[]]$arguments = @()) {
             $ErrorActionPreference = $previousErrorActionPreference
         }
         if ($testExitCode -ne 0) { throw "Falha em $testFile (exit=$testExitCode; detalhes suprimidos para evitar exposição de tokens)." }
+        $script:failurePhase = 'app-test-complete'
         return
     }
-    App (@('php', "/workspace/tests/auth/$testFile") + $arguments) | Out-Null
+    $script:failurePhase = 'app-test-command'
+    App (@('php', '-d', 'error_log=/tmp/auth-fixture-error.log', "/workspace/tests/auth/$testFile") + $arguments) | Out-Null
+    $script:failurePhase = 'app-test-complete'
 }
 try {
     $required=@('app','config','public','vendor','services','tests/auth')
@@ -183,22 +215,45 @@ try {
     if($i -eq 30){throw 'Aplicação HTTP não ficou pronta.'}
     Assert-ActiveTopology
     if ($Browser) {
+        $script:failurePhase = 'browser-topology'
         Write-Output 'STEP navegador'
         Assert-ActiveTopology
+        $script:failurePhase = 'browser-copy'
         D @('cp',(Join-Path $root 'tests/auth/rei73-browser-cdp.cjs'),"${browserContainer}:/tmp/rei73-browser-cdp.cjs") | Out-Null
         Assert-ActiveTopology
+        $script:failurePhase = 'browser-command'
         D @('exec',$browserContainer,'node','/tmp/rei73-browser-cdp.cjs') | Write-Output
+        $script:failurePhase = 'browser-after'
         Assert-ActiveTopology
     }
     if ($Browser) { Run-AppTest 'login-rate-limit.fixture.php' @('seed') }
-    D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",'--env',"E2E_RESET_TOKEN=$token",$client,'php','tests/auth/http-auth-flow.test.php')|Write-Output
+    D @('exec','-d','--env','PHP_CLI_SERVER_WORKERS=4',$app,'sh','-c','cd /workspace && exec php -S 0.0.0.0:8080 -t public >/tmp/auth-e2e-app.log 2>&1')|Out-Null
+    $script:failurePhase = 'http-readiness'
+    for($i=0; $i -lt 30; $i++) {
+        Assert-ActiveTopology
+        $probe = Start-Process -FilePath 'docker' -ArgumentList @('--context', $dockerContext, 'exec', '--env', 'APP_ENV=testing', '--env', 'AUTH_TEST_ISOLATION=isolated-auth-test', '--env', 'AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner', '--env', "AUTH_TEST_GUARD_TOKEN=$guardToken", $client, 'php', '/workspace/tests/auth/http-ready.test.php') -Wait -PassThru -NoNewWindow
+        if($probe.ExitCode -eq 0){break}
+        Start-Sleep -Seconds 1
+    }
+    if($i -eq 30){throw 'Aplicação HTTP não ficou pronta.'}
+    $script:failurePhase = 'http-ready'
+    Assert-ActiveTopology
+    $script:failurePhase = 'http-flow'
+    D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",$client,'php','tests/auth/http-auth-flow.test.php')|Write-Output
+    $script:failurePhase = 'http-concurrency'
     D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",$client,'php','tests/auth/rei158-http-concurrency.test.php')|Write-Output
+    $script:failurePhase = 'lock-wait-test'
     Run-AppTest 'rei158-http-lock-wait.test.php'
+    $script:failurePhase = 'password-reset-test'
     Run-AppTest 'password-reset-states.test.php'
 } catch {
     # Dados de erro do Docker, testes e servidor podem conter tokens; nunca os imprima.
     $executionFailure = $true
-    Write-Output 'RUNNER_FAILURE: verifique a última etapa STEP exibida; detalhes sensíveis omitidos.'
+    if ($script:failurePhase -match '^(setup|app-test-topology|app-test-command|app-test-complete|app-command-topology|app-command-execution|reset-token-fixture|reset-token-ready|http-readiness|http-ready|http-flow|http-concurrency|lock-wait-test|password-reset-test|browser-topology|browser-copy|browser-command|browser-after)$') {
+        Write-Output "RUNNER_FAILURE phase=$script:failurePhase; detalhes sensíveis omitidos."
+    } else {
+        Write-Output 'RUNNER_FAILURE phase=unknown; detalhes sensíveis omitidos.'
+    }
 } finally {
     if ($creationPending) {
         $knownIds = @($browserContainer, $client, $app, $mailpit, $mysql | Where-Object { $_ })

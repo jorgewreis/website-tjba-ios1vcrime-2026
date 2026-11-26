@@ -13,8 +13,6 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/GuiasService.php';
 
-$connection = Conection::getInstance()->getConnection();
-
 $rawPayload = file_get_contents('php://input') ?: '';
 $parsed = json_decode($rawPayload, true);
 if (!is_array($parsed)) {
@@ -37,6 +35,7 @@ unset($parsed['id']);
 $tinhaDataFatoOuDiasMulta = isset($parsed['data_fato']) || isset($parsed['dias_multa']);
 
 try {
+    $connection = Conection::getInstance()->getConnection();
     $service = new GuiasService($connection);
     $updated = $service->update($id, $parsed);
     $body = ['success' => $updated, 'id' => $id];
@@ -51,6 +50,7 @@ try {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (\Throwable $exception) {
+    error_log('cartorio-guias/update: erro interno (' . get_class($exception) . ')');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao atualizar guia: ' . ApiErrorReporter::genericMessage($exception, 'public/api/cartorio-guias/update.php')], JSON_UNESCAPED_UNICODE);
 }

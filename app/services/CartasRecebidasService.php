@@ -203,48 +203,112 @@ final class CartasRecebidasService
     {
         require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
         $dadosJson = CartorioSubtarefaUsuarioSessao::mergeDadosEspecificosComSessao($this->connection, $dadosJson);
+        $ownsTransaction = !$this->connection->inTransaction();
+        $savepoint = $ownsTransaction ? null : 'carta_recebida_conclusao_' . bin2hex(random_bytes(8));
 
-        $subtarefa = $this->subtarefasRepository->findById($subtarefaId);
-        if ($subtarefa === null) {
-            throw new InvalidArgumentException('Subtarefa não encontrada.');
+        if ($ownsTransaction) {
+            $this->connection->beginTransaction();
+        } else {
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
         }
 
-        $ordem = (int) ($subtarefa['ordem'] ?? 0);
-        $cartaId = trim((string) ($subtarefa['carta_recebida_id'] ?? ''));
-        $tipoAtual = trim((string) ($subtarefa['tipo'] ?? ''));
+        try {
+            // A carta é o mutex por fluxo: duas requisições concorrentes para
+            // cumprimento/devolução serializam antes de validar e gravar.
+            $cartaLookup = $this->connection->prepare('SELECT `id` FROM `cartas_recebidas` WHERE `id` = :id LIMIT 1 FOR UPDATE');
+            $cartaLookup->execute([':id' => trim($this->subtarefasRepository->findById($subtarefaId)['carta_recebida_id'] ?? '')]);
+            $cartaLockId = $cartaLookup->fetchColumn();
+            if ($cartaLockId === false || trim((string) $cartaLockId) === '') {
+                throw new InvalidArgumentException('Subtarefa não encontrada.');
+            }
 
-        if ($cartaId === '') {
-            throw new InvalidArgumentException('Carta da subtarefa não identificada.');
-        }
+            $taskLookup = $this->connection->prepare('SELECT `id`, `carta_recebida_id`, `tipo`, `ordem`, `status` FROM `cartas_recebidas_subtarefas` WHERE `id` = :id LIMIT 1 FOR UPDATE');
+            $taskLookup->execute([':id' => trim($subtarefaId)]);
+            $subtarefa = $taskLookup->fetch(PDO::FETCH_ASSOC);
+            if ($subtarefa === false) {
+                throw new InvalidArgumentException('Subtarefa não encontrada.');
+            }
 
-        if (!CartasRecebidasSubtarefasRepository::isOrdemAtiva($ordem)
-            || !CartasRecebidasSubtarefasRepository::isTipoAtivo($tipoAtual)) {
-            throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual.');
-        }
+            $ordem = (int) ($subtarefa['ordem'] ?? 0);
+            $cartaId = trim((string) ($subtarefa['carta_recebida_id'] ?? ''));
+            $tipoAtual = trim((string) ($subtarefa['tipo'] ?? ''));
+            $statusAtual = strtolower(trim((string) ($subtarefa['status'] ?? '')));
 
-        $this->subtarefasRepository->marcarConcluidaComDados($subtarefaId, $dadosJson);
+            if ($cartaId === '' || $cartaId !== trim((string) $cartaLockId)) {
+                throw new InvalidArgumentException('Carta da subtarefa não identificada.');
+            }
+            if (!CartasRecebidasSubtarefasRepository::isOrdemAtiva($ordem)
+                || !CartasRecebidasSubtarefasRepository::isTipoAtivo($tipoAtual)
+                || CartasRecebidasSubtarefasRepository::tipoPorOrdem($ordem) !== $tipoAtual) {
+                throw new InvalidArgumentException('Subtarefa inválida para o fluxo atual.');
+            }
 
-        $proximaOrdem = $this->subtarefasRepository->obterProximaOrdem($ordem);
-        if ($proximaOrdem !== null) {
-            $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
-            $existente = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, $proximaOrdem);
-            if ($existente === null) {
-                $this->subtarefasRepository->create($cartaId, $proximoTipo, $proximaOrdem, 'em_andamento', null);
-            } else {
-                $statusProx = strtolower(trim((string) ($existente['status'] ?? '')));
-                if ($statusProx === 'concluída') {
-                    $statusProx = 'concluida';
-                }
-                if ($statusProx !== 'concluida' && $statusProx !== CartasRecebidasSubtarefasRepository::STATUS_CANCELADA) {
-                    $this->subtarefasRepository->atualizarStatus((string) ($existente['id'] ?? ''), 'em_andamento');
+            if ($ordem > CartasRecebidasSubtarefasRepository::ORDEM_CUMPRIMENTO) {
+                $anterior = $this->connection->prepare('SELECT `id`, `status` FROM `cartas_recebidas_subtarefas` WHERE `carta_recebida_id` = :carta_id AND `ordem` = :ordem ORDER BY `updated_at` DESC LIMIT 1 FOR UPDATE');
+                $anterior->execute([
+                    ':carta_id' => $cartaId,
+                    ':ordem' => CartasRecebidasSubtarefasRepository::ORDEM_CUMPRIMENTO,
+                ]);
+                $anterior = $anterior->fetch(PDO::FETCH_ASSOC);
+                if ($anterior === false || strtolower(trim((string) ($anterior['status'] ?? ''))) !== 'concluida') {
+                    throw new InvalidArgumentException('Conclua o cumprimento antes de devolver a carta.');
                 }
             }
-            $this->repository->update($cartaId, ['status' => CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO]);
 
-            return ['tarefa_principal_concluida' => false];
+            $jaConcluida = in_array($statusAtual, ['concluida', 'concluída'], true);
+            if (!$jaConcluida && $statusAtual !== 'em_andamento') {
+                throw new InvalidArgumentException('Somente a subtarefa em andamento pode ser concluída.');
+            }
+
+            if (!$jaConcluida) {
+                $this->subtarefasRepository->marcarConcluidaComDados($subtarefaId, $dadosJson);
+
+                $proximaOrdem = $this->subtarefasRepository->obterProximaOrdem($ordem);
+                if ($proximaOrdem !== null) {
+                    $proximoTipo = $this->subtarefasRepository->obterProximoTipo($ordem);
+                    $existente = $this->subtarefasRepository->findByCartaIdEOrdem($cartaId, $proximaOrdem);
+                    if ($existente === null) {
+                        $this->subtarefasRepository->create($cartaId, (string) $proximoTipo, $proximaOrdem, 'em_andamento', null);
+                    } else {
+                        $statusProx = strtolower(trim((string) ($existente['status'] ?? '')));
+                        if ($statusProx === 'concluída') {
+                            $statusProx = 'concluida';
+                        }
+                        if ($statusProx !== 'concluida' && $statusProx !== CartasRecebidasSubtarefasRepository::STATUS_CANCELADA) {
+                            $this->subtarefasRepository->atualizarStatus((string) ($existente['id'] ?? ''), 'em_andamento');
+                        }
+                    }
+                    $this->repository->update($cartaId, ['status' => CartasRecebidasUiCopy::STATUS_AGUARDANDO_DEVOLUCAO]);
+                    $result = ['tarefa_principal_concluida' => false];
+                } else {
+                    $this->repository->update($cartaId, ['status' => 'concluída']);
+                    $result = $this->resultadoConclusaoCarta($cartaId);
+                }
+            } else {
+                $result = $ordem === CartasRecebidasSubtarefasRepository::ORDEM_DEVOLUCAO
+                    ? $this->resultadoConclusaoCarta($cartaId)
+                    : ['tarefa_principal_concluida' => false];
+            }
+
+            if ($ownsTransaction) {
+                $this->connection->commit();
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            return $result;
+        } catch (Throwable $exception) {
+            if ($ownsTransaction && $this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            } elseif (!$ownsTransaction && $this->connection->inTransaction()) {
+                $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            throw $exception;
         }
+    }
 
-        $this->repository->update($cartaId, ['status' => 'concluída']);
+    private function resultadoConclusaoCarta(string $cartaId): array
+    {
         $carta = $this->repository->find($cartaId);
         $processo = trim((string) ($carta['numero_processo_origem'] ?? ''));
         $finalidade = trim((string) ($carta['finalidade'] ?? ''));
@@ -255,10 +319,7 @@ final class CartasRecebidasService
             . ' (' . ($finalidade !== '' ? $finalidade : 'finalidade não informada')
             . ' de ' . (($cidade !== '' ? $cidade : 'comarca não informada') . ($uf !== '' ? '/' . $uf : '')) . ').';
 
-        return [
-            'tarefa_principal_concluida' => true,
-            'tarefa_principal_mensagem' => $msg,
-        ];
+        return ['tarefa_principal_concluida' => true, 'tarefa_principal_mensagem' => $msg];
     }
 
     public function cancelarSubtarefa(string $subtarefaId): void

@@ -54,8 +54,9 @@ final class PartesRepository
         if ($id === '') {
             return null;
         }
+        $lockSuffix = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
         $statement = $this->connection->prepare(
-            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1 FOR UPDATE', $this->table)
+            sprintf('SELECT `id`, `cpf`, `nome_completo`, `sexo`, `data_nascimento`, `profissao`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1%s', $this->table, $lockSuffix)
         );
         $statement->execute([':id' => $id]);
         $result = $statement->fetch(PDO::FETCH_ASSOC);
