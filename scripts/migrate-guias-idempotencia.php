@@ -8,11 +8,25 @@ if (PHP_SAPI !== 'cli') {
 
 $configuredRoot = getenv('GUIAS_PROJECT_ROOT');
 $root = is_string($configuredRoot) && trim($configuredRoot) !== ''
-    ? realpath($configuredRoot)
+    ? rtrim($configuredRoot, '/\\')
     : dirname(__DIR__);
-if (!is_string($root) || !is_file($root . '/app/helpers/Conection.php')) {
+$connection = $root . '/app/helpers/Conection.php';
+if (!is_file($connection)) {
+    throw new RuntimeException('Conexão da aplicação ausente para a migration de guias.');
+}
+
+require_once $connection;
+
+// O teste de guarda injeta uma conexão CLI que encerra o processo antes do acesso ao banco.
+if (getenv('GUIAS_PROJECT_ROOT') !== false) {
+    Conection::getInstance();
+}
+
+$realRoot = realpath($root);
+if (!is_string($realRoot)) {
     throw new RuntimeException('Raiz da aplicação inválida para a migration de guias.');
 }
+$root = $realRoot;
 $configuredHelper = getenv('GUIAS_MIGRATION_HELPER');
 $helper = is_string($configuredHelper) && trim($configuredHelper) !== ''
     ? realpath($configuredHelper)
@@ -28,7 +42,6 @@ if (!is_file($sql)) {
     throw new RuntimeException('SQL da migration de guias ausente.');
 }
 
-require_once $root . '/app/helpers/Conection.php';
 require_once $helper;
 $created = GuiasIdempotenciaMigration::apply(Conection::getInstance()->getConnection(), $sql);
 fwrite(STDOUT, $created
