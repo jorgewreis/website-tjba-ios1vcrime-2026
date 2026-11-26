@@ -165,7 +165,7 @@ $appFiles = [
     'helpers/TextFormatter.php', 'helpers/ParteDocumentoHelper.php',
     'access/AccessEvaluator.php', 'access/ProfileNormalizer.php', 'access/PageAccessRegistry.php',
     'access/AccessAreas.php', 'access/AccessPolicyVersion.php',
-    'repositories/ProcessosPartesRepository.php', 'repositories/PartesDocumentosRepository.php',
+    'repositories/ProcessosPartesRepository.php', 'repositories/PartesRepository.php', 'repositories/PartesDocumentosRepository.php',
 ];
 foreach ($appFiles as $relative) {
     $copyRelative($appRoot, $relative, $lab, 'app/' . $relative);
