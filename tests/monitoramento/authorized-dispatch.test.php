@@ -23,10 +23,11 @@ try {
         $path = 'public/api/gabinete-monitoramento-eletronico/' . $endpoint;
         $put($path, (string) file_get_contents($root . '/' . $path));
     }
-    foreach (['app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php', 'app/access/AccessEvaluator.php', 'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php', 'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php'] as $path) {
+    foreach (['app/helpers/ApiErrorReporter.php', 'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php', 'app/access/AccessEvaluator.php', 'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php', 'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php'] as $path) {
         $put($path, (string) file_get_contents($root . '/' . $path));
     }
     $put('app/helpers/AutoloadHelper.php', '<?php');
+    $put('app/helpers/ProcessoSetorAuthorization.php', '<?php final class ProcessoSetorAuthorization { public static function canAccessProcess(PDO $pdo, string $actor, string $id, bool $lock): bool { return $id !== "PROC-BLOCKED"; } }');
     $put('app/helpers/Conection.php', '<?php function appIsHttpsRequest(): bool { return false; } final class Conection { public static function getInstance(): self { return new self(); } public function getConnection(): PDO { return new class extends PDO { public function __construct() {} }; } }');
     $put('config/security.php', '<?php final class Security { public static function isAuthenticated(): bool { return true; } }');
     $put('app/helpers/UsuarioPerfisAutorizacao.php', '<?php final class UsuarioPerfisAutorizacao { public static function perfisDoUsuario(string $id): array { return [getenv("MOCK_PROFILE") ?: "SERVIDOR-GABINETE"]; } }');
@@ -40,7 +41,7 @@ final class GabineteMonitoramentoEletronicoService {
     public function cancel(string $id): bool { $this->record('cancel', [$id]); return true; }
     public function delete(string $id): array { $this->record('delete', [$id]); return ['deleted' => true]; }
     public function listarReusDoProcesso(string $id): array { $this->record('listar', [$id]); return []; }
-    public function ensureProcessoEListarReusParaCadastro(string $numero, string $codigo, string $descricao): array { $this->record('sincronizar', [$numero, $codigo, $descricao]); return ['processo_id' => 'PROC-SINTETICO', 'reus' => []]; }
+    public function buscarIdProcessoParaConsulta(string $numero): string { return 'PROC-SINTETICO'; }
 }
 PHP);
     $cases = [
@@ -67,8 +68,7 @@ PHP);
         }
         unlink($record);
     }
-    // The consultation dispatches a potentially mutating sync only after the
-    // real guard accepts each existing authorized internal profile and POST.
+    // The readonly lookup preserves the existing internal page and trusted POST rules.
     foreach (['SERVIDOR-GABINETE', 'ESTAGIARIO-GABINETE', 'SERVIDOR-CARTORIO', 'ESTAGIARIO-CARTORIO', 'SERVIDOR-AUDIENCIAS', 'ESTAGIARIO-AUDIENCIAS', 'ADMIN', 'CHEFIA'] as $profile) {
         $record = $tmp . '/dispatch.json';
         $path = $tmp . '/public/api/gabinete-monitoramento-eletronico/reus-partes.php';
@@ -80,7 +80,7 @@ PHP);
             throw new RuntimeException("Falha na consulta {$profile}: {$err} {$out}");
         }
         $actual = json_decode((string) file_get_contents($record), true, 512, JSON_THROW_ON_ERROR);
-        if ($actual[0] !== 'sincronizar') { throw new RuntimeException("Consulta não despachada para {$profile}."); }
+        if ($actual !== ['listar', ['PROC-SINTETICO']]) { throw new RuntimeException("Consulta não despachada para {$profile}."); }
         unlink($record);
     }
     echo "PASS despacho autorizado dos cinco endpoints (serviço simulado)\n";

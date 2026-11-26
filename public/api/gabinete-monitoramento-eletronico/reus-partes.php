@@ -12,7 +12,6 @@ require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 require_once $basePath . '/app/services/GabineteMonitoramentoEletronicoService.php';
-require_once $basePath . '/app/services/ProcessoDataJudSyncQueue.php';
 
 ApiAccessGuard::requireAccess(['monitoramentogabinetecreate'], true);
 
@@ -34,30 +33,30 @@ if (!is_array($parsed)) {
 
 $processoId = trim((string) ($parsed['processo_id'] ?? ''));
 $numeroProcesso = trim((string) ($parsed['numero_processo'] ?? ''));
-$classeCodigo = trim((string) ($parsed['classe_codigo'] ?? ''));
-$classeDescricao = trim((string) ($parsed['classe_descricao'] ?? ''));
+// Mantém POST de mesma origem para não colocar o número do processo na URL.
+header('Cache-Control: no-store');
 
 try {
     $service = new GabineteMonitoramentoEletronicoService($connection);
-
-    if ($processoId !== '') {
-        if (!ProcessoSetorAuthorization::canAccessProcess($connection, trim((string) ($_SESSION['id_usuario'] ?? '')), $processoId, false)) {
-            http_response_code(403);
-            echo json_encode(['error' => 'Acesso negado ao processo.'], JSON_UNESCAPED_UNICODE);
-            exit;
-        }
-        ProcessoDataJudSyncQueue::enqueueBestEffort($connection, $processoId);
-        $lista = $service->listarReusDoProcesso($processoId);
-        echo json_encode(['processo_id' => $processoId, 'reus' => $lista], JSON_UNESCAPED_UNICODE);
+    if ($processoId === '' && $numeroProcesso !== '') {
+        $processoId = $service->buscarIdProcessoParaConsulta($numeroProcesso);
+    }
+    if ($processoId !== '' && !ProcessoSetorAuthorization::canAccessProcess(
+        $connection,
+        trim((string) ($_SESSION['id_usuario'] ?? '')),
+        $processoId,
+        false
+    )) {
+        http_response_code(403);
+        echo json_encode(['error' => 'Acesso negado ao processo.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
-    if ($numeroProcesso === '') {
-        echo json_encode(['processo_id' => '', 'reus' => []], JSON_UNESCAPED_UNICODE);
-        exit;
+    $reus = $service->listarReusDoProcesso($processoId);
+    $result = ['processo_id' => $processoId, 'reus' => $reus];
+    if ($reus === [] && ($processoId !== '' || $numeroProcesso !== '')) {
+        $result['mensagem'] = 'Nenhum réu vinculado encontrado. Informe o nome manualmente.';
     }
-
-    $result = $service->ensureProcessoEListarReusParaCadastro($numeroProcesso, $classeCodigo, $classeDescricao);
     echo json_encode($result, JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);

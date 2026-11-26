@@ -18,13 +18,16 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[2]
 ENDPOINT = 'public/api/gabinete-monitoramento-eletronico/reus-partes.php'
 REAL_FILES = [
-    ENDPOINT, 'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php',
+    ENDPOINT, 'app/helpers/ApiErrorReporter.php', 'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php',
     'app/helpers/UserAccessHelper.php', 'app/access/AccessEvaluator.php',
     'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php',
     'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php',
 ]
 STUBS = {
     'app/helpers/AutoloadHelper.php': '<?php',
+    'app/helpers/ProcessoSetorAuthorization.php': '''<?php final class ProcessoSetorAuthorization {
+      public static function canAccessProcess(PDO $pdo, string $user, string $id, bool $lock): bool { return $id !== 'PROC-BLOCKED'; }
+    }''',
     'app/helpers/Conection.php': '''<?php
 function appIsHttpsRequest(): bool { return false; }
 function bootstrapSession(): void { $_SESSION = ['id_usuario' => 'SYNTHETIC']; }
@@ -45,9 +48,8 @@ final class GabineteMonitoramentoEletronicoService {
     file_put_contents(getenv('FIXTURE_RECORD'), 'called');
     return [['fixture_id' => $id]];
   }
-  public function ensureProcessoEListarReusParaCadastro(string $cnj, string $code, string $description): array {
-    file_put_contents(getenv('FIXTURE_RECORD'), 'called');
-    return ['fixture_args' => [$cnj, $code, $description], 'reus' => []];
+  public function buscarIdProcessoParaConsulta(string $cnj): string {
+    return $cnj === '0000002-54.2020.8.05.0001' ? 'PROC-BLOCKED' : 'PROC-SYNTHETIC';
   }
 }''',
 }
@@ -103,12 +105,15 @@ with tempfile.TemporaryDirectory(prefix='monitoramento-json-') as temporary:
         payload = {'numero_processo': '0000001-69.2020.8.05.0001',
                    'classe_codigo': 'SYN-42', 'classe_descricao': 'Classe sintetica'}
         status, body = request(port, payload=payload)
-        assert status == 200 and body == {'fixture_args': list(payload.values()), 'reus': []}, (status, body)
+        assert status == 200 and body == {'processo_id': 'PROC-SYNTHETIC', 'reus': [{'fixture_id': 'PROC-SYNTHETIC'}]}, (status, body)
         status, body = request(port, payload={'processo_id': 'PROC-SYNTHETIC'})
         assert status == 200 and body == {'processo_id': 'PROC-SYNTHETIC',
                                           'reus': [{'fixture_id': 'PROC-SYNTHETIC'}]}, (status, body)
         assert record.read_text() == 'called'
         record.unlink()
+        for forbidden in [{'processo_id': 'PROC-BLOCKED'}, {'numero_processo': '0000002-54.2020.8.05.0001'}]:
+            status, body = request(port, payload=forbidden)
+            assert status == 403 and 'reus' not in body and not record.exists(), (status, body)
         for kwargs, expected in [({'auth': 'no'}, 401), ({'profile': 'ESTUDANTE'}, 403),
                                  ({'origin': 'http://evil.invalid'}, 403), ({'method': 'GET'}, 403)]:
             status, body = request(port, payload=payload, **kwargs)

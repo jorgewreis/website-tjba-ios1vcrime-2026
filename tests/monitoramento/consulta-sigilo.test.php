@@ -14,9 +14,9 @@ $db->exec("INSERT INTO partes VALUES ('PARTE-SINTETICA', 'Nome Sintetico')");
 $db->exec("INSERT INTO processos_partes VALUES ('VINCULO', 'P-SIG', 'PARTE-SINTETICA', 'reu', 'passivo')");
 $service = new GabineteMonitoramentoEletronicoService($db);
 $direto = $service->listarReusDoProcesso('P-SIG');
-$porNumero = $service->ensureProcessoEListarReusParaCadastro('0000001-69.2020.8.05.0001');
+$porNumero = $service->buscarIdProcessoParaConsulta('0000001-69.2020.8.05.0001');
 if (count($direto) !== 1 || $direto[0]['id'] !== 'VINCULO'
-    || $porNumero['processo_id'] !== 'P-SIG' || $porNumero['reus'] !== $direto
+    || $porNumero !== 'P-SIG' || $service->listarReusDoProcesso($porNumero) !== $direto
     || (int) $db->query("SELECT sigiloso FROM processos WHERE id='P-SIG'")->fetchColumn() !== 1) {
     throw new RuntimeException('Consulta sintética de processo sigiloso falhou ou alterou sigilo.');
 }
