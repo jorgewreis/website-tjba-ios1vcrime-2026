@@ -14,7 +14,7 @@ final class GuiasTestePDO extends PDO
         $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $this->sqliteCreateFunction('NOW', static fn (): string => '2026-01-01 00:00:00', 0);
         $this->sqliteCreateFunction('UUID', static fn (): string => bin2hex(random_bytes(16)), 0);
-        $this->exec('CREATE TABLE guias (id TEXT PRIMARY KEY, numero_processo TEXT, denunciado TEXT, tipo TEXT, status TEXT, data_fato TEXT, dias_multa INTEGER, valor_multa REAL, updated_at TEXT)');
+        $this->exec('CREATE TABLE guias (id TEXT PRIMARY KEY, numero_processo TEXT, processo_id TEXT, parte_id TEXT, denunciado TEXT, tipo TEXT, status TEXT, data_fato TEXT, dias_multa INTEGER, valor_multa REAL, updated_at TEXT)');
         $this->exec('CREATE TABLE guias_subtarefas (id TEXT PRIMARY KEY, guia_id TEXT, tipo TEXT, ordem INTEGER, status TEXT, dados_especificos TEXT, created_at TEXT, updated_at TEXT)');
         $this->exec('CREATE TABLE dashboard_conclusoes (id TEXT PRIMARY KEY, usuario_id TEXT, modulo TEXT, area TEXT, referencia_interna TEXT, concluido_em TEXT)');
         $this->exec('CREATE TABLE guias_alocados (id TEXT PRIMARY KEY, guia_id TEXT, usuario_id TEXT, tipo TEXT, created_at TEXT)');
