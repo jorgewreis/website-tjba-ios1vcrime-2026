@@ -16,7 +16,7 @@ $file = fopen('php://temp', 'w+');
 fwrite($file, substr($csv, 3));
 rewind($file);
 $rows = [];
-while (($row = fgetcsv($file, 0, ';')) !== false) $rows[] = $row;
+while (($row = fgetcsv($file, 0, ';', '"', '')) !== false) $rows[] = $row;
 fclose($file);
 if ($rows[4][0] !== "'=TITULO" || $rows[5][0] !== "'\t=FILTRO" || $rows[8][0] !== "'+CABECALHO") {
     throw new RuntimeException('Cabeçalho ou filtros não foram protegidos.');

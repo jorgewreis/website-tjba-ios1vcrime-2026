@@ -64,23 +64,23 @@ final class ListExportPresentation
         foreach (self::institutionalHeaderLines() as $line) {
             $row = array_fill(0, $n, '');
             $row[0] = $line;
-            fputcsv($output, $row, ';');
+            fputcsv($output, $row, ';', '"', '');
         }
-        fputcsv($output, array_fill(0, $n, ''), ';');
+        fputcsv($output, array_fill(0, $n, ''), ';', '"', '');
 
         $titleRow = array_fill(0, $n, '');
         $titleRow[0] = self::csvText($sessionTitle);
-        fputcsv($output, $titleRow, ';');
+        fputcsv($output, $titleRow, ';', '"', '');
 
         $filterRow = array_fill(0, $n, '');
         $filterRow[0] = self::csvText($filterSummary);
-        fputcsv($output, $filterRow, ';');
+        fputcsv($output, $filterRow, ';', '"', '');
 
         $metaRow = array_fill(0, $n, '');
         $metaRow[0] = self::buildResultsMetaLine($resultCount);
-        fputcsv($output, $metaRow, ';');
+        fputcsv($output, $metaRow, ';', '"', '');
 
-        fputcsv($output, array_fill(0, $n, ''), ';');
+        fputcsv($output, array_fill(0, $n, ''), ';', '"', '');
     }
 
     public static function htmlInstitutionalBlock(): string
