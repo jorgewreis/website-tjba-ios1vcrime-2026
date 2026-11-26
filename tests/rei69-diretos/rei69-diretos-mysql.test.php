@@ -281,9 +281,9 @@ PHP;
     $stderr .= stream_get_contents($pipes[2]);
     fclose($pipes[1]); fclose($pipes[2]);
     proc_close($process);
-        if ($exit !== 0) { $failureDetail='child_exit'; throw new RuntimeException('Endpoint CLI falhou.'); }
     $statusText = substr($stderr, (int) strrpos($stderr, 'HTTP:') + 5);
     if ($statusText === '' || !ctype_digit($statusText)) { $failureDetail='exit'; throw new RuntimeException('Endpoint sem status HTTP controlado: ' . $endpoint . ' (' . $stderr . ')'); }
+    if ($exit !== 0 && !in_array((int) $statusText, [400, 401, 403], true)) { $failureDetail='child_exit'; throw new RuntimeException('Endpoint CLI falhou fora de uma recusa HTTP controlada.'); }
     try { $body = $stdout === '' ? [] : json_decode($stdout, true, 512, JSON_THROW_ON_ERROR); }
     catch (JsonException $exception) { $failureDetail='exit'; throw $exception; }
     return [(int) $statusText, is_array($body) ? $body : []];
