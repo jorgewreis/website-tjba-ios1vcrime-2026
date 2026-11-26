@@ -10,8 +10,11 @@ $states = [
 $routes = [];
 foreach ($states as $code => $uf) {
     $routes[] = ['8', $code, 'tj' . $uf];
-    $routes[] = ['6', $code, 'tre-' . ($code === '07' ? 'dft' : $uf)];
 }
+$electoral = $states;
+$electoral['03'] = 'ap';
+$electoral['04'] = 'am';
+foreach ($electoral as $code => $uf) $routes[] = ['6', $code, 'tre-' . ($code === '07' ? 'dft' : $uf)];
 for ($i = 1; $i <= 6; $i++) $routes[] = ['4', sprintf('%02d', $i), 'trf' . $i];
 for ($i = 1; $i <= 24; $i++) $routes[] = ['5', sprintf('%02d', $i), 'trt' . $i];
 array_push($routes,
