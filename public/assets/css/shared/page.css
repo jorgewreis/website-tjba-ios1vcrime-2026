@@ -40,6 +40,10 @@ h2 {
     margin: 10px 40px;
 }
 
+@media (max-width: 767px) {
+    body.page-internal .spacing-top-page { height: 76px; }
+}
+
 @media (max-width: 680px) {
     body.page-internal .header-page {
         min-width: 0;
