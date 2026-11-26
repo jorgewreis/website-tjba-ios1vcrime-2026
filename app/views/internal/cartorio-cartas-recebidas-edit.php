@@ -188,7 +188,7 @@ $stateOptions = [
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
-<body class="page-internal">
+<body class="page-internal page-operational-form">
 
     <div class="spacing-top-page"></div>
 
@@ -238,7 +238,7 @@ $stateOptions = [
                     <label for="filter-cidade">Cidade <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="height-md" style="width: 350px;" id="filter-cidade" aria-describedby="comarca-lookup-status" placeholder="Digite o nome da cidade" maxlength="120" value="<?php echo htmlspecialchars($cidadeValue, ENT_QUOTES); ?>" required>
                     <p id="comarca-lookup-status" role="status" aria-live="polite"></p>
-                    <button type="button" id="comarca-lookup-retry" hidden>Consultar cidade novamente</button>
+                    <button type="button" class="operational-retry" id="comarca-lookup-retry" hidden>Consultar cidade novamente</button>
                 </div>
                 <div class="col filter">
                     <label for="filter-estado">Estado <span class="label-hint-obrigatorio">*obrigatório</span></label>
