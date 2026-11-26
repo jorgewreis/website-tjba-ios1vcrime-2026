@@ -61,14 +61,6 @@ try {
         echo json_encode(['error' => 'Acesso negado ao processo.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
-    $lock = $connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
-    $person = $connection->prepare('SELECT `id` FROM `partes` WHERE `id` = :id' . $lock);
-    $person->execute([':id' => $parteId]);
-    $personExists = $person->fetchColumn() !== false;
-    $person->closeCursor();
-    if (!$personExists) {
-        throw new InvalidArgumentException('Pessoa não encontrada.');
-    }
     $repository = new ProcessosPartesRepository($connection);
     $newId = $repository->addParte($processoId, $parteId, $tipoParte, $polo, $prioridades);
     $partesRepository = new PartesRepository($connection);

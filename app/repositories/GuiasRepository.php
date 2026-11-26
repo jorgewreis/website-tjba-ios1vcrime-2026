@@ -27,7 +27,7 @@ final class GuiasRepository
     public function lockForUpdate(string $id): ?array
     {
         $statement = $this->connection->prepare(sprintf(
-            'SELECT `id`, `status` FROM `%s` WHERE `id` = :id LIMIT 1 FOR UPDATE',
+            'SELECT `id`, `status`, `numero_processo`, `processo_id`, `parte_id` FROM `%s` WHERE `id` = :id LIMIT 1 FOR UPDATE',
             $this->table
         ));
         $statement->execute([':id' => trim($id)]);

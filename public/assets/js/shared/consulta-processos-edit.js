@@ -30,9 +30,9 @@
         }
     }
 
-    function postJson(url, payload) {
+    function postJson(url, payload, options) {
         if (common && typeof common.postJson === 'function') {
-            return common.postJson(url, payload);
+            return common.postJson(url, payload, options);
         }
         return fetch(url, {
             method: 'POST',
@@ -41,7 +41,7 @@
             body: JSON.stringify(payload || {})
         }).then(function (response) {
             return response.json().then(function (data) {
-                return { ok: response.ok, data: data };
+                return { ok: response.ok, status: response.status, data: data };
             });
         });
     }
@@ -58,7 +58,8 @@
             const id = String(item.id || item.assunto_id || '').trim();
             const codigo = String(item.codigo || item.assunto_codigo || '').trim();
             const descricao = String(item.descricao || item.assunto_descricao || '').trim();
-            const origem = String(item.origem || 'manual').trim();
+            const origemInformada = String(item.origem || '').trim();
+            const origem = origemInformada === 'manual' || origemInformada === 'datajud' ? origemInformada : 'unknown';
             if (!id) {
                 return;
             }
@@ -96,12 +97,15 @@
             const texto = item.codigo
                 ? (item.descricao && item.descricao !== item.codigo ? (item.codigo + ' - ' + item.descricao) : item.codigo)
                 : item.descricao;
+            const control = item.origem === 'manual'
+                ? '  <button type="button" class="btn btn-secondary-outline height-sm btn-assunto-desvincular" data-assunto-id="' + item.id + '">Remover</button>'
+                : '  <span class="label label-default">' + escapeHtml(item.origem === 'datajud' ? 'DataJud' : 'Origem não identificada') + '</span>';
             return [
                 '<div class="display-flex row row-full justify-between align-center border-bottom padding-y-sm" data-assunto-id="' + item.id + '">',
                 '  <div class="display-flex col" style="width:auto; flex:1 1 auto;">',
                 '    <span class="major-info">' + escapeHtml(texto) + '</span>',
                 '  </div>',
-                '  <button type="button" class="btn btn-secondary-outline height-sm btn-assunto-desvincular" data-assunto-id="' + item.id + '">Remover</button>',
+                control,
                 '</div>'
             ].join('');
         }).join('');
@@ -178,6 +182,10 @@
         let codigoVerificadoNoBd = '';
         let assuntoEncontradoNoCatalogo = false;
         let buscaPessoaTimer = null;
+        let pessoaResultadoIncerto = false;
+        let pessoaPendente = false;
+        let pessoaNavegando = false;
+        let geracaoBuscaPessoa = 0;
 
         function clearBuscaAssuntoTimer() {
             if (buscaAssuntoTimer !== null) {
@@ -255,7 +263,7 @@
             const parteId = parteIdInput ? String(parteIdInput.value || '').trim() : '';
             const tipo = parteTipoSelect ? String(parteTipoSelect.value || '').trim() : '';
             const polo = partePoloSelect ? String(partePoloSelect.value || '').trim() : '';
-            parteAdicionarBtn.disabled = (parteId === '' && nome === '') || tipo === '' || polo === '';
+            parteAdicionarBtn.disabled = pessoaPendente || pessoaResultadoIncerto || pessoaNavegando || (parteId === '' && nome === '') || tipo === '' || polo === '';
         }
 
         function aplicarPoloPadraoPorTipo() {
@@ -344,7 +352,7 @@
             atualizarBtnAdicionarParte();
         }
 
-        function buscarPessoasPorNome(nome) {
+        function buscarPessoasPorNome(nome, geracao) {
             return fetch('/api/pessoas/search-by-name.php?nome=' + encodeURIComponent(nome) + '&limit=5', {
                 credentials: 'same-origin',
                 headers: { Accept: 'application/json' }
@@ -353,17 +361,21 @@
                     return { ok: response.ok, body: body };
                 });
             }).then(function (result) {
+                if (geracao !== geracaoBuscaPessoa || pessoaPendente || pessoaResultadoIncerto || pessoaNavegando) return;
                 if (!result.ok || (result.body && result.body.error)) {
                     mostrarInputNomeParte(nome);
                     return;
                 }
                 mostrarSugestoesPessoas(result.body ? result.body.pessoas : [], nome);
             }).catch(function () {
+                if (geracao !== geracaoBuscaPessoa || pessoaPendente || pessoaResultadoIncerto || pessoaNavegando) return;
                 mostrarInputNomeParte(nome);
             });
         }
 
         function scheduleBuscarPessoas() {
+            if (pessoaPendente || pessoaResultadoIncerto || pessoaNavegando) return;
+            const geracao = ++geracaoBuscaPessoa;
             if (buscaPessoaTimer !== null) {
                 global.clearTimeout(buscaPessoaTimer);
                 buscaPessoaTimer = null;
@@ -372,6 +384,7 @@
             if (parteIdInput) {
                 parteIdInput.value = '';
             }
+            setParteNomeStatus('', '');
             if (nome.length < 3) {
                 setParteNomeStatus('', '');
                 atualizarBtnAdicionarParte();
@@ -379,7 +392,7 @@
             }
             buscaPessoaTimer = global.setTimeout(function () {
                 buscaPessoaTimer = null;
-                buscarPessoasPorNome(nome);
+                buscarPessoasPorNome(nome, geracao);
             }, 700);
             atualizarBtnAdicionarParte();
         }
@@ -408,11 +421,18 @@
             }
             return postJson('/api/pessoas/create.php', {
                 nome_completo: nome
+            }, { requireJson: true }).catch(function () {
+                const error = new Error('Não foi possível confirmar o resultado. Consulte o cadastro de pessoas antes de tentar novamente.');
+                error.verificacaoNecessaria = true;
+                throw error;
             }).then(function (result) {
-                if (result.data && result.data.id) {
+                if (result.ok && result.data && result.data.id) {
                     return String(result.data.id);
                 }
-                throw new Error((result.data && result.data.error) ? result.data.error : 'Erro ao cadastrar pessoa.');
+                const error = new Error((result.data && result.data.error) ? result.data.error : 'Não foi possível confirmar o resultado. Consulte o cadastro de pessoas antes de tentar novamente.');
+                error.verificacaoNecessaria = result.status >= 500 || !result.data || typeof result.data !== 'object' || (!result.data.error && !result.data.id) || result.data.resultado === 'verificacao_necessaria';
+                if (error.verificacaoNecessaria) error.message = 'Não foi possível confirmar o resultado. Consulte o cadastro de pessoas antes de tentar novamente.';
+                throw error;
             });
         }
 
@@ -598,6 +618,7 @@
         if (parteNomeInput) {
             parteNomeInput.addEventListener('input', scheduleBuscarPessoas);
             parteNomeInput.addEventListener('blur', function () {
+                if (pessoaPendente || pessoaResultadoIncerto || pessoaNavegando) return;
                 parteNomeInput.value = parteNomeAtual();
                 atualizarBtnAdicionarParte();
             });
@@ -605,6 +626,7 @@
 
         if (parteNomeSelect && parteNomeInput) {
             parteNomeSelect.addEventListener('change', function () {
+                if (pessoaPendente || pessoaResultadoIncerto || pessoaNavegando) return;
                 const selected = parteNomeSelect.options[parteNomeSelect.selectedIndex] || null;
                 const value = String(parteNomeSelect.value || '').trim();
                 if (value === '__outro__') {
@@ -617,7 +639,8 @@
                 if (parteIdInput) {
                     parteIdInput.value = selected ? String(selected.dataset.parteId || '').trim() : '';
                 }
-                setParteNomeStatus(value === '__nova__' ? 'Nova pessoa' : 'Parte vinculada', value === '__nova__' ? '' : 'var(--color-success-active)');
+                const selecionadaId = selected ? String(selected.dataset.parteId || '').trim() : '';
+                setParteNomeStatus(value === '__nova__' && !selecionadaId ? 'Nova pessoa' : (value === '__nova__' ? 'Pessoa cadastrada; vínculo pendente' : 'Parte vinculada'), selecionadaId ? 'var(--color-success-active)' : '');
                 atualizarBtnAdicionarParte();
             });
         }
@@ -635,32 +658,78 @@
 
         if (parteAdicionarBtn && processoId) {
             parteAdicionarBtn.addEventListener('click', function () {
+                if (pessoaPendente || pessoaResultadoIncerto || pessoaNavegando) return;
                 const tipo = parteTipoSelect ? String(parteTipoSelect.value || '').trim() : '';
                 const polo = partePoloSelect ? String(partePoloSelect.value || '').trim() : '';
                 const nome = parteNomeAtual();
+                const pessoaJaExistente = parteIdInput ? String(parteIdInput.value || '').trim() !== '' : false;
                 if (nome === '' || tipo === '' || polo === '') {
                     notify('error', 'Campos obrigatórios', 'Informe nome, tipo e polo da parte.');
                     return;
                 }
-                parteAdicionarBtn.disabled = true;
+                ++geracaoBuscaPessoa;
+                if (buscaPessoaTimer !== null) {
+                    global.clearTimeout(buscaPessoaTimer);
+                    buscaPessoaTimer = null;
+                }
+                const camposParte = [parteNomeInput, parteNomeSelect, parteTipoSelect, partePoloSelect].filter(Boolean);
+                const estadosCampos = camposParte.map(function (campo) { return campo.disabled; });
+                camposParte.forEach(function (campo) { campo.disabled = true; });
+                pessoaPendente = true;
+                atualizarBtnAdicionarParte();
                 criarPessoaSeNecessario().then(function (parteId) {
+                    if (parteIdInput) parteIdInput.value = parteId;
+                    if (!pessoaJaExistente) {
+                        setParteNomeStatus('Pessoa cadastrada; vínculo pendente', 'var(--color-success-active)');
+                        const selected = parteNomeSelect && parteNomeSelect.options[parteNomeSelect.selectedIndex];
+                        if (selected && selected.value === '__nova__') {
+                            selected.dataset.parteId = parteId;
+                            selected.textContent = 'Pessoa cadastrada; vínculo pendente';
+                        }
+                    }
                     return postJson('/api/processos-partes/create.php', {
                         processo_id: processoId,
                         parte_id: parteId,
                         tipo_parte: tipo,
                         polo: polo
+                    }, { requireJson: true }).catch(function () {
+                        const error = new Error('Não foi possível confirmar o vínculo. Consulte as partes do processo antes de tentar novamente.');
+                        error.verificacaoNecessaria = true;
+                        throw error;
                     });
                 }).then(function (result) {
-                    if (result.data && result.data.id) {
+                    if (result.ok && result.data && result.data.id) {
+                        pessoaNavegando = true;
                         limparFormularioParte();
                         queuePostReloadToast('success', 'Sucesso', 'Parte adicionada ao processo.', storageKey);
                         global.location.reload();
                         return;
                     }
+                    if (result.status >= 500 || !result.data || typeof result.data !== 'object' || (!result.data.error && !result.data.id)) {
+                        const error = new Error('Não foi possível confirmar o vínculo. Consulte as partes do processo antes de tentar novamente.');
+                        error.verificacaoNecessaria = true;
+                        throw error;
+                    }
                     notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Erro ao adicionar parte.');
-                    atualizarBtnAdicionarParte();
                 }).catch(function (error) {
+                    if (error && error.verificacaoNecessaria) {
+                        pessoaResultadoIncerto = true;
+                        let aviso = global.document.getElementById('pessoa-resultado-incerto');
+                        if (!aviso) {
+                            aviso = global.document.createElement('div');
+                            aviso.id = 'pessoa-resultado-incerto';
+                            aviso.setAttribute('role', 'alert');
+                            parteAdicionarBtn.parentNode.prepend(aviso);
+                        }
+                        aviso.textContent = error.message;
+                        return;
+                    }
                     notify('error', 'Erro', error && error.message ? error.message : 'Erro de conexão ao adicionar parte.');
+                }).finally(function () {
+                    pessoaPendente = false;
+                    if (!pessoaResultadoIncerto && !pessoaNavegando) {
+                        camposParte.forEach(function (campo, index) { campo.disabled = estadosCampos[index]; });
+                    }
                     atualizarBtnAdicionarParte();
                 });
             });
@@ -683,6 +752,11 @@
                 }).then(function (result) {
                     if (!result.data || result.data.error) {
                         notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Erro ao desvincular assunto.');
+                        target.disabled = false;
+                        return;
+                    }
+                    if (result.data.action !== 'deleted') {
+                        notify('info', 'Assunto não removido', 'O vínculo permaneceu inalterado. Atualize a lista para ver o estado atual.');
                         target.disabled = false;
                         return;
                     }

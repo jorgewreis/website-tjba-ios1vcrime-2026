@@ -60,12 +60,14 @@ try {
         echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
-    $lock = $connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
-    $locked = $connection->prepare('SELECT `processo_id`, `parte_id`, `tipo_parte` FROM `processos_partes` WHERE `id` = :id' . $lock);
-    $locked->execute([':id' => $id]);
-    $vinculo = $locked->fetch(PDO::FETCH_ASSOC);
-    $locked->closeCursor();
-    if ($vinculo === false || !hash_equals($processId, trim((string) $vinculo['processo_id']))) {
+    if (!ProcessoSetorAuthorization::linkBelongsToProcess($connection, $id, $processId)) {
+        $connection->rollBack();
+        http_response_code(404);
+        echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $vinculo = $repository->findById($id);
+    if ($vinculo === null) {
         $connection->rollBack();
         http_response_code(404);
         echo json_encode(['error' => 'Vínculo não encontrado.'], JSON_UNESCAPED_UNICODE);

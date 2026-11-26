@@ -11,6 +11,8 @@ require_once __DIR__ . '/../repositories/PartesTelefonesRepository.php';
 require_once __DIR__ . '/../repositories/PartesInstituicoesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 
+final class PessoaDocumentoEstadoAlterado extends RuntimeException {}
+
 final class PessoasService
 {
     private PDO $connection;
@@ -84,6 +86,7 @@ final class PessoasService
                 throw new RuntimeException('Não foi possível iniciar o cadastro da pessoa.');
             }
             try {
+                ParteDocumentoLock::requireTransactionalTables($this->connection, self::tabelasAdicionaisCadastro($payload));
                 $id = $this->partesRepository->insert([
                     'cpf' => '',
                     'nome_completo' => $payload['nome_completo'] ?? '',
@@ -108,20 +111,36 @@ final class PessoasService
                     }
                 }
 
-                $this->connection->commit();
+                ParteDocumentoLock::commit($this->connection, 'cadastro da pessoa');
                 return $id;
             } catch (Throwable $e) {
                 if ($this->connection->inTransaction()) {
                     try {
-                        $this->connection->rollBack();
+                        if (!$this->connection->rollBack()) {
+                            throw new RuntimeException('Rollback do cadastro retornou false.');
+                        }
                     } catch (Throwable $rollbackError) {
                         ParteDocumentoLock::markConnectionUnsafe($this->connection);
-                        throw new RuntimeException('Falha ao reverter cadastro da pessoa; estado da conexão incerto.', 0, $e);
+                        throw new DocumentoResultadoIncerto('nao_confirmada', $e);
                     }
                 }
                 throw $e;
             }
         });
+    }
+
+    /** @return list<string> */
+    private static function tabelasAdicionaisCadastro(array $payload): array
+    {
+        $telefones = $payload['telefones'] ?? [];
+        if (is_array($telefones)) {
+            foreach ($telefones as $telefone) {
+                if (trim((string) ($telefone['numero'] ?? '')) !== '') {
+                    return ['partes_telefones'];
+                }
+            }
+        }
+        return [];
     }
 
     public function update(string $id, array $payload): bool
@@ -157,11 +176,8 @@ final class PessoasService
         }
         ParteDocumentoHelper::validarNumero($tipo, $numero);
 
-        return ParteDocumentoLock::run(
-            $this->connection,
-            $tipo,
-            $numero,
-            fn(): string => $this->transacaoDocumento($parteId, function () use ($parteId, $tipo, $numero): string {
+        return $this->comLocksDocumento($parteId, $tipo, $numero,
+            function () use ($parteId, $tipo, $numero): string {
                 $existentes = $this->documentosRepository->findByParteId($parteId);
                 foreach ($existentes as $doc) {
                     if (ParteDocumentoHelper::normalizarTipo((string) ($doc['tipo'] ?? '')) === $tipo) {
@@ -169,15 +185,16 @@ final class PessoasService
                     }
                 }
 
+                $cpfAnterior = $tipo === 'CPF' ? ($this->partesRepository->findById($parteId)['cpf'] ?? null) : null;
                 $newId = $this->documentosRepository->insert([
                     'parte_id' => $parteId,
                     'tipo' => $tipo,
                     'numero' => $numero,
                 ]);
-                $this->sincronizarCpfLegado($parteId);
+                if ($tipo === 'CPF') $this->sincronizarCpfLegado($parteId, $cpfAnterior);
 
                 return $newId;
-            })
+            }
         );
     }
 
@@ -193,11 +210,8 @@ final class PessoasService
         if ($parteId === '' || $tipo === '' || $numero === '') {
             return false;
         }
-        return ParteDocumentoLock::run(
-            $this->connection,
-            $tipo,
-            $numero,
-            fn(): bool => $this->transacaoDocumento($parteId, function () use ($id, $parteId, $tipo, $numero): bool {
+        return $this->comLocksDocumento($parteId, $tipo, $numero,
+            function () use ($id, $parteId, $tipo, $numero): bool {
                 $atual = $this->documentosRepository->findById($id);
                 if ($atual === null || (string) ($atual['parte_id'] ?? '') !== $parteId) {
                     return false;
@@ -206,14 +220,73 @@ final class PessoasService
                     || ParteDocumentoHelper::normalizarNumero($tipo, (string) ($atual['numero'] ?? '')) !== $numero) {
                     throw new RuntimeException('Documento alterado durante a exclusão; tente novamente.');
                 }
+                $cpfAnterior = null;
+                if ($tipo === 'CPF') {
+                    $parte = $this->partesRepository->findById($parteId);
+                    if ($parte === null) throw new InvalidArgumentException('Pessoa não encontrada.');
+                    $cpfAnterior = $parte['cpf'] ?? null;
+                    $legado = ParteDocumentoHelper::normalizarNumero('CPF', (string) ($cpfAnterior ?? ''));
+                    $cpfs = [];
+                    foreach ($this->documentosRepository->findByParteId($parteId) as $documento) {
+                        if (ParteDocumentoHelper::normalizarTipo((string) ($documento['tipo'] ?? '')) === 'CPF') $cpfs[] = $documento;
+                    }
+                    if (count($cpfs) !== 1 || ($legado !== '' && $legado !== $numero)) {
+                        throw new InvalidArgumentException('CPF divergente ou ambíguo; cadastro requer reconciliação.');
+                    }
+                }
                 $ok = $this->documentosRepository->delete($id);
-                if ($ok) {
-                    $this->sincronizarCpfLegado($parteId);
+                if ($ok && $tipo === 'CPF') {
+                    $this->sincronizarCpfLegado($parteId, $cpfAnterior);
                 }
 
                 return $ok;
-            })
+            }
         );
+    }
+
+    /** Os CPFs antigo e documental são bloqueados antes da transação e revalidados sob lock da pessoa. */
+    private function comLocksDocumento(string $parteId, string $tipo, string $numero, callable $operacao): mixed
+    {
+        if ($this->connection->inTransaction()) {
+            throw new LogicException('A alteração de documento exige transação própria.');
+        }
+        for ($tentativa = 0; $tentativa < 3; $tentativa++) {
+            $snapshot = $this->estadoCpfDocumento($parteId);
+            $locks = [
+                ['tipo' => $tipo, 'numero' => $numero],
+                ['tipo' => 'CPF', 'numero' => $snapshot['legado']],
+                ['tipo' => 'CPF', 'numero' => $snapshot['documento']],
+            ];
+            try {
+                return ParteDocumentoLock::runMany($this->connection, $locks,
+                    fn(): mixed => $this->transacaoDocumento($parteId, function () use ($parteId, $snapshot, $operacao): mixed {
+                        if ($this->estadoCpfDocumento($parteId) !== $snapshot) {
+                            throw new PessoaDocumentoEstadoAlterado('O CPF da pessoa foi alterado durante a operação.');
+                        }
+                        return $operacao();
+                    })
+                );
+            } catch (PessoaDocumentoEstadoAlterado $error) {
+                if (ParteDocumentoLock::isConnectionUnsafe($this->connection) || $this->connection->inTransaction() || $tentativa === 2) {
+                    throw $error;
+                }
+            }
+        }
+        throw new RuntimeException('Não foi possível alterar o documento.');
+    }
+
+    /** @return array{legado:string, documento:string} */
+    private function estadoCpfDocumento(string $parteId): array
+    {
+        $parte = $this->partesRepository->findById($parteId);
+        if ($parte === null) {
+            throw new InvalidArgumentException('Pessoa não encontrada.');
+        }
+        $documentos = $this->documentosRepository->findByParteId($parteId);
+        return [
+            'legado' => ParteDocumentoHelper::normalizarNumero('CPF', (string) ($parte['cpf'] ?? '')),
+            'documento' => ParteDocumentoHelper::resolverCpfParaColunaLegada($documentos) ?? '',
+        ];
     }
 
     /** Serializa alterações de documentos da mesma pessoa antes de ler ou gravar. */
@@ -226,6 +299,7 @@ final class PessoasService
             throw new RuntimeException('Não foi possível iniciar a alteração do documento.');
         }
         try {
+            ParteDocumentoLock::requireTransactionalTables($this->connection);
             $sql = 'SELECT `id` FROM `partes` WHERE `id` = :id';
             if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
                 $sql .= ' FOR UPDATE';
@@ -236,16 +310,18 @@ final class PessoasService
                 throw new InvalidArgumentException('Pessoa não encontrada.');
             }
             $resultado = $operacao();
-            $this->connection->commit();
+            ParteDocumentoLock::commit($this->connection, 'alteração de documento');
             return $resultado;
         } catch (Throwable $e) {
             if ($this->connection->inTransaction()) {
                 try {
-                    $this->connection->rollBack();
+                    if (!$this->connection->rollBack()) {
+                        throw new RuntimeException('Rollback da alteração de documento retornou false.');
+                    }
                 } catch (Throwable $rollbackError) {
-                ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                    ParteDocumentoLock::markConnectionUnsafe($this->connection);
                     error_log('Falha ao reverter transação de documento; estado da conexão incerto.');
-                    throw new RuntimeException('Falha ao reverter alteração de documento; estado da conexão incerto.', 0, $e);
+                    throw new DocumentoResultadoIncerto('nao_confirmada', $e);
                 }
             }
             throw $e;
@@ -502,14 +578,72 @@ final class PessoasService
                 'numero' => $doc['numero'],
             ]);
         }
-        $this->sincronizarCpfLegado($parteId);
+        $this->sincronizarCpfLegado($parteId, null);
     }
 
-    private function sincronizarCpfLegado(string $parteId): void
+    private function sincronizarCpfLegado(string $parteId, ?string $cpfAnterior): void
     {
         $documentos = $this->documentosRepository->findByParteId($parteId);
         $cpf = ParteDocumentoHelper::resolverCpfParaColunaLegada($documentos);
-        $this->partesRepository->setCpfLegado($parteId, $cpf);
+        $this->partesRepository->setCpfLegado($parteId, $cpf, $cpfAnterior);
+    }
+
+    /**
+     * Serializa números de documento globalmente no MySQL, inclusive quando duas
+     * requisições tentam vinculá-los a partes diferentes. O lock envolve o commit
+     * da transação que grava o documento, evitando depender de índice ausente no
+     * checkout. SQLite segue sem lock advisory para os testes unitários locais.
+     *
+     * @param list<array{tipo: string, numero: string}> $documentos
+     */
+    private function withDocumentNumberLocks(array $documentos, callable $operation): mixed
+    {
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql' || $documentos === []) {
+            return $operation();
+        }
+
+        $lockNames = [];
+        foreach ($documentos as $documento) {
+            $tipo = ParteDocumentoHelper::normalizarTipo((string) ($documento['tipo'] ?? ''));
+            $numero = ParteDocumentoHelper::normalizarNumero($tipo, (string) ($documento['numero'] ?? ''));
+            if ($tipo === '' || $numero === '') {
+                continue;
+            }
+            $lockNames[] = 'pd_' . substr(hash('sha256', $tipo . "\0" . $numero), 0, 60);
+        }
+        $lockNames = array_values(array_unique($lockNames));
+        sort($lockNames, SORT_STRING);
+        if ($lockNames === []) {
+            return $operation();
+        }
+
+        $acquired = [];
+        try {
+            $acquire = $this->connection->prepare('SELECT GET_LOCK(:lock_name, 10)');
+            foreach ($lockNames as $lockName) {
+                $acquire->execute([':lock_name' => $lockName]);
+                if ((int) $acquire->fetchColumn() !== 1) {
+                    throw new RuntimeException('Não foi possível reservar o documento para gravação. Tente novamente.');
+                }
+                $acquired[] = $lockName;
+            }
+
+            return $operation();
+        } finally {
+            if ($acquired !== []) {
+                $release = $this->connection->prepare('SELECT RELEASE_LOCK(:lock_name)');
+                foreach (array_reverse($acquired) as $lockName) {
+                    try {
+                        $release->execute([':lock_name' => $lockName]);
+                        if ((int) $release->fetchColumn() !== 1) {
+                            error_log('liberar bloqueio de documento: lock não pertencia à conexão atual');
+                        }
+                    } catch (Throwable $releaseError) {
+                        error_log('liberar bloqueio de documento: ' . $releaseError->getMessage());
+                    }
+                }
+            }
+        }
     }
 
     private function canonProfissaoParaComparacao(?string $valor): string

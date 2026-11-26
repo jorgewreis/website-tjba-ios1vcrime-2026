@@ -6,26 +6,30 @@ require_once __DIR__ . '/../../../config/security.php';
 require_once __DIR__ . '/../../../app/helpers/bootstrap.php';
 require_once __DIR__ . '/../../../app/services/PasswordResetService.php';
 
+if (!headers_sent()) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Referrer-Policy: no-referrer');
+}
+
 $service = new PasswordResetService();
 
-// Token: POST (hidden) > GET > query na REQUEST_URI (alguns proxies/iframe não repõem $_GET no POST).
+// O token é recebido pelo bootstrap same-origin e mantido em sessão; o formulário
+// envia a credencial somente no corpo POST.
 $token = '';
-if (isset($_POST['token']) && is_string($_POST['token'])) {
-    $token = trim($_POST['token']);
-}
-if ($token === '' && isset($_GET['token']) && is_string($_GET['token'])) {
-    $token = trim($_GET['token']);
-}
-if ($token === '' && !empty($_SERVER['REQUEST_URI'])) {
-    $uri = (string) $_SERVER['REQUEST_URI'];
-    if (preg_match('/[?&]token=([^&]+)/', $uri, $m)) {
-        $token = trim(rawurldecode($m[1]));
-    }
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
+    $token = isset($_POST['token']) && is_string($_POST['token'])
+        ? trim($_POST['token'])
+        : trim((string) ($_SESSION['password_reset_form_token'] ?? ''));
+} else {
+    $token = trim((string) ($_SESSION['password_reset_form_token'] ?? ''));
 }
 
 $tokenData = $service->validateResetToken($token);
-// action explícito com ?token= garante que, no POST, o PHP receba $_GET['token'] mesmo se o hidden falhar.
-$formAction = '/views/public/redefinir-senha-form.php' . ($token !== '' ? ('?token=' . rawurlencode($token)) : '');
+$formAction = '/views/public/redefinir-senha-form.php';
+if ($tokenData === null && ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+    unset($_SESSION['password_reset_form_token']);
+}
 
 $mensagemErro    = '';
 $mensagemSucesso = '';
@@ -47,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (($resultado['success'] ?? false) === true) {
                 $mensagemSucesso = (string) ($resultado['message'] ?? 'Senha redefinida com sucesso.');
                 $tokenData = null;
+                unset($_SESSION['password_reset_form_token']);
             } else {
                 $mensagemErro = (string) ($resultado['message'] ?? 'Não foi possível redefinir a senha.');
                 $tokenData = $service->validateResetToken($token);
@@ -62,6 +67,7 @@ $csrfToken = Security::generateCSRFToken();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <title>Redefinir senha</title>
 
     <link rel="stylesheet" href="/assets/css/shared/reset.css">
@@ -70,8 +76,6 @@ $csrfToken = Security::generateCSRFToken();
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <link rel="stylesheet" href="/assets/css/shared/layout.css">
     <link rel="stylesheet" href="/assets/css/shared/login.css">
-
-    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
 
     <script>
         (function() {

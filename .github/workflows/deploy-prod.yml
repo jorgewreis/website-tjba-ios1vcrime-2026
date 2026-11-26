@@ -144,12 +144,34 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "mkdir -p \"${PROD_PATH}\" && echo \"Diretório OK: ${PROD_PATH}\""
 
+      - name: Migrar setor responsável de processos (PROD, antes do sync)
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          PROD_PATH: ${{ secrets.PROD_PATH }}
+        run: |
+          set -euo pipefail
+          migration_payload="$(base64 -w 0 scripts/migrate-process-responsible-sector.php)"
+          printf -v remote_command 'set -e; cd %q && test -f .env && mkdir -p scripts && temp_script=$(mktemp scripts/.migrate-process-sector.XXXXXX) && trap %q EXIT && base64 -d > "$temp_script" && php "$temp_script" --apply' \
+            "$PROD_PATH" 'rm -f -- "$temp_script"'
+          printf '%s' "$migration_payload" | ssh -i ~/.ssh/id_ed25519 \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" "$remote_command"
+
       - name: Aplicar migration de cartas antes da publicação (PROD)
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
           DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
         run: bash .github/scripts/deploy-staged-cartas-migration.sh
+
+      - name: Aplicar migration de idempotência de guias antes da publicação (PROD)
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
+        run: bash .github/scripts/deploy-staged-guias-migration.sh
 
       - name: Sync files to server (PROD)
         env:
