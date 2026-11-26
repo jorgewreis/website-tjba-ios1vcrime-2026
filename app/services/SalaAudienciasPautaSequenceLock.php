@@ -16,7 +16,7 @@ final class SalaAudienciasPautaSequenceLock
         $this->connection = $connection;
     }
 
-    public function acquire(int $year, int $timeoutSeconds = 5): void
+    public function acquire(int $year, int $timeoutSeconds = 5, bool $schedule = false): void
     {
         if ($this->acquired || $year < 1) {
             throw new InvalidArgumentException('Ano ou estado do bloqueio anual inválido.');
@@ -34,8 +34,9 @@ final class SalaAudienciasPautaSequenceLock
 
         // GET_LOCK aceita nomes de até 64 caracteres e pertence ao servidor MySQL,
         // por isso o hash inclui banco, tabela e ano.
-        $this->lockName = 'fokus_pauta_seq_' . substr(
-            hash('sha256', strtolower($database) . ':sala_audiencias_pauta:' . $year),
+        $prefix = $schedule ? 'fokus_pauta_ag_' : 'fokus_pauta_seq_';
+        $this->lockName = $prefix . substr(
+            hash('sha256', strtolower($database) . ':sala_audiencias_pauta:' . ($schedule ? 'agenda' : $year)),
             0,
             48
         );
@@ -46,7 +47,7 @@ final class SalaAudienciasPautaSequenceLock
 
         if ((int) $statement->fetchColumn() !== 1) {
             $this->lockName = null;
-            throw new SalaAudienciasPautaSequenceLockException('O sequencial anual da pauta está ocupado; tente novamente.');
+            throw new SalaAudienciasPautaSequenceLockException('A pauta está sendo atualizada; tente novamente.');
         }
 
         $this->acquired = true;

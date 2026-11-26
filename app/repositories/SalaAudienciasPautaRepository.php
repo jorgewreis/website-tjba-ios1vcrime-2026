@@ -151,17 +151,23 @@ final class SalaAudienciasPautaRepository
     /**
      * Retorna o id da audiência em andamento na data (ou null).
      */
-    public function findIdEmAndamentoNaData(string $dataYmd): ?string
+    public function findIdEmAndamentoNaData(string $dataYmd, ?string $exceptId = null): ?string
     {
         $dataYmd = trim($dataYmd);
         if ($dataYmd === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataYmd)) {
             return null;
         }
         $sql = sprintf(
-            'SELECT `id_pauta` FROM `%s` WHERE `ativo` = 1 AND `status` = \'em_andamento\' AND `data_audiencia` = :d LIMIT 1',
+            'SELECT `id_pauta` FROM `%s` WHERE `ativo` = 1 AND `status` = \'em_andamento\' AND `data_audiencia` = :d',
             $this->table
         );
-        $st = $this->connection->prepare($sql);
+        if ($exceptId !== null) {
+            $sql .= ' AND `id_pauta` <> :exc';
+        }
+        $st = $this->connection->prepare($sql . ' LIMIT 1');
+        if ($exceptId !== null) {
+            $st->bindValue(':exc', $exceptId);
+        }
         $st->bindValue(':d', $dataYmd);
         $st->execute();
         $id = $st->fetchColumn();
@@ -189,7 +195,7 @@ final class SalaAudienciasPautaRepository
             $st->bindValue(':now', $now);
             $st->execute();
 
-            return true;
+            return $st->rowCount() > 0;
         }
         if ($acao === 'reiniciar') {
             $sql = sprintf(
@@ -201,7 +207,7 @@ final class SalaAudienciasPautaRepository
             $st->bindValue(':u', $atualizadoPor);
             $st->execute();
 
-            return true;
+            return $st->rowCount() > 0;
         }
         if ($acao === 'encerrar') {
             $sql = sprintf(
@@ -214,7 +220,7 @@ final class SalaAudienciasPautaRepository
             $st->bindValue(':now', $now);
             $st->execute();
 
-            return true;
+            return $st->rowCount() > 0;
         }
         if ($acao === 'redesignar') {
             $sql = sprintf(
@@ -226,7 +232,7 @@ final class SalaAudienciasPautaRepository
             $st->bindValue(':u', $atualizadoPor);
             $st->execute();
 
-            return true;
+            return $st->rowCount() > 0;
         }
 
         return false;
@@ -409,7 +415,7 @@ final class SalaAudienciasPautaRepository
      * Indica se já existe audiência ativa para o processo que impede um novo cadastro.
      * Liberam novo cadastro: cancelada, redesignada, finalizada e realizada.
      */
-    public function existsBlockingPautaForProcesso(string $processoId): bool
+    public function existsBlockingPautaForProcesso(string $processoId, ?string $exceptId = null): bool
     {
         $processoId = trim($processoId);
         if ($processoId === '') {
@@ -419,11 +425,16 @@ final class SalaAudienciasPautaRepository
             'SELECT 1 FROM `%s`
              WHERE `ativo` = 1
                AND `processo` = :processo
-               AND `status` NOT IN (\'cancelada\', \'redesignada\', \'adiada\', \'finalizada\', \'realizada\')
-             LIMIT 1',
+               AND `status` NOT IN (\'cancelada\', \'redesignada\', \'adiada\', \'finalizada\', \'realizada\')',
             $this->table
         );
-        $st = $this->connection->prepare($sql);
+        if ($exceptId !== null) {
+            $sql .= ' AND `id_pauta` <> :exc';
+        }
+        $st = $this->connection->prepare($sql . ' LIMIT 1');
+        if ($exceptId !== null) {
+            $st->bindValue(':exc', $exceptId);
+        }
         $st->bindValue(':processo', $processoId);
         $st->execute();
 

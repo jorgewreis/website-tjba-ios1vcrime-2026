@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 $fixtureStage = 'setup';
 set_exception_handler(static function (Throwable $exception) use (&$fixtureStage): void {
-    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness'];
+    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness', 'pauta_transition_lock', 'pauta_allocation_lock', 'reu_principal_lock'];
     $code = in_array($fixtureStage, $allowed, true) ? $fixtureStage : 'unknown';
     fwrite(STDERR, "REI69_FIXTURE_FAILURE code=$code\n");
     exit(1);
@@ -151,4 +151,94 @@ if (($updatedWitness['ok'] ?? false) !== true || $pdo->inTransaction() || !$upda
 foreach (['classes','processos','setores','usuario_setor'] as $unchangedTable) {
     if ($beforeWitness[$unchangedTable] !== $afterWitness[$unchangedTable]) throw new RuntimeException('Pure witness update changed an unrelated table.');
 }
+
+// A second connection to the same sentinel-checked disposable schema.
+$fixtureStage = 'pauta_transition_lock';
+$peer = new PDO($dsn, 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
+$peer->exec('SET SESSION innodb_lock_wait_timeout=1');
+$peerPauta = new SalaAudienciasPautaService($peer);
+$pdo->exec('ALTER TABLE sala_audiencias_pauta ADD data_hora_inicio_efetivo DATETIME, ADD data_hora_fim_efetivo DATETIME, ADD atualizado_por VARCHAR(40)');
+$pdo->prepare("UPDATE sala_audiencias_pauta SET data_audiencia=?, hora_audiencia='09:00:00' WHERE id_pauta='PA'")
+    ->execute([date('Y-m-d')]);
+$agenda = new SalaAudienciasPautaSequenceLock($pdo);
+$agenda->acquire((int) date('Y'), 5, true);
+try {
+    try {
+        $peerPauta->setStatusPainel('PA', 'iniciar', null);
+        throw new RuntimeException('Uma segunda conexão ignorou o lock compartilhado da pauta.');
+    } catch (SalaAudienciasPautaSequenceLockException) {
+        // Expected: no change until the active schedule operation releases the lock.
+    }
+    if ($pdo->query("SELECT status FROM sala_audiencias_pauta WHERE id_pauta='PA'")->fetchColumn() !== 'designada') {
+        throw new RuntimeException('A pauta foi alterada apesar do lock.');
+    }
+} finally {
+    $agenda->release();
+}
+$peerPauta->setStatusPainel('PA', 'iniciar', null);
+if ($pdo->query("SELECT status FROM sala_audiencias_pauta WHERE id_pauta='PA'")->fetchColumn() !== 'em_andamento') {
+    throw new RuntimeException('A pauta não progrediu depois de liberar o lock.');
+}
+
+$fixtureStage = 'pauta_allocation_lock';
+$pdo->exec('CREATE TABLE sala_audiencias_pauta_alocados (
+    id VARCHAR(40) PRIMARY KEY, pauta_id VARCHAR(40), usuario_id VARCHAR(40), tipo VARCHAR(16),
+    created_at DATETIME, UNIQUE (pauta_id, usuario_id)
+) ENGINE=InnoDB');
+$pautaAloc = new SalaAudienciasPautaAlocadosRepository($pdo);
+$first = $pautaAloc->addAlocado('PA', 'U1', SalaAudienciasPautaAlocadosRepository::TIPO_ALL);
+foreach (['U2', 'U3', 'U4'] as $uid) $service->addAlocadoUsuario('PA', $uid);
+$pdo->beginTransaction();
+try {
+    $pautaAloc->addAlocado('PA', 'U5');
+    try {
+        $peerPauta->addAlocadoUsuario('PA', 'U6');
+        throw new RuntimeException('A escrita não esperou a transação da alocação anterior.');
+    } catch (PDOException $exception) {
+        if ((int) ($exception->errorInfo[1] ?? 0) !== 1205 || $peer->inTransaction()) {
+            throw $exception;
+        }
+    }
+    $pdo->commit();
+} finally {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+}
+try {
+    $peerPauta->addAlocadoUsuario('PA', 'U6');
+    throw new RuntimeException('A sexta alocação foi aceita após a primeira transação.');
+} catch (InvalidArgumentException $exception) {
+    if (!str_contains($exception->getMessage(), 'Limite de 5')) throw $exception;
+}
+if ((new SalaAudienciasPautaAlocadosRepository($peer))->addAlocado('PA', 'U1') !== $first
+    || $pautaAloc->countByPautaId('PA') !== 5 || $peer->inTransaction()) {
+    throw new RuntimeException('Repetição idempotente ou capacidade da pauta não foi preservada.');
+}
+
+$fixtureStage = 'reu_principal_lock';
+require_once '/repo/app/services/GabineteReusPresosService.php';
+$pdo->exec("ALTER TABLE gabinete_reu_preso ADD controle_tipo VARCHAR(16), ADD proxima_revisao DATE, ADD updated_at DATETIME");
+$pdo->exec("ALTER TABLE gabinete_reu_preso_processo ADD principal INT, ADD data_prisao DATE, ADD created_at DATETIME, ADD updated_at DATETIME");
+$pdo->exec('CREATE TABLE gabinete_reu_preso_movimentacao (reu_preso_id VARCHAR(40), processo_id VARCHAR(40), data_movimentacao DATE, tipo_codigo VARCHAR(80)) ENGINE=InnoDB');
+$pdo->exec("INSERT INTO gabinete_reu_preso (id,status,controle_tipo) VALUES ('R','ativo','principal')");
+$pdo->exec("INSERT INTO gabinete_reu_preso_processo (id,processo_id,reu_preso_id,situacao,principal,data_prisao) VALUES
+    ('L1','A','R','solto',1,'2026-01-01'),('L2','B','R','solto',0,'2026-02-01')");
+$peerGabinete = new GabineteReusPresosService($peer);
+$pdo->beginTransaction();
+try {
+    (new GabineteReuPresoRepository($pdo))->findById('R', true);
+    try {
+        $peerGabinete->setPrincipal('R', 'L2');
+        throw new RuntimeException('A troca não esperou o bloqueio do réu.');
+    } catch (PDOException $exception) {
+        if ((int) ($exception->errorInfo[1] ?? 0) !== 1205 || $peer->inTransaction()) throw $exception;
+    }
+} finally {
+    $pdo->rollBack();
+}
+$peerGabinete->setPrincipal('R', 'L2');
+if ($pdo->query("SELECT id FROM gabinete_reu_preso_processo WHERE reu_preso_id='R' AND principal=1")->fetchAll(PDO::FETCH_COLUMN) !== ['L2']
+    || $pdo->query("SELECT proxima_revisao FROM gabinete_reu_preso WHERE id='R'")->fetchColumn() !== '2026-05-02') {
+    throw new RuntimeException('A troca não deixou um único principal com o prazo correspondente.');
+}
+
 echo "PASS REI69 pauta cross-process synthetic service regression\n";

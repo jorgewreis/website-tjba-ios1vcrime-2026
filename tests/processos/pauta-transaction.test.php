@@ -13,7 +13,7 @@ foreach (['APP_ENV' => 'fixture', 'DB_HOST' => '127.0.0.1', 'DB_PORT' => '1', 'D
 require_once __DIR__ . '/../../app/services/SalaAudienciasPautaService.php';
 
 // Real transactions in an in-memory SQLite database. MySQL-specific UPDATE
-// LIMIT is removed and NOW/REGEXP_REPLACE are emulated for this test only.
+// LIMIT and FOR UPDATE are removed and NOW/REGEXP_REPLACE are emulated for this test only.
 final class PautaTestDatabase extends PDO
 {
     public function __construct()
@@ -30,6 +30,7 @@ final class PautaTestDatabase extends PDO
 
     public function prepare(string $query, array $options = []): PDOStatement|false
     {
+        $query = preg_replace("/\s+FOR UPDATE\s*$/i", "", $query);
         if (preg_match('/^\s*UPDATE\b/i', $query)) {
             $query = preg_replace('/\s+LIMIT\s+1\s*$/i', '', $query);
         }

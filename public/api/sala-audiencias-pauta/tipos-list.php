@@ -7,6 +7,14 @@ ApiErrorReporter::register('public/api/sala-audiencias-pauta/tipos-list.php');
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/BootstrapHelper.php';
+require_once $basePath . '/config/security.php';
+if (!Security::isAuthenticated()) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Sessão expirada ou não autenticada.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/services/SalaAudienciasPautaService.php';
 

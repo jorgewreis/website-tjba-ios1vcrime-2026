@@ -99,15 +99,9 @@ final class SalaAudienciasPautaService
     public function addAlocadoUsuario(string $idPauta, string $usuarioAlvoId): void
     {
         $idPauta = trim($idPauta);
-        if ($this->pautaRepository->findById($idPauta) === null) {
-            throw new InvalidArgumentException('Audiência não encontrada.');
-        }
         $usuarioAlvoId = trim($usuarioAlvoId);
         if ($usuarioAlvoId === '') {
             throw new InvalidArgumentException('Usuário é obrigatório.');
-        }
-        if ($this->alocadosRepository->countByPautaId($idPauta) >= 5) {
-            throw new InvalidArgumentException('Limite de 5 servidores alocados por audiência.');
         }
         $this->alocadosRepository->addAlocado($idPauta, $usuarioAlvoId, SalaAudienciasPautaAlocadosRepository::TIPO_SPECIFIC);
     }
@@ -129,9 +123,9 @@ final class SalaAudienciasPautaService
      */
     private function formatAlocadosPresentation(array $alocadosRaw): array
     {
-        $max = 5;
+        // Exibir também eventual excesso legado para permitir a correção manual.
         $alocados = [];
-        foreach (array_slice($alocadosRaw, 0, $max) as $a) {
+        foreach ($alocadosRaw as $a) {
             $tipo = $this->normalizeTipoAlocado((string) ($a['tipo'] ?? ''));
             $alocados[] = [
                 'alocado_id' => (string) ($a['id'] ?? ''),
@@ -174,6 +168,11 @@ final class SalaAudienciasPautaService
     }
 
     public function create(array $payload, ?string $usuarioId): string
+    {
+        return $this->withScheduleLock(fn () => $this->createWithScheduleLock($payload, $usuarioId));
+    }
+
+    private function createWithScheduleLock(array $payload, ?string $usuarioId): string
     {
         $numeroProcesso = trim((string) ($payload['numero_processo'] ?? ''));
         if ($numeroProcesso === '') {
@@ -227,6 +226,9 @@ final class SalaAudienciasPautaService
                 );
             }
             $status = $this->finalizeStatusPauta(trim((string) ($payload['status'] ?? '')), 'designada');
+            if ($status === 'em_andamento') {
+                throw new InvalidArgumentException('Cadastre a audiência antes de iniciá-la.');
+            }
 
             $seq = $this->pautaRepository->nextSequencialForYear($ano);
             $id = $this->pautaRepository->insert([
@@ -264,6 +266,11 @@ final class SalaAudienciasPautaService
 
     public function update(string $id, array $payload, ?string $usuarioId): bool
     {
+        return $this->withScheduleLock(fn () => $this->updateWithScheduleLock($id, $payload, $usuarioId));
+    }
+
+    private function updateWithScheduleLock(string $id, array $payload, ?string $usuarioId): bool
+    {
         $tipo = trim((string) ($payload['tipo_audiencia'] ?? ''));
         $data = trim((string) ($payload['data_audiencia'] ?? ''));
         $hora = trim((string) ($payload['hora_audiencia'] ?? ''));
@@ -279,6 +286,12 @@ final class SalaAudienciasPautaService
         }
         $statusAtualNorm = $this->normalizeLegacyStatus(trim((string) ($atual['status'] ?? 'designada')));
         $status = $this->finalizeStatusPauta($statusIn, $statusAtualNorm);
+        if ($status === 'em_andamento') {
+            $this->assertPodeFicarEmAndamento($id, $data, $statusAtualNorm);
+        }
+        if (in_array($status, ['designada', 'em_andamento'], true)) {
+            $this->assertProcessoSemOutraPautaAtiva((string) ($atual['processo'] ?? ''), $id);
+        }
         $dataAtual = trim((string) ($atual['data_audiencia'] ?? ''));
         $horaAtualRaw = trim((string) ($atual['hora_audiencia'] ?? ''));
 
@@ -327,6 +340,11 @@ final class SalaAudienciasPautaService
      */
     public function setStatusPainel(string $idPauta, string $acao, ?string $usuarioId): void
     {
+        $this->withScheduleLock(fn () => $this->setStatusPainelWithScheduleLock($idPauta, $acao, $usuarioId));
+    }
+
+    private function setStatusPainelWithScheduleLock(string $idPauta, string $acao, ?string $usuarioId): void
+    {
         $idPauta = trim($idPauta);
         $acao = strtolower(trim($acao));
         if (!in_array($acao, ['reiniciar', 'iniciar', 'encerrar', 'redesignar'], true)) {
@@ -358,13 +376,13 @@ final class SalaAudienciasPautaService
         }
 
         if ($acao === 'iniciar') {
-            if ($stAtual !== 'designada') {
-                throw new InvalidArgumentException('Só é possível iniciar audiências com status Designada.');
-            }
+            $this->assertPodeFicarEmAndamento($idPauta, $dataAud, $stAtual, false);
+            $this->assertProcessoSemOutraPautaAtiva((string) ($pauta['processo'] ?? ''), $idPauta);
         } elseif ($acao === 'reiniciar') {
             if ($stAtual === 'designada') {
                 throw new InvalidArgumentException('Não é possível reiniciar uma audiência com status Designada.');
             }
+            $this->assertProcessoSemOutraPautaAtiva((string) ($pauta['processo'] ?? ''), $idPauta);
             $horaBruta = trim((string) ($pauta['hora_audiencia'] ?? ''));
             $this->assertDataAudienciaNaoPassada($dataAud);
             $horaNorm = $this->normalizarHoraNaGradeCadastro($horaBruta);
@@ -388,6 +406,39 @@ final class SalaAudienciasPautaService
         $this->sincronizarDuracaoEHorariosPauta($idPauta);
     }
 
+    private function withScheduleLock(callable $operation): mixed
+    {
+        // Um mutex por banco coordena cadastro, edição e painel mesmo com mudança de data.
+        $lock = new SalaAudienciasPautaSequenceLock($this->connection);
+        $lock->acquire((int) date('Y'), 5, true);
+        try {
+            return $operation();
+        } finally {
+            $lock->release();
+        }
+    }
+
+    private function assertProcessoSemOutraPautaAtiva(string $processoId, string $id): void
+    {
+        if ($this->pautaRepository->existsBlockingPautaForProcesso($processoId, $id)) {
+            throw new InvalidArgumentException('Já existe outra audiência ativa para este número de processo.');
+        }
+    }
+
+    private function assertPodeFicarEmAndamento(string $id, string $data, string $atual, bool $allowExisting = true): void
+    {
+        if ($data !== date('Y-m-d')) {
+            throw new InvalidArgumentException('A audiência só pode ficar em andamento na data designada.');
+        }
+        if ($atual !== 'designada' && !($allowExisting && $atual === 'em_andamento')) {
+            throw new InvalidArgumentException('Só é possível iniciar audiências com status Designada.');
+        }
+        $outra = $this->pautaRepository->findIdEmAndamentoNaData($data, $id);
+        if ($outra !== null) {
+            throw new InvalidArgumentException('Já existe outra audiência em andamento.');
+        }
+    }
+
     public function findIdEmAndamentoNaData(string $dataYmd): ?string
     {
         return $this->pautaRepository->findIdEmAndamentoNaData($dataYmd);
@@ -395,17 +446,18 @@ final class SalaAudienciasPautaService
 
     public function cancel(string $id, ?string $usuarioId): bool
     {
-        return $this->pautaRepository->setStatus($id, 'cancelada', $usuarioId);
+        return $this->withScheduleLock(fn (): bool => $this->pautaRepository->setStatus($id, 'cancelada', $usuarioId));
     }
 
     public function delete(string $id, ?string $usuarioId): bool
     {
-        $ok = $this->pautaRepository->softDelete($id, $usuarioId);
-        if ($ok) {
-            $this->alocadosRepository->deleteByPautaId($id);
-        }
-
-        return $ok;
+        return $this->withScheduleLock(function () use ($id, $usuarioId): bool {
+            $ok = $this->pautaRepository->softDelete($id, $usuarioId);
+            if ($ok) {
+                $this->alocadosRepository->deleteByPautaId($id);
+            }
+            return $ok;
+        });
     }
 
     public function addParte(string $idPauta, array $payload, ?string $usuarioId): string
@@ -936,7 +988,7 @@ final class SalaAudienciasPautaService
         }
         $s = $this->normalizeLegacyStatus($s);
         if (!in_array($s, ['designada', 'redesignada', 'cancelada', 'em_andamento', 'finalizada'], true)) {
-            return 'designada';
+            throw new InvalidArgumentException('Status da audiência inválido.');
         }
 
         return $s;
