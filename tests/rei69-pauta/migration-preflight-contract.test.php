@@ -39,4 +39,14 @@ foreach (['isUsableIndex','isExactTargetIndex'] as $method) {
     if (!$check->invoke($migration, ['non_unique'=>1,'columns'=>['ID_SETOR_RESPONSAVEL'],'sub_parts'=>[null]])) throw new RuntimeException('Case-insensitive index was rejected');
     if ($check->invoke($migration, ['non_unique'=>1,'columns'=>['OTHER'],'sub_parts'=>[null]])) throw new RuntimeException('Wrong index was accepted');
 }
+// REI-69: production has setores.id_setor as VARCHAR(30); CHAR(30) in schema.sql. Both are accepted, other shapes are not.
+$assertSector = new ReflectionMethod(ProcessResponsibleSectorMigration::class, 'assertChar30PrimaryKey');
+$sectorColumn = ['DATA_TYPE'=>'char','CHARACTER_MAXIMUM_LENGTH'=>30,'IS_NULLABLE'=>'NO','COLUMN_KEY'=>'PRI','CHARACTER_SET_NAME'=>'utf8mb4','COLLATION_NAME'=>'utf8mb4_unicode_ci'];
+$sectorIndexes = ['PRIMARY'=>['non_unique'=>0,'columns'=>['id_setor'],'sub_parts'=>[null]]];
+$sectorRejected = 'setores.id_setor não corresponde ao contrato CHAR(30) ou VARCHAR(30) utf8mb4_unicode_ci e PRIMARY KEY.';
+expect69migration(null, fn()=> $assertSector->invoke($migration, $sectorColumn, $sectorIndexes, 'setores.id_setor'));
+expect69migration(null, fn()=> $assertSector->invoke($migration, array_replace($sectorColumn, ['DATA_TYPE'=>'varchar']), $sectorIndexes, 'setores.id_setor'));
+expect69migration($sectorRejected, fn()=> $assertSector->invoke($migration, array_replace($sectorColumn, ['DATA_TYPE'=>'varchar','CHARACTER_MAXIMUM_LENGTH'=>31]), $sectorIndexes, 'setores.id_setor'));
+expect69migration($sectorRejected, fn()=> $assertSector->invoke($migration, array_replace($sectorColumn, ['DATA_TYPE'=>'text']), $sectorIndexes, 'setores.id_setor'));
+expect69migration($sectorRejected, fn()=> $assertSector->invoke($migration, array_replace($sectorColumn, ['COLLATION_NAME'=>'utf8mb4_general_ci']), $sectorIndexes, 'setores.id_setor'));
 echo "PASS metadata FK and index contract (simulated PDO)\n";

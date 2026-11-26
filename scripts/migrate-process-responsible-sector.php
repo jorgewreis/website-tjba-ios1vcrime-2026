@@ -20,6 +20,9 @@ final class ProcessResponsibleSectorMigration
     private const INDEX_NAME = 'idx_processos_id_setor_responsavel';
     private const FOREIGN_KEY_NAME = 'fk_processos_setor_responsavel';
 
+    /** CHAR or VARCHAR, copied from the real setores.id_setor so the FK types match. */
+    private string $sectorColumnType = 'CHAR';
+
     public function __construct(private readonly PDO $connection)
     {
     }
@@ -42,6 +45,7 @@ final class ProcessResponsibleSectorMigration
         $sectorColumn = $this->columnMetadata($database, self::SECTOR_TABLE, self::SECTOR_COLUMN);
         $sectorIndexes = $this->indexes($database, self::SECTOR_TABLE);
         $this->assertChar30PrimaryKey($sectorColumn, $sectorIndexes, 'setores.id_setor');
+        $this->sectorColumnType = strtoupper((string) $sectorColumn['DATA_TYPE']);
 
         $processColumn = $this->columnMetadata($database, self::PROCESS_TABLE, self::PROCESS_COLUMN);
         $addColumn = $processColumn === null;
@@ -116,7 +120,7 @@ final class ProcessResponsibleSectorMigration
         if ($plan['add_column']) {
             $this->connection->exec(
                 'ALTER TABLE `processos` ADD COLUMN `id_setor_responsavel` '
-                . 'CHAR(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL, ALGORITHM=INSTANT'
+                . $this->sectorColumnType . '(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL, ALGORITHM=INSTANT'
             );
             echo 'Coluna nullable id_setor_responsavel adicionada; registros existentes permanecem sem atribuição.' . PHP_EOL;
         }
@@ -187,7 +191,7 @@ final class ProcessResponsibleSectorMigration
     {
         $primaryIndex = $indexes['PRIMARY'] ?? null;
         if ($column === null
-            || strtolower((string) $column['DATA_TYPE']) !== 'char'
+            || !in_array(strtolower((string) $column['DATA_TYPE']), ['char', 'varchar'], true)
             || (int) $column['CHARACTER_MAXIMUM_LENGTH'] !== 30
             || $column['IS_NULLABLE'] !== 'NO'
             || $column['COLUMN_KEY'] !== 'PRI'
@@ -198,7 +202,7 @@ final class ProcessResponsibleSectorMigration
             || count($primaryIndex['columns']) !== 1
             || strcasecmp((string) $primaryIndex['columns'][0], self::SECTOR_COLUMN) !== 0
             || $primaryIndex['sub_parts'] !== [null]) {
-            throw new RuntimeException($label . ' não corresponde ao contrato CHAR(30) utf8mb4_unicode_ci e PRIMARY KEY.');
+            throw new RuntimeException($label . ' não corresponde ao contrato CHAR(30) ou VARCHAR(30) utf8mb4_unicode_ci e PRIMARY KEY.');
         }
     }
 
