@@ -54,7 +54,7 @@ try {
     if (!is_array($config) || trim((string) ($config['api_key'] ?? '')) === '') {
         throw new RuntimeException('Integração DataJud indisponível.');
     }
-    $resultado = (new DataJudService($config))->searchProcesso($digits);
+    $resultado = (new DataJudService($config))->searchProcesso($digits, true);
     $classe = $resultado['classe'] ?? null;
     $codigo = is_array($classe) ? ($classe['codigo'] ?? null) : null;
     $descricao = is_array($classe) ? ($classe['descricao'] ?? null) : null;
@@ -84,6 +84,8 @@ try {
         }
     )['classe'];
     echo json_encode($result, JSON_UNESCAPED_UNICODE);
+} catch (DataJudUpstreamException $e) {
+    $e->respondForSync();
 } catch (InvalidArgumentException $e) {
     if ($escritaIniciada) {
         http_response_code(409);

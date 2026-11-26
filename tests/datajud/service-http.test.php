@@ -114,4 +114,26 @@ $service->searchProcesso($number);
 if (($captured['size'] ?? null) !== 2 || ($captured['track_total_hits'] ?? null) !== true) throw new LogicException('Exact total not requested');
 $expectedFields = ['numeroProcesso', 'tribunal', 'classe', 'classeProcessual', 'assuntos', 'prioridade', 'polo', 'poloAtivo', 'poloPassivo', 'movimentos', 'orgaoJulgador', 'nivelSigilo', 'grau', 'formato', 'sistema', 'dataAjuizamento', 'dataHoraUltimaAtualizacao', 'id'];
 if (($captured['_source'] ?? null) !== $expectedFields) throw new LogicException('Query requested source fields outside the institutional mapper contract.');
+$captured = null;
+$sampleSource = $source + ['classe' => ['codigo' => 42, 'nome' => 'Classe sintética'], 'assuntos' => []];
+$sample = ['timed_out'=>false, '_shards'=>['total'=>1,'successful'=>1,'failed'=>0,'skipped'=>0],
+    'hits'=>['total'=>['value'=>1,'relation'=>'eq'],'hits'=>[['_source'=>$sampleSource]]]];
+$service = new DataJudService([], static function (string $url, array $body) use (&$captured, $response, $sample): array {
+    $captured = $body;
+    return $response(200, $sample);
+});
+$sync = $service->searchProcesso($number, true);
+if ($captured['_source'] !== ['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos']
+    || $sync['resultado_unico_verificado'] !== true || $sync['assuntos_estado'] !== 'vazio'
+    || (int) ($sync['classe']['codigo'] ?? 0) !== 42) throw new LogicException('Projeção de sincronização perdeu informação necessária.');
+foreach ([[429, $empty, 'throttled'], [503, $empty, 'unavailable'], [401, $empty, 'authorization'],
+    [200, array_replace($empty, ['_shards'=>['failed'=>1]]), 'incomplete']] as [$status, $body, $expected]) {
+    $calls = 0;
+    try {
+        $make([$response($status, $body)], $calls)->searchProcesso($number, true);
+        throw new LogicException('Resposta não utilizável aceita para escrita.');
+    } catch (DataJudUpstreamException $error) {
+        if ($error->reason !== $expected || $calls !== 1) throw new LogicException('Resposta ou retentativa indevida.');
+    }
+}
 echo "PASS: falhas HTTP e respostas inválidas não viram ausência; consulta restrita ao tribunal.\n";

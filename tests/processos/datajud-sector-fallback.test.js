@@ -29,7 +29,8 @@ async function run(responses) {
         assert(response, `unexpected request: ${url}`);
         return Promise.resolve({
             ok: response.ok,
-            json: () => Promise.resolve(response.body)
+            status: response.status,
+            json: () => response.nonJson ? Promise.reject(new SyntaxError('HTML')) : Promise.resolve(response.body)
         });
     };
 
@@ -73,6 +74,15 @@ async function run(responses) {
     assert.strictEqual(deniedOperation.reloads, 0);
     assert.strictEqual(deniedOperation.notifications.length, 1);
     assert.strictEqual(deniedOperation.notifications[0][2], 'Operação não autorizada.');
+
+    const cf = await run([{ ok: false, status: 403, nonJson: true }]);
+    assert.strictEqual(cf.calls.length, 1);
+    assert.strictEqual(cf.reloads, 0);
+    assert.match(cf.notifications[0][2], /servidor não autorizou/);
+    const throttled = await run([{ ok: false, status: 503, body: { code: 'datajud_throttled', error: 'O DataJud limitou a consulta.' } }]);
+    assert.strictEqual(throttled.calls.length, 1);
+    assert.strictEqual(throttled.reloads, 0);
+    assert.match(throttled.notifications[0][2], /DataJud limitou/);
 
     console.log('PASS REI-72/76 DataJud fallback preserves class-only permission and reports skipped subjects');
 })().catch(error => {
