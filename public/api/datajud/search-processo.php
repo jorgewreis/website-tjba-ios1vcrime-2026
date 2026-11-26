@@ -5,7 +5,11 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 3) . '/app/helpers/ApiErrorReporter.php';
 ApiErrorReporter::register('public/api/datajud/search-processo.php');
 header('Content-Type: application/json; charset=UTF-8');
-header('Access-Control-Allow-Origin: *');
+header('Cache-Control: no-store');
+
+require_once dirname(__DIR__, 3) . '/app/helpers/ApiAccessGuard.php';
+// O painel interno também inclui os perfis internos legados sem setor composto.
+ApiAccessGuard::requireAccess(['dashboard'], true);
 
 $config = require __DIR__ . '/config.php';
 

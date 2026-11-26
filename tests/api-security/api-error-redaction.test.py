@@ -42,8 +42,12 @@ with tempfile.TemporaryDirectory(prefix="rei67-api-errors-") as temp:
     root = Path(temp)
     copy(root, "app/helpers/ApiErrorReporter.php")
 
-    # Actual public DataJud route with an injected synthetic service exception.
+    # Actual internal DataJud route with an injected synthetic service exception.
     public_route = copy(root, "public/api/datajud/search-processo.php")
+    (root / "app/helpers/ApiAccessGuard.php").write_text(
+        "<?php final class ApiAccessGuard { public static function requireAccess(array $pages, bool $write): void {} }",
+        encoding="utf-8",
+    )
     copy(root, "app/helpers/CnjValidator.php")
     (root / "public/api/datajud/config.php").write_text("<?php return ['api_key' => 'synthetic'];\n", encoding="utf-8")
     service = root / "app/services/DataJudService.php"

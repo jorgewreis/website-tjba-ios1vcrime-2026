@@ -14,3 +14,7 @@ Revisão do código da Vara 2026, base `c96eb38`. Não houve consulta, teste de 
 Confirmar se algum consumidor legítimo usa o endpoint sem login. Se não, restringir a sessão interna autorizada e a POST de mesma origem, preservando a consulta aos metadados públicos do CNJ em todas as telas autorizadas. Definir limite após medir volume e gargalo, com resposta estável e sem retentativas em massa. Se houver consumidor externo, inventariá-lo antes de restringir acesso e separar seu contrato, sem ampliar o acesso interno ou repassar a chave.
 
 Validar no ambiente sintético recusas e consultas permitidas, visibilidade após mudança de perfil, resposta de limite e recuperação; simular a origem em todos os cenários. Não habilitar, desabilitar ou presumir limites em produção nesta etapa.
+
+## Decisão confirmada em 26/11/2026
+
+Jorge confirmou que a consulta pertence ao sistema interno e é acessível a qualquer usuário interno autenticado. A rota de pesquisa usa a mesma fronteira de perfis do dashboard interno, inclusive perfis internos legados e contas mistas, com POST de origem confiável e sem CORS amplo. Não muda a API oficial do CNJ, as permissões por registro para gravação nem a política de consultas a processos sob sigilo. Não foi configurada quota em produção: medir volume, erros e capacidade antes de definir um valor.
