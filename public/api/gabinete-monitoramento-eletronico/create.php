@@ -47,6 +47,8 @@ function assertCnjFormattedValueMon(array $input, string $key, string $fieldLabe
 try {
     assertCnjFormattedValueMon($parsed, 'numero_processo', 'Número do processo');
 
+    // Audit identity is derived from the authenticated session, never the payload.
+    $parsed['usuario_cadastro_id'] = trim((string) ($_SESSION['id_usuario'] ?? ''));
     $service = new GabineteMonitoramentoEletronicoService($connection);
     $newId = $service->create($parsed);
     http_response_code(201);

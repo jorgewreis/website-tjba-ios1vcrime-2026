@@ -1,0 +1,154 @@
+<?php
+declare(strict_types=1);
+
+$fixtureStage = 'setup';
+set_exception_handler(static function (Throwable $exception) use (&$fixtureStage): void {
+    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness'];
+    $code = in_array($fixtureStage, $allowed, true) ? $fixtureStage : 'unknown';
+    fwrite(STDERR, "REI69_FIXTURE_FAILURE code=$code\n");
+    exit(1);
+});
+// Fixture CI-only: no application configuration and no TCP fallback.
+$fixtureStage = 'setup_env';
+$dsn = 'mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=rei69_pauta_test;charset=utf8mb4';
+$marker = (string) getenv('REI69PAUTA_TEST_DISPOSABLE_MARKER');
+if (getenv('REI69PAUTA_TEST_DISPOSABLE') !== '1' || getenv('REI69PAUTA_TEST_REPO_ROOT') !== '/repo'
+    || getenv('REI69PAUTA_MYSQL_DSN') !== $dsn || !preg_match('/^[a-f0-9]{64}$/', $marker)) {
+    throw new RuntimeException('Fixture requires the dedicated CI runner.');
+}
+$fixtureStage = 'setup_connect';
+$pdo = new PDO($dsn, 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
+$fixtureStage = 'setup_database';
+if ($pdo->query('SELECT DATABASE()')->fetchColumn() !== 'rei69_pauta_test'
+    || !str_starts_with((string) $pdo->query('SELECT VERSION()')->fetchColumn(), '8.4.')
+    || (string) $pdo->query('SELECT @@lower_case_table_names')->fetchColumn() !== getenv('REI69PAUTA_EXPECT_LOWER_CASE')
+    || $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN) !== ['rei69_pauta_test_guard']) {
+    throw new RuntimeException('Unexpected database or schema.');
+}
+$fixtureStage = 'setup_sentinel';
+$guards = $pdo->query('SELECT marker FROM rei69_pauta_test_guard')->fetchAll(PDO::FETCH_COLUMN);
+if (count($guards) !== 1 || !hash_equals($marker, (string) $guards[0])) throw new RuntimeException('Sentinel mismatch.');
+// DDL below is reached only after the dedicated runner and sentinel checks.
+$fixtureStage = 'setup_require';
+require_once '/repo/app/services/SalaAudienciasPautaService.php';
+$fixtureStage = 'setup_mode';
+$pdo->exec("SET SESSION sql_mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
+$pdo->exec("SET time_zone='+00:00'");
+$ddl = [
+    'classes' => 'id VARCHAR(40) PRIMARY KEY,nome VARCHAR(80)',
+    'processos' => 'id VARCHAR(40) PRIMARY KEY,numero_processo VARCHAR(40),classe_id VARCHAR(40),data_fato DATE,sigiloso INT,created_at DATETIME,updated_at DATETIME,id_setor_responsavel VARCHAR(40)',
+    'setores' => 'id_setor VARCHAR(40) PRIMARY KEY,ativo INT NOT NULL',
+    'usuario_setor' => 'usuario VARCHAR(40) NOT NULL,setor VARCHAR(40) NOT NULL,PRIMARY KEY(usuario,setor)',
+    'partes' => 'id VARCHAR(40) PRIMARY KEY,cpf VARCHAR(20),nome_completo VARCHAR(100),sexo VARCHAR(20),data_nascimento DATE,profissao VARCHAR(80),created_at DATETIME,updated_at DATETIME',
+    'processos_partes' => 'id VARCHAR(40) PRIMARY KEY,processo_id VARCHAR(40),parte_id VARCHAR(40),tipo_parte VARCHAR(40),polo VARCHAR(40),prioridade_mulher INT DEFAULT 0,prioridade_crianca_adolescente INT DEFAULT 0,prioridade_idoso INT DEFAULT 0,prioridade_pessoa_deficiencia INT DEFAULT 0,created_at DATETIME,updated_at DATETIME',
+    'sala_audiencias_pauta' => 'id_pauta VARCHAR(40) PRIMARY KEY,ativo INT,processo VARCHAR(40),numero_sequencial INT,ano INT,tipo_audiencia VARCHAR(80),data_audiencia DATE,hora_audiencia TIME,status VARCHAR(40),data_hora_designacao DATETIME,hora_inicio TIME,hora_fim TIME,duracao_estimada_minutos INT',
+    'sala_audiencias_pauta_parte' => 'id_parte VARCHAR(40) PRIMARY KEY,pauta VARCHAR(40),parte_id_global VARCHAR(40),processo_parte_id VARCHAR(40),nome_parte VARCHAR(100),tipo_parte VARCHAR(40),tipo_defensor VARCHAR(40),defensor_publico_id VARCHAR(40),defensor_publico_outro VARCHAR(100),defensor_privado_id VARCHAR(40),defensor_privado_outro VARCHAR(100),maioridade VARCHAR(40),expedicao VARCHAR(40),cumprimento VARCHAR(40),id_documento_expedido VARCHAR(40),id_documento_cumprido VARCHAR(40),contatos TEXT,criado_por VARCHAR(40),atualizado_por VARCHAR(40),ativo INT,created_at DATETIME DEFAULT CURRENT_TIMESTAMP,updated_at DATETIME DEFAULT CURRENT_TIMESTAMP',
+    'processo_prioridades' => 'id VARCHAR(40) PRIMARY KEY,processo_id VARCHAR(40),codigo VARCHAR(80),origem VARCHAR(80),regra_detalhe TEXT,created_at DATETIME',
+    'gabinete_reu_preso' => 'id VARCHAR(40) PRIMARY KEY,status VARCHAR(40)',
+    'gabinete_reu_preso_processo' => 'id VARCHAR(40) PRIMARY KEY,processo_id VARCHAR(40),reu_preso_id VARCHAR(40),situacao VARCHAR(40)',
+];
+$fixtureStage = 'setup_ddl';
+foreach ($ddl as $name => $columns) $pdo->exec("CREATE TABLE `$name` ($columns) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+$fixtureStage = 'setup_seed_classes';
+$pdo->exec("INSERT INTO classes VALUES ('C','Classe sintetica')");
+$fixtureStage = 'setup_seed_sectors';
+$pdo->exec("INSERT INTO setores VALUES ('SA',1),('SB',1),('SI',0); INSERT INTO usuario_setor VALUES ('synthetic','SA'),('synthetic-other','SB'),('synthetic-inactive','SI')");
+$fixtureStage = 'setup_seed_domain';
+foreach (['A', 'B'] as $key) {
+    $pdo->prepare("INSERT INTO processos VALUES (?,?,'C',NULL,0,NOW(),NOW(),?)")->execute([$key, 'CNJ-SINTETICO-' . $key, 'S' . $key]);
+    $pdo->prepare("INSERT INTO partes VALUES (?,NULL,?,'X','2000-01-01','Sintetica',NOW(),NOW())")->execute([$key, 'Pessoa Sintetica ' . $key]);
+    $pdo->prepare("INSERT INTO sala_audiencias_pauta (id_pauta,ativo,processo,numero_sequencial,ano,tipo_audiencia,data_audiencia,hora_audiencia,status) VALUES (?,1,?,1,2026,'instrucao','2030-01-01','10:00:00','designada')")->execute(['P' . $key, $key]);
+}
+$fixtureStage = 'setup_seed_links';
+foreach (['AA'=>['A','A'], 'AB'=>['A','B'], 'BA'=>['B','A'], 'BB'=>['B','B']] as $id => [$process, $person]) {
+    $pdo->prepare("INSERT INTO processos_partes (id,processo_id,parte_id,tipo_parte,polo,created_at,updated_at) VALUES (?,?,?,'vitima','ativo',NOW(),NOW())")->execute([$id, $process, $person]);
+}
+$fixtureStage = 'setup_seed_part';
+$pdo->exec("INSERT INTO sala_audiencias_pauta_parte (id_parte,pauta,parte_id_global,processo_parte_id,nome_parte,tipo_parte,maioridade,expedicao,cumprimento,ativo) VALUES ('PP-A','PA','A','AA','Pessoa Sintetica A','vitima','maior','Não expedido','pendente',1)");
+function snapshot69p(PDO $pdo, array $tables): array {
+    $out=[]; foreach ($tables as $table) { $rows=$pdo->query("SELECT * FROM `$table`")->fetchAll(PDO::FETCH_ASSOC); usort($rows, static fn($a,$b)=>strcmp(json_encode($a),json_encode($b))); $out[$table]=$rows; } return $out;
+}
+$fixtureStage = 'setup_service';
+$service = new SalaAudienciasPautaService($pdo);
+$tables = array_keys($ddl);
+$payload = ['parte_id_global'=>'A','processo_parte_id'=>'AA','nome_parte'=>'Pessoa Sintetica A','tipo_parte'=>'vitima','maioridade'=>'maior','expedicao'=>'Não expedido','cumprimento'=>'pendente'];
+$fixtureStage = 'positive_update';
+$control = $service->updateParte('PP-A', $payload, 'synthetic');
+$current = $pdo->query("SELECT processo_parte_id,parte_id_global FROM sala_audiencias_pauta_parte WHERE id_parte='PP-A'")->fetch(PDO::FETCH_ASSOC);
+if (($control['ok'] ?? false) !== true || $current !== ['processo_parte_id'=>'AA','parte_id_global'=>'A'] || $pdo->inTransaction()) throw new RuntimeException('Positive update control failed.');
+$fixtureStage = 'positive_add';
+$controlAddId = $service->addParte('PA', $payload, 'synthetic');
+$controlAddStmt = $pdo->prepare('SELECT pauta,processo_parte_id,parte_id_global FROM sala_audiencias_pauta_parte WHERE id_parte=? AND ativo=1');
+$controlAddStmt->execute([$controlAddId]);
+if ($controlAddStmt->fetch(PDO::FETCH_ASSOC) !== ['pauta'=>'PA','processo_parte_id'=>'AA','parte_id_global'=>'A'] || $pdo->inTransaction()) throw new RuntimeException('Positive add control failed.');
+$fixtureStage = 'sector_denial';
+$beforeDenied = snapshot69p($pdo, $tables);
+try {
+    $service->addParte('PA', $payload, 'synthetic-no-sector');
+    throw new RuntimeException('Cross-sector link mutation was accepted.');
+} catch (PautaVinculoSetorNegado $e) {
+    if ($e->getMessage() !== 'Acesso setorial necessário para alterar vínculo do processo.') throw new RuntimeException('Unexpected authorization failure.', 0, $e);
+}
+if ($pdo->inTransaction() || snapshot69p($pdo, $tables) !== $beforeDenied) throw new RuntimeException('Denied sector request changed synthetic data.');
+foreach ([['synthetic-other', 'SA'], ['synthetic', null], ['synthetic-inactive', 'SI']] as [$actor, $responsible]) {
+    $st = $pdo->prepare("UPDATE processos SET id_setor_responsavel=? WHERE id='A'");
+    $st->execute([$responsible]);
+    $beforeDeniedUpdate = snapshot69p($pdo, $tables);
+    try {
+        $service->updateParte('PP-A', $payload, $actor);
+        throw new RuntimeException('Unauthorized update was accepted.');
+    } catch (PautaVinculoSetorNegado $e) {
+        if ($e->getMessage() !== 'Acesso setorial necessário para alterar vínculo do processo.') throw new RuntimeException('Unexpected authorization failure.', 0, $e);
+    }
+    if ($pdo->inTransaction() || snapshot69p($pdo, $tables) !== $beforeDeniedUpdate) throw new RuntimeException('Denied update changed synthetic data.');
+}
+$pdo->exec("UPDATE processos SET id_setor_responsavel='SA' WHERE id='A'");
+$fixtureStage = 'cross_link';
+foreach (['AB', 'BA', 'BB'] as $badLink) {
+    foreach (['add', 'update'] as $operation) {
+        $case = array_replace($payload, ['processo_parte_id'=>$badLink, 'tipo_parte'=>'testemunha_defesa']);
+        $before = snapshot69p($pdo, $tables);
+        try {
+            if ($operation === 'add') $service->addParte('PA', $case, 'synthetic');
+            else $service->updateParte('PP-A', $case, 'synthetic');
+            throw new RuntimeException('Cross-process or cross-person reference was accepted.');
+        } catch (InvalidArgumentException $e) {
+            if ($e->getMessage() !== 'Vínculo de processo e pessoa incompatível com a audiência.') throw new RuntimeException('Unexpected validation failure.', 0, $e);
+        }
+        if ($pdo->inTransaction() || snapshot69p($pdo, $tables) !== $before) throw new RuntimeException('Rejected request changed synthetic data or left a transaction.');
+    }
+}
+$fixtureStage = 'defender';
+$defenderCase = array_replace($payload, ['processo_parte_id'=>'BA', 'tipo_defensor'=>'publico', 'defensor_publico_id'=>'outro', 'defensor_publico_outro'=>'Defensor Sintetico Novo']);
+$beforeDefender = snapshot69p($pdo, $tables);
+try {
+    $service->addParte('PA', $defenderCase, 'synthetic');
+    throw new RuntimeException('Cross-process reference with defender was accepted.');
+} catch (InvalidArgumentException $e) {
+    if ($e->getMessage() !== 'Vínculo de processo e pessoa incompatível com a audiência.') throw new RuntimeException('Unexpected defender validation failure.', 0, $e);
+}
+if ($pdo->inTransaction() || snapshot69p($pdo, $tables) !== $beforeDefender) throw new RuntimeException('Rejected defender request changed synthetic data.');
+$fixtureStage = 'witness';
+$witness = array_replace($payload, ['parte_id_global'=>'', 'processo_parte_id'=>'', 'nome_parte'=>'Testemunha Sintetica Sem Cadastro', 'tipo_parte'=>'testemunha_defesa']);
+$witnessId = $service->addParte('PA', $witness, 'synthetic-no-sector');
+$witnessStmt = $pdo->prepare('SELECT parte_id_global,processo_parte_id FROM sala_audiencias_pauta_parte WHERE id_parte=?');
+$witnessStmt->execute([$witnessId]);
+$witnessRow = $witnessStmt->fetch(PDO::FETCH_ASSOC);
+if (!$witnessRow || trim((string)$witnessRow['parte_id_global']) !== '' || trim((string)$witnessRow['processo_parte_id']) !== '') throw new RuntimeException('Witness without global identity was not preserved.');
+$beforeWitness = snapshot69p($pdo, $tables);
+$updatedWitness = $service->updateParte($witnessId, array_replace($witness, ['nome_parte'=>'Testemunha Sintetica Atualizada']), 'synthetic-no-sector');
+$afterWitness = snapshot69p($pdo, $tables);
+$witnessStmt->execute([$witnessId]);
+$updatedWitnessRow = $witnessStmt->fetch(PDO::FETCH_ASSOC);
+$witnessNameStmt = $pdo->prepare('SELECT nome_parte FROM sala_audiencias_pauta_parte WHERE id_parte=?');
+$witnessNameStmt->execute([$witnessId]);
+if (($updatedWitness['ok'] ?? false) !== true || $pdo->inTransaction() || !$updatedWitnessRow
+    || trim((string)$updatedWitnessRow['parte_id_global']) !== '' || trim((string)$updatedWitnessRow['processo_parte_id']) !== ''
+    || $witnessNameStmt->fetchColumn() !== 'Testemunha Sintetica Atualizada'
+    || $beforeWitness['processos_partes'] !== $afterWitness['processos_partes'] || $beforeWitness['partes'] !== $afterWitness['partes']) {
+    throw new RuntimeException('Pure witness update failed or changed process links or people.');
+}
+foreach (['classes','processos','setores','usuario_setor'] as $unchangedTable) {
+    if ($beforeWitness[$unchangedTable] !== $afterWitness[$unchangedTable]) throw new RuntimeException('Pure witness update changed an unrelated table.');
+}
+echo "PASS REI69 pauta cross-process synthetic service regression\n";

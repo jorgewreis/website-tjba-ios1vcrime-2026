@@ -61,6 +61,9 @@ try {
         echo json_encode(['error' => 'Acesso negado ao processo.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
+    if ((new PartesRepository($connection))->findById($parteId) === null) {
+        throw new InvalidArgumentException('Pessoa nÃ£o encontrada.');
+    }
     $repository = new ProcessosPartesRepository($connection);
     $newId = $repository->addParte($processoId, $parteId, $tipoParte, $polo, $prioridades);
     $partesRepository = new PartesRepository($connection);

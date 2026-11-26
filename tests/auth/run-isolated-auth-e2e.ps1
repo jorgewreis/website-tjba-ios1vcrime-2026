@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$QaImageId = '', [switch]$Browser)
+param([string]$QaImageId = '', [switch]$Browser, [switch]$Rei69Http)
 
 # Deliberately has no host ports, bind mounts, or compose dependency. It is
 # opt-in: invoking this script is the only action that creates Docker resources.

@@ -37,10 +37,14 @@ try {
     $id = $service->addParte($idPauta, $payload, $usuarioId);
     http_response_code(201);
     echo json_encode(['id' => $id], JSON_UNESCAPED_UNICODE);
+} catch (PautaVinculoSetorNegado $e) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Acesso setorial necessário para alterar vínculo do processo.'], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    error_log('Pauta: falha ao adicionar parte.');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao adicionar parte: ' . ApiErrorReporter::genericMessage($e, 'public/api/sala-audiencias-pauta/partes-create.php')], JSON_UNESCAPED_UNICODE);
 }

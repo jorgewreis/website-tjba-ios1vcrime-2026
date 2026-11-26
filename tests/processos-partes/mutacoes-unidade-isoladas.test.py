@@ -14,6 +14,7 @@ FILES = [
     'public/api/processos-partes/update.php',
     'public/api/processos-partes/delete.php',
     'app/helpers/ApiAccessGuard.php',
+    'app/helpers/ApiErrorReporter.php',
     'app/helpers/BootstrapHelper.php',
     'app/helpers/UserAccessHelper.php',
     'app/helpers/ProcessoSetorAuthorization.php',
@@ -61,6 +62,12 @@ final class Conection { public static function getInstance(): self { return new 
 final class PartesRepository {
   private PDO $db;
   public function __construct(PDO $db) { $this->db = $db; }
+  public function findById(string $id): ?array {
+    $stmt = $this->db->prepare('SELECT id FROM partes WHERE id = ? LIMIT 1');
+    $stmt->execute([$id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row === false ? null : $row;
+  }
   public function syncProfissaoFromTipoProcessoParte(string $parteId, string $tipoParte): void {
     $stmt = $this->db->prepare('INSERT INTO sync_log (parte_id, tipo_parte) VALUES (?, ?)');
     $stmt->execute([$parteId, $tipoParte]);

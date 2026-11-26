@@ -36,10 +36,14 @@ try {
     $service = new SalaAudienciasPautaService($connection);
     $result = $service->updateParte($idParte, $payload, $usuarioId);
     echo json_encode(['success' => (bool) ($result['ok'] ?? false)], JSON_UNESCAPED_UNICODE);
+} catch (PautaVinculoSetorNegado $e) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Acesso setorial necessário para alterar vínculo do processo.'], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    error_log('Pauta: falha ao atualizar parte.');
     http_response_code(500);
     echo json_encode(['error' => 'Erro ao atualizar parte: ' . ApiErrorReporter::genericMessage($e, 'public/api/sala-audiencias-pauta/partes-update.php')], JSON_UNESCAPED_UNICODE);
 }
