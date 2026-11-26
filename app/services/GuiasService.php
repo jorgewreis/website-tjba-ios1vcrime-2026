@@ -69,10 +69,9 @@ final class GuiasService
     }
 
     /**
-     * Garante cálculo automático de valor_multa quando já existem data_fato e dias_multa.
-     * Também atualiza em banco quando encontrar guia com valor ausente.
+     * Calcula o valor para exibição, sem alterar a guia durante consultas.
      */
-    private function sincronizarValorMultaSePossivel(array $guia): array
+    private function preencherValorMultaParaExibicao(array $guia): array
     {
         $idGuia = trim((string) ($guia['id'] ?? $guia['IdGuia'] ?? ''));
         $dataFato = trim((string) ($guia['data_fato'] ?? ''));
@@ -89,7 +88,6 @@ final class GuiasService
             return $guia;
         }
 
-        $this->repository->update($idGuia, ['valor_multa' => $valorCalculado]);
         $guia['valor_multa'] = $valorCalculado;
         return $guia;
     }
@@ -98,11 +96,10 @@ final class GuiasService
     {
         $rows = $this->repository->fetchList($filters, $limit, $offset);
         foreach ($rows as $i => $row) {
-            $rows[$i] = $this->sincronizarValorMultaSePossivel($row);
+            $rows[$i] = $this->preencherValorMultaParaExibicao($row);
             $row = $rows[$i];
             $idGuia = (string) ($row['IdGuia'] ?? '');
             if ($idGuia !== '') {
-                $this->subtarefasRepository->ensureOitoSubtarefas($idGuia);
                 $rows[$i]['Subtarefas'] = $this->subtarefasRepository->findPendenteOuEmAndamentoByGuiaId($idGuia);
                 $rows[$i]['SubtarefasAll'] = $this->subtarefasRepository->findByGuiaId($idGuia);
                 $alocadosRaw = $this->alocadosRepository->findByGuiaId($idGuia);
@@ -152,7 +149,7 @@ final class GuiasService
             return null;
         }
 
-        return $this->sincronizarValorMultaSePossivel($guia);
+        return $this->preencherValorMultaParaExibicao($guia);
     }
 
     /**
@@ -1105,6 +1102,11 @@ final class GuiasService
                 throw new InvalidArgumentException('Não é possível criar ou ativar subtarefas de uma guia encerrada.');
             }
 
+            $dadosGuia = $this->repository->findById($guiaId) ?? $guia;
+            $guiaComValor = $this->preencherValorMultaParaExibicao($dadosGuia);
+            if (($guiaComValor['valor_multa'] ?? null) !== ($dadosGuia['valor_multa'] ?? null)) {
+                $this->repository->update($guiaId, ['valor_multa' => $guiaComValor['valor_multa']]);
+            }
             $existentes = $this->subtarefasRepository->findByGuiaId($guiaId);
             if (count($existentes) === 0) {
                 $this->subtarefasRepository->ensureOitoSubtarefas($guiaId);

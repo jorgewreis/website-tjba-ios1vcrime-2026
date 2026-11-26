@@ -17,10 +17,13 @@ $connection = Conection::getInstance()->getConnection();
 $currentUserId   = trim((string) ($_SESSION['id_usuario'] ?? ''));
 $perfisGestaoLst = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $isGestao        = false;
+$podeInicializarTarefas = false;
 if ($currentUserId !== '') {
     require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
     $perfisUsuario = UsuarioPerfisAutorizacao::perfisDoUsuario($currentUserId);
     $isGestao = count(array_intersect($perfisUsuario, $perfisGestaoLst)) > 0;
+    require_once __DIR__ . '/../../access/AccessEvaluator.php';
+    $podeInicializarTarefas = AccessEvaluator::canAccessPage('guiasedit', $perfisUsuario);
 }
 
 $routePage = trim((string) ($_GET['page'] ?? 'guias'));
@@ -435,6 +438,11 @@ if ($totalPages > 0) {
 
                 <?php if (!$tarefaConcluida): ?>
                 <div class="display-flex col col-full subtask subtask-collapsed" id="subtask-<?php echo htmlspecialchars($idGuia); ?>" aria-hidden="true">
+                    <?php if ($podeInicializarTarefas && $allSt === [] && in_array($row['Status'] ?? '', ['pendente', 'em_andamento'], true)): ?>
+                        <button type="button" class="btn btn-primary height-sm btn-criar-subtarefa" data-guia-id="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>">
+                            Iniciar etapas da guia
+                        </button>
+                    <?php endif; ?>
                     <?php foreach ($subtarefas as $st):
                         $stId = $st['id'] ?? '';
                         $stTipo = $st['tipo'] ?? '';

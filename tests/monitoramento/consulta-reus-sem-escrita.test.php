@@ -11,20 +11,20 @@ $db->exec('CREATE TABLE processos_partes (id TEXT, processo_id TEXT, parte_id TE
 $db->exec("INSERT INTO processos VALUES ('P', '0000001-69.2020.8.05.0001', NULL, NULL, 1, '', '')");
 $db->exec("INSERT INTO partes VALUES ('A', 'Pessoa homônima sintética')");
 $db->exec("INSERT INTO processos_partes VALUES ('V', 'P', 'A', 'vitima', 'ativo')");
+$db->exec('CREATE TABLE processo_datajud_sync_queue (processo_id TEXT, requested_by TEXT)');
+$_SESSION['id_usuario'] = 'synthetic-read';
 $before = [];
-foreach (['processos','classes','partes','processos_partes'] as $table) $before[$table] = $db->query("SELECT * FROM $table")->fetchAll(PDO::FETCH_ASSOC);
+foreach (['processos','classes','partes','processos_partes','processo_datajud_sync_queue'] as $table) $before[$table] = $db->query("SELECT * FROM $table")->fetchAll(PDO::FETCH_ASSOC);
 $service = new GabineteMonitoramentoEletronicoService($db);
-$novo = $service->ensureProcessoEListarReusParaCadastro('0000002-54.2020.8.05.0001', '123', 'Classe enviada');
-$existente = $service->ensureProcessoEListarReusParaCadastro('0000001-69.2020.8.05.0001', '123', 'Classe enviada');
-foreach ([[$novo, ''], [$existente, 'P']] as [$result, $expectedId]) {
-    if ($result['processo_id'] !== $expectedId || $result['reus'] !== [] || empty($result['mensagem'])) {
-        throw new RuntimeException('Consulta vazia deve oferecer entrada manual.');
-    }
+$novo = $service->buscarIdProcessoParaConsulta('0000002-54.2020.8.05.0001');
+$existente = $service->buscarIdProcessoParaConsulta('0000001-69.2020.8.05.0001');
+if ($novo !== '' || $existente !== 'P' || $service->listarReusDoProcesso($existente) !== []) {
+    throw new RuntimeException('Leitura local vazia deve permitir entrada manual.');
 }
 foreach ($before as $table=>$rows) {
     if ($db->query("SELECT * FROM $table")->fetchAll(PDO::FETCH_ASSOC) !== $rows) throw new RuntimeException("Consulta alterou $table.");
 }
 $db->exec("INSERT INTO processos_partes VALUES ('R', 'P', 'A', 'reu', 'passivo')");
-$comReu = $service->ensureProcessoEListarReusParaCadastro('0000001-69.2020.8.05.0001');
-if (count($comReu['reus']) !== 1 || $comReu['reus'][0]['id'] !== 'R') throw new RuntimeException('Réu vinculado não retornou.');
+$comReu = $service->listarReusDoProcesso($existente);
+if (count($comReu) !== 1 || $comReu[0]['id'] !== 'R') throw new RuntimeException('Réu vinculado não retornou.');
 echo "PASS consulta de réus sem escrita e entrada manual (SQLite sintético; sem DataJud)\n";

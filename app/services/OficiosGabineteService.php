@@ -24,6 +24,7 @@ final class OficiosGabineteService
     private const NUMERO_PROCESSO_SEM_VINCULO = '—';
 
     private PDO $connection;
+    private bool $sequenceLockUncertain = false;
     private OficiosGabineteRepository $repository;
     private ProcessosRepository $processosRepository;
     private ClassesRepository $classesRepository;
@@ -75,64 +76,61 @@ final class OficiosGabineteService
             throw new InvalidArgumentException('O número do processo é obrigatório.');
         }
 
-        $this->connection->beginTransaction();
-        try {
-            $processoOrigemId = null;
-            $numeroFormatado = self::NUMERO_PROCESSO_SEM_VINCULO;
+        $ano = (int) date('Y');
+        return $this->withAnnualSequence($ano, fn (): string => $this->createInSequence($payload, $tipoOficioRaw, $numeroProcesso, $ano));
+    }
 
-            if ($numeroProcesso !== '') {
-                $digits = preg_replace('/\D+/', '', $numeroProcesso);
-                if (strlen($digits) !== 20) {
-                    throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
-                }
-                if (!CnjValidator::isValid($digits)) {
-                    throw new InvalidArgumentException('Número do processo inválido. Verifique o dígito verificador.');
-                }
-                $numeroFormatado = $this->formatarCNJ($digits);
+    private function createInSequence(array $payload, string $tipoOficioRaw, string $numeroProcesso, int $ano): string
+    {
+        $processoOrigemId = null;
+        $numeroFormatado = self::NUMERO_PROCESSO_SEM_VINCULO;
 
-                $classeId = null;
-                $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
-                $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-                if ($classeCodigo !== '') {
-                    $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
-                    $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
-                }
-                $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
-                ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
+        if ($numeroProcesso !== '') {
+            $digits = preg_replace('/\D+/', '', $numeroProcesso);
+            if (strlen($digits) !== 20) {
+                throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
             }
+            if (!CnjValidator::isValid($digits)) {
+                throw new InvalidArgumentException('Número do processo inválido. Verifique o dígito verificador.');
+            }
+            $numeroFormatado = $this->formatarCNJ($digits);
 
-            $tipoOficio = TextFormatter::formatProperName($tipoOficioRaw, 255);
-
-            $ano = (int) date('Y');
-
-            $criadoPor = trim((string) ($payload['criado_por'] ?? ''));
-            $criadoPor = $criadoPor !== '' ? $criadoPor : null;
-
-            $seq = $this->repository->nextSequencialForYear($ano);
-            $id = IdGenerator::generateUniquePrefixedId(
-                $this->connection,
-                'oficios_gabinete',
-                'id',
-                'OFG',
-                30
-            );
-            $this->repository->insert([
-                'id' => $id,
-                'processo_id' => $processoOrigemId,
-                'numero_processo' => $numeroFormatado,
-                'ano' => $ano,
-                'numero_sequencial' => $seq,
-                'tipo_oficio' => $tipoOficio,
-                'status' => 'finalizada',
-                'criado_por' => $criadoPor,
-                'atualizado_por' => $criadoPor,
-            ]);
-            $this->connection->commit();
-            return $id;
-        } catch (\Throwable $e) {
-            $this->connection->rollBack();
-            throw $e;
+            $classeId = null;
+            $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+            $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+            if ($classeCodigo !== '') {
+                $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
+                $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+            }
+            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
+            ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
         }
+
+        $tipoOficio = TextFormatter::formatProperName($tipoOficioRaw, 255);
+
+        $criadoPor = trim((string) ($payload['criado_por'] ?? ''));
+        $criadoPor = $criadoPor !== '' ? $criadoPor : null;
+
+        $seq = $this->repository->nextSequencialForYear($ano);
+        $id = IdGenerator::generateUniquePrefixedId(
+            $this->connection,
+            'oficios_gabinete',
+            'id',
+            'OFG',
+            30
+        );
+        $this->repository->insert([
+            'id' => $id,
+            'processo_id' => $processoOrigemId,
+            'numero_processo' => $numeroFormatado,
+            'ano' => $ano,
+            'numero_sequencial' => $seq,
+            'tipo_oficio' => $tipoOficio,
+            'status' => 'finalizada',
+            'criado_por' => $criadoPor,
+            'atualizado_por' => $criadoPor,
+        ]);
+        return $id;
     }
 
     /**
@@ -184,16 +182,70 @@ final class OficiosGabineteService
             throw new InvalidArgumentException('Ofício não encontrado.');
         }
         $ano = (int) ($row['ano'] ?? 0);
-        $seq = (int) ($row['numero_sequencial'] ?? 0);
-        $max = $this->repository->getMaxSequencialForYear($ano);
-        if ($seq !== $max || $max === 0) {
-            throw new InvalidArgumentException('Só é possível excluir o último ofício criado no ano (maior número sequencial).');
+        return $this->withAnnualSequence($ano, function () use ($id, $ano): array {
+            // O primeiro SELECT serve só para descobrir o ano. Releia a
+            // existência e o sequencial depois de adquirir o lock.
+            $row = $this->repository->findById($id);
+            if ($row === null || (int) $row['ano'] !== $ano) {
+                throw new InvalidArgumentException('Ofício não encontrado.');
+            }
+            $max = $this->repository->getMaxSequencialForYear($ano);
+            if ($max === 0 || (int) $row['numero_sequencial'] !== $max) {
+                throw new InvalidArgumentException('Só é possível excluir o último ofício criado no ano (maior número sequencial).');
+            }
+            if (!$this->repository->delete($id)) {
+                throw new RuntimeException('Falha ao excluir o ofício do Gabinete.');
+            }
+            return ['deleted' => true, 'message' => 'Ofício excluído com sucesso.'];
+        });
+    }
+
+    private function withAnnualSequence(int $ano, callable $operation): mixed
+    {
+        if ($this->sequenceLockUncertain || $this->connection->inTransaction()) {
+            throw new LogicException('O sequencial de ofícios exige transação própria.');
         }
-        $deleted = $this->repository->delete($id);
-        return [
-            'deleted' => $deleted,
-            'message' => $deleted ? 'Ofício excluído com sucesso.' : 'Nenhum registro removido.',
-        ];
+        $lockName = null;
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
+            $db = $this->connection->query('SELECT DATABASE()')->fetchColumn();
+            if (!is_string($db) || $db === '') {
+                throw new RuntimeException('Banco indisponível para reservar o sequencial de ofícios.');
+            }
+            $name = 'fokus_ofg_' . substr(hash('sha256', strtolower($db) . ':' . $ano), 0, 48);
+            $lock = $this->connection->prepare('SELECT GET_LOCK(?, 5)');
+            $lock->execute([$name]);
+            $acquired = (int) $lock->fetchColumn() === 1;
+            $lock->closeCursor();
+            if (!$acquired) {
+                throw new RuntimeException('O sequencial de ofícios está ocupado; tente novamente.');
+            }
+            $lockName = $name;
+        }
+        try {
+            if (!$this->connection->beginTransaction()) {
+                throw new RuntimeException('Não foi possível iniciar a transação de ofícios.');
+            }
+            $result = $operation();
+            if (!$this->connection->commit()) {
+                throw new RuntimeException('Não foi possível confirmar a operação de ofícios.');
+            }
+            return $result;
+        } catch (Throwable $error) {
+            if ($this->connection->inTransaction()) $this->connection->rollBack();
+            throw $error;
+        } finally {
+            if ($lockName !== null) {
+                try {
+                    $release = $this->connection->prepare('SELECT RELEASE_LOCK(?)');
+                    $release->execute([$lockName]);
+                    if ($release->fetchColumn() === false) throw new RuntimeException('Liberação não confirmada.');
+                    $release->closeCursor();
+                } catch (Throwable) {
+                    $this->sequenceLockUncertain = true;
+                    error_log('Ofícios do Gabinete: liberação do sequencial não confirmada; sessão não persistente.');
+                }
+            }
+        }
     }
 
     private function formatarCNJ(string $digits): string

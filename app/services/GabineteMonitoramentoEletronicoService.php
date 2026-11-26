@@ -94,32 +94,15 @@ final class GabineteMonitoramentoEletronicoService
         return $out;
     }
 
-    /**
-     * Consulta réus já vinculados. Nome ou polo extraídos do DataJud não comprovam
-     * identidade nem condição de réu; quando ausentes, o usuário informa manualmente.
-     *
-     * @return array{processo_id: string, reus: list<array{id: string, nome: string, tipo_parte: string}>}
-     */
-    public function ensureProcessoEListarReusParaCadastro(string $numeroRaw, string $classeCodigo = '', string $classeDescricao = ''): array
+    /** Resolve o CNJ localmente antes de autorizar a consulta de réus. Não grava nem sincroniza. */
+    public function buscarIdProcessoParaConsulta(string $numeroRaw): string
     {
-        $numeroProcesso = trim($numeroRaw);
-        $digits = preg_replace('/\D+/', '', $numeroProcesso);
+        $digits = preg_replace('/\D+/', '', trim($numeroRaw));
         if (strlen($digits) !== 20) {
             throw new InvalidArgumentException('Número do processo deve ter 20 dígitos (formato CNJ).');
         }
-        $numeroFormatado = $this->formatarCNJ($digits);
-
-        $existing = $this->processosRepository->findByNumero($numeroFormatado);
-        if ($existing === null) {
-            return ['processo_id' => '', 'reus' => [], 'mensagem' => 'Nenhum réu vinculado encontrado. Informe o nome manualmente.'];
-        }
-        $processoId = trim((string) ($existing['id'] ?? ''));
-        if ($processoId === '') throw new RuntimeException('Processo encontrado sem identificador.');
-        ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoId);
-        $reus = $this->listarReusDoProcesso($processoId);
-        $result = ['processo_id' => $processoId, 'reus' => $reus];
-        if ($reus === []) $result['mensagem'] = 'Nenhum réu vinculado encontrado. Informe o nome manualmente.';
-        return $result;
+        $existing = $this->processosRepository->findByNumero($this->formatarCNJ($digits));
+        return trim((string) ($existing['id'] ?? ''));
     }
 
     public function create(array $payload): string
@@ -149,7 +132,7 @@ final class GabineteMonitoramentoEletronicoService
                 $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
             }
             $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
-        ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
+            ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
 
             $processoParteId = trim((string) ($payload['processo_parte_id'] ?? $payload['reu_processo_parte_id'] ?? ''));
             $reuId = trim((string) ($payload['reu_id'] ?? ''));

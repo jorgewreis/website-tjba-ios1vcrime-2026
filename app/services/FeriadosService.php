@@ -18,6 +18,7 @@ final class FeriadosService
 
     private PDO $connection;
     private FeriadosRepository $repository;
+    private bool $calendarLockUncertain = false;
 
     public function __construct(PDO $connection, ?FeriadosRepository $repository = null)
     {
@@ -115,8 +116,8 @@ final class FeriadosService
     /** Executa cada mutação do calendário e seus recálculos como uma unidade serializada. */
     private function withCalendarTransaction(callable $operation): array
     {
-        if ($this->connection->inTransaction()) {
-            throw new LogicException('A mutação de calendário não pode herdar uma transação externa.');
+        if ($this->calendarLockUncertain || $this->connection->inTransaction()) {
+            throw new LogicException('Conexão indisponível para iniciar a mutação de calendário.');
         }
         $mysql = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql';
         $lockAcquired = false;
@@ -146,12 +147,30 @@ final class FeriadosService
             }
         } finally {
             if ($lockAcquired) {
-                $stmt = $this->connection->query("SELECT RELEASE_LOCK('fokus-law-feriados-recalc')");
-                if ($stmt === false || (int) $stmt->fetchColumn() !== 1) {
-                    error_log('Falha ao liberar bloqueio serial do calendário de feriados.');
-                }
+                $this->releaseCalendarLock();
             }
         }
+    }
+
+    private function releaseCalendarLock(): void
+    {
+        // A limpeza nunca deve substituir um commit confirmado nem o erro original.
+        // Se a sessão caiu, a conexão não persistente libera o lock ao encerrar.
+        for ($attempt = 0; $attempt < 2; $attempt++) {
+            try {
+                $stmt = $this->connection->query("SELECT RELEASE_LOCK('fokus-law-feriados-recalc')");
+                if ($stmt !== false) {
+                    $result = $stmt->fetchColumn();
+                    $stmt->closeCursor();
+                    // 0 ou NULL significam que esta conexão já não possui o lock.
+                    if ($result !== false) return;
+                }
+            } catch (Throwable) {
+                // A primeira exceção pode ter ocorrido antes ou depois da liberação.
+            }
+        }
+        $this->calendarLockUncertain = true;
+        error_log('Feriados: liberação do bloqueio do calendário não confirmada; sessão não persistente.');
     }
 
     private function isValidId(string $id): bool

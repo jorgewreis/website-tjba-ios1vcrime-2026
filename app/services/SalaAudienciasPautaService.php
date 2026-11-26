@@ -452,11 +452,26 @@ final class SalaAudienciasPautaService
     public function delete(string $id, ?string $usuarioId): bool
     {
         return $this->withScheduleLock(function () use ($id, $usuarioId): bool {
-            $ok = $this->pautaRepository->softDelete($id, $usuarioId);
-            if ($ok) {
-                $this->alocadosRepository->deleteByPautaId($id);
+            if ($this->connection->inTransaction() || !$this->connection->beginTransaction()) {
+                throw new LogicException('A exclusão da pauta exige transação própria.');
             }
-            return $ok;
+            try {
+                // O UPDATE mantém o lock da pauta até o commit. Alocações novas
+                // também exigem o lock da pauta ativa, na mesma ordem.
+                $ok = $this->pautaRepository->softDelete($id, $usuarioId);
+                if ($ok) {
+                    $this->alocadosRepository->deleteByPautaId($id);
+                }
+                if (!$this->connection->commit()) {
+                    throw new RuntimeException('Não foi possível confirmar a exclusão da pauta.');
+                }
+                return $ok;
+            } catch (Throwable $error) {
+                if ($this->connection->inTransaction()) {
+                    $this->connection->rollBack();
+                }
+                throw $error;
+            }
         });
     }
 

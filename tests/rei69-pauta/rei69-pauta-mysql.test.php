@@ -3,12 +3,12 @@ declare(strict_types=1);
 
 $fixtureStage = 'setup';
 set_exception_handler(static function (Throwable $exception) use (&$fixtureStage): void {
-    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness', 'pauta_transition_lock', 'pauta_allocation_lock', 'reu_principal_lock', 'pauta_atomic_derived', 'dashboard_strict_series', 'atas_csv'];
+    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness', 'pauta_transition_lock', 'pauta_allocation_lock', 'reu_principal_lock', 'pauta_atomic_derived', 'dashboard_strict_series', 'atas_csv', 'pauta_delete_atomic', 'oficios_sequence', 'feriados_cleanup', 'guias_readonly'];
     $code = in_array($fixtureStage, $allowed, true) ? $fixtureStage : 'unknown';
     fwrite(STDERR, "REI69_FIXTURE_FAILURE code=$code\n");
-    if ($code === 'atas_csv') {
+    if (in_array($code, ['atas_csv', 'pauta_delete_atomic', 'oficios_sequence', 'feriados_cleanup', 'guias_readonly'], true)) {
         $mysqlCode = $exception instanceof PDOException ? (int) ($exception->errorInfo[1] ?? 0) : 0;
-        fwrite(STDERR, 'REI69_FIXTURE_DETAIL area=atas_csv line=' . $exception->getLine() . ' mysql=' . $mysqlCode . "\n");
+        fwrite(STDERR, 'REI69_FIXTURE_DETAIL area=' . $code . ' line=' . $exception->getLine() . ' mysql=' . $mysqlCode . "\n");
     }
     exit(1);
 });
@@ -309,5 +309,7 @@ if (!str_contains($csv,'20/11/2026 14:35') || !str_contains($csv,'ata-publica.pd
     || str_contains($csv,'ata-sigilosa.pdf') || str_contains($csv,'Deprecated')) {
     throw new RuntimeException('O CSV não preservou a data de envio ou a exclusão de atas sigilosas.');
 }
+
+require '/repo/tests/rei69-pauta/integridade-operacional-mysql.php';
 
 echo "PASS REI69 pauta cross-process synthetic service regression\n";
