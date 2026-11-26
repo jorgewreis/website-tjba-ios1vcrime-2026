@@ -10,6 +10,7 @@ $basePath = dirname(__DIR__, 3);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/ApiAccessGuard.php';
+require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 require_once $basePath . '/app/services/GabineteMonitoramentoEletronicoService.php';
 require_once $basePath . '/app/services/ProcessoDataJudSyncQueue.php';
 
@@ -40,6 +41,11 @@ try {
     $service = new GabineteMonitoramentoEletronicoService($connection);
 
     if ($processoId !== '') {
+        if (!ProcessoSetorAuthorization::canAccessProcess($connection, trim((string) ($_SESSION['id_usuario'] ?? '')), $processoId, false)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Acesso negado ao processo.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
         ProcessoDataJudSyncQueue::enqueueBestEffort($connection, $processoId);
         $lista = $service->listarReusDoProcesso($processoId);
         echo json_encode(['processo_id' => $processoId, 'reus' => $lista], JSON_UNESCAPED_UNICODE);
