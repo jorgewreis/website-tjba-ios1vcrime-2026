@@ -195,7 +195,8 @@ final class ProcessResponsibleSectorMigration
             || strtolower((string) $column['COLLATION_NAME']) !== 'utf8mb4_unicode_ci'
             || $primaryIndex === null
             || (int) $primaryIndex['non_unique'] !== 0
-            || $primaryIndex['columns'] !== [self::SECTOR_COLUMN]
+            || count($primaryIndex['columns']) !== 1
+            || strcasecmp((string) $primaryIndex['columns'][0], self::SECTOR_COLUMN) !== 0
             || $primaryIndex['sub_parts'] !== [null]) {
             throw new RuntimeException($label . ' não corresponde ao contrato CHAR(30) utf8mb4_unicode_ci e PRIMARY KEY.');
         }

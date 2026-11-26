@@ -221,7 +221,7 @@ $snapshot = static function (PDO $db): array {
     }
     return $out;
 };
-$invoke = static function (string $endpoint, string $user, string $profile, array $payload, string $method = 'POST', string $origin = 'http://example.invalid', bool $authenticated = true, bool $hasSession = true, bool $failSync = false) use ($lab, &$childUncertain, &$failureStage): array {
+$invoke = static function (string $endpoint, string $user, string $profile, array $payload, string $method = 'POST', string $origin = 'http://example.invalid', bool $authenticated = true, bool $hasSession = true, bool $failSync = false) use ($lab, &$childUncertain, &$failureStage, &$failureDetail): array {
     $script = $lab . '/public/api/processos-partes/' . $endpoint;
     $code = <<<'PHP'
 $_SERVER['REQUEST_METHOD'] = (string) getenv('TEST_METHOD');
