@@ -31,6 +31,12 @@ jobs:
       - name: Validar plataforma real contra o lock
         run: composer check-platform-reqs --lock --no-dev
       - name: Verificar testes isolados do escopo
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: '1'
+          DB_NAME: isolated_fixture_only
+          DB_USER: fixture
+          DB_PASS: fixture-only-unused
         run: |
           php tests/datajud/service-http.test.php
           php tests/datajud/mapper-sync-real.test.php
