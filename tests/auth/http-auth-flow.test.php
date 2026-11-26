@@ -153,7 +153,15 @@ $rate = req('/views/public/login-form.php'); $rateCookie = sessionCookie($rate['
 ok(responseSuccess($rateLogin['body']), 'login não limpou rate-limit sintético');
 
 $GLOBALS['phase'] = 'password_reset';
-$token = getenv('E2E_RESET_TOKEN') ?: fail('token sintético ausente'); ok((bool)preg_match('/^[a-f0-9]{64}$/', $token), 'token sintético inválido');
+$tokenForm = req('/views/public/recupera-form.php');
+$tokenCsrf = csrf($tokenForm['body']);
+$tokenMailBefore = mails();
+$tokenRequest = req('/envia_mail.php', 'POST', ['cpf'=>'52998224725','email'=>'ativo@auth-test.invalid','csrf_token'=>$tokenCsrf], sessionCookie($tokenForm['headers']), true);
+$GLOBALS['phase'] = 'reset_token_mail';
+if ($tokenRequest['status'] !== 200 || mails() !== $tokenMailBefore + 1) fail('token sintético não foi enviado ao Mailpit');
+$latestMail = request('mailpit', 8025, '/view/latest.txt')['body'];
+if (!preg_match('~/redefinir_senha\.php#token=([a-f0-9]{64})~i', $latestMail, $tokenMatch)) fail('token sintético ausente no e-mail');
+$token = $tokenMatch[1];
 $newPassword = 'NovaA' . bin2hex(random_bytes(4)) . '!9';
 $GLOBALS['phase'] = 'reset_shell';
 $resetStart = req('/redefinir_senha.php'); $resetCookie = sessionCookie($resetStart['headers']);
