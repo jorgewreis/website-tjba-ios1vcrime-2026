@@ -233,54 +233,77 @@ final class Usuario
             return ['success' => false, 'message' => 'Usuário não identificado.'];
         }
 
-        $stmt = $this->pdo->prepare("
-            SELECT senha_hash FROM usuarios WHERE id_usuario = ? LIMIT 1
-        ");
-        $stmt->execute([$idUsuario]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$row || empty($row['senha_hash'])) {
-            return ['success' => false, 'message' => 'Usuário não encontrado.'];
-        }
-
-        if (!Security::verifyPassword($senhaAtual, $row['senha_hash'])) {
-            return ['success' => false, 'message' => 'Senha atual incorreta.'];
-        }
-
-        $policy = Security::validatePasswordPolicy($novaSenha);
-        if (($policy['valid'] ?? false) !== true) {
-            return ['success' => false, 'message' => $policy['message'] ?? 'Senha inválida.'];
-        }
-
-        if (Security::verifyPassword($novaSenha, $row['senha_hash'])) {
-            return ['success' => false, 'message' => 'A nova senha deve ser diferente da senha atual.'];
+        require_once __DIR__ . '/../services/PasswordResetService.php';
+        if (!(new PasswordResetService())->prepareResetStorage()) {
+            return ['success' => false, 'message' => 'Não foi possível atualizar a senha. Tente novamente.'];
         }
 
         $checkHistory = PASSWORD_HISTORY_ON_CHANGE_ENABLED
             && (!function_exists('isPasswordHistoryCheckEnabled') || isPasswordHistoryCheckEnabled());
-        if ($checkHistory && $this->passwordMatchesStoredHistory($idUsuario, $novaSenha)) {
-            return ['success' => false, 'message' => 'A nova senha não pode repetir nenhuma das últimas senhas utilizadas.'];
-        }
-
-        $novoHash = Security::hashPassword($novaSenha);
+        $this->pdo->beginTransaction();
         try {
+            PasswordResetTransactionalGuard::requireTransactionalTables($this->pdo, true, $checkHistory);
             $stmt = $this->pdo->prepare("
-                UPDATE usuarios SET senha_hash = ?, updated_at = NOW() WHERE id_usuario = ?
+                SELECT senha_hash FROM usuarios WHERE id_usuario = ? LIMIT 1 FOR UPDATE
             ");
-            $stmt->execute([$novoHash, $idUsuario]);
-        } catch (\PDOException $e) {
-            if (stripos($e->getMessage(), 'updated_at') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
-                $stmt = $this->pdo->prepare("UPDATE usuarios SET senha_hash = ? WHERE id_usuario = ?");
-                $stmt->execute([$novoHash, $idUsuario]);
-            } else {
-                throw $e;
+            $stmt->execute([$idUsuario]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if (!$row || empty($row['senha_hash'])) {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => 'Usuário não encontrado.'];
             }
-        }
 
-        if ($stmt->rowCount() < 1) {
-            return ['success' => false, 'message' => 'Não foi possível atualizar a senha. Tente novamente.'];
-        }
+            if (!Security::verifyPassword($senhaAtual, $row['senha_hash'])) {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => 'Senha atual incorreta.'];
+            }
 
-        return ['success' => true];
+            $policy = Security::validatePasswordPolicy($novaSenha);
+            if (($policy['valid'] ?? false) !== true) {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => $policy['message'] ?? 'Senha inválida.'];
+            }
+
+            if (Security::verifyPassword($novaSenha, $row['senha_hash'])) {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => 'A nova senha deve ser diferente da senha atual.'];
+            }
+
+            if ($checkHistory && $this->passwordMatchesStoredHistory($idUsuario, $novaSenha)) {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => 'A nova senha não pode repetir nenhuma das últimas senhas utilizadas.'];
+            }
+
+            $novoHash = Security::hashPassword($novaSenha);
+            try {
+                $stmt = $this->pdo->prepare("
+                    UPDATE usuarios SET senha_hash = ?, updated_at = NOW() WHERE id_usuario = ?
+                ");
+                $stmt->execute([$novoHash, $idUsuario]);
+            } catch (\PDOException $e) {
+                if (stripos($e->getMessage(), 'updated_at') !== false || stripos($e->getMessage(), 'Unknown column') !== false) {
+                    $stmt = $this->pdo->prepare("UPDATE usuarios SET senha_hash = ? WHERE id_usuario = ?");
+                    $stmt->execute([$novoHash, $idUsuario]);
+                } else {
+                    throw $e;
+                }
+            }
+
+            if ($stmt->rowCount() < 1) {
+                $this->pdo->rollBack();
+                return ['success' => false, 'message' => 'Não foi possível atualizar a senha. Tente novamente.'];
+            }
+
+            $invalidate = $this->pdo->prepare('UPDATE recuperacao_senha SET usado = 1 WHERE usuario = ? AND usado = 0');
+            $invalidate->execute([$idUsuario]);
+            $this->pdo->commit();
+            return ['success' => true];
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
     }
 
     /**
