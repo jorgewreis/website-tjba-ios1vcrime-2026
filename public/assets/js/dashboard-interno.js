@@ -183,6 +183,7 @@
         if(value!==null&&value!==undefined)set(valueId,count(value));
         applyCountBadge($(valueId),value);
       });
+      highlightResponsible('dash-overdue-expedidas-row','dash-overdue-expedidas',envioProprio&&!!envioResponsavel);
       sortSectorMetrics();
       if(queueCard)queueCard.hidden=!cartorioEnabled||!hasAnyMetric;
       if(sectorColumn)sectorColumn.hidden=!cartorioEnabled||!hasAnyMetric;
