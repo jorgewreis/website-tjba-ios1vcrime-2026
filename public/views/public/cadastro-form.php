@@ -32,7 +32,7 @@ $faculdades = [
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <link rel="stylesheet" href="/assets/css/shared/layout.css">
-    <link rel="stylesheet" href="/assets/css/shared/login.css">
+    <link rel="stylesheet" href="/assets/css/shared/login.css?v=<?php echo (int) (@filemtime(dirname(__DIR__, 2) . '/assets/css/shared/login.css') ?: time()); ?>">
 
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
 
@@ -60,7 +60,7 @@ $faculdades = [
         }
     </style>
 </head>
-<body>
+<body class="login-form-page">
 
     <div class="title-page" style="margin-top: 30px;">
         <span class="title">Cadastro de estudantes</span>

@@ -1,0 +1,126 @@
+/* Cartas e ofícios: sem alterar apresentação no desktop ou outras listagens. */
+@media (max-width: 767px) {
+    .page-operational-list .card-page {
+        margin-inline: 12px;
+        width: calc(100% - 24px);
+    }
+
+    .page-operational-list .card-page :is(.row, .col, .card-line) {
+        box-sizing: border-box;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .page-operational-list .card-page .row {
+        flex-wrap: wrap;
+        row-gap: 8px;
+    }
+
+    .page-operational-list .card-page > .row {
+        padding-inline: 12px;
+    }
+
+    .page-operational-list .card-title > .row,
+    .page-operational-list .card-page .row-fit:has(> :is(input:not([type="hidden"]), select)) {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .page-operational-list .card-page .row > .col:has(> :is(input:not([type="hidden"]), select)) {
+        flex: 1 1 min(100%, 260px);
+    }
+
+    .page-operational-list .card-page :is(input:not([type="hidden"], [type="radio"], [type="checkbox"]), select) {
+        box-sizing: border-box;
+        width: 100% !important;
+        min-width: 0;
+        max-width: 100%;
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    .page-operational-list .card-page .btn {
+        max-width: 100%;
+        min-height: 44px;
+        white-space: normal;
+    }
+
+    .page-operational-list .pagination-controls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 4px;
+        max-width: 100%;
+    }
+
+    .page-operational-list .pagination-controls > button {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .page-operational-list .pagination-info {
+        margin-inline: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .page-operational-list .register.register-oficio-list .register-oficio-list-row { flex-wrap: wrap; }
+
+    .page-operational-list .register.register-oficio-list .register-oficio-list-row > .display-flex.row-fit.flex-1 {
+        flex-basis: 100%;
+        width: 100%;
+    }
+
+    .page-operational-list .register-oficio-list-row :is(.col-process, .col:has(> .major-info)) {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .page-operational-list .register-oficio-list :is(.container-processo, .container-historical) {
+        box-sizing: border-box;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .page-operational-list .register-oficio-list :is(.major-info, .minor-info) {
+        max-width: 100%;
+        width: auto;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .page-operational-list .register.register-oficio-list :is(.container-data-create, .container-historical) {
+        flex: 1 1 100%;
+        margin-inline: 0;
+    }
+
+    .page-operational-list .register-with-metadata,
+    .page-operational-list .register-line {
+        box-sizing: border-box;
+        max-width: 100%;
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .page-operational-list .carta-expedida-v2-row .carta-row-action {
+        min-width: 44px;
+        min-height: 44px;
+        opacity: 1;
+    }
+}
+
+/* O CSS legado aplica a estrutura dos cartões somente a partir de 390px. */
+@media (max-width: 389px) {
+    .page-operational-list .register-line.carta-expedida-v2-row {
+        display: flex;
+        width: 100%;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .page-operational-list .carta-expedida-v2-row :is(.carta-expedida-left, .register-block-status) {
+        display: flex;
+        gap: 8px;
+    }
+
+    .page-operational-list .carta-expedida-v2-row .register-block-status { align-items: center; }
+}

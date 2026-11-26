@@ -206,9 +206,10 @@ function cartorio_oficios_label_cumprimento(array $row): string
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
     <?php include __DIR__ . '/_copy_process_script.php'; ?>
+    <link rel="stylesheet" href="/assets/css/shared/operational-list-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/shared/operational-list-mobile.css') ?: time()); ?>">
 </head>
 
-<body class="page-internal">
+<body class="page-internal page-operational-list">
 
     <div class="spacing-top-page"></div>
 
@@ -329,7 +330,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <select class="width-500 height-md" id="filter-status">
+                <select class="width-500 height-md" id="filter-status" aria-label="Filtrar por status">
                     <option value="" <?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="pendente" <?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>
                         Pendente (<?php echo htmlspecialchars((string) ($statusCounts['pendente'] ?? 0)); ?>)
@@ -341,7 +342,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
                         Cancelada (<?php echo htmlspecialchars((string) ($statusCounts['cancelada'] ?? 0)); ?>)
                     </option>
                 </select>
-                <select class="width-300 height-md" id="filter-ano" <?php echo $anosComOficios === [] ? ' disabled' : ''; ?>>
+                <select class="width-300 height-md" id="filter-ano" aria-label="Filtrar por ano" <?php echo $anosComOficios === [] ? ' disabled' : ''; ?>>
                     <?php if ($anosComOficios === []): ?>
                         <option value="">—</option>
                     <?php else: ?>

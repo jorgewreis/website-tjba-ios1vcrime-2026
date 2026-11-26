@@ -103,7 +103,7 @@ if ($_siteUpdatedAt instanceof DateTimeImmutable) {
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <link rel="stylesheet" href="/assets/css/shared/layout.css">
     <link rel="stylesheet" href="/assets/css/shared/page.css">
-    <link rel="stylesheet" href="/assets/css/shared/login.css">
+    <link rel="stylesheet" href="/assets/css/shared/login.css?v=<?php echo (int) (@filemtime(__DIR__ . '/assets/css/shared/login.css') ?: time()); ?>">
     <link rel="stylesheet" href="/assets/css/shared/toast.css">
 
     <?php if (!$needsResetFragmentBootstrap): ?>
@@ -125,11 +125,8 @@ if ($_siteUpdatedAt instanceof DateTimeImmutable) {
 </head>
 <body>
 
-    <!-- PAGE DISPOSITIVOS INCOMPATÍVEIS -->
-    <div class="noview"></div>
-
     <!-- CONTEÚDO DO SITE -->
-    <div class="view layout-wraper">
+    <div class="layout-wraper layout-wraper--login">
 
         <div class="layout-container">
             <div class="layout-page">
