@@ -24,7 +24,7 @@ if ($LASTEXITCODE -ne 0 -or $contextInfo.Endpoints.docker.Host -notin @('npipe:/
 $mysql = $mailpit = $app = $client = $browserContainer = $null; $cleanupFailed = $false; $networkAttempted = $false; $creationPending = $false;
 . (Join-Path $PSScriptRoot 'cleanup-owned.ps1')
 . (Join-Path $PSScriptRoot 'docker-topology-validation.ps1')
-$executionFailure = $null; $guardToken = $null
+$executionFailure = $null; $guardToken = $null; $script:failurePhase = 'setup'
 function D([string[]]$a) {
     $prior = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
@@ -102,6 +102,7 @@ function App([string[]]$a) {
     return D $dockerArgs
 }
 function Run-AppTest([string]$testFile, [string[]]$arguments = @()) {
+    $script:failurePhase = 'app-test-topology'
     Assert-ActiveTopology
     Write-Output "STEP $testFile"
     if ($testFile -eq 'password-reset-states.test.php') {
@@ -114,9 +115,12 @@ function Run-AppTest([string]$testFile, [string[]]$arguments = @()) {
             $ErrorActionPreference = $previousErrorActionPreference
         }
         if ($testExitCode -ne 0) { throw "Falha em $testFile (exit=$testExitCode; detalhes suprimidos para evitar exposição de tokens)." }
+        $script:failurePhase = 'app-test-complete'
         return
     }
+    $script:failurePhase = 'app-test-command'
     App (@('php', '-d', 'error_log=/tmp/auth-fixture-error.log', "/workspace/tests/auth/$testFile") + $arguments) | Out-Null
+    $script:failurePhase = 'app-test-complete'
 }
 try {
     $required=@('app','config','public','vendor','services','tests/auth')
@@ -206,11 +210,15 @@ try {
     if($i -eq 30){throw 'Aplicação HTTP não ficou pronta.'}
     Assert-ActiveTopology
     if ($Browser) {
+        $script:failurePhase = 'browser-topology'
         Write-Output 'STEP navegador'
         Assert-ActiveTopology
+        $script:failurePhase = 'browser-copy'
         D @('cp',(Join-Path $root 'tests/auth/rei73-browser-cdp.cjs'),"${browserContainer}:/tmp/rei73-browser-cdp.cjs") | Out-Null
         Assert-ActiveTopology
+        $script:failurePhase = 'browser-command'
         D @('exec',$browserContainer,'node','/tmp/rei73-browser-cdp.cjs') | Write-Output
+        $script:failurePhase = 'browser-after'
         Assert-ActiveTopology
     }
     if ($Browser) { Run-AppTest 'login-rate-limit.fixture.php' @('seed') }
@@ -221,7 +229,11 @@ try {
 } catch {
     # Dados de erro do Docker, testes e servidor podem conter tokens; nunca os imprima.
     $executionFailure = $true
-    Write-Output 'RUNNER_FAILURE: verifique a última etapa STEP exibida; detalhes sensíveis omitidos.'
+    if ($script:failurePhase -match '^(setup|app-test-topology|app-test-command|app-test-complete|browser-topology|browser-copy|browser-command|browser-after)$') {
+        Write-Output "RUNNER_FAILURE phase=$script:failurePhase; detalhes sensíveis omitidos."
+    } else {
+        Write-Output 'RUNNER_FAILURE phase=unknown; detalhes sensíveis omitidos.'
+    }
 } finally {
     if ($creationPending) {
         $knownIds = @($browserContainer, $client, $app, $mailpit, $mysql | Where-Object { $_ })
