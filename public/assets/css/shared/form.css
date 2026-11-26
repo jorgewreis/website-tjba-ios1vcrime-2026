@@ -1066,3 +1066,69 @@ input[type="radio"] {
 .height-lg {
     height: 50px !important;
 }
+
+/* Formulários operacionais opt-in: mantenha o desktop e os formulários legados intactos. */
+@media (max-width: 767px) {
+    .page-operational-form .card-page { overflow-wrap: anywhere; }
+
+    .page-operational-form .card-page :is(.row, .col, .card-buttons) {
+        box-sizing: border-box;
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .page-operational-form .card-page .row { flex-wrap: wrap; row-gap: 8px; }
+
+    .page-operational-form .card-page .row > .col:has(> :is(input:not([type="hidden"], [type="checkbox"], [type="radio"]), select, textarea)) {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .page-operational-form .card-page :is(input:not([type="hidden"], [type="checkbox"], [type="radio"]), select, textarea) {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    .page-operational-form .card-page .btn {
+        min-height: 44px;
+        max-width: 100%;
+        white-space: normal;
+    }
+
+    .page-operational-form .card-buttons {
+        height: auto;
+        min-height: 60px;
+        padding: 10px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .page-operational-form .card-page .timeline > .row-fit {
+        width: 100%;
+        flex: 0 1 100%;
+    }
+
+    .page-operational-form .card-page .timeline .subtask-status-info {
+        flex: 1 1 0;
+        min-width: 0;
+        align-items: flex-start;
+    }
+
+    .page-operational-form .card-page .timeline .subtask-date {
+        width: 100%;
+        margin: 0 !important;
+        align-items: flex-start !important;
+        text-align: start;
+    }
+
+    .page-operational-form .card-page .timeline .button-subtask { margin-left: 0; }
+
+    .page-operational-form .card-page .timeline-header .status-with-progress {
+        max-width: 100%;
+        white-space: normal;
+    }
+}
