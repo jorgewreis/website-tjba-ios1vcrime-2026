@@ -159,8 +159,10 @@ function painelResumoInscrito(array $inscrito): string
         <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <link rel="stylesheet" href="/assets/css/shared/timeline-day-ruler.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/timeline-day-ruler.css') ?: time(); ?>">
+        <link rel="stylesheet" href="/assets/css/shared/operational-list-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/shared/operational-list-mobile.css') ?: time()); ?>">
+        <link rel="stylesheet" href="/assets/css/modules/audiencias/day-minutes-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/modules/audiencias/day-minutes-mobile.css') ?: time()); ?>">
     </head>
-<body class="page-internal">
+<body class="page-internal page-operational-list page-hearing-day">
     <div class="spacing-top-page"></div>
 
     <div class="header-page">
