@@ -4,7 +4,7 @@ declare(strict_types=1);
 require __DIR__ . "/sandbox-guard.php";
 set_exception_handler(static function (Throwable $e): void { echo "HTTP_DIAG: " . ($GLOBALS['phase'] ?? 'unknown') . " " . get_class($e) . " code=" . (string)$e->getCode() . PHP_EOL; exit(1); });
 
-function fail(string $m): never { fwrite(STDERR, "FAIL http-auth-flow: $m\n"); exit(1); }
+function fail(string $m): never { fwrite(STDERR, 'HTTP_FAIL phase=' . ($GLOBALS['phase'] ?? 'unknown') . PHP_EOL); exit(1); }
 function ok(bool $v, string $m): void { if (!$v) fail($m); }
 function responseSuccess(string $body): bool { $decoded = json_decode($body, true); return is_array($decoded) && ($decoded['success'] ?? false) === true; }
 function csrf(string $html): string {
@@ -62,6 +62,7 @@ function sessionCookie(array $headers): string { foreach ($headers as $h) if (st
 function refreshedSessionCookie(array $headers, string $fallback): string { foreach ($headers as $h) if (stripos($h, 'Set-Cookie: PHPSESSID=') === 0 && preg_match('/PHPSESSID=([^;]+)/', $h, $m)) return 'PHPSESSID=' . $m[1]; return $fallback; }
 function mails(): int { $GLOBALS['phase'] = 'mail_json'; return count(json_decode(request('mailpit', 8025, '/api/v1/messages')['body'], true, flags: JSON_THROW_ON_ERROR)['messages'] ?? []); }
 
+$GLOBALS['phase'] = 'login';
 $form = req('/views/public/login-form.php'); $loginCsrf = csrf($form['body']); $loginCookie = sessionCookie($form['headers']);
 $invalid = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12345','csrf_token'=>'invalid'], $loginCookie);
 ok(!responseSuccess($invalid['body']), 'login com CSRF inválido foi aceito');
@@ -69,6 +70,7 @@ $login = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!1234
 ok(responseSuccess($login['body']), 'login válido não autenticou: ' . substr($login['body'], 0, 500)); $session = sessionCookie($login['headers']);
 
 // Consultas reais após login, com instituições e usuários exclusivamente sintéticos.
+$GLOBALS['phase'] = 'institution_access';
 $searchPath = '/api/instituicoes-publicas/search.php?nome=Sintetica';
 $anonymousSearch = req($searchPath);
 $anonymousBody = json_decode($anonymousSearch['body'], true);
@@ -82,6 +84,7 @@ $inactivePath = '/api/instituicoes-publicas/list.php?nome=Sintetica&ativo=0';
 $adminInactive = req($inactivePath, 'GET', [], $session);
 $adminInactiveData = json_decode($adminInactive['body'], true);
 ok($adminInactive['status'] === 200 && is_array($adminInactiveData) && array_column($adminInactiveData['data'] ?? [], 'id') === ['INS-SYNTHETIC-INACTIVE'], 'filtro de inativas interno divergiu');
+$GLOBALS['phase'] = 'profile_access';
 foreach ([['258.369.147-37', 'CONSULTOR'], ['314.159.265-90', 'MISTO'], ['147.258.369-82', 'ESTUDANTE']] as [$cpf, $role]) {
     $profileForm = req('/views/public/login-form.php');
     $profileLogin = req('/login.php', 'POST', ['cpf'=>$cpf, 'senha'=>'Sintetica!12345', 'csrf_token'=>csrf($profileForm['body'])], sessionCookie($profileForm['headers']));
@@ -108,6 +111,7 @@ foreach ([['258.369.147-37', 'CONSULTOR'], ['314.159.265-90', 'MISTO'], ['147.25
             && !str_contains($profileSearch['body'], 'Sintetica') && !str_contains($profileSearch['body'], 'INS-SYNTHETIC-'), 'perfil estudante acessou instituições');
     }
 }
+$GLOBALS['phase'] = 'password_change';
 $home = req('/home.php', 'GET', [], $session); $logoutCsrf = csrf($home['body']);
 // Exercise the real password-change endpoint and real session on the runner's
 // disposable database, then restore the synthetic password for later cases.
@@ -127,6 +131,7 @@ $badLogout = req('/logout.php', 'POST', ['csrf_token'=>'invalid'], $session); ok
 
 // A second login replaces the persisted token while the first browser session
 // remains open. Logging out from that stale session must not revoke the new one.
+$GLOBALS['phase'] = 'logout_race';
 $secondLoginForm = req('/views/public/login-form.php');
 $secondLogin = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12345','csrf_token'=>csrf($secondLoginForm['body'])], sessionCookie($secondLoginForm['headers']));
 ok(responseSuccess($secondLogin['body']), 'segundo login válido não autenticou');
@@ -143,9 +148,11 @@ $secondClosed = req('/home.php', 'GET', [], $secondSession);
 ok(in_array($secondClosed['status'], [302,401,403], true), 'logout recente não encerrou a sessão local');
 
 // The runner seeds synthetic scopes; this successful login must clear them.
+$GLOBALS['phase'] = 'http_rate_limit';
 $rate = req('/views/public/login-form.php'); $rateCookie = sessionCookie($rate['headers']); $rateLogin = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12345','csrf_token'=>csrf($rate['body'])], $rateCookie);
 ok(responseSuccess($rateLogin['body']), 'login não limpou rate-limit sintético');
 
+$GLOBALS['phase'] = 'password_reset';
 $token = getenv('E2E_RESET_TOKEN') ?: fail('token sintético ausente'); ok((bool)preg_match('/^[a-f0-9]{64}$/', $token), 'token sintético inválido');
 $newPassword = 'NovaA' . bin2hex(random_bytes(4)) . '!9';
 $resetStart = req('/redefinir_senha.php'); $resetCookie = sessionCookie($resetStart['headers']);
@@ -185,6 +192,7 @@ $resetLoginForm = req('/views/public/login-form.php'); $resetLoginCookie = sessi
 $resetLogin = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>$newPassword,'csrf_token'=>csrf($resetLoginForm['body'])], $resetLoginCookie);
 ok(responseSuccess($resetLogin['body']), 'redefinição válida não permitiu novo login: ' . substr($resetLogin['body'], 0, 500));
 
+$GLOBALS['phase'] = 'reset_mail';
 $resetForm = req('/views/public/recupera-form.php'); $resetCsrf = csrf($resetForm['body']); $resetCookie = sessionCookie($resetForm['headers']); $before = mails();
 $badReset = req('/envia_mail.php', 'POST', ['cpf'=>'52998224725','email'=>'ativo@auth-test.invalid','csrf_token'=>'invalid'], $resetCookie, true);
 ok($badReset['status'] === 419 && mails() === $before, 'reset com CSRF inválido enviou e-mail ou teve status incorreto');
