@@ -1,0 +1,32 @@
+/* Consulta de processos e lista de guias: cartões sem corte, mantendo a ordem do DOM. */
+@media (max-width: 767px) {
+    .page-process-queue-list .card-page .register-with-metadata > .row-full { flex-wrap: wrap; }
+
+    .page-process-queue-list .register > .row-full > .row-fit,
+    .page-process-queue-list .register :is(.col-process, .col-tipo-guia) { width: 100%; }
+
+    .page-process-queue-list .card-page form > .row-full { padding-inline: 12px; }
+
+    .page-process-queue-list .register :is(.major-info, .minor-info) {
+        width: auto;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .page-process-queue-list .register :is(.container-processo, .container-data-create, .container-historical) {
+        box-sizing: border-box;
+        min-width: 0;
+        max-width: 100%;
+        margin-inline: 0;
+    }
+
+    .page-process-queue-list .register.register-with-metadata :is(.container-data-create, .container-historical) {
+        flex: 1 1 100%;
+    }
+
+    .page-process-queue-list .card-page :is(.button-table, .button-subtask) {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}

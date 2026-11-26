@@ -98,8 +98,10 @@ $itemsLabel = $itemsPerPage === 1 ? 'item' : 'itens';
             }
         })();
         </script>
+        <link rel="stylesheet" href="/assets/css/shared/operational-list-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/shared/operational-list-mobile.css') ?: time()); ?>">
+        <link rel="stylesheet" href="/assets/css/shared/process-queue-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/shared/process-queue-mobile.css') ?: time()); ?>">
     </head>
-<body class="page-internal">
+<body class="page-internal page-operational-list page-process-queue-list">
 
     <div class="spacing-top-page"></div>
 

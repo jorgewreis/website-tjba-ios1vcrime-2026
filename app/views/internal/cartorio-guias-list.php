@@ -200,8 +200,10 @@ if ($totalPages > 0) {
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
+        <link rel="stylesheet" href="/assets/css/shared/operational-list-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/shared/operational-list-mobile.css') ?: time()); ?>">
+        <link rel="stylesheet" href="/assets/css/shared/process-queue-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/shared/process-queue-mobile.css') ?: time()); ?>">
     </head>
-<body class="page-internal">
+<body class="page-internal page-operational-list page-process-queue-list">
 
     <div class="spacing-top-page"></div>
 
@@ -238,14 +240,14 @@ if ($totalPages > 0) {
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center">
-                <select class="width-500 height-md" id="filter-status">
+                <select class="width-500 height-md" id="filter-status" aria-label="Filtrar por status">
                     <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="pendente"<?php echo $statusFilter === 'pendente' ? ' selected' : ''; ?>>Pendente (<?php echo (int) ($statusCounts['pendente'] ?? 0); ?>)</option>
                     <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
                     <option value="concluída"<?php echo $statusFilter === 'concluída' ? ' selected' : ''; ?>>Finalizada (<?php echo (int) ($statusCounts['concluída'] ?? 0); ?>)</option>
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                 </select>
-                <select class="width-700 height-md" id="filter-tipo">
+                <select class="width-700 height-md" id="filter-tipo" aria-label="Filtrar por tipo de guia">
                     <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Todos os tipos</option>
                     <?php foreach ($tipoCountsOrdered as $tipo => $count): if ($count === 0 && $tipoFilter !== $tipo) continue; ?>
                         <option value="<?php echo htmlspecialchars($tipo, ENT_QUOTES); ?>"<?php echo $tipoFilter === $tipo ? ' selected' : ''; ?>>
@@ -328,7 +330,7 @@ if ($totalPages > 0) {
                         <div class="col">
                             <?php if (!$tarefaConcluida): ?>
                                 <label class="button-table" title="Expandir detalhes">
-                                    <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idGuia); ?>" aria-expanded="false" />
+                                    <input type="radio" name="open-subtask" value="<?php echo htmlspecialchars($idGuia, ENT_QUOTES); ?>" aria-controls="subtask-<?php echo htmlspecialchars($idGuia); ?>" aria-expanded="false" aria-label="Expandir etapas da guia" />
                                     <i class="fi fi-rr-angle-small-down"></i>
                                 </label>
                             <?php endif; ?>
