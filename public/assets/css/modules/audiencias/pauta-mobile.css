@@ -1,0 +1,42 @@
+/* Os cartões mantêm as mesmas informações e ações da pauta no desktop. */
+@media (max-width: 767px) {
+    .page-pauta-list .register.register-pauta > .row-full {
+        flex-wrap: wrap;
+    }
+
+    .page-pauta-list .register-pauta > .row-full > .row-fit {
+        width: 100%;
+    }
+
+    .page-pauta-list .register-pauta > .row-full .col {
+        width: 100%;
+    }
+
+    .page-pauta-list .register-pauta :is(.container-processo, .container-historical, .container-data-create) {
+        box-sizing: border-box;
+        min-width: 0;
+        max-width: 100%;
+        margin-inline: 0;
+    }
+
+    .page-pauta-list .register-pauta :is(.container-historical, .container-data-create) {
+        flex: 1 1 100%;
+    }
+
+    .page-pauta-list .register-pauta :is(.major-info, .minor-info) {
+        width: auto;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .page-pauta-list .register-pauta .painel-dia-actions {
+        flex-wrap: wrap;
+        max-width: 100%;
+    }
+
+    .page-pauta-list .register.register-pauta .painel-dia-actions .btn-editar {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}

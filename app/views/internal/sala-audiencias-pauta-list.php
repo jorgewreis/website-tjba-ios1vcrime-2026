@@ -144,8 +144,10 @@ $statusFilterLabelsPauta = [
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <link rel="stylesheet" href="/assets/css/shared/operational-list-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/shared/operational-list-mobile.css') ?: time()); ?>">
+        <link rel="stylesheet" href="/assets/css/modules/audiencias/pauta-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/modules/audiencias/pauta-mobile.css') ?: time()); ?>">
     </head>
-<body class="page-internal">
+<body class="page-internal page-operational-list page-pauta-list">
 
     <!-- SPACING -->
     <div class="spacing-top-page"></div>
@@ -193,7 +195,7 @@ $statusFilterLabelsPauta = [
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
-                <select class="width-500 height-md" id="filter-status">
+                <select class="width-500 height-md" id="filter-status" aria-label="Filtrar por status">
                     <option value=""<?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="designada"<?php echo $statusFilter === 'designada' ? ' selected' : ''; ?>>Designada (<?php echo (int) ($statusCounts['designada'] ?? 0); ?>)</option>
                     <option value="em_andamento"<?php echo $statusFilter === 'em_andamento' ? ' selected' : ''; ?>>Em andamento (<?php echo (int) ($statusCounts['em_andamento'] ?? 0); ?>)</option>
@@ -202,13 +204,13 @@ $statusFilterLabelsPauta = [
                     <option value="redesignada"<?php echo $statusFilter === 'redesignada' ? ' selected' : ''; ?>>Redesignada (<?php echo (int) ($statusCounts['redesignada'] ?? 0); ?>)</option>
                     <option value="cancelada"<?php echo $statusFilter === 'cancelada' ? ' selected' : ''; ?>>Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)</option>
                 </select>
-                <select class="width-500 height-md" id="filter-periodo">
+                <select class="width-500 height-md" id="filter-periodo" aria-label="Filtrar por período">
                     <option value=""<?php echo $periodoFilter === '' ? ' selected' : ''; ?>>Todo o período</option>
                     <option value="hoje"<?php echo $periodoFilter === 'hoje' ? ' selected' : ''; ?>>Hoje</option>
                     <option value="semana"<?php echo $periodoFilter === 'semana' ? ' selected' : ''; ?>>Próximos 7 dias</option>
                     <option value="mes"<?php echo $periodoFilter === 'mes' ? ' selected' : ''; ?>>Este mês</option>
                 </select>
-                <select class="width-700 height-md" id="filter-tipo">
+                <select class="width-700 height-md" id="filter-tipo" aria-label="Filtrar por tipo de audiência">
                     <option value=""<?php echo $tipoFilter === '' ? ' selected' : ''; ?>>Todos os tipos de audiência</option>
                     <?php foreach ($tipos as $tp): $tpNome = (string) ($tp['nome'] ?? ''); ?>
                         <option value="<?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?>"<?php echo $tipoFilter === $tpNome ? ' selected' : ''; ?>><?php echo htmlspecialchars($tpNome, ENT_QUOTES); ?></option>
