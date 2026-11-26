@@ -335,6 +335,15 @@ final class GabineteReusPresosService
     public function saveProcessoLink(array $input): string
     {
         $reuId = trim((string) ($input['reu_preso_id'] ?? ''));
+        if ($reuId === '') {
+            throw new InvalidArgumentException('Identificador do réu é obrigatório.');
+        }
+        return $this->withLockedActiveReu($reuId, fn (): string => $this->saveProcessoLinkLocked($input));
+    }
+
+    private function saveProcessoLinkLocked(array $input): string
+    {
+        $reuId = trim((string) ($input['reu_preso_id'] ?? ''));
         $linkId = trim((string) ($input['link_id'] ?? ''));
         $numeroRaw = trim((string) ($input['numero_processo'] ?? ''));
         $situacao = trim((string) ($input['situacao'] ?? 'preso'));
@@ -344,16 +353,6 @@ final class GabineteReusPresosService
         $classeCodigo = trim((string) ($input['classe_codigo'] ?? ''));
         $classeDescricao = trim((string) ($input['classe_descricao'] ?? ''));
 
-        if ($reuId === '') {
-            throw new InvalidArgumentException('Identificador do réu é obrigatório.');
-        }
-        $reu = $this->reuRepo->findById($reuId);
-        if ($reu === null) {
-            throw new InvalidArgumentException('Réu preso não encontrado.');
-        }
-        if (($reu['status'] ?? '') !== 'ativo') {
-            throw new InvalidArgumentException('Não é possível alterar processos de um registro arquivado.');
-        }
         if (!in_array($situacao, ['preso', 'solto'], true)) {
             throw new InvalidArgumentException('Situação inválida.');
         }
@@ -429,11 +428,8 @@ final class GabineteReusPresosService
 
         $this->reconciliarPrioridadesProcesso($processoId);
 
-        if ($principal && !$autoPrincipal) {
+        if ($autoPrincipal) {
             $this->setPrincipalInternal($reuId, $newId);
-        } elseif ($autoPrincipal) {
-            $this->procRepo->clearPrincipalForReu($reuId);
-            $this->procRepo->update($newId, ['principal' => 1]);
         }
         $this->ensureReuParteVinculadaAoProcesso($reuId, $processoId);
         $this->recalcProximaRevisao($reuId);
@@ -452,23 +448,21 @@ final class GabineteReusPresosService
             throw new InvalidArgumentException('Vínculo não encontrado.');
         }
         $reuId = (string) ($link['reu_preso_id'] ?? '');
-        $reu = $this->reuRepo->findById($reuId);
-        if ($reu === null || ($reu['status'] ?? '') !== 'ativo') {
-            throw new InvalidArgumentException('Operação não permitida.');
-        }
-
-        $processoId = (string) ($link['processo_id'] ?? '');
-        $situacao = (string) ($link['situacao'] ?? '');
-        $wasPrincipal = !empty($link['principal']);
-
-        $this->procRepo->deleteById($linkId);
-        $this->reconciliarPrioridadesProcesso($processoId);
-
-        $remaining = $this->procRepo->findByReuPresoId($reuId);
-        if ($wasPrincipal && $remaining !== []) {
-            $first = $remaining[0];
-            $this->procRepo->update((string) $first['id'], ['principal' => 1]);
-        }
+        $this->withLockedActiveReu($reuId, function () use ($reuId, $linkId): void {
+            $link = $this->procRepo->findById($linkId);
+            if ($link === null || (string) ($link['reu_preso_id'] ?? '') !== $reuId) {
+                throw new InvalidArgumentException('Vínculo não encontrado.');
+            }
+            if (!$this->procRepo->deleteById($linkId)) {
+                throw new RuntimeException('Não foi possível desvincular o processo.');
+            }
+            $remaining = $this->procRepo->findByReuPresoId($reuId);
+            if (!empty($link['principal']) && $remaining !== []) {
+                $this->setPrincipalInternal($reuId, (string) $remaining[0]['id']);
+            }
+            $this->reconciliarPrioridadesProcesso((string) ($link['processo_id'] ?? ''));
+            $this->recalcProximaRevisao($reuId);
+        });
     }
 
     public function setPrincipal(string $reuPresoId, string $linkId): void
@@ -478,21 +472,45 @@ final class GabineteReusPresosService
         if ($reuPresoId === '' || $linkId === '') {
             throw new InvalidArgumentException('Dados incompletos.');
         }
-        $reu = $this->reuRepo->findById($reuPresoId);
-        if ($reu === null || ($reu['status'] ?? '') !== 'ativo') {
-            throw new InvalidArgumentException('Operação não permitida.');
+        $this->withLockedActiveReu($reuPresoId, function () use ($reuPresoId, $linkId): void {
+            $link = $this->procRepo->findById($linkId);
+            if ($link === null || (string) ($link['reu_preso_id'] ?? '') !== $reuPresoId) {
+                throw new InvalidArgumentException('Vínculo inválido.');
+            }
+            $this->setPrincipalInternal($reuPresoId, $linkId);
+            $this->recalcProximaRevisao($reuPresoId);
+        });
+    }
+
+    private function withLockedActiveReu(string $reuId, callable $operation): mixed
+    {
+        // These commands own the transaction; the parent's lock must outlive every write.
+        if ($this->connection->inTransaction()) {
+            throw new LogicException('Alteração do vínculo requer transação própria.');
         }
-        $link = $this->procRepo->findById($linkId);
-        if ($link === null || (string) ($link['reu_preso_id'] ?? '') !== $reuPresoId) {
-            throw new InvalidArgumentException('Vínculo inválido.');
+        $this->connection->beginTransaction();
+        try {
+            $reu = $this->reuRepo->findById($reuId, true);
+            if ($reu === null || ($reu['status'] ?? '') !== 'ativo') {
+                throw new InvalidArgumentException('Operação não permitida.');
+            }
+            $result = $operation();
+            $this->connection->commit();
+            return $result;
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            }
+            throw $exception;
         }
-        $this->setPrincipalInternal($reuPresoId, $linkId);
     }
 
     private function setPrincipalInternal(string $reuPresoId, string $linkId): void
     {
         $this->procRepo->clearPrincipalForReu($reuPresoId);
-        $this->procRepo->update($linkId, ['principal' => 1]);
+        if (!$this->procRepo->update($linkId, ['principal' => 1])) {
+            throw new RuntimeException('Não foi possível definir o processo principal.');
+        }
     }
 
     /**

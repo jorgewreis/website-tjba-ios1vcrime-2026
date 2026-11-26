@@ -16,7 +16,7 @@ final class GabineteReuPresoRepository
         $this->controleTipo = $controleTipo === 'substituto' ? 'substituto' : 'principal';
     }
 
-    public function findById(string $id): ?array
+    public function findById(string $id, bool $lock = false): ?array
     {
         $id = trim($id);
         if ($id === '') {
@@ -24,6 +24,7 @@ final class GabineteReuPresoRepository
         }
         $st = $this->connection->prepare(
             sprintf('SELECT * FROM `%s` WHERE `id` = :id AND `controle_tipo` = :controle_tipo LIMIT 1', $this->table)
+            . ($lock && $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '')
         );
         $st->bindValue(':id', $id);
         $st->bindValue(':controle_tipo', $this->controleTipo);
