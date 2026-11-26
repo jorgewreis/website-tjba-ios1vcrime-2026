@@ -66,7 +66,7 @@ final class ProcessResponsibleSectorMigration
         $foreignKeys = $this->foreignKeys($database);
         $targetForeignKeys = [];
         foreach ($foreignKeys as $foreignKey) {
-            if ($foreignKey['COLUMN_NAME'] === self::PROCESS_COLUMN) {
+            if (strcasecmp((string) ($foreignKey['COLUMN_NAME'] ?? ''), self::PROCESS_COLUMN) === 0) {
                 $targetForeignKeys[] = $foreignKey;
             }
         }
@@ -229,14 +229,15 @@ final class ProcessResponsibleSectorMigration
     private function isUsableIndex(array $index): bool
     {
         return (int) $index['non_unique'] === 1
-            && ($index['columns'][0] ?? null) === self::PROCESS_COLUMN
+            && strcasecmp((string) ($index['columns'][0] ?? ''), self::PROCESS_COLUMN) === 0
             && ($index['sub_parts'][0] ?? null) === null;
     }
 
     private function isExactTargetIndex(array $index): bool
     {
         return (int) $index['non_unique'] === 1
-            && $index['columns'] === [self::PROCESS_COLUMN]
+            && count($index['columns']) === 1
+            && strcasecmp((string) ($index['columns'][0] ?? ''), self::PROCESS_COLUMN) === 0
             && $index['sub_parts'] === [null];
     }
 

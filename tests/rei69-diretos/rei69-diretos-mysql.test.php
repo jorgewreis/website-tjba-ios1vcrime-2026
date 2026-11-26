@@ -243,7 +243,7 @@ PHP;
     ];
     $pipes = [];
     $process = proc_open([PHP_BINARY, '-r', $code], [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes, $lab, $environment);
-    if (!is_resource($process)) throw new RuntimeException('Falha ao iniciar PHP CLI para endpoint sintético.');
+    if (!is_resource($process)) { $failureDetail='spawn'; throw new RuntimeException('Falha ao iniciar PHP CLI para endpoint sintético.'); }
     fclose($pipes[0]);
     stream_set_blocking($pipes[1], false);
     stream_set_blocking($pipes[2], false);
@@ -267,6 +267,7 @@ PHP;
         } while ($status['running'] && microtime(true) < $killDeadline);
         if ($status['running']) { $childUncertain = true; $failureStage = 'child_uncertain'; throw new RuntimeException('Encerramento do processo de teste não comprovado.'); }
         fclose($pipes[1]); fclose($pipes[2]); proc_close($process);
+        $failureDetail='finish_timeout';
         throw new RuntimeException('Processo de teste excedeu limite.');
     }
     $exit = $status['exitcode'];
@@ -276,8 +277,9 @@ PHP;
     proc_close($process);
         if ($exit !== 0) { $failureDetail='child_exit'; throw new RuntimeException('Endpoint CLI falhou.'); }
     $statusText = substr($stderr, (int) strrpos($stderr, 'HTTP:') + 5);
-    if ($statusText === '' || !ctype_digit($statusText)) throw new RuntimeException('Endpoint sem status HTTP controlado: ' . $endpoint . ' (' . $stderr . ')');
-    $body = $stdout === '' ? [] : json_decode($stdout, true, 512, JSON_THROW_ON_ERROR);
+    if ($statusText === '' || !ctype_digit($statusText)) { $failureDetail='exit'; throw new RuntimeException('Endpoint sem status HTTP controlado: ' . $endpoint . ' (' . $stderr . ')'); }
+    try { $body = $stdout === '' ? [] : json_decode($stdout, true, 512, JSON_THROW_ON_ERROR); }
+    catch (JsonException $exception) { $failureDetail='exit'; throw $exception; }
     return [(int) $statusText, is_array($body) ? $body : []];
 };
 $assert = static function (bool $condition, string $message) use (&$failureDetail): void {
