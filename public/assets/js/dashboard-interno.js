@@ -64,9 +64,9 @@
     rows.forEach(row=>container.appendChild(row));
   }
   function destroyCharts(){charts.splice(0).forEach(c=>c.destroy());}
-  function weeklyBars(id,labels,datasets){
+  function periodBars(id,labels,datasets){
     const el=$(id);if(!el||!window.Chart)return;
-    charts.push(new Chart(el,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#777183',maxRotation:0,autoSkip:false,padding:1,font:{size:8}}},y:{beginAtZero:true,ticks:{precision:0,maxTicksLimit:3,padding:2,color:'#777183',font:{size:8}},border:{display:false},grid:{color:'rgba(39,31,50,.06)'}}}}}));
+    charts.push(new Chart(el,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false},ticks:{color:'#777183',maxRotation:0,autoSkip:true,maxTicksLimit:10,padding:1,font:{size:8}}},y:{beginAtZero:true,ticks:{precision:0,maxTicksLimit:3,padding:2,color:'#777183',font:{size:8}},border:{display:false},grid:{color:'rgba(39,31,50,.06)'}}}}}));
   }
   function activeQueueCount(queues,key,type){
     const broken=(queues||[]).some(row=>row.key===key&&row.error);
@@ -110,22 +110,22 @@
       destroyCharts();
 
       const registered=data.geral?.cartas_cadastradas||{};
-      const week=registered.semana||{labels:[],expedidas:[],recebidas:[]};
+      const lettersPeriod=registered.ultimos_30_dias||{labels:[],expedidas:[],recebidas:[]};
       set('dash-registered-expedidas',count(registered.expedidas));
       set('dash-registered-recebidas',count(registered.recebidas));
-      weeklyBars('dash-chart-cadastros-semana',week.labels||[],[
-        {label:'Expedidas',data:week.expedidas||[],backgroundColor:colors.purple,borderRadius:3,maxBarThickness:10},
-        {label:'Recebidas',data:week.recebidas||[],backgroundColor:colors.mint,borderRadius:3,maxBarThickness:10}
+      periodBars('dash-chart-cadastros-semana',lettersPeriod.labels||[],[
+        {label:'Expedidas',data:lettersPeriod.expedidas||[],backgroundColor:colors.purple,borderRadius:3,maxBarThickness:7},
+        {label:'Recebidas',data:lettersPeriod.recebidas||[],backgroundColor:colors.mint,borderRadius:3,maxBarThickness:7}
       ]);
 
       const offices=data.geral?.oficios_cadastrados||{};
       const officesYear=offices.ano||{};
-      const officesWeek=offices.semana||{labels:[],cartorio:[],gabinete:[]};
+      const officesPeriod=offices.ultimos_30_dias||{labels:[],cartorio:[],gabinete:[]};
       set('dash-offices-year-cartorio',count(officesYear.cartorio));
       set('dash-offices-year-gabinete',count(officesYear.gabinete));
-      weeklyBars('dash-chart-oficios-semana',officesWeek.labels||[],[
-        {label:'Cartório',data:officesWeek.cartorio||[],backgroundColor:colors.purple,borderRadius:3,maxBarThickness:10},
-        {label:'Gabinete',data:officesWeek.gabinete||[],backgroundColor:colors.mint,borderRadius:3,maxBarThickness:10}
+      periodBars('dash-chart-oficios-semana',officesPeriod.labels||[],[
+        {label:'Cartório',data:officesPeriod.cartorio||[],backgroundColor:colors.purple,borderRadius:3,maxBarThickness:7},
+        {label:'Gabinete',data:officesPeriod.gabinete||[],backgroundColor:colors.mint,borderRadius:3,maxBarThickness:7}
       ]);
 
       const cartorioEnabled=Boolean(data.setor?.conectado)&&(data.setor?.areas||[]).includes('CARTORIO');

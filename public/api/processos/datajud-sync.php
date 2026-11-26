@@ -197,6 +197,9 @@ try {
     }
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+} catch (DataJudAmbiguousResponseException $e) {
+    http_response_code(422);
+    echo json_encode(['error' => 'O DataJud retornou mais de um registro; nenhum dado foi sincronizado.'], JSON_UNESCAPED_UNICODE);
 } catch (RuntimeException $e) {
     http_response_code(502);
     echo json_encode(['error' => ApiErrorReporter::genericMessage($e, 'public/api/processos/datajud-sync.php')], JSON_UNESCAPED_UNICODE);

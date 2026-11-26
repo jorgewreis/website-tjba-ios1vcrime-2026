@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../services/ProcessoDataJudSyncQueue.php';
 
 final class ProcessosRepository
 {
@@ -28,6 +29,7 @@ final class ProcessosRepository
         $existing = $this->findByDigits($digits);
         if ($existing !== null) {
             $this->updateIfNeeded($existing['id'], $classeId, $dataFato, $preservarSigiloExistente ? null : $sigiloso);
+            ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, (string) $existing['id']);
             return (string) $existing['id'];
         }
 
@@ -51,6 +53,8 @@ final class ProcessosRepository
         $statement->bindValue(':data_fato', $dataFato);
         $statement->bindValue(':sigiloso', $sigiloso ? 1 : 0, PDO::PARAM_INT);
         $statement->execute();
+
+        ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $id);
 
         return $id;
     }

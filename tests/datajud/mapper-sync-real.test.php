@@ -30,7 +30,30 @@ $db->exec("INSERT INTO processo_assuntos VALUES ('m','p1','a1','manual',NULL,NUL
 $sync = new ProcessoDataJudSyncService($db);
 $snapshot = static fn(): array => $db->query('SELECT assunto_id, origem FROM processo_assuntos ORDER BY assunto_id')->fetchAll(PDO::FETCH_ASSOC);
 $before = $snapshot();
+$beforeClass = $db->query("SELECT classe_id FROM processos WHERE id = 'p1'")->fetchColumn();
+$failingAtomicSync = new ProcessoDataJudSyncService(
+    $db,
+    static function (string $numero, string $codigo, string $descricao) use ($db): array {
+        $db->exec("UPDATE processos SET classe_id = 'class-new' WHERE id = 'p1'");
+        return ['action' => 'updated'];
+    },
+    static function (string $numero, array $assuntos, bool $allowVerifiedEmpty) use ($db): array {
+        $db->exec("DELETE FROM processo_assuntos WHERE processo_id = 'p1' AND origem = 'datajud'");
+        throw new RuntimeException('falha sintética entre classe e assuntos');
+    }
+);
+try {
+    $failingAtomicSync->sync('00008323520184013202', ['codigo' => '1268', 'descricao' => 'Classe sintética'], [['codigo' => '9', 'descricao' => 'Assunto sintético']]);
+    throw new LogicException('Falha entre classe e assuntos deveria abortar a sincronização.');
+} catch (RuntimeException $expected) {
+    if ($expected->getMessage() === 'Falha entre classe e assuntos deveria abortar a sincronização.') throw $expected;
+}
+if ($db->inTransaction() || $db->query("SELECT classe_id FROM processos WHERE id = 'p1'")->fetchColumn() !== $beforeClass || $snapshot() !== $before) {
+    throw new RuntimeException('Falha na segunda etapa deixou classe/assuntos parcialmente sincronizados.');
+}
 $map = static fn(array $source): array => DataJudResponseMapper::mapSourceToPayload($source, '00008323520184013202', false);
+$unverified = $map(['numeroProcesso' => '00008323520184013202', 'nivelSigilo' => 0, 'assuntos' => []]);
+if ($unverified['resultado_unico_verificado'] !== false) throw new LogicException('Mapper sem contexto HTTP marcou unicidade verificada.');
 foreach ([[]] as $source) {
     $payload = $map($source);
     if ($payload['assuntos_estado'] !== 'ausente') throw new RuntimeException('Fonte ausente deveria permanecer distinta da lista vazia explícita.');

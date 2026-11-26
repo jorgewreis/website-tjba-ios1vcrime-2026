@@ -45,20 +45,18 @@ final class DashboardResumoService
         $oldestLabel = null;
         $oldestReturns = null;
         $lettersRegistered = ['expedidas'=>null,'recebidas'=>null];
-        $weeklyLabels=[];$weeklyLetters=['expedidas'=>array_fill(0,7,0),'recebidas'=>array_fill(0,7,0)];
+        $last30DaysLabels=[];$last30DaysLetters=['expedidas'=>array_fill(0,30,0),'recebidas'=>array_fill(0,30,0)];
         $officesRegistered=['cartorio'=>null,'gabinete'=>null];
-        $weeklyOffices=['cartorio'=>array_fill(0,7,0),'gabinete'=>array_fill(0,7,0)];
-        for($i=6;$i>=0;$i--){$day=(new DateTimeImmutable('today'))->modify('-'.$i.' days');$weeklyLabels[]=$day->format('d/m');}
+        $last30DaysOffices=['cartorio'=>array_fill(0,30,0),'gabinete'=>array_fill(0,30,0)];
+        $last30DaysDates=[];
+        for($i=29;$i>=0;$i--){$day=(new DateTimeImmutable('today'))->modify('-'.$i.' days');$last30DaysDates[]=$day->format('Y-m-d');$last30DaysLabels[]=$day->format('d/m');}
         foreach(['expedidas'=>'cartas_expedidas','recebidas'=>'cartas_recebidas'] as $kind=>$table){
             try {
                 if (!$this->tableExists($table)) continue;
                 // Expedidas são contadas no snapshot do fluxo, também usado pela lista.
-                if ($kind === 'recebidas') {
-                    $activeWhere="`status` COLLATE utf8mb4_unicode_ci NOT IN ('concluída','cancelada')";
-                    $count=$this->pdo->query("SELECT COUNT(*) FROM `{$table}` WHERE {$activeWhere}");$lettersRegistered[$kind]=(int)$count->fetchColumn();
-                }
-                $weekly=$this->pdo->query("SELECT DATE(created_at) dia, COUNT(*) total FROM `{$table}` WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)");
-                foreach($weekly->fetchAll(PDO::FETCH_ASSOC) as $dayRow){$idx=array_search(date('d/m',strtotime((string)$dayRow['dia'])),$weeklyLabels,true);if($idx!==false)$weeklyLetters[$kind][$idx]=(int)$dayRow['total'];}
+                $lettersRegistered[$kind]=0;
+                $recent=$this->pdo->query("SELECT DATE(created_at) dia, COUNT(*) total FROM `{$table}` WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 29 DAY) AND created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY) GROUP BY DATE(created_at)");
+                foreach($recent->fetchAll(PDO::FETCH_ASSOC) as $dayRow){$idx=array_search(substr((string)$dayRow['dia'],0,10),$last30DaysDates,true);if($idx!==false){$count=(int)$dayRow['total'];$last30DaysLetters[$kind][$idx]=$count;$lettersRegistered[$kind]+=$count;}}
             } catch(Throwable $e) { error_log('dashboard resumo [cadastros '.$kind.']: '.$e->getMessage()); }
         }
         foreach(['cartorio'=>'oficios_cartorio','gabinete'=>'oficios_gabinete'] as $kind=>$table){
@@ -66,8 +64,8 @@ final class DashboardResumoService
                 if (!$this->tableExists($table)) continue;
                 $annual=$this->pdo->query("SELECT COUNT(*) FROM `{$table}` WHERE created_at >= MAKEDATE(YEAR(CURDATE()),1) AND created_at < MAKEDATE(YEAR(CURDATE())+1,1)");
                 $officesRegistered[$kind]=(int)$annual->fetchColumn();
-                $weekly=$this->pdo->query("SELECT DATE(created_at) dia, COUNT(*) total FROM `{$table}` WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY DATE(created_at)");
-                foreach($weekly->fetchAll(PDO::FETCH_ASSOC) as $dayRow){$idx=array_search(date('d/m',strtotime((string)$dayRow['dia'])),$weeklyLabels,true);if($idx!==false)$weeklyOffices[$kind][$idx]=(int)$dayRow['total'];}
+                $recent=$this->pdo->query("SELECT DATE(created_at) dia, COUNT(*) total FROM `{$table}` WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 29 DAY) AND created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY) GROUP BY DATE(created_at)");
+                foreach($recent->fetchAll(PDO::FETCH_ASSOC) as $dayRow){$idx=array_search(substr((string)$dayRow['dia'],0,10),$last30DaysDates,true);if($idx!==false)$last30DaysOffices[$kind][$idx]=(int)$dayRow['total'];}
             } catch(Throwable $e) { error_log('dashboard resumo [cadastros oficios '.$kind.']: '.$e->getMessage()); }
         }
         $registrations = array_fill(0,6,0);
@@ -116,7 +114,6 @@ final class DashboardResumoService
                         $snapshot = $this->pdo->query(CartasExpedidasEstadoFluxo::consultaEstados(true));
                         if ($snapshot === false) throw new RuntimeException('Consulta de cartas expedidas indisponível.');
                         $estadosExpedidas = $snapshot->fetchAll(PDO::FETCH_ASSOC);
-                        $lettersRegistered['expedidas'] = count(array_filter($estadosExpedidas, static fn(array $estado): bool => $estado['etapa'] !== 'encerrada'));
                         $expedidasResumo = CartasExpedidasEstadoFluxo::resumir($estadosExpedidas);
                         if ($expedidasResumo['envios'] === null) throw new RuntimeException('Etapa efetiva de cartas expedidas indeterminada.');
                         $moduleCount=0;
@@ -254,7 +251,7 @@ final class DashboardResumoService
         }
         $sectorQueues=$includeCartorio?$queues:[];$reportedTotal=$hasQueueErrors?null:$total;$sectorTotal=$includeCartorio?$reportedTotal:null;
         $alerts=$this->letterAlerts($oldest,$oldestLabel,$cartasEmDevolucao,$oldestReturns,$deadlinesSoon,$nearestDeadline,$mostOverdueExpedidaDays);
-        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'semana'=>['labels'=>$weeklyLabels,'expedidas'=>$weeklyLetters['expedidas'],'recebidas'=>$weeklyLetters['recebidas']]],'oficios_cadastrados'=>['ano'=>['cartorio'=>$officesRegistered['cartorio'],'gabinete'=>$officesRegistered['gabinete']],'semana'=>['labels'=>$weeklyLabels,'cartorio'=>$weeklyOffices['cartorio'],'gabinete'=>$weeklyOffices['gabinete']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'responsaveis_regras'=>$responsaveisRegras,'responsaveis_proprios'=>$responsaveisProprios,'prazos_vencidos'=>$overdueDeadlines,'prazos_vencidos_dias'=>['expedidas'=>$mostOverdueExpedidaDays,'recebidas'=>$mostOverdueRecebidaDays],'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'alertas'=>$alerts,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors,'cartas_expedidas_inconsistencias'=>$expedidasResumo['inconsistencias']??null];
+        return ['geral'=>['tarefas_abertas'=>$reportedTotal,'filas'=>$queues,'cartas_cadastradas'=>['expedidas'=>$lettersRegistered['expedidas'],'recebidas'=>$lettersRegistered['recebidas'],'ultimos_30_dias'=>['labels'=>$last30DaysLabels,'expedidas'=>$last30DaysLetters['expedidas'],'recebidas'=>$last30DaysLetters['recebidas']]],'oficios_cadastrados'=>['ano'=>['cartorio'=>$officesRegistered['cartorio'],'gabinete'=>$officesRegistered['gabinete']],'ultimos_30_dias'=>['labels'=>$last30DaysLabels,'cartorio'=>$last30DaysOffices['cartorio'],'gabinete'=>$last30DaysOffices['gabinete']]],'cadastros_mensais'=>['labels'=>$registrationLabels,'values'=>$registrations],'conclusoes_semanais'=>$globalCompletions], 'setor'=>['areas'=>$areas,'selecionado'=>$selectedArea,'conectado'=>$includeCartorio,'tarefas_abertas'=>$sectorTotal,'filas'=>$sectorQueues,'responsaveis_regras'=>$responsaveisRegras,'responsaveis_proprios'=>$responsaveisProprios,'prazos_vencidos'=>$overdueDeadlines,'prazos_vencidos_dias'=>['expedidas'=>$mostOverdueExpedidaDays,'recebidas'=>$mostOverdueRecebidaDays],'cadastros_mensais'=>$includeCartorio?['labels'=>$registrationLabels,'values'=>$registrations]:['labels'=>[],'values'=>[]]], 'usuario'=>$completed, 'agenda'=>$calendar,'alertas'=>$alerts,'fila_mais_antiga_em'=>$oldest,'fila_mais_antiga_etapa'=>$oldestLabel,'prazos_proximos_7d'=>$deadlinesSoon,'cartas_recebidas_aguardando_devolucao'=>$cartasEmDevolucao,'atualizado_em'=>date(DATE_ATOM),'fila_parcial'=>$hasQueueErrors,'cartas_expedidas_inconsistencias'=>$expedidasResumo['inconsistencias']??null];
     }
 
     /** @return array{0: ?string, 1: ?string} */

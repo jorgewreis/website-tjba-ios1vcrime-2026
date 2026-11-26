@@ -19,19 +19,19 @@ final class DataJudTribunalResolver
         '08' => 'tjes',
         '09' => 'tjgo',
         '10' => 'tjma',
-        '11' => 'tjmg',
+        '11' => 'tjmt',
         '12' => 'tjms',
-        '13' => 'tjmt',
+        '13' => 'tjmg',
         '14' => 'tjpa',
         '15' => 'tjpb',
-        '16' => 'tjpe',
-        '17' => 'tjpi',
-        '18' => 'tjpr',
+        '16' => 'tjpr',
+        '17' => 'tjpe',
+        '18' => 'tjpi',
         '19' => 'tjrj',
         '20' => 'tjrn',
-        '21' => 'tjro',
-        '22' => 'tjrr',
-        '23' => 'tjrs',
+        '21' => 'tjrs',
+        '22' => 'tjro',
+        '23' => 'tjrr',
         '24' => 'tjsc',
         '25' => 'tjse',
         '26' => 'tjsp',
@@ -42,38 +42,38 @@ final class DataJudTribunalResolver
     private const JUSTICA_ELEITORAL = [
         '01' => 'tre-ac',
         '02' => 'tre-al',
-        '03' => 'tre-am',
-        '04' => 'tre-ap',
+        '03' => 'tre-ap',
+        '04' => 'tre-am',
         '05' => 'tre-ba',
         '06' => 'tre-ce',
         '07' => 'tre-dft',
         '08' => 'tre-es',
         '09' => 'tre-go',
         '10' => 'tre-ma',
-        '11' => 'tre-mg',
+        '11' => 'tre-mt',
         '12' => 'tre-ms',
-        '13' => 'tre-mt',
+        '13' => 'tre-mg',
         '14' => 'tre-pa',
         '15' => 'tre-pb',
-        '16' => 'tre-pe',
-        '17' => 'tre-pi',
-        '18' => 'tre-pr',
+        '16' => 'tre-pr',
+        '17' => 'tre-pe',
+        '18' => 'tre-pi',
         '19' => 'tre-rj',
         '20' => 'tre-rn',
-        '21' => 'tre-ro',
-        '22' => 'tre-rr',
-        '23' => 'tre-rs',
+        '21' => 'tre-rs',
+        '22' => 'tre-ro',
+        '23' => 'tre-rr',
         '24' => 'tre-sc',
         '25' => 'tre-se',
         '26' => 'tre-sp',
         '27' => 'tre-to',
     ];
 
-    /** Justiça Militar Estadual (segmento 9): CNJ usa 01–03 para MG, RS e SP. */
+    /** State military courts use TR codes 13 (MG), 21 (RS), and 26 (SP). */
     private const MILITAR_ESTADUAL = [
-        '01' => 'tjmmg',
-        '02' => 'tjmrs',
-        '03' => 'tjmsp',
+        '13' => 'tjmmg',
+        '21' => 'tjmrs',
+        '26' => 'tjmsp',
     ];
 
     /**
@@ -89,8 +89,9 @@ final class DataJudTribunalResolver
         $tr = substr($twentyDigits, 14, 2);
 
         switch ($j) {
+            // A API Pública do DataJud não cobre o STF nem o CNJ.
             case '1':
-                return $tr === '00' ? 'stf' : null;
+                return null;
             case '2':
                 return null;
             case '3':

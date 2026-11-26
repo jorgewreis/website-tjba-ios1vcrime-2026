@@ -11,6 +11,7 @@ require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/services/GabineteMonitoramentoEletronicoService.php';
+require_once $basePath . '/app/services/ProcessoDataJudSyncQueue.php';
 
 ApiAccessGuard::requireAccess(['monitoramentogabinetecreate'], true);
 
@@ -39,6 +40,7 @@ try {
     $service = new GabineteMonitoramentoEletronicoService($connection);
 
     if ($processoId !== '') {
+        ProcessoDataJudSyncQueue::enqueueBestEffort($connection, $processoId);
         $lista = $service->listarReusDoProcesso($processoId);
         echo json_encode(['processo_id' => $processoId, 'reus' => $lista], JSON_UNESCAPED_UNICODE);
         exit;

@@ -329,6 +329,11 @@ jobs:
               php scripts/migrate-dashboard-conclusoes.php
             fi
 
+            if [ -f scripts/migrate-processo-datajud-sync-queue.php ]; then
+              php scripts/migrate-processo-datajud-sync-queue.php
+              bash scripts/install-cron-processos-datajud.sh
+            fi
+
             bash scripts/install-cron-inactive-external-users.sh
 
             sudo systemctl reload nginx 2>/dev/null || true

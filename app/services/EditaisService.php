@@ -5,6 +5,7 @@ require_once __DIR__ . '/../repositories/EditaisRepository.php';
 require_once __DIR__ . '/../repositories/EditaisSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/EditaisAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/FeriadosRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
@@ -150,6 +151,7 @@ final class EditaisService
                         $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
                     }
                     $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
+            ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoId);
                 } else {
                     $processoId = null;
                     $existingProcess = $this->processosRepository->findByNumero($numeroFormatado);

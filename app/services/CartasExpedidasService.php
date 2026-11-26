@@ -9,7 +9,7 @@ require_once __DIR__ . '/../repositories/TribunaisRepository.php';
 require_once __DIR__ . '/../repositories/ComarcasRepository.php';
 require_once __DIR__ . '/../repositories/VarasRepository.php';
 require_once __DIR__ . '/../repositories/CartasExpedidasAlocadosRepository.php';
-require_once __DIR__ . '/DataJudService.php';
+require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
@@ -29,10 +29,9 @@ final class CartasExpedidasService
     private ComarcasRepository $comarcasRepository;
     private VarasRepository $varasRepository;
     private CartasExpedidasAlocadosRepository $alocadosRepository;
-    private ?DataJudService $dataJudService;
 
 
-    public function __construct(PDO $connection, ?DataJudService $dataJudService = null)
+    public function __construct(PDO $connection)
     {
         $this->connection = $connection;
         $this->repository = new CartasExpedidasRepository($connection);
@@ -43,7 +42,6 @@ final class CartasExpedidasService
         $this->comarcasRepository = new ComarcasRepository($connection);
         $this->varasRepository = new VarasRepository($connection);
         $this->alocadosRepository = new CartasExpedidasAlocadosRepository($connection);
-        $this->dataJudService = $dataJudService;
     }
 
     public function listCartas(array $filters, int $limit, int $offset): array
@@ -149,16 +147,6 @@ final class CartasExpedidasService
         // O sigilo calculado inicializa apenas processos novos.
         $sigiloso = self::sigiloParaCriacao($payload);
 
-        if ($this->dataJudService !== null) {
-            try {
-                $dataJud = $this->dataJudService->searchProcesso($digits);
-                $classeCodigo = trim((string) ($dataJud['classe']['codigo'] ?? $classeCodigo));
-                $classeNome = trim((string) ($dataJud['classe']['descricao'] ?? $classeNome));
-            } catch (Throwable $e) {
-                // Mantém classe do formulário em caso de falha no DataJud
-            }
-        }
-
         $classeInformada = $classeCodigo !== '' || $classeNome !== '';
         $classeNaoInformada = !$classeInformada
             || $this->normalizeClasseLabel($classeNome) === 'classe nao informada'
@@ -197,6 +185,7 @@ final class CartasExpedidasService
             $classeId = $this->classesRepository->ensureClass((string) $classeCodigo, $classeNome !== '' ? TextFormatter::formatProperName((string) $classeNome, 200) : (string) $classeCodigo);
         }
         $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, $sigiloso, true);
+        ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
 
         $tribunalDestinoSigla = 'TJ' . $ufDestino;
         $tribunalDestinoId = $this->tribunaisRepository->ensureTribunal($tribunalDestinoSigla, 'Tribunal de Justiça do Estado');

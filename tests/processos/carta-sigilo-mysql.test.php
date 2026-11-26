@@ -38,7 +38,7 @@ $marker = $pdo->query('SELECT marker FROM rei88_test_guard LIMIT 1')->fetchColum
 if (!is_string($marker) || !hash_equals($expectedMarker, $marker)) {
     throw new RuntimeException('Recusado: sentinela do runner não corresponde à execução corrente.');
 }
-$fixtureTables = ['cartas_expedidas_subtarefas', 'cartas_expedidas', 'varas', 'comarcas', 'tribunais', 'processos', 'classes'];
+$fixtureTables = ['processo_datajud_sync_queue', 'cartas_expedidas_subtarefas', 'cartas_expedidas', 'varas', 'comarcas', 'tribunais', 'processos', 'classes'];
 register_shutdown_function(static function () use ($pdo, $fixtureTables, $expectedMarker): void {
     try {
         $guard = $pdo->query('SELECT marker FROM rei88_test_guard LIMIT 1')->fetchColumn();
@@ -59,6 +59,7 @@ $pdo->exec("SET SESSION sql_mode = 'STRICT_ALL_TABLES'");
 $ddl = [
     "CREATE TABLE classes (id VARCHAR(30) PRIMARY KEY, codigo VARCHAR(80) NOT NULL UNIQUE, nome VARCHAR(200) NOT NULL, created_at DATETIME NULL, updated_at DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE processos (id VARCHAR(30) PRIMARY KEY, numero_processo VARCHAR(32) NOT NULL UNIQUE, classe_id VARCHAR(30) NULL, data_fato DATE NULL, sigiloso TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NULL, updated_at DATETIME NULL, CONSTRAINT fk_test_processo_classe FOREIGN KEY (classe_id) REFERENCES classes(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "CREATE TABLE processo_datajud_sync_queue (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, processo_id VARCHAR(30) NOT NULL UNIQUE, status VARCHAR(16) NOT NULL DEFAULT 'pendente', tentativas SMALLINT UNSIGNED NOT NULL DEFAULT 0, proxima_tentativa_em DATETIME NOT NULL, solicitado_em DATETIME(6) NOT NULL, processando_em DATETIME(6) NULL, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, atualizado_em DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE tribunais (id VARCHAR(30) PRIMARY KEY, sigla VARCHAR(16) NOT NULL UNIQUE, nome VARCHAR(200) NOT NULL, created_at DATETIME NULL, updated_at DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE comarcas (id VARCHAR(30) PRIMARY KEY, tribunal_id VARCHAR(30) NOT NULL, uf CHAR(2) NOT NULL, nome VARCHAR(200) NOT NULL, cidade VARCHAR(200) NULL, status_cidade VARCHAR(32) NOT NULL, created_at DATETIME NULL, updated_at DATETIME NULL, UNIQUE KEY uq_test_comarca (tribunal_id, uf, nome), CONSTRAINT fk_test_comarca_tribunal FOREIGN KEY (tribunal_id) REFERENCES tribunais(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE varas (id VARCHAR(30) PRIMARY KEY, comarca_id VARCHAR(30) NOT NULL, codigo VARCHAR(80) NOT NULL DEFAULT '', nome VARCHAR(200) NOT NULL, email VARCHAR(200) NOT NULL DEFAULT '', telefone VARCHAR(80) NOT NULL DEFAULT '', created_at DATETIME NULL, updated_at DATETIME NULL, CONSTRAINT fk_test_vara_comarca FOREIGN KEY (comarca_id) REFERENCES comarcas(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",

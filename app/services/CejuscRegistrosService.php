@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../helpers/CnjValidator.php';
+require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 
 final class CejuscRegistroDuplicadoException extends RuntimeException
 {
@@ -143,6 +144,7 @@ final class CejuscRegistrosService
     {
         $processos = new ProcessosRepository($this->connection);
         $processoId = $processos->ensureProcess($data['numero_processo']);
+        ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoId);
         if ($garantirPrioridadeCejusc) {
             (new ProcessoPrioridadesService($this->connection))->registrarViolenciaDomesticaCejusc($processoId);
         }

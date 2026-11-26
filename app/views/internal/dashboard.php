@@ -21,23 +21,23 @@ require_once __DIR__ . '/../../access/ProfileNormalizer.php';
       <div class="dashboard-interno-columns">
         <section class="dashboard-column dashboard-system" aria-labelledby="dash-system-title">
           <header><span class="column-kicker">SISTEMA</span><h2 id="dash-system-title">Fluxo geral</h2></header>
-          <article class="dash-card dash-letters-card" aria-label="Cartas ativas e cadastros dos últimos sete dias">
-            <div class="dash-summary-heading"><strong>Cartas ativas</strong><span>Total atual</span></div>
+          <article class="dash-card dash-letters-card" aria-label="Cadastro de Expedição de Cartas nos últimos 30 dias">
+            <div class="dash-summary-heading"><strong>Cadastro de Expedição de Cartas</strong><span>Últimos 30 dias</span></div>
             <div class="dash-summary-stats">
               <div><span><i class="legend-dot legend-purple" aria-hidden="true"></i>Expedidas</span><strong id="dash-registered-expedidas">—</strong></div>
               <div><span><i class="legend-dot legend-mint" aria-hidden="true"></i>Recebidas</span><strong id="dash-registered-recebidas">—</strong></div>
             </div>
-            <small class="dash-summary-period">Cadastros por dia · últimos 7 dias</small>
-            <div class="dash-letters-chart"><canvas id="dash-chart-cadastros-semana" aria-label="Todas as cartas cadastradas por dia nos últimos sete dias: expedidas em roxo e recebidas em verde"></canvas></div>
+            <small class="dash-summary-period">Cadastros por dia · últimos 30 dias</small>
+            <div class="dash-letters-chart"><canvas id="dash-chart-cadastros-semana" aria-label="Cartas expedidas e recebidas cadastradas por dia nos últimos 30 dias"></canvas></div>
           </article>
-          <article class="dash-card dash-offices-card" aria-label="Ofícios cadastrados no ano corrente e nos últimos sete dias">
-            <div class="dash-summary-heading"><strong>Ofícios cadastrados</strong><span>Ano corrente</span></div>
+          <article class="dash-card dash-offices-card" aria-label="Cadastro de Expedição de Ofícios no ano corrente e nos últimos 30 dias">
+            <div class="dash-summary-heading"><strong>Cadastro de Expedição de Ofícios</strong><span>Ano corrente</span></div>
             <div class="dash-summary-stats">
               <div><span><i class="legend-dot legend-purple" aria-hidden="true"></i>Cartório</span><strong id="dash-offices-year-cartorio">—</strong></div>
               <div><span><i class="legend-dot legend-mint" aria-hidden="true"></i>Gabinete</span><strong id="dash-offices-year-gabinete">—</strong></div>
             </div>
-            <small class="dash-summary-period">Cadastros por dia · últimos 7 dias</small>
-            <div class="dash-weekly-chart dash-offices-chart"><canvas id="dash-chart-oficios-semana" aria-label="Quantidade de ofícios cadastrados por dia nos últimos sete dias, no Cartório e no Gabinete"></canvas></div>
+            <small class="dash-summary-period">Cadastros por dia · últimos 30 dias</small>
+            <div class="dash-weekly-chart dash-offices-chart"><canvas id="dash-chart-oficios-semana" aria-label="Quantidade de ofícios cadastrados por dia nos últimos 30 dias, no Cartório e no Gabinete"></canvas></div>
           </article>
         </section>
         <section id="dash-sector-column" class="dashboard-column dashboard-sector" aria-labelledby="dash-sector-title" hidden>

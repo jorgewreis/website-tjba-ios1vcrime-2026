@@ -4,6 +4,19 @@ on: [push, pull_request]
 jobs:
   php-lint:
     runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.4.34
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: datajud_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
     steps:
       - uses: actions/checkout@v6.0.1
       - name: Setup PHP
@@ -17,6 +30,27 @@ jobs:
         run: composer validate --no-check-publish
       - name: Validar plataforma real contra o lock
         run: composer check-platform-reqs --lock --no-dev
+      - name: Verificar testes isolados do escopo
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: '1'
+          DB_NAME: isolated_fixture_only
+          DB_USER: fixture
+          DB_PASS: fixture-only-unused
+        run: |
+          php tests/datajud/service-http.test.php
+          php tests/datajud/mapper-sync-real.test.php
+          php tests/datajud/tribunal-resolver.test.php
+          php tests/instituicoes-publicas/access-policy.test.php
+          php tests/guias/conclusao-atomicidade.test.php
+          php tests/dashboard/guias-fila.test.php
+          node tests/dashboard/rei167-guide-counters.test.js
+      - name: Testar fila e worker no MariaDB 10.4
+        env:
+          DATAJUD_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=datajud_test;charset=utf8mb4
+          DATAJUD_TEST_USER: root
+          DATAJUD_TEST_PASSWORD: root
+        run: php tests/datajud/queue-mariadb.test.php
       - name: Simular instalação sem gravar dependências
         run: composer install --dry-run --no-dev --no-interaction --no-progress --no-scripts --no-plugins
       - name: Testar listagem unificada de usuários com perfis mistos

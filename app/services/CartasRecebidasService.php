@@ -12,6 +12,7 @@ require_once __DIR__ . '/../repositories/VarasRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/CartasRecebidasUiCopy.php';
+require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 
 final class CartasRecebidasService
 {
@@ -137,6 +138,7 @@ final class CartasRecebidasService
         $processoOrigemId = null;
         if (strlen($digits) === 20) {
             $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
+            ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
         }
 
         $idCarta = IdGenerator::generateUniquePrefixedId(
