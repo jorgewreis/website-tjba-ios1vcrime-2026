@@ -178,3 +178,33 @@
 @media (max-width: 389px) {
     .editais-v2-page .header-page { width: auto; min-width: 0; max-width: 100%; margin: 10px 20px; }
 }
+
+@media (max-width: 767px) {
+    .editais-v2-page .card-page :is(input:not([type="hidden"], [type="radio"], [type="checkbox"]), select, textarea) {
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    .editais-v2-page .card-page :is(.btn, .carta-row-action) {
+        min-height: 44px;
+        max-width: 100%;
+        white-space: normal;
+    }
+
+    .editais-v2-page .card-page .carta-row-action { min-width: 44px; }
+
+    .editais-v2-page .editais-form-field > label {
+        width: auto;
+        max-width: 100%;
+        white-space: normal;
+    }
+
+    .editais-create-page .card-buttons { flex-wrap: wrap; }
+
+    .editais-list-page .editais-v2-subtasks :is(.subtask, .subtask-row-fields, .task-status) {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .editais-list-page .editais-v2-subtasks .subtask-row-fields > * { max-width: 100%; }
+}

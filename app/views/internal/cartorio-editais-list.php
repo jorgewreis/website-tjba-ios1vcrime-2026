@@ -161,8 +161,9 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
         <?php include __DIR__ . '/_copy_process_script.php'; ?>
+        <link rel="stylesheet" href="/assets/css/shared/operational-list-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/shared/operational-list-mobile.css') ?: time()); ?>">
     </head>
-<body class="page-internal editais-v2-page editais-list-page">
+<body class="page-internal page-operational-list editais-v2-page editais-list-page">
 
     <div class="spacing-top-page"></div>
 
