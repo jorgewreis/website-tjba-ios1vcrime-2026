@@ -254,6 +254,7 @@ try {
     if ($fixtureExit -ne 0) {
         $codes = @($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -match '^REI69_FIXTURE_FAILURE code=(setup|setup_env|setup_connect|setup_database|setup_sentinel|setup_require|setup_mode|setup_ddl|setup_seed_classes|setup_seed_sectors|setup_seed_domain|setup_seed_links|setup_seed_part|setup_service|positive_update|positive_add|sector_denial|cross_link|defender|witness|pauta_transition_lock|pauta_allocation_lock|reu_principal_lock|pauta_atomic_derived|dashboard_strict_series|atas_csv|unknown)$' })
         if ($codes.Count -eq 1) { Write-Output $codes[0] } else { Write-Output 'REI69_FIXTURE_FAILURE code=unknown' }
+        $fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -match '^REI69_FIXTURE_DETAIL area=atas_csv line=[0-9]+ mysql=[0-9]+$' } | Select-Object -First 1 | Write-Output
         throw 'Fixture falhou.'
     }
     if (@($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -eq 'PASS REI69 pauta cross-process synthetic service regression' }).Count -ne 1) { throw 'Fixture não confirmou marcador de sucesso.' }

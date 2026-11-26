@@ -6,6 +6,10 @@ set_exception_handler(static function (Throwable $exception) use (&$fixtureStage
     $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness', 'pauta_transition_lock', 'pauta_allocation_lock', 'reu_principal_lock', 'pauta_atomic_derived', 'dashboard_strict_series', 'atas_csv'];
     $code = in_array($fixtureStage, $allowed, true) ? $fixtureStage : 'unknown';
     fwrite(STDERR, "REI69_FIXTURE_FAILURE code=$code\n");
+    if ($code === 'atas_csv') {
+        $mysqlCode = $exception instanceof PDOException ? (int) ($exception->errorInfo[1] ?? 0) : 0;
+        fwrite(STDERR, 'REI69_FIXTURE_DETAIL area=atas_csv line=' . $exception->getLine() . ' mysql=' . $mysqlCode . "\n");
+    }
     exit(1);
 });
 // Fixture CI-only: no application configuration and no TCP fallback.
@@ -286,9 +290,9 @@ $fixtureStage = 'atas_csv';
 require_once '/repo/app/helpers/InternalListExportHandlers.php';
 require_once '/repo/app/helpers/ListExportHelper.php';
 $pdo->exec("ALTER TABLE sala_audiencias_pauta ADD localizacao VARCHAR(120), ADD created_at DATETIME, ADD updated_at DATETIME, ADD criado_por VARCHAR(40)");
-$pdo->exec('CREATE TABLE usuarios (id_usuario VARCHAR(40) PRIMARY KEY, nome VARCHAR(80), sobrenome VARCHAR(80)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+$pdo->exec('CREATE TABLE usuarios (id_usuario VARCHAR(40) PRIMARY KEY, nome VARCHAR(80), sobrenome VARCHAR(80)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 $pdo->exec('CREATE TABLE sala_audiencias_ata (id_ata VARCHAR(40) PRIMARY KEY, pauta VARCHAR(40), expires_at DATETIME,
-    nome_original VARCHAR(80), uploaded_at DATETIME, arquivo_relativo VARCHAR(120), uploaded_by VARCHAR(40)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    nome_original VARCHAR(80), uploaded_at DATETIME, arquivo_relativo VARCHAR(120), uploaded_by VARCHAR(40)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
 $pdo->exec("UPDATE sala_audiencias_pauta SET status='finalizada',data_audiencia=CURDATE() WHERE id_pauta IN ('PA','PB')");
 $pdo->exec("UPDATE processos SET sigiloso=1 WHERE id='B'");
 $pdo->exec("INSERT INTO sala_audiencias_ata (id_ata,pauta,expires_at,uploaded_at,arquivo_relativo) VALUES
