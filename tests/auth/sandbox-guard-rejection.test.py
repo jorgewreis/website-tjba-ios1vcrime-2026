@@ -20,7 +20,7 @@ PHP_FILES = (
     'login-rate-limit-storage.fixture.php', 'login-rate-limit.test.php', 'login-rate-limit-concurrency.test.php',
     'password-reset-states.test.php', 'reset-concurrency.worker.php',
     'reset-token-concurrency.test.php', 'sandbox-connectivity.test.php',
-    'smtp-capture.test.php', 'trusted-post-origin.test.php',
+    'rei69-http-direct.test.php', 'smtp-capture.test.php', 'trusted-post-origin.test.php',
 )
 PS_FILES = (
     'http-auth-flow.test.ps1', 'run-isolated-mysql-php.ps1',

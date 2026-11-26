@@ -4,7 +4,7 @@ declare(strict_types=1);
 $failureStage = 'setup';
 $failureDetail = 'general';
 set_exception_handler(static function (Throwable $exception) use (&$failureStage, &$failureDetail): void {
-    $allowed = ['setup','guard','positive_create','negative','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','monitor_setup','monitor_positive','monitor_create','monitor_row','monitor_row_prepare','monitor_row_execute','monitor_row_fetch','monitor_tasks','monitor_rollback','cnj_setup','cnj_wait_a','cnj_wait_b','cnj_finish','cnj_check','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_pauta_finish','c4_direct_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check','c6_controls','c6_prepare','c6_wait','c6_finish','c6_check'];
+    $allowed = ['setup','guard','positive_create','negative','negative_create_sector','negative_create_unassigned','negative_create_inactive','negative_create_missing','negative_update','negative_delete','rollback_create','rollback_update','positive_update','positive_delete','concurrency','child_uncertain','monitor_setup','monitor_positive','monitor_create','monitor_row','monitor_row_prepare','monitor_row_execute','monitor_row_fetch','monitor_tasks','monitor_rollback','cnj_setup','cnj_wait_a','cnj_wait_b','cnj_finish','cnj_check','c1_setup','c1_wait','c1_finish','c1_check','c2_setup','c2_person_wait','c2_sector_wait','c2_finish','c2_check','c3_setup','c3_person_wait','c3_pauta_wait','c3_finish','c3_check','c3_direct','c3_pauta','c3_tipo','c3_snapshot','c4_setup','c4_link_wait','c4_direct_wait','c4_finish','c4_pauta_finish','c4_direct_finish','c4_check','c5_setup','c5_first_wait','c5_second_wait','c5_finish','c5_check','c6_controls','c6_prepare','c6_wait','c6_finish','c6_check'];
     // The positive read reports only fixed categories, never database messages or values.
     if (in_array($failureStage, ['monitor_row_prepare','monitor_row_execute','monitor_row_fetch'], true) && $exception instanceof PDOException) {
         $state = strtolower((string) $exception->getCode());
@@ -12,7 +12,7 @@ set_exception_handler(static function (Throwable $exception) use (&$failureStage
         $failureDetail = $driverCode === 1267 ? 'monitor_sql_collation' : (in_array($state, ['42s22','42s02','23000','40001','hy000'], true) ? 'monitor_sql_'.$state : 'monitor_sql_other');
     }
     $stage = in_array($failureStage, $allowed, true) ? $failureStage : 'setup';
-    $details=['general','monitor_sql_42s22','monitor_sql_42s02','monitor_sql_23000','monitor_sql_40001','monitor_sql_hy000','monitor_sql_other','monitor_sql_collation','monitor_invalid','monitor_logic','monitor_runtime','monitor_error','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','wait_no_edge','wait_other_table','wait_other_index','wait_key_padded','wait_key_other','wait_key_null','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
+    $details=['general','child_exit','monitor_sql_42s22','monitor_sql_42s02','monitor_sql_23000','monitor_sql_40001','monitor_sql_hy000','monitor_sql_other','monitor_sql_collation','monitor_invalid','monitor_logic','monitor_runtime','monitor_error','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','wait_no_edge','wait_other_table','wait_other_index','wait_key_padded','wait_key_other','wait_key_null','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
     $detail=in_array($failureDetail,$details,true) ? $failureDetail : 'general';
     fwrite(STDERR, 'REI69_DIRECT_FAILURE code=' . $stage . ' detail=' . $detail . "\n");
     exit(1);
@@ -274,7 +274,7 @@ PHP;
     $stderr .= stream_get_contents($pipes[2]);
     fclose($pipes[1]); fclose($pipes[2]);
     proc_close($process);
-    if ($exit !== 0) throw new RuntimeException('Endpoint CLI falhou.');
+        if ($exit !== 0) { $failureDetail='child_exit'; throw new RuntimeException('Endpoint CLI falhou.'); }
     $statusText = substr($stderr, (int) strrpos($stderr, 'HTTP:') + 5);
     if ($statusText === '' || !ctype_digit($statusText)) throw new RuntimeException('Endpoint sem status HTTP controlado: ' . $endpoint . ' (' . $stderr . ')');
     $body = $stdout === '' ? [] : json_decode($stdout, true, 512, JSON_THROW_ON_ERROR);
@@ -287,10 +287,11 @@ try {
     $failureStage = 'negative';
     $payload = ['processo_id' => 'PRC-1', 'parte_id' => 'PAR-2', 'tipo_parte' => 'advogado', 'polo' => 'passivo'];
     $before = $snapshot($pdo);
-    foreach ([['USR-2','PRC-1'], ['USR-3','PRC-1'], ['USR-1','PRC-3'], ['USR-4','PRC-4']] as [$user,$process]) {
+    foreach ([['USR-2','PRC-1','negative_create_sector'], ['USR-3','PRC-1','negative_create_sector'], ['USR-1','PRC-3','negative_create_unassigned'], ['USR-4','PRC-4','negative_create_inactive']] as [$user,$process,$failureStage]) {
         [$status] = $invoke('create.php', $user, 'SERVIDOR-CARTORIO', array_replace($payload, ['processo_id'=>$process]));
         $assert($status === 403 && $snapshot($pdo) === $before, 'Negativa setorial de create falhou.');
     }
+    $failureStage='negative_create_missing';
     [$missing] = $invoke('create.php', 'USR-1', 'SERVIDOR-CARTORIO', array_replace($payload, ['parte_id'=>'INEXISTENTE']));
     $assert($missing === 400 && $snapshot($pdo) === $before, 'Pessoa ausente não foi rejeitada sem efeitos.');
     $failureStage = 'rollback_create';
@@ -318,7 +319,9 @@ try {
         $assert($anonymous === 401 && $method === 403 && $origin === 403 && $snapshot($pdo) === $created, 'Guarda de sessão, método ou origem falhou.');
     }
     $failureStage = 'negative';
+    $failureStage = 'negative_update';
     foreach (['update.php','delete.php'] as $endpoint) {
+        $failureStage = $endpoint === 'update.php' ? 'negative_update' : 'negative_delete';
         [$denied] = $invoke($endpoint, 'USR-2', 'SERVIDOR-CARTORIO', ['id'=>$body['id'],'tipo_parte'=>'defensor_publico']);
         [$nullSector] = $invoke($endpoint, 'USR-1', 'SERVIDOR-CARTORIO', ['id'=>'VNC-3','tipo_parte'=>'defensor_publico']);
         [$inactiveSector] = $invoke($endpoint, 'USR-4', 'SERVIDOR-CARTORIO', ['id'=>'VNC-4','tipo_parte'=>'defensor_publico']);

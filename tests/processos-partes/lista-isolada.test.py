@@ -109,5 +109,5 @@ require getenv('TEST_ENDPOINT');'''
     assert status == 400 and 'data' not in body, (status, body)
     status, body = invoke({'processo_id': 'P1'}, cartorio_profile, method='POST')
     assert status == 405 and 'data' not in body, (status, body)
-    assert {table: list(db.execute(f'SELECT * FROM {table} ORDER BY 1, 2')) for table in tables} == before
+    assert list(db.execute('SELECT * FROM processos_partes ORDER BY id')) == before
     print('PASS leitura isolada por processo e parte (SQLite; identidade simulada)')

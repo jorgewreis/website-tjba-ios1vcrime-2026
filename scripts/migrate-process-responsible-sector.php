@@ -82,7 +82,7 @@ final class ProcessResponsibleSectorMigration
             if (count($constraintRows) !== 1) {
                 throw new RuntimeException('A constraint de setor responsável existente é composta e incompatível.');
             }
-            $this->assertCompatibleForeignKey($targetForeignKeys[0]);
+            $this->assertCompatibleForeignKey($targetForeignKeys[0], $database);
         }
 
         return [
@@ -244,7 +244,7 @@ final class ProcessResponsibleSectorMigration
     private function foreignKeys(string $database): array
     {
         $statement = $this->connection->prepare(
-            'SELECT k.CONSTRAINT_NAME, k.COLUMN_NAME, k.REFERENCED_TABLE_NAME, k.REFERENCED_COLUMN_NAME, '
+            'SELECT k.CONSTRAINT_NAME, k.COLUMN_NAME, k.REFERENCED_TABLE_SCHEMA, k.REFERENCED_TABLE_NAME, k.REFERENCED_COLUMN_NAME, '
             . 'r.DELETE_RULE, r.UPDATE_RULE '
             . 'FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE k '
             . 'JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS r '
@@ -257,10 +257,18 @@ final class ProcessResponsibleSectorMigration
         return $statement->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    private function assertCompatibleForeignKey(array $foreignKey): void
+    private function assertCompatibleForeignKey(array $foreignKey, string $database): void
     {
-        if ($foreignKey['REFERENCED_TABLE_NAME'] !== self::SECTOR_TABLE
-            || $foreignKey['REFERENCED_COLUMN_NAME'] !== self::SECTOR_COLUMN
+        $lowerCaseTableNames = (int) $this->connection->query('SELECT @@lower_case_table_names')->fetchColumn();
+        if (!in_array($lowerCaseTableNames, [0, 1, 2], true)) {
+            throw new RuntimeException('Modo de nomes de tabelas não reconhecido.');
+        }
+        $matchesIdentifier = static fn (string $actual, string $expected): bool => $lowerCaseTableNames === 0
+            ? $actual === $expected
+            : strcasecmp($actual, $expected) === 0;
+        if (!$matchesIdentifier((string) ($foreignKey['REFERENCED_TABLE_SCHEMA'] ?? ''), $database)
+            || !$matchesIdentifier((string) ($foreignKey['REFERENCED_TABLE_NAME'] ?? ''), self::SECTOR_TABLE)
+            || strcasecmp((string) ($foreignKey['REFERENCED_COLUMN_NAME'] ?? ''), self::SECTOR_COLUMN) !== 0
             || !in_array(strtoupper($foreignKey['DELETE_RULE']), ['RESTRICT', 'NO ACTION'], true)
             || !in_array(strtoupper($foreignKey['UPDATE_RULE']), ['RESTRICT', 'NO ACTION'], true)) {
             throw new RuntimeException('A referência existente de setor responsável não corresponde à política esperada.');

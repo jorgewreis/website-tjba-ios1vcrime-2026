@@ -31,7 +31,7 @@ jobs:
             --mount "type=bind,source=$PWD/composer.lock,target=/workspace/composer.lock,readonly" \
             --mount "type=bind,source=$PWD/vendor,target=/workspace/vendor" --workdir /workspace \
             composer@sha256:5248900ab8b5f7f880c2d62180e40960cd87f60149ec9a1abfd62ac72a02577c \
-            install --no-dev --no-scripts --no-plugins --prefer-dist --no-interaction --no-progress --optimize-autoloader
+            install --no-dev --no-scripts --no-plugins --prefer-dist --no-interaction --no-progress --optimize-autoloader --ignore-platform-req=ext-pdo_mysql
           docker run --rm --label fokus.auth-e2e=rei69-ci-prep --network none \
             --mount "type=bind,source=$PWD/composer.json,target=/workspace/composer.json,readonly" \
             --mount "type=bind,source=$PWD/composer.lock,target=/workspace/composer.lock,readonly" \
