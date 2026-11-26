@@ -209,11 +209,18 @@ function value(id) { const el=elements.get(id); return el ? el.textContent + el.
   assigned.setor.prazos_vencidos = {expedidas:2,recebidas:1};
   assigned.setor.prazos_vencidos_dias = {expedidas:9,recebidas:3};
   assigned.setor.responsaveis_regras = {cartas_expedidas_envio:'Lia Teste'};
+  const overdueExpedidasRow = elements.get('dash-overdue-expedidas-row');
+  const overdueRecebidasRow = elements.get('dash-overdue-recebidas-row');
+  const ownColors = row => [...row.classes].filter(cls => cls.startsWith('dash-own-'));
+
   for (const [ownAssignment,label] of [[false,'Lia'],[true,'você']]) {
     assigned.setor.responsaveis_proprios = {cartas_expedidas_envio:ownAssignment};
     await refresh({ok:true,json:async()=>assigned});
     assert.equal(value('dash-overdue-expedidas'), '2');
     assert.equal(elements.get('dash-overdue-expedidas-row').dataset.urgencyDays, '9');
+    assert.deepEqual(ownColors(overdueExpedidasRow), ownAssignment ? ['dash-own-mint'] : []);
+    assert.deepEqual(ownColors(overdueRecebidasRow), []);
+
     for (const id of ['dash-queue-expedidas-responsaveis','dash-overdue-expedidas-responsaveis']) {
       const target = elements.get(id);
       assert.equal(target.hidden,false);
@@ -222,16 +229,23 @@ function value(id) { const el=elements.get(id); return el ? el.textContent + el.
     assert.equal(elements.get('dash-queue-expedidas-row').hidden,true);
     assert.equal(elements.get('dash-overdue-recebidas-responsaveis').hidden,true);
   }
+  assigned.setor.prazos_vencidos.expedidas = 12;
+  await refresh({ok:true,json:async()=>assigned});
+  assert.equal(value('dash-overdue-expedidas'), '12');
+  assert.deepEqual(ownColors(overdueExpedidasRow), ['dash-own-danger']);
+  assigned.setor.prazos_vencidos.expedidas = 2;
   assigned.setor.responsaveis_regras = {};
   await refresh({ok:true,json:async()=>assigned});
   assert.equal(elements.get('dash-overdue-expedidas-responsaveis').hidden,true);
   assert.deepEqual(elements.get('dash-overdue-expedidas-responsaveis').children,[]);
+  assert.deepEqual(ownColors(overdueExpedidasRow), []);
   assert.equal(value('dash-overdue-expedidas'), '2');
   assigned.setor.areas = ['GABINETE'];
   assigned.setor.responsaveis_regras = {cartas_expedidas_envio:'Lia Teste'};
   await refresh({ok:true,json:async()=>assigned});
   assert.equal(elements.get('dash-overdue-expedidas-responsaveis').hidden,true);
 
+  assert.deepEqual(ownColors(overdueExpedidasRow), []);
   await refresh([{key:'guias',error:true,count:null}]);
   assert.equal(elements.get('dash-sector-column').hidden, false, 'guide error alone remains visible');
   await refresh([]);
