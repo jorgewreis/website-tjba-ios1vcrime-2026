@@ -160,7 +160,7 @@ $copyRelative = static function (string $root, string $relative, string $destina
     }
 };
 $appFiles = [
-    'helpers/ApiAccessGuard.php', 'helpers/BootstrapHelper.php', 'helpers/UserAccessHelper.php',
+    'helpers/ApiAccessGuard.php', 'helpers/ApiErrorReporter.php', 'helpers/BootstrapHelper.php', 'helpers/UserAccessHelper.php',
     'helpers/ProcessoSetorAuthorization.php', 'helpers/IdGenerator.php',
     'helpers/TextFormatter.php', 'helpers/ParteDocumentoHelper.php',
     'access/AccessEvaluator.php', 'access/ProfileNormalizer.php', 'access/PageAccessRegistry.php',
