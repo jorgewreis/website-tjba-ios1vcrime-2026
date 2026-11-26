@@ -1,0 +1,62 @@
+@media (max-width: 767px) {
+    .page-hearing-day .timeline-day-ruler-legend { flex-wrap: wrap; }
+
+    .page-hearing-day .pagination-controls > a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .page-hearing-day .register.register-painel-dia > .register-line > :is(.left, .right) {
+        flex: 1 1 100%;
+        min-width: 0;
+        justify-content: flex-start;
+    }
+
+    .page-hearing-day .register.register-painel-dia :is(.container-processo.container-lg, .painel-dia-audiencia-info, .painel-dia-acoes),
+    .page-hearing-minutes .register.register-with-metadata :is(.container-processo, .container-historical, .container-data-create) {
+        box-sizing: border-box;
+        flex: 1 1 100%;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        margin-inline: 0;
+    }
+
+    .page-hearing-day .register.register-painel-dia :is(.painel-dia-audiencia-info, .painel-dia-acoes) > .container-line:first-child,
+    .page-hearing-day .register.register-painel-dia .painel-dia-audiencia-info .container-line:first-child :is(.left, .box-number) {
+        height: auto;
+    }
+
+    .page-hearing-day .register.register-painel-dia :is(.painel-dia-audiencia-info, .painel-dia-acoes) :is(.content-number, .content-assuntos, a),
+    .page-hearing-minutes .register.register-with-metadata :is(.major-info, .minor-info) {
+        width: auto;
+        max-width: 100%;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .page-hearing-day .register.register-painel-dia .painel-dia-actions { flex-wrap: wrap; }
+    .page-hearing-day .register.register-painel-dia .painel-dia-actions .btn-editar {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .page-hearing-minutes .register.register-with-metadata > .row-full { flex-wrap: wrap; }
+
+    .page-hearing-minutes .register.register-with-metadata > .row-full > .row-fit {
+        flex: 1 1 100%;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .page-hearing-minutes .register.register-with-metadata > .row-full .col { width: 100%; }
+
+    /* Só o botão visível abre o seletor de PDF. */
+    .page-hearing-minutes .card-page input.ata-file-input {
+        width: 1px !important;
+        min-height: 0;
+    }
+}

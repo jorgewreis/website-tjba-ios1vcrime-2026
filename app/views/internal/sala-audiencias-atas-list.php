@@ -120,8 +120,10 @@ function sala_audiencias_ata_label_prazo_download(string $expiresAt): string
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <link rel="stylesheet" href="/assets/css/shared/processo-bloco-listagem.css?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/css/shared/processo-bloco-listagem.css') ?: time(); ?>">
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <link rel="stylesheet" href="/assets/css/shared/operational-list-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/shared/operational-list-mobile.css') ?: time()); ?>">
+        <link rel="stylesheet" href="/assets/css/modules/audiencias/day-minutes-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/modules/audiencias/day-minutes-mobile.css') ?: time()); ?>">
     </head>
-<body class="page-internal">
+<body class="page-internal page-operational-list page-hearing-minutes">
 
     <div class="spacing-top-page"></div>
 
