@@ -35,6 +35,7 @@ function D([string[]]$a) {
             'REI158_DIAG code-(?:initial|workers|success|timeout|storage)-(?:other|[0-3])',
             'AUTH_FIXTURE_DIAG stage=(?:initial|clear|register|count) class=(?:PDOException|RuntimeException|InvalidArgumentException|Throwable) sqlstate=(?:none|[A-Z0-9]{5}) native=(?:none|[0-9]{1,5})',
             'HTTP_DIAG: (?:unknown|login|institution_access|profile_access|password_change|logout_race|http_rate_limit|password_reset|reset_shell|reset_invalid_csrf|reset_valid_stage|reset_staged_form|legacy_reset_link|password_update|password_login|reset_mail|mail_json|response_json) (?:PDOException|JsonException|RuntimeException|InvalidArgumentException|Error|TypeError|ValueError|Throwable) code=-?[0-9]{1,5}',
+            'HTTP_FAIL phase=reset_valid_stage status=[0-9]{1,3}',
             'HTTP_FAIL phase=(?:unknown|login|institution_access|profile_access|password_change|logout_race|http_rate_limit|password_reset|reset_shell|reset_invalid_csrf|reset_valid_stage|reset_staged_form|legacy_reset_link|password_update|password_login|reset_mail|mail_json|response_json)',
             'FAIL navegador etapa=(?:init|browser-start|websocket|cdp-setup|form|invalid-login|valid-login)',
             'DIAG navegador: (?:net::ERR_(?:NAME_NOT_RESOLVED|CONNECTION_REFUSED|CONNECTION_CLOSED|BLOCKED_BY_CLIENT|ADDRESS_UNREACHABLE|ABORTED)|erro de rede nao classificado)',

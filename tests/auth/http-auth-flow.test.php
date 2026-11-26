@@ -166,7 +166,10 @@ $badStage = req('/redefinir_senha.php', 'POST', ['reset_action'=>'stage_token','
 ok($badStage['status'] === 419, 'bootstrap do reset deve rejeitar CSRF inválido');
 $GLOBALS['phase'] = 'reset_valid_stage';
 $staged = req('/redefinir_senha.php', 'POST', ['reset_action'=>'stage_token','csrf_token'=>$bootstrapCsrf,'token'=>$token], $resetCookie);
-ok($staged['status'] === 204, 'bootstrap do fragmento não guardou token válido na sessão');
+if ($staged['status'] !== 204) {
+    fwrite(STDERR, 'HTTP_FAIL phase=reset_valid_stage status=' . (int) $staged['status'] . PHP_EOL);
+    exit(1);
+}
 $GLOBALS['phase'] = 'reset_staged_form';
 $fragmentForm = req('/views/public/redefinir-senha-form.php', 'GET', [], $resetCookie);
 ok(str_contains($fragmentForm['body'], 'id="formRedefinirSenha"'), 'token enviado no corpo não foi recuperado da sessão');
