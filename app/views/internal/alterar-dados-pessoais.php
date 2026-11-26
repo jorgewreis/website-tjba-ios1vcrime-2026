@@ -109,6 +109,19 @@ if ($dados !== null) {
             .regras-alocacao-list .regras-alocacao-item:last-child { border-bottom: none; }
             .regras-alocacao-regra { font-weight: 600; }
             .regras-alocacao-desc { color: var(--color-text-secondary); }
+            #form-dados-pessoais > .row > .col { min-width: 0; max-width: 100%; }
+            #form-dados-pessoais input:not([type="hidden"]),
+            #form-dados-pessoais select {
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+            @media (max-width: 680px) {
+                #form-dados-pessoais > .row { flex-wrap: wrap; box-sizing: border-box; }
+                #form-dados-pessoais > .row > .col { flex: 1 1 100%; }
+                #form-dados-pessoais input:not([type="hidden"]),
+                #form-dados-pessoais select { width: 100%; min-height: 44px; font-size: 16px; }
+                #form-dados-pessoais .btn { min-height: 44px; }
+            }
         </style>
     </head>
 <body class="page-internal">
