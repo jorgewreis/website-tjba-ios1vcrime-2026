@@ -8,6 +8,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '../..');
 const view = fs.readFileSync(path.join(root, 'app/views/internal/dashboard.php'), 'utf8');
 const source = fs.readFileSync(path.join(root, 'public/assets/js/dashboard-interno.js'), 'utf8');
+const summary = fs.readFileSync(path.join(root, 'app/services/DashboardResumoService.php'), 'utf8');
 const runnerPayloadFile = process.env.REI167_PAYLOAD_FILE;
 const runnerScenarios = ['expedicao', 'envio', 'zero', 'falha', 'gabinete'];
 function readRunnerPayloads() {
@@ -26,6 +27,11 @@ for (const id of ['dash-queue-guias-expedicao-row', 'dash-queue-guias-envio-row'
 }
 assert.match(view, /<b>Guias<\/b><br>aguardando expedição/);
 assert.match(view, /<b>Guias<\/b><br>aguardando envio/);
+assert.match(view, /<strong>Cadastro de Expedição de Cartas<\/strong><span>Últimos 30 dias<\/span>/);
+assert.match(view, /<strong>Cadastro de Expedição de Ofícios<\/strong><span>Ano corrente<\/span>/);
+assert.match(summary, /INTERVAL 29 DAY/, 'registration series must query a 30-day window including today');
+assert.match(summary, /\$lettersRegistered\[\$kind\]\s*\+=\s*\$count/, 'letter headline must sum the 30 daily counts');
+assert.match(summary, /MAKEDATE\(YEAR\(CURDATE\(\)\),1\)/, 'office headline must count the current calendar year');
 assert.match(view, /<section[^>]*id="dash-sector-column"[^>]*hidden/,
   'outer sector column starts hidden until an indicator is available');
 
@@ -63,12 +69,18 @@ const document = {
   createElement: tag => { const el = new Element(); el.tagName = tag.toUpperCase(); return el; },
   addEventListener: (event, callback) => { if (event === 'DOMContentLoaded') document.ready = callback; }
 };
-const window = {};
-const sandbox = { window, document, fetch: async () => responseQueue.shift(), console, Number, Date, Math, Promise };
+const chartInstances = [];
+class Chart {
+  static defaults = {font:{}};
+  constructor(element, config) { this.element=element; this.config=config; chartInstances.push(this); }
+  destroy() { this.destroyed=true; }
+}
+const window = {Chart};
+const sandbox = { window, document, Chart, fetch: async () => responseQueue.shift(), console, Number, Date, Math, Promise };
 vm.runInNewContext(source, sandbox, { filename: 'dashboard-interno.js' });
 const permitted = (filas, sector = {conectado:true,areas:['CARTORIO']}) => ({
   ok: true, json: async () => ({
-    geral: {filas:sector.generalFilas||filas,cartas_cadastradas:{expedidas:4,recebidas:2},oficios_cadastrados:{ano:{cartorio:1,gabinete:2}}},
+    geral: {filas:sector.generalFilas||filas,cartas_cadastradas:{expedidas:12,recebidas:7,ultimos_30_dias:{labels:Array.from({length:30},(_,i)=>`D${i+1}`),expedidas:Array.from({length:30},(_,i)=>i),recebidas:Array.from({length:30},(_,i)=>i+1)}},oficios_cadastrados:{ano:{cartorio:24,gabinete:16},ultimos_30_dias:{labels:Array.from({length:30},(_,i)=>`D${i+1}`),cartorio:Array.from({length:30},(_,i)=>i+2),gabinete:Array.from({length:30},(_,i)=>i+3)}}},
     setor: {...sector,filas,prazos_vencidos:{expedidas:0,recebidas:0},prazos_vencidos_dias:{}},
     usuario:{modules:[],oficios_expedidos_30d:0,medidas_protetivas_expedidas_30d:0}, alertas:[]
   })
@@ -91,6 +103,19 @@ function value(id) { const el=elements.get(id); return el ? el.textContent + el.
 (async () => {
   const runnerPayloads = readRunnerPayloads();
   await refresh([{key:'guias',type:'expedicao_guia',count:2},{key:'guias',type:'envio_guia',count:1},{key:'oficios',type:'enviar_oficio',count:1}], {conectado:true,areas:['CARTORIO'],responsaveis_regras:{guias:'Ana Souza',oficios:'Bruno Lima'}});
+  assert.equal(value('dash-registered-expedidas'), '12');
+  assert.equal(value('dash-registered-recebidas'), '7');
+  assert.equal(value('dash-offices-year-cartorio'), '24');
+  assert.equal(value('dash-offices-year-gabinete'), '16');
+  const lettersChart=chartInstances.find(chart=>chart.element.id==='dash-chart-cadastros-semana');
+  const officesChart=chartInstances.find(chart=>chart.element.id==='dash-chart-oficios-semana');
+  assert.equal(lettersChart.config.data.labels.length, 30);
+  assert.deepEqual(lettersChart.config.data.labels, Array.from({length:30},(_,i)=>`D${i+1}`));
+  assert.deepEqual(lettersChart.config.data.datasets[0].data, Array.from({length:30},(_,i)=>i));
+  assert.deepEqual(lettersChart.config.data.datasets[1].data, Array.from({length:30},(_,i)=>i+1));
+  assert.equal(officesChart.config.data.labels.length, 30);
+  assert.deepEqual(officesChart.config.data.datasets[0].data, Array.from({length:30},(_,i)=>i+2));
+  assert.deepEqual(officesChart.config.data.datasets[1].data, Array.from({length:30},(_,i)=>i+3));
   for (const id of ['dash-queue-guias-expedicao-responsaveis','dash-queue-guias-envio-responsaveis']) {
     assert.equal(value(id), 'Responsável: Ana');
     assert.equal(elements.get(id).children[0].tagName, 'IMG');

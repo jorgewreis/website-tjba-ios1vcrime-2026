@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/GabineteMonitoramentoEletronicoRepository.php';
 require_once __DIR__ . '/../repositories/GabineteMonitoramentoEletronicoSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
@@ -114,6 +115,7 @@ final class GabineteMonitoramentoEletronicoService
         }
         $processoId = trim((string) ($existing['id'] ?? ''));
         if ($processoId === '') throw new RuntimeException('Processo encontrado sem identificador.');
+        ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoId);
         $reus = $this->listarReusDoProcesso($processoId);
         $result = ['processo_id' => $processoId, 'reus' => $reus];
         if ($reus === []) $result['mensagem'] = 'Nenhum réu vinculado encontrado. Informe o nome manualmente.';
@@ -147,6 +149,7 @@ final class GabineteMonitoramentoEletronicoService
                 $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
             }
             $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
+        ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
 
             $processoParteId = trim((string) ($payload['processo_parte_id'] ?? $payload['reu_processo_parte_id'] ?? ''));
             $reuId = trim((string) ($payload['reu_id'] ?? ''));

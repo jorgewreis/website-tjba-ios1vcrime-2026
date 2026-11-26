@@ -80,6 +80,7 @@ final class DataJudResponseMapper
             'assuntos' => $assuntos,
             'assuntos_estado' => $estadoAssuntos,
             'assuntos_completos' => $assuntosCompletos,
+            'resultado_unico_verificado' => false,
             'prioridades' => self::formatarPrioridades($source['prioridade'] ?? []),
             'polo_passivo' => $poloPassivo,
             'movimentos' => $movimentos,

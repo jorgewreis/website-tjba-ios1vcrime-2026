@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/GabineteReuPresoMovimentacaoRepository.
 require_once __DIR__ . '/../repositories/SalaAudienciasPautaRepository.php';
 require_once __DIR__ . '/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
@@ -369,6 +370,7 @@ final class GabineteReusPresosService
         }
 
         $processoId = $this->processosRepository->ensureProcess($numeroRaw, $classeId, null, null);
+        ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoId);
 
         if ($linkId !== '') {
             $existing = $this->procRepo->findById($linkId);

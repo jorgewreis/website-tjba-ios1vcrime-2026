@@ -106,8 +106,8 @@ final class PageAccessRegistry
 
             'consultapartescreate' => $areaCartorio,
             'consultapartesedit' => $areaCartorio,
-            'instituicoespublicascreate' => $areaCartorio,
-            'instituicoespublicasedit' => $areaCartorio,
+            'instituicoespublicascreate' => ['kind' => 'all_internal'],
+            'instituicoespublicasedit' => ['kind' => 'all_internal'],
             'processospartescreate' => $areaCartorio,
             'processosparteslist' => $areaCartorio,
             'processospartesedit' => $areaCartorio,

@@ -7,7 +7,9 @@ $cases = [
     ['instituicoespublicas', ['SERVIDOR-GABINETE'], true],
     ['instituicoespublicascreate', ['CONSULTOR'], false],
     ['instituicoespublicasedit', ['ESTUDANTE'], false],
-    ['instituicoespublicasedit', ['SERVIDOR-GABINETE'], false],
+    ['instituicoespublicasedit', ['SERVIDOR-GABINETE'], true],
+    ['instituicoespublicascreate', ['ESTAGIARIO-GABINETE'], true],
+    ['instituicoespublicasedit', ['SERVIDOR-AUDIENCIAS'], true],
     ['instituicoespublicascreate', ['SERVIDOR-CARTORIO'], true],
     ['instituicoespublicasedit', ['SERVIDOR-CARTORIO'], true],
 ];
@@ -16,4 +18,4 @@ foreach ($cases as [$page, $profiles, $expected]) {
         throw new RuntimeException("Política inesperada para {$page} e " . implode(',', $profiles));
     }
 }
-echo "PASS policy matrix (8 casos)\n";
+echo "PASS policy matrix (10 casos)\n";

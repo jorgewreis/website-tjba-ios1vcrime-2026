@@ -35,6 +35,8 @@ try {
     $data = $service->searchProcesso($numero);
 } catch (InvalidArgumentException $e) {
     respond(['error' => $e->getMessage()], 400);
+} catch (DataJudAmbiguousResponseException $e) {
+    respond(['error' => 'O DataJud retornou mais de um registro para este processo; confira os dados manualmente.'], 409);
 } catch (RuntimeException $e) {
     $message = ApiErrorReporter::genericMessage($e, 'public/api/datajud/search-processo.php');
     respond(['error' => $message], 502);

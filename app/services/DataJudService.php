@@ -5,6 +5,8 @@ require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../DataJud/DataJudResponseMapper.php';
 require_once __DIR__ . '/../DataJud/DataJudTribunalResolver.php';
 
+final class DataJudAmbiguousResponseException extends RuntimeException {}
+
 /**
  * Serviço para consulta ao DataJud (CNJ).
  * Mesma estrutura lógica de public/api/datajud/search-processo.php.
@@ -83,7 +85,7 @@ final class DataJudService
                 throw new RuntimeException('Consulta DataJud incompleta. Tente novamente.');
             }
             if ($total['value'] > 1 || count($decoded['hits']['hits']) > 1) {
-                throw new RuntimeException('A consulta DataJud retornou mais de um documento para o processo. A sincronização requer revisão.');
+                throw new DataJudAmbiguousResponseException('Consulta DataJud ambígua; a sincronização automática foi recusada.');
             }
             if ($total['value'] !== count($decoded['hits']['hits'])) {
                 throw new RuntimeException('Resposta inválida do DataJud. Tente novamente.');
@@ -154,7 +156,14 @@ final class DataJudService
             ],
             'size' => 2,
             'track_total_hits' => true,
-            '_source' => true,
+            // Fetch only fields consumed by the institutional mapper. This mirrors
+            // the bounded source selection used by the Fokus Law client.
+            '_source' => [
+                'numeroProcesso', 'tribunal', 'classe', 'classeProcessual', 'assuntos',
+                'prioridade', 'polo', 'poloAtivo', 'poloPassivo', 'movimentos',
+                'orgaoJulgador', 'nivelSigilo', 'grau', 'formato', 'sistema',
+                'dataAjuizamento', 'dataHoraUltimaAtualizacao', 'id',
+            ],
         ];
     }
 
@@ -166,14 +175,8 @@ final class DataJudService
         if ($this->transport !== null) {
             return ($this->transport)($url, $body);
         }
-        $timeout = (int) ($this->config['timeout'] ?? 30);
-        if ($timeout < 5) {
-            $timeout = 30;
-        }
-        $connectTimeout = (int) ($this->config['connect_timeout'] ?? 10);
-        if ($connectTimeout < 2) {
-            $connectTimeout = 10;
-        }
+        $timeout = max(5, min(60, (int) ($this->config['timeout'] ?? 30)));
+        $connectTimeout = max(2, min(15, (int) ($this->config['connect_timeout'] ?? 10)));
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
