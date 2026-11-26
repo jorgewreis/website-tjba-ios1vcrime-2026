@@ -204,6 +204,34 @@ function value(id) { const el=elements.get(id); return el ? el.textContent + el.
   overdueOnly.setor.prazos_vencidos.expedidas = 1;
   await refresh({ok:true,json:async()=>overdueOnly});
   assert.equal(elements.get('dash-sector-column').hidden, false, 'overdue indicator alone keeps sector visible');
+  // The overdue card uses the same assignment even when the dispatch queue is empty.
+  const assigned = await permitted([]).json();
+  assigned.setor.prazos_vencidos = {expedidas:2,recebidas:1};
+  assigned.setor.prazos_vencidos_dias = {expedidas:9,recebidas:3};
+  assigned.setor.responsaveis_regras = {cartas_expedidas_envio:'Lia Teste'};
+  for (const [ownAssignment,label] of [[false,'Lia'],[true,'você']]) {
+    assigned.setor.responsaveis_proprios = {cartas_expedidas_envio:ownAssignment};
+    await refresh({ok:true,json:async()=>assigned});
+    assert.equal(value('dash-overdue-expedidas'), '2');
+    assert.equal(elements.get('dash-overdue-expedidas-row').dataset.urgencyDays, '9');
+    for (const id of ['dash-queue-expedidas-responsaveis','dash-overdue-expedidas-responsaveis']) {
+      const target = elements.get(id);
+      assert.equal(target.hidden,false);
+      assert.equal(target.children.at(-1).textContent,label);
+    }
+    assert.equal(elements.get('dash-queue-expedidas-row').hidden,true);
+    assert.equal(elements.get('dash-overdue-recebidas-responsaveis').hidden,true);
+  }
+  assigned.setor.responsaveis_regras = {};
+  await refresh({ok:true,json:async()=>assigned});
+  assert.equal(elements.get('dash-overdue-expedidas-responsaveis').hidden,true);
+  assert.deepEqual(elements.get('dash-overdue-expedidas-responsaveis').children,[]);
+  assert.equal(value('dash-overdue-expedidas'), '2');
+  assigned.setor.areas = ['GABINETE'];
+  assigned.setor.responsaveis_regras = {cartas_expedidas_envio:'Lia Teste'};
+  await refresh({ok:true,json:async()=>assigned});
+  assert.equal(elements.get('dash-overdue-expedidas-responsaveis').hidden,true);
+
   await refresh([{key:'guias',error:true,count:null}]);
   assert.equal(elements.get('dash-sector-column').hidden, false, 'guide error alone remains visible');
   await refresh([]);
