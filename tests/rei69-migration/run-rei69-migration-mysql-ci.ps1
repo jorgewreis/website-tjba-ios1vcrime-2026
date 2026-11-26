@@ -49,7 +49,7 @@ if ($LASTEXITCODE -ne 0 -or $contextInfo.Endpoints.docker.Host -ne $dockerEndpoi
 
 $runId = [Guid]::NewGuid().ToString('N')
 $schemaName = 'rei69m_' + $runId
-$otherSchemaName = 'rei69x_' + $runId
+$otherSchemaName = 'rei69o_' + $runId
 $marker = ([Guid]::NewGuid().ToString('N') + [Guid]::NewGuid().ToString('N')).ToLowerInvariant()
 $label = 'com.fokus.rei69migration-test'
 $dbName = "fokus-rei69migration-mysql-$runId"

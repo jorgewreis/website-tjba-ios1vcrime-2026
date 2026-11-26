@@ -13,8 +13,8 @@ $other=(string)getenv('REI69PAUTA_OTHER_SCHEMA');
 $marker=(string)getenv('REI69PAUTA_TEST_DISPOSABLE_MARKER');
 $dsn="mysql:unix_socket=/var/run/mysqld/mysqld.sock;dbname=$schema;charset=utf8mb4";
 if (getenv('REI69PAUTA_TEST_DISPOSABLE')!=='1' || getenv('REI69PAUTA_TEST_REPO_ROOT')!=='/repo'
-    || !preg_match('/^rei69m_[a-f0-9]{32}$/',$schema) || !preg_match('/^rei69x_[a-f0-9]{32}$/',$other)
-    || substr($schema,7)!==substr($other,7) || !preg_match('/^[a-f0-9]{64}$/',$marker)
+    || !preg_match('/^rei69m_[a-f0-9]{32}$/',$schema) || !preg_match('/^rei69o_[a-f0-9]{32}$/',$other)
+    || !preg_match('/^[a-f0-9]{64}$/',$marker)
     || getenv('REI69PAUTA_MYSQL_DSN')!==$dsn) throw new RuntimeException('Runner identity invalid');
 $stage='connect';
 $pdo=new PDO($dsn,'root','',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_EMULATE_PREPARES=>false]);

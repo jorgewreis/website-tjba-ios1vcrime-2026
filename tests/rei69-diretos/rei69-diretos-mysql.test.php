@@ -14,7 +14,7 @@ set_exception_handler(static function (Throwable $exception) use (&$failureStage
     if ($failureDetail === 'general') {
         $failureDetail = $exception instanceof PDOException ? 'pdo'
             : ($exception instanceof LogicException ? 'logic'
-                : ($exception instanceof RuntimeException ? 'runtime_line_'.$exception->getLine()
+                : ($exception instanceof RuntimeException ? 'runtime'
                     : ($exception instanceof JsonException ? 'json' : 'other')));
     }
     $stage = in_array($failureStage, $allowed, true) ? $failureStage : 'setup';
