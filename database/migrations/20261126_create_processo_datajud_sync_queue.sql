@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS processo_datajud_sync_queue (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   processo_id CHAR(30) NOT NULL,
+  requested_by CHAR(30) NULL,
   status VARCHAR(16) NOT NULL DEFAULT 'pendente',
   tentativas SMALLINT UNSIGNED NOT NULL DEFAULT 0,
   proxima_tentativa_em DATETIME NOT NULL,

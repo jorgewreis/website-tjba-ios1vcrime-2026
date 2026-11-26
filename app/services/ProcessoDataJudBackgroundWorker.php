@@ -6,6 +6,7 @@ require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/AssuntosRepository.php';
 require_once __DIR__ . '/../helpers/CnjValidator.php';
+require_once __DIR__ . '/../helpers/ProcessoSetorAuthorization.php';
 require_once __DIR__ . '/ProcessoDataJudSyncService.php';
 
 final class ProcessoDataJudBackgroundWorker
@@ -42,7 +43,7 @@ final class ProcessoDataJudBackgroundWorker
             // Recover jobs whose worker died after claiming them.
             $this->db->exec("UPDATE processo_datajud_sync_queue SET status = IF(tentativas + 1 >= 8, 'esgotado', 'falhou'), tentativas = tentativas + 1, proxima_tentativa_em = DATE_ADD(NOW(), INTERVAL 2 MINUTE), processando_em = NULL, updated_at = NOW() WHERE status = 'processando' AND processando_em < DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
             $this->db->beginTransaction();
-            $q = $this->db->query("SELECT id, processo_id, tentativas FROM processo_datajud_sync_queue WHERE status IN ('pendente','falhou') AND proxima_tentativa_em <= NOW() ORDER BY proxima_tentativa_em, id LIMIT 1 FOR UPDATE");
+            $q = $this->db->query("SELECT id, processo_id, requested_by, tentativas FROM processo_datajud_sync_queue WHERE status IN ('pendente','falhou') AND requested_by IS NOT NULL AND proxima_tentativa_em <= NOW() ORDER BY proxima_tentativa_em, id LIMIT 1 FOR UPDATE");
             $job = $q->fetch(PDO::FETCH_ASSOC);
             if (!is_array($job)) {
                 $this->db->commit();
@@ -64,6 +65,12 @@ final class ProcessoDataJudBackgroundWorker
     {
         $processo = (new ProcessosRepository($this->db))->findById((string) $job['processo_id']);
         if ($processo === null || !empty($processo['sigiloso'])) return;
+        if (!ProcessoSetorAuthorization::canAccessProcess(
+            $this->db,
+            (string) ($job['requested_by'] ?? ''),
+            (string) $job['processo_id'],
+            false
+        )) return;
         $numero = (string) ($processo['numero_processo'] ?? '');
         try {
             $result = $this->dataJud->searchProcesso($numero);
@@ -78,12 +85,10 @@ final class ProcessoDataJudBackgroundWorker
             || ($result['sigilo_ausencia_verificada'] ?? false) !== true) return;
 
         $classe = $result['classe'] ?? null;
-        if (!is_array($classe)) return;
+        if (!is_array($classe) || !self::isValidClassPayload($classe)) return;
         $codigoClasse = $classe['codigo'] ?? null;
         if ($codigoClasse === null && ($classe['descricao'] ?? null) === null) {
             $classe = null;
-        } elseif (!is_scalar($codigoClasse) || ClassesRepository::normalizeCodigo((string) $codigoClasse) === '') {
-            return;
         }
 
         $assuntos = $result['assuntos'] ?? null;
@@ -113,6 +118,7 @@ final class ProcessoDataJudBackgroundWorker
             $assuntos,
             $estadoAssuntos === 'vazio',
             function (PDO $writeDb) use ($job, $numero): bool {
+                if (!ProcessoSetorAuthorization::canModifyProcess($writeDb, (string) $job['requested_by'], (string) $job['processo_id'], true)) return false;
                 $sql = 'SELECT numero_processo, sigiloso FROM processos WHERE id = :id LIMIT 1';
                 if ($writeDb->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') $sql .= ' FOR UPDATE';
                 $query = $writeDb->prepare($sql);
@@ -123,6 +129,20 @@ final class ProcessoDataJudBackgroundWorker
                     && empty($current['sigiloso']);
             }
         );
+    }
+
+    /** Evita que bool/array recebidos do índice virem códigos ou nomes por cast PHP. */
+    public static function isValidClassPayload(array $classe): bool
+    {
+        $codigo = $classe['codigo'] ?? null;
+        $descricao = $classe['descricao'] ?? null;
+        $nome = $classe['nome'] ?? null;
+        if ($codigo === null && $descricao === null) return true;
+        return (is_string($codigo) || is_int($codigo))
+            && preg_match('/^[0-9]+$/D', trim((string) $codigo)) === 1
+            && ClassesRepository::normalizeCodigo((string) $codigo) !== ''
+            && ($descricao === null || is_string($descricao))
+            && ($nome === null || is_string($nome));
     }
 
     private function finish(int $id): void
