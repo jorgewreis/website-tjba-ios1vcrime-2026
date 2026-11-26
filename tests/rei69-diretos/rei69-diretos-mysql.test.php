@@ -19,7 +19,7 @@ set_exception_handler(static function (Throwable $exception) use (&$failureStage
     }
     $stage = in_array($failureStage, $allowed, true) ? $failureStage : 'setup';
     $details=['general','child_exit','child_fatal','pdo','logic','runtime','json','other','monitor_sql_42s22','monitor_sql_42s02','monitor_sql_23000','monitor_sql_40001','monitor_sql_hy000','monitor_sql_other','monitor_sql_collation','monitor_invalid','monitor_logic','monitor_runtime','monitor_error','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','wait_no_edge','wait_other_table','wait_other_index','wait_key_padded','wait_key_other','wait_key_null','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
-    $detail=preg_match('/^(?:runtime_line_[0-9]{1,4}|child_http_[1-5][0-9]{2})$/D', $failureDetail) === 1 ? $failureDetail : (in_array($failureDetail,$details,true) ? $failureDetail : 'general');
+    $detail=preg_match('/^(?:runtime_line_[0-9]{1,4}|child_http_[1-5][0-9]{2}|child_fatal_line_[0-9]{1,4})$/D', $failureDetail) === 1 ? $failureDetail : (in_array($failureDetail,$details,true) ? $failureDetail : 'general');
     fwrite(STDERR, 'REI69_DIRECT_FAILURE code=' . $stage . ' detail=' . $detail . "\n");
     exit(1);
 });
@@ -231,7 +231,7 @@ $_SESSION = getenv('TEST_SESSION') === '1' ? ['id_usuario' => (string) getenv('T
 $payload = json_decode((string) getenv('TEST_PAYLOAD'), true);
 $_POST = is_array($payload) ? $payload : [];
 $_GET = is_array($payload) ? $payload : [];
-register_shutdown_function(static function (): void { $code = http_response_code(); fwrite(STDERR, 'HTTP:' . ($code ?: 200)); });
+register_shutdown_function(static function (): void { $code = http_response_code(); $last = error_get_last(); if (is_array($last) && in_array($last['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) fwrite(STDERR, 'PHPFATAL:' . (int) $last['type'] . ':' . (int) $last['line'] . "\n"); fwrite(STDERR, 'HTTP:' . ($code ?: 200)); });
 require (string) getenv('TEST_ENDPOINT');
 PHP;
     $environment = [
@@ -284,7 +284,7 @@ PHP;
     $statusText = substr($stderr, (int) strrpos($stderr, 'HTTP:') + 5);
     if ($statusText === '' || !ctype_digit($statusText)) { $failureDetail='exit'; throw new RuntimeException('Endpoint sem status HTTP controlado: ' . $endpoint . ' (' . $stderr . ')'); }
     if ($exit !== 0 && !in_array((int) $statusText, [400, 401, 403], true)) {
-        $failureDetail = preg_match('/(?:PHP Fatal error|Uncaught (?:Error|TypeError|PDOException)|Parse error)/', $stderr) === 1 ? 'child_fatal' : 'child_http_'.$statusText;
+        $failureDetail = preg_match('/PHPFATAL:[0-9]+:([0-9]+)/', $stderr, $fatalMatch) === 1 ? 'child_fatal_line_'.$fatalMatch[1] : (preg_match('/(?:PHP Fatal error|Uncaught (?:Error|TypeError|PDOException)|Parse error)/', $stderr) === 1 ? 'child_fatal' : 'child_http_'.$statusText);
         throw new RuntimeException('Endpoint CLI falhou fora de uma recusa HTTP controlada.');
     }
     try { $body = $stdout === '' ? [] : json_decode($stdout, true, 512, JSON_THROW_ON_ERROR); }
