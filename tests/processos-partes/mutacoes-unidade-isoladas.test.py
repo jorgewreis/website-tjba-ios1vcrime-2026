@@ -14,6 +14,7 @@ FILES = [
     'public/api/processos-partes/update.php',
     'public/api/processos-partes/delete.php',
     'app/helpers/ApiAccessGuard.php',
+    'app/helpers/ApiErrorReporter.php',
     'app/helpers/BootstrapHelper.php',
     'app/helpers/UserAccessHelper.php',
     'app/helpers/ProcessoSetorAuthorization.php',

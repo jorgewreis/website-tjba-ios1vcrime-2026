@@ -3,7 +3,7 @@ declare(strict_types=1);
 // CI synthetic schema test only. No application configuration or TCP connection.
 $stage='guard';
 set_exception_handler(static function(Throwable $e) use (&$stage): void {
-    $allowed=['guard','connect','identity','sentinel','second_schema','fixture_ddl','cross_fk','migration','idempotence','full_ddl'];
+    $allowed=['guard','connect','identity','sentinel','second_schema','fixture_ddl','cross_fk','cross_fk_accepted','cross_fk_unexpected','migration','idempotence','full_ddl'];
     $code=in_array($stage,$allowed,true)?$stage:'unknown';
     fwrite(STDERR,"REI69_FIXTURE_FAILURE code=$code\n");
     exit(1);
@@ -47,12 +47,13 @@ $migration=new ProcessResponsibleSectorMigration($pdo);
 $stage='cross_fk';
 $beforeCreate=$pdo->query('SHOW CREATE TABLE processos')->fetch(PDO::FETCH_NUM)[1];
 $beforeLegacy=$pdo->query('SELECT id,ID_SETOR_RESPONSAVEL FROM processos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
-try {
-    $migration->preflight();
-    throw new LogicException('Cross-schema FK was accepted');
-} catch (RuntimeException $e) {
-    if ($e->getMessage()!=='A referência existente de setor responsável não corresponde à política esperada.') throw new LogicException('Unexpected preflight error',0,$e);
+$crossSchemaRejected=false;
+try { $migration->preflight(); }
+catch (RuntimeException $e) {
+    if ($e->getMessage()==='A referência existente de setor responsável não corresponde à política esperada.') $crossSchemaRejected=true;
+    else { $stage='cross_fk_unexpected'; throw $e; }
 }
+if (!$crossSchemaRejected) { $stage='cross_fk_accepted'; throw new RuntimeException('Cross-schema FK was accepted'); }
 if ($pdo->query('SHOW CREATE TABLE processos')->fetch(PDO::FETCH_NUM)[1]!==$beforeCreate
     || $pdo->query('SELECT id,ID_SETOR_RESPONSAVEL FROM processos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC)!==$beforeLegacy) throw new RuntimeException('Rejected preflight changed schema or rows');
 $pdo->exec('ALTER TABLE processos DROP FOREIGN KEY fk_cross_fixture');

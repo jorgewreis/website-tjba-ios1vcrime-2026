@@ -11,8 +11,14 @@ set_exception_handler(static function (Throwable $exception) use (&$failureStage
         $driverCode = (int) ($exception->errorInfo[1] ?? 0);
         $failureDetail = $driverCode === 1267 ? 'monitor_sql_collation' : (in_array($state, ['42s22','42s02','23000','40001','hy000'], true) ? 'monitor_sql_'.$state : 'monitor_sql_other');
     }
+    if ($failureDetail === 'general') {
+        $failureDetail = $exception instanceof PDOException ? 'pdo'
+            : ($exception instanceof LogicException ? 'logic'
+                : ($exception instanceof RuntimeException ? 'runtime'
+                    : ($exception instanceof JsonException ? 'json' : 'other')));
+    }
     $stage = in_array($failureStage, $allowed, true) ? $failureStage : 'setup';
-    $details=['general','child_exit','monitor_sql_42s22','monitor_sql_42s02','monitor_sql_23000','monitor_sql_40001','monitor_sql_hy000','monitor_sql_other','monitor_sql_collation','monitor_invalid','monitor_logic','monitor_runtime','monitor_error','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','wait_no_edge','wait_other_table','wait_other_index','wait_key_padded','wait_key_other','wait_key_null','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
+    $details=['general','child_exit','pdo','logic','runtime','json','other','monitor_sql_42s22','monitor_sql_42s02','monitor_sql_23000','monitor_sql_40001','monitor_sql_hy000','monitor_sql_other','monitor_sql_collation','monitor_invalid','monitor_logic','monitor_runtime','monitor_error','spawn','early_exit','early_401','early_403','early_404','early_500','pauta_connect','pauta_require','pauta_construct','pauta_sql_42s22','pauta_sql_42s02','pauta_sql_23000','pauta_sql_40001','pauta_sql_hy000','pauta_sql_other','pauta_acl','pauta_invalid','pauta_runtime','pauta_noop','pauta_error','pauta_fatal','connection_id','wait_query','wait_timeout','wait_no_edge','wait_other_table','wait_other_index','wait_key_padded','wait_key_other','wait_key_null','finish_timeout','exit','assert','snapshot_pauta','snapshot_other'];
     $detail=in_array($failureDetail,$details,true) ? $failureDetail : 'general';
     fwrite(STDERR, 'REI69_DIRECT_FAILURE code=' . $stage . ' detail=' . $detail . "\n");
     exit(1);
