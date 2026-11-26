@@ -6,13 +6,13 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = path.resolve(__dirname, '../..');
 const render = require('./mobile-operations-fixture.cjs');
 const setup = {
-    dashboard: ['#dash-queue-guias-expedicao', '#dash-queue-guias-expedicao-responsaveis', '#dash-alerts', '.dash-production-grid', '#dash-chart-cadastros-semana'],
+    dashboard: ['#dash-queue-guias-expedicao', '#dash-queue-expedidas-responsaveis', '#dash-queue-guias-expedicao-responsaveis', '#dash-alerts', '.dash-production-grid', '#dash-chart-cadastros-semana'],
     process: ['#btn-proc-datajud-sync', '#process-responsible-sector-select', '#proc-classe-atual', '#processo-assunto-descricao', '#processo-parte-nome', '#process-responsible-sector-submit'],
     create: ['#filter-processo', '#filter-denunciado', '#filter-tipo', '#filter-data-fato', '#cadastrar-btn', '#voltar-btn'],
     edit: ['#edit-processo', '#edit-observacoes', '#edit-tipo', '#edit-data-fato', '#cancelar-tarefa-btn', '#excluir-btn', '#salvar-btn', '.timeline-header', '.timeline .subtask-date']
 };
 const sample = {
-    setor: {conectado:true,areas:['CARTORIO'],filas:[{key:'guias',type:'expedicao_guia',count:12},{key:'guias',type:'envio_guia',count:9}],responsaveis_regras:{guias:'ResponsávelDeTesteComNomeBemComprido'},responsaveis_proprios:{guias:false}},
+    setor: {conectado:true,areas:['CARTORIO'],filas:[{key:'cartas_expedidas',type:'aguardando_envio',count:5},{key:'guias',type:'expedicao_guia',count:12},{key:'guias',type:'envio_guia',count:9}],responsaveis_regras:{cartas_expedidas_envio:'Pessoa responsável pelo envio',guias:'ResponsávelDeTesteComNomeBemComprido'},responsaveis_proprios:{cartas_expedidas_envio:false,guias:false}},
     alertas:[{key:'cumprimento_expedido_excedido',label:'Prazo para cumprimento de uma medida com descrição extensa',detail:'Acompanhar o prazo desta tarefa sintética',value:45,unit:'days'}],
     geral:{cartas_cadastradas:{expedidas:1730,recebidas:245,ultimos_30_dias:{labels:['24/11','25/11','26/11'],expedidas:[2,4,2],recebidas:[0,1,0]}}},
     usuario:{oficios_expedidos_30d:1234,medidas_protetivas_expedidas_30d:123}
@@ -47,6 +47,8 @@ const sample = {
                 if (name === 'dashboard') {
                     await page.locator('#dash-sector-column').waitFor();
                     assert.equal(await page.locator('#dash-queue-guias-expedicao').innerText(), '12');
+                    assert.equal(await page.locator('#dash-queue-expedidas').innerText(), '5');
+                    assert.match(await page.locator('#dash-queue-expedidas-responsaveis').innerText(), /Responsável: Pessoa/);
                 }
                 const metrics = await page.evaluate(selectors => {
                     const container = document.querySelector('.card-page, .dashboard-shell').getBoundingClientRect();

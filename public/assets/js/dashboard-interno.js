@@ -132,7 +132,8 @@
       const sectorQueues=data.setor?.filas||[];
       const responsible=cartorioEnabled?(data.setor?.responsaveis_regras||{}):{};
       const own=cartorioEnabled?(data.setor?.responsaveis_proprios||{}):{};
-      ['dash-queue-expedidas-responsaveis','dash-queue-recebidas-responsaveis','dash-queue-editais-responsaveis','dash-overdue-expedidas-responsaveis','dash-overdue-recebidas-responsaveis'].forEach(id=>setResponsible(id,''));
+      ['dash-queue-recebidas-responsaveis','dash-queue-editais-responsaveis','dash-overdue-expedidas-responsaveis','dash-overdue-recebidas-responsaveis'].forEach(id=>setResponsible(id,''));
+      setResponsible('dash-queue-expedidas-responsaveis',responsible.cartas_expedidas_envio,own.cartas_expedidas_envio===true);
       setResponsible('dash-queue-oficios-responsaveis',responsible.oficios,own.oficios===true);
       setResponsible('dash-queue-guias-expedicao-responsaveis',responsible.guias,own.guias===true);
       setResponsible('dash-queue-guias-envio-responsaveis',responsible.guias,own.guias===true);
@@ -165,6 +166,7 @@
       applyCountBadge($('dash-queue-editais'),queueEditais);
       applyCountBadge($('dash-queue-guias-expedicao'),queueGuiasExpedicao);
       applyCountBadge($('dash-queue-guias-envio'),queueGuiasEnvio);
+      highlightResponsible('dash-queue-expedidas-row','dash-queue-expedidas',own.cartas_expedidas_envio===true&&!!responsible.cartas_expedidas_envio);
       highlightResponsible('dash-queue-oficios-row','dash-queue-oficios',own.oficios===true&&!!responsible.oficios);
       highlightResponsible('dash-queue-guias-expedicao-row','dash-queue-guias-expedicao',own.guias===true&&!!responsible.guias);
       highlightResponsible('dash-queue-guias-envio-row','dash-queue-guias-envio',own.guias===true&&!!responsible.guias);

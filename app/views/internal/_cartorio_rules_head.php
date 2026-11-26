@@ -27,7 +27,7 @@ $description = (string) ($description ?? '');
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
-<body class="page-internal">
+<body class="page-internal<?php echo !empty($usarFormularioOperacional) ? ' page-operational-form' : ''; ?>">
 
     <div class="spacing-top-page"></div>
 

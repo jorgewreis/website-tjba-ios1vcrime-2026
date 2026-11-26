@@ -31,6 +31,8 @@ function fixtures() {
         stub('services','PasswordResetService','function validateResetToken($t){return $t === "synthetic" ? ["id"=>"fake"] : null;}');
         copy('app/helpers/RandomPhrase.php');
         copy('app/helpers/CartasExpedidasEstadoFluxo.php');
+        copy('app/helpers/CartasExpedidasEnvioRegra.php');
+        stub('repositories','AlocacoesRegrasRepository','function findByRegra($n){return null;}');
         copy('public/_layout_login.php');
         const html = {};
         for (const [route,file] of Object.entries(publicForms)) {

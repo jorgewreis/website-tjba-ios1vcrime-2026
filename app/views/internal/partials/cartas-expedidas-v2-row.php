@@ -15,6 +15,9 @@ require_once __DIR__ . '/../../../helpers/CartasExpedidasUiCopy.php';
 require_once __DIR__ . '/../../../helpers/RegistroMetadataHelper.php';
 
 $idCarta = trim((string) ($row['IdCarta'] ?? ''));
+$nomeResponsavelEnvio = isset($responsavelRegraEnvio) && class_exists(CartasExpedidasEnvioRegra::class, false)
+    ? CartasExpedidasEnvioRegra::responsavelNaEtapa((string) ($row['EtapaEfetiva'] ?? ''), $responsavelRegraEnvio)
+    : '';
 $st = CartasExpedidasEstadoFluxo::normalizar((string) ($row['Status'] ?? ''));
 $isAguardandoCumprimento = ($row['EtapaEfetiva'] ?? '') === 'devolucao' || $st === 'aguardando cumprimento';
 /** @var list<array<string, mixed>> $allSt */
@@ -293,6 +296,12 @@ $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
         </div>
         <div class="register-block carta-info-column">
             <div class="register-block-content">
+                    <?php if ($nomeResponsavelEnvio !== ''): ?>
+                        <div class="register-block-content-item">
+                            <span class="register-block-content-item-text">Envio:</span>
+                            <span class="register-block-content-item-value"><?php echo htmlspecialchars($nomeResponsavelEnvio, ENT_QUOTES, 'UTF-8'); ?></span>
+                        </div>
+                    <?php endif; ?>
                 <div class="register-block-content-item">
                     <strong class="register-block-content-item-value"><?php echo htmlspecialchars($destino, ENT_QUOTES); ?></strong>
                 </div>

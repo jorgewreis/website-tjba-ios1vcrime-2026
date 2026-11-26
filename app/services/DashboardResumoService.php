@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/CartasExpedidasEstadoFluxo.php';
+require_once __DIR__ . '/../helpers/CartasExpedidasEnvioRegra.php';
 
 /** Consultas agregadas usadas pelo dashboard interno. Filas contam somente subtarefas executáveis. */
 final class DashboardResumoService
@@ -236,6 +237,13 @@ final class DashboardResumoService
         $responsaveisRegras = [];
         $responsaveisProprios = [];
         if ($includeCartorio) {
+            try {
+                $envio = CartasExpedidasEnvioRegra::responsavel($this->pdo);
+                if ($envio !== null) {
+                    $responsaveisRegras['cartas_expedidas_envio'] = $envio['nome'];
+                    $responsaveisProprios['cartas_expedidas_envio'] = trim($userId) === $envio['id'];
+                }
+            } catch (Throwable $e) { error_log('dashboard resumo [responsável pelo envio de cartas]: falha interna.'); }
             try {
                 $stmt = $this->pdo->prepare('SELECT u.id_usuario,u.nome,u.sobrenome FROM alocacoes_regras r JOIN usuarios u ON u.id_usuario COLLATE utf8mb4_unicode_ci = r.usuario_id COLLATE utf8mb4_unicode_ci WHERE r.regra = ? LIMIT 1');
                 foreach (['guias'=>'ALLOCATE-GUIAS','oficios'=>'ALLOCATE-CARTORIOOFICIOS'] as $key=>$regra) {
