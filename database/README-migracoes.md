@@ -158,12 +158,12 @@ Essa etapa reconstrói a tabela e pode bloquear gravações pelo tempo da cópia
 antes de executá-la em produção, verifique volume e espaço disponível e programe
 uma janela operacional compatível. O preflight `--dry-run` não estima duração.
 
-Enquanto `id_setor_responsavel` estiver nulo, operações protegidas por
-unidade devem negar mutações. Os fluxos atuais de criação de processos
-não atribuem setor automaticamente; processos existentes e novos só
-podem habilitar essas mutações depois de atribuição explícita por fonte
-autorizada. Perfil, módulo de origem, classe e CNJ não substituem esse
-vínculo.
+No cadastro inicial e para processos históricos com `id_setor_responsavel`
+nulo, o Cartório é a unidade efetiva quando houver exatamente um setor ativo
+com `codigo_area = CARTORIO`. Não há alteração em massa nem inferência por
+perfil, nome, origem ou CNJ. Unidade explícita é preservada; se estiver inativa
+ou o padrão não puder ser resolvido, as operações protegidas negam acesso.
+A permissão individual e a lotação ativa continuam necessárias.
 
 ## 10. Ordem sugerida por cenário
 

@@ -86,7 +86,7 @@ final class ProcessoClasseSyncService
      *
      * @return array{action: 'noop'|'updated'|'created', processo_id: string, classe_id: string}
      */
-    public function syncFromDataJud(string $digits20, string $codigoRaw, string $descricaoRaw, bool $requireExistingProcess = false): array
+    public function syncFromDataJud(string $digits20, string $codigoRaw, string $descricaoRaw, bool $requireExistingProcess = false, bool $reconcileUnchangedPriorities = true): array
     {
         $ownsTransaction = !$this->connection->inTransaction();
         $savepoint = 'classe_datajud_' . bin2hex(random_bytes(6));
@@ -98,7 +98,7 @@ final class ProcessoClasseSyncService
             $this->connection->exec('SAVEPOINT ' . $savepoint);
         }
         try {
-            $result = $this->syncClasseEPrioridades($digits20, $codigoRaw, $descricaoRaw, $requireExistingProcess);
+            $result = $this->syncClasseEPrioridades($digits20, $codigoRaw, $descricaoRaw, $requireExistingProcess, $reconcileUnchangedPriorities);
             if ($ownsTransaction) {
                 if (!$this->connection->commit()) throw new RuntimeException('Não foi possível confirmar a sincronização de classe.');
             } else {
@@ -118,7 +118,7 @@ final class ProcessoClasseSyncService
         }
     }
 
-    private function syncClasseEPrioridades(string $digits20, string $codigoRaw, string $descricaoRaw, bool $requireExistingProcess): array
+    private function syncClasseEPrioridades(string $digits20, string $codigoRaw, string $descricaoRaw, bool $requireExistingProcess, bool $reconcileUnchangedPriorities): array
     {
         $digits20 = CnjValidator::digits20OrThrow($digits20);
 
@@ -143,6 +143,14 @@ final class ProcessoClasseSyncService
         }
         if ($requireExistingProcess && $processo === null) {
             throw new InvalidArgumentException('Processo não encontrado no cadastro local.');
+        }
+
+        if (!$reconcileUnchangedPriorities && $processo !== null) {
+            $currentId = trim((string) ($processo['classe_id'] ?? ''));
+            $currentClass = $currentId === '' ? null : $this->classesRepository->findById($currentId);
+            if ($currentClass !== null && ClassesRepository::normalizeCodigo((string) ($currentClass['codigo'] ?? '')) === $codigo) {
+                return ['action' => 'noop', 'processo_id' => (string) $processo['id'], 'classe_id' => $currentId];
+            }
         }
 
         $desc = trim($descricaoRaw);

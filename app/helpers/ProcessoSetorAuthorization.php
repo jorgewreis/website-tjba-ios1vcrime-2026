@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/ProcessResponsibleSectorDefault.php';
+
 /** Autorização por operação já aprovada e lotação atual do processo. */
 final class ProcessoSetorAuthorization
 {
@@ -45,14 +47,21 @@ final class ProcessoSetorAuthorization
 
         $responsibleSector = trim((string) ($process['id_setor_responsavel'] ?? ''));
         $joinedSector = trim((string) ($process['setor_id'] ?? ''));
-        if ($responsibleSector === '' || $joinedSector === '' || !hash_equals($responsibleSector, $joinedSector)
+        $usesDefault = $responsibleSector === '';
+        if ($usesDefault) {
+            $default = ProcessResponsibleSectorDefault::resolve($connection);
+            if ($default === null) return false;
+            $responsibleSector = (string) $default['id_setor'];
+        } elseif ($joinedSector === '' || !hash_equals($responsibleSector, $joinedSector)
             || (int) ($process['setor_ativo'] ?? 0) !== 1) {
             return false;
         }
 
         $sectorSql = 'SELECT us.`setor` FROM `usuario_setor` us
              INNER JOIN `setores` setor ON setor.`id_setor` = us.`setor` AND setor.`ativo` = 1
-             WHERE us.`usuario` = :usuario AND us.`setor` = :setor LIMIT 1';
+             WHERE us.`usuario` = :usuario AND us.`setor` = :setor'
+            . ($usesDefault ? " AND UPPER(TRIM(setor.`codigo_area`)) = 'CARTORIO'" : '')
+            . ' LIMIT 1';
         if ($lock && $connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') {
             $sectorSql .= ' FOR UPDATE';
         }

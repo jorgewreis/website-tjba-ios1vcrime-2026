@@ -17,7 +17,7 @@ FILES = [
     'app/helpers/ApiErrorReporter.php',
     'app/helpers/BootstrapHelper.php',
     'app/helpers/UserAccessHelper.php',
-    'app/helpers/ProcessoSetorAuthorization.php',
+    'app/helpers/ProcessoSetorAuthorization.php', 'app/helpers/ProcessResponsibleSectorDefault.php',
     'app/helpers/IdGenerator.php',
     'app/access/AccessEvaluator.php',
     'app/access/ProfileNormalizer.php',
