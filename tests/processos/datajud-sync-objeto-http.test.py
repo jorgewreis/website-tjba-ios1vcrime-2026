@@ -133,6 +133,7 @@ class DataJudService {
         payload = json.loads(write_marker.read_text(encoding='utf-8'))
         assert payload == ['12345678901234567890', {'codigo':'42','descricao':'Classe'}, [], True]
 
+        assert request(ficha_id='STALE', sector='denied')[0] == 403 and not read_marker.exists() and not write_marker.exists()
         assert request(ficha_id='STALE')[0] == 409 and not read_marker.exists() and not write_marker.exists()
         assert request(ficha_id='P1', process='secret')[0] == 422 and not read_marker.exists() and not write_marker.exists()
         assert request(ficha_id='P1')[0] == 200 and write_marker.exists()

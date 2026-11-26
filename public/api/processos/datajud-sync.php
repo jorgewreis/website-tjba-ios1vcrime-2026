@@ -52,14 +52,14 @@ try {
         exit;
     }
     $processoId = trim((string) ($processo['id'] ?? ''));
-    if ($fromDetails && ($expectedId === '' || !hash_equals($processoId, $expectedId))) {
-        http_response_code(409);
-        echo json_encode(['error' => 'A ficha mudou. Recarregue a página antes de sincronizar.'], JSON_UNESCAPED_UNICODE);
-        exit;
-    }
     if ($processoId === '' || !ProcessoSetorAuthorization::canAccessProcess($connection, $usuarioId, $processoId, false)) {
         http_response_code(403);
         echo json_encode(['error' => 'Acesso ao processo não autorizado.', 'code' => 'acesso_setorial_obrigatorio'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($fromDetails && ($expectedId === '' || !hash_equals($processoId, $expectedId))) {
+        http_response_code(409);
+        echo json_encode(['error' => 'A ficha mudou. Recarregue a página antes de sincronizar.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
