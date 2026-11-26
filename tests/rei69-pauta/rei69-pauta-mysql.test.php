@@ -592,7 +592,7 @@ foreach ($allocationModules as [$domain,$table,$parent]) {
     $ins = $pdo->prepare("INSERT INTO `$table` (id,`$parent`,usuario_id,tipo,created_at) VALUES (?,?,?,?,NOW())");
     foreach ([['Own321','owner','specific'],['Other321','peer','specific'],['Rule321','owner','rule'],
               ['All321','owner','all'],['Unknown321','owner','legacy']] as [$id,$who,$kind]) {
-        $ins->execute([$id,'FIXTURE-321',$who,$kind]);
+        $ins->execute([$id,'FIXTURE-321-'.$id,$who,$kind]);
     }
     foreach (['Other321','Rule321','All321','Unknown321','Missing321'] as $nonOwned) {
         if ($domain->removeAlocado($nonOwned,'owner',false)) throw new RuntimeException('Alocação fora do escopo foi removida.');
