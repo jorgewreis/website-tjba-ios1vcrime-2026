@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/ProcessResponsibleSectorDefault.php';
 
 final class ResponsibleProcessNotFound extends RuntimeException {}
 
@@ -10,7 +11,7 @@ final class ProcessResponsibleSectorService
     public function __construct(private PDO $connection) {}
 
     /**
-     * @return array{process_id:string,previous_sector_id:?string,sector_id:?string,changed:bool}
+     * @return array{process_id:string,previous_sector_id:?string,sector_id:string,is_default:bool,changed:bool}
      */
     public function assign(
         string $processId,
@@ -37,8 +38,8 @@ final class ProcessResponsibleSectorService
             throw new InvalidArgumentException('Identidade do operador inválida.');
         }
         $reasonLength = function_exists('mb_strlen') ? mb_strlen($justification, 'UTF-8') : strlen($justification);
-        if ($justification === '' || $reasonLength > 500) {
-            throw new InvalidArgumentException('Informe justificativa de até 500 caracteres.');
+        if ($reasonLength > 500) {
+            throw new InvalidArgumentException('A justificativa opcional deve ter até 500 caracteres.');
         }
 
         $remoteAddress = trim($remoteAddress);
@@ -67,14 +68,21 @@ final class ProcessResponsibleSectorService
                 throw new ResponsibleProcessNotFound('Processo não encontrado.');
             }
 
-            if ($sectorId !== null) {
-                $sectorStatement = $this->connection->prepare(
-                    'SELECT `id_setor` FROM `setores` WHERE `id_setor` = :id AND `ativo` = 1 LIMIT 1' . $lockClause
-                );
-                $sectorStatement->execute([':id' => $sectorId]);
-                if ($sectorStatement->fetchColumn() === false) {
-                    throw new InvalidArgumentException('Selecione um setor ativo existente.');
+            $effectiveSector = $sectorId;
+            if ($effectiveSector === null) {
+                $default = ProcessResponsibleSectorDefault::resolve($this->connection);
+                if ($default === null) {
+                    throw new InvalidArgumentException('Cartório ativo não está configurado. Selecione um setor ativo.');
                 }
+                $effectiveSector = (string) $default['id_setor'];
+            }
+            $sectorStatement = $this->connection->prepare(
+                'SELECT `id_setor` FROM `setores` WHERE `id_setor` = :id AND `ativo` = 1'
+                . ($sectorId === null ? " AND UPPER(TRIM(`codigo_area`)) = 'CARTORIO'" : '') . ' LIMIT 1' . $lockClause
+            );
+            $sectorStatement->execute([':id' => $effectiveSector]);
+            if ($sectorStatement->fetchColumn() === false) {
+                throw new InvalidArgumentException('Selecione um setor ativo existente.');
             }
 
             $previous = trim((string) ($process['id_setor_responsavel'] ?? ''));
@@ -83,7 +91,8 @@ final class ProcessResponsibleSectorService
                 $result = [
                     'process_id' => $processId,
                     'previous_sector_id' => $previous,
-                    'sector_id' => $sectorId,
+                    'sector_id' => $effectiveSector,
+                    'is_default' => $sectorId === null,
                     'changed' => false,
                 ];
             } else {
@@ -97,7 +106,7 @@ final class ProcessResponsibleSectorService
                     JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
                 );
                 $after = json_encode(
-                    ['id_setor_responsavel' => $sectorId, 'justificativa' => $justification],
+                    ['id_setor_responsavel' => $sectorId, 'justificativa' => $justification !== '' ? $justification : null],
                     JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
                 );
                 $logId = IdGenerator::generateUniquePrefixedId(
@@ -126,7 +135,8 @@ final class ProcessResponsibleSectorService
                 $result = [
                     'process_id' => $processId,
                     'previous_sector_id' => $previous,
-                    'sector_id' => $sectorId,
+                    'sector_id' => $effectiveSector,
+                    'is_default' => $sectorId === null,
                     'changed' => true,
                 ];
             }

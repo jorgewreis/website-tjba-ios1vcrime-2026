@@ -70,7 +70,7 @@ class DataJudService {
   }
 }''', encoding='utf-8')
     (base / 'app/services/ProcessoDataJudSyncService.php').write_text('''<?php class ProcessoDataJudSyncService {
-  function __construct($connection) {}
+  function __construct($connection, bool $onlyChangedFields=false) {}
     function sync(string $numero, ?array $classe, ?array $assuntos, bool $verifiedEmptySubjects=false): array {
     file_put_contents(__DIR__.'/write-called', json_encode([$numero,$classe,$assuntos,$verifiedEmptySubjects]));
     return ['classe'=>$classe === null ? null : ['action'=>'updated'], 'assuntos'=>$assuntos === null ? null : ['action'=>'updated']];
@@ -85,10 +85,13 @@ class DataJudService {
     read_marker = base / 'app/services/source-called'
     write_marker = base / 'app/services/write-called'
 
-    def request(endpoint='processos/datajud-sync.php', result='ok', process='exists', profile='internal', origin='ok', number='12345678901234567890', sector='allowed'):
+    def request(endpoint='processos/datajud-sync.php', result='ok', process='exists', profile='internal', origin='ok', number='12345678901234567890', sector='allowed', ficha_id=None):
         read_marker.unlink(missing_ok=True)
         write_marker.unlink(missing_ok=True)
-        data = json.dumps({'numero': number, 'codigo':'999', 'descricao':'client spoof', 'assuntos':[{'codigo':'999','descricao':'client spoof'}]}).encode()
+        body = {'numero': number, 'codigo':'999', 'descricao':'client spoof', 'assuntos':[{'codigo':'999','descricao':'client spoof'}]}
+        if ficha_id is not None:
+            body.update(origem='ficha', processo_id=ficha_id)
+        data = json.dumps(body).encode()
         url = f'http://127.0.0.1:{port}/api/{endpoint}'
         req = urllib.request.Request(url, data=data, headers={'Content-Type':'application/json','X-Test-Result':result,'X-Test-Process':process,'X-Test-Profile':profile,'X-Test-Origin':origin,'X-Test-Sector':sector})
         try:
@@ -129,6 +132,12 @@ class DataJudService {
         assert code == 200 and body['success'] is True and write_marker.exists()
         payload = json.loads(write_marker.read_text(encoding='utf-8'))
         assert payload == ['12345678901234567890', {'codigo':'42','descricao':'Classe'}, [], True]
+
+        assert request(ficha_id='STALE', sector='denied')[0] == 403 and not read_marker.exists() and not write_marker.exists()
+        assert request(ficha_id='STALE')[0] == 409 and not read_marker.exists() and not write_marker.exists()
+        assert request(ficha_id='P1', process='secret')[0] == 422 and not read_marker.exists() and not write_marker.exists()
+        assert request(ficha_id='P1')[0] == 200 and write_marker.exists()
+        assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', {'codigo':'42','descricao':'Classe'}, None, False]
 
         cartorio = 'cartorio-cartas-expedidas/sync-processo-datajud.php'
         for endpoint in ('processos/datajud-sync.php', cartorio):

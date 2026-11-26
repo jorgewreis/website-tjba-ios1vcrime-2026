@@ -45,6 +45,13 @@ async function main() {
   assert.equal(success.elements['process-responsible-sector-reason'].value, '');
   assert.equal(success.elements['process-responsible-sector-submit'].disabled, false);
 
+  const optional = createForm(async (url, options) => {
+    assert.equal(JSON.parse(options.body).justificativa, '');
+    return { ok: true, json: async () => ({ success: true, changed: true, sector_id: 'SET-1', is_default: true }) };
+  });
+  optional.elements['process-responsible-sector-reason'].value = '  ';
+  await optional.handlers.submit({ preventDefault() {} });
+  assert.equal(optional.elements['process-responsible-sector-current'].textContent, 'Unidade padrão: Cartório');
   const failure = createForm(async () => { throw new Error('synthetic network failure'); });
   await failure.handlers.submit({ preventDefault() {} });
   assert.equal(failure.elements['process-responsible-sector-status'].textContent, 'Falha de comunicação. A justificativa foi preservada; tente novamente.');

@@ -12,6 +12,7 @@ require_once __DIR__ . '/../../helpers/ParteDocumentoHelper.php';
 require_once __DIR__ . '/../../services/ConsultaProcessosService.php';
 require_once __DIR__ . '/../../services/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
+require_once __DIR__ . '/../../helpers/ProcessResponsibleSectorDefault.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 if ($id === '') { header('Location: /frame.php?page=consultaprocessos'); exit; }
@@ -23,6 +24,7 @@ if ($processo === null) { header('Location: /frame.php?page=consultaprocessos');
 $podeAtribuirSetorResponsavel = in_array('ADMIN', ProfileNormalizer::normalize($userPerfils ?? []), true);
 $setoresResponsaveis = [];
 $setorResponsavelAtual = '';
+$setorCartorioPadrao = null;
 $erroSetorResponsavel = '';
 if ($podeAtribuirSetorResponsavel) {
     try {
@@ -33,6 +35,7 @@ if ($podeAtribuirSetorResponsavel) {
         $stmtSetorAtual->execute([':id' => (string) ($processo['id'] ?? '')]);
         $rowSetorAtual = $stmtSetorAtual->fetch(PDO::FETCH_ASSOC) ?: [];
         $setorResponsavelAtual = trim((string) ($rowSetorAtual['id_setor_responsavel'] ?? ''));
+        $setorCartorioPadrao = ProcessResponsibleSectorDefault::resolve($connection);
         $stmtSetores = $connection->query('SELECT `id_setor`, `nome` FROM `setores` WHERE `ativo` = 1 ORDER BY `nome` ASC');
         $setoresResponsaveis = $stmtSetores ? $stmtSetores->fetchAll(PDO::FETCH_ASSOC) : [];
     } catch (Throwable $error) {
@@ -85,7 +88,8 @@ $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
                 <h2 id="responsible-sector-title">Unidade responsável</h2>
                 <p id="process-responsible-sector-current" aria-live="polite">
                     <?php if ($erroSetorResponsavel !== ''): ?>Não foi possível verificar a unidade responsável.
-                    <?php elseif ($setorResponsavelAtual === ''): ?>Sem unidade atribuída. Mutações protegidas por unidade permanecem bloqueadas.
+                    <?php elseif ($setorResponsavelAtual === '' && $setorCartorioPadrao !== null): ?>Unidade padrão: Cartório
+                    <?php elseif ($setorResponsavelAtual === ''): ?>Cartório ativo não está configurado.
                     <?php else: ?>Atribuição atual: <?php echo htmlspecialchars((string) ($rowSetorAtual['setor_nome'] ?? 'Setor não encontrado'), ENT_QUOTES); ?><?php if ((int) ($rowSetorAtual['setor_ativo'] ?? 0) !== 1): ?> (inativo)<?php endif; ?><?php endif; ?>
                 </p>
             </div>
@@ -97,18 +101,24 @@ $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
                     <div class="col">
                         <label for="process-responsible-sector-select">Setor ativo</label>
                         <select class="width-500 height-md" id="process-responsible-sector-select" name="setor_id">
-                            <option value="" <?php echo $setorResponsavelAtual === '' ? 'selected' : ''; ?>>Sem atribuição</option>
+                            <?php if ($setorCartorioPadrao === null && $setorResponsavelAtual === ''): ?>
+                            <option value="" selected disabled>Selecione um setor ativo</option>
+                            <?php endif; ?>
                             <?php if ($setorResponsavelAtual !== '' && (int) ($rowSetorAtual['setor_ativo'] ?? 0) !== 1): ?>
                             <option value="<?php echo htmlspecialchars($setorResponsavelAtual, ENT_QUOTES); ?>" selected disabled>Setor atual inativo — selecione um setor ativo</option>
                             <?php endif; ?>
-                            <?php foreach ($setoresResponsaveis as $setor): ?>
-                            <option value="<?php echo htmlspecialchars((string) ($setor['id_setor'] ?? ''), ENT_QUOTES); ?>" <?php echo $setorResponsavelAtual !== '' && $setorResponsavelAtual === (string) ($setor['id_setor'] ?? '') ? 'selected' : ''; ?>><?php echo htmlspecialchars((string) ($setor['nome'] ?? ''), ENT_QUOTES); ?></option>
+                            <?php foreach ($setoresResponsaveis as $setor):
+                                $idOpcao = (string) ($setor['id_setor'] ?? '');
+                                $opcaoPadrao = $setorCartorioPadrao !== null && $idOpcao === (string) $setorCartorioPadrao['id_setor'];
+                                $opcaoSelecionada = $setorResponsavelAtual === '' ? $opcaoPadrao : $setorResponsavelAtual === $idOpcao;
+                            ?>
+                            <option value="<?php echo htmlspecialchars($idOpcao, ENT_QUOTES); ?>" <?php echo $opcaoSelecionada ? 'selected' : ''; ?>><?php echo htmlspecialchars((string) ($setor['nome'] ?? ''), ENT_QUOTES); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
                     <div class="col col-full">
-                        <label for="process-responsible-sector-reason">Justificativa obrigatória</label>
-                        <textarea class="width-700" id="process-responsible-sector-reason" name="justificativa" maxlength="500" rows="3" required></textarea>
+                        <label for="process-responsible-sector-reason">Justificativa (opcional)</label>
+                        <textarea class="width-700" id="process-responsible-sector-reason" name="justificativa" maxlength="500" rows="3"></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary height-md" id="process-responsible-sector-submit">Registrar atribuição</button>
                 </div>
@@ -119,7 +129,14 @@ $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
         <?php endif; ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Classe processual</h2>
+            <?php if (empty($processo['sigiloso'])): ?>
+                <button type="button" class="btn btn-secondary height-md" id="btn-proc-datajud-sync"
+                        data-process-id="<?php echo htmlspecialchars($processoIdFicha, ENT_QUOTES); ?>"
+                        data-numero="<?php echo htmlspecialchars((string) ($processo['numero_processo'] ?? ''), ENT_QUOTES); ?>"
+                        aria-describedby="proc-datajud-sync-status">Sincronizar classe e assuntos com o DataJud</button>
+            <?php endif; ?>
         </div>
+        <p class="padding-x-md" id="proc-datajud-sync-status" role="status" aria-live="polite"><?php if (!empty($processo['sigiloso'])): ?>Sincronização indisponível para processos sigilosos.<?php endif; ?></p>
         <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">

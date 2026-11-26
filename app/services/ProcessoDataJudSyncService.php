@@ -15,14 +15,14 @@ final class ProcessoDataJudSyncService
     private Closure $classeSync;
     private Closure $assuntoSync;
 
-    public function __construct(private PDO $db, ?callable $classeSync = null, ?callable $assuntoSync = null)
+    public function __construct(private PDO $db, ?callable $classeSync = null, ?callable $assuntoSync = null, bool $onlyChangedFields = false)
     {
         $this->classeSync = Closure::fromCallable($classeSync ??
             fn(string $numero, string $codigo, string $descricao): array =>
-                (new ProcessoClasseSyncService($this->db))->syncFromDataJud($numero, $codigo, $descricao, true));
+                (new ProcessoClasseSyncService($this->db))->syncFromDataJud($numero, $codigo, $descricao, true, !$onlyChangedFields));
         $this->assuntoSync = Closure::fromCallable($assuntoSync ??
             fn(string $numero, array $assuntos, bool $allowVerifiedEmpty): array =>
-                (new ProcessoAssuntoSyncService($this->db))->syncFromDataJud($numero, $assuntos, true, $allowVerifiedEmpty));
+                (new ProcessoAssuntoSyncService($this->db))->syncFromDataJud($numero, $assuntos, true, $allowVerifiedEmpty, $onlyChangedFields));
     }
 
     /**

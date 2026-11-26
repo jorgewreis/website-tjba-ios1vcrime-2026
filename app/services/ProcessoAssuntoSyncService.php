@@ -68,7 +68,8 @@ final class ProcessoAssuntoSyncService
         string $digits20,
         array $assuntosPayload,
         bool $requireExistingProcess = false,
-        bool $allowVerifiedEmptyPayload = false
+        bool $allowVerifiedEmptyPayload = false,
+        bool $preserveCatalog = false
     ): array
     {
         $digits20 = CnjValidator::digits20OrThrow($digits20);
@@ -103,7 +104,10 @@ final class ProcessoAssuntoSyncService
         }
         $assuntoIds = [];
         foreach ($assuntosNormalizados as $item) {
-            $assuntoIds[] = $this->assuntosRepository->ensureAssunto($item['codigo'], $item['descricao'], true);
+            $existing = $preserveCatalog ? $this->assuntosRepository->findByCodigo($item['codigo'], true) : null;
+            $assuntoIds[] = $existing !== null
+                ? (string) $existing['id']
+                : $this->assuntosRepository->ensureAssunto($item['codigo'], $item['descricao'], true);
         }
         $assuntoIds = array_values(array_unique($assuntoIds));
 

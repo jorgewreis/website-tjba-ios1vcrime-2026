@@ -249,9 +249,49 @@
         enviarAtualizacao({ codigo: codigo, nome: nome }, button, 'Classe cadastrada e vinculada ao processo.');
     }
 
+    async function sincronizarFichaDataJud() {
+        const button = global.document.getElementById('btn-proc-datajud-sync');
+        const status = global.document.getElementById('proc-datajud-sync-status');
+        if (!button || !status || button.disabled) return;
+        setBusy(button, true);
+        status.textContent = 'Consultando o DataJud…';
+        let reloading = false;
+        try {
+            const response = await global.fetch('/api/processos/datajud-sync.php', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+                body: JSON.stringify({
+                    origem: 'ficha',
+                    numero: button.dataset.numero,
+                    processo_id: button.dataset.processId
+                })
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result.success !== true) {
+                status.textContent = typeof result.error === 'string'
+                    ? result.error : 'Não foi possível confirmar a sincronização. Confira a ficha antes de tentar novamente.';
+                return;
+            }
+            const changed = [result.classe, result.assuntos].some(item =>
+                item && (item.action === 'updated' || item.action === 'created'));
+            status.textContent = result.message || 'Nenhuma alteração necessária.';
+            if (changed) {
+                queuePostReloadToast('success', 'DataJud', status.textContent);
+                global.location.reload();
+                reloading = true;
+            }
+        } catch (error) {
+            status.textContent = 'Falha na comunicação. Confira os dados da ficha antes de tentar novamente.';
+        } finally {
+            if (!reloading) setBusy(button, false);
+        }
+    }
+
     function initialize() {
         flushPostReloadToast();
 
+        global.document.getElementById('btn-proc-datajud-sync')?.addEventListener('click', sincronizarFichaDataJud);
         global.document.getElementById('btn-proc-classe-buscar')?.addEventListener('click', buscarClasse);
         global.document.getElementById('btn-proc-classe-vincular')?.addEventListener('click', vincularExistente);
         global.document.getElementById('btn-proc-classe-cadastrar')?.addEventListener('click', cadastrarNova);

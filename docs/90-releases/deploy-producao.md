@@ -17,8 +17,8 @@ Após a sincronização, `.github/workflows/deploy-prod.yml` atualiza `APP_URL` 
 as dependências PHP quando há `composer.json`. Antes do `rsync`, o workflow aplica
 primeiro a migration de setor responsável, sem preencher processos legados. A
 coluna `processos.id_setor_responsavel` permanece nula até atribuição explícita;
-as operações protegidas por setor negam acesso enquanto não houver setor ativo
-atribuído. Essa etapa usa `ALGORITHM=COPY, LOCK=SHARED`, então volume da tabela,
+o Cartório ativo e inequívoco é a unidade efetiva enquanto o campo estiver nulo.
+O controle por lotação permanece válido e não há atualização em massa. Essa etapa usa `ALGORITHM=COPY, LOCK=SHARED`, então volume da tabela,
 espaço disponível e janela operacional precisam ser avaliados antes do deploy.
 Em seguida, envia o script e o SQL de idempotência de Cartas Expedidas a um
 diretório temporário

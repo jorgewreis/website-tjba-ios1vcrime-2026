@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../app/helpers/ProcessResponsibleSectorAdminPolicy.php';
 require_once __DIR__ . '/../../app/helpers/EffectiveAccessProfiles.php';
+require_once __DIR__ . '/../../app/helpers/ProcessoSetorAuthorization.php';
 require_once __DIR__ . '/../../app/services/ProcessResponsibleSectorService.php';
 
 function assertSameValue(mixed $expected, mixed $actual, string $message): void
@@ -31,11 +32,21 @@ if (!in_array('sqlite', PDO::getAvailableDrivers(), true)) {
 
 $pdo = new PDO('sqlite::memory:', options: [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
 $pdo->exec('CREATE TABLE processos (id TEXT PRIMARY KEY, id_setor_responsavel TEXT NULL, updated_at TEXT NULL)');
-$pdo->exec('CREATE TABLE setores (id_setor TEXT PRIMARY KEY, nome TEXT NOT NULL, ativo INTEGER NOT NULL)');
+$pdo->exec('CREATE TABLE setores (id_setor TEXT PRIMARY KEY, nome TEXT NOT NULL, ativo INTEGER NOT NULL, codigo_area TEXT)');
 $pdo->exec('CREATE TABLE logs_sistema (id_log_sistema TEXT PRIMARY KEY, usuario TEXT NOT NULL, modulo TEXT NOT NULL, acao TEXT NOT NULL, tabela_afetada TEXT NULL, registro_id TEXT NULL, dados_anteriores TEXT NULL, dados_novos TEXT NULL, ip TEXT NOT NULL, data_hora TEXT NULL)');
-$pdo->exec("INSERT INTO processos (id, id_setor_responsavel) VALUES ('PRC-1', NULL), ('PRC-2', 'SET-OLD')");
-$pdo->exec("INSERT INTO setores (id_setor, nome, ativo) VALUES ('SET-1', 'Cartório', 1), ('SET-2', 'Gabinete', 1), ('SET-OLD', 'Setor encerrado', 0)");
+$pdo->exec("INSERT INTO processos (id, id_setor_responsavel) VALUES ('PRC-1', NULL), ('PRC-2', 'SET-OLD'), ('SINTESE-NOVO', NULL)");
+$pdo->exec("INSERT INTO setores (id_setor, nome, ativo, codigo_area) VALUES ('SET-1', 'Cartório', 1, 'CARTORIO'), ('SET-2', 'Gabinete', 1, 'GABINETE'), ('SET-OLD', 'Setor encerrado', 0, 'CARTORIO')");
 $service = new ProcessResponsibleSectorService($pdo);
+$pdo->exec("CREATE TABLE usuario_setor (usuario TEXT, setor TEXT)");
+$pdo->exec("INSERT INTO usuario_setor VALUES ('CART', 'SET-1'), ('GAB', 'SET-2'), ('ANT', 'SET-OLD')");
+assertSameValue(true, ProcessoSetorAuthorization::canAccessProcess($pdo, 'CART', 'PRC-1', false), 'Legado nulo deve usar Cartório.');
+assertSameValue(true, ProcessoSetorAuthorization::canAccessProcess($pdo, 'CART', 'SINTESE-NOVO', false), 'Cadastro novo com valor inicial nulo deve usar Cartório.');
+assertSameValue(false, ProcessoSetorAuthorization::canAccessProcess($pdo, 'GAB', 'PRC-1', false), 'Outro setor não recebe acesso pelo padrão.');
+assertSameValue(false, ProcessoSetorAuthorization::canAccessProcess($pdo, 'CART', 'PRC-2', false), 'Setor explícito inativo não vira Cartório.');
+$pdo->exec("UPDATE setores SET ativo=1 WHERE id_setor='SET-OLD'");
+assertSameValue(false, ProcessoSetorAuthorization::canAccessProcess($pdo, 'CART', 'PRC-1', false), 'Padrão duplicado não deve liberar acesso.');
+$pdo->exec("UPDATE setores SET ativo=0 WHERE id_setor='SET-OLD'");
+
 
 assertSameValue(true, ProcessResponsibleSectorAdminPolicy::allows(['ADMIN']), 'ADMIN deve poder atribuir.');
 assertSameValue(true, ProcessResponsibleSectorAdminPolicy::allows(['SERVIDOR-CARTORIO', 'ADMIN']), 'Perfil misto com ADMIN ativo deve poder atribuir.');
@@ -73,7 +84,7 @@ assertSameValue(null, $pdo->query("SELECT id_setor_responsavel FROM processos WH
 
 assertThrows(fn () => $service->assign('MISSING', 'SET-1', 'Teste', 'ADMIN-1', '192.0.2.10'), ResponsibleProcessNotFound::class, 'Processo inexistente deve falhar');
 assertThrows(fn () => $service->assign('PRC-1', 'SET-OLD', 'Teste', 'ADMIN-1', '192.0.2.10'), InvalidArgumentException::class, 'Setor inativo deve falhar');
-assertThrows(fn () => $service->assign('PRC-1', 'SET-1', '  ', 'ADMIN-1', '192.0.2.10'), InvalidArgumentException::class, 'Justificativa vazia deve falhar');
+assertThrows(fn () => $service->assign('PRC-1', 'SET-1', str_repeat('a', 501), 'ADMIN-1', '192.0.2.10'), InvalidArgumentException::class, 'Justificativa longa deve falhar');
 assertSameValue(null, $pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-1'")->fetchColumn(), 'Falhas de validação não devem alterar o processo.');
 
 $pdo->beginTransaction();
@@ -82,6 +93,14 @@ assertSameValue(true, $pdo->inTransaction(), 'O serviço não deve concluir a tr
 $pdo->rollBack();
 assertSameValue(null, $pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-1'")->fetchColumn(), 'Rollback externo deve reverter a atribuição.');
 
+$withoutNote = $service->assign('PRC-1', 'SET-2', '  ', 'ADMIN-1', '192.0.2.10');
+assertSameValue(true, $withoutNote['changed'], 'Justificativa vazia é permitida.');
+assertSameValue(null, json_decode($pdo->query("SELECT dados_novos FROM logs_sistema WHERE dados_novos LIKE '%SET-2%' ORDER BY rowid DESC LIMIT 1")->fetchColumn(), true)['justificativa'], 'Atribuição sem texto deve ser auditada.');
+assertSameValue(false, ProcessoSetorAuthorization::canAccessProcess($pdo, 'CART', 'PRC-1', false), 'Unidade explícita prevalece sobre o padrão.');
+assertSameValue(true, ProcessoSetorAuthorization::canAccessProcess($pdo, 'GAB', 'PRC-1', false), 'A unidade explícita preserva seu acesso.');
+$reset = $service->assign('PRC-1', null, '', 'ADMIN-1', '192.0.2.10');
+assertSameValue('SET-1', $reset['sector_id'], 'Retorno ao padrão deve informar a unidade efetiva.');
+assertSameValue(true, $reset['is_default'], 'Retorno ao padrão deve ser identificado.');
 $pdo->exec('DROP TABLE logs_sistema');
 assertThrows(fn () => $service->assign('PRC-1', 'SET-1', 'Auditoria obrigatória', 'ADMIN-1', '192.0.2.10'), PDOException::class, 'Falha de auditoria deve fazer a operação falhar');
 assertSameValue(null, $pdo->query("SELECT id_setor_responsavel FROM processos WHERE id='PRC-1'")->fetchColumn(), 'Falha ao gravar auditoria deve reverter a atribuição.');

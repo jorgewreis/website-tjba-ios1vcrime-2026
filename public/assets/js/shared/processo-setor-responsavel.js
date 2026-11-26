@@ -15,11 +15,7 @@
         event.preventDefault();
         if (!select || !reason || !button || !status) return;
         const justification = reason.value.trim();
-        if (justification === '') {
-            status.textContent = 'Informe a justificativa para registrar a alteração.';
-            reason.focus();
-            return;
-        }
+        if (button.disabled) return;
 
         button.disabled = true;
         status.textContent = 'Registrando atribuição…';
@@ -44,7 +40,7 @@
             const sectorName = result.sector_id ? (chosen ? chosen.textContent.trim() : 'Setor atribuído') : '';
             if (current) {
                 current.textContent = sectorName
-                    ? 'Atribuição atual: ' + sectorName
+                    ? (result.is_default ? 'Unidade padrão: Cartório' : 'Atribuição atual: ' + sectorName)
                     : 'Sem unidade atribuída. Mutações protegidas por unidade permanecem bloqueadas.';
             }
             status.textContent = result.changed ? 'Atribuição auditada com sucesso.' : 'Nenhuma alteração necessária.';

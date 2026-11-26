@@ -4,6 +4,8 @@ declare(strict_types=1);
 header('Content-Type: application/json; charset=UTF-8');
 
 $basePath = dirname(__DIR__, 3);
+require_once $basePath . '/app/helpers/ApiErrorReporter.php';
+ApiErrorReporter::register('public/api/processos/setor-responsavel.php');
 require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/ProcessResponsibleSectorAdminPolicy.php';
@@ -29,7 +31,11 @@ try {
     $processId = trim((string) ($payload['processo_id'] ?? ''));
     $sectorRaw = $payload['setor_id'] ?? null;
     $sectorId = is_scalar($sectorRaw) && trim((string) $sectorRaw) !== '' ? trim((string) $sectorRaw) : null;
-    $justification = (string) ($payload['justificativa'] ?? '');
+    $reason = $payload['justificativa'] ?? '';
+    if (!is_string($reason) || ($sectorRaw !== null && !is_string($sectorRaw))) {
+        throw new InvalidArgumentException('Setor ou justificativa inválidos.');
+    }
+    $justification = $reason;
 
     $service = new ProcessResponsibleSectorService(Conection::getInstance()->getConnection());
     $result = $service->assign(

@@ -23,7 +23,9 @@ if (!is_array($payload)) {
     $payload = $_POST;
 }
 
-$numero = isset($payload['numero']) ? (string) $payload['numero'] : '';
+$numero = is_string($payload['numero'] ?? null) ? $payload['numero'] : '';
+$fromDetails = ($payload['origem'] ?? null) === 'ficha';
+$expectedId = is_string($payload['processo_id'] ?? null) ? trim($payload['processo_id']) : '';
 $escritaIniciada = false;
 $autorizacaoSetorialNegada = false;
 $fonteDataJudValidada = false;
@@ -53,6 +55,11 @@ try {
     if ($processoId === '' || !ProcessoSetorAuthorization::canAccessProcess($connection, $usuarioId, $processoId, false)) {
         http_response_code(403);
         echo json_encode(['error' => 'Acesso ao processo não autorizado.', 'code' => 'acesso_setorial_obrigatorio'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    if ($fromDetails && ($expectedId === '' || !hash_equals($processoId, $expectedId))) {
+        http_response_code(409);
+        echo json_encode(['error' => 'A ficha mudou. Recarregue a página antes de sincronizar.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -149,11 +156,14 @@ try {
         $escritaIniciada = true;
         return true;
     };
-    $resultadoSync = (new ProcessoDataJudSyncService($connection))->sync(
+    $syncService = $fromDetails
+        ? new ProcessoDataJudSyncService($connection, onlyChangedFields: true)
+        : new ProcessoDataJudSyncService($connection);
+    $resultadoSync = $syncService->sync(
         $digits,
         $classeCodigo === '' ? null : ['codigo' => $classeCodigo, 'descricao' => $classeDescricao],
-        $assuntos,
-        $estadoAssuntos === 'vazio',
+        $fromDetails && $estadoAssuntos === 'vazio' ? null : $assuntos,
+        !$fromDetails && $estadoAssuntos === 'vazio',
         $beforeWrite
     );
     $classeResultado = $resultadoSync['classe'];
