@@ -99,18 +99,25 @@ final class GuiasAlocadosRepository
         return $rows;
     }
 
-    public function deleteById(string $id): bool
+    public function deleteByIdForActor(string $id, string $actorId, bool $isManager): bool
     {
         $id = trim($id);
-        if ($id === '') {
+        $actorId = trim($actorId);
+        if ($id === '' || $actorId === '') {
             return false;
         }
+        // A autorização e a exclusão avaliam a mesma versão da linha.
+        $predicate = $isManager
+            ? "`tipo` IN ('rule', 'all', 'specific')"
+            : "`tipo` = 'specific' AND `usuario_id` = :actor";
         $stmt = $this->connection->prepare(
-            sprintf('DELETE FROM `%s` WHERE `id` = :id', $this->table)
+            sprintf('DELETE FROM `%s` WHERE `id` = :id AND (%s)', $this->table, $predicate)
         );
         $stmt->bindValue(':id', $id);
+        if (!$isManager) {
+            $stmt->bindValue(':actor', $actorId);
+        }
         $stmt->execute();
-
         return $stmt->rowCount() > 0;
     }
 

@@ -106,7 +106,7 @@ final class SalaAudienciasPautaService
         $this->alocadosRepository->addAlocado($idPauta, $usuarioAlvoId, SalaAudienciasPautaAlocadosRepository::TIPO_SPECIFIC);
     }
 
-    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    public function removeAlocado(string $alocadoId, string $requestUserId, bool $isGestao): bool
     {
         $alocadoId = trim($alocadoId);
         $requestUserId = trim($requestUserId);
@@ -114,7 +114,7 @@ final class SalaAudienciasPautaService
             return false;
         }
 
-        return $this->alocadosRepository->deleteById($alocadoId);
+        return $this->alocadosRepository->deleteByIdForActor($alocadoId, $requestUserId, $isGestao);
     }
 
     /**
