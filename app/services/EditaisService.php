@@ -92,48 +92,142 @@ final class EditaisService
         $digits = preg_replace('/\D+/', '', $numeroProcesso);
         $numeroFormatado = strlen($digits) === 20 ? $this->formatarCNJ($digits) : $numeroProcesso;
 
-        if (strlen($digits) === 20) {
-            $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
-            $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
-            $classeId = null;
-            if ($classeCodigo !== '') {
-                $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
-                $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
-            }
-            $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
+        $idempotencyKey = trim((string) ($payload['idempotency_key'] ?? ''));
+        if ($idempotencyKey !== '' && !preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i', $idempotencyKey)) {
+            throw new InvalidArgumentException('Chave de criação inválida. Recarregue a página e tente novamente.');
+        }
+
+        $ownsTransaction = !$this->connection->inTransaction();
+        $savepoint = $ownsTransaction ? null : 'edital_create_' . bin2hex(random_bytes(8));
+        if ($ownsTransaction) {
+            $this->connection->beginTransaction();
         } else {
-            $processoId = null;
-            $existing = $this->processosRepository->findByNumero($numeroFormatado);
-            if ($existing !== null) {
-                $processoId = (string) $existing['id'];
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
+        }
+
+        $attemptedNewEditalInsert = false;
+        try {
+            $idEdital = $idempotencyKey !== ''
+                ? 'EDI-' . strtoupper(substr(hash('sha256', strtolower($idempotencyKey)), 0, 26))
+                : IdGenerator::generateUniquePrefixedId(
+                    $this->connection,
+                    $this->repository->getTableName(),
+                    'id',
+                    'EDI',
+                    30
+                );
+
+            $rowExistente = $idempotencyKey !== '' ? $this->repository->findById($idEdital) : null;
+            if ($rowExistente !== null) {
+                // Resolve only existing state before deciding whether this is a
+                // replay. In particular, do not let ensureProcess change the
+                // process class for a key that was submitted with other data.
+                $processoExistente = $this->processosRepository->findByNumero($numeroFormatado);
+                $processoId = $processoExistente !== null ? (string) $processoExistente['id'] : null;
+                $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+                $classeExistente = $classeCodigo !== '' ? $this->classesRepository->findByCodigo($classeCodigo) : null;
+                $sameRequest = (string) ($rowExistente['processo_id'] ?? '') === (string) ($processoId ?? '')
+                    && (string) ($rowExistente['tipo_edital'] ?? '') === $tipoEdital
+                    && (int) ($rowExistente['prazo_dias'] ?? 0) === $prazoDias
+                    && trim((string) ($rowExistente['observacoes'] ?? '')) === trim((string) ($payload['observacoes'] ?? ''));
+                if ($sameRequest && $classeCodigo !== '') {
+                    $sameRequest = $classeExistente !== null
+                        && (string) ($processoExistente['classe_id'] ?? '') === (string) ($classeExistente['id'] ?? '');
+                }
+                if (!$sameRequest) {
+                    throw new InvalidArgumentException('Esta tentativa de criação já foi usada com outros dados. Recarregue a página para iniciar um novo cadastro.');
+                }
+                // A repetição pode chegar depois de uma confirmação de commit cuja
+                // resposta HTTP se perdeu. Reconciliar as etapas sob o mesmo ID.
+                $this->criarPrimeiraSubtarefa($idEdital);
+            } else {
+                if (strlen($digits) === 20) {
+                    $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+                    $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
+                    $classeId = null;
+                    if ($classeCodigo !== '') {
+                        $classeNome = $classeDescricao !== '' ? TextFormatter::formatProperName($classeDescricao, 200) : $classeCodigo;
+                        $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
+                    }
+                    $processoId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
+                } else {
+                    $processoId = null;
+                    $existingProcess = $this->processosRepository->findByNumero($numeroFormatado);
+                    if ($existingProcess !== null) {
+                        $processoId = (string) $existingProcess['id'];
+                    }
+                }
+
+                $row = [
+                    'id' => $idEdital,
+                    'processo_id' => $processoId,
+                    'status' => 'pendente',
+                    'tipo_edital' => $tipoEdital,
+                    'prazo_dias' => $prazoDias,
+                    'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
+                ];
+
+                $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
+                if ($usuarioCadastroId !== '') {
+                    $row['criado_por'] = $usuarioCadastroId;
+                }
+
+                $attemptedNewEditalInsert = true;
+                $this->repository->insert($row);
+                // The main record, both workflow stages and the derived status are
+                // committed together. The endpoint's later retry remains harmless.
+                $this->criarPrimeiraSubtarefa($idEdital);
             }
+
+            if ($ownsTransaction) {
+                $this->connection->commit();
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            return $idEdital;
+        } catch (Throwable $exception) {
+            if ($ownsTransaction && $this->connection->inTransaction()) {
+                $this->connection->rollBack();
+            } elseif (!$ownsTransaction && $this->connection->inTransaction()) {
+                $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            if ($ownsTransaction && $attemptedNewEditalInsert && $idempotencyKey !== '' && $this->isUniqueConstraintViolation($exception)) {
+                // A concurrent request with the same key may have committed after
+                // our initial lookup and before this INSERT. Recover only when the
+                // deterministic ID now identifies the exact same request; otherwise
+                // preserve the original constraint error instead of retrying blindly.
+                $committed = $this->repository->findById($idEdital);
+                $committedProcess = $this->processosRepository->findByNumero($numeroFormatado);
+                $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
+                $committedClass = $classeCodigo !== '' ? $this->classesRepository->findByCodigo($classeCodigo) : null;
+                $sameRequest = $committed !== null
+                    && (string) ($committed['processo_id'] ?? '') === (string) ($processoId ?? '')
+                    && (string) ($committed['tipo_edital'] ?? '') === $tipoEdital
+                    && (int) ($committed['prazo_dias'] ?? 0) === $prazoDias
+                    && trim((string) ($committed['observacoes'] ?? '')) === trim((string) ($payload['observacoes'] ?? ''));
+                if ($sameRequest && $classeCodigo !== '') {
+                    $sameRequest = $committedProcess !== null
+                        && $committedClass !== null
+                        && (string) ($committedProcess['classe_id'] ?? '') === (string) ($committedClass['id'] ?? '');
+                }
+                if ($sameRequest) {
+                    $this->criarPrimeiraSubtarefa($idEdital);
+                    return $idEdital;
+                }
+            }
+            throw $exception;
         }
+    }
 
-        $idEdital = IdGenerator::generateUniquePrefixedId(
-            $this->connection,
-            $this->repository->getTableName(),
-            'id',
-            'EDI',
-            30
-        );
-
-        $row = [
-            'id' => $idEdital,
-            'processo_id' => $processoId,
-            'status' => 'pendente',
-            'tipo_edital' => $tipoEdital,
-            'prazo_dias' => $prazoDias,
-            'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
-        ];
-
-        $usuarioCadastroId = trim((string) ($payload['usuario_cadastro_id'] ?? ''));
-        if ($usuarioCadastroId !== '') {
-            $row['criado_por'] = $usuarioCadastroId;
+    private function isUniqueConstraintViolation(Throwable $exception): bool
+    {
+        if (!$exception instanceof PDOException) {
+            return false;
         }
-
-        $this->repository->insert($row);
-
-        return $idEdital;
+        $errorInfo = $exception->errorInfo ?? [];
+        return ($errorInfo[0] ?? '') === '23000'
+            && (int) ($errorInfo[1] ?? 0) === 1062;
     }
 
     public function criarPrimeiraSubtarefa(string $editalId): void
@@ -142,28 +236,40 @@ final class EditaisService
         if ($editalId === '') {
             throw new InvalidArgumentException('Identificador do edital é obrigatório.');
         }
-        if ($this->repository->findById($editalId) === null) {
-            throw new InvalidArgumentException('Edital não encontrado.');
-        }
-        $existentes = $this->subtarefasRepository->findByEditalId($editalId);
-        if (count($existentes) > 0) {
+        $this->reconciliarComEditalBloqueado($editalId, function () use ($editalId): void {
+            if ($this->repository->findById($editalId) === null) {
+                throw new InvalidArgumentException('Edital não encontrado.');
+            }
+
+            $repo = $this->subtarefasRepository;
+            $existentes = $repo->findByEditalId($editalId);
+            $ordensExistentes = [];
+            foreach ($existentes as $subtarefa) {
+                $tipo = trim((string) ($subtarefa['tipo'] ?? ''));
+                $ordem = (int) ($subtarefa['ordem'] ?? 0);
+                if ($tipo === $repo::TIPO_PUBLICACAO || $ordem === $repo::ORDEM_PUBLICACAO) {
+                    $ordensExistentes[$repo::ORDEM_PUBLICACAO] = true;
+                } elseif ($tipo === $repo::TIPO_DECURSO || $ordem === $repo::ORDEM_DECURSO) {
+                    $ordensExistentes[$repo::ORDEM_DECURSO] = true;
+                }
+            }
+
+            if (!isset($ordensExistentes[$repo::ORDEM_PUBLICACAO])) {
+                $repo->create($editalId, $repo::TIPO_PUBLICACAO, $repo::ORDEM_PUBLICACAO, 'em_andamento', null);
+            }
+            if (!isset($ordensExistentes[$repo::ORDEM_DECURSO])) {
+                $repo->create($editalId, $repo::TIPO_DECURSO, $repo::ORDEM_DECURSO, 'pendente', null);
+            }
+
+            $todas = $repo->findByEditalId($editalId);
             require_once __DIR__ . '/../helpers/EditaisUiCopy.php';
-            $status = EditaisUiCopy::statusPrincipalFromSubtarefas($existentes);
+            $status = EditaisUiCopy::statusPrincipalFromSubtarefas($todas);
             if ($status === 'concluída' || $status === 'concluida') {
                 $status = 'concluída';
             }
             $this->repository->update($editalId, ['status' => $status]);
             $this->tentarFinalizacaoAutomaticaPorDecurso($editalId);
-            return;
-        }
-
-        $repo = $this->subtarefasRepository;
-        $repo->create($editalId, $repo::TIPO_PUBLICACAO, $repo::ORDEM_PUBLICACAO, 'em_andamento', null);
-        $repo->create($editalId, $repo::TIPO_DECURSO, $repo::ORDEM_DECURSO, 'pendente', null);
-
-        require_once __DIR__ . '/../helpers/EditaisUiCopy.php';
-        $this->repository->update($editalId, ['status' => EditaisUiCopy::STATUS_AGUARDANDO_PUBLICACAO]);
-
+        });
     }
 
     public function concluirSubtarefa(string $subtarefaId, ?string $dadosJson = null): array
@@ -490,7 +596,8 @@ final class EditaisService
             $this->connection->exec('SAVEPOINT ' . $savepoint);
         }
         try {
-            $statement = $this->connection->prepare('SELECT `id` FROM `editais` WHERE `id` = :id FOR UPDATE');
+            $lockSuffix = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : '';
+            $statement = $this->connection->prepare('SELECT `id` FROM `editais` WHERE `id` = :id' . $lockSuffix);
             $statement->execute([':id' => $editalId]);
             $exists = $statement->fetchColumn() !== false;
             $statement->closeCursor();

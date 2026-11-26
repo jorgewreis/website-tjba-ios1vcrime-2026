@@ -101,8 +101,23 @@ ok($change['status'] === 200 && responseSuccess($change['body']), 'troca de senh
 $restore = req('/api/alterar_senha.php', 'POST', ['csrf_token' => $changeCsrf, 'senha_atual' => 'NovaSenha!45678', 'nova_senha' => 'Ativo!12345', 'confirmar_senha' => 'Ativo!12345'], $session, true);
 ok($restore['status'] === 200 && responseSuccess($restore['body']), 'restauração da senha sintética falhou');
 $badLogout = req('/logout.php', 'POST', ['csrf_token'=>'invalid'], $session); ok($badLogout['status'] === 403, 'logout com CSRF inválido não retornou 403');
-$logout = req('/logout.php', 'POST', ['csrf_token'=>$logoutCsrf], $session); ok($logout['status'] === 302, 'logout válido não redirecionou');
-$closed = req('/home.php', 'GET', [], $session); ok(in_array($closed['status'], [302,401,403], true), 'sessão encerrada acessou área autenticada');
+
+// A second login replaces the persisted token while the first browser session
+// remains open. Logging out from that stale session must not revoke the new one.
+$secondLoginForm = req('/views/public/login-form.php');
+$secondLogin = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12345','csrf_token'=>csrf($secondLoginForm['body'])], sessionCookie($secondLoginForm['headers']));
+ok(responseSuccess($secondLogin['body']), 'segundo login válido não autenticou');
+$secondSession = sessionCookie($secondLogin['headers']);
+$staleLogout = req('/logout.php', 'POST', ['csrf_token'=>$logoutCsrf], $session);
+ok($staleLogout['status'] === 302, 'logout de sessão antiga não encerrou o cookie local');
+$oldSessionAccess = req('/home.php', 'GET', [], $session);
+ok(in_array($oldSessionAccess['status'], [302,401,403], true), 'sessão antiga permaneceu autenticada depois do segundo login');
+$secondHome = req('/home.php', 'GET', [], $secondSession);
+ok($secondHome['status'] === 200, 'logout antigo revogou o login mais recente');
+$secondLogout = req('/logout.php', 'POST', ['csrf_token'=>csrf($secondHome['body'])], $secondSession);
+ok($secondLogout['status'] === 302, 'logout da sessão mais recente não redirecionou');
+$secondClosed = req('/home.php', 'GET', [], $secondSession);
+ok(in_array($secondClosed['status'], [302,401,403], true), 'logout recente não encerrou a sessão local');
 
 // The runner seeds synthetic scopes; this successful login must clear them.
 $rate = req('/views/public/login-form.php'); $rateCookie = sessionCookie($rate['headers']); $rateLogin = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>'Ativo!12345','csrf_token'=>csrf($rate['body'])], $rateCookie);
@@ -110,12 +125,39 @@ ok(responseSuccess($rateLogin['body']), 'login não limpou rate-limit sintético
 
 $token = getenv('E2E_RESET_TOKEN') ?: fail('token sintético ausente'); ok((bool)preg_match('/^[a-f0-9]{64}$/', $token), 'token sintético inválido');
 $newPassword = 'NovaA' . bin2hex(random_bytes(4)) . '!9';
-$password = req('/views/public/redefinir-senha-form.php?token=' . rawurlencode($token)); $passwordCookie = sessionCookie($password['headers']);
-$badPassword = req('/views/public/redefinir-senha-form.php?token=' . rawurlencode($token), 'POST', ['csrf_token'=>'invalid','token'=>$token,'nova_senha'=>$newPassword,'confirmar_senha'=>$newPassword], $passwordCookie);
+$resetStart = req('/redefinir_senha.php'); $resetCookie = sessionCookie($resetStart['headers']);
+ok((bool) array_filter($resetStart['headers'], static fn (string $h): bool => stripos($h, 'Referrer-Policy: no-referrer') === 0), 'shell de reset precisa impedir envio de referrer');
+ok(!str_contains($resetStart['body'], $token), 'token do fragmento não deve aparecer no HTML inicial');
+if (!preg_match('/name="reset-bootstrap-csrf"\s+content="([^"]+)"/', $resetStart['body'], $bootstrapCsrfMatch)) fail('CSRF de bootstrap do reset ausente');
+$bootstrapCsrf = html_entity_decode($bootstrapCsrfMatch[1], ENT_QUOTES, 'UTF-8');
+$badStage = req('/redefinir_senha.php', 'POST', ['reset_action'=>'stage_token','csrf_token'=>'invalid','token'=>$token], $resetCookie);
+ok($badStage['status'] === 419, 'bootstrap do reset deve rejeitar CSRF inválido');
+$staged = req('/redefinir_senha.php', 'POST', ['reset_action'=>'stage_token','csrf_token'=>$bootstrapCsrf,'token'=>$token], $resetCookie);
+ok($staged['status'] === 204, 'bootstrap do fragmento não guardou token válido na sessão');
+$fragmentForm = req('/views/public/redefinir-senha-form.php', 'GET', [], $resetCookie);
+ok(str_contains($fragmentForm['body'], 'id="formRedefinirSenha"'), 'token enviado no corpo não foi recuperado da sessão');
+$resetCookie = refreshedSessionCookie($fragmentForm['headers'], $resetCookie);
+$legacyQuerySentinel = str_repeat('a', 64);
+$legacyShell = req('/redefinir_senha.php?token=' . rawurlencode($legacyQuerySentinel));
+ok(!str_contains($legacyShell['body'], $legacyQuerySentinel), 'shell não deve ecoar credencial legada na query');
+ok($legacyShell['status'] === 302, 'link legado válido deve migrar para fragmento sem renderizar a página com query');
+ok((bool) array_filter($legacyShell['headers'], static fn (string $h): bool => stripos($h, 'Location: /redefinir_senha.php#token=' . $legacyQuerySentinel) === 0), 'link legado deve redirecionar para o fragmento');
+ok((bool) array_filter($legacyShell['headers'], static fn (string $h): bool => stripos($h, 'Referrer-Policy: no-referrer') === 0), 'migração do link legado precisa impedir envio de referrer');
+ok((bool) array_filter($legacyShell['headers'], static fn (string $h): bool => stripos($h, 'Cache-Control:') === 0 && stripos($h, 'no-store') !== false), 'redirect de link legado não pode ser armazenado em cache');
+ok(!str_contains($legacyShell['body'], 'cdn-uicons.flaticon.com'), 'shell do reset não deve incluir recurso externo');
+$legacyForm = req('/views/public/redefinir-senha-form.php');
+ok(!str_contains($legacyForm['body'], 'id="formRedefinirSenha"'), 'query legada não deve conceder acesso ao formulário');
+ok((bool) array_filter($legacyForm['headers'], static fn (string $h): bool => stripos($h, 'Referrer-Policy: no-referrer') === 0), 'formulário precisa impedir envio de referrer');
+ok((bool) array_filter($legacyForm['headers'], static fn (string $h): bool => stripos($h, 'Cache-Control:') === 0 && stripos($h, 'no-store') !== false), 'link de reset não pode ser armazenado em cache');
+$passwordCookie = $resetCookie;
+$password = req('/views/public/redefinir-senha-form.php', 'GET', [], $passwordCookie);
+ok(str_contains($password['body'], 'action="/views/public/redefinir-senha-form.php"'), 'formulário deve postar em URL sem token');
+ok(!str_contains($password['body'], 'cdn-uicons.flaticon.com'), 'formulário de reset não deve carregar recurso externo');
+$badPassword = req('/views/public/redefinir-senha-form.php', 'POST', ['csrf_token'=>'invalid','token'=>$token,'nova_senha'=>$newPassword,'confirmar_senha'=>$newPassword], $passwordCookie);
 ok(str_contains($badPassword['body'], 'formRedefinirSenha'), 'CSRF inválido consumiu token de reset');
-$password = req('/views/public/redefinir-senha-form.php?token=' . rawurlencode($token), 'GET', [], $passwordCookie);
+$password = req('/views/public/redefinir-senha-form.php', 'GET', [], $passwordCookie);
 $passwordCookie = refreshedSessionCookie($password['headers'], $passwordCookie);
-$goodPassword = req('/views/public/redefinir-senha-form.php?token=' . rawurlencode($token), 'POST', ['csrf_token'=>csrf($password['body']),'token'=>$token,'nova_senha'=>$newPassword,'confirmar_senha'=>$newPassword], $passwordCookie);
+$goodPassword = req('/views/public/redefinir-senha-form.php', 'POST', ['csrf_token'=>csrf($password['body']),'token'=>$token,'nova_senha'=>$newPassword,'confirmar_senha'=>$newPassword], $passwordCookie);
 $resetLoginForm = req('/views/public/login-form.php'); $resetLoginCookie = sessionCookie($resetLoginForm['headers']);
 $resetLogin = req('/login.php', 'POST', ['cpf'=>'529.982.247-25','senha'=>$newPassword,'csrf_token'=>csrf($resetLoginForm['body'])], $resetLoginCookie);
 ok(responseSuccess($resetLogin['body']), 'redefinição válida não permitiu novo login: ' . substr($resetLogin['body'], 0, 500));
