@@ -13,7 +13,14 @@ require_once __DIR__ . '/../../helpers/CartasExpedidasUiCopy.php';
 require_once __DIR__ . '/../../helpers/ProcessoBlocoListagemHelper.php';
 require_once __DIR__ . '/../../helpers/RegistroMetadataHelper.php';
 
+require_once __DIR__ . '/../../helpers/CartasExpedidasEnvioRegra.php';
 $connection = Conection::getInstance()->getConnection();
+$responsavelRegraEnvio = null;
+try {
+    $responsavelRegraEnvio = CartasExpedidasEnvioRegra::responsavel($connection);
+} catch (Throwable $e) {
+    error_log('cartas expedidas: não foi possível carregar a regra de envio');
+}
 
 $routePage = trim((string) ($_GET['page'] ?? 'cartasexpedidas'));
 if ($routePage === '') {
@@ -188,6 +195,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                     <option value="csv">CSV</option>
                     <option value="print">Imprimir</option>
                 </select>
+                <button type="button" class="btn btn-secondary-outline" data-nav-href="/frame.php?page=cartasexpedidasrules">Regra de envio</button>
                 <button type="button" class="btn btn-primary width-300" id="novo-cadastro-btn">Novo cadastro</button>
             </div>
         </div>
