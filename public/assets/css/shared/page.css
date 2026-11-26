@@ -40,6 +40,26 @@ h2 {
     margin: 10px 40px;
 }
 
+@media (max-width: 680px) {
+    body.page-internal .header-page {
+        min-width: 0;
+        max-width: none;
+        width: auto;
+        margin-inline: 20px;
+        overflow-wrap: anywhere;
+    }
+
+    body.page-internal .header-page .location {
+        flex-wrap: wrap;
+        max-width: 100%;
+    }
+
+    body.page-internal .header-page .title-page {
+        max-width: 100%;
+        min-width: 0;
+    }
+}
+
 .footer-page {
     display: none;
 }

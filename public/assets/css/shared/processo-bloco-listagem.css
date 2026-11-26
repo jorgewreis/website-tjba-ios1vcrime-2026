@@ -1107,10 +1107,84 @@
     margin-top: 0;
 }
 
-@media (max-width: 680px) {
+@media (max-width: 1024px) {
+    :is(#card-audiencias-hoje-estudante, #card-minhas-inscricoes-estudante) > :is(.row, .register-painel-estudante) {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0;
+    }
+
+    :is(#card-audiencias-hoje-estudante, #card-minhas-inscricoes-estudante) .pagination-controls {
+        flex-wrap: wrap;
+        max-width: 100%;
+    }
+
+    #timeline-hoje-painel-estudante {
+        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #timeline-hoje-painel-estudante .timeline-day-ruler-legend {
+        flex-wrap: wrap;
+    }
+
+    #timeline-hoje-painel-estudante .timeline-day-ruler-label:first-child {
+        transform: none;
+    }
+
+    #timeline-hoje-painel-estudante .timeline-day-ruler-label:last-child:not(:first-child) {
+        transform: translateX(-100%);
+    }
+
+    .register.register-painel-estudante > .register-line {
+        box-sizing: border-box;
+        min-width: 0;
+        gap: 8px;
+    }
+
     .register.register-painel-estudante > .register-line > .left,
     .register.register-painel-estudante > .register-line > .right {
+        flex: 0 0 100%;
         width: 100%;
-        justify-content: center;
+        min-width: 0;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .register.register-painel-estudante > .register-line > .left > .container-processo.container-lg,
+    .register.register-painel-estudante > .register-line > .left > .painel-estudante-document-info,
+    .register.register-painel-estudante .painel-estudante-inscricoes {
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        padding: 4px;
+    }
+
+    .register.register-painel-estudante .line-content.double-line {
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
+    .register.register-painel-estudante .container-processo :is(.content-classe, .content-assuntos, .content-polo, .content-partes),
+    .register.register-painel-estudante .painel-estudante-document-info .js-time-block .js-time-lines,
+    .register.register-painel-estudante .painel-estudante-document-info .js-time-lines > strong {
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+
+    .register.register-painel-estudante .js-audience-link-info a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        max-width: 100%;
+    }
+
+    .register.register-painel-estudante .painel-estudante-inscricao-ui .btn {
+        height: auto;
+        min-height: 44px;
+        max-width: 100%;
+        white-space: normal;
     }
 }
