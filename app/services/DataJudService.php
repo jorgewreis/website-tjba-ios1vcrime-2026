@@ -4,6 +4,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../DataJud/DataJudResponseMapper.php';
 require_once __DIR__ . '/../DataJud/DataJudTribunalResolver.php';
+require_once __DIR__ . '/../DataJud/DataJudUpstreamException.php';
+require_once __DIR__ . '/../DataJud/DataJudLocalSigiloException.php';
 
 final class DataJudAmbiguousResponseException extends RuntimeException {}
 
@@ -27,7 +29,7 @@ final class DataJudService
      *
      * @return array<string, mixed> payload com campos processuais; inclui sigilo_restrito e sigilo_mensagem quando aplicável
      */
-    public function searchProcesso(string $numero): array
+    public function searchProcesso(string $numero, bool $forSync = false): array
     {
         $numero = CnjValidator::digits20OrThrow($numero);
 
@@ -37,7 +39,7 @@ final class DataJudService
             throw new InvalidArgumentException('Tribunal do processo não suportado para consulta no DataJud.');
         }
 
-        $body = $this->buildElasticsearchBody($numero);
+        $body = $this->buildElasticsearchBody($numero, $forSync);
 
         $attempts = [[$resolvedAlias, DataJudTribunalResolver::buildSearchUrl($baseUrl, $resolvedAlias)]];
 
@@ -47,15 +49,19 @@ final class DataJudService
             $httpCode = $exec['http_code'];
 
             if ($exec['curl_error'] !== '') {
-                throw new RuntimeException('Falha ao contatar o DataJud. Tente novamente.');
+                throw new DataJudUpstreamException('transport');
             }
 
             if ($httpCode === 401 || $httpCode === 403) {
-                throw new RuntimeException('Não autorizado a consultar o DataJud. Verifique a chave da API.');
+                throw new DataJudUpstreamException('authorization');
             }
 
-            if ($httpCode >= 500 || $httpCode === 429) {
-                throw new RuntimeException('Serviço DataJud indisponível no momento. Tente novamente em instantes.');
+            if ($httpCode === 429) {
+                throw new DataJudUpstreamException('throttled');
+            }
+
+            if ($httpCode >= 500) {
+                throw new DataJudUpstreamException('unavailable');
             }
 
             if ($httpCode < 200 || $httpCode >= 300) {
@@ -65,12 +71,12 @@ final class DataJudService
             // Mesmo com HTTP 200, o Elasticsearch pode reportar execução incompleta.
             if (is_array($decoded) && array_key_exists('timed_out', $decoded)
                 && (!is_bool($decoded['timed_out']) || $decoded['timed_out'])) {
-                throw new RuntimeException('Consulta DataJud incompleta. Tente novamente.');
+                throw new DataJudUpstreamException('incomplete');
             }
             if (is_array($decoded) && array_key_exists('_shards', $decoded)) {
                 $shards = $decoded['_shards'];
                 if (!is_array($shards) || !isset($shards['failed']) || !is_int($shards['failed']) || $shards['failed'] !== 0) {
-                    throw new RuntimeException('Consulta DataJud incompleta. Tente novamente.');
+                    throw new DataJudUpstreamException('incomplete');
                 }
             }
             if (!is_array($decoded) || !isset($decoded['hits']['hits']) || !is_array($decoded['hits']['hits']) || !array_is_list($decoded['hits']['hits'])) {
@@ -82,7 +88,7 @@ final class DataJudService
             $total = $decoded['hits']['total'] ?? null;
             if (!is_array($total) || !isset($total['value'], $total['relation'])
                 || !is_int($total['value']) || $total['value'] < 0 || $total['relation'] !== 'eq') {
-                throw new RuntimeException('Consulta DataJud incompleta. Tente novamente.');
+                throw new DataJudUpstreamException('incomplete');
             }
             if ($total['value'] > 1 || count($decoded['hits']['hits']) > 1) {
                 throw new DataJudAmbiguousResponseException('Consulta DataJud ambígua; a sincronização automática foi recusada.');
@@ -103,9 +109,11 @@ final class DataJudService
                 && $shardInfo['skipped'] <= $shardInfo['successful'];
 
             if ($decoded['hits']['hits'] === []) {
-                if (!$complete) throw new RuntimeException('Consulta DataJud incompleta. Tente novamente.');
+                if (!$complete) throw new DataJudUpstreamException('incomplete');
                 continue;
             }
+
+            if ($forSync && !$complete) throw new DataJudUpstreamException('incomplete');
 
             $source = $decoded['hits']['hits'][0]['_source'] ?? null;
             if (!is_array($source) || !isset($source['numeroProcesso']) || !is_string($source['numeroProcesso'])
@@ -140,9 +148,9 @@ final class DataJudService
     }
 
     /**
-     * @return array{query: array<string, mixed>, size: int, _source: bool}
+     * @return array{query: array<string, mixed>, size: int, track_total_hits: bool, _source: list<string>}
      */
-    private function buildElasticsearchBody(string $numero): array
+    private function buildElasticsearchBody(string $numero, bool $forSync): array
     {
         return [
             'query' => [
@@ -156,9 +164,8 @@ final class DataJudService
             ],
             'size' => 2,
             'track_total_hits' => true,
-            // Fetch only fields consumed by the institutional mapper. This mirrors
-            // the bounded source selection used by the Fokus Law client.
-            '_source' => [
+            // A sincronização não precisa carregar movimentos ou partes.
+            '_source' => $forSync ? ['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos'] : [
                 'numeroProcesso', 'tribunal', 'classe', 'classeProcessual', 'assuntos',
                 'prioridade', 'polo', 'poloAtivo', 'poloPassivo', 'movimentos',
                 'orgaoJulgador', 'nivelSigilo', 'grau', 'formato', 'sistema',

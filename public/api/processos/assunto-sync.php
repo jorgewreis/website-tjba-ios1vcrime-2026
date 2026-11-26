@@ -56,7 +56,10 @@ try {
         exit;
     }
 
-    $resultado = (new DataJudService($config))->searchProcesso($digits);
+    if (!empty($processo['sigiloso'])) {
+        throw new DataJudLocalSigiloException();
+    }
+    $resultado = (new DataJudService($config))->searchProcesso($digits, true);
     if (($resultado['resultado_unico_verificado'] ?? null) !== true
         || ($resultado['sigilo_ausencia_verificada'] ?? null) !== true
         || ($resultado['fonte_confirmada_para_sincronizacao'] ?? null) !== true) {
@@ -135,6 +138,8 @@ try {
     }
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+} catch (DataJudUpstreamException|DataJudLocalSigiloException $e) {
+    $e->respondForSync();
 } catch (RuntimeException $e) {
     if ($autorizacaoSetorialNegada) {
         http_response_code(403);

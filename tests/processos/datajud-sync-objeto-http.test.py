@@ -17,11 +17,12 @@ with tempfile.TemporaryDirectory(prefix='rei76-datajud-') as tmp:
     for directory in ('public/api/processos', 'public/api/datajud', 'public/api/cartorio-cartas-expedidas', 'app/helpers', 'app/access', 'app/repositories', 'app/services'):
         (base / directory).mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT / 'public/api/processos/datajud-sync.php', base / 'public/api/processos/datajud-sync.php')
+    shutil.copyfile(ROOT / 'app/helpers/ApiErrorReporter.php', base / 'app/helpers/ApiErrorReporter.php')
     shutil.copyfile(ROOT / 'public/api/cartorio-cartas-expedidas/sync-processo-datajud.php', base / 'public/api/cartorio-cartas-expedidas/sync-processo-datajud.php')
     shutil.copyfile(ROOT / 'public/api/processos/assunto-sync.php', base / 'public/api/processos/assunto-sync.php')
     (base / 'app/helpers/ApiAccessGuard.php').write_text('''<?php
 class ApiAccessGuard { static function requireAccess($pages, $write) {
-  if ($pages !== ['consultaprocessos'] || !$write || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST'
+  if (!in_array($pages, [['consultaprocessos'], ['cartasexpedidasedit']], true) || !$write || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST'
       || ($_SERVER['HTTP_X_TEST_ORIGIN'] ?? '') !== 'ok'
       || ($_SERVER['HTTP_X_TEST_PROFILE'] ?? '') !== 'internal') { http_response_code(403); exit; }
   $_SESSION = ['id_usuario' => 'synthetic'];
@@ -40,14 +41,22 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
 }''', encoding='utf-8')
     (base / 'app/repositories/ProcessosRepository.php').write_text('''<?php class ProcessosRepository {
   function __construct($connection) {}
-  function findByNumero(string $numero): ?array { return ($_SERVER['HTTP_X_TEST_PROCESS'] ?? 'exists') === 'missing' ? null : ['id'=>'P1','numero_processo'=>$numero]; }
+  function findByNumero(string $numero): ?array { return ($_SERVER['HTTP_X_TEST_PROCESS'] ?? 'exists') === 'missing' ? null : ['id'=>'P1','numero_processo'=>$numero,'sigiloso'=>($_SERVER['HTTP_X_TEST_PROCESS'] ?? '') === 'secret']; }
 }''', encoding='utf-8')
     (base / 'public/api/datajud/config.php').write_text("<?php return ['api_key'=>'synthetic'];", encoding='utf-8')
-    (base / 'app/services/DataJudService.php').write_text('''<?php class DataJudService {
+    (base / 'app/DataJud').mkdir(exist_ok=True)
+    shutil.copyfile(ROOT / 'app/DataJud/DataJudUpstreamException.php', base / 'app/DataJud/DataJudUpstreamException.php')
+    shutil.copyfile(ROOT / 'app/DataJud/DataJudLocalSigiloException.php', base / 'app/DataJud/DataJudLocalSigiloException.php')
+    (base / 'app/services/DataJudService.php').write_text('''<?php
+require_once __DIR__ . '/../DataJud/DataJudUpstreamException.php';
+require_once __DIR__ . '/../DataJud/DataJudLocalSigiloException.php';
+class DataJudService {
   function __construct(array $config) {}
   function searchProcesso(string $numero): array {
     file_put_contents(__DIR__.'/source-called', '1');
     return match ($_SERVER['HTTP_X_TEST_RESULT'] ?? 'ok') {
+      'throttled' => throw new DataJudUpstreamException('throttled'),
+      'incomplete' => throw new DataJudUpstreamException('incomplete'),
       'ambiguous' => ['resultado_unico_verificado'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
       'restricted' => ['resultado_unico_verificado'=>true, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'sigilo_restrito'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
       'missing-sigilo' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>false, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
@@ -122,6 +131,16 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
         assert payload == ['12345678901234567890', {'codigo':'42','descricao':'Classe'}, [], True]
 
         cartorio = 'cartorio-cartas-expedidas/sync-processo-datajud.php'
+        for endpoint in ('processos/datajud-sync.php', cartorio):
+            status, body = request(endpoint=endpoint, process='secret')
+            assert status == 422 and body['code'] == 'datajud_sigilo_local', (status, body)
+            assert not read_marker.exists() and not write_marker.exists(), 'Número sigiloso local não deve ir ao DataJud.'
+
+            for mode in ('throttled', 'incomplete'):
+                status, body = request(endpoint=endpoint, result=mode)
+                assert status == 503 and body['code'] == f'datajud_{mode}', (status, body)
+                assert read_marker.exists() and not write_marker.exists(), 'Falha externa não pode iniciar gravação.'
+
         assert request(endpoint=cartorio, process='missing')[0] == 404 and not read_marker.exists() and not write_marker.exists()
         code, body = request(endpoint=cartorio, sector='denied')
         assert code == 403 and body.get('code') == 'acesso_setorial_obrigatorio' and not read_marker.exists() and not write_marker.exists()

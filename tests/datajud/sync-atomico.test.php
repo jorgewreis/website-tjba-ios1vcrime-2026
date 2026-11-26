@@ -62,6 +62,17 @@ foreach ([null, [['codigo' => null]], [['codigo' => '456'], ['codigo' => '']]] a
     try { $service->sync($numero, null, $payload); throw new LogicException('Esperava rejeição.'); }
     catch (InvalidArgumentException $e) {}
 }
+$beforeSigilo = $db->query('SELECT * FROM estado ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
+$db->exec("UPDATE processos SET sigiloso=1 WHERE id='p1'");
+try {
+    $service->sync($numero, $classe, $assuntos);
+    throw new LogicException('Esperava bloqueio pelo sigilo vigente no cadastro.');
+} catch (DataJudLocalSigiloException) {
+    if ($db->inTransaction() || $db->query('SELECT * FROM estado ORDER BY id')->fetchAll(PDO::FETCH_ASSOC) !== $beforeSigilo) {
+        throw new RuntimeException('Sincronização restrita alterou dados locais.');
+    }
+}
+$db->exec("UPDATE processos SET sigiloso=0 WHERE id='p1'");
 $db->beginTransaction();
 try { $service->sync($numero, $classe, null); throw new LogicException('Transação externa foi aceita.'); }
 catch (RuntimeException $e) { if (!$db->inTransaction()) throw $e; }
