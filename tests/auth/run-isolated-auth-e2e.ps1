@@ -97,8 +97,10 @@ function Assert-ActiveTopology {
 }
 function Copy-Tree([string]$source) { Assert-SafeTree $source; D @('cp',$source,"${app}:/workspace/") | Out-Null }
 function App([string[]]$a) {
+    $script:failurePhase = 'app-command-topology'
     Assert-ActiveTopology
     $dockerArgs = @('exec','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_ENV_FILE=/workspace/tests/auth/.env.test.runtime','--env','AUTH_TEST_MAILPIT_URL=http://mailpit:8025','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner',"--env","AUTH_TEST_GUARD_TOKEN=$guardToken",$app) + $a
+    $script:failurePhase = 'app-command-execution'
     return D $dockerArgs
 }
 function Run-AppTest([string]$testFile, [string[]]$arguments = @()) {
@@ -222,14 +224,33 @@ try {
         Assert-ActiveTopology
     }
     if ($Browser) { Run-AppTest 'login-rate-limit.fixture.php' @('seed') }
+    $script:failurePhase = 'reset-token-fixture'
+    $token=(App @('php','/workspace/tests/auth/http-reset-token.fixture.php')|Select-Object -Last 1).Trim()
+    if($token -notmatch '^[a-f0-9]{64}$'){throw 'Token sintético inválido.'}
+    $script:failurePhase = 'reset-token-ready'
+    D @('exec','-d','--env','PHP_CLI_SERVER_WORKERS=4',$app,'sh','-c','cd /workspace && exec php -S 0.0.0.0:8080 -t public >/tmp/auth-e2e-app.log 2>&1')|Out-Null
+    $script:failurePhase = 'http-readiness'
+    for($i=0; $i -lt 30; $i++) {
+        Assert-ActiveTopology
+        $probe = Start-Process -FilePath 'docker' -ArgumentList @('--context', $dockerContext, 'exec', '--env', 'APP_ENV=testing', '--env', 'AUTH_TEST_ISOLATION=isolated-auth-test', '--env', 'AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner', '--env', "AUTH_TEST_GUARD_TOKEN=$guardToken", $client, 'php', '/workspace/tests/auth/http-ready.test.php') -Wait -PassThru -NoNewWindow
+        if($probe.ExitCode -eq 0){break}
+        Start-Sleep -Seconds 1
+    }
+    if($i -eq 30){throw 'Aplicação HTTP não ficou pronta.'}
+    $script:failurePhase = 'http-ready'
+    Assert-ActiveTopology
+    $script:failurePhase = 'http-flow'
     D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",'--env',"E2E_RESET_TOKEN=$token",$client,'php','tests/auth/http-auth-flow.test.php')|Write-Output
+    $script:failurePhase = 'http-concurrency'
     D @('exec','--workdir','/workspace','--env','APP_ENV=testing','--env','AUTH_TEST_ISOLATION=isolated-auth-test','--env','AUTH_TEST_GUARD_FILE=/workspace/tests/auth/.isolated-runner','--env',"AUTH_TEST_GUARD_TOKEN=$guardToken",$client,'php','tests/auth/rei158-http-concurrency.test.php')|Write-Output
+    $script:failurePhase = 'lock-wait-test'
     Run-AppTest 'rei158-http-lock-wait.test.php'
+    $script:failurePhase = 'password-reset-test'
     Run-AppTest 'password-reset-states.test.php'
 } catch {
     # Dados de erro do Docker, testes e servidor podem conter tokens; nunca os imprima.
     $executionFailure = $true
-    if ($script:failurePhase -match '^(setup|app-test-topology|app-test-command|app-test-complete|browser-topology|browser-copy|browser-command|browser-after)$') {
+    if ($script:failurePhase -match '^(setup|app-test-topology|app-test-command|app-test-complete|app-command-topology|app-command-execution|reset-token-fixture|reset-token-ready|http-readiness|http-ready|http-flow|http-concurrency|lock-wait-test|password-reset-test|browser-topology|browser-copy|browser-command|browser-after)$') {
         Write-Output "RUNNER_FAILURE phase=$script:failurePhase; detalhes sensíveis omitidos."
     } else {
         Write-Output 'RUNNER_FAILURE phase=unknown; detalhes sensíveis omitidos.'
