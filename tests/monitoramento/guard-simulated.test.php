@@ -22,10 +22,11 @@ try {
         $relative = 'public/api/gabinete-monitoramento-eletronico/' . $endpoint;
         $put($relative, (string) file_get_contents($root . '/' . $relative));
     }
-    foreach (['app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php', 'app/access/AccessEvaluator.php', 'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php', 'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php'] as $relative) {
+    foreach (['app/helpers/ApiErrorReporter.php', 'app/helpers/ApiAccessGuard.php', 'app/helpers/BootstrapHelper.php', 'app/helpers/UserAccessHelper.php', 'app/access/AccessEvaluator.php', 'app/access/ProfileNormalizer.php', 'app/access/PageAccessRegistry.php', 'app/access/AccessAreas.php', 'app/access/AccessPolicyVersion.php'] as $relative) {
         $put($relative, (string) file_get_contents($root . '/' . $relative));
     }
     $put('app/helpers/AutoloadHelper.php', '<?php');
+    $put('app/helpers/ProcessoSetorAuthorization.php', '<?php final class ProcessoSetorAuthorization { public static function canAccessProcess(PDO $pdo, string $actor, string $id, bool $lock): bool { return $id !== "PROC-BLOCKED"; } }');
     $put('app/helpers/Conection.php', '<?php function appIsHttpsRequest(): bool { return false; } final class Conection { public static function getInstance(): self { fwrite(STDERR, "CONNECTION_ATTEMPT\n"); throw new RuntimeException("stub"); } }');
     $put('config/security.php', '<?php final class Security { public static function isAuthenticated(): bool { return getenv("MOCK_AUTH") === "1"; } }');
     $put('app/helpers/UsuarioPerfisAutorizacao.php', '<?php final class UsuarioPerfisAutorizacao { public static function perfisDoUsuario(string $id): array { return [getenv("MOCK_PROFILE")]; } }');

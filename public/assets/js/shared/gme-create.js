@@ -301,13 +301,7 @@
             }
             syncRegisterButtonState();
 
-            const classCode = global.document.getElementById(settings.classCodeInputId || 'hidden-classe-codigo')?.value || '';
-            const classDescription = global.document.getElementById(settings.classDescriptionInputId || 'hidden-classe-descricao')?.value || '';
-            const payload = {
-                numero_processo: numeroFormatado,
-                classe_codigo: classCode,
-                classe_descricao: classDescription
-            };
+            const payload = { numero_processo: numeroFormatado };
 
             fetch(settings.reusEndpoint, {
                 method: 'POST',
