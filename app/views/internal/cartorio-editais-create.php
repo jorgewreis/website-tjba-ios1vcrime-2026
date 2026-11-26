@@ -21,7 +21,7 @@ $editaisCssV = @filemtime($assetsRoot . '/css/modules/cartorio/editais-v2.css') 
 
         <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
-<body class="page-internal editais-v2-page editais-create-page">
+<body class="page-internal page-operational-form editais-v2-page editais-create-page">
 
     <div class="spacing-top-page"></div>
 
