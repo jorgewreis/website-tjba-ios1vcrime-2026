@@ -4,7 +4,7 @@ declare(strict_types=1);
 $stage='guard';
 set_exception_handler(static function(Throwable $e) use (&$stage): void {
     $allowed=['guard','connect','identity','sentinel','second_schema','fixture_ddl','cross_fk','cross_fk_accepted','cross_fk_unexpected','migration','idempotence','full_ddl'];
-    $code=in_array($stage,$allowed,true)?$stage:'unknown';
+    $code=$stage === 'cross_fk_unexpected' ? 'cross_fk_unexpected_line_'.$e->getLine() : (in_array($stage,$allowed,true)?$stage:'unknown');
     fwrite(STDERR,"REI69_FIXTURE_FAILURE code=$code\n");
     exit(1);
 });

@@ -259,7 +259,7 @@ try {
     $fixtureOutput = & docker --host $dockerEndpoint exec $phpId php -d 'error_log=/tmp/rei69pauta-test.log' /test/rei69-migration-mysql.test.php 2>&1
     $fixtureExit = $LASTEXITCODE
     if ($fixtureExit -ne 0) {
-        $codes = @($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -match '^REI69_FIXTURE_FAILURE code=(guard|connect|identity|sentinel|second_schema|fixture_ddl|cross_fk|cross_fk_accepted|cross_fk_unexpected|migration|idempotence|full_ddl|unknown)$' })
+        $codes = @($fixtureOutput | ForEach-Object { [string]$_ } | Where-Object { $_ -match '^REI69_FIXTURE_FAILURE code=(guard|connect|identity|sentinel|second_schema|fixture_ddl|cross_fk|cross_fk_accepted|cross_fk_unexpected|cross_fk_unexpected_line_[0-9]{1,4}|migration|idempotence|full_ddl|unknown)$' })
         if ($codes.Count -eq 1) { Write-Output $codes[0] } else { Write-Output 'REI69_FIXTURE_FAILURE code=unknown' }
         throw 'Fixture falhou.'
     }
