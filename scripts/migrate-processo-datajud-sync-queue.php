@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
-if (PHP_SAPI !== 'cli') { http_response_code(403); exit; }
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit;
+}
 require_once dirname(__DIR__) . '/app/helpers/Conection.php';
 $db = Conection::getInstance()->getConnection();
 $db->exec("CREATE TABLE IF NOT EXISTS processo_datajud_sync_queue (

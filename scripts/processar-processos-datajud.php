@@ -1,6 +1,10 @@
 <?php
 declare(strict_types=1);
-if (PHP_SAPI !== 'cli') { http_response_code(403); exit; }
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit;
+}
 $root = dirname(__DIR__);
 require_once $root . '/app/helpers/Conection.php';
 require_once $root . '/app/services/ProcessoDataJudBackgroundWorker.php';
