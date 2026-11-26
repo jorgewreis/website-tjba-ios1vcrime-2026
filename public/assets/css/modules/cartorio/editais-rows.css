@@ -36,3 +36,22 @@
     .edital-row .carta-expedida-left { width: 100%; min-width: 0; }
     .edital-row .register-block-status > .carta-row-action { opacity: 1; }
 }
+
+@media (max-width: 767px) {
+    .edital-row .register-block-status > .carta-row-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        opacity: 1;
+    }
+
+    .edital-row .register-block-status > .carta-row-action img {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+    }
+}

@@ -76,7 +76,7 @@ $v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: ti
 
         <?php include __DIR__ . '/_toast_script.php'; ?>
     </head>
-<body class="page-internal">
+<body class="page-internal page-operational-form">
 
     <div class="spacing-top-page"></div>
 

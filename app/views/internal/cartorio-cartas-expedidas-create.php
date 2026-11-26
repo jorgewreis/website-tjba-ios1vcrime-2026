@@ -162,7 +162,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
     <?php include __DIR__ . '/_toast_script.php'; ?>
 </head>
 
-<body class="page-internal">
+<body class="page-internal page-operational-form">
 
     <div class="spacing-top-page"></div>
     <div class="header-page">
