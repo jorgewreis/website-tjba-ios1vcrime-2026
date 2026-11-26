@@ -143,9 +143,12 @@
         if (!classeInput) {
             return;
         }
-        classeInput.classList.remove('status-finished');
-        classeInput.classList.add('status-warning');
-        classeInput.setAttribute('aria-busy', 'true');
+        var silent = classeInput.getAttribute('data-datajud-silent-loading') === 'true';
+        if (!silent) {
+            classeInput.classList.remove('status-finished');
+            classeInput.classList.add('status-warning');
+            classeInput.setAttribute('aria-busy', 'true');
+        }
         classeInput.readOnly = true;
         var preserve = classeInput.getAttribute('data-preserve-banco') === '1';
         var keepInitial = classeInput.getAttribute('data-datajud-initial') === '1'
@@ -153,7 +156,7 @@
         if (!preserve && !keepInitial) {
             classeInput.value = '';
         }
-        if (classeInput.getAttribute('data-datajud-silent-loading') !== 'true') {
+        if (!silent) {
             classeInput.placeholder = getClasseLoadingPlaceholder(attemptIndex || 1);
         }
     }

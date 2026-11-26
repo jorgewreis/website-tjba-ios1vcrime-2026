@@ -94,7 +94,7 @@ $v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: ti
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Informações da carta</h2></div>
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
-                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span><span id="processo-ap-info" class="label-hint-consulta-datajud" aria-live="polite"></span></label>
+                <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                 <input type="text" class="height-md" style="width: 220px;" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off" required>
             </div>
             <div class="col filter">
@@ -160,21 +160,6 @@ $v2PageListCssV = @filemtime($assetsRoot . '/css/shared/v2-page-list.css') ?: ti
                 </select>
             </div>
         </div>        
-
-        <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
-            <div class="col filter">
-                <label class="status-classe" for="filter-classe"><span>Classe processual</span> <span class="label-hint-obrigatorio">*obrigatório</span></label>
-                <select class="height-md" style="width: 350px;" id="filter-classe" required>
-                    <option value="" selected disabled>Selecione aqui</option>
-                    <option value="355">355 - Carta Precatória Criminal</option>
-                    <option value="335">335 - Carta de Ordem Criminal</option>
-                    <option value="375">375 - Carta Rogatória Criminal</option>
-                </select>
-            </div>
-        </div>
-
-        <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
-        <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
         <?php if ($cnjError): ?>
             <script>

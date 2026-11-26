@@ -15,7 +15,7 @@ class Element {
 
 async function main() {
   const view = fs.readFileSync('app/views/internal/sala-audiencias-pauta-create.php', 'utf8');
-  assert.match(view, /<label for="audiencia-classe">Classe processual[\s\S]*?<span[^>]*id="processo-ap-info"[^>]*aria-live="polite"[^>]*><\/span><\/label>/, 'status deve ser separado do rótulo');
+  assert.doesNotMatch(view, /id="processo-ap-info"|for="audiencia-classe"/, "cadastro não exibe classe ou andamento do DataJud");
   const ids = ['audiencia-processo', 'audiencia-tipo', 'audiencia-data', 'audiencia-hora', 'audiencia-sala', 'audiencia-status', 'audiencia-classe', 'hidden-classe-codigo', 'hidden-classe-descricao', 'btn-audiencia-cadastrar', 'processo-ap-info'];
   const el = Object.fromEntries(ids.map(id => [id, new Element()]));
   Object.assign(el['audiencia-processo'], { value: '12345678901234567890' });

@@ -124,16 +124,19 @@ final class CartasRecebidasService
 
         $classeId = null;
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
-        $classeDescricao = trim((string) ($payload['classe_descricao'] ?? $payload['classe'] ?? ''));
         $classesCartaRecebida = [
             '355' => 'Carta Precatória Criminal',
             '335' => 'Carta de Ordem Criminal',
             '375' => 'Carta Rogatória Criminal',
         ];
-        if (!isset($classesCartaRecebida[$classeCodigo])) {
-            throw new InvalidArgumentException('Selecione uma das classes permitidas para carta recebida.');
+        // O cadastro padrão não escolhe classe. O vínculo existente é preservado
+        // e a fila já prevista abaixo pode completar o registro.
+        if ($classeCodigo !== '') {
+            if (!isset($classesCartaRecebida[$classeCodigo])) {
+                throw new InvalidArgumentException('Código de classe não permitido para carta recebida.');
+            }
+            $classeId = $this->classesRepository->ensureClass($classeCodigo, $classesCartaRecebida[$classeCodigo]);
         }
-        $classeId = $this->classesRepository->ensureClass($classeCodigo, $classesCartaRecebida[$classeCodigo]);
 
         $processoOrigemId = null;
         if (strlen($digits) === 20) {

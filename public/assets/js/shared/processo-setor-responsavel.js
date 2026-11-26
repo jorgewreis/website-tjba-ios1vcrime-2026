@@ -5,7 +5,6 @@
     if (!form) return;
 
     const select = document.getElementById('process-responsible-sector-select');
-    const reason = document.getElementById('process-responsible-sector-reason');
     const button = document.getElementById('process-responsible-sector-submit');
     const status = document.getElementById('process-responsible-sector-status');
     const current = document.getElementById('process-responsible-sector-current');
@@ -13,8 +12,7 @@
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
-        if (!select || !reason || !button || !status) return;
-        const justification = reason.value.trim();
+        if (!select || !button || !status) return;
         if (button.disabled) return;
 
         button.disabled = true;
@@ -27,7 +25,6 @@
                 body: JSON.stringify({
                     processo_id: form.dataset.processId || '',
                     setor_id: select.value,
-                    justificativa: justification,
                 }),
             });
             const result = await response.json().catch(function () { return {}; });
@@ -44,9 +41,8 @@
                     : 'Sem unidade atribuída. Mutações protegidas por unidade permanecem bloqueadas.';
             }
             status.textContent = result.changed ? 'Atribuição auditada com sucesso.' : 'Nenhuma alteração necessária.';
-            reason.value = '';
         } catch (error) {
-            status.textContent = 'Falha de comunicação. A justificativa foi preservada; tente novamente.';
+            status.textContent = 'Falha de comunicação. Tente novamente.';
         } finally {
             button.disabled = false;
         }
