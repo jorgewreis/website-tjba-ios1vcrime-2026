@@ -28,19 +28,11 @@ function mailpitMessages(): array
         throw new RuntimeException('Endpoint Mailpit de teste inválido.');
     }
 
-    $parts = parse_url($endpoint);
-    $socket = @fsockopen((string) $parts['host'], (int) $parts['port'], $errno, $error, 10);
-    if ($socket === false) {
-        throw new RuntimeException("Mailpit indisponível: $errno $error");
+    $context = stream_context_create(['http' => ['timeout' => 12, 'header' => "Connection: close\r\n"]]);
+    $body = file_get_contents($endpoint . '/api/v1/messages', false, $context);
+    if ($body === false) {
+        throw new RuntimeException('Mailpit indisponível.');
     }
-    stream_set_timeout($socket, 12);
-    fwrite($socket, "GET /api/v1/messages HTTP/1.1\r\nHost: {$parts['host']}:{$parts['port']}\r\nConnection: close\r\n\r\n");
-    $raw = stream_get_contents($socket);
-    fclose($socket);
-    if ($raw === false || !str_contains($raw, "\r\n\r\n")) {
-        throw new RuntimeException('Resposta Mailpit inválida.');
-    }
-    [, $body] = explode("\r\n\r\n", $raw, 2);
     return json_decode($body, true, 512, JSON_THROW_ON_ERROR);
 }
 
