@@ -14,7 +14,6 @@ function createForm(fetchImpl) {
   const elements = {
     'process-responsible-sector-form': form,
     'process-responsible-sector-select': { value: 'SET-2', selectedIndex: 1, options: [{}, { textContent: 'Gabinete' }] },
-    'process-responsible-sector-reason': { value: 'Atribuição sintética', focus() { this.focused = true; } },
     'process-responsible-sector-submit': { disabled: false },
     'process-responsible-sector-status': { textContent: '' },
     'process-responsible-sector-current': { textContent: '' },
@@ -38,27 +37,24 @@ async function main() {
   assert.equal(request.options.method, 'POST');
   assert.equal(request.options.credentials, 'same-origin');
   assert.deepEqual(JSON.parse(request.options.body), {
-    processo_id: 'PRC-SINTETICO', setor_id: 'SET-2', justificativa: 'Atribuição sintética',
+    processo_id: 'PRC-SINTETICO', setor_id: 'SET-2',
   });
   assert.equal(success.elements['process-responsible-sector-current'].textContent, 'Atribuição atual: Gabinete');
   assert.equal(success.elements['process-responsible-sector-status'].textContent, 'Atribuição auditada com sucesso.');
-  assert.equal(success.elements['process-responsible-sector-reason'].value, '');
   assert.equal(success.elements['process-responsible-sector-submit'].disabled, false);
 
   const optional = createForm(async (url, options) => {
-    assert.equal(JSON.parse(options.body).justificativa, '');
+    assert.equal(Object.hasOwn(JSON.parse(options.body), 'justificativa'), false);
     return { ok: true, json: async () => ({ success: true, changed: true, sector_id: 'SET-1', is_default: true }) };
   });
-  optional.elements['process-responsible-sector-reason'].value = '  ';
   await optional.handlers.submit({ preventDefault() {} });
   assert.equal(optional.elements['process-responsible-sector-current'].textContent, 'Unidade padrão: Cartório');
   const failure = createForm(async () => { throw new Error('synthetic network failure'); });
   await failure.handlers.submit({ preventDefault() {} });
-  assert.equal(failure.elements['process-responsible-sector-status'].textContent, 'Falha de comunicação. A justificativa foi preservada; tente novamente.');
-  assert.equal(failure.elements['process-responsible-sector-reason'].value, 'Atribuição sintética');
+  assert.equal(failure.elements['process-responsible-sector-status'].textContent, 'Falha de comunicação. Tente novamente.');
   assert.equal(failure.elements['process-responsible-sector-submit'].disabled, false);
 
-  console.log('PASS: envio same-origin, retorno de sucesso e preservação da justificativa em falha de rede.');
+  console.log('PASS: envio same-origin, retorno de sucesso e envio sem justificativa e recuperação de falha de rede.');
 }
 
 main().catch((error) => {

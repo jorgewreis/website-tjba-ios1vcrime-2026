@@ -367,8 +367,8 @@ $tiposAudienciaPermitidos = [
                         $classeInputClassPautaEdit .= ' status-finished';
                     }
                     ?>
-                    <label for="audiencia-edit-classe" id="processo-ap-info" aria-live="polite">Classe processual<?php echo $classeValorTemInfo ? ' <span class="label-hint-automatizado">*automatizado</span>' : ''; ?></label>
-                    <input type="text" class="<?php echo htmlspecialchars($classeInputClassPautaEdit, ENT_QUOTES, 'UTF-8'); ?>" id="audiencia-edit-classe" data-datajud-related="true"<?php echo $classeValorTemInfo ? ' data-datajud-initial="1"' : ''; ?> value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Sem classe vinculada — cadastre na página do processo" readonly autocomplete="off">
+                    <label for="audiencia-edit-classe">Classe processual<?php echo $classeValorTemInfo ? ' <span class="label-hint-automatizado">*automatizado</span>' : ''; ?></label>
+                    <input type="text" class="<?php echo htmlspecialchars($classeInputClassPautaEdit, ENT_QUOTES, 'UTF-8'); ?>" id="audiencia-edit-classe" data-datajud-related="true" data-datajud-silent-loading="true"<?php echo $classeValorTemInfo ? ' data-datajud-initial="1"' : ''; ?> value="<?php echo htmlspecialchars($classeValor, ENT_QUOTES, 'UTF-8'); ?>" placeholder="Sem classe vinculada — cadastre na página do processo" readonly autocomplete="off">
                 </div>
                 <?php $podeBaixarResumoEdit = in_array($statusAtualEdit, ['designada', 'redesignada'], true); ?>
                 <?php if ($podeBaixarResumoEdit): ?>

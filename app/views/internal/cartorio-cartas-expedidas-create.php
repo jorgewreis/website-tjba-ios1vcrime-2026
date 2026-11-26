@@ -221,16 +221,12 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
 
         <div class="display-flex row row-full padding-x-md padding-y-md border-bottom gap-y-md">
             <div class="col filter">
-                <label class="status-classe" for="filter-classe">
-                    <span>Classe processual</span>
-                    <span class="label-hint-consulta-datajud" id="processo-ap-info" aria-live="polite"></span>
-                </label>
-                <input type="text" class="height-md" style="width: 350px;" id="filter-classe" data-datajud-related="true" value="" disabled autocomplete="off">
                 <label id="filter-assuntos" class="processo-bd-info empty" data-empty-prefix="Assuntos:" hidden></label>
                 <label id="filter-prioridades" class="processo-bd-info empty" data-empty-prefix="Prioridades:" hidden></label>
             </div>
         </div>
 
+        <input type="hidden" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true">
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
         <input type="hidden" id="filter-sistema-envio" name="sistema_envio" value="outro">

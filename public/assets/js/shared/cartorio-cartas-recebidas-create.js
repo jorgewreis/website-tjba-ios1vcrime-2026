@@ -14,7 +14,6 @@
         const gate = helpers.initCreateButtonGate({ button: button, initialLabel: 'Novo cadastro', readyLabel: 'Cadastrar' });
         const feedback = helpers.notify;
         const processoInput = global.document.getElementById('filter-processo');
-        const classeSelect = global.document.getElementById('filter-classe');
 
         if (!button) {
             return;
@@ -52,8 +51,14 @@
                 ? App.ProperNameHelper.formatProper(helpers.getValue('filter-cidade'), 50)
                 : helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
             const ufOrigem = helpers.getValue('filter-estado');
+            const tipoCarta = helpers.getValue('filter-tipo-carta');
             const finalidade = helpers.getValue('filter-tipo');
 
+            if (!tipoCarta) {
+                feedback('Selecione o tipo da carta.', 'error');
+                global.document.getElementById('filter-tipo-carta')?.focus();
+                return;
+            }
             if (!cidadeOrigem) {
                 feedback('Informe a cidade de origem.', 'error');
                 return;
@@ -67,25 +72,15 @@
                 return;
             }
 
-            const classeCodigo = String(classeSelect?.value || '').trim();
-            const classeDescricao = String(classeSelect?.selectedOptions?.[0]?.textContent || '').replace(/^\d+\s*-\s*/, '').trim();
-            if (!classeCodigo || !classeDescricao) {
-                feedback('Selecione a classe processual da carta recebida.', 'error');
-                classeSelect?.focus();
-                return;
-            }
-
             const prazo = parseInt(global.document.getElementById('filter-prazo')?.value ?? '30', 10) || 30;
-            const payload = Object.assign({
+            const payload = {
                 numero_processo_origem: processo.value,
+                tipo_carta: tipoCarta,
                 cidade_origem: cidadeOrigem,
                 uf_origem: ufOrigem,
                 finalidade: finalidade,
                 prazo_dias: prazo
-            }, {
-                classe_codigo: classeCodigo,
-                classe_descricao: classeDescricao
-            });
+            };
 
             gate.setSubmitting();
             feedback('Enviando dados...', 'info', 'Informação');
