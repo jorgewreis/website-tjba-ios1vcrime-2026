@@ -9,7 +9,7 @@ $states = [
 ];
 $routes = [];
 foreach ($states as $code => $uf) {
-    $routes[] = ['8', $code, 'tj' . $uf];
+    $routes[] = ['8', $code, 'tj' . ($code === '07' ? 'dft' : $uf)];
 }
 $electoral = $states;
 $electoral['03'] = 'ap';
