@@ -5,7 +5,8 @@ require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
-require_once __DIR__ . '/ProcessoPrioridadesService.php';
+require_once __DIR__ . '/../repositories/ProcessoPrioridadesRepository.php';
+require_once __DIR__ . '/../helpers/PrioridadesProcessuaisCatalog.php';
 
 /**
  * Leitura de processo/classe por CNJ e sincronização da classe a partir do DataJud.
@@ -26,14 +27,25 @@ final class ProcessoClasseSyncService
     /** Classe CNJ 1268 — Medida Protetiva: prioridades de violência doméstica e sigiloso (derivado). */
     private const CODIGO_CLASSE_MEDIDA_PROTETIVA = '1268';
 
-    private function aplicarPrioridadesMedidaProtetivaSeClasse1268(string $processoId, string $codigoClasseNormalizado, string $numeroProcesso): void
+    private function aplicarPrioridadesMedidaProtetivaSeClasse1268(string $processoId, string $codigoClasseNormalizado): void
     {
         if ($codigoClasseNormalizado !== self::CODIGO_CLASSE_MEDIDA_PROTETIVA) {
             return;
         }
-        $prioridades = new ProcessoPrioridadesService($this->connection);
-        $prioridades->registrarPrioridadesCadastroMedidaProtetiva($processoId);
-        $prioridades->reconciliarAutomaticas($processoId, trim($numeroProcesso), 0);
+        // insert preserva o registro e a origem quando aquele código já
+        // existe (manual, CEJUSC ou outra regra). Não altera outras prioridades.
+        $prioridades = new ProcessoPrioridadesRepository($this->connection);
+        $prioridades->insert(
+            $processoId,
+            PrioridadesProcessuaisCatalog::codigoViolenciaDomestica(),
+            ProcessoPrioridadeOrigem::REGRA_VIOLENCIA_DOMESTICA_MP,
+            ['fonte' => 'medida_protetiva']
+        );
+        $prioridades->insert(
+            $processoId,
+            PrioridadesProcessuaisCatalog::codigoSigiloso(),
+            ProcessoPrioridadeOrigem::REGRA_DERIVADA_MENOR_OU_VD
+        );
     }
 
     /**
@@ -76,6 +88,38 @@ final class ProcessoClasseSyncService
      */
     public function syncFromDataJud(string $digits20, string $codigoRaw, string $descricaoRaw, bool $requireExistingProcess = false): array
     {
+        $ownsTransaction = !$this->connection->inTransaction();
+        $savepoint = 'classe_datajud_' . bin2hex(random_bytes(6));
+        if ($ownsTransaction) {
+            if (!$this->connection->beginTransaction()) {
+                throw new RuntimeException('Não foi possível iniciar a sincronização de classe.');
+            }
+        } else {
+            $this->connection->exec('SAVEPOINT ' . $savepoint);
+        }
+        try {
+            $result = $this->syncClasseEPrioridades($digits20, $codigoRaw, $descricaoRaw, $requireExistingProcess);
+            if ($ownsTransaction) {
+                if (!$this->connection->commit()) throw new RuntimeException('Não foi possível confirmar a sincronização de classe.');
+            } else {
+                $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+            }
+            return $result;
+        } catch (Throwable $exception) {
+            if ($this->connection->inTransaction()) {
+                if ($ownsTransaction) {
+                    $this->connection->rollBack();
+                } else {
+                    $this->connection->exec('ROLLBACK TO SAVEPOINT ' . $savepoint);
+                    $this->connection->exec('RELEASE SAVEPOINT ' . $savepoint);
+                }
+            }
+            throw $exception;
+        }
+    }
+
+    private function syncClasseEPrioridades(string $digits20, string $codigoRaw, string $descricaoRaw, bool $requireExistingProcess): array
+    {
         $digits20 = CnjValidator::digits20OrThrow($digits20);
 
         $codigo = ClassesRepository::normalizeCodigo($codigoRaw);
@@ -85,6 +129,18 @@ final class ProcessoClasseSyncService
 
         $numeroFormatado = $this->formatarCnj20($digits20);
         $processo = $this->processosRepository->findByNumero($digits20);
+        if ($processo !== null) {
+            $sql = 'SELECT id, numero_processo, classe_id FROM processos WHERE id=:id';
+            if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') $sql .= ' FOR UPDATE';
+            $lock = $this->connection->prepare($sql);
+            $lock->execute([':id' => (string) $processo['id']]);
+            $current = $lock->fetch(PDO::FETCH_ASSOC);
+            $lock->closeCursor();
+            if ($current === false || CnjValidator::onlyDigits((string) $current['numero_processo']) !== $digits20) {
+                throw new InvalidArgumentException('O processo mudou antes da sincronização de classe.');
+            }
+            $processo = $current;
+        }
         if ($requireExistingProcess && $processo === null) {
             throw new InvalidArgumentException('Processo não encontrado no cadastro local.');
         }
@@ -95,7 +151,7 @@ final class ProcessoClasseSyncService
 
         if ($processo === null) {
             $pid = $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, null);
-            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo, $numeroFormatado);
+            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo);
 
             return [
                 'action' => 'created',
@@ -109,7 +165,7 @@ final class ProcessoClasseSyncService
 
         if ($existingClasseId === '') {
             $this->processosRepository->updateClasseForProcesso($pid, $classeIdResolved);
-            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo, $numeroFormatado);
+            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo);
 
             return [
                 'action' => 'updated',
@@ -121,7 +177,7 @@ final class ProcessoClasseSyncService
         $existingClasse = $this->classesRepository->findById($existingClasseId);
         if ($existingClasse === null) {
             $this->processosRepository->updateClasseForProcesso($pid, $classeIdResolved);
-            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo, $numeroFormatado);
+            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo);
 
             return [
                 'action' => 'updated',
@@ -132,6 +188,7 @@ final class ProcessoClasseSyncService
 
         $existingCodigo = ClassesRepository::normalizeCodigo((string) ($existingClasse['codigo'] ?? ''));
         if ($existingCodigo === $codigo) {
+            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo);
             return [
                 'action' => 'noop',
                 'processo_id' => $pid,
@@ -140,7 +197,7 @@ final class ProcessoClasseSyncService
         }
 
         $this->processosRepository->updateClasseForProcesso($pid, $classeIdResolved);
-        $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo, $numeroFormatado);
+        $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo);
 
         return [
             'action' => 'updated',
@@ -170,8 +227,6 @@ final class ProcessoClasseSyncService
         if ($processo === null) {
             throw new InvalidArgumentException('Processo não encontrado.');
         }
-        $numeroProcesso = trim((string) ($processo['numero_processo'] ?? ''));
-
         $codigo = ClassesRepository::normalizeCodigo($codigoRaw);
         if ($codigo === '') {
             throw new InvalidArgumentException('Código da classe é obrigatório.');
@@ -181,7 +236,7 @@ final class ProcessoClasseSyncService
         if ($existente !== null) {
             $classeId = (string) $existente['id'];
             $this->processosRepository->updateClasseForProcesso($processoId, $classeId);
-            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($processoId, $codigo, $numeroProcesso);
+            $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($processoId, $codigo);
 
             return [
                 'action' => 'linked',
@@ -201,7 +256,7 @@ final class ProcessoClasseSyncService
 
         $classeId = $this->classesRepository->ensureClass($codigo, $nome);
         $this->processosRepository->updateClasseForProcesso($processoId, $classeId);
-        $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($processoId, $codigo, $numeroProcesso);
+        $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($processoId, $codigo);
         $criada = $this->classesRepository->findById($classeId);
 
         return [

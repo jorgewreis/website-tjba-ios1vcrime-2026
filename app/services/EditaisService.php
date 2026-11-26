@@ -284,6 +284,21 @@ final class EditaisService
             throw new InvalidArgumentException('Subtarefa não encontrada.');
         }
 
+        $editalId = trim((string) ($subtarefa['edital_id'] ?? ''));
+        if ($editalId === '') throw new InvalidArgumentException('Edital da subtarefa não identificado.');
+        $result = $this->reconciliarComEditalBloqueado($editalId, function () use ($subtarefaId, $dadosJson, $editalId): array {
+            $current = $this->subtarefasRepository->findById($subtarefaId, true);
+            if ($current === null || (string) $current['edital_id'] !== $editalId) {
+                throw new InvalidArgumentException('Subtarefa não encontrada no edital.');
+            }
+            return $this->concluirSubtarefaSobLock($current, $subtarefaId, $dadosJson, $editalId);
+        });
+        if (!is_array($result)) throw new InvalidArgumentException('Edital da subtarefa não encontrado.');
+        return $result;
+    }
+
+    private function concluirSubtarefaSobLock(array $subtarefa, string $subtarefaId, ?string $dadosJson, string $editalId): array
+    {
         $ordem = (int) ($subtarefa['ordem'] ?? 0);
         $tipoSub = trim((string) ($subtarefa['tipo'] ?? ''));
         if ($tipoSub === EditaisSubtarefasRepository::TIPO_PUBLICACAO) {
@@ -295,12 +310,6 @@ final class EditaisService
         } elseif ($ordem === 4) {
             $ordem = EditaisSubtarefasRepository::ORDEM_DECURSO;
         }
-        $editalId = trim((string) ($subtarefa['edital_id'] ?? ''));
-
-        if ($editalId === '') {
-            throw new InvalidArgumentException('Edital da subtarefa não identificado.');
-        }
-
         if ($ordem === EditaisSubtarefasRepository::ORDEM_PUBLICACAO) {
             $dadosArray = [];
             if ($dadosJson !== null && $dadosJson !== '') {
@@ -317,9 +326,27 @@ final class EditaisService
             if ($dtPublicacao === false || $dtPublicacao->format('Y-m-d') !== $dataPublicacao) {
                 throw new InvalidArgumentException('Data da publicação inválida.');
             }
-            $edital = $this->repository->findById($editalId);
+            $edital = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql'
+                ? $this->repository->findByIdForUpdate($editalId) : $this->repository->findById($editalId);
             if ($edital === null) {
                 throw new InvalidArgumentException('Edital não encontrado para calcular o decurso.');
+            }
+            $situacao = strtolower(trim((string) ($edital['status'] ?? '')));
+            $situacaoEtapa = strtolower(trim((string) ($subtarefa['status'] ?? '')));
+            if ($situacao === 'cancelada') {
+                throw new InvalidArgumentException('Não é possível certificar publicação de edital cancelado.');
+            }
+            if (in_array($situacaoEtapa, ['concluida', 'concluída'], true)) {
+                if ((string) ($edital['data_publicacao'] ?? '') === $dataPublicacao) {
+                    return [
+                        'tarefa_principal_concluida' => in_array($situacao, ['concluida', 'concluída'], true),
+                        'replayed' => true,
+                    ];
+                }
+                throw new InvalidArgumentException('Publicação já certificada com outra data. Nenhum dado foi alterado.');
+            }
+            if (in_array($situacao, ['concluida', 'concluída'], true) || $situacaoEtapa !== 'em_andamento') {
+                throw new InvalidArgumentException('A etapa de publicação não está disponível para conclusão.');
             }
             $prazoDias = (int) ($edital['prazo_dias'] ?? 0);
             if ($prazoDias < 1) {
@@ -346,7 +373,7 @@ final class EditaisService
         $this->subtarefasRepository->atualizarStatus($subtarefaId, 'concluida');
 
         require_once __DIR__ . '/../helpers/EditaisUiCopy.php';
-        $todas = $this->subtarefasRepository->findByEditalId($editalId);
+        $todas = $this->subtarefasRepository->findByEditalId($editalId, true);
         $proximaEncontrada = null;
         if ($ordem === EditaisSubtarefasRepository::ORDEM_PUBLICACAO) {
             foreach ($todas as $st) {
@@ -361,7 +388,7 @@ final class EditaisService
         if ($proximaEncontrada !== null) {
             $this->subtarefasRepository->atualizarStatus((string) $proximaEncontrada['id'], 'em_andamento');
             $this->repository->update($editalId, ['status' => EditaisUiCopy::STATUS_AGUARDANDO_DECURSO]);
-            $this->tentarFinalizacaoAutomaticaPorDecurso($editalId);
+            $this->tentarFinalizacaoAutomaticaPorDecurso($editalId, $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql');
 
             return ['tarefa_principal_concluida' => false];
         }
@@ -412,7 +439,7 @@ final class EditaisService
             return false;
         }
 
-        $subtarefas = $this->subtarefasRepository->findByEditalId($editalId);
+        $subtarefas = $this->subtarefasRepository->findByEditalId($editalId, $usarLeituraAtual);
         $subPublicacao = null;
         $subDecurso = null;
         foreach ($subtarefas as $st) {
@@ -468,7 +495,7 @@ final class EditaisService
             throw new InvalidArgumentException('Edital sem prazo definido. Não é possível certificar o decurso.');
         }
 
-        $subtarefas = $this->subtarefasRepository->findByEditalId($editalId);
+        $subtarefas = $this->subtarefasRepository->findByEditalId($editalId, $usarLeituraAtual);
         $subPublicacao = null;
         foreach ($subtarefas as $st) {
             $tipo = trim((string) ($st['tipo'] ?? ''));

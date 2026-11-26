@@ -82,7 +82,7 @@ final class EditaisSubtarefasRepository
         });
     }
 
-    public function findByEditalId(string $editalId): array
+    public function findByEditalId(string $editalId, bool $currentRead = false): array
     {
         $editalId = trim($editalId);
         if ($editalId === '') {
@@ -91,8 +91,9 @@ final class EditaisSubtarefasRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'SELECT `id`, `edital_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at` FROM `%s` WHERE `edital_id` = :edital_id ORDER BY `ordem` ASC',
-                $this->table
+                'SELECT `id`, `edital_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at` FROM `%s` WHERE `edital_id` = :edital_id ORDER BY `ordem` ASC%s',
+                $this->table,
+                $currentRead && $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : ''
             )
         );
         $statement->bindValue(':edital_id', $editalId);
@@ -119,7 +120,7 @@ final class EditaisSubtarefasRepository
         $statement->execute();
     }
 
-    public function findById(string $id): ?array
+    public function findById(string $id, bool $currentRead = false): ?array
     {
         $id = trim($id);
         if ($id === '') {
@@ -128,8 +129,9 @@ final class EditaisSubtarefasRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'SELECT `id`, `edital_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1',
-                $this->table
+                'SELECT `id`, `edital_id`, `tipo`, `ordem`, `status`, `dados_especificos`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1%s',
+                $this->table,
+                $currentRead && $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : ''
             )
         );
         $statement->bindValue(':id', $id);

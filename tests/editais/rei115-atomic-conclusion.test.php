@@ -81,4 +81,22 @@ DashboardResumoService::registrarConclusao($pdo, $before, 'editais', 'CARTORIO',
 $pdo->commit();
 rei115Check((int)$pdo->query('SELECT COUNT(*) FROM dashboard_conclusoes')->fetchColumn() === 1, 'repetição duplicou o registro de dashboard');
 
+$editaisService = new EditaisService($pdo);
+$snapshot = static function () use ($pdo): array {
+    return array_map(static fn(string $table): array => $pdo->query('SELECT * FROM ' . $table . ' ORDER BY id')->fetchAll(PDO::FETCH_ASSOC),
+        ['editais', 'editais_subtarefas', 'dashboard_conclusoes']);
+};
+foreach (['aguardando decurso', 'concluída', 'cancelada'] as $status) {
+    $pdo->prepare("UPDATE editais SET status=? WHERE id='e1'")->execute([$status]);
+    $before = $snapshot();
+    if ($status !== 'cancelada') {
+        $replay = $editaisService->concluirSubtarefa('s1', json_encode(['data_publicacao' => date('Y-m-d'), 'novo' => 'alterado']));
+        rei115Check(($replay['replayed'] ?? false) === true, 'repetição de publicação não reconhecida');
+    }
+    try {
+        $editaisService->concluirSubtarefa('s1', '{"data_publicacao":"2090-01-01"}');
+        throw new LogicException('Data divergente aceitou reprocessamento.');
+    } catch (InvalidArgumentException) {}
+    rei115Check($before === $snapshot() && !$pdo->inTransaction(), 'repetição alterou estado ou metadados');
+}
 echo "REI-115: rejeição sem escrita parcial, rollback de falha intermediária, sucesso e repetição passaram em SQLite memória.\n";

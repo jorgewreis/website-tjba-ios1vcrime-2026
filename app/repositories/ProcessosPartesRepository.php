@@ -500,8 +500,12 @@ final class ProcessosPartesRepository
                     throw new InvalidArgumentException('Tipo de parte inválido.');
                 }
                 $params[':' . $column] = $val;
-            } else {
-                $params[':' . $column] = trim((string) $payload[$column]);
+            } elseif ($column === 'polo') {
+                $val = is_string($payload[$column]) ? trim($payload[$column]) : '';
+                if (!in_array($val, self::POLOS_VALIDOS, true)) {
+                    throw new InvalidArgumentException('Polo inválido.');
+                }
+                $params[':' . $column] = $val;
             }
         }
 

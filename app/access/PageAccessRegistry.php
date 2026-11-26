@@ -81,9 +81,6 @@ final class PageAccessRegistry
             'reuspresoscreate' => $areaGabinete,
             'reuspresosedit' => $areaGabinete,
 
-            'notificacoes' => ['kind' => 'all_internal'],
-            'configuracoes' => ['kind' => 'all_internal'],
-            'documentos' => ['kind' => 'all_internal'],
             'feriadoslist' => ['kind' => 'all_internal'],
             'alterardados' => ['kind' => 'all_internal'],
 
