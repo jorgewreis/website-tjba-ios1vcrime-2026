@@ -51,8 +51,14 @@
                 ? App.ProperNameHelper.formatProper(helpers.getValue('filter-cidade'), 50)
                 : helpers.formatProperName(helpers.getValue('filter-cidade'), 50);
             const ufOrigem = helpers.getValue('filter-estado');
+            const tipoCarta = helpers.getValue('filter-tipo-carta');
             const finalidade = helpers.getValue('filter-tipo');
 
+            if (!tipoCarta) {
+                feedback('Selecione o tipo da carta.', 'error');
+                global.document.getElementById('filter-tipo-carta')?.focus();
+                return;
+            }
             if (!cidadeOrigem) {
                 feedback('Informe a cidade de origem.', 'error');
                 return;
@@ -69,6 +75,7 @@
             const prazo = parseInt(global.document.getElementById('filter-prazo')?.value ?? '30', 10) || 30;
             const payload = {
                 numero_processo_origem: processo.value,
+                tipo_carta: tipoCarta,
                 cidade_origem: cidadeOrigem,
                 uf_origem: ufOrigem,
                 finalidade: finalidade,

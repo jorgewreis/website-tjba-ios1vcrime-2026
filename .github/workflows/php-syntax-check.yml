@@ -40,6 +40,7 @@ jobs:
         run: |
           php tests/datajud/service-http.test.php
           php tests/datajud/background-class-payload.test.php
+          php tests/cartas-recebidas/classe-cnj.test.php
           php tests/datajud/mapper-sync-real.test.php
           php tests/datajud/tribunal-resolver.test.php
           php tests/datajud/ficha-datajud-differential.test.php

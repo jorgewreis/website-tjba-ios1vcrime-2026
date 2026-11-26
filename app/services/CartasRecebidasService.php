@@ -12,10 +12,16 @@ require_once __DIR__ . '/../repositories/VarasRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/CartasRecebidasUiCopy.php';
-require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 
 final class CartasRecebidasService
 {
+    // Classes criminais das Tabelas Processuais Unificadas (CNJ).
+    public const TIPOS_CARTA = [
+        'precatoria' => ['codigo' => '355', 'nome' => 'Carta Precatória Criminal'],
+        'ordem' => ['codigo' => '335', 'nome' => 'Carta de Ordem Criminal'],
+        'rogatoria' => ['codigo' => '375', 'nome' => 'Carta Rogatória Criminal'],
+    ];
+
     private PDO $connection;
     private CartasRecebidasRepository $repository;
     private CartasRecebidasSubtarefasRepository $subtarefasRepository;
@@ -69,6 +75,7 @@ final class CartasRecebidasService
         $numero=trim((string)($payload['numero_processo_origem']??$payload['processo']??''));
         $digits=preg_replace('/\D+/', '', $numero);
         if(strlen($digits)!==20)throw new InvalidArgumentException('O número do processo de origem deve conter os 20 dígitos do CNJ.');
+        $classe = self::classeParaCadastro($payload);
         $lockName='cr_cnj_'.substr(hash('sha256',$digits),0,56);
         $lock=$this->connection->prepare('SELECT GET_LOCK(?, 10)');$lock->execute([$lockName]);
         if((int)$lock->fetchColumn()!==1)throw new RuntimeException('Não foi possível verificar o cadastro da carta. Tente novamente.');
@@ -78,7 +85,7 @@ final class CartasRecebidasService
             if($this->repository->existsByNumeroProcessoOrigem($digits)){
                 throw new InvalidArgumentException('Já existe uma carta recebida cadastrada para o processo '.$this->formatarCNJ($digits).'. Reinicie o registro existente.');
             }
-            $id=$this->createCarta($payload);
+            $id=$this->createCarta($payload, $classe);
             if($ownsTransaction)$this->connection->commit();
             return $id;
         } catch(Throwable $e) {
@@ -90,7 +97,7 @@ final class CartasRecebidasService
         }
     }
 
-    private function createCarta(array $payload): string
+    private function createCarta(array $payload, array $classe): string
     {
         $numeroProcesso = trim((string) ($payload['numero_processo_origem'] ?? $payload['processo'] ?? ''));
         if ($numeroProcesso === '') {
@@ -122,27 +129,9 @@ final class CartasRecebidasService
         }
         $prazoDias = (int) $this->sanitizePrazo((string) ($payload['prazo_dias'] ?? $payload['prazo'] ?? '30'));
 
-        $classeId = null;
-        $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
-        $classesCartaRecebida = [
-            '355' => 'Carta Precatória Criminal',
-            '335' => 'Carta de Ordem Criminal',
-            '375' => 'Carta Rogatória Criminal',
-        ];
-        // O cadastro padrão não escolhe classe. O vínculo existente é preservado
-        // e a fila já prevista abaixo pode completar o registro.
-        if ($classeCodigo !== '') {
-            if (!isset($classesCartaRecebida[$classeCodigo])) {
-                throw new InvalidArgumentException('Código de classe não permitido para carta recebida.');
-            }
-            $classeId = $this->classesRepository->ensureClass($classeCodigo, $classesCartaRecebida[$classeCodigo]);
-        }
-
-        $processoOrigemId = null;
-        if (strlen($digits) === 20) {
-            $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
-            ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
-        }
+        // A classe já é gravada no cadastro. A fila DataJud continua independente.
+        $classeId = $this->classesRepository->ensureClass($classe['codigo'], $classe['nome']);
+        $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
 
         $idCarta = IdGenerator::generateUniquePrefixedId(
             $this->connection,
@@ -180,6 +169,26 @@ final class CartasRecebidasService
         $this->repository->update($idCarta, ['status' => CartasRecebidasUiCopy::STATUS_AGUARDANDO_CUMPRIMENTO]);
 
         return $idCarta;
+    }
+
+    /** @return array{codigo:string,nome:string} */
+    private static function classeParaCadastro(array $payload): array
+    {
+        if (array_key_exists('tipo_carta', $payload)) {
+            $tipo = $payload['tipo_carta'];
+            if (!is_string($tipo) || !isset(self::TIPOS_CARTA[$tipo])) {
+                throw new InvalidArgumentException('Selecione um tipo de carta válido.');
+            }
+            return self::TIPOS_CARTA[$tipo];
+        }
+        // Compatibilidade com chamadas anteriores que enviavam o código.
+        $codigo = $payload['classe_codigo'] ?? null;
+        if (is_string($codigo) || is_int($codigo)) {
+            foreach (self::TIPOS_CARTA as $classe) {
+                if ($classe['codigo'] === trim((string) $codigo)) return $classe;
+            }
+        }
+        throw new InvalidArgumentException('Selecione o tipo da carta antes de cadastrar.');
     }
 
     /** @return array{0:string,1:string} Nome e ID canônicos para o cadastro. */

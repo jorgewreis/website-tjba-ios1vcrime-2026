@@ -30,9 +30,11 @@ if ($agoraFixo === false
     throw new RuntimeException('A normalização determinística do status da pauta divergiu.');
 }
 
-$agoraElegibilidade = time();
-$dataHojeElegibilidade = date('Y-m-d', $agoraElegibilidade);
-$horaFuturaElegibilidade = date('H:i:s', $agoraElegibilidade + 3600);
+// Use horários fixos dentro do dia local: somar 1h ao relógio real
+// atravessava a meia-noite e convertia uma audiência futura em atrasada.
+$dataHojeElegibilidade = date('Y-m-d');
+$agoraElegibilidade = strtotime($dataHojeElegibilidade . ' 10:00:00');
+$horaFuturaElegibilidade = '11:00:00';
 $elegiveisStatus = [
     'id_pauta' => 'pauta-status-sintetica',
     'ja_inscrito' => 0,
@@ -71,8 +73,8 @@ foreach ($codes as $i => $code) {
     $processo = 'processo-' . $i;
     $pauta = 'pauta-' . $i;
     $db->prepare('INSERT INTO processos VALUES (?, ?, NULL, 0)')->execute([$processo, 'SEGREDO-' . $i]);
-    $db->prepare("INSERT INTO sala_audiencias_pauta VALUES (?, 1, ?, date('now'), '10:00', 'designada')")
-        ->execute([$pauta, $processo]);
+    $db->prepare("INSERT INTO sala_audiencias_pauta VALUES (?, 1, ?, ?, '23:59:59', 'designada')")
+        ->execute([$pauta, $processo, $dataHojeElegibilidade]);
     $db->prepare('INSERT INTO processo_prioridades VALUES (?, ?, ?, \'manual\', NULL, CURRENT_TIMESTAMP)')
         ->execute(['prioridade-' . $i, $processo, $code]);
     try {
