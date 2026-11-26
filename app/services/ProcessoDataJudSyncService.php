@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/CnjValidator.php';
+require_once __DIR__ . '/../DataJud/DataJudLocalSigiloException.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/AssuntosRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
@@ -43,7 +44,8 @@ final class ProcessoDataJudSyncService
     {
         $numero = CnjValidator::digits20OrThrow($numero);
         $processos = new ProcessosRepository($this->db);
-        if ($processos->findByNumero($numero) === null) {
+        $processo = $processos->findByNumero($numero);
+        if ($processo === null) {
             throw new InvalidArgumentException('Processo não encontrado no cadastro local.');
         }
         $codigo = '';
@@ -84,6 +86,19 @@ final class ProcessoDataJudSyncService
             if ($beforeWrite !== null && $beforeWrite($this->db) !== true) {
                 throw new RuntimeException('A autorização para sincronizar o processo foi recusada.');
             }
+            // Confira o sigilo do cadastro sob lock; pode ter mudado
+            // enquanto a API pública respondia.
+            $sql = 'SELECT numero_processo, sigiloso FROM processos WHERE id = :id';
+            if ($this->db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') $sql .= ' FOR UPDATE';
+            $row = $this->db->prepare($sql);
+            $row->execute([':id' => (string) $processo['id']]);
+            $local = $row->fetch(PDO::FETCH_ASSOC);
+            $row->closeCursor();
+            if ($local === false || CnjValidator::onlyDigits((string) $local['numero_processo']) !== $numero) {
+                throw new InvalidArgumentException('O processo mudou antes da sincronização.');
+            }
+            if (!empty($local['sigiloso'])) throw new DataJudLocalSigiloException();
+
             $resultadoClasse = $classe === null ? null : ($this->classeSync)($numero, $codigo, $descricao);
             $resultadoAssuntos = $assuntos === null ? null : ($this->assuntoSync)($numero, $assuntos, $verifiedEmptySubjects);
             if (!$this->db->inTransaction()) throw new RuntimeException('Transação de sincronização interrompida.');

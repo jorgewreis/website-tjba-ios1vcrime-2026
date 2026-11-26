@@ -91,6 +91,13 @@
                     .then(function (response) {
                         return response.json().then(function (body) {
                             return { ok: response.ok, body: body };
+                        }).catch(function () {
+                            var message = response.status === 401
+                                ? 'Sessão expirada. Faça login novamente.'
+                                : (response.status === 403
+                                    ? 'O servidor não autorizou a solicitação de sincronização.'
+                                    : 'A sincronização retornou uma resposta inesperada. Confira os dados antes de tentar novamente.');
+                            return { ok: false, body: { error: message } };
                         });
                     })
                     .then(function (result) {

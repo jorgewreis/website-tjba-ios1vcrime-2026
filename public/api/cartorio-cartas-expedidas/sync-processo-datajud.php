@@ -58,7 +58,10 @@ try {
         exit;
     }
 
-    $resultadoBusca = (new DataJudService($config))->searchProcesso($digits);
+    if (!empty($processo['sigiloso'])) {
+        throw new DataJudLocalSigiloException();
+    }
+    $resultadoBusca = (new DataJudService($config))->searchProcesso($digits, true);
     if (($resultadoBusca['resultado_unico_verificado'] ?? null) !== true
         || ($resultadoBusca['sigilo_ausencia_verificada'] ?? null) !== true
         || ($resultadoBusca['fonte_confirmada_para_sincronizacao'] ?? null) !== true) {
@@ -180,6 +183,8 @@ try {
     }
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+} catch (DataJudUpstreamException|DataJudLocalSigiloException $e) {
+    $e->respondForSync();
 } catch (RuntimeException $e) {
     http_response_code(502);
     echo json_encode(['error' => ApiErrorReporter::genericMessage($e, 'public/api/cartorio-cartas-expedidas/sync-processo-datajud.php')], JSON_UNESCAPED_UNICODE);

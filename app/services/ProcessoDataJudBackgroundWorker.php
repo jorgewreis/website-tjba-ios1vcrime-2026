@@ -28,6 +28,11 @@ final class ProcessoDataJudBackgroundWorker
                 $this->retry((int) $job['id'], (int) $job['tentativas']);
                 $failed++;
                 error_log('datajud background sync falhou: ' . get_class($e));
+                if ($e instanceof DataJudUpstreamException && in_array($e->reason, ['throttled', 'authorization', 'unavailable', 'transport'], true)) {
+                    // Deixe os outros itens para a próxima execução, sem consumir
+                    // suas tentativas durante uma indisponibilidade da origem.
+                    break;
+                }
             }
         }
         return ['processados' => $done, 'falhas' => $failed];
@@ -73,7 +78,7 @@ final class ProcessoDataJudBackgroundWorker
         )) return;
         $numero = (string) ($processo['numero_processo'] ?? '');
         try {
-            $result = $this->dataJud->searchProcesso($numero);
+            $result = $this->dataJud->searchProcesso($numero, true);
         } catch (DataJudAmbiguousResponseException) {
             // A public index may contain multiple degrees. This is a valid but
             // non-syncable result, so repeated background retries cannot help.

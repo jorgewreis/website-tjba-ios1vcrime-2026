@@ -56,7 +56,10 @@ try {
         exit;
     }
 
-    $resultadoBusca = (new DataJudService($config))->searchProcesso($digits);
+    if (!empty($processo['sigiloso'])) {
+        throw new DataJudLocalSigiloException();
+    }
+    $resultadoBusca = (new DataJudService($config))->searchProcesso($digits, true);
     if (($resultadoBusca['resultado_unico_verificado'] ?? null) !== true
         || ($resultadoBusca['sigilo_ausencia_verificada'] ?? null) !== true
         || ($resultadoBusca['fonte_confirmada_para_sincronizacao'] ?? null) !== true) {
@@ -200,6 +203,8 @@ try {
 } catch (DataJudAmbiguousResponseException $e) {
     http_response_code(422);
     echo json_encode(['error' => 'O DataJud retornou mais de um registro; nenhum dado foi sincronizado.'], JSON_UNESCAPED_UNICODE);
+} catch (DataJudUpstreamException|DataJudLocalSigiloException $e) {
+    $e->respondForSync();
 } catch (RuntimeException $e) {
     http_response_code(502);
     echo json_encode(['error' => ApiErrorReporter::genericMessage($e, 'public/api/processos/datajud-sync.php')], JSON_UNESCAPED_UNICODE);
