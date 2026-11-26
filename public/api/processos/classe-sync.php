@@ -45,7 +45,8 @@ try {
     // A classe enviada pelo navegador não comprova sua origem. Exigir processo
     // local e consultar a fonte no servidor antes de qualquer gravação.
     $connection = Conection::getInstance()->getConnection();
-    if ((new ProcessosRepository($connection))->findByNumero($digits) === null) {
+    $processo = (new ProcessosRepository($connection))->findByNumero($digits);
+    if ($processo === null) {
         http_response_code(404);
         echo json_encode(['error' => 'Processo não encontrado no cadastro local.'], JSON_UNESCAPED_UNICODE);
         exit;
@@ -53,6 +54,15 @@ try {
     $config = require $basePath . '/public/api/datajud/config.php';
     if (!is_array($config) || trim((string) ($config['api_key'] ?? '')) === '') {
         throw new RuntimeException('Integração DataJud indisponível.');
+    }
+    if (!empty($processo['sigiloso'])) {
+        $processoId = trim((string) ($processo['id'] ?? ''));
+        if (!ProcessoSetorAuthorization::canAccessProcess($connection, $usuarioId, $processoId, false)) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Acesso ao processo não autorizado.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+        throw new DataJudLocalSigiloException();
     }
     $resultado = (new DataJudService($config))->searchProcesso($digits, true);
     $classe = $resultado['classe'] ?? null;
@@ -84,7 +94,7 @@ try {
         }
     )['classe'];
     echo json_encode($result, JSON_UNESCAPED_UNICODE);
-} catch (DataJudUpstreamException $e) {
+} catch (DataJudUpstreamException|DataJudLocalSigiloException $e) {
     $e->respondForSync();
 } catch (InvalidArgumentException $e) {
     if ($escritaIniciada) {

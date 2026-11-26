@@ -41,13 +41,15 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
 }''', encoding='utf-8')
     (base / 'app/repositories/ProcessosRepository.php').write_text('''<?php class ProcessosRepository {
   function __construct($connection) {}
-  function findByNumero(string $numero): ?array { return ($_SERVER['HTTP_X_TEST_PROCESS'] ?? 'exists') === 'missing' ? null : ['id'=>'P1','numero_processo'=>$numero]; }
+  function findByNumero(string $numero): ?array { return ($_SERVER['HTTP_X_TEST_PROCESS'] ?? 'exists') === 'missing' ? null : ['id'=>'P1','numero_processo'=>$numero,'sigiloso'=>($_SERVER['HTTP_X_TEST_PROCESS'] ?? '') === 'secret']; }
 }''', encoding='utf-8')
     (base / 'public/api/datajud/config.php').write_text("<?php return ['api_key'=>'synthetic'];", encoding='utf-8')
     (base / 'app/DataJud').mkdir(exist_ok=True)
     shutil.copyfile(ROOT / 'app/DataJud/DataJudUpstreamException.php', base / 'app/DataJud/DataJudUpstreamException.php')
+    shutil.copyfile(ROOT / 'app/DataJud/DataJudLocalSigiloException.php', base / 'app/DataJud/DataJudLocalSigiloException.php')
     (base / 'app/services/DataJudService.php').write_text('''<?php
 require_once __DIR__ . '/../DataJud/DataJudUpstreamException.php';
+require_once __DIR__ . '/../DataJud/DataJudLocalSigiloException.php';
 class DataJudService {
   function __construct(array $config) {}
   function searchProcesso(string $numero): array {
@@ -130,6 +132,10 @@ class DataJudService {
 
         cartorio = 'cartorio-cartas-expedidas/sync-processo-datajud.php'
         for endpoint in ('processos/datajud-sync.php', cartorio):
+            status, body = request(endpoint=endpoint, process='secret')
+            assert status == 422 and body['code'] == 'datajud_sigilo_local', (status, body)
+            assert not read_marker.exists() and not write_marker.exists(), 'Número sigiloso local não deve ir ao DataJud.'
+
             for mode in ('throttled', 'incomplete'):
                 status, body = request(endpoint=endpoint, result=mode)
                 assert status == 503 and body['code'] == f'datajud_{mode}', (status, body)

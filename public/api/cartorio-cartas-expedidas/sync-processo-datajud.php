@@ -58,6 +58,9 @@ try {
         exit;
     }
 
+    if (!empty($processo['sigiloso'])) {
+        throw new DataJudLocalSigiloException();
+    }
     $resultadoBusca = (new DataJudService($config))->searchProcesso($digits, true);
     if (($resultadoBusca['resultado_unico_verificado'] ?? null) !== true
         || ($resultadoBusca['sigilo_ausencia_verificada'] ?? null) !== true
@@ -180,7 +183,7 @@ try {
     }
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
-} catch (DataJudUpstreamException $e) {
+} catch (DataJudUpstreamException|DataJudLocalSigiloException $e) {
     $e->respondForSync();
 } catch (RuntimeException $e) {
     http_response_code(502);

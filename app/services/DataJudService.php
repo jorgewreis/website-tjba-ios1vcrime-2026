@@ -5,6 +5,7 @@ require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../DataJud/DataJudResponseMapper.php';
 require_once __DIR__ . '/../DataJud/DataJudTribunalResolver.php';
 require_once __DIR__ . '/../DataJud/DataJudUpstreamException.php';
+require_once __DIR__ . '/../DataJud/DataJudLocalSigiloException.php';
 
 final class DataJudAmbiguousResponseException extends RuntimeException {}
 
