@@ -161,11 +161,13 @@ ok((bool) array_filter($resetStart['headers'], static fn (string $h): bool => st
 ok(!str_contains($resetStart['body'], $token), 'token do fragmento não deve aparecer no HTML inicial');
 if (!preg_match('/name="reset-bootstrap-csrf"\s+content="([^"]+)"/', $resetStart['body'], $bootstrapCsrfMatch)) fail('CSRF de bootstrap do reset ausente');
 $bootstrapCsrf = html_entity_decode($bootstrapCsrfMatch[1], ENT_QUOTES, 'UTF-8');
-$GLOBALS['phase'] = 'reset_stage';
+$GLOBALS['phase'] = 'reset_invalid_csrf';
 $badStage = req('/redefinir_senha.php', 'POST', ['reset_action'=>'stage_token','csrf_token'=>'invalid','token'=>$token], $resetCookie);
 ok($badStage['status'] === 419, 'bootstrap do reset deve rejeitar CSRF inválido');
+$GLOBALS['phase'] = 'reset_valid_stage';
 $staged = req('/redefinir_senha.php', 'POST', ['reset_action'=>'stage_token','csrf_token'=>$bootstrapCsrf,'token'=>$token], $resetCookie);
 ok($staged['status'] === 204, 'bootstrap do fragmento não guardou token válido na sessão');
+$GLOBALS['phase'] = 'reset_staged_form';
 $fragmentForm = req('/views/public/redefinir-senha-form.php', 'GET', [], $resetCookie);
 ok(str_contains($fragmentForm['body'], 'id="formRedefinirSenha"'), 'token enviado no corpo não foi recuperado da sessão');
 $resetCookie = refreshedSessionCookie($fragmentForm['headers'], $resetCookie);
