@@ -57,14 +57,14 @@ final class OficiosCartorioService
         return in_array($tipo, ['rule', 'all', 'specific'], true) ? $tipo : 'specific';
     }
 
-    public function removeAlocado(string $alocadoId, string $tipo, string $requestUserId): bool
+    public function removeAlocado(string $alocadoId, string $requestUserId, bool $isGestao): bool
     {
         $alocadoId     = trim($alocadoId);
         $requestUserId = trim($requestUserId);
         if ($alocadoId === '' || $requestUserId === '') {
             return false;
         }
-        return $this->alocadosRepository->deleteById($alocadoId);
+        return $this->alocadosRepository->deleteByIdForActor($alocadoId, $requestUserId, $isGestao);
     }
 
     public function listOficios(array $filters, int $limit, int $offset): array

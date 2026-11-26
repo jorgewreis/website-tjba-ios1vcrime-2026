@@ -209,6 +209,20 @@ function value(id) { const el=elements.get(id); return el ? el.textContent + el.
   await refresh([]);
   assert.equal(elements.get('dash-sector-column').hidden, true, 'empty refresh hides outer sector again');
 
+  const respScope = {conectado:true, areas:['CARTORIO'], responsaveis_regras:{guias:'Lia Teste',oficios:'Davi Exemplo'}, responsaveis_proprios:{guias:true,oficios:false}};
+  const respRows = [{key:'guias',type:'expedicao_guia',count:2},{key:'guias',type:'envio_guia',count:1},{key:'oficios',type:'enviar_oficio',count:1}];
+  await refresh(respRows, respScope);
+  for (const key of ['guias-expedicao','guias-envio','oficios']) {
+    const field = elements.get('dash-queue-'+key+'-responsaveis');
+    assert.equal(field.hidden,false);
+    assert.equal(field.children.at(-1).textContent,key==='oficios'?'Davi':'você');
+  }
+  await refresh(respRows, {...respScope, responsaveis_regras:{guias:'Eva Atualizada'},responsaveis_proprios:{}});
+  assert.equal(elements.get('dash-queue-guias-expedicao-responsaveis').children.at(-1).textContent, 'Eva');
+  assert.equal(elements.get('dash-queue-oficios-responsaveis').hidden,true);
+  await refresh(respRows,{...respScope,areas:['GABINETE']});
+  assert.equal(elements.get('dash-queue-guias-expedicao-responsaveis').hidden,true);
+
   if (runnerPayloads) {
     for (const entry of runnerPayloads) {
       await refresh(entry);

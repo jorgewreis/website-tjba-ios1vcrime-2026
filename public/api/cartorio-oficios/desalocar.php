@@ -27,7 +27,6 @@ if (!is_array($parsed)) {
 }
 
 $alocadoId = trim((string) ($parsed['alocado_id'] ?? ''));
-$tipo      = trim((string) ($parsed['tipo'] ?? ''));
 
 if ($alocadoId === '') {
     http_response_code(400);
@@ -47,16 +46,15 @@ $perfisGestao = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
 $perfis = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
 $isGestao  = count(array_intersect($perfis, $perfisGestao)) > 0;
 
-if (in_array($tipo, ['rule', 'all'], true) && !$isGestao) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Apenas gestores podem remover alocações por regra ou atribuição direta.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
 try {
     $service = new OficiosCartorioService($connection);
-    $deleted  = $service->removeAlocado($alocadoId, $tipo, $userId);
-    echo json_encode(['deleted' => $deleted], JSON_UNESCAPED_UNICODE);
+    $deleted  = $service->removeAlocado($alocadoId, $userId, $isGestao);
+    if (!$deleted) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Alocação não encontrada ou indisponível para remoção.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    echo json_encode(['deleted' => true], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);

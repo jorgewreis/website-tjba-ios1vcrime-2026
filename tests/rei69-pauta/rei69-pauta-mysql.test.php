@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 $fixtureStage = 'setup';
 set_exception_handler(static function (Throwable $exception) use (&$fixtureStage): void {
-    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness', 'pauta_transition_lock', 'pauta_allocation_lock', 'reu_principal_lock', 'pauta_atomic_derived', 'dashboard_strict_series', 'atas_csv', 'pauta_delete_atomic', 'oficios_sequence', 'feriados_cleanup', 'guias_readonly', 'polo_validacao', 'classe_prioridades', 'edital_replay'];
+    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness', 'pauta_transition_lock', 'pauta_allocation_lock', 'reu_principal_lock', 'pauta_atomic_derived', 'dashboard_strict_series', 'atas_csv', 'pauta_delete_atomic', 'oficios_sequence', 'feriados_cleanup', 'guias_readonly', 'polo_validacao', 'classe_prioridades', 'edital_replay', 'dashboard_responsaveis', 'alocacao_autorizada'];
     $code = in_array($fixtureStage, $allowed, true) ? $fixtureStage : 'unknown';
     fwrite(STDERR, "REI69_FIXTURE_FAILURE code=$code\n");
-    if (in_array($code, ['atas_csv', 'pauta_delete_atomic', 'oficios_sequence', 'feriados_cleanup', 'guias_readonly', 'polo_validacao', 'classe_prioridades', 'edital_replay'], true)) {
+    if (in_array($code, ['atas_csv', 'pauta_delete_atomic', 'oficios_sequence', 'feriados_cleanup', 'guias_readonly', 'polo_validacao', 'classe_prioridades', 'edital_replay', 'dashboard_responsaveis', 'alocacao_autorizada'], true)) {
         $mysqlCode = $exception instanceof PDOException ? (int) ($exception->errorInfo[1] ?? 0) : 0;
         fwrite(STDERR, 'REI69_FIXTURE_DETAIL area=' . $code . ' line=' . $exception->getLine() . ' mysql=' . $mysqlCode . "\n");
     }
@@ -551,6 +551,73 @@ foreach (['aguardando decurso', 'concluída', 'cancelada'] as $status) {
     } catch (InvalidArgumentException) {}
     if (snapshot69p($peer, $editalTables) !== $snapshot || $peer->inTransaction()) {
         throw new RuntimeException('Replay mudou datas, dados ou estados.');
+    }
+}
+
+$fixtureStage = 'dashboard_responsaveis';
+$pdo->exec('CREATE TABLE alocacoes_regras (regra VARCHAR(45) PRIMARY KEY, usuario_id VARCHAR(40))
+    ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci');
+$pdo->exec("INSERT INTO usuarios VALUES ('OWNER-318','Lia','Teste'),('OTHER-318','Davi','Exemplo')");
+$pdo->exec("INSERT INTO alocacoes_regras VALUES
+    ('ALLOCATE-GUIAS','OWNER-318'),('ALLOCATE-CARTORIOOFICIOS','OTHER-318')");
+$dash318 = new DashboardResumoService($peer);
+$owner318 = $dash318->resumo('OWNER-318',['CARTORIO'],'CARTORIO')['setor'];
+if ($owner318['responsaveis_regras'] !== ['guias'=>'Lia Teste','oficios'=>'Davi Exemplo']
+    || $owner318['responsaveis_proprios'] !== ['guias'=>true,'oficios'=>false]) {
+    throw new RuntimeException('Responsável por regra ou vínculo com usuário logado incorreto.');
+}
+$pdo->exec("UPDATE alocacoes_regras SET usuario_id='OTHER-318' WHERE regra='ALLOCATE-GUIAS'");
+$pdo->exec("DELETE FROM alocacoes_regras WHERE regra='ALLOCATE-CARTORIOOFICIOS'");
+$changed318 = $dash318->resumo('OTHER-318',['CARTORIO'],'CARTORIO')['setor'];
+$outside318 = $dash318->resumo('OTHER-318',['GABINETE'],'GABINETE')['setor'];
+if ($changed318['responsaveis_regras'] !== ['guias'=>'Davi Exemplo'] || $changed318['responsaveis_proprios'] !== ['guias'=>true]
+    || $outside318['responsaveis_regras'] !== [] || $outside318['responsaveis_proprios'] !== []) {
+    throw new RuntimeException('Troca/ausência da regra ou fronteira de setor não aplicada.');
+}
+try {
+    $dash318->resumo('OTHER-318',['GABINETE'],'CARTORIO');
+    throw new LogicException('Setor não autorizado aceito.');
+} catch (InvalidArgumentException) {}
+$fixtureStage = 'alocacao_autorizada';
+require_once '/repo/app/services/OficiosCartorioService.php';
+$pdo->exec('CREATE TABLE cartorio_oficios_alocados (id VARCHAR(40) PRIMARY KEY, oficio_id VARCHAR(40),
+    usuario_id VARCHAR(40), tipo VARCHAR(40), created_at DATETIME) ENGINE=InnoDB');
+$pdo->exec("ALTER TABLE guias_alocados ADD PRIMARY KEY (id)");
+$allocationModules = [
+    [new GuiasService($peer), 'guias_alocados', 'guia_id'],
+    [new OficiosCartorioService($peer), 'cartorio_oficios_alocados', 'oficio_id'],
+    [new SalaAudienciasPautaService($peer), 'sala_audiencias_pauta_alocados', 'pauta_id'],
+];
+foreach ($allocationModules as [$domain,$table,$parent]) {
+    $ins = $pdo->prepare("INSERT INTO `$table` (id,`$parent`,usuario_id,tipo,created_at) VALUES (?,?,?,?,NOW())");
+    foreach ([['Own321','owner','specific'],['Other321','peer','specific'],['Rule321','owner','rule'],
+              ['All321','owner','all'],['Unknown321','owner','legacy']] as [$id,$who,$kind]) {
+        $ins->execute([$id,'FIXTURE-321-'.$id,$who,$kind]);
+    }
+    foreach (['Other321','Rule321','All321','Unknown321','Missing321'] as $nonOwned) {
+        if ($domain->removeAlocado($nonOwned,'owner',false)) throw new RuntimeException('Alocação fora do escopo foi removida.');
+    }
+    if (!$domain->removeAlocado('Own321','owner',false) || $domain->removeAlocado('Own321','owner',false)
+        || !$domain->removeAlocado('Other321','gestor',true) || !$domain->removeAlocado('Rule321','gestor',true)
+        || !$domain->removeAlocado('All321','gestor',true) || $domain->removeAlocado('Unknown321','gestor',true)) {
+        throw new RuntimeException('Remoções permitidas ou tratamento de tipo desconhecido incorretos.');
+    }
+    $ins->execute(['Concurrent321','FIXTURE-321','owner','specific']);
+    $pdo->beginTransaction();
+    try {
+        $pdo->exec("UPDATE `$table` SET tipo='rule' WHERE id='Concurrent321'");
+        try {
+            $domain->removeAlocado('Concurrent321','owner',false);
+            throw new LogicException('A exclusão não aguardou o registro persistido.');
+        } catch (PDOException $e) {
+            if ((int) ($e->errorInfo[1] ?? 0) !== 1205) throw $e;
+        }
+        $pdo->commit();
+    } finally {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+    }
+    if ($domain->removeAlocado('Concurrent321','owner',false) || !$domain->removeAlocado('Concurrent321','gestor',true)) {
+        throw new RuntimeException('A nova versão persistida não foi respeitada.');
     }
 }
 
