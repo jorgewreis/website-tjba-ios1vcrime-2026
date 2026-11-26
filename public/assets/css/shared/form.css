@@ -1093,7 +1093,7 @@ input[type="radio"] {
         font-size: 16px;
     }
 
-    .page-operational-form .card-page .btn {
+    .page-operational-form .card-page :is(.btn, .operational-retry:not([hidden])) {
         min-height: 44px;
         max-width: 100%;
         white-space: normal;
