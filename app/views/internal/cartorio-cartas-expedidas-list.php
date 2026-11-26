@@ -164,9 +164,10 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
     <?php include __DIR__ . '/_internal_head_css.php'; ?>
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
+    <link rel="stylesheet" href="/assets/css/shared/operational-list-mobile.css?v=<?php echo (int) (@filemtime(__DIR__ . '/../../../public/assets/css/shared/operational-list-mobile.css') ?: time()); ?>">
 </head>
 
-<body class="page-internal">
+<body class="page-internal page-operational-list">
 
     <div class="spacing-top-page"></div>
     <div class="header-page">
@@ -196,7 +197,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                 <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-gray-900); font-size: 13px;">Filtros</span>
             </div>
             <div class="display-flex row row-fit justify-end gap-y-md align-center flex-wrap">
-                <select class="width-500 height-md" id="filter-status">
+                <select class="width-500 height-md" id="filter-status" aria-label="Filtrar por status">
                     <option value="" <?php echo $statusFilter === '' ? ' selected' : ''; ?>>Todos os status</option>
                     <option value="aguardando_envio" <?php echo $statusFilter === 'aguardando_envio' ? ' selected' : ''; ?>>
                         Aguardando envio (<?php echo $statusCounts['aguardando_envio'] === null ? '—' : (int) $statusCounts['aguardando_envio']; ?>)
@@ -211,7 +212,7 @@ $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time()
                         Cancelada (<?php echo (int) ($statusCounts['cancelada'] ?? 0); ?>)
                     </option>
                 </select>
-                <select class="height-md" id="filter-tipo" style="width: 350px;">
+                <select class="height-md" id="filter-tipo" aria-label="Filtrar por finalidade" style="width: 350px;">
                     <option value="" <?php echo $finalidadeFilter === '' ? ' selected' : ''; ?>>Todas as finalidades</option>
                     <?php foreach ($finalidadeCounts as $finalidade => $count): ?>
                         <option value="<?php echo htmlspecialchars($finalidade, ENT_QUOTES); ?>" <?php echo $finalidadeFilter === $finalidade ? ' selected' : ''; ?>>

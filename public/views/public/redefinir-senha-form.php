@@ -75,7 +75,7 @@ $csrfToken = Security::generateCSRFToken();
     <link rel="stylesheet" href="/assets/css/shared/form.css">
     <link rel="stylesheet" href="/assets/css/shared/table.css">
     <link rel="stylesheet" href="/assets/css/shared/layout.css">
-    <link rel="stylesheet" href="/assets/css/shared/login.css">
+    <link rel="stylesheet" href="/assets/css/shared/login.css?v=<?php echo (int) (@filemtime(dirname(__DIR__, 2) . '/assets/css/shared/login.css') ?: time()); ?>">
 
     <script>
         (function() {
@@ -101,7 +101,7 @@ $csrfToken = Security::generateCSRFToken();
         }
     </style>
 </head>
-<body>
+<body class="login-form-page">
 
     <div class="title-page" style="margin-top: 30px;">
         <span class="title">Redefinir senha</span>
