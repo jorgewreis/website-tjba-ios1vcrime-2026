@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
 
 @media (max-width: 389px) {
-    .view {
+    .view:not(.layout-wraper--home) {
         display: none;
     }
     .noview {
@@ -18,8 +18,8 @@ body {
 }
 
 
-/* ========== DESKTOP (min-width: 390px) ========== */
-@media (min-width: 390px) {
+/* Utilitários compartilhados e base do layout em qualquer viewport. */
+@media all {
 
     /* CONTAINER */
     .container {
@@ -799,6 +799,89 @@ body {
         cursor: pointer;
         width: auto;
         box-sizing: border-box;
+    }
+}
+
+/* Shell autenticado: em telas compactas o menu vira uma gaveta,
+   e a página usa toda a largura e altura visível, sem empurrar o iframe. */
+@media (max-width: 767px) {
+    .layout-wraper--home .layout-container {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    .layout-wraper--home .layout-page {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .layout-wraper--home .layout-navbar {
+        box-sizing: border-box;
+        width: auto;
+        height: 56px;
+        margin: 8px 8px 0;
+        padding: 0 8px;
+    }
+
+    .layout-wraper--home .navbar-nav .nav-item {
+        margin-right: 0;
+    }
+
+    .layout-wraper--home .layout-navbar button.nav-link {
+        display: grid;
+        place-items: center;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+    }
+
+    .layout-wraper--home .layout-navbar .nav-link.disabled {
+        display: none;
+    }
+
+    .layout-wraper--home .layout-menu {
+        position: fixed;
+        inset-block-start: 0;
+        height: 100vh;
+        height: 100dvh;
+        width: min(280px, calc(100% - 56px));
+    }
+
+    .layout-wraper--home .brand-name,
+    .layout-wraper--home .menu-inner {
+        width: 100%;
+    }
+
+    .layout-wraper--home .menu-inner {
+        min-height: 0;
+        flex: 1 1 auto;
+        overscroll-behavior: contain;
+    }
+
+    .layout-wraper--home .brand-name button.layout-menu-toggle {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .layout-wraper--home .layout-overlay {
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    .layout-wraper--home .drag-target {
+        pointer-events: none;
+    }
+
+    .view.layout-wraper--home .content-wrapper,
+    .layout-wraper--home .target-page {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+    }
+
+    .layout-wraper--home .settings-dropdown {
+        max-width: calc(100vw - 32px);
     }
 }
 

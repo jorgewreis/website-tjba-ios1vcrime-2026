@@ -314,6 +314,30 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+        @media (max-width: 767px) {
+            .navbar-nav-left .nav-new-avatar {
+                width: 44px;
+                height: 44px;
+                margin-left: 0;
+            }
+
+            .navbar-nav-left .layout-menu-toggle {
+                position: static;
+                transform: none;
+                width: 44px;
+                height: 44px;
+                margin-inline-start: 4px;
+                padding: 0;
+            }
+
+            .navbar-nav-left .layout-menu-toggle .nav-link {
+                flex: 0 0 44px;
+                width: 44px;
+                height: 44px;
+                margin: 0;
+            }
+        }
+
         @media (min-width: 1280px) {
             .nav-item-user-summary {
                 display: flex;
@@ -454,22 +478,19 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 </head>
 <body>
 
-    <!-- PAGE DISPOSITIVOS INCOMPATIVEIS -->
-    <div class="noview"></div>
-
     <!-- CONTEÚDO DO SITE -->
-    <div class="view layout-wraper">
+    <div class="view layout-wraper layout-wraper--home">
 
         <div class="layout-container">
 
-            <div class="layout-menu">
+            <nav class="layout-menu" id="layout-menu" aria-label="Menu principal">
                 <div class="brand-name">
                     <button type="button" class="brand-name-link">
                         <span class="name-primary">Sistema de Gestão</span>
                         <span class="name-secondary">Primeira Vara Crime</span>
                     </button>
-                    <button type="button" class="layout-menu-toggle">
-                        <i class="fi fi-rs-angle-circle-left"></i>
+                    <button type="button" class="layout-menu-toggle" aria-label="Fechar menu principal">
+                        <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg>
                     </button>
                 </div>
                 <ul class="menu-inner">
@@ -480,7 +501,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                         </button>
                     </li>
                 </ul>
-            </div>
+            </nav>
 
             <div class="layout-page">            
                 <!-- NAVBAR -->
@@ -505,8 +526,8 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                             </div>
                         </div>
                         <div class="layout-menu-toggle">
-                            <button type="button" class="nav-item nav-link">
-                                <i class="fi fi-br-menu-burger"></i>
+                            <button type="button" class="nav-item nav-link" aria-label="Abrir menu principal" aria-controls="layout-menu" aria-expanded="false">
+                                <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
                             </button>
                         </div>
                         <div class="nav-item nav-item-user-summary">
@@ -526,7 +547,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                     <div class="navbar-nav-right">
                         <ul class="navbar-nav">
                             <li class="nav-item" data-target="<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>">
-                                <button type="button" class="nav-link">
+                                <button type="button" class="nav-link" aria-label="Página inicial">
                                     <i class="fi fi-br-layout-fluid"></i>
                                 </button>
                             </li>
@@ -567,7 +588,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
                 <!-- CONTENT WRAPER -->
                 <div class="content-wrapper">
-                    <iframe class="target-page" id="frame" src="/frame.php?page=<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>"></iframe>
+                    <iframe class="target-page" id="frame" title="Área de trabalho da Vara" src="/frame.php?page=<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>"></iframe>
                 </div>
             </div>            
         </div>        
@@ -583,7 +604,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
     <script src="/assets/js/shared/navigate-buttons.js" defer></script>
     <script src="/assets/js/shared/user-context.js" defer></script>
     <script src="/assets/js/shared/common.js?v=logout-csrf-20261114" defer></script>
-    <script src="/assets/js/shared/menu.js" defer></script>
+    <script src="/assets/js/shared/menu.js?v=<?php echo hash_file('sha256', __DIR__ . '/assets/js/shared/menu.js') ?: time(); ?>" defer></script>
 
     <script>
         /** Página inicial do iframe (dashboard interno ou início externo). Alinhado ao PHP $defaultHomePage. */
@@ -1049,7 +1070,6 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
             await initDynamicMenu();
             App.Menu.initMenu();
-            App.Menu.initActive();
 
             if (PODE_ALTERNAR_MODO_ADMIN) {
                 const modeButtons = document.querySelectorAll('button[data-admin-mode]');
