@@ -27,11 +27,17 @@ function render() {
         stub('repositories','ProcessosRepository','function findById($id){return ["numero_processo"=>"0000000-00.2026.0.00.0000","classe_id"=>"C"];}');
         stub('repositories','ClassesRepository','function findById($id){return ["nome"=>"Classe sintética com nome extenso","codigo"=>"100"];}');
         for(const name of ['CartasExpedidas','CartasRecebidas']) {
-            stub('services',name+'Service','function find($id){return ["processo_origem_id"=>"P","finalidade"=>"Intimação para Audiência","cidade_destino"=>"Comarca Sintética","uf_destino"=>"BA","prazo_dias"=>30,"status"=>"em_andamento"]; }');
+            const tipos = name === 'CartasRecebidas'
+                ? fs.readFileSync(path.join(root,'app/services/CartasRecebidasService.php'),'utf8').match(/public const TIPOS_CARTA = \[.*?\];/s)[0]
+                : '';
+            stub('services',name+'Service',tipos+' function find($id){return ["processo_origem_id"=>"P","finalidade"=>"Intimação para Audiência","cidade_destino"=>"Comarca Sintética","uf_destino"=>"BA","prazo_dias"=>30,"status"=>"em_andamento"]; }');
             stub('repositories',name+'SubtarefasRepository','function findByCartaId($id){return [];}');
         }
         for(const name of ['OficiosCartorio','OficiosGabinete']) {
-            stub('services',name+'Service','function find($id){return ["id"=>"O","numero_sequencial"=>12,"ano"=>2026,"numero_processo"=>"0000000-00.2026.0.00.0000","classe_nome"=>"Classe sintética","tipo_oficio"=>"Comunicação de teste","status"=>"pendente","forma_cumprimento"=>"cartorio"]; }');
+            const tipos = name === 'CartasRecebidas'
+                ? fs.readFileSync(path.join(root,'app/services/CartasRecebidasService.php'),'utf8').match(/public const TIPOS_CARTA = \[.*?\];/s)[0]
+                : '';
+            stub('services',name+'Service',tipos+' function find($id){return ["id"=>"O","numero_sequencial"=>12,"ano"=>2026,"numero_processo"=>"0000000-00.2026.0.00.0000","classe_nome"=>"Classe sintética","tipo_oficio"=>"Comunicação de teste","status"=>"pendente","forma_cumprimento"=>"cartorio"]; }');
             stub('repositories',name+'Repository','function getMaxSequencialForYear($ano){return 12;}');
         }
         stub('repositories','OficiosCartorioSubtarefasRepository','const TIPO_ENVIAR="enviar"; const TIPO_JUNTAR="juntar"; function findByOficioId($id){return [["tipo"=>"enviar","status"=>"pendente"]];}');
@@ -81,6 +87,10 @@ function render() {
                 if(width<768) for(const x of m.xs) {
                     assert.ok(x.l>=m.left-1&&x.r<=m.right+1,f+' out of card '+JSON.stringify(x));
                     if(x.control) assert.ok(x.h>=43.9,f+' target too small '+x.id);
+                }
+                if(f.endsWith('recebidas-create')) {
+                    assert.deepEqual(await page.locator('#filter-tipo-carta option').evaluateAll(opts=>opts.map(opt=>opt.value)),['','precatoria','ordem','rogatoria']);
+                    assert.equal(await page.locator('#filter-classe').count(),0);
                 }
                 if(width===320&&f.endsWith('recebidas-edit')) {
                     const retry=page.locator('#comarca-lookup-retry');

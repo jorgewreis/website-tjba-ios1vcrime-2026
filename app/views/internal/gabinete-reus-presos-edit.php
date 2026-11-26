@@ -208,8 +208,8 @@ if ($ultimaMov !== null) {
                         <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                     </div>
                     <div class="col">
-                        <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                        <input type="text" class="width-500 height-md" id="filter-classe" data-datajud-related="true" placeholder="Preenchido pelo DataJud" readonly>
+                        <label for="filter-classe">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                        <input type="text" class="width-500 height-md" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true" placeholder="Preenchido pelo DataJud" readonly>
                     </div>
                 </div>
                 <input type="hidden" id="hidden-classe-codigo">

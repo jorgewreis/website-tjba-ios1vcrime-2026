@@ -37,8 +37,8 @@ $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?:
                     <input type="text" id="filter-processo" name="numero_processo" required inputmode="numeric" maxlength="25" value="<?php echo htmlspecialchars((string) $registro['numero_processo'], ENT_QUOTES); ?>">
                 </div>
                 <div class="col filter cejusc-form-field cejusc-field-class">
-                    <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" id="filter-classe" data-datajud-related="true" value="<?php echo htmlspecialchars((string) ($registro['classe_descricao'] ?? $registro['classe_codigo'] ?? ''), ENT_QUOTES); ?>" readonly>
+                    <label for="filter-classe">Classe <span class="label-hint-automatizado">*automatizado</span></label>
+                    <input type="text" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true" value="<?php echo htmlspecialchars((string) ($registro['classe_descricao'] ?? $registro['classe_codigo'] ?? ''), ENT_QUOTES); ?>" readonly>
                 </div>
             </div>
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo" value="<?php echo htmlspecialchars((string) ($registro['classe_codigo'] ?? ''), ENT_QUOTES); ?>">

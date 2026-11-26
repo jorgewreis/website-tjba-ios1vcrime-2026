@@ -29,11 +29,8 @@ $cejuscCssV = @filemtime($assetsRoot . '/css/modules/cartorio/cejusc-v2.css') ?:
                     <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" id="filter-processo" name="numero_processo" required inputmode="numeric" maxlength="25" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
-                <div class="col filter cejusc-form-field cejusc-field-class">
-                    <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" id="filter-classe" data-datajud-related="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
-                </div>
             </div>
+            <input type="hidden" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true">
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
             <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
             <div class="cejusc-form-grid">

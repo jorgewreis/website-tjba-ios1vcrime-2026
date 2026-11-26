@@ -43,11 +43,8 @@ $routePage = trim((string) ($_GET['page'] ?? 'monitoramentogabinetecreate'));
                     <label for="filter-processo">Número do processo <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <input type="text" class="width-400 height-md" id="filter-processo" name="processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
-                <div class="col">
-                    <label for="filter-classe" id="processo-ap-info" aria-live="polite">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" name="classe" placeholder="Preenchido automaticamente pelo DataJud" readonly>
-                </div>
             </div>
+            <input type="hidden" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true">
             <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
             <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 

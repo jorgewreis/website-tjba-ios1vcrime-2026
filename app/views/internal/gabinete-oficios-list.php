@@ -175,10 +175,6 @@ if ($totalPages > 0) {
                     <input type="text" class="width-400 height-md" id="filter-processo" placeholder="0000000-00.0000.0.00.0000" autocomplete="off">
                 </div>
                 <div class="col">
-                    <label for="filter-classe">Classe <span class="label-hint-automatizado">*automatizado</span></label>
-                    <input type="text" class="width-600 height-md" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true" placeholder="Preenchido automaticamente pelo DataJud" readonly>
-                </div>
-                <div class="col">
                     <label for="gab-oficio-tipo">Tipo de ofício <span class="label-hint-obrigatorio">*obrigatório</span></label>
                     <select class="width-600 height-md" id="gab-oficio-tipo">
                         <option value="">Selecione…</option>
@@ -222,6 +218,7 @@ if ($totalPages > 0) {
                 <button type="button" class="btn btn-primary" id="btn-gab-oficio-registrar">Registrar</button>
             </div>
         </div>
+        <input type="hidden" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true">
         <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 

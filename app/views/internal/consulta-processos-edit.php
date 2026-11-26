@@ -116,10 +116,6 @@ $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <div class="col col-full">
-                        <label for="process-responsible-sector-reason">Justificativa (opcional)</label>
-                        <textarea class="width-700" id="process-responsible-sector-reason" name="justificativa" maxlength="500" rows="3"></textarea>
-                    </div>
                     <button type="submit" class="btn btn-primary height-md" id="process-responsible-sector-submit">Registrar atribuição</button>
                 </div>
                 <p id="process-responsible-sector-status" role="status" aria-live="polite"></p>
