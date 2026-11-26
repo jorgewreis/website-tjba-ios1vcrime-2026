@@ -58,6 +58,13 @@ jobs:
           DEPLOY_TARGET_PATH: ${{ secrets.DEV_PATH }}
         run: bash .github/scripts/deploy-staged-cartas-migration.sh
 
+      - name: Aplicar migration de idempotência de guias antes da publicação (DEV)
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          DEPLOY_TARGET_PATH: ${{ secrets.DEV_PATH }}
+        run: bash .github/scripts/deploy-staged-guias-migration.sh
+
       # Em caso de permissão negada, siga o diagnóstico pontual em DEPLOY-SETUP.md.
       - name: Sync files to server (DEV)
         env:

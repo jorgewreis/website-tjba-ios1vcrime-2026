@@ -11,12 +11,17 @@ require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/SalarioMinimoRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/AlocacaoTarefasPerfisHelper.php';
 require_once __DIR__ . '/../helpers/CartorioTarefaStatusPrincipalHelper.php';
+require_once __DIR__ . '/../helpers/ParteDocumentoLock.php';
+require_once __DIR__ . '/../helpers/GuiasCadastroTransactionalGuard.php';
+require_once __DIR__ . '/../helpers/GuiasIdempotencia.php';
 
 final class GuiasService
 {
+    private bool $idempotencyReplayed = false;
     private PDO $connection;
     private GuiasRepository $repository;
     private GuiasSubtarefasRepository $subtarefasRepository;
@@ -159,11 +164,56 @@ final class GuiasService
 
     public function create(array $payload): string
     {
-        // #region agent log
-        $logPath = dirname(__DIR__, 2) . '/debug-64730a.log';
-        @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'GuiasService.php:create:entry', 'message' => 'create() started', 'data' => ['payloadKeys' => array_keys($payload), 'numeroProcessoLen' => strlen(trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? '')))], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
-        // #endregion
+        $this->idempotencyReplayed = false;
+        if (ParteDocumentoLock::isConnectionUnsafe($this->connection)) throw new RuntimeException('Conexão indisponível para cadastro ou edição de guia.');
+        $numero = trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? ''));
+        if (!preg_match('/^(?:\d{20}|\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})$/D', $numero)) {
+            throw new InvalidArgumentException('Informe o número do processo no formato CNJ completo.');
+        }
+        CnjValidator::digits20OrThrow($numero);
+        $regime = trim((string) ($payload['regime'] ?? ''));
+        if ($regime !== '' && !in_array($regime, self::REGIMES_VALIDOS, true)) {
+            throw new InvalidArgumentException('Regime inválido. Use: Aberto, Semiaberto ou Fechado.');
+        }
+        $parte = trim((string) ($payload['parte_id'] ?? $payload['reu_id'] ?? ''));
+        $nome = trim((string) ($payload['denunciado'] ?? ''));
+        $cpfInformado = trim((string) ($payload['cpf'] ?? ''));
+        if ($parte === '' && $nome === '' && $cpfInformado === '') throw new InvalidArgumentException('Informe ou selecione a pessoa.');
+        if ($parte === '' && $cpfInformado === '' && ($payload['confirmar_nova_pessoa'] ?? false) !== true) {
+            throw new InvalidArgumentException('Selecione uma pessoa existente ou confirme o cadastro de uma nova pessoa.');
+        }
+        $key = strtolower(trim((string)($payload['idempotency_key'] ?? '')));
+        $actor = trim((string)($payload['usuario_cadastro_id'] ?? ''));
+        if ($key !== '' && ($actor === '' || preg_match('/^[a-f0-9]{64}$/D', $key) !== 1)) throw new InvalidArgumentException('Chave de envio inválida.');
+        $hash = $key !== '' ? GuiasIdempotencia::payloadHash($payload) : '';
+        $cpf = preg_replace('/\D+/', '', (string) ($payload['cpf'] ?? '')) ?? '';
+        if (trim((string) ($payload['cpf'] ?? '')) !== '' && !Security::validarCPF($cpf)) {
+            throw new InvalidArgumentException('CPF inválido. Verifique os dígitos.');
+        }
+        return $this->comTravaCpf($cpf, fn(): string => $this->executarTransacaoCadastroEdicao(function () use ($payload, $key, $actor, $hash): string {
+            if ($key === '') return $this->createTransacional($payload);
+            $candidate = IdGenerator::generateUniquePrefixedId($this->connection, $this->repository->getTableName(), 'id', 'GUI', 30);
+            $reservation = GuiasIdempotencia::reserve($this->connection, $actor, $key, $hash, $candidate);
+            $this->idempotencyReplayed = $reservation['replayed'];
+            if ($reservation['replayed']) return $reservation['id'];
+            return $this->createTransacional($payload, $candidate);
+        }, $key !== '', $cpf !== ''));
+    }
 
+    /** A trava coordena somente os escritores que usam este protocolo. */
+    private function comTravaCpf(string $cpf, callable $operation): mixed
+    {
+        if ($cpf !== '' && $this->connection->inTransaction()) throw new RuntimeException('Conexão indisponível para cadastro de guia.');
+        return ParteDocumentoLock::run($this->connection, 'CPF', $cpf, $operation);
+    }
+
+    public function wasIdempotencyReplay(): bool { return $this->idempotencyReplayed; }
+
+    /** A resposta de criação/replay não deve atualizar a guia após o commit. */
+    public function findForCreateResponse(string $id): ?array { return $this->repository->findById($id); }
+
+    private function createTransacional(array $payload, ?string $reservedId = null): string
+    {
         $numeroProcesso = trim((string) ($payload['numero_processo'] ?? $payload['processo'] ?? ''));
         if ($numeroProcesso === '') {
             throw new InvalidArgumentException('O número do processo é obrigatório.');
@@ -177,10 +227,6 @@ final class GuiasService
         if ($denunciado !== '') {
             $denunciado = TextFormatter::formatProperName($denunciado, 255);
         }
-        if ($parteId === '' && $denunciado !== '' && strlen($digits) === 20) {
-            $parteId = $this->partesRepository->ensureParteByNomeOuCpf($denunciado, null);
-        }
-
         $tipo = trim((string) ($payload['tipo'] ?? 'Guia - Tipo não informado'));
         if ($tipo === '') {
             $tipo = 'Guia - Tipo não informado';
@@ -195,6 +241,8 @@ final class GuiasService
         if ($dataFato !== null && $dataFato > date('Y-m-d')) {
             throw new InvalidArgumentException('A data do fato deve ser anterior à data de hoje.');
         }
+
+        [$parteId, $denunciado] = $this->resolverParteCriacao($parteId, $denunciado, $payload);
 
         $processoId = null;
         $classeCodigo = trim((string) ($payload['classe_codigo'] ?? ''));
@@ -224,7 +272,7 @@ final class GuiasService
             $denunciado = $parte !== null ? trim((string) ($parte['nome_completo'] ?? '')) : '';
         }
 
-        $idGuia = IdGenerator::generateUniquePrefixedId(
+        $idGuia = $reservedId ?? IdGenerator::generateUniquePrefixedId(
             $this->connection,
             $this->repository->getTableName(),
             'id',
@@ -262,11 +310,6 @@ final class GuiasService
             }
         }
 
-        // #region agent log
-        $logPath = dirname(__DIR__, 2) . '/debug-64730a.log';
-        @file_put_contents($logPath, json_encode(['sessionId' => '64730a', 'location' => 'GuiasService.php:create:beforeInsert', 'message' => 'row built', 'data' => ['idGuia' => $idGuia, 'rowKeys' => array_keys($row)], 'timestamp' => round(microtime(true) * 1000), 'hypothesisId' => 'D']) . "\n", FILE_APPEND | LOCK_EX);
-        // #endregion
-
         $this->repository->insert($row);
 
         $regraRow = $this->alocacoesRegrasRepository->findByRegra(self::REGRA_ALOCAR_GUIAS);
@@ -289,7 +332,7 @@ final class GuiasService
                 } else {
                     $this->alocadosRepository->addAlocado($idGuia, $usuarioCadastroId, GuiasAlocadosRepository::TIPO_ALL);
                 }
-            } catch (RuntimeException $e) {
+            } catch (LimiteAlocadosException $e) {
                 // limite já atingido ou duplicata, ignorar
             }
         }
@@ -298,7 +341,7 @@ final class GuiasService
         if ($usuarioIdRegra !== '' && !$chefiaRegra && $usuarioIdRegra !== $usuarioCadastroId) {
             try {
                 $this->alocadosRepository->addAlocado($idGuia, $usuarioIdRegra, GuiasAlocadosRepository::TIPO_RULE);
-            } catch (RuntimeException $e) {
+            } catch (LimiteAlocadosException $e) {
                 // limite ou duplicata
             }
         }
@@ -310,7 +353,7 @@ final class GuiasService
             function (string $uid) use ($idGuia): void {
                 try {
                     $this->alocadosRepository->addAlocado($idGuia, $uid, GuiasAlocadosRepository::TIPO_SPECIFIC);
-                } catch (RuntimeException $e) {
+                } catch (LimiteAlocadosException $e) {
                     // limite ou duplicata
                 }
             }
@@ -336,22 +379,167 @@ final class GuiasService
 
     public function update(string $id, array $payload): bool
     {
+        return $this->executarTransacaoCadastroEdicao(fn(): bool => $this->updateTransacional($id, $payload));
+    }
+
+    /** @return array{string, string} */
+    private function resolverParteCriacao(string $parteId, string $nome, array $payload): array
+    {
+        $cpf = preg_replace('/\D+/', '', (string) ($payload['cpf'] ?? '')) ?? '';
+        if ($cpf !== '') {
+            $ids = $this->buscarPartesPorCpfCanonico($cpf);
+            if (count($ids) > 1) throw new InvalidArgumentException('CPF associado a mais de uma pessoa. Corrija o cadastro antes de continuar.');
+            if ($ids !== []) {
+                if ($parteId !== '' && $parteId !== (string) $ids[0]) throw new InvalidArgumentException('CPF não corresponde à pessoa selecionada.');
+                $parteId = (string) $ids[0];
+            } elseif ($parteId !== '') {
+                throw new InvalidArgumentException('CPF não corresponde à pessoa selecionada.');
+            }
+        }
+        if ($parteId !== '') {
+            $parte = $this->partesRepository->findById($parteId);
+            if ($parte === null) throw new InvalidArgumentException('Pessoa selecionada não encontrada.');
+            return [$parteId, trim((string) $parte['nome_completo'])];
+        }
+        if ($nome === '') throw new InvalidArgumentException('Informe o nome da pessoa.');
+        if ($cpf === '' && ($payload['confirmar_nova_pessoa'] ?? false) !== true) {
+            throw new InvalidArgumentException('Selecione uma pessoa existente ou confirme o cadastro de uma nova pessoa.');
+        }
+        $parteId = $this->partesRepository->insert(['nome_completo' => $nome, 'cpf' => $cpf]);
+        if ($cpf !== '') {
+            $statement = $this->connection->prepare("SELECT COUNT(*) FROM partes_documentos WHERE parte_id = ? AND UPPER(tipo) = 'CPF' AND numero = ?");
+            $statement->execute([$parteId, $cpf]);
+            if ((int) $statement->fetchColumn() !== 1) throw new RuntimeException('Persistência do documento não confirmada.');
+        }
+        return [$parteId, $nome];
+    }
+
+    /** @return list<string> */
+    private function buscarPartesPorCpfCanonico(string $cpf): array
+    {
+        $ids = [];
+        try {
+            $statement = $this->connection->prepare(
+                "SELECT id FROM partes WHERE REGEXP_REPLACE(COALESCE(cpf, ''), '[^0-9]', '') = ? "
+                . "UNION SELECT parte_id FROM partes_documentos WHERE UPPER(tipo) = 'CPF' "
+                . "AND REGEXP_REPLACE(COALESCE(numero, ''), '[^0-9]', '') = ?"
+            );
+            $statement->execute([$cpf, $cpf]);
+            $ids = $statement->fetchAll(PDO::FETCH_COLUMN);
+        } catch (Throwable) {
+            // Fallback para servidores sem REGEXP_REPLACE: normaliza em PHP
+            // para manter o mesmo contrato de ParteDocumentoHelper.
+            foreach ($this->connection->query("SELECT id, cpf FROM partes WHERE cpf IS NOT NULL AND cpf <> ''")->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                if (ParteDocumentoHelper::normalizarNumero('CPF', (string) ($row['cpf'] ?? '')) === $cpf) {
+                    $ids[] = (string) $row['id'];
+                }
+            }
+            foreach ($this->connection->query("SELECT parte_id, numero FROM partes_documentos WHERE UPPER(tipo) = 'CPF'")->fetchAll(PDO::FETCH_ASSOC) as $row) {
+                if (ParteDocumentoHelper::normalizarNumero('CPF', (string) ($row['numero'] ?? '')) === $cpf) {
+                    $ids[] = (string) $row['parte_id'];
+                }
+            }
+        }
+
+        $ids = array_values(array_unique(array_filter(array_map('strval', $ids), static fn(string $id): bool => trim($id) !== '')));
+        return $ids;
+    }
+
+    /** @template T @param callable():T $operation @return T */
+    private function executarTransacaoCadastroEdicao(callable $operation, bool $idempotency = false, bool $documentos = false): mixed
+    {
+        if (ParteDocumentoLock::isConnectionUnsafe($this->connection)) {
+            throw new RuntimeException('Conexão indisponível para cadastro ou edição de guia.');
+        }
+        if ($this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) !== 'mysql') {
+            return $this->executarTransacaoCadastroEdicaoInterna($operation, null, $idempotency, $documentos);
+        }
+        $timeout = $this->connection->query('SELECT @@SESSION.innodb_lock_wait_timeout')->fetchColumn();
+        if (!is_numeric($timeout) || (int)$timeout < 1) throw new RuntimeException('Timeout de linha inválido.');
+        $timeout = (int)$timeout;
+        $failure = null;
+        $result = null;
+        $restored = false;
+        $restore = function () use ($timeout, &$restored): void {
+            try {
+                if ($this->connection->exec('SET SESSION innodb_lock_wait_timeout = ' . $timeout) === false) throw new RuntimeException('Não foi possível restaurar timeout de linha.');
+                $restored = true;
+            } catch (Throwable $e) {
+                ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                throw $e;
+            }
+        };
+        try {
+            if ($this->connection->exec('SET SESSION innodb_lock_wait_timeout = ' . min(5, $timeout)) === false) {
+                throw new RuntimeException('Não foi possível limitar espera de linha.');
+            }
+            $result = $this->executarTransacaoCadastroEdicaoInterna($operation, $restore, $idempotency, $documentos);
+        } catch (Throwable $e) {
+            $failure = $e;
+        } finally {
+            try {
+                if (!$restored) $restore();
+            } catch (Throwable $restoreFailure) {
+                ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                if ($failure === null) $failure = $restoreFailure;
+                else error_log('GuiasService: restauração de timeout de linha não confirmada.');
+            }
+        }
+        if ($failure !== null) throw $failure;
+        return $result;
+    }
+
+    /** @template T @param callable():T $operation @return T */
+    private function executarTransacaoCadastroEdicaoInterna(callable $operation, ?callable $beforeCommit = null, bool $idempotency = false, bool $documentos = false): mixed
+    {
+        if ($this->connection->inTransaction()) {
+            throw new RuntimeException('Cadastro e edição de guias exigem transação própria.');
+        }
+        if (!$this->connection->beginTransaction()) {
+            throw new RuntimeException('Não foi possível iniciar a transação de guia.');
+        }
+        try {
+            GuiasCadastroTransactionalGuard::requireTransactionalTables($this->connection, $idempotency, $documentos);
+            $result = $operation();
+            if ($result === false) {
+                try {
+                    if (!$this->connection->rollBack()) throw new RuntimeException('Não foi possível reverter a transação de guia.');
+                } catch (Throwable $rollbackFailure) {
+                    ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                    throw $rollbackFailure;
+                }
+                return false;
+            }
+            try {
+                if ($beforeCommit !== null) $beforeCommit();
+                if (!$this->connection->commit()) throw new RuntimeException('Não foi possível confirmar a transação de guia.');
+            } catch (Throwable $commitFailure) {
+                ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                throw $commitFailure;
+            }
+            return $result;
+        } catch (Throwable $e) {
+            try {
+                if ($this->connection->inTransaction() && !$this->connection->rollBack()) throw new RuntimeException('Rollback não confirmado.');
+            } catch (Throwable $rollbackFailure) {
+                ParteDocumentoLock::markConnectionUnsafe($this->connection);
+                error_log('GuiasService: rollback não confirmado.');
+            }
+            throw $e;
+        }
+    }
+
+    private function updateTransacional(string $id, array $payload): bool
+    {
         if (trim($id) === '') {
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
         $usuarioId = trim((string) ($payload['usuario_id'] ?? ''));
         unset($payload['usuario_id']);
-        if ($usuarioId !== '') {
-            try {
-                $this->alocadosRepository->addAlocado($id, $usuarioId);
-            } catch (RuntimeException $e) {
-                // limite ou duplicata
-            }
-        }
 
         $allowed = [
-            'numero_processo', 'processo_id', 'denunciado', 'parte_id', 'tipo', 'etapa', 'status',
+            'denunciado', 'tipo', 'etapa', 'status',
             'regime', 'data_fato', 'dias_multa', 'observacoes', 'user_cadastro',
         ];
         $filtered = [];
@@ -359,9 +547,6 @@ final class GuiasService
             if (array_key_exists($key, $payload)) {
                 $filtered[$key] = $payload[$key];
             }
-        }
-        if (array_key_exists('reu_id', $payload) && !array_key_exists('parte_id', $filtered)) {
-            $filtered['parte_id'] = $payload['reu_id'];
         }
         if (isset($filtered['denunciado']) && is_string($filtered['denunciado']) && $filtered['denunciado'] !== '') {
             $filtered['denunciado'] = TextFormatter::formatProperName($filtered['denunciado'], 255);
@@ -387,20 +572,61 @@ final class GuiasService
                 $filtered['dias_multa'] = (int) $dm;
             }
         }
-
-        $updated = $this->repository->update($id, $filtered);
-        if ($updated && (array_key_exists('data_fato', $filtered) || array_key_exists('dias_multa', $filtered))) {
+        // The regular editor cannot reassign the guide's process/person. Keep
+        // those identities stable instead of silently changing the guide row
+        // while leaving processo-partes relations untouched.
+        $current = $this->repository->lockForUpdate($id);
+        if ($current === null) return false;
+        $this->assertGuideIdentityUnchanged($payload, $current);
+        if ($filtered === []) return false;
+        if ($usuarioId !== '') {
+            try {
+                $this->alocadosRepository->addAlocado($id, $usuarioId);
+            } catch (LimiteAlocadosException $e) {
+                // O limite de alocação é uma condição de negócio tolerada.
+            }
+        }
+        $this->repository->update($id, $filtered);
+        if (array_key_exists('data_fato', $filtered) || array_key_exists('dias_multa', $filtered)) {
             $guia = $this->repository->findById($id);
             if ($guia !== null && isset($guia['data_fato']) && $guia['data_fato'] !== null && $guia['data_fato'] !== ''
                 && isset($guia['dias_multa']) && (int) $guia['dias_multa'] > 0) {
                 $valorMulta = $this->calcularValorPenaMulta((string) $guia['data_fato'], (int) $guia['dias_multa']);
-                if ($valorMulta !== null) {
-                    $this->repository->update($id, ['valor_multa' => $valorMulta]);
-                }
+            } else {
+                $valorMulta = null;
             }
+            $this->repository->update($id, ['valor_multa' => $valorMulta]);
             $this->sincronizarDetalhamentoAposUpdate($id, $usuarioId);
         }
-        return $updated;
+        return true;
+    }
+
+    /** @param array<string, mixed> $payload @param array<string, mixed> $current */
+    private function assertGuideIdentityUnchanged(array $payload, array $current): void
+    {
+        if (array_key_exists('numero_processo', $payload)) {
+            // Compare canonical digits without revalidating legacy rows; this
+            // editor must preserve the current identity even if old data needs
+            // a separate repair.
+            $requested = CnjValidator::onlyDigits(trim((string) $payload['numero_processo']));
+            $existing = CnjValidator::onlyDigits(trim((string) ($current['numero_processo'] ?? '')));
+            if ($requested !== $existing) {
+                throw new InvalidArgumentException('O processo da guia não pode ser alterado nesta edição.');
+            }
+        }
+
+        foreach (['processo_id' => 'processo_id', 'parte_id' => 'parte_id', 'reu_id' => 'parte_id'] as $field => $currentField) {
+            if (!array_key_exists($field, $payload)) continue;
+            $requested = trim((string) ($payload[$field] ?? ''));
+            $existing = trim((string) ($current[$currentField] ?? ''));
+            if ($requested !== $existing) {
+                throw new InvalidArgumentException('O processo ou a pessoa vinculada à guia não pode ser alterado nesta edição.');
+            }
+        }
+        if (array_key_exists('parte_id', $payload) && array_key_exists('reu_id', $payload)
+            && trim((string) ($payload['parte_id'] ?? '')) !== trim((string) ($payload['reu_id'] ?? ''))) {
+            throw new InvalidArgumentException('Os identificadores de pessoa informados são incompatíveis.');
+        }
     }
 
     /**
@@ -945,23 +1171,24 @@ final class GuiasService
         if ($guiaId === '') {
             throw new InvalidArgumentException('Identificador da guia inválido.');
         }
-        $row = $this->repository->findById($guiaId);
-        if ($row === null) {
-            throw new InvalidArgumentException('Guia não encontrada.');
-        }
-        $st = trim((string) ($row['status'] ?? ''));
-        if (in_array($st, ['cancelada', 'concluída'], true)) {
-            throw new InvalidArgumentException('Não é possível alterar alocações neste status.');
-        }
-        AlocacaoTarefasPerfisHelper::registrarAlocacaoDirecionadaNaEdicao(
-            $this->connection,
-            $actorId,
-            $targetUsuarioId,
-            function (string $uid) use ($guiaId): void {
-                $this->alocadosRepository->addAlocado($guiaId, $uid, GuiasAlocadosRepository::TIPO_SPECIFIC);
-            },
-            true
-        );
+        $this->executarTransacaoCadastroEdicao(function () use ($guiaId, $targetUsuarioId, $actorId): bool {
+            $row = $this->repository->lockForUpdate($guiaId);
+            if ($row === null) throw new InvalidArgumentException('Guia não encontrada.');
+            $st = trim((string) ($row['status'] ?? ''));
+            if (in_array($st, ['cancelada', 'concluída'], true)) {
+                throw new InvalidArgumentException('Não é possível alterar alocações neste status.');
+            }
+            AlocacaoTarefasPerfisHelper::registrarAlocacaoDirecionadaNaEdicao(
+                $this->connection,
+                $actorId,
+                $targetUsuarioId,
+                function (string $uid) use ($guiaId): void {
+                    $this->alocadosRepository->addAlocado($guiaId, $uid, GuiasAlocadosRepository::TIPO_SPECIFIC);
+                },
+                true
+            );
+            return true;
+        });
     }
 
     private function formatarCNJ(string $digits): string
