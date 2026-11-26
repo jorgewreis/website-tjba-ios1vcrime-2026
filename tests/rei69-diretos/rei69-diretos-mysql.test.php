@@ -281,7 +281,8 @@ PHP;
     $stderr .= stream_get_contents($pipes[2]);
     fclose($pipes[1]); fclose($pipes[2]);
     proc_close($process);
-    $statusText = substr($stderr, (int) strrpos($stderr, 'HTTP:') + 5);
+    preg_match_all('/HTTP:([1-5][0-9]{2})/', $stderr, $statusMatches);
+    $statusText = $statusMatches[1] === [] ? '' : (string) end($statusMatches[1]);
     if ($statusText === '' || !ctype_digit($statusText)) { $failureDetail='exit'; throw new RuntimeException('Endpoint sem status HTTP controlado: ' . $endpoint . ' (' . $stderr . ')'); }
     if ($exit !== 0 && !in_array((int) $statusText, [400, 401, 403], true)) {
         $failureDetail = preg_match('/PHPFATAL:([A-Za-z0-9_.-]{1,80}):([0-9]+)/', $stderr, $fatalMatch) === 1 ? 'child_fatal_'.$fatalMatch[1].'_'.$fatalMatch[2] : (preg_match('/(?:PHP Fatal error|Uncaught (?:Error|TypeError|PDOException)|Parse error)/', $stderr) === 1 ? 'child_fatal' : 'child_http_'.$statusText);
