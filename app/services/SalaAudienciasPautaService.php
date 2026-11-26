@@ -594,10 +594,10 @@ final class SalaAudienciasPautaService
                 'atualizado_por' => $usuarioId,
             ]);
 
-            $this->connection->commit();
             $this->sincronizarDuracaoEHorariosPauta($idPauta);
             $numeroProcPauta = trim((string) ($pauta['numero_processo'] ?? ''));
             $this->sincronizarPrioridadesProcessoAposPartes($processoId, $numeroProcPauta);
+            $this->connection->commit();
 
             return $idPartePauta;
         } catch (Throwable $e) {
@@ -717,7 +717,6 @@ final class SalaAudienciasPautaService
 
             $ok = $this->parteRepository->update($idParte, $updateRow);
 
-            $this->connection->commit();
             $idPautaSync = trim((string) ($parteAtual['pauta'] ?? ''));
             if ($idPautaSync !== '') {
                 $this->sincronizarDuracaoEHorariosPauta($idPautaSync);
@@ -725,6 +724,7 @@ final class SalaAudienciasPautaService
             $processoIdAtual = trim((string) ($parteAtual['processo'] ?? ''));
             $numeroProcAtual = trim((string) ($parteAtual['numero_processo'] ?? ''));
             $this->sincronizarPrioridadesProcessoAposPartes($processoIdAtual, $numeroProcAtual);
+            $this->connection->commit();
 
             return [
                 'ok' => $ok,

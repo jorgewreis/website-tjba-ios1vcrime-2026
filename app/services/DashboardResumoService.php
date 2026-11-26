@@ -53,7 +53,7 @@ final class DashboardResumoService
         foreach(['expedidas'=>'cartas_expedidas','recebidas'=>'cartas_recebidas'] as $kind=>$table){
             try {
                 if (!$this->tableExists($table)) continue;
-                // Expedidas são contadas no snapshot do fluxo, também usado pela lista.
+                // Cadastros são uma série histórica; filas operacionais usam o snapshot do fluxo abaixo.
                 $lettersRegistered[$kind]=0;
                 $recent=$this->pdo->query("SELECT DATE(created_at) dia, COUNT(*) total FROM `{$table}` WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 29 DAY) AND created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY) GROUP BY DATE(created_at)");
                 foreach($recent->fetchAll(PDO::FETCH_ASSOC) as $dayRow){$idx=array_search(substr((string)$dayRow['dia'],0,10),$last30DaysDates,true);if($idx!==false){$count=(int)$dayRow['total'];$last30DaysLetters[$kind][$idx]=$count;$lettersRegistered[$kind]+=$count;}}
@@ -157,7 +157,7 @@ final class DashboardResumoService
                         $queues[]=['key'=>'guias','type'=>'expedicao_guia','label'=>$meta['types']['expedicao_guia'],'count'=>$guiasAguardandoExpedicao,'route'=>$meta['route']];
                     }
                     $total += $moduleCount;
-                    try { $monthStmt=$this->pdo->query("SELECT DATE_FORMAT(p.created_at,'%m/%Y') mes,COUNT(*) total FROM `{$meta['parent']}` p WHERE p.created_at >= DATE_SUB(DATE_FORMAT(CURDATE(),'%Y-%m-01'), INTERVAL 5 MONTH) GROUP BY DATE_FORMAT(p.created_at,'%Y-%m') ORDER BY DATE_FORMAT(p.created_at,'%Y-%m')"); foreach($monthStmt->fetchAll(PDO::FETCH_ASSOC) as $monthRow){$idx=array_search((string)$monthRow['mes'],$registrationLabels,true);if($idx!==false)$registrations[$idx]+=(int)$monthRow['total'];} } catch (Throwable $ignored) {}
+                    try { $monthStmt=$this->pdo->query("SELECT DATE_FORMAT(p.created_at,'%m/%Y') mes,COUNT(*) total FROM `{$meta['parent']}` p WHERE p.created_at >= DATE_SUB(DATE_FORMAT(CURDATE(),'%Y-%m-01'), INTERVAL 5 MONTH) GROUP BY DATE_FORMAT(p.created_at,'%m/%Y') ORDER BY MIN(p.created_at)"); foreach($monthStmt->fetchAll(PDO::FETCH_ASSOC) as $monthRow){$idx=array_search((string)$monthRow['mes'],$registrationLabels,true);if($idx!==false)$registrations[$idx]+=(int)$monthRow['total'];} } catch (Throwable $ignored) {}
                 } catch (Throwable $e) { $hasQueueErrors=true; $queues[] = ['key'=>$key,'label'=>$meta['label'],'count'=>null,'route'=>$meta['route'],'error'=>true]; }
             }
         }
@@ -168,7 +168,7 @@ final class DashboardResumoService
                 $st=$this->pdo->prepare("SELECT COUNT(*) FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(NOW(), INTERVAL 7 DAY)"); $st->execute([$userId]); $completed['7d']=(int)$st->fetchColumn();
                 $st=$this->pdo->prepare("SELECT COUNT(*) FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(NOW(), INTERVAL 30 DAY)"); $st->execute([$userId]); $completed['30d']=(int)$st->fetchColumn();
                 $st=$this->pdo->prepare("SELECT modulo, COUNT(*) total FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(NOW(), INTERVAL 30 DAY) GROUP BY modulo"); $st->execute([$userId]); $completed['modules']=$st->fetchAll(PDO::FETCH_ASSOC);
-                $st=$this->pdo->prepare("SELECT modulo,DATEDIFF(CURDATE(),DATE(concluido_em)) age,COUNT(*) total FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY modulo,DATE(concluido_em)"); $st->execute([$userId]);
+                $st=$this->pdo->prepare("SELECT modulo,DATEDIFF(CURDATE(),DATE(concluido_em)) age,COUNT(*) total FROM dashboard_conclusoes WHERE {$scope} AND concluido_em >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY modulo, DATEDIFF(CURDATE(),DATE(concluido_em))"); $st->execute([$userId]);
                 foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $row) { $i=6-(int)$row['age'];$module=(string)$row['modulo'];if($i>=0&&$i<7){$completed['weekly'][$i]+=(int)$row['total'];if(isset($completed['weekly_by_module'][$module]))$completed['weekly_by_module'][$module][$i]=(int)$row['total'];} }
             }
         } catch (Throwable $e) { error_log('dashboard resumo [produtividade]: '.$e->getMessage()); }
@@ -201,7 +201,7 @@ final class DashboardResumoService
             }
         } catch(Throwable $e) {}
         $globalCompletions=array_fill(0,7,0);
-        try { if($this->tableExists('dashboard_conclusoes')){ $st=$this->pdo->query("SELECT DATEDIFF(CURDATE(),DATE(concluido_em)) age,COUNT(*) total FROM dashboard_conclusoes WHERE concluido_em>=DATE_SUB(CURDATE(),INTERVAL 6 DAY) GROUP BY DATE(concluido_em)"); foreach($st->fetchAll(PDO::FETCH_ASSOC) as $r){$idx=6-(int)$r['age'];if($idx>=0&&$idx<7)$globalCompletions[$idx]=(int)$r['total'];} } } catch(Throwable $e) { error_log('dashboard resumo [conclusoes gerais]: '.$e->getMessage()); }
+        try { if($this->tableExists('dashboard_conclusoes')){ $st=$this->pdo->query("SELECT DATEDIFF(CURDATE(),DATE(concluido_em)) age,COUNT(*) total FROM dashboard_conclusoes WHERE concluido_em>=DATE_SUB(CURDATE(),INTERVAL 6 DAY) GROUP BY DATEDIFF(CURDATE(),DATE(concluido_em))"); foreach($st->fetchAll(PDO::FETCH_ASSOC) as $r){$idx=6-(int)$r['age'];if($idx>=0&&$idx<7)$globalCompletions[$idx]=(int)$r['total'];} } } catch(Throwable $e) { error_log('dashboard resumo [conclusoes gerais]: '.$e->getMessage()); }
         $cartasEmDevolucao=$this->queueCount($queues,'cartas_recebidas','devolucao');
         $deadlinesSoon=null;
         $nearestDeadline=null;

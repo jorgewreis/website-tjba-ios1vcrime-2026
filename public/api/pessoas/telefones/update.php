@@ -9,7 +9,7 @@ ApiAccessGuard::requireAccess(['consultapartesedit', 'partesinstituicoesedit', '
 
 header('Content-Type: application/json; charset=UTF-8');
 
-$basePath = dirname(__DIR__, 3);
+$basePath = dirname(__DIR__, 4);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/PessoasService.php';
@@ -31,8 +31,15 @@ if ($id === '') {
 
 try {
     $service = new PessoasService($connection);
-    $service->updateTelefone($id, $parsed);
+    if (!$service->updateTelefone($id, $parsed)) {
+        http_response_code(404);
+        echo json_encode(['error' => 'Telefone não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     echo json_encode(['success' => true], JSON_UNESCAPED_UNICODE);
+} catch (InvalidArgumentException $exception) {
+    http_response_code(400);
+    echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     ApiErrorReporter::logUnexpected($exception, 'public/api/pessoas/telefones/update.php');
     http_response_code(500);

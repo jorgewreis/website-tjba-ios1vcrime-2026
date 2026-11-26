@@ -720,7 +720,7 @@ final class InternalListExportHandlers
                 'tipo_audiencia' => $r['tipo_audiencia'] ?? '',
                 'localizacao' => $r['localizacao'] ?? '',
                 'arquivo_relativo' => $r['arquivo_relativo'] ?? '',
-                'uploaded_at' => $r['uploaded_at'] ?? '',
+                'uploaded_at' => self::formatExportDateTime($r['DataUploadAta'] ?? $r['Data'] ?? null),
             ];
         }
 

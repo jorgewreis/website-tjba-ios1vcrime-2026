@@ -107,14 +107,21 @@ final class PartesTelefonesRepository
                 $value = (int) (bool) $value;
             } else {
                 $value = trim((string) $value);
-                $value = $value === '' && $column !== 'numero' ? null : $value;
+                if ($column === 'numero') {
+                    $value = preg_replace('/\D/', '', $value);
+                    if ($value === '') {
+                        throw new InvalidArgumentException('Número do telefone é obrigatório.');
+                    }
+                } elseif ($value === '') {
+                    $value = null;
+                }
             }
             $set[] = sprintf('`%s` = :%s', $column, $column);
             $params[':' . $column] = $value;
         }
 
         if (empty($set)) {
-            return false;
+            throw new InvalidArgumentException('Informe os dados que deseja alterar.');
         }
 
         $set[] = '`updated_at` = NOW()';
@@ -126,7 +133,8 @@ final class PartesTelefonesRepository
         }
         $statement->execute();
 
-        return $statement->rowCount() > 0;
+        // MySQL pode reportar zero em uma edição idempotente no mesmo segundo.
+        return $statement->rowCount() > 0 || $this->findById($id) !== null;
     }
 
     public function delete(string $id): bool

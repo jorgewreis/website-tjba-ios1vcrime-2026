@@ -163,7 +163,8 @@ final class PessoasService
             if ($ok) {
                 $this->reconciliarProfissaoParteComVinculosInstituicao($id);
             }
-            return $ok;
+            // A existência já foi confirmada sob lock. Zero linhas afetadas pode ser uma edição idempotente.
+            return true;
         });
     }
 

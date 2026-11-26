@@ -24,7 +24,9 @@ final class Connection168 extends PDO
     }
     public function query(string $query,?int $fetchMode=null,mixed ...$fetchModeArgs): PDOStatement|false
     {
-        if (str_starts_with($query,'SELECT COUNT(*) FROM `cartas_expedidas`')) throw new RuntimeException('Registered count must use the flow snapshot');
+        if (str_contains($query, 'SELECT DATE(created_at) dia, COUNT(*) total FROM `cartas_expedidas`')) {
+            return new Statement168([['dia'=>date('Y-m-d'), 'total'=>9]]);
+        }
         if (str_starts_with($query,'SELECT f.*,CURRENT_DATE hoje')) {
             $this->snapshots++;
             if ($this->fail) throw new PDOException('synthetic failure');
@@ -53,7 +55,7 @@ foreach ([['envio',1,0,0],['devolucao',0,1,1],['encerrada',0,0,0]] as [$stage,$s
     assert168($pdo->snapshots===$before+1,'One snapshot for queue and deadlines');
     assert168(queue168($result,'aguardando_envio')===$send && queue168($result,'aguardando_devolucao')===$back,'Transition counts');
     assert168($result['geral']['tarefas_abertas']===$send+$back,'Total no double counting');
-    assert168($result['geral']['cartas_cadastradas']['expedidas']===$send+$back,'Registered total follows effective open list');
+    assert168($result['geral']['cartas_cadastradas']['expedidas']===9,'Historical registrations are independent from the open queue');
     assert168($result['prazos_proximos_7d']===$soon,'Pending executable return supplies deadline');
 }
 $pdo->states=[array_merge($base,['etapa'=>'envio','diagnostico'=>'devolucao_ausente'])];
@@ -66,7 +68,7 @@ assert168($result['prazos_proximos_7d']===null && $result['setor']['prazos_venci
 $pdo->states=[array_merge($base,['etapa'=>'indeterminada','diagnostico'=>'etapas_duplicadas'])];
 $result=$service->resumo('ficticio',['CARTORIO']);
 assert168(queue168($result,'aguardando_envio')===null && $result['geral']['tarefas_abertas']===null && $result['fila_parcial'],'Ambiguous data never appears as zero');
-assert168($result['geral']['cartas_cadastradas']['expedidas']===1,'Known record count includes visible ambiguous record');
+assert168($result['geral']['cartas_cadastradas']['expedidas']===9,'Historical series is available despite an ambiguous operational record');
 $pdo->states=[
     array_merge($base,['id'=>'stale','status'=>'em_andamento','etapa'=>'encerrada']),
     array_merge($base,['id'=>'terminal','status'=>'finalizada','etapa'=>'encerrada']),
@@ -75,8 +77,8 @@ $pdo->states=[
 ];
 $before=$pdo->snapshots;
 $result=$service->resumo('ficticio',['CARTORIO']);
-assert168($pdo->snapshots===$before+1,'Registered total reuses one queue/deadline snapshot');
-assert168($result['geral']['cartas_cadastradas']['expedidas']===2,'Default list total excludes closed flow with stale parent and terminal, retaining ambiguous');
+assert168($pdo->snapshots===$before+1,'Operational queue/deadline calculations share one snapshot');
+assert168($result['geral']['cartas_cadastradas']['expedidas']===9,'Historical registrations are stable across status combinations');
 $pdo->states=[];
 $result=$service->resumo('ficticio',['CARTORIO']);
 assert168(queue168($result,'aguardando_envio')===0 && !$result['fila_parcial'],'Empty result known zero');

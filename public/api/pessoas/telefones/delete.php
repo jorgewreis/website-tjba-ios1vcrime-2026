@@ -9,7 +9,7 @@ ApiAccessGuard::requireAccess(['consultapartesedit', 'partesinstituicoesedit', '
 
 header('Content-Type: application/json; charset=UTF-8');
 
-$basePath = dirname(__DIR__, 3);
+$basePath = dirname(__DIR__, 4);
 require_once $basePath . '/app/helpers/Conection.php';
 require_once $basePath . '/app/helpers/BootstrapHelper.php';
 require_once $basePath . '/app/services/PessoasService.php';
@@ -36,8 +36,12 @@ if ($id === '') {
 
 try {
     $service = new PessoasService($connection);
-    $removed = $service->deleteTelefone($id);
-    echo json_encode(['deleted' => $removed], JSON_UNESCAPED_UNICODE);
+    if (!$service->deleteTelefone($id)) {
+        http_response_code(404);
+        echo json_encode(['deleted' => false, 'error' => 'Telefone não encontrado.'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    echo json_encode(['deleted' => true], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $exception) {
     ApiErrorReporter::logUnexpected($exception, 'public/api/pessoas/telefones/delete.php');
     http_response_code(500);

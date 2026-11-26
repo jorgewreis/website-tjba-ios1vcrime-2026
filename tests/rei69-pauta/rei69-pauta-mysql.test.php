@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 $fixtureStage = 'setup';
 set_exception_handler(static function (Throwable $exception) use (&$fixtureStage): void {
-    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness', 'pauta_transition_lock', 'pauta_allocation_lock', 'reu_principal_lock'];
+    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness', 'pauta_transition_lock', 'pauta_allocation_lock', 'reu_principal_lock', 'pauta_atomic_derived', 'dashboard_strict_series', 'atas_csv'];
     $code = in_array($fixtureStage, $allowed, true) ? $fixtureStage : 'unknown';
     fwrite(STDERR, "REI69_FIXTURE_FAILURE code=$code\n");
     exit(1);
@@ -239,6 +239,71 @@ $peerGabinete->setPrincipal('R', 'L2');
 if ($pdo->query("SELECT id FROM gabinete_reu_preso_processo WHERE reu_preso_id='R' AND principal=1")->fetchAll(PDO::FETCH_COLUMN) !== ['L2']
     || $pdo->query("SELECT proxima_revisao FROM gabinete_reu_preso WHERE id='R'")->fetchColumn() !== '2026-05-02') {
     throw new RuntimeException('A troca não deixou um único principal com o prazo correspondente.');
+}
+
+$fixtureStage = 'pauta_atomic_derived';
+$pdo->exec("CREATE TRIGGER fixture_pauta_timing BEFORE UPDATE ON sala_audiencias_pauta FOR EACH ROW
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture_timings'");
+foreach (['add', 'update'] as $operation) {
+    $before = snapshot69p($pdo, $tables);
+    try {
+        if ($operation === 'add') {
+            $service->addParte('PA', array_replace($witness, ['nome_parte'=>'Outra testemunha sintética']), 'synthetic');
+        } else {
+            $service->updateParte($witnessId, array_replace($witness, ['nome_parte'=>'Edição sintética']), 'synthetic');
+        }
+        throw new RuntimeException('A falha da etapa derivada não foi propagada.');
+    } catch (PDOException $exception) {
+        if ((string) $exception->getCode() !== '45000' || !str_contains($exception->getMessage(), 'fixture_timings')) {
+            throw $exception;
+        }
+    }
+    if ($pdo->inTransaction() || snapshot69p($pdo, $tables) !== $before) {
+        throw new RuntimeException('A falha de duração não reverteu parte, vínculo e demais dados.');
+    }
+}
+$pdo->exec('DROP TRIGGER fixture_pauta_timing');
+
+$fixtureStage = 'dashboard_strict_series';
+require_once '/repo/app/services/DashboardResumoService.php';
+$pdo->exec("SET SESSION sql_mode=CONCAT(@@sql_mode,',ONLY_FULL_GROUP_BY')");
+$pdo->exec('CREATE TABLE guias (id VARCHAR(40) PRIMARY KEY, status VARCHAR(40), created_at DATETIME) ENGINE=InnoDB');
+$pdo->exec('CREATE TABLE guias_subtarefas (guia_id VARCHAR(40), ordem INT, tipo VARCHAR(40), status VARCHAR(40), updated_at DATETIME) ENGINE=InnoDB');
+$pdo->exec('CREATE TABLE dashboard_conclusoes (usuario_id VARCHAR(40), modulo VARCHAR(40), concluido_em DATETIME) ENGINE=InnoDB');
+$pdo->exec("INSERT INTO guias VALUES ('G1','concluída',CURDATE()),('G2','concluída',CURDATE()),('G3','concluída',DATE_SUB(DATE_FORMAT(CURDATE(),'%Y-%m-01'),INTERVAL 1 DAY))");
+$pdo->exec("INSERT INTO dashboard_conclusoes VALUES
+    ('U','oficios',CURDATE()),('U','oficios',CURDATE()),('U','cartas_recebidas',DATE_SUB(CURDATE(),INTERVAL 1 DAY)),
+    ('outro','oficios',CURDATE())");
+$d = (new DashboardResumoService($pdo))->resumo('U',['CARTORIO'],'CARTORIO');
+if ($d['geral']['cadastros_mensais']['values'][4] !== 1 || $d['geral']['cadastros_mensais']['values'][5] !== 2
+    || $d['geral']['conclusoes_semanais'][5] !== 1 || $d['geral']['conclusoes_semanais'][6] !== 3
+    || $d['usuario']['weekly'][5] !== 1 || $d['usuario']['weekly'][6] !== 2
+    || $d['usuario']['weekly_by_module']['oficios'][6] !== 2) {
+    throw new RuntimeException('As séries não preservaram agrupamentos mensais, globais e por usuário.');
+}
+
+$fixtureStage = 'atas_csv';
+require_once '/repo/app/helpers/InternalListExportHandlers.php';
+require_once '/repo/app/helpers/ListExportHelper.php';
+$pdo->exec("ALTER TABLE sala_audiencias_pauta ADD localizacao VARCHAR(120), ADD created_at DATETIME, ADD updated_at DATETIME, ADD criado_por VARCHAR(40)");
+$pdo->exec('CREATE TABLE usuarios (id_usuario VARCHAR(40) PRIMARY KEY, nome VARCHAR(80), sobrenome VARCHAR(80)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+$pdo->exec('CREATE TABLE sala_audiencias_ata (id_ata VARCHAR(40) PRIMARY KEY, pauta VARCHAR(40), expires_at DATETIME,
+    nome_original VARCHAR(80), uploaded_at DATETIME, arquivo_relativo VARCHAR(120), uploaded_by VARCHAR(40)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+$pdo->exec("UPDATE sala_audiencias_pauta SET status='finalizada',data_audiencia=CURDATE() WHERE id_pauta IN ('PA','PB')");
+$pdo->exec("UPDATE processos SET sigiloso=1 WHERE id='B'");
+$pdo->exec("INSERT INTO sala_audiencias_ata (id_ata,pauta,expires_at,uploaded_at,arquivo_relativo) VALUES
+    ('ATA_A','PA',DATE_ADD(NOW(),INTERVAL 1 DAY),'2026-11-20 14:35:21','ata-publica.pdf'),
+    ('ATA_B','PB',DATE_ADD(NOW(),INTERVAL 1 DAY),'2026-11-20 12:30:00','ata-sigilosa.pdf')");
+$a = InternalListExportHandlers::dispatch('salaata',$pdo,'synthetic',[]);
+if (count($a['rows']) !== 1 || $a['rows'][0]['uploaded_at'] !== '20/11/2026 14:35') {
+    throw new RuntimeException('Data de envio incorreta ou política de seleção da exportação não preservada.');
+}
+ob_start();
+ListExportHelper::streamCsv($a['slug'],$a['title'],'',$a['columns'],$a['rows']);
+$csv = ob_get_clean();
+if (!str_contains($csv,'20/11/2026 14:35') || !str_contains($csv,'ata-publica.pdf')
+    || str_contains($csv,'ata-sigilosa.pdf') || str_contains($csv,'Deprecated')) {
+    throw new RuntimeException('O CSV não preservou a data de envio ou a exclusão de atas sigilosas.');
 }
 
 echo "PASS REI69 pauta cross-process synthetic service regression\n";

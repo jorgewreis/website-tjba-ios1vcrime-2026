@@ -34,7 +34,7 @@ final class ListExportHelper
         fwrite($output, "\xEF\xBB\xBF");
         ListExportPresentation::writeCsvPreamble($output, count($columns), $sessionTitle, $filterSummary, count($rows));
         $labels = array_map(static fn (array $c): string => ListExportPresentation::csvText($c['label']), $columns);
-        fputcsv($output, $labels, ';');
+        fputcsv($output, $labels, ';', '"', '');
 
         foreach ($rows as $row) {
             $line = [];
@@ -46,7 +46,7 @@ final class ListExportHelper
                 $line[] = is_int($value) || is_float($value)
                     ? $formatted : ListExportPresentation::csvText($formatted);
             }
-            fputcsv($output, $line, ';');
+            fputcsv($output, $line, ';', '"', '');
         }
 
         fclose($output);
