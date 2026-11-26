@@ -157,7 +157,7 @@ $fixtureStage = 'pauta_transition_lock';
 $peer = new PDO($dsn, 'root', '', [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_EMULATE_PREPARES => false]);
 $peer->exec('SET SESSION innodb_lock_wait_timeout=1');
 $peerPauta = new SalaAudienciasPautaService($peer);
-$pdo->exec('ALTER TABLE sala_audiencias_pauta ADD data_hora_inicio_efetivo DATETIME, ADD data_hora_fim_efetivo DATETIME');
+$pdo->exec('ALTER TABLE sala_audiencias_pauta ADD data_hora_inicio_efetivo DATETIME, ADD data_hora_fim_efetivo DATETIME, ADD atualizado_por VARCHAR(40)');
 $pdo->prepare("UPDATE sala_audiencias_pauta SET data_audiencia=?, hora_audiencia='09:00:00' WHERE id_pauta='PA'")
     ->execute([date('Y-m-d')]);
 $agenda = new SalaAudienciasPautaSequenceLock($pdo);
