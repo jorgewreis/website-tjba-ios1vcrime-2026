@@ -162,15 +162,14 @@ $copyRelative = static function (string $root, string $relative, string $destina
 $appFiles = [
     'helpers/ApiAccessGuard.php', 'helpers/ApiErrorReporter.php', 'helpers/BootstrapHelper.php', 'helpers/UserAccessHelper.php',
     'helpers/ProcessoSetorAuthorization.php', 'helpers/IdGenerator.php',
-    'helpers/TextFormatter.php', 'helpers/ParteDocumentoHelper.php',
+    'helpers/TextFormatter.php', 'helpers/ParteDocumentoHelper.php', 'helpers/ParteDocumentoLock.php',
     'access/AccessEvaluator.php', 'access/ProfileNormalizer.php', 'access/PageAccessRegistry.php',
     'access/AccessAreas.php', 'access/AccessPolicyVersion.php',
-    'repositories/ProcessosPartesRepository.php', 'repositories/PartesRepository.php', 'repositories/PartesDocumentosRepository.php',
+    'repositories/ProcessosPartesRepository.php', 'repositories/PartesRepository.php', 'repositories/PartesDocumentosRepository.php', 'repositories/CpfIdentidadeRepository.php',
 ];
 foreach ($appFiles as $relative) {
     $copyRelative($appRoot, $relative, $lab, 'app/' . $relative);
 }
-$copyRelative($appRoot, 'repositories/PartesRepository.php', $lab, 'app/repositories/PartesRepository.php');
 foreach (['create.php', 'update.php', 'delete.php'] as $endpoint) {
     $copyRelative($endpointRoot, $endpoint, $lab, 'public/api/processos-partes/' . $endpoint);
 }
