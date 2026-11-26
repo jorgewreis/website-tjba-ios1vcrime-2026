@@ -50,7 +50,13 @@ final class ProcessResponsibleSectorMigration
         }
 
         $indexes = $this->indexes($database, self::PROCESS_TABLE);
-        $targetIndex = $indexes[self::INDEX_NAME] ?? null;
+        $targetIndex = null;
+        foreach ($indexes as $name => $index) {
+            if (strcasecmp((string) $name, self::INDEX_NAME) === 0) {
+                $targetIndex = $index;
+                break;
+            }
+        }
         if ($targetIndex !== null
             && !$this->isExactTargetIndex($targetIndex)) {
             throw new RuntimeException('O índice reservado para setor responsável existe com definição incompatível.');
