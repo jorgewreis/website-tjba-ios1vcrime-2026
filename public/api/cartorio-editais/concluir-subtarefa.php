@@ -41,7 +41,9 @@ try {
     $before = DashboardResumoService::statusAnterior($connection, 'editais_subtarefas', $subtarefaId);
     $service = new EditaisService($connection);
     $resultado = $service->concluirSubtarefa($subtarefaId, $dadosEspecificos);
-    DashboardResumoService::registrarConclusao($connection, $before, 'editais', 'CARTORIO', trim((string)($_SESSION['id_usuario'] ?? '')));
+    if (($resultado['replayed'] ?? false) !== true) {
+        DashboardResumoService::registrarConclusao($connection, $before, 'editais', 'CARTORIO', trim((string)($_SESSION['id_usuario'] ?? '')));
+    }
     $connection->commit();
     echo json_encode(array_merge(['success' => true], is_array($resultado) ? $resultado : []), JSON_UNESCAPED_UNICODE);
 } catch (\InvalidArgumentException $exception) {

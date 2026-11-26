@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 $fixtureStage = 'setup';
 set_exception_handler(static function (Throwable $exception) use (&$fixtureStage): void {
-    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness', 'pauta_transition_lock', 'pauta_allocation_lock', 'reu_principal_lock', 'pauta_atomic_derived', 'dashboard_strict_series', 'atas_csv', 'pauta_delete_atomic', 'oficios_sequence', 'feriados_cleanup', 'guias_readonly'];
+    $allowed = ['setup', 'setup_env', 'setup_connect', 'setup_database', 'setup_sentinel', 'setup_require', 'setup_mode', 'setup_ddl', 'setup_seed_classes', 'setup_seed_sectors', 'setup_seed_domain', 'setup_seed_links', 'setup_seed_part', 'setup_service', 'positive_update', 'positive_add', 'sector_denial', 'cross_link', 'defender', 'witness', 'pauta_transition_lock', 'pauta_allocation_lock', 'reu_principal_lock', 'pauta_atomic_derived', 'dashboard_strict_series', 'atas_csv', 'pauta_delete_atomic', 'oficios_sequence', 'feriados_cleanup', 'guias_readonly', 'polo_validacao', 'classe_prioridades', 'edital_replay'];
     $code = in_array($fixtureStage, $allowed, true) ? $fixtureStage : 'unknown';
     fwrite(STDERR, "REI69_FIXTURE_FAILURE code=$code\n");
-    if (in_array($code, ['atas_csv', 'pauta_delete_atomic', 'oficios_sequence', 'feriados_cleanup', 'guias_readonly'], true)) {
+    if (in_array($code, ['atas_csv', 'pauta_delete_atomic', 'oficios_sequence', 'feriados_cleanup', 'guias_readonly', 'polo_validacao', 'classe_prioridades', 'edital_replay'], true)) {
         $mysqlCode = $exception instanceof PDOException ? (int) ($exception->errorInfo[1] ?? 0) : 0;
         fwrite(STDERR, 'REI69_FIXTURE_DETAIL area=' . $code . ' line=' . $exception->getLine() . ' mysql=' . $mysqlCode . "\n");
     }
@@ -463,6 +463,95 @@ if ((int) $peer->query("SELECT COUNT(*) FROM guias_subtarefas WHERE guia_id='LEG
     || (float) $peer->query("SELECT valor_multa FROM guias WHERE id='LEG-NULL'")->fetchColumn() !== 3000.0
     || $peer->query("SELECT valor_multa FROM guias WHERE id='FORA'")->fetchColumn() !== null) {
     throw new RuntimeException('Inicialização explícita não gravou apenas a guia selecionada.');
+}
+
+$fixtureStage = 'polo_validacao';
+$pp = new ProcessosPartesRepository($pdo);
+$before = snapshot69p($peer, ['processos_partes']);
+try {
+    $pp->update('AA', ['polo'=>'inválido', 'prioridade_mulher'=>true]);
+    throw new LogicException('Polo inválido aceito.');
+} catch (InvalidArgumentException) {}
+if (snapshot69p($peer, ['processos_partes']) !== $before || !$pp->update('AA', ['polo'=>'terceiros'])
+    || $peer->query("SELECT polo FROM processos_partes WHERE id='AA'")->fetchColumn() !== 'terceiros') {
+    throw new RuntimeException('Validação ou isolamento de edição de polo incorretos.');
+}
+
+$fixtureStage = 'classe_prioridades';
+require_once '/repo/app/services/ProcessoClasseSyncService.php';
+$pdo->exec('ALTER TABLE classes ADD codigo VARCHAR(40), ADD created_at DATETIME, ADD updated_at DATETIME');
+$pdo->exec("UPDATE classes SET codigo='1' WHERE id='C'");
+$pdo->exec("INSERT INTO classes (id,codigo,nome) VALUES ('C1268','1268','Medida sintética')");
+$pdo->exec("INSERT INTO processos (id,numero_processo,classe_id,sigiloso) VALUES
+    ('CLASS-CASE','00000016920208050001','C',0)");
+$pdo->exec("INSERT INTO processo_prioridades (id,processo_id,codigo,origem) VALUES ('MANUAL-KEEP','CLASS-CASE','violencia_domestica','manual')");
+$pdo->exec("CREATE TRIGGER fixture_priority_fail BEFORE INSERT ON processo_prioridades FOR EACH ROW
+    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'fixture_priority_fail'");
+$svcClasse = new ProcessoClasseSyncService($pdo);
+try {
+    $svcClasse->syncFromDataJud('00000016920208050001', '1268', 'Medida sintética', true);
+    throw new LogicException('Falha depois da troca de classe não propagada.');
+} catch (PDOException $error) {
+    if ((string) $error->getCode() !== '45000') throw $error;
+}
+if ($pdo->inTransaction() || $peer->query("SELECT classe_id FROM processos WHERE id='CLASS-CASE'")->fetchColumn() !== 'C'
+    || (int) $peer->query("SELECT COUNT(*) FROM processo_prioridades WHERE processo_id='CLASS-CASE'")->fetchColumn() !== 1) {
+    throw new RuntimeException('Rollback da troca de classe não ocorreu.');
+}
+$pdo->exec('DROP TRIGGER fixture_priority_fail');
+$pdo->exec("UPDATE processos SET classe_id='C1268' WHERE id='CLASS-CASE'");
+foreach ([1,2] as $_) {
+    if ($svcClasse->syncFromDataJud('00000016920208050001','1268','Medida sintética',true)['action'] !== 'noop') {
+        throw new RuntimeException('Reparação de prioridade alterou indevidamente a classe existente.');
+    }
+}
+$priorities = $peer->query("SELECT codigo,origem FROM processo_prioridades WHERE processo_id='CLASS-CASE' ORDER BY codigo")->fetchAll(PDO::FETCH_KEY_PAIR);
+if (count($priorities) !== 2 || ($priorities['violencia_domestica'] ?? null) !== 'manual'
+    || ($priorities['sigiloso'] ?? null) !== ProcessoPrioridadeOrigem::REGRA_DERIVADA_MENOR_OU_VD) {
+    throw new RuntimeException('Prioridade ausente não conciliada ou origem manual substituída.');
+}
+
+$fixtureStage = 'edital_replay';
+require_once '/repo/app/services/EditaisService.php';
+$pdo->exec('CREATE TABLE editais (id VARCHAR(40) PRIMARY KEY, processo_id VARCHAR(40), tipo_edital VARCHAR(40),
+    prazo_dias INTEGER, data_publicacao DATE, data_inicio_contagem DATE, data_decurso_prazo DATE,
+    status VARCHAR(40), observacoes TEXT, updated_at DATETIME) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci');
+$pdo->exec('CREATE TABLE editais_subtarefas (id VARCHAR(40) PRIMARY KEY, edital_id VARCHAR(40), tipo VARCHAR(50),
+    ordem INT, status VARCHAR(40), dados_especificos TEXT, created_at DATETIME, updated_at DATETIME) ENGINE=InnoDB');
+$pdo->exec("INSERT INTO editais (id,tipo_edital,prazo_dias,status) VALUES ('ED-SINT','edital',5,'aguardando publicação')");
+$pdo->exec("INSERT INTO editais_subtarefas (id,edital_id,tipo,ordem,status) VALUES
+    ('PUB','ED-SINT','certificacao_publicacao',1,'em_andamento'),('DEC','ED-SINT','certificacao_decurso_prazo',2,'pendente')");
+$edition = new EditaisService($pdo);
+$otherEdition = new EditaisService($peer);
+$payload = '{"data_publicacao":"2099-11-01"}';
+$pdo->beginTransaction();
+try {
+    $pdo->query("SELECT id FROM editais WHERE id='ED-SINT' FOR UPDATE")->closeCursor();
+    try {
+        $otherEdition->concluirSubtarefa('PUB', $payload);
+        throw new LogicException('Certificação ignorou lock do edital.');
+    } catch (PDOException $error) {
+        if ((int) ($error->errorInfo[1] ?? 0) !== 1205 || $peer->inTransaction()) throw $error;
+    }
+    $edition->concluirSubtarefa('PUB', $payload);
+    $pdo->commit();
+} finally {
+    if ($pdo->inTransaction()) $pdo->rollBack();
+}
+$editalTables = ['editais','editais_subtarefas'];
+$initial = snapshot69p($peer, $editalTables);
+if (($otherEdition->concluirSubtarefa('PUB', $payload)['replayed'] ?? false) !== true
+    || snapshot69p($peer, $editalTables) !== $initial) throw new RuntimeException('Replay idêntico não foi sem efeito.');
+foreach (['aguardando decurso', 'concluída', 'cancelada'] as $status) {
+    $pdo->prepare("UPDATE editais SET status=? WHERE id='ED-SINT'")->execute([$status]);
+    $snapshot = snapshot69p($peer, $editalTables);
+    try {
+        $otherEdition->concluirSubtarefa('PUB', '{"data_publicacao":"2099-12-01"}');
+        throw new LogicException('Replay com divergência aceito.');
+    } catch (InvalidArgumentException) {}
+    if (snapshot69p($peer, $editalTables) !== $snapshot || $peer->inTransaction()) {
+        throw new RuntimeException('Replay mudou datas, dados ou estados.');
+    }
 }
 
 echo "PASS REI69 pauta cross-process synthetic service regression\n";
