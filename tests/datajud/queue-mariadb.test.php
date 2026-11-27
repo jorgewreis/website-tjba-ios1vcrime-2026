@@ -134,7 +134,30 @@ if ($callsOk !== 1 || $queueRow($id2)['status'] !== 'falhou' || $queueRow($id2)[
 foreach ([$id, $id2, $restricted] as $extra) {
     $db->exec('DELETE FROM processos WHERE id=' . $db->quote($extra));
 }
-echo "PASS: one lookup on new registration, no retries or legacy work, no duplicate workers.\n";
+// Only a real 429 may schedule one bounded automatic retry for a new registration.
+$id429 = $repo->ensureProcess('0000005-09.2020.8.05.0001');
+$db->exec("UPDATE processos SET id_setor_responsavel='SET-1' WHERE id=" . $db->quote($id429));
+$rateCalls = 0;
+$rateClient = new DataJudService([], static function () use (&$rateCalls): array {
+    ++$rateCalls;
+    return ['http_code'=>429, 'retry_after'=>90, 'decoded'=>null, 'curl_error'=>'', 'raw'=>''];
+});
+$worker429 = new ProcessoDataJudBackgroundWorker($db, $rateClient);
+$worker429->run(20);
+if ($rateCalls !== 1 || $queueRow($id429)['status'] !== 'cadastro_inicial' || (int) $queueRow($id429)['tentativas'] !== 1) {
+    throw new RuntimeException('First upstream rate limit did not schedule a bounded retry.');
+}
+$wait429 = (int) $db->query('SELECT TIMESTAMPDIFF(SECOND,NOW(),proxima_tentativa_em) FROM processo_datajud_sync_queue WHERE processo_id=' . $db->quote($id429))->fetchColumn();
+$worker429->run(20);
+if ($rateCalls !== 1 || $wait429 < 85) throw new RuntimeException('Worker retried before the requested wait.');
+$db->exec("UPDATE processo_datajud_sync_queue SET proxima_tentativa_em=NOW() WHERE processo_id=" . $db->quote($id429));
+$worker429->run(20);
+$worker429->run(20);
+if ($rateCalls !== 2 || $queueRow($id429)['status'] !== 'falhou' || (int) $queueRow($id429)['tentativas'] !== 2) {
+    throw new RuntimeException('The queue retried a second rate limit.');
+}
+$db->exec('DELETE FROM processos WHERE id=' . $db->quote($id429));
+echo "PASS: 429 delays one first-registration retry; no repeat for partials or legacy work.\n";
 
 // Same isolated MariaDB runtime also checks provenance migration and
 // native SQL updates. No real process data or network requests.

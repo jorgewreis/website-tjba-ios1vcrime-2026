@@ -190,7 +190,7 @@ final class DataJudService
     }
 
     /**
-     * @return array{curl_error: string, http_code: int, decoded: mixed, raw: string, retry_after?: int}
+     * @return array{curl_error: string, http_code: int, decoded: mixed, raw: string, retry_after?: int|null}
      */
     private function executeElasticsearchSearch(string $url, array $body): array
     {
@@ -201,10 +201,17 @@ final class DataJudService
         $token = $pacer->acquire();
         $result = null;
         try {
-            return $result = $this->sendToElastic($url, $body);
+            $result = $this->sendToElastic($url, $body);
         } finally {
-            $pacer->finish($token, $result['retry_after'] ?? 0);
+            $limited = ($result['http_code'] ?? 0) === 429;
+            $bodyResult = $result['decoded'] ?? null;
+            $healthy = ($result['http_code'] ?? 0) === 200 && ($result['curl_error'] ?? '') === ''
+                && ($bodyResult['timed_out'] ?? null) === false && ($bodyResult['_shards']['failed'] ?? null) === 0
+                && ($bodyResult['hits']['total']['relation'] ?? null) === 'eq';
+            $wait = $pacer->finish($token, $limited, $result['retry_after'] ?? null, $healthy);
         }
+        if ($limited) $result['retry_after'] = $wait;
+        return $result;
     }
 
     private function sendToElastic(string $url, array $body): array
@@ -245,7 +252,7 @@ final class DataJudService
         return [
             'curl_error' => is_string($curlErr) ? $curlErr : '',
             'http_code' => $httpCode,
-            'retry_after' => $httpCode === 429 ? DataJudRequestPacer::retryAfter($retryAfterHeader) : 0,
+            'retry_after' => $httpCode === 429 ? DataJudRequestPacer::retryAfter($retryAfterHeader) : null,
             'decoded' => $decoded,
             'raw' => is_string($raw) ? $raw : '',
         ];

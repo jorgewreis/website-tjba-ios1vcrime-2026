@@ -10,9 +10,9 @@ if (($consulta['timeout'] ?? null) !== 60 || ($consulta['connect_timeout'] ?? nu
 $clock = strtotime('Fri, 27 Nov 2026 17:00:00 GMT');
 if (DataJudRequestPacer::retryAfter('90', $clock) !== 90
     || DataJudRequestPacer::retryAfter('Fri, 27 Nov 2026 17:03:00 GMT', $clock) !== 180
-    || DataJudRequestPacer::retryAfter('0', $clock) !== 60
-    || DataJudRequestPacer::retryAfter('texto não confiável', $clock) !== 60) {
-    throw new LogicException('Retry-After deve respeitar atraso ou data informados pelo CNJ, com piso conservador.');
+    || DataJudRequestPacer::retryAfter('0', $clock) !== 0
+    || DataJudRequestPacer::retryAfter('texto não confiável', $clock) !== null) {
+    throw new LogicException('Retry-After válido deve ser respeitado exatamente; inválido usa política de recuo compartilhada.');
 }
 $number = '0000001-69.2020.8.05.0001';
 $response = static fn(int $status, $body, string $error = ''): array => ['http_code' => $status, 'decoded' => $body, 'curl_error' => $error, 'raw' => ''];

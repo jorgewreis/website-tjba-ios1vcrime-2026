@@ -45,6 +45,12 @@ final class ProcessoDataJudBackgroundWorker
                     $this->defer((int) $job['id'], max(5, min(86400, $e->retryAfter ?? 60)));
                     break;
                 }
+                if ($e instanceof DataJudUpstreamException && $e->reason === 'throttled'
+                    && (int) $job['tentativas'] === 0) {
+                    // Uma única retentativa real, só no primeiro cadastro e só para 429.
+                    $this->retryInitial((int) $job['id'], max(25, min(86400, $e->retryAfter ?? 60)));
+                    break;
+                }
                 $this->fail((int) $job['id']);
                 $failed++;
                 error_log('datajud background sync falhou: ' . get_class($e));
@@ -69,13 +75,13 @@ final class ProcessoDataJudBackgroundWorker
             $this->db->exec("UPDATE processo_datajud_sync_queue SET status='falhou', processando_em=NULL, updated_at=NOW()
                 WHERE status='cad_inicial_exec' AND processando_em < DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
             $this->db->beginTransaction();
-            $q = $this->db->query("SELECT id, processo_id, requested_by FROM processo_datajud_sync_queue WHERE status='cadastro_inicial' AND tentativas=0 AND requested_by IS NOT NULL AND proxima_tentativa_em <= NOW() ORDER BY proxima_tentativa_em, id LIMIT 1 FOR UPDATE");
+            $q = $this->db->query("SELECT id, processo_id, requested_by, tentativas FROM processo_datajud_sync_queue WHERE status='cadastro_inicial' AND tentativas < 2 AND requested_by IS NOT NULL AND proxima_tentativa_em <= NOW() ORDER BY proxima_tentativa_em, id LIMIT 1 FOR UPDATE");
             $job = $q->fetch(PDO::FETCH_ASSOC);
             if (!is_array($job)) {
                 $this->db->commit();
                 return null;
             }
-            $u = $this->db->prepare("UPDATE processo_datajud_sync_queue SET status='cad_inicial_exec', tentativas=1, processando_em=NOW(6), updated_at=NOW() WHERE id=:id AND status='cadastro_inicial'");
+            $u = $this->db->prepare("UPDATE processo_datajud_sync_queue SET status='cad_inicial_exec', tentativas=tentativas+1, processando_em=NOW(6), updated_at=NOW() WHERE id=:id AND status='cadastro_inicial'");
             $u->execute([':id' => (int) $job['id']]);
             if ($u->rowCount() !== 1) throw new RuntimeException('Cadastro inicial não reservado para o DataJud.');
             $this->db->commit();
@@ -181,9 +187,20 @@ final class ProcessoDataJudBackgroundWorker
     private function defer(int $id, int $seconds): void
     {
         $q = $this->db->prepare("UPDATE processo_datajud_sync_queue
-            SET status='cadastro_inicial', tentativas=0, processando_em=NULL,
+            SET status='cadastro_inicial', tentativas=GREATEST(tentativas-1,0), processando_em=NULL,
                 proxima_tentativa_em=DATE_ADD(NOW(), INTERVAL :seconds SECOND), updated_at=NOW()
             WHERE id=:id AND status='cad_inicial_exec'");
+        $q->bindValue(':seconds', $seconds, PDO::PARAM_INT);
+        $q->bindValue(':id', $id, PDO::PARAM_INT);
+        $q->execute();
+    }
+
+    private function retryInitial(int $id, int $seconds): void
+    {
+        $q = $this->db->prepare("UPDATE processo_datajud_sync_queue
+            SET status='cadastro_inicial', processando_em=NULL,
+                proxima_tentativa_em=DATE_ADD(NOW(), INTERVAL :seconds SECOND), updated_at=NOW()
+            WHERE id=:id AND status='cad_inicial_exec' AND tentativas=1");
         $q->bindValue(':seconds', $seconds, PDO::PARAM_INT);
         $q->bindValue(':id', $id, PDO::PARAM_INT);
         $q->execute();
