@@ -5,6 +5,7 @@ require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../DataJud/DataJudResponseMapper.php';
 require_once __DIR__ . '/../DataJud/DataJudTribunalResolver.php';
 require_once __DIR__ . '/../DataJud/DataJudUpstreamException.php';
+require_once __DIR__ . '/../DataJud/DataJudRequestPacer.php';
 require_once __DIR__ . '/../DataJud/DataJudLocalSigiloException.php';
 
 final class DataJudAmbiguousResponseException extends RuntimeException {}
@@ -67,7 +68,7 @@ final class DataJudService
             }
 
             if ($httpCode === 429) {
-                throw new DataJudUpstreamException('throttled');
+                throw new DataJudUpstreamException('throttled', $exec['retry_after'] ?? 60);
             }
 
             if ($httpCode >= 500) {
@@ -189,17 +190,30 @@ final class DataJudService
     }
 
     /**
-     * @return array{curl_error: string, http_code: int, decoded: mixed, raw: string}
+     * @return array{curl_error: string, http_code: int, decoded: mixed, raw: string, retry_after?: int}
      */
     private function executeElasticsearchSearch(string $url, array $body): array
     {
         if ($this->transport !== null) {
             return ($this->transport)($url, $body);
         }
+        $pacer = DataJudRequestPacer::connect();
+        $token = $pacer->acquire();
+        $result = null;
+        try {
+            return $result = $this->sendToElastic($url, $body);
+        } finally {
+            $pacer->finish($token, $result['retry_after'] ?? 0);
+        }
+    }
+
+    private function sendToElastic(string $url, array $body): array
+    {
         $timeout = max(5, min(60, (int) ($this->config['timeout'] ?? 60)));
         $connectTimeout = max(2, min(15, (int) ($this->config['connect_timeout'] ?? 10)));
 
         $ch = curl_init($url);
+        $retryAfterHeader = null;
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
             CURLOPT_RETURNTRANSFER => true,
@@ -211,6 +225,11 @@ final class DataJudService
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_CONNECTTIMEOUT => $connectTimeout,
             CURLOPT_FAILONERROR => false,
+            CURLOPT_HEADERFUNCTION => static function ($handle, string $line) use (&$retryAfterHeader): int {
+                if (preg_match('/^HTTP\//i', $line)) $retryAfterHeader = null;
+                if (stripos($line, 'Retry-After:') === 0) $retryAfterHeader = trim(substr($line, 12));
+                return strlen($line);
+            },
         ]);
 
         $raw = curl_exec($ch);
@@ -226,6 +245,7 @@ final class DataJudService
         return [
             'curl_error' => is_string($curlErr) ? $curlErr : '',
             'http_code' => $httpCode,
+            'retry_after' => $httpCode === 429 ? DataJudRequestPacer::retryAfter($retryAfterHeader) : 0,
             'decoded' => $decoded,
             'raw' => is_string($raw) ? $raw : '',
         ];

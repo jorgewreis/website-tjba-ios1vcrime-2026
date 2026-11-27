@@ -48,6 +48,7 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
 
 (async () => {
     const cases = [
+        [429,'datajud_local_throttled',/Aguarde antes de iniciar/,true],
         [503,'datajud_throttled',/limitou a consulta/,true],
         [503,'datajud_incomplete',/consulta incompleta/,true],
         [503,'datajud_transport',/conectar ao DataJud/,true],
@@ -68,6 +69,9 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
         assert.equal(result.retry,shouldRetry);
         assert.deepEqual(result.fields,{vara:'Vara local',classe:'Classe local',sigilo:'Sigilo local',assuntos:'Assuntos locais'});
     }
+    const paced = await render(429, {estado:'erro',code:'datajud_local_throttled',retry_after:25});
+    assert.match(paced.message,/25 s/);
+    assert.equal(paced.retry,true);
     const empty = await render(200,{estado:'indisponivel'});
     assert.match(empty.message,/Não há dados públicos verificáveis/);
     assert.equal(empty.retry,false);
@@ -111,5 +115,5 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
     assert.equal(oldMarkup.fields.assuntos,'Assuntos locais');
     const badData = await render(200,{estado:'disponivel',assuntos:['Remoto']},{localSubjects:'não JSON'});
     assert.equal(badData.fields.assuntos,'Remoto');
-    console.log('PASS: 25 cenários sintéticos de feedback e preservação da ficha DataJud.');
+    console.log('PASS: 27 cenários sintéticos de feedback e preservação da ficha DataJud.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

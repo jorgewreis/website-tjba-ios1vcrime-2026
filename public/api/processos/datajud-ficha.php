@@ -42,14 +42,15 @@ try {
 } catch (DataJudUpstreamException $erro) {
     // Codes are from a fixed vocabulary. Do not expose upstream bodies or configuration.
     $code = match ($erro->reason) {
+        'local_throttled' => 'datajud_local_throttled',
         'throttled' => 'datajud_throttled',
         'incomplete' => 'datajud_incomplete',
         'authorization' => 'datajud_authorization',
         'transport' => 'datajud_transport',
         default => 'datajud_unavailable',
     };
-    if ($code === 'datajud_throttled') header('Retry-After: 60');
-    $send(['estado'=>'erro', 'code'=>$code], $code === 'datajud_authorization' ? 502 : 503);
+    $erro->emitRetryHeader();
+    $send(['estado'=>'erro', 'code'=>$code, 'retry_after'=>$erro->retryAfter], $erro->httpStatus());
 } catch (DataJudAmbiguousResponseException $erro) {
     $send(['estado'=>'erro', 'code'=>'datajud_ambiguous'], 409);
 } catch (InvalidArgumentException $erro) {

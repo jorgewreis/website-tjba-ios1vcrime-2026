@@ -7,6 +7,13 @@ if (($consulta['timeout'] ?? null) !== 60 || ($consulta['connect_timeout'] ?? nu
     throw new LogicException('A consulta interativa deve aguardar até 60 s, com até 10 s para conectar.');
 }
 
+$clock = strtotime('Fri, 27 Nov 2026 17:00:00 GMT');
+if (DataJudRequestPacer::retryAfter('90', $clock) !== 90
+    || DataJudRequestPacer::retryAfter('Fri, 27 Nov 2026 17:03:00 GMT', $clock) !== 180
+    || DataJudRequestPacer::retryAfter('0', $clock) !== 60
+    || DataJudRequestPacer::retryAfter('texto não confiável', $clock) !== 60) {
+    throw new LogicException('Retry-After deve respeitar atraso ou data informados pelo CNJ, com piso conservador.');
+}
 $number = '0000001-69.2020.8.05.0001';
 $response = static fn(int $status, $body, string $error = ''): array => ['http_code' => $status, 'decoded' => $body, 'curl_error' => $error, 'raw' => ''];
 $empty = ['timed_out' => false, '_shards' => ['total' => 1, 'successful' => 1, 'failed' => 0, 'skipped' => 0], 'hits' => ['total' => ['value' => 0, 'relation' => 'eq'], 'hits' => []]];
