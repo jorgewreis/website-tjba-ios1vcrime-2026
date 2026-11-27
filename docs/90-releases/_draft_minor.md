@@ -136,4 +136,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(security): proteger mutações de processos** `[296ed18c]`
 - **test: make security fixtures portable across Windows and CI** `[7f21329d]`
 - **test(REI-107): observe lock wait from expected worker** `[3f1b607e]`
+- **test(REI-163): revalidate ata eligibility after enrollment** `[83976ae2]`
 
