@@ -2,6 +2,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../../helpers/CartasExpedidasTempoEtapa.php';
+require_once __DIR__ . '/../../../helpers/ProcessoNivelSigilo.php';
+
+$rotuloSigilo = ProcessoNivelSigilo::rotulo($sigiloso, $row['processo_nivel_sigilo'] ?? null);
 
 $prior = (string)($prioridadesPiloto[$idCarta] ?? '');
 $priorLabel = CartasExpedidasPrioridade::ROTULOS[$prior] ?? 'Sem prioridade definida';
@@ -42,11 +45,21 @@ $nomeCurtoResponsavelPiloto = match (count($partesResponsavel ?: [])) {
 ?>
 <div class="ce-grid ce-entry">
   <div class="ce-process">
-    <?php if ($numeroVisivel !== ''): ?><button class="ce-cnj" type="button" data-ce-copy="<?= $e($numeroVisivel) ?>" title="Copiar número do processo" aria-label="<?= $e('Copiar número '.$numeroVisivel) ?>"><?= $e($numeroVisivel) ?></button><?php else: ?>—<?php endif; ?>
-    <?php if ($sigiloso): ?><span class="ce-double-tag ce-process-secrecy"><span>Sigiloso</span><span>Nível não informado</span></span><?php endif; ?>
-    <?php if ($prioridadesDoProcesso !== ''): ?>
-      <span class="ce-double-tag ce-process-priority" title="<?= $e($prioridadesDoProcesso) ?>"><span>Prioridade</span><span class="ce-process-priority-values"><?= $e($prioridadesDoProcesso) ?></span></span>
-    <?php endif; ?>
+    <div class="ce-process-line">
+      <?php if ($numeroVisivel !== ''): ?><button class="ce-cnj" type="button" data-ce-copy="<?= $e($numeroVisivel) ?>" title="Copiar número do processo" aria-label="<?= $e('Copiar número '.$numeroVisivel) ?>"><?= $e($numeroVisivel) ?></button><?php else: ?>—<?php endif; ?>
+      <?php if ($rotuloSigilo !== null || $prioridadesDoProcesso !== ''): ?>
+        <details class="ce-process-indicators">
+          <summary aria-label="<?= $e($rotuloSigilo !== null && $prioridadesDoProcesso !== '' ? 'Sigilo e prioridades do processo' : ($rotuloSigilo !== null ? 'Sigilo do processo' : 'Prioridades do processo')) ?>">
+            <?php if ($rotuloSigilo !== null): ?><span class="ce-indicator" data-ce-indicator="sigilo" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"><rect x="2.5" y="6.75" width="11" height="7.5" rx="1.6"/><path d="M4.5 6.75V5a3.5 3.5 0 0 1 7 0v1.75M8 10v1.3"/></svg></span><?php endif; ?>
+            <?php if ($prioridadesDoProcesso !== ''): ?><span class="ce-indicator" data-ce-indicator="prioridade" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14.25V2.75h10l-2.1 3 2.1 3H3"/></svg></span><?php endif; ?>
+          </summary>
+          <dl class="ce-process-indicators-content">
+            <?php if ($rotuloSigilo !== null): ?><dt>Sigilo</dt><dd><?= $e($rotuloSigilo) ?></dd><?php endif; ?>
+            <?php if ($prioridadesDoProcesso !== ''): ?><dt>Prioridade</dt><dd><?= $e($prioridadesDoProcesso) ?></dd><?php endif; ?>
+          </dl>
+        </details>
+      <?php endif; ?>
+    </div>
     <?php if ($groupKey==='conferir'): ?><span class="ce-tag">Etapa a conferir</span><?php endif; ?>
   </div>
   <div class="ce-destino"><span class="ce-visually-hidden">Destino: </span><?= $e($destino ?: '—') ?></div>
@@ -73,7 +86,7 @@ $nomeCurtoResponsavelPiloto = match (count($partesResponsavel ?: [])) {
 <template id="<?= $e($detailId) ?>">
  <div class="ce-detail">
   <p class="ce-status"><span class="ce-tag"><?= $e($statusVisivelTexto) ?></span></p>
-  <p class="ce-detail-number"><?= $e($numeroVisivel) ?> <?php if ($sigiloso): ?><span class="ce-double-tag ce-process-secrecy"><span>Sigiloso</span><span>Nível não informado</span></span><?php endif; ?></p>
+  <p class="ce-detail-number"><?= $e($numeroVisivel) ?> <?php if ($rotuloSigilo !== null): ?><span class="ce-double-tag ce-process-secrecy" title="<?= $e($rotuloSigilo) ?>"><span>Sigilo</span><span><?= $e($rotuloSigilo) ?></span></span><?php endif; ?></p>
   <div class="ce-tabs" role="tablist" aria-label="Informações da carta">
     <button type="button" id="ce-tab-resumo" role="tab" aria-controls="ce-resumo" aria-selected="true" data-ce-tab>Resumo</button>
     <button type="button" id="ce-tab-historico" role="tab" aria-controls="ce-historico" aria-selected="false" tabindex="-1" data-ce-tab>Histórico (<?= count($historicoLinhas) ?>)</button>

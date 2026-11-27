@@ -84,7 +84,7 @@ if ($envioPiloto !== []) {
     $linhasPaginadas = array_values(array_filter($linhasPaginadas,
         static fn (array $carta): bool => !isset($idsEnvio[$carta['IdCarta']])));
 }
-$rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, array_merge($envioPiloto, $linhasPaginadas));
+$rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, array_merge($envioPiloto, $linhasPaginadas), !empty($cartasPiloto));
 $registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 

@@ -51,7 +51,7 @@ final class ProcessoBlocoListagemHelper
     }
 
     /** @param list<array<string, mixed>> $rows */
-    public static function appendBlocoData(PDO $connection, array $rows): array
+    public static function appendBlocoData(PDO $connection, array $rows, bool $incluirNivelSigilo = false): array
     {
         if ($rows === []) {
             return $rows;
@@ -135,6 +135,11 @@ final class ProcessoBlocoListagemHelper
         $idsParaPrioridade = array_values(array_unique(array_filter($resolvedIds, static function (string $id): bool {
             return $id !== '';
         })));
+        $niveisSigilo = [];
+        if ($incluirNivelSigilo) {
+            require_once __DIR__ . '/../repositories/ProcessoNivelSigiloRepository.php';
+            $niveisSigilo = (new ProcessoNivelSigiloRepository($connection))->porIds($idsParaPrioridade);
+        }
         $prioridadesPorProcesso = $prioridadesRepo->findByProcessoIds($idsParaPrioridade);
         $assuntosPorProcesso = $assuntosRepo->findByProcessoIds($idsParaPrioridade);
         $polosPassivosPorProcesso = $partesRepo->listNomesPoloPassivoByProcessoIds($idsParaPrioridade);
@@ -229,6 +234,9 @@ final class ProcessoBlocoListagemHelper
                 'bloco_processo_abrir_disabled' => !$podeAbrir,
                 'processo_sigiloso' => $sigilosoMesclado,
             ];
+            if ($incluirNivelSigilo) {
+                $out[$idx]['processo_nivel_sigilo'] = $sigilosoMesclado ? ($niveisSigilo[$rid] ?? null) : null;
+            }
         }
 
         $merged = [];

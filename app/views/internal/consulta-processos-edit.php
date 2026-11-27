@@ -13,6 +13,8 @@ require_once __DIR__ . '/../../services/ConsultaProcessosService.php';
 require_once __DIR__ . '/../../services/ProcessoPrioridadesService.php';
 require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 require_once __DIR__ . '/../../helpers/ProcessResponsibleSectorDefault.php';
+require_once __DIR__ . '/../../helpers/ProcessoSetorAuthorization.php';
+require_once __DIR__ . '/../../repositories/ProcessoNivelSigiloRepository.php';
 
 $id = trim((string) ($_GET['id'] ?? ''));
 if ($id === '') { header('Location: /frame.php?page=consultaprocessos'); exit; }
@@ -58,6 +60,20 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
 $instituicoesPorParteFicha = [];
 $documentosPorParteFicha = [];
 $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
+$podeRegistrarNivel = false;
+$nivelConfirmado = null;
+if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
+    try {
+        $repoNivel = new ProcessoNivelSigiloRepository($connection);
+        $podeRegistrarNivel = $repoNivel->disponivel() && ProcessoSetorAuthorization::canAccessProcess(
+            $connection, (string) ($_SESSION['id_usuario'] ?? ''), $processoIdFicha, false
+        );
+        if ($podeRegistrarNivel) $nivelConfirmado = $repoNivel->porIds([$processoIdFicha])[$processoIdFicha] ?? null;
+    } catch (Throwable $erroNivel) {
+        $podeRegistrarNivel = false;
+        error_log('Não foi possível carregar a classificação local de sigilo.');
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -82,6 +98,25 @@ $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
     <div class="container-full card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">
         <input type="hidden" id="proc-id" value="<?php echo htmlspecialchars((string) ($processo['id'] ?? ''), ENT_QUOTES); ?>">
+        <?php if ($podeRegistrarNivel): ?>
+        <section class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" aria-labelledby="processo-sigilo-titulo">
+            <h2 id="processo-sigilo-titulo">Nível de sigilo</h2>
+            <p id="processo-sigilo-orientacao">Registre o nível conferido no PJe. Não altera as permissões de acesso.</p>
+            <form id="processo-nivel-sigilo-form" class="display-flex row row-full flex-wrap align-end gap-y-md" data-process-id="<?= htmlspecialchars($processoIdFicha, ENT_QUOTES) ?>">
+                <div class="col">
+                    <label for="processo-nivel-sigilo">Nível confirmado no PJe</label>
+                    <select required id="processo-nivel-sigilo" class="height-md" aria-describedby="processo-sigilo-orientacao">
+                        <option value="" disabled <?= $nivelConfirmado === null ? 'selected' : '' ?>>Selecione o nível</option>
+                        <?php foreach (ProcessoNivelSigilo::ROTULOS as $nivel => $rotulo): ?>
+                        <option value="<?= $nivel ?>" <?= $nivelConfirmado === $nivel ? 'selected' : '' ?>><?= htmlspecialchars($rotulo, ENT_QUOTES) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary height-md">Salvar nível</button>
+            </form>
+            <p id="processo-nivel-sigilo-status" role="status" aria-live="polite"></p>
+        </section>
+        <?php endif; ?>
         <?php if ($podeAtribuirSetorResponsavel): ?>
         <section class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" aria-labelledby="responsible-sector-title">
             <div>
@@ -409,6 +444,9 @@ $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
         window.PROCESSO_PRIORIDADES_INITIAL = <?php echo json_encode($prioridadesFichaEstado, JSON_UNESCAPED_UNICODE); ?>;
     </script>
     <script src="/assets/js/modules/audiencias/pauta-edit-prioridades.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit-prioridades.js') ?: time(); ?>"></script>
+    <?php endif; ?>
+    <?php if ($podeRegistrarNivel): ?>
+    <script src="/assets/js/shared/processo-nivel-sigilo.js?v=<?= filemtime(__DIR__ . '/../../../public/assets/js/shared/processo-nivel-sigilo.js') ?>"></script>
     <?php endif; ?>
     <script src="/assets/js/shared/processos-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/processos-edit.js') ?: time(); ?>"></script>
     <?php if ($podeAtribuirSetorResponsavel && $erroSetorResponsavel === ''): ?>
