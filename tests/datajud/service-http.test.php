@@ -2,6 +2,11 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../../app/services/DataJudService.php';
 
+$consulta = require __DIR__ . '/../../public/api/datajud/config.php';
+if (($consulta['timeout'] ?? null) !== 60 || ($consulta['connect_timeout'] ?? null) !== 10) {
+    throw new LogicException('A consulta interativa deve aguardar até 60 s, com até 10 s para conectar.');
+}
+
 $number = '0000001-69.2020.8.05.0001';
 $response = static fn(int $status, $body, string $error = ''): array => ['http_code' => $status, 'decoded' => $body, 'curl_error' => $error, 'raw' => ''];
 $empty = ['timed_out' => false, '_shards' => ['total' => 1, 'successful' => 1, 'failed' => 0, 'skipped' => 0], 'hits' => ['total' => ['value' => 0, 'relation' => 'eq'], 'hits' => []]];

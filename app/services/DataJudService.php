@@ -182,7 +182,7 @@ final class DataJudService
         if ($this->transport !== null) {
             return ($this->transport)($url, $body);
         }
-        $timeout = max(5, min(60, (int) ($this->config['timeout'] ?? 30)));
+        $timeout = max(5, min(60, (int) ($this->config['timeout'] ?? 60)));
         $connectTimeout = max(2, min(15, (int) ($this->config['connect_timeout'] ?? 10)));
 
         $ch = curl_init($url);
