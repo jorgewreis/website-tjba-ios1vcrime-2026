@@ -86,9 +86,36 @@ $db->exec("INSERT INTO classes (id,codigo,nome) VALUES ('CLASS-A','11','Classe s
 $db->exec("UPDATE processos SET classe_id='CLASS-A'");
 $origemMigration = file_get_contents(__DIR__ . '/../../database/migrations/20261127_add_processos_classe_origem.sql');
 if (!is_string($origemMigration) || trim($origemMigration) === '') throw new RuntimeException('Origin migration is missing.');
+$applyOrigem = static function (PDO $connection) use ($origemMigration): void {
+    // Execute in the same physical connection; surface errors from every statement.
+    $cursor = $connection->query($origemMigration);
+    do {
+        if ($cursor->columnCount() > 0) $cursor->fetchAll();
+    } while ($cursor->nextRowset());
+    $cursor->closeCursor();
+};
+$foreignLock = new PDO($dsn, (string) getenv('DATAJUD_TEST_USER'), (string) getenv('DATAJUD_TEST_PASSWORD'), [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+]);
+$lockExpr = "CONCAT('rei345_classe_origem:', LEFT(SHA2(DATABASE(), 256), 40))";
+if ((int) $foreignLock->query("SELECT GET_LOCK($lockExpr, 0)")->fetchColumn() !== 1) {
+    throw new RuntimeException('Failed to take the synthetic migration test lock.');
+}
+try {
+    $applyOrigem($db);
+    throw new RuntimeException('A second session migrated while the named lock was held.');
+} catch (PDOException $e) {
+    if (!str_contains($e->getMessage(), 'REI345_MIGRATION_LOCK_NOT_ACQUIRED')) throw $e;
+} finally {
+    $foreignLock->query("SELECT RELEASE_LOCK($lockExpr)")->fetchColumn();
+}
+if ((int) $db->query("SELECT IS_FREE_LOCK($lockExpr)")->fetchColumn() !== 1) {
+    throw new RuntimeException('The migration left a named lock behind after contention.');
+}
+
 $repo = new ProcessosRepository($db);
 if ($repo->classeOrigemDisponivel()) throw new RuntimeException('Synthetic legacy schema already contains the provenance column.');
-$db->exec($origemMigration);
+$applyOrigem($db);
 $repo = new ProcessosRepository($db);
 $legacy = $repo->findById($processId);
 if (!$repo->classeOrigemDisponivel() || $legacy === null || $legacy['classe_id'] !== 'CLASS-A' || $legacy['classe_origem'] !== null) {
@@ -104,7 +131,7 @@ $established = $classeSync->syncFromDataJud('00000016920208050001', '11', 'Class
 if (($established['action'] ?? null) !== 'updated' || $repo->findById($processId)['classe_origem'] !== 'datajud') {
     throw new RuntimeException('Identical verified class did not establish DataJud origin.');
 }
-$db->exec($origemMigration);
+$applyOrigem($db);
 if ($repo->findById($processId)['classe_origem'] !== 'datajud') {
     throw new RuntimeException('Reapplying the idempotent migration changed existing provenance.');
 }
@@ -120,8 +147,21 @@ $replaced = $classeSync->syncFromDataJud('00000016920208050001', '12', 'Classe s
 if (($replaced['action'] ?? null) !== 'updated' || $repo->findById($processId)['classe_id'] !== 'CLASS-B') {
     throw new RuntimeException('Another verified synchronization did not replace the protected class.');
 }
+// Preserve incompatible pre-existing definitions instead of modifying them or declaring success.
+$db->exec("ALTER TABLE processos DROP COLUMN classe_origem, ADD COLUMN classe_origem VARCHAR(12) NULL DEFAULT NULL");
+$db->exec("UPDATE processos SET classe_origem='legado'");
+try {
+    $applyOrigem($db);
+    throw new RuntimeException('An incompatible existing definition was accepted.');
+} catch (PDOException $e) {
+    if (!str_contains($e->getMessage(), 'REI345_INCOMPATIBLE_CLASSE_ORIGEM')) throw $e;
+}
+if ($db->query('SELECT classe_origem FROM processos')->fetchColumn() !== 'legado'
+    || (int) $db->query("SELECT IS_FREE_LOCK($lockExpr)")->fetchColumn() !== 1) {
+    throw new RuntimeException('An incompatible migration changed data or leaked its lock.');
+}
 $db->exec('DROP TABLE classes');
-echo "PASS: MariaDB provenance migration reapplies without changing legacy or DataJud origins.\n";
+echo "PASS: isolated provenance migration applies twice, preserves legacy/DataJud origins, and rejects incompatible schema and contention.\n";
 
 $db->exec('DROP TABLE processo_datajud_sync_queue');
 $db->exec('DROP TABLE processos');

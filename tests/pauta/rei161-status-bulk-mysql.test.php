@@ -45,6 +45,50 @@ $process = $db->prepare('INSERT INTO processos (id, sigiloso) VALUES (?, ?)');
 foreach ([['P-OPEN', 0], ['P-SECRET', 1], ['P-MINOR', 0], ['P-PRIORITY', 0], ['P-SIG-PRIORITY', 0], ['P-CHILD-PRIORITY', 0], ['P-DV-PRIORITY', 0], ['P-NONBLOCKING', 0], ['P-OBS', 0]] as [$id, $secret]) {
     $process->execute([$id, $secret]);
 }
+// Exercise the exact additive provenance SQL in this same authenticated disposable MySQL 8.4.
+$origemSql = file_get_contents(__DIR__ . '/../../database/migrations/20261127_add_processos_classe_origem.sql');
+rei161Assert(is_string($origemSql) && $origemSql !== '', 'Migração de origem indisponível.');
+$applyOrigem = static function () use ($db, $origemSql): void {
+    $cursor = $db->query($origemSql);
+    do {
+        if ($cursor->columnCount() > 0) $cursor->fetchAll();
+    } while ($cursor->nextRowset());
+    $cursor->closeCursor();
+};
+$lockExpr = "CONCAT('rei345_classe_origem:', LEFT(SHA2(DATABASE(), 256), 40))";
+$contender = new PDO($dsn, 'root', $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+rei161Assert((int) $contender->query("SELECT GET_LOCK($lockExpr, 0)")->fetchColumn() === 1, 'Lock sintético não adquirido.');
+try {
+    $applyOrigem();
+    throw new RuntimeException('Migração avançou durante lock concorrente.');
+} catch (PDOException $e) {
+    if (!str_contains($e->getMessage(), 'REI345_MIGRATION_LOCK_NOT_ACQUIRED')) throw $e;
+} finally {
+    $contender->query("SELECT RELEASE_LOCK($lockExpr)")->fetchColumn();
+}
+rei161Assert($db->query("SHOW COLUMNS FROM processos LIKE 'classe_origem'")->fetch() === false,
+    'A tentativa com lock concorrente alterou a tabela.');
+$applyOrigem();
+rei161Assert((int) $db->query('SELECT COUNT(*) FROM processos WHERE classe_origem IS NOT NULL')->fetchColumn() === 0,
+    'A migração preencheu a origem no legado.');
+$db->exec("UPDATE processos SET classe_origem='datajud' WHERE id='P-OPEN'");
+$applyOrigem();
+rei161Assert($db->query("SELECT classe_origem FROM processos WHERE id='P-OPEN'")->fetchColumn() === 'datajud',
+    'A reaplicação alterou uma origem já registrada.');
+$db->exec("ALTER TABLE processos ALTER COLUMN classe_origem SET DEFAULT 'manual'");
+try {
+    $applyOrigem();
+    throw new RuntimeException('Migração aceitou default incompatível.');
+} catch (PDOException $e) {
+    if (!str_contains($e->getMessage(), 'REI345_INCOMPATIBLE_CLASSE_ORIGEM')) throw $e;
+}
+rei161Assert($db->query("SELECT classe_origem FROM processos WHERE id='P-OPEN'")->fetchColumn() === 'datajud',
+    'A recusa por default incompatível alterou dados.');
+rei161Assert((int) $db->query("SELECT IS_FREE_LOCK(CONCAT('rei345_classe_origem:', LEFT(SHA2(DATABASE(), 256), 40)))")->fetchColumn() === 1,
+    'A recusa deixou o lock de migração adquirido.');
+$db->exec("ALTER TABLE processos ALTER COLUMN classe_origem SET DEFAULT NULL");
+echo "PASS REI-345 exact additive SQL on disposable MySQL 8.4: apply, reapply, legacy, wrong default, lock release.\n";
+
 // Use the same real Bahia clock as the service. Near midnight, wait at most
 // one minute so a run started at 23:59 does not fail just because of the date.
 while (date('H:i') === '23:59') {
