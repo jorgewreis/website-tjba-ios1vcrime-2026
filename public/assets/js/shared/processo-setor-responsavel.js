@@ -9,12 +9,24 @@
     const status = document.getElementById('process-responsible-sector-status');
     const current = document.getElementById('process-responsible-sector-current');
     const endpoint = '/api/processos/setor-responsavel.php';
+    const requiresDestination = form.dataset.explicitDestination === 'true';
+    let submitting = false;
+    function refreshSubmitState() {
+        if (requiresDestination && select && button) button.disabled = submitting || select.value === '';
+    }
+    if (requiresDestination && select) {
+        select.addEventListener('change', refreshSubmitState);
+        refreshSubmitState();
+    }
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
         if (!select || !button || !status) return;
-        if (button.disabled) return;
+        if (button.disabled || submitting || (requiresDestination && select.value === '')) return;
+        const sectorId = select.value;
+        const chosen = select.options[select.selectedIndex];
 
+        submitting = true;
         button.disabled = true;
         status.textContent = 'Registrando atribuição…';
         try {
@@ -24,7 +36,7 @@
                 headers: { 'Content-Type': 'application/json; charset=UTF-8' },
                 body: JSON.stringify({
                     processo_id: form.dataset.processId || '',
-                    setor_id: select.value,
+                    setor_id: sectorId,
                 }),
             });
             const result = await response.json().catch(function () { return {}; });
@@ -33,7 +45,6 @@
                 return;
             }
 
-            const chosen = select.options[select.selectedIndex];
             const sectorName = result.sector_id ? (chosen ? chosen.textContent.trim() : 'Setor atribuído') : '';
             if (current) {
                 current.textContent = sectorName
@@ -44,7 +55,9 @@
         } catch (error) {
             status.textContent = 'Falha de comunicação. Tente novamente.';
         } finally {
+            submitting = false;
             button.disabled = false;
+            refreshSubmitState();
         }
     });
 })();

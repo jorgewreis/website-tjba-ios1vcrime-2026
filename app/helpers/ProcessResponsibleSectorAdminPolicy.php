@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../access/ProfileNormalizer.php';
 
-/** Atribuição de unidade responsável é exclusiva de ADMIN efetivo, não de chefia em geral. */
+/** Somente ADMIN efetivo atribui sem lotação de origem ou restaura o padrão. */
 final class ProcessResponsibleSectorAdminPolicy
 {
     /** @param list<string> $effectiveProfiles */
