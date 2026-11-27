@@ -100,6 +100,7 @@ try {
 }
 
 $partes = $processo['partes'] ?? [];
+$partesAgrupadasFicha = ProcessoFicha::partesPorPolo($partes);
 $assuntosFicha = is_array($processo['assuntos'] ?? null) ? $processo['assuntos'] : [];
 $processoIdFicha = trim((string) ($processo['id'] ?? ''));
 $nMenoresPauta = $processoIdFicha !== ''
@@ -129,10 +130,13 @@ if ($sigilosoFicha && $acessoSetorial) {
         error_log('Não foi possível carregar a classificação local de sigilo.');
     }
 }
-$rotuloSigiloFicha = $sigilosoFicha
+// Sinal adicional só afeta a apresentação e não reclassifica o cadastro nem o acesso.
+$temNivelFicha = $sigilosoFicha
+    || !empty($prioridadesFichaEstado['sigiloso_obrigatorio_menor_ou_vd'])
+    || in_array('sigiloso', array_column($prioridadesFichaEstado['prioridades'] ?? [], 'codigo'), true);
+$rotuloSigiloFicha = $temNivelFicha
     ? (ProcessoNivelSigilo::ROTULOS[$nivelConfirmado] ?? 'Sigiloso · nível não informado')
-    : 'Não informado';
-$temNivelFicha = $sigilosoFicha;
+    : 'Público';
 if (!$modoEdicao) {
     require __DIR__ . '/partials/processo-ficha-leitura.php';
     return;
@@ -345,91 +349,19 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             </div>
         </div>
         <div class="display-flex row row-full align-center padding-x-md padding-y-md border-bottom"><h2>Partes cadastradas</h2></div>
-        <?php if (!empty($partes)): ?>
-            <?php
-                $partesGruposOrdem = [
-                    'reus' => ['label' => 'Réus', 'ordem' => 10],
-                    'defesa_reus' => ['label' => 'Defesa vinculada aos réus', 'ordem' => 20],
-                    'vitimas' => ['label' => 'Vítimas', 'ordem' => 30],
-                    'testemunhas_denuncia' => ['label' => 'Testemunhas da denúncia', 'ordem' => 40],
-                    'testemunhas_defesa' => ['label' => 'Testemunhas da defesa', 'ordem' => 50],
-                    'outros' => ['label' => 'Outras partes', 'ordem' => 900],
-                ];
-                $grupoDaParteProcesso = static function (array $parte): string {
-                    $tipo = trim((string) ($parte['tipo_parte'] ?? ''));
-                    if (in_array($tipo, ['reu', 'indiciado', 'sentenciado', 'requerido'], true)) {
-                        return 'reus';
-                    }
-                    if (in_array($tipo, ['advogado', 'defensor_publico'], true)) {
-                        return 'defesa_reus';
-                    }
-                    if (in_array($tipo, ['vitima', 'requerente'], true)) {
-                        return 'vitimas';
-                    }
-                    if ($tipo === 'testemunha_denuncia') {
-                        return 'testemunhas_denuncia';
-                    }
-                    if ($tipo === 'testemunha_defesa') {
-                        return 'testemunhas_defesa';
-                    }
-
-                    return 'outros';
-                };
-                $partesAgrupadasProcesso = [];
-                foreach ($partes as $parteItemProcesso) {
-                    if (!is_array($parteItemProcesso)) {
-                        continue;
-                    }
-                    $grupoParteProcesso = $grupoDaParteProcesso($parteItemProcesso);
-                    if (!isset($partesAgrupadasProcesso[$grupoParteProcesso])) {
-                        $partesAgrupadasProcesso[$grupoParteProcesso] = [];
-                    }
-                    $partesAgrupadasProcesso[$grupoParteProcesso][] = $parteItemProcesso;
-                }
-                foreach ($partesAgrupadasProcesso as &$grupoItensProcesso) {
-                    usort($grupoItensProcesso, static function (array $a, array $b): int {
-                        return strcasecmp((string) ($a['nome_completo'] ?? ''), (string) ($b['nome_completo'] ?? ''));
-                    });
-                }
-                unset($grupoItensProcesso);
-                uksort($partesAgrupadasProcesso, static function (string $a, string $b) use ($partesGruposOrdem): int {
-                    return ($partesGruposOrdem[$a]['ordem'] ?? 999) <=> ($partesGruposOrdem[$b]['ordem'] ?? 999);
-                });
-            ?>
-            <?php foreach ($partesAgrupadasProcesso as $grupoKeyProcesso => $partesGrupoProcesso): ?>
-            <?php if ($partesGrupoProcesso === []): ?>
-                <?php continue; ?>
-            <?php endif; ?>
+        <?php if ($partesAgrupadasFicha !== []): ?>
+            <?php foreach ($partesAgrupadasFicha as $grupoFicha): ?>
             <div class="display-flex row row-full justify-between padding-x-md padding-y-sm border-bottom" style="background-color: var(--color-primary-bg-light);">
                 <div class="display-flex row row-fit justify-start align-center padding-x-sm">
                     <span class="text text-ellipsis" style="font-weight: 500; color: var(--color-primary-active); font-size: 12px;">
-                        <?php echo htmlspecialchars((string) ($partesGruposOrdem[$grupoKeyProcesso]['label'] ?? 'Partes'), ENT_QUOTES); ?>
+                        <?= $eFicha($grupoFicha['rotulo']) ?>
                     </span>
                 </div>
             </div>
-            <?php foreach ($partesGrupoProcesso as $p): ?>
+            <?php foreach ($grupoFicha['partes'] as $itemParteFicha): ?>
             <?php
+                $p = $itemParteFicha['registro'];
                 $tipoParteRaw = trim((string) ($p['tipo_parte'] ?? ''));
-                $poloRaw = trim((string) ($p['polo'] ?? ''));
-                $tipoParteLabels = [
-                    'reu' => 'Réu',
-                    'indiciado' => 'Indiciado',
-                    'sentenciado' => 'Sentenciado',
-                    'requerido' => 'Requerido',
-                    'vitima' => 'Vítima',
-                    'requerente' => 'Requerente',
-                    'testemunha_defesa' => 'Testemunha da Defesa',
-                    'testemunha_denuncia' => 'Testemunha da Denúncia',
-                    'advogado' => 'Advogado',
-                    'defensor_publico' => 'Defensor Público',
-                ];
-                $poloLabels = [
-                    'ativo' => 'Ativo',
-                    'passivo' => 'Passivo',
-                    'terceiros' => 'Terceiros',
-                ];
-                $tipoParteLabel = $tipoParteLabels[$tipoParteRaw] ?? ($tipoParteRaw !== '' ? ucfirst(str_replace('_', ' ', $tipoParteRaw)) : 'Parte');
-                $poloLabel = $poloLabels[$poloRaw] ?? ($poloRaw !== '' ? ucfirst(str_replace('_', ' ', $poloRaw)) : 'Polo não informado');
                 $cpfParte = trim((string) ($p['cpf'] ?? ''));
                 $nomeParte = trim((string) ($p['nome_completo'] ?? ''));
                 $nomeParte = $nomeParte !== '' ? $nomeParte : 'Nome não informado';
@@ -484,8 +416,8 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <div class="display-flex row row-full justify-between padding-x-sm padding-y-sm align-center">
                     <div class="display-flex row row-fit justify-start gap-y-sm align-center">
                         <div class="col width-700">
-                            <div class="minor-info"><?php echo htmlspecialchars($tipoParteLabel . ' - ' . $poloLabel, ENT_QUOTES); ?></div>
-                            <span class="major-info text-ellipsis"><?php echo htmlspecialchars($nomeParte, ENT_QUOTES); ?></span>
+                            <div class="minor-info"><?= $eFicha($itemParteFicha['papel']) ?></div>
+                            <span class="major-info text-ellipsis ficha-parte-nome"><?php if ($itemParteFicha['destaque']): ?><strong><?= $eFicha($nomeParte) ?></strong><?php else: ?><?= $eFicha($nomeParte) ?><?php endif; ?></span>
                             <?php if ($detalhesParteTexto !== ''): ?>
                                 <span class="minor-info-defesa"><?php echo htmlspecialchars($detalhesParteTexto, ENT_QUOTES); ?></span>
                             <?php endif; ?>

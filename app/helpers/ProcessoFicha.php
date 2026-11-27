@@ -7,6 +7,48 @@ require_once __DIR__ . '/../DataJud/DataJudTribunalResolver.php';
 
 final class ProcessoFicha
 {
+    private const POLOS = ['ativo'=>'Polo ativo', 'passivo'=>'Polo passivo', 'terceiros'=>'Terceiros', 'indefinido'=>'Polo não informado'];
+    private const PAPEIS_PRINCIPAIS = [
+        'autor' => ['ativo', 'Autor', 10],
+        'requerente' => ['ativo', 'Requerente', 20],
+        'reu' => ['passivo', 'Réu', 10],
+        'vitima' => ['terceiros', 'Vítima', 10],
+        'testemunha_denuncia' => ['terceiros', 'Testemunha da Denúncia', 20],
+        'testemunha_defesa' => ['terceiros', 'Testemunha da Defesa', 30],
+    ];
+    private const PAPEIS_ADICIONAIS = ['advogado'=>'Advogado', 'defensor_publico'=>'Defensor Público',
+        'indiciado'=>'Indiciado', 'sentenciado'=>'Sentenciado', 'requerido'=>'Requerido'];
+
+    /** Ordenação visual; não altera o papel ou o polo persistido. */
+    public static function partesPorPolo(array $partes): array
+    {
+        $grupos = array_fill_keys(array_keys(self::POLOS), []);
+        foreach ($partes as $parte) {
+            if (!is_array($parte)) continue;
+            $tipo = trim((string) ($parte['tipo_parte'] ?? ''));
+            $polo = trim((string) ($parte['polo'] ?? ''));
+            [$grupo, $papel, $ordem] = self::PAPEIS_PRINCIPAIS[$tipo]
+                ?? [isset(self::POLOS[$polo]) ? $polo : 'indefinido',
+                    self::PAPEIS_ADICIONAIS[$tipo] ?? ($tipo !== '' ? ucfirst(str_replace('_', ' ', $tipo)) : 'Parte'), 90];
+            if ($tipo === 'advogado' && $polo === 'passivo') {
+                $papel = 'Advogado do réu';
+                $ordem = 20;
+            }
+            $grupos[$grupo][] = [
+                'registro' => $parte, 'papel' => $papel, 'ordem' => $ordem,
+                'destaque' => in_array($tipo, ['reu', 'vitima'], true),
+            ];
+        }
+        $resultado = [];
+        foreach ($grupos as $polo => $itens) {
+            if ($itens === []) continue;
+            usort($itens, static fn(array $a, array $b): int => ($a['ordem'] <=> $b['ordem'])
+                ?: strcasecmp((string) ($a['registro']['nome_completo'] ?? ''), (string) ($b['registro']['nome_completo'] ?? '')));
+            $resultado[$polo] = ['rotulo' => self::POLOS[$polo], 'partes' => $itens];
+        }
+        return $resultado;
+    }
+
     public static function origem(string $numero): array
     {
         $vazio = ['segmento' => null, 'tribunal' => null, 'unidade' => null, 'comarca' => null, 'ano' => null];
@@ -94,7 +136,7 @@ final class ProcessoFicha
         }
 
         // Sem nomes de partes, documentos ou complementos de andamentos neste retorno.
-        return ['estado'=>'disponivel', 'sigilo'=>'Sem sigilo', 'vara'=>$texto($data['orgao_julgador']['nome'] ?? null),
+        return ['estado'=>'disponivel', 'sigilo'=>'Público', 'vara'=>$texto($data['orgao_julgador']['nome'] ?? null),
             'classe'=>$texto($data['classe']['descricao'] ?? null), 'assuntos'=>array_values(array_unique($assuntos)),
             'movimentos'=>$movimentos];
     }

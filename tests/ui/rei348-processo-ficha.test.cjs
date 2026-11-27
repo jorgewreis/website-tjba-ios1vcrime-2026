@@ -61,8 +61,19 @@ function render(url, perfil) {
         stub('repositories','ProcessosRepository','function findById($id){return ["id"=>$id,"numero_processo"=>"0001234-76.2026.8.05.0103","sigiloso"=>$id==="P2"]; }');
         stub('services','ConsultaProcessosService',`function get($id){return (new ProcessosRepository())->findById($id)+[
             "classe_nome"=>"Classe cadastrada fictícia","classe_origem"=>$id==="P2"?"datajud":"manual","assuntos"=>[["id"=>"VINCULO-AF","assunto_id"=>"AF","origem"=>"manual","assunto_codigo"=>"100","assunto_descricao"=>"Assunto cadastrado"]],
-            "partes"=>[["id"=>"PF","parte_id"=>"PF","nome_completo"=>"Pessoa fictícia A","polo"=>"passivo","tipo_parte"=>"reu"]]];}`);
-        stub('services','ProcessoPrioridadesService','function getEstadoEdicaoPorProcessoId(...$x){return ["prioridades"=>[["codigo"=>"fixture","label"=>"Réu preso","origem"=>"manual"]],"catalogo"=>[]];}');
+            "partes"=>[
+              ["id"=>"DEF","nome_completo"=>"Pessoa fictícia testemunha defesa","polo"=>"terceiros","tipo_parte"=>"testemunha_defesa"],
+              ["id"=>"PF","parte_id"=>"PF","nome_completo"=>"Pessoa fictícia A","polo"=>"passivo","tipo_parte"=>"reu"],
+              ["id"=>"REQ","nome_completo"=>"Pessoa fictícia requerente","polo"=>"ativo","tipo_parte"=>"requerente"],
+              ["id"=>"ADV","nome_completo"=>"Pessoa fictícia defesa","polo"=>"passivo","tipo_parte"=>"advogado"],
+              ["id"=>"ADV-A","nome_completo"=>"Pessoa fictícia procuradora","polo"=>"ativo","tipo_parte"=>"advogado"],
+              ["id"=>"ANC","nome_completo"=>"Pessoa fictícia autor","polo"=>"ativo","tipo_parte"=>"autor"],
+              ["id"=>"VIT","nome_completo"=>"Pessoa fictícia vítima","polo"=>"ativo","tipo_parte"=>"vitima"],
+              ["id"=>"DEN","nome_completo"=>"Pessoa fictícia testemunha denúncia","polo"=>"terceiros","tipo_parte"=>"testemunha_denuncia"],
+              ["id"=>"IND","nome_completo"=>"Pessoa fictícia indiciada","polo"=>"passivo","tipo_parte"=>"indiciado"],
+              ["id"=>"DESC","nome_completo"=>"Pessoa fictícia desconhecida","polo"=>"legado","tipo_parte"=>"perito_ad_hoc"]
+            ]];}`);
+        stub('services','ProcessoPrioridadesService','function getEstadoEdicaoPorProcessoId(...$x){return ["prioridades"=>[["codigo"=>$x[0]==="P4"?"sigiloso":"fixture","label"=>$x[0]==="P4"?"Sigiloso":"Réu preso","origem"=>"manual"]],"catalogo"=>[]];}');
         const routeSource = fs.readFileSync(path.join(root,'public/frame.php'),'utf8');
         const listSource = fs.readFileSync(path.join(root,'app/helpers/ProcessoBlocoListagemHelper.php'),'utf8');
         assert.match(routeSource, /'consultaprocessosedit'\s*=>\s*\$PAGES \. '\/consulta-processos-edit\.php'/);
@@ -77,10 +88,13 @@ function render(url, perfil) {
                 if(u.hostname !== 'fixture.test') return rt.abort();
                 if(u.pathname === '/api/processos/datajud-ficha.php'){
                     pedidos++;
-                    assert.deepEqual(rt.request().postDataJSON(),{processo_id:'P1'});
+                    const id = rt.request().postDataJSON().processo_id;
+                    assert.ok(['P1','P3','P4'].includes(id));
+                    if(id==='P3') return rt.fulfill({json:{estado:'restrito',sigilo:null}});
+                    if(id==='P4') return rt.fulfill({json:{estado:'disponivel',sigilo:'Público',movimentos:[]}});
                     if(falha){falha=false; return rt.fulfill({status:502,json:{estado:'erro'}});}
                     return rt.fulfill({json:{estado:'disponivel',vara:'Vara de destino fictícia',classe:'Classe na fonte',
-                        assuntos:['Assunto na fonte'],sigilo:'Sem sigilo',movimentos:[
+                        assuntos:['Assunto na fonte'],sigilo:'Público',movimentos:[
                             {nome:'Movimento 2',data:'2026-11-24T12:00:00Z'}, {nome:'Movimento 4',data:'2026-11-26T12:00:00Z'},
                             {nome:'<b>Movimento 1</b>',data:'2026-11-23T12:00:00Z'}, {nome:'Movimento 3',data:'2026-11-25T12:00:00Z'}]
                     }});
@@ -108,6 +122,17 @@ function render(url, perfil) {
             assert.equal(await pg.locator('input,select,textarea').count(),0,'modo inicial não tem controles de gravação');
             assert.equal(await pg.getByRole('heading',{name:'Dados do processo',exact:true}).count(),1);
             assert.equal(await pg.getByText('Ano',{exact:true}).count(),0);
+            assert.equal(await pg.getByText('Somente leitura',{exact:true}).count(),0);
+            assert.equal(await pg.getByText('Comarca de origem',{exact:true}).count(),0);
+            assert.equal(await pg.locator('dt').filter({hasText:/^Comarca$/}).count(),1);
+            assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');
+            assert.deepEqual(await pg.locator('.ficha-polo').allTextContents(), ['Polo ativo','Polo passivo','Terceiros','Polo não informado']);
+            const papeis = async (polo) => pg.locator('[aria-labelledby="ficha-polo-'+polo+'"] .ficha-parte-papel').allTextContents();
+            assert.deepEqual(await papeis('ativo'),['Autor','Requerente','Advogado']);
+            assert.deepEqual(await papeis('passivo'),['Réu','Advogado do réu','Indiciado']);
+            assert.deepEqual(await papeis('terceiros'),['Vítima','Testemunha da Denúncia','Testemunha da Defesa']);
+            assert.deepEqual(await papeis('indefinido'),['Perito ad hoc']);
+            assert.deepEqual(await pg.locator('.ficha-partes strong').allTextContents(),['Pessoa fictícia A','Pessoa fictícia vítima']);
             assert.equal(await pg.locator('dt').filter({hasText:/^Classe$/}).count(),1);
             assert.equal(await pg.locator('dt').filter({hasText:/^Assuntos$/}).count(),1);
             assert.equal(await pg.locator('[data-ficha-classe]').textContent(),'Classe cadastrada fictícia');
@@ -131,6 +156,7 @@ function render(url, perfil) {
             await pg.getByRole('link',{name:'Editar dados'}).click();
             await pg.getByRole('heading',{name:'Editar dados do processo'}).waitFor();
             assert.equal(await pg.locator('#process-responsible-sector-select').inputValue(),'CT');
+            assert.deepEqual(await pg.locator('[data-parte-id] .ficha-parte-nome strong').allTextContents(), ['Pessoa fictícia A','Pessoa fictícia vítima']);
             assert.equal(await pg.getByText(/justificativa/i).count(),0);
             if(process.env.FICHA_SCREENSHOTS) await pg.screenshot({path:path.join(process.env.FICHA_SCREENSHOTS, 'edicao-' + largura + '.png')});
             assert.deepEqual(await pg.evaluate(()=>document.documentElement.scrollWidth<=innerWidth ? [] :
@@ -158,11 +184,20 @@ function render(url, perfil) {
             assert.match(await pg.getByText('Classe sincronizada com o DataJud.',{exact:false}).textContent(),/Só outra sincronização/);
             const leituraOutroSetor = await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P2&perfil=SERVIDOR-GABINETE');
             assert.equal(leituraOutroSetor.status(),200);
-            assert.equal(await pg.getByText('Pessoa fictícia A').count(),1);
+            assert.equal(await pg.getByText('Pessoa fictícia A',{exact:true}).count(),1);
             assert.equal(await pg.getByRole('link',{name:'Editar dados'}).count(),0);
             assert.equal(pedidos,antes,'nenhuma consulta pública do processo sigiloso');
             const negada = await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P2&perfil=SERVIDOR-GABINETE&modo=editar');
             assert.equal(negada.status(),403);
+            await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P3');
+            await pg.getByText('Histórico indisponível na base pública por sigilo.').waitFor();
+            assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Sigiloso · nível não informado');
+            await Promise.all([
+                pg.waitForResponse(r=>r.url().includes('datajud-ficha.php')),
+                pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P4')
+            ]);
+            await pg.waitForFunction(()=>document.querySelector('[data-ficha-status]').textContent !== 'Movimentações ainda não carregadas.');
+            assert.equal(await pg.locator('[data-ficha-sigilo-local]').textContent(),'Sigiloso · nível não informado');
             await pg.close();
         }
         console.log('PASS: ficha, edição e histórico em 1440, 390 e 320 px; retorno com filtros, consulta e sigilo.');
