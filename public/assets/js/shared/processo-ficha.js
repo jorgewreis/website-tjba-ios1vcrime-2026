@@ -128,9 +128,5 @@
         }
     }
     tentar.addEventListener('click', consultar);
-    if (painel.dataset.fichaConsultaManual !== undefined) {
-        consultarBotao?.addEventListener('click', consultar);
-    } else {
-        consultar();
-    }
+    consultarBotao?.addEventListener('click', consultar);
 })();

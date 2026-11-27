@@ -176,6 +176,8 @@ function render(url, perfil) {
             assert.equal(await pg.locator('[data-ficha-assuntos]').textContent(),'Assunto cadastrado; Assunto protegido');
             assert.equal(await pg.locator('[data-ficha-vara]').textContent(),'Vara local fictícia');
             assert.deepEqual(JSON.parse(await pg.locator('[data-ficha-datajud]').getAttribute('data-ficha-assuntos-locais')),['Assunto cadastrado']);
+            assert.equal(pedidos,0,'abrir a ficha não consulta o DataJud');
+            await pg.getByRole('button',{name:'Consultar movimentações'}).click();
             await pg.getByRole('button',{name:'Tentar novamente'}).click();
             await pg.getByText('Vara de destino fictícia').waitFor();
             assert.deepEqual(await pg.locator('[data-ficha-recentes] strong').allTextContents(),['Movimento 4','Movimento 3','Movimento 2']);
@@ -276,15 +278,17 @@ function render(url, perfil) {
             await Promise.all([pg.waitForEvent('load'),pg.getByRole('button',{name:'Salvar classificação'}).click()]);
             assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');
             await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P3');
+            await pg.getByRole('button',{name:'Consultar movimentações'}).click();
             await pg.getByText('Histórico indisponível na base pública por sigilo.').waitFor();
             assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');
             assert.equal(await pg.locator('[data-ficha-sigilo-datajud]').isVisible(),true);
             assert.equal(await pg.locator('[data-ficha-sigilo-datajud]').textContent(),'Restrição indicada pelo DataJud · nível não informado');
+            await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P4');
             await Promise.all([
                 pg.waitForResponse(r=>r.url().includes('datajud-ficha.php')),
-                pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P4')
+                pg.getByRole('button',{name:'Consultar movimentações'}).click()
             ]);
-            await pg.waitForFunction(()=>document.querySelector('[data-ficha-status]').textContent !== 'Movimentações ainda não carregadas.');
+            await pg.getByText('Nenhuma movimentação retornada pelo DataJud.').waitFor();
             assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');
             assert.equal(await pg.locator('[data-ficha-alerta-protecao]').isVisible(),true);
             await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P4&modo=editar');

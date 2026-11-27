@@ -7,7 +7,6 @@ require_once __DIR__ . '/../repositories/SalaAudienciasPautaAlocadosRepository.p
 require_once __DIR__ . '/../repositories/SalaAudienciasPautaParteRepository.php';
 require_once __DIR__ . '/../repositories/SalaAudienciasTiposRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
-require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
@@ -219,7 +218,6 @@ final class SalaAudienciasPautaService
             }
 
             $processoId = $this->processosRepository->ensureProcess($numeroProcesso, $classeId, null, null);
-            ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoId);
             if ($this->pautaRepository->existsBlockingPautaForProcesso($processoId)) {
                 throw new InvalidArgumentException(
                     'Já existe audiência ativa para este número de processo. Só é permitido cadastrar outra quando a anterior estiver cancelada, redesignada, finalizada ou realizada.'

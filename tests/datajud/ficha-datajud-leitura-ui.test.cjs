@@ -15,7 +15,7 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
     const list = {children: [], replaceChildren(...entries) { this.children = entries; }};
     const history = {hidden: true, addEventListener() {}};
     const fields = {vara: 'Vara local', classe: 'Classe local', sigilo: 'Sigilo local', assuntos: 'Assuntos locais'};
-    const pane = {dataset: {fichaDatajud: 'PROCESSO_SINTETICO', fichaConsultaManual: editMode ? '' : undefined, fichaAssuntosLocais: subjectsOnField ? undefined : localSubjects}, querySelector(key) {
+    const pane = {dataset: {fichaDatajud: 'PROCESSO_SINTETICO', fichaAssuntosLocais: subjectsOnField ? undefined : localSubjects}, querySelector(key) {
         return ({'[data-ficha-status]':status, '[data-ficha-tentar]':retry, '[data-ficha-consultar]':start, '[data-ficha-recentes]':list,
             '[data-ficha-historico]':history, '[data-ficha-todas]':list})[key];
     }};
@@ -33,12 +33,10 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
         return response;
     }});
     await new Promise(setImmediate);
-    if (editMode) {
-        assert.equal(calls.length, 0, 'edição não deve abrir consulta paralela automaticamente');
-        assert.equal(start.hidden, false);
-        await Promise.all([start.onClick(), start.onClick()]);
-        assert.equal(start.hidden, true);
-    }
+    assert.equal(calls.length, 0, 'ficha não consulta o DataJud automaticamente: ' + (editMode ? 'edição' : 'leitura'));
+    assert.equal(start.hidden, false);
+    await Promise.all([start.onClick(), start.onClick()]);
+    assert.equal(start.hidden, true);
     assert.deepEqual(calls, [['/api/processos/datajud-ficha.php','POST',
         {processo_id:'PROCESSO_SINTETICO'}, 'same-origin','no-store']]);
     if (manualTry) {

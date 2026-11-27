@@ -4,7 +4,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/GabineteMonitoramentoEletronicoRepository.php';
 require_once __DIR__ . '/../repositories/GabineteMonitoramentoEletronicoSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
-require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
@@ -132,7 +131,6 @@ final class GabineteMonitoramentoEletronicoService
                 $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
             }
             $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
-            ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
 
             $processoParteId = trim((string) ($payload['processo_parte_id'] ?? $payload['reu_processo_parte_id'] ?? ''));
             $reuId = trim((string) ($payload['reu_id'] ?? ''));
