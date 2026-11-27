@@ -5,7 +5,9 @@ require_once __DIR__ . '/../../../helpers/CartasExpedidasPrioridade.php';
 require_once __DIR__ . '/../../../helpers/DeleteAuthorization.php';
 
 $e = static fn ($v): string => htmlspecialchars((string) $v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
-$canDelete = DeleteAuthorization::usuarioPodeExcluir((string) ($_SESSION['id_usuario'] ?? ''), DeleteAuthorization::perfisAdminOuChefia());
+$usuarioPiloto = trim((string) ($_SESSION['id_usuario'] ?? ''));
+$canDelete = DeleteAuthorization::usuarioPodeExcluir($usuarioPiloto, DeleteAuthorization::perfisAdminOuChefia());
+$canManageShipping = $usuarioPiloto !== '' && CartasExpedidasEnvioRegra::podeAlterar(UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioPiloto), true);
 $prioridadesPiloto = CartasExpedidasPrioridade::paraCartas($connection, array_column($rows, 'IdCarta'));
 $groups = [
     'envio' => ['Aguardando envio', $statusCounts['aguardando_envio'], []],
@@ -40,7 +42,11 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
   <header class="ce-header">
    <div><p class="ce-eyebrow">Cartório / Expedição <span class="ce-tag">Versão piloto</span></p><h1>Cartas Expedidas</h1><p>1ª Vara Crime · Cartas expedidas do cartório</p></div>
    <div class="ce-tools">
+    <?php if ($canManageShipping): ?>
     <a class="ce-button" href="?page=cartasexpedidasrules&amp;piloto=1" data-ce-frame data-title="Regra de envio de cartas">Regra de envio</a>
+    <?php else: ?>
+    <button type="button" class="ce-button" disabled title="Disponível apenas para Chefia e Admin">Regra de envio</button>
+    <?php endif; ?>
     <a class="ce-button primary" href="?page=cartasexpedidascreate&amp;piloto=1" data-ce-frame data-title="Nova carta expedida">+ Novo cadastro</a>
    </div>
   </header>

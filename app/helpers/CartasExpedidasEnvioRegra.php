@@ -7,9 +7,10 @@ final class CartasExpedidasEnvioRegra
 {
     public const NOME = 'ALLOCATE-CARTAS-EXPEDIDAS-ENVIO';
 
-    public static function podeAlterar(array $perfis): bool
+    public static function podeAlterar(array $perfis, bool $piloto = false): bool
     {
-        return array_intersect($perfis, ['ADMIN', 'DIRETORA', 'MAGISTRADA']) !== [];
+        $permitidos = $piloto ? ['ADMIN', 'CHEFIA'] : ['ADMIN', 'DIRETORA', 'MAGISTRADA'];
+        return array_intersect($perfis, $permitidos) !== [];
     }
 
     /** @return list<array{id:string,nome:string}> */

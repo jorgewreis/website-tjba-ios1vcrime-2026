@@ -22,9 +22,9 @@ const render=(route,role,embed=false)=>{
     cartasexpedidascreate:'cartorio-cartas-expedidas-create.php',
     cartasexpedidasrules:'cartorio-cartas-expedidas-rules.php'
   }[route];
-  return execFileSync(process.env.PHP_BIN || 'php',['-d','display_errors=stderr','-r',
-    'require "fixture.php"; require "app/helpers/CartasExpedidasEstadoFluxo.php"; $_SERVER["REQUEST_METHOD"]="GET"; $_SESSION=["id_usuario"=>"T1"]; $GLOBALS["testrole"]='+JSON.stringify(role)+'; $_GET=["page"=>'+JSON.stringify(route)+',"piloto"=>"'+(embed?'1':'0')+'"]; require "'+'app/views/internal/'+file+'";'],
-    {cwd:dir,encoding:'utf8'});
+  return JSON.parse(execFileSync(process.env.PHP_BIN || 'php',['-d','display_errors=stderr','-r',
+    'ob_start(); register_shutdown_function(static function(){echo json_encode(["body"=>ob_get_clean(),"status"=>http_response_code() ?: 200], JSON_THROW_ON_ERROR);}); require "fixture.php"; require "app/helpers/CartasExpedidasEstadoFluxo.php"; $_SERVER["REQUEST_METHOD"]="GET"; $_SESSION=["id_usuario"=>"T1"]; $GLOBALS["testrole"]='+JSON.stringify(role)+'; $_GET=["page"=>'+JSON.stringify(route)+',"piloto"=>"'+(embed?'1':'0')+'"]; require "'+'app/views/internal/'+file+'";'],
+    {cwd:dir,encoding:'utf8'}));
 };
 
 (async()=>{
@@ -56,7 +56,7 @@ const render=(route,role,embed=false)=>{
     fs.symlinkSync(path.join(root,'public'),path.join(dir,'public'));
     const roleMap=new Map();
     browser=await chromium.launch({executablePath:process.env.CHROMIUM_BIN||undefined,headless:true});
-    for(const [width,role,mayDelete] of [[1440,'ADMIN',true],[900,'CHEFIA',true],[767,'CHEFIA',true],[390,'DIRETORA',false],[320,'SERVIDOR-CARTORIO',false]]) {
+    for(const [width,role,mayDelete] of [[1640,'ADMIN',true],[1440,'ADMIN',true],[900,'CHEFIA',true],[767,'CHEFIA',true],[390,'DIRETORA',false],[320,'SERVIDOR-CARTORIO',false]]) {
       const p=await browser.newPage({viewport:{width,height:900}});
       p.setDefaultTimeout(5000);
       await p.addInitScript(()=>{Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copied=text;}}});});
@@ -69,7 +69,7 @@ const render=(route,role,embed=false)=>{
         if(u.pathname==='/frame.php') {
           const key=role+'|'+u.searchParams.get('page')+'|'+u.searchParams.get('piloto');
           if(!roleMap.has(key)) roleMap.set(key,render(u.searchParams.get('page'),role,u.searchParams.has('piloto')));
-          return r.fulfill({contentType:'text/html; charset=utf-8',body:roleMap.get(key)});
+          return r.fulfill({contentType:'text/html; charset=utf-8',...roleMap.get(key)});
         }
         const f=path.join(root,'public',u.pathname);
         if(u.pathname.startsWith('/assets/') && fs.existsSync(f)) return r.fulfill({path:f});
@@ -82,6 +82,10 @@ const render=(route,role,embed=false)=>{
         assert.ok(shellBar && header && header.y>=shellBar.y+shellBar.height+12,'floating shell must not overlap header at '+width+' '+shell);
       }
       await p.goto('http://fixture.test/frame.php?page=cartasexpedidasnova');
+      if(width>=768) {
+        const search=await p.getByRole('searchbox',{name:'Pesquisar por processo'}).boundingBox();
+        assert.ok(search && search.width>=220 && search.width<=250,'desktop process search must stay compact at '+width);
+      }
       if(width<=767) {
         const [dest,actions,entry,search,status,goal]=await Promise.all(['.ce-entry .ce-destino','.ce-entry .ce-row-actions','.ce-entry','.ce-toolbar input[type=search]','.ce-toolbar select[name=status]','.ce-toolbar select[name=finalidade]'].map(sel=>p.locator(sel).first().boundingBox()));
         assert.ok(Math.abs((dest.y+dest.height/2)-(actions.y+actions.height/2))<2,'actions must share metadata row');
@@ -92,6 +96,11 @@ const render=(route,role,embed=false)=>{
         assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'list must not overflow horizontally');
       }
       assert.equal(await p.locator('.ce-entry').count(),2);
+      for (const actions of await p.locator('.ce-row-actions').all()) {
+        const action=await actions.locator('.ce-button.small').boundingBox();
+        const menu=await actions.locator('summary').boundingBox();
+        assert.ok(action && menu && Math.abs(action.height-menu.height)<1,'row buttons must have equal heights at '+width);
+      }
       assert.equal(await p.locator('.ce-tools a[href="?page=cartasexpedidas"]').count(),0);
       const finalidade=p.locator('.ce-entry').first().locator('.ce-finalidade');
       assert.equal(await finalidade.getAttribute('title'),'Intimação de Decisão Interlocutória');
@@ -124,16 +133,24 @@ const render=(route,role,embed=false)=>{
       const create=p.frameLocator('#ce-panel iframe');
       assert.equal(await create.locator('#ce-prioridade-tarefa').inputValue(),'medio');
       await p.getByRole('button',{name:'Fechar painel'}).click();
-      await p.getByRole('link',{name:'Regra de envio'}).click();
-      const rules=p.frameLocator('#ce-panel iframe');
-      assert.match(await rules.locator('.ce-rule-now').textContent(),/Lia Bastos Facundo de Martins/);
-      assert.equal(await rules.locator('[name=csrf_token]').count(),role==='ADMIN'||role==='DIRETORA'?1:0);
+      if (mayDelete) {
+        await p.getByRole('link',{name:'Regra de envio'}).click();
+        const rules=p.frameLocator('#ce-panel iframe');
+        assert.match(await rules.locator('.ce-rule-now').textContent(),/Lia Bastos Facundo de Martins/);
+        assert.equal(await rules.locator('[name=csrf_token]').count(),1);
+      } else {
+        assert.ok(await p.getByRole('button',{name:'Regra de envio'}).isDisabled());
+        assert.equal(await p.getByRole('link',{name:'Regra de envio'}).count(),0);
+        const refused=await p.goto('http://fixture.test/frame.php?page=cartasexpedidasrules&piloto=1');
+        assert.equal(refused.status(),403);
+        assert.equal(await p.locator('form').count(),0);
+      }
       await p.goto('http://fixture.test/frame.php?page=cartasexpedidas');
       assert.equal(await p.locator('.carta-expedida-v2-row').count(),2);
       assert.equal(await p.locator('#ce-panel').count(),0);
       await p.close();
     }
-    console.log('PASS: rotas coexistem; cinco viewports; cópia, menu por etapa, abas, prioridade, regra e perfis.');
+    console.log('PASS: rotas coexistem; seis viewports; cópia, menu por etapa, abas, prioridade, regra e perfis.');
   } finally {
     if(browser) await browser.close();
     fs.rmSync(dir,{recursive:true,force:true});
