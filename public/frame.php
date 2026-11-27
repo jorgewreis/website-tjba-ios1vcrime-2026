@@ -26,6 +26,7 @@ $ERRORS = $PAGES . '/errors';
 // Lista de páginas permitidas e seus caminhos.
 $allowed_pages = [
     'dashboard'             => $PAGES . '/dashboard.php',
+    'dashboard2'            => $PAGES . '/dashboard-2.php',
     'dashboardexterno'      => $PAGES . '/dashboard-externo.php',
     'cejusc'                => $PAGES . '/cartorio-cejusc-list.php',
     'cejusccreate'          => $PAGES . '/cartorio-cejusc-create.php',
@@ -183,6 +184,13 @@ do {
             $validationMessage = 'Página não encontrada';
             break;
         }
+    }
+
+    if ($page === 'dashboard2'
+        && !in_array(strtolower((string) envValue('DASHBOARD2_ENABLED', '0')), ['1', 'true', 'yes', 'on'], true)) {
+        $validationStatus = 404;
+        $validationMessage = 'Página não encontrada';
+        break;
     }
 
     $userPerfils = UsuarioPerfisAutorizacao::perfisDoUsuario($userId);
