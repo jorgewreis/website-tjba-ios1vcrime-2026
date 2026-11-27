@@ -68,9 +68,9 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
   <div class="ce-columns ce-grid" aria-hidden="true"><span>Processo</span><span>Destino</span><span>Finalidade</span><span>Prazo</span><span>Responsável</span><span>Prioridade</span><span>Ações</span></div>
   <?php if ($rows === []): ?><p class="ce-empty">Nenhuma carta encontrada com esses filtros.</p><?php endif; ?>
   <?php foreach ($groups as $groupKey=>[$label,$count,$items]): ?>
-  <?php if ($items === []) continue; ?>
+  <?php if ($items === []) continue; $nestaPagina = count($items); ?>
   <details class="ce-group <?= $e($groupKey) ?>" <?= in_array($groupKey,['encerrada','cancelada'],true)&&$statusFilter===''?'':'open' ?>>
-    <summary><span class="ce-dot"></span><?= $e($label) ?> <span class="ce-tag" title="<?= $count===null?'Nesta página':'Total filtrado' ?>"><?= $e($count ?? count($items)) ?></span></summary>
+    <summary><span class="ce-dot"></span><?= $e($label) ?> <span class="ce-tag" title="Cartas nesta página" aria-label="<?= $e($nestaPagina . ' nesta página') ?>"><?= $e($nestaPagina) ?></span><?php if ($totalPages > 1 && $count !== null && $count > $nestaPagina): ?> <small><?= $e($count) ?> no total</small><?php endif; ?></summary>
     <?php foreach ($items as $row) require __DIR__ . '/cartas-expedidas-v2-row.php'; ?>
   </details>
   <?php endforeach; ?>

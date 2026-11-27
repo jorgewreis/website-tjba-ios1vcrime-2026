@@ -15,7 +15,7 @@ const put = (name,contents) => {
 const copy = f => put(f,fs.readFileSync(path.join(root,f)));
 const stub = (folder,name,body) => put('app/'+folder+'/'+name+'.php','<?php class '+name+'{function __construct(...$a){} '+body+'}');
 const cpInternal = f => copy('app/views/internal/'+f);
-const render=(route,role,embed=false,id=null)=>{
+const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1)=>{
   const file={
     cartasexpedidas:'cartorio-cartas-expedidas-list.php',
     cartasexpedidasnova:'cartorio-cartas-expedidas-nova.php',
@@ -24,7 +24,7 @@ const render=(route,role,embed=false,id=null)=>{
     cartasexpedidasrules:'cartorio-cartas-expedidas-rules.php'
   }[route];
   return JSON.parse(execFileSync(process.env.PHP_BIN || 'php',['-d','display_errors=stderr','-r',
-    'ob_start(); register_shutdown_function(static function(){echo json_encode(["body"=>ob_get_clean(),"status"=>http_response_code() ?: 200], JSON_THROW_ON_ERROR);}); require "fixture.php"; require "app/helpers/CartasExpedidasEstadoFluxo.php"; $_SERVER["REQUEST_METHOD"]="GET"; $_SESSION=["id_usuario"=>"T1"]; $GLOBALS["testrole"]='+JSON.stringify(role)+'; $_GET=["page"=>'+JSON.stringify(route)+',"piloto"=>"'+(embed?'1':'0')+'","id"=>'+JSON.stringify(id)+']; require "'+'app/views/internal/'+file+'";'],
+    'ob_start(); register_shutdown_function(static function(){echo json_encode(["body"=>ob_get_clean(),"status"=>http_response_code() ?: 200], JSON_THROW_ON_ERROR);}); require "fixture.php"; require "app/helpers/CartasExpedidasEstadoFluxo.php"; $_SERVER["REQUEST_METHOD"]="GET"; $_SESSION=["id_usuario"=>"T1"]; $GLOBALS["testrole"]='+JSON.stringify(role)+'; $_GET=["page"=>'+JSON.stringify(route)+',"piloto"=>"'+(embed?'1':'0')+'","id"=>'+JSON.stringify(id)+',"processo"=>'+JSON.stringify(paginada?'fixture-paginacao':'')+',"page_number"=>'+JSON.stringify(pageNumber)+']; require "'+'app/views/internal/'+file+'";'],
     {cwd:dir,encoding:'utf8'}));
 };
 
@@ -42,10 +42,14 @@ const render=(route,role,embed=false,id=null)=>{
     stub('repositories','CartasExpedidasSubtarefasRepository','const TIPO_ENVIO="aguardando_envio",TIPO_DEVOLUCAO="aguardando_devolucao",ORDEM_ENVIO=1,ORDEM_DEVOLUCAO=2; function findByCartaId($id){return [];} static function resolverSubtarefaAtivaPorLista($rows){return $rows[0]??null;}');
     stub('repositories','TribunaisRepository','');
     put('app/helpers/CartorioTimelineHelper.php','<?php function cartorioTimelineBuildViewData(...$a){return ["statusLabel"=>"Aguardando envio","cadastro"=>["minorText"=>"Carta cadastrada"]];}');
-    stub('services','CartasExpedidasService',`function find($id){return $id === "C1" ? ["processo_origem_id"=>"P1","finalidade"=>"Intimação de Decisão Interlocutória","cidade_destino"=>"Una","uf_destino"=>"BA","prazo_dias"=>30,"status"=>"aguardando envio","prioridade_tarefa"=>"critico"] : null;} function listCartas(...$a){return ["total"=>2,"rows"=>[
+    stub('services','CartasExpedidasService',`function find($id){return $id === "C1" ? ["processo_origem_id"=>"P1","finalidade"=>"Intimação de Decisão Interlocutória","cidade_destino"=>"Una","uf_destino"=>"BA","prazo_dias"=>30,"status"=>"aguardando envio","prioridade_tarefa"=>"critico"] : null;} function listCartas($f,$limit,$offset){$rows=[
        ["IdCarta"=>"C1","numero_processo"=>"0000041-00.2026.0.00.0000","Status"=>"aguardando envio","EtapaEfetiva"=>"envio","Comarca"=>"Una","Estado"=>"BA","Finalidade"=>"Intimação de Decisão Interlocutória","Prazo"=>30,"bloco_processo_abrir_href"=>"/frame.php?page=consultaprocessosedit","SubtarefasAll"=>[["id"=>"S1","tipo"=>"aguardando_envio"]]],
        ["IdCarta"=>"C2","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"]]]
-    ]];} function getStatusCounts($f){return ["aguardando envio"=>1,"aguardando cumprimento"=>1];} function getFinalidadeCounts($f){return ["Intimação de Decisão Interlocutória"=>1,"Intimação"=>1];}`);
+    ]; if (($f["processo"]??"") !== "fixture-paginacao") return ["total"=>2,"rows"=>$rows];
+    $lista=[]; for($i=0;$i<15;$i++) { $c=$rows[$i<4?0:1]; $c["IdCarta"]="P".$i; $lista[]=$c; }
+    $ultima=$rows[0]; $ultima["IdCarta"]="P15"; $lista[]=$ultima;
+    return ["total"=>16,"rows"=>array_slice($lista,$offset,$limit)];
+    } function getStatusCounts($f){return ($f["processo"]??"") === "fixture-paginacao" ? ["aguardando envio"=>5,"aguardando cumprimento"=>11] : ["aguardando envio"=>1,"aguardando cumprimento"=>1];} function getFinalidadeCounts($f){return ["Intimação de Decisão Interlocutória"=>1,"Intimação"=>1];}`);
     put('fixture.php',`<?php
       class ProcessosRepository {function __construct($db){} function findById($id){return ['numero_processo'=>'0000041-00.2026.0.00.0000'];}}
       class Security {static function generateCSRFToken(){return 'fixture-token';}}
@@ -71,8 +75,8 @@ const render=(route,role,embed=false,id=null)=>{
           return r.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/assets/css/shared/layout.css"><style>body{margin:0}'+(u.pathname==='/shell-flush'?'.layout-wraper--home .target-page{margin-top:0}':'')+'</style><div class="layout-wraper--home"><nav class="layout-navbar">Menu flutuante</nav><iframe class="target-page" src="/frame.php?page=cartasexpedidasnova"></iframe></div>'});
         }
         if(u.pathname==='/frame.php') {
-          const key=role+'|'+u.searchParams.get('page')+'|'+u.searchParams.get('piloto')+'|'+u.searchParams.get('id');
-          if(!roleMap.has(key)) roleMap.set(key,render(u.searchParams.get('page'),role,u.searchParams.has('piloto'),u.searchParams.get('id')));
+          const key=role+'|'+u.searchParams.get('page')+'|'+u.searchParams.get('piloto')+'|'+u.searchParams.get('id')+'|'+u.searchParams.get('processo')+'|'+u.searchParams.get('page_number');
+          if(!roleMap.has(key)) roleMap.set(key,render(u.searchParams.get('page'),role,u.searchParams.has('piloto'),u.searchParams.get('id'),u.searchParams.get('processo')==='fixture-paginacao',Number(u.searchParams.get('page_number')||1)));
           return r.fulfill({contentType:'text/html; charset=utf-8',...roleMap.get(key)});
         }
         const f=path.join(root,'public',u.pathname);
@@ -161,6 +165,17 @@ const render=(route,role,embed=false,id=null)=>{
       await p.goto('http://fixture.test/frame.php?page=cartasexpedidasedit&id=C1');
       assert.equal(await p.getByText('Subtarefas - Timeline',{exact:true}).count(),1);
       assert.equal(await p.locator('#filter-tipo').inputValue(),'Intimação de Decisão Interlocutória');
+      if(width===1640) {
+        await p.goto('http://fixture.test/frame.php?page=cartasexpedidasnova&processo=fixture-paginacao');
+        const envio=p.locator('details.ce-group.envio');
+        assert.equal(await envio.locator('.ce-entry').count(),4);
+        assert.equal(await envio.locator('summary > .ce-tag').textContent(),'4');
+        assert.equal(await envio.locator('summary > small').textContent(),'5 no total');
+        await p.getByRole('link',{name:'Próxima'}).click();
+        assert.equal(await envio.locator('.ce-entry').count(),1);
+        assert.equal(await envio.locator('summary > .ce-tag').textContent(),'1');
+        assert.equal(await envio.locator('summary > small').textContent(),'5 no total');
+      }
       await p.close();
     }
     console.log('PASS: rotas coexistem; seis viewports; cópia, menu por etapa, abas, prioridade, regra e perfis.');
