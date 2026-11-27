@@ -63,10 +63,13 @@ final class ProcessoVaraRepository
     }
 
     /** @return array{nome:?string,municipio_ibge:?string} */
-    public function dadosDataJudPorProcesso(string $id): array
+    public function dadosDataJudPorProcesso(string $id, bool $forUpdate = false): array
     {
         if (!$this->dataJudDisponivel()) return ['nome'=>null, 'municipio_ibge'=>null];
-        $stmt = $this->db->prepare('SELECT vara_nome_datajud, orgao_municipio_ibge_datajud FROM processos WHERE id = :id');
+        if ($forUpdate && !$this->db->inTransaction()) throw new LogicException('Leitura corrente requer transação.');
+        $sql = 'SELECT vara_nome_datajud, orgao_municipio_ibge_datajud FROM processos WHERE id = :id';
+        if ($forUpdate && $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql') $sql .= ' FOR UPDATE';
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([':id'=>$id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         $stmt->closeCursor();
@@ -79,13 +82,20 @@ final class ProcessoVaraRepository
         if (!$this->db->inTransaction() || !$this->dataJudDisponivel()) {
             throw new LogicException('Gravação de órgão DataJud sem transação ou schema.');
         }
-        $atual = $this->dadosDataJudPorProcesso($id);
-        $nome = $orgao['nome'] ?? $atual['nome'];
-        $ibge = $orgao['municipio_ibge'] ?? $atual['municipio_ibge'];
-        if ($atual === ['nome'=>$nome, 'municipio_ibge'=>$ibge]) return false;
-        $stmt = $this->db->prepare('UPDATE processos SET vara_nome_datajud = :nome,
-            orgao_municipio_ibge_datajud = :ibge, updated_at = CURRENT_TIMESTAMP WHERE id = :id');
-        if (!$stmt->execute([':id'=>$id, ':nome'=>$nome, ':ibge'=>$ibge]) || $stmt->rowCount() !== 1) {
+        // Leitura corrente: uma consulta anterior pode ter fixado um snapshot
+        // REPEATABLE READ, mesmo quando o processo já está bloqueado.
+        $atual = $this->dadosDataJudPorProcesso($id, true);
+        $set = [];
+        $params = [':id'=>$id];
+        foreach (['nome'=>'vara_nome_datajud', 'municipio_ibge'=>'orgao_municipio_ibge_datajud'] as $chave=>$coluna) {
+            if (!isset($orgao[$chave]) || $orgao[$chave] === $atual[$chave]) continue;
+            $set[] = $coluna . ' = :' . $chave;
+            $params[':' . $chave] = $orgao[$chave];
+        }
+        if ($set === []) return false;
+        $stmt = $this->db->prepare('UPDATE processos SET ' . implode(', ', $set)
+            . ', updated_at = CURRENT_TIMESTAMP WHERE id = :id');
+        if (!$stmt->execute($params) || $stmt->rowCount() !== 1) {
             throw new RuntimeException('Órgão julgador DataJud não confirmado.');
         }
         return true;
@@ -97,7 +107,7 @@ final class ProcessoVaraRepository
         if (!$this->db->inTransaction() || !$this->disponivel()) {
             throw new LogicException('Gravação de Vara sem transação ou coluna.');
         }
-        if ($this->dadosDataJudPorProcesso($id)['nome'] !== null) {
+        if ($this->dadosDataJudPorProcesso($id, true)['nome'] !== null) {
             throw new ProcessoVaraDataJudProtegidaException('A Vara sincronizada com o DataJud não pode ser alterada manualmente.');
         }
         if ($this->porProcesso($id) === $vara) return false;

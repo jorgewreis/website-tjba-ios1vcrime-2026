@@ -157,6 +157,19 @@ $db->rollBack();
 rei161Assert($repoVara->dadosDataJudPorProcesso('P-OPEN')['nome'] === 'Vara sintética'
     && $repoVara->porProcesso('P-OPEN') === 'Vara de fallback sintética',
     'Rollback mudou órgão registrado ou fallback manual.');
+// An earlier consistent read must not cause the omitted municipality to be
+// overwritten after another session commits a newer verified value.
+$db->exec('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+$db->beginTransaction();
+rei161Assert($repoVara->dadosDataJudPorProcesso('P-OPEN')['municipio_ibge'] === null,
+    'Esperava snapshot anterior sem município.');
+$contender->exec("UPDATE processos SET orgao_municipio_ibge_datajud='9999998' WHERE id='P-OPEN'");
+rei161Assert($repoVara->registrarDataJud('P-OPEN', ['nome'=>'Vara concorrência sintética']),
+    'Nome verificado não foi atualizado.');
+$db->commit();
+rei161Assert($repoVara->dadosDataJudPorProcesso('P-OPEN') === ['nome'=>'Vara concorrência sintética','municipio_ibge'=>'9999998'],
+    'Snapshot antigo sobrescreveu município concorrente omitido da resposta.');
+echo "PASS: snapshot antigo não apaga município gravado por outra sessão.\n";
 echo "PASS: repositório do órgão DataJud MySQL preservou fallback, protegeu remoção e reverteu alteração.\n";
 echo "PASS: DDL do órgão julgador, nulidade do legado, reaplicação, recusa e schema parcial (MySQL 8.4).\n";
 
