@@ -41,4 +41,4 @@ Um caso integrado no teste de serviço usa transporte sintético e passa pelo ma
 1. Após recuperação da origem e respeitando a limitação, consultar os três casos e conferir identidade, completude, classe, assuntos, grau e órgão retornados; registrar a origem de comarca sem inferir lotação atual.
 2. Verificar a ficha em sessão autenticada, incluindo leitura, sincronização autorizada, visualização do grau e preservação dos dados diante de falhas. Confirmar schema e persistência somente no ambiente autorizado.
 3. Investigar a política para múltiplos hits válidos e, se forem observados, apresentar os registros por grau sem escolher ou sincronizar automaticamente um resultado não identificado.
-4. Revisar e validar a candidata no SHA atual e seguir os gates aplicáveis antes de publicar. Nenhum commit, merge ou deploy desta candidata foi feito.
+4. Revisar e validar a candidata versionada localmente no SHA atual e seguir os gates aplicáveis antes de publicar. Não houve push, merge ou deploy desta candidata.
