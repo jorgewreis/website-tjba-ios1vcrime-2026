@@ -60,6 +60,7 @@ final class DataJudService
             $httpCode = $exec['http_code'];
 
             if ($exec['curl_error'] !== '') {
+                $this->logDiagnostic('transport', $httpCode, null, $exec['curl_errno'] ?? null);
                 throw new DataJudUpstreamException('transport');
             }
 
@@ -82,12 +83,16 @@ final class DataJudService
             // Mesmo com HTTP 200, o Elasticsearch pode reportar execução incompleta.
             if (is_array($decoded) && array_key_exists('timed_out', $decoded)
                 && (!is_bool($decoded['timed_out']) || $decoded['timed_out'])) {
-                throw new DataJudUpstreamException('incomplete');
+                $this->rejectIncomplete('search_timeout', $httpCode, $decoded);
+            }
+            if (is_array($decoded) && array_key_exists('terminated_early', $decoded)
+                && $decoded['terminated_early'] !== false) {
+                $this->rejectIncomplete('terminated_early', $httpCode, $decoded);
             }
             if (is_array($decoded) && array_key_exists('_shards', $decoded)) {
                 $shards = $decoded['_shards'];
                 if (!is_array($shards) || !isset($shards['failed']) || !is_int($shards['failed']) || $shards['failed'] !== 0) {
-                    throw new DataJudUpstreamException('incomplete');
+                    $this->rejectIncomplete('shard_failure', $httpCode, $decoded);
                 }
             }
             if (!is_array($decoded) || !isset($decoded['hits']['hits']) || !is_array($decoded['hits']['hits']) || !array_is_list($decoded['hits']['hits'])) {
@@ -99,32 +104,23 @@ final class DataJudService
             $total = $decoded['hits']['total'] ?? null;
             if (!is_array($total) || !isset($total['value'], $total['relation'])
                 || !is_int($total['value']) || $total['value'] < 0 || $total['relation'] !== 'eq') {
-                throw new DataJudUpstreamException('incomplete');
+                $this->rejectIncomplete('non_exact_total', $httpCode, $decoded);
             }
             if ($total['value'] > 1 || count($decoded['hits']['hits']) > 1) {
                 throw new DataJudAmbiguousResponseException('Consulta DataJud ambígua; a sincronização automática foi recusada.');
             }
             if ($total['value'] !== count($decoded['hits']['hits'])) {
-                throw new RuntimeException('Resposta inválida do DataJud. Tente novamente.');
+                $this->rejectIncomplete('hit_count_mismatch', $httpCode, $decoded);
             }
 
-            $shardInfo = $decoded['_shards'] ?? null;
-            $complete = array_key_exists('timed_out', $decoded)
-                && is_array($shardInfo)
-                && isset($shardInfo['total'], $shardInfo['successful'], $shardInfo['failed'], $shardInfo['skipped'])
-                && is_int($shardInfo['total']) && $shardInfo['total'] > 0
-                && is_int($shardInfo['successful']) && $shardInfo['successful'] >= 0
-                && is_int($shardInfo['failed']) && $shardInfo['failed'] === 0
-                && is_int($shardInfo['skipped']) && $shardInfo['skipped'] >= 0
-                && $shardInfo['successful'] + $shardInfo['failed'] === $shardInfo['total']
-                && $shardInfo['skipped'] <= $shardInfo['successful'];
+            $complete = self::hasCompleteSearchMetadata($decoded);
+            if (!$complete && ($forSync || $apenasFichaPublica || $decoded['hits']['hits'] === [])) {
+                $this->rejectIncomplete('incomplete_metadata', $httpCode, $decoded);
+            }
 
             if ($decoded['hits']['hits'] === []) {
-                if (!$complete) throw new DataJudUpstreamException('incomplete');
                 continue;
             }
-
-            if ($forSync && !$complete) throw new DataJudUpstreamException('incomplete');
 
             $source = $decoded['hits']['hits'][0]['_source'] ?? null;
             if (!is_array($source) || !isset($source['numeroProcesso']) || !is_string($source['numeroProcesso'])
@@ -141,6 +137,41 @@ final class DataJudService
 
         // 0 hits: na API pública isso ocorre com frequência em processos sigilosos (fora do índice público).
         return DataJudResponseMapper::mapEmptyPublicSearch($numero);
+    }
+
+    private static function hasCompleteSearchMetadata(array $decoded): bool
+    {
+        $s = $decoded['_shards'] ?? null;
+        return ($decoded['timed_out'] ?? null) === false
+            && (!array_key_exists('terminated_early', $decoded) || $decoded['terminated_early'] === false)
+            && is_array($s)
+            && is_int($s['total'] ?? null) && $s['total'] > 0
+            && ($s['successful'] ?? null) === $s['total']
+            && ($s['failed'] ?? null) === 0
+            && is_int($s['skipped'] ?? null) && $s['skipped'] >= 0 && $s['skipped'] <= $s['total'];
+    }
+
+    private function rejectIncomplete(string $reason, int $httpCode, array $decoded): never
+    {
+        $this->logDiagnostic($reason, $httpCode, $decoded);
+        throw new DataJudUpstreamException('incomplete');
+    }
+
+    // Somente diagnósticos agregados. Nunca registrar a consulta, URL, corpo ou cURL error.
+    private function logDiagnostic(string $reason, int $httpCode, ?array $decoded, ?int $curlErrno = null): void
+    {
+        $count = static fn(mixed $v): ?int => is_int($v) && $v >= 0 ? $v : null;
+        $details = ['reason' => $reason, 'http' => $httpCode];
+        if ($curlErrno !== null) $details['curl_errno'] = $curlErrno;
+        if ($decoded !== null) {
+            $details['timed_out'] = is_bool($decoded['timed_out'] ?? null) ? $decoded['timed_out'] : null;
+            $details['shards_total'] = $count($decoded['_shards']['total'] ?? null);
+            $details['shards_failed'] = $count($decoded['_shards']['failed'] ?? null);
+            $details['hits_exact'] = ($decoded['hits']['total']['relation'] ?? null) === 'eq';
+            $details['hits_reported'] = $count($decoded['hits']['total']['value'] ?? null);
+            $details['hits_returned'] = is_array($decoded['hits']['hits'] ?? null) ? count($decoded['hits']['hits']) : null;
+        }
+        error_log('DataJud: ' . json_encode($details));
     }
 
     private function getBaseUrl(): string
@@ -190,7 +221,7 @@ final class DataJudService
     }
 
     /**
-     * @return array{curl_error: string, http_code: int, decoded: mixed, raw: string, retry_after?: int|null}
+     * @return array{curl_error: string, curl_errno?: int, http_code: int, decoded: mixed, raw: string, retry_after?: int|null}
      */
     private function executeElasticsearchSearch(string $url, array $body): array
     {
@@ -206,8 +237,10 @@ final class DataJudService
             $limited = ($result['http_code'] ?? 0) === 429;
             $bodyResult = $result['decoded'] ?? null;
             $healthy = ($result['http_code'] ?? 0) === 200 && ($result['curl_error'] ?? '') === ''
-                && ($bodyResult['timed_out'] ?? null) === false && ($bodyResult['_shards']['failed'] ?? null) === 0
-                && ($bodyResult['hits']['total']['relation'] ?? null) === 'eq';
+                && is_array($bodyResult) && self::hasCompleteSearchMetadata($bodyResult)
+                && ($bodyResult['hits']['total']['relation'] ?? null) === 'eq'
+                && is_array($bodyResult['hits']['hits'] ?? null) && array_is_list($bodyResult['hits']['hits'])
+                && ($bodyResult['hits']['total']['value'] ?? null) === count($bodyResult['hits']['hits']);
             $wait = $pacer->finish($token, $limited, $result['retry_after'] ?? null, $healthy);
         }
         if ($limited) $result['retry_after'] = $wait;
@@ -241,6 +274,7 @@ final class DataJudService
 
         $raw = curl_exec($ch);
         $curlErr = curl_error($ch);
+        $curlErrno = curl_errno($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
@@ -251,6 +285,7 @@ final class DataJudService
 
         return [
             'curl_error' => is_string($curlErr) ? $curlErr : '',
+            'curl_errno' => $curlErrno,
             'http_code' => $httpCode,
             'retry_after' => $httpCode === 429 ? DataJudRequestPacer::retryAfter($retryAfterHeader) : null,
             'decoded' => $decoded,

@@ -153,4 +153,60 @@ foreach ([[429, $empty, 'throttled'], [503, $empty, 'unavailable'], [401, $empty
         if ($error->reason !== $expected || $calls !== 1) throw new LogicException('Resposta ou retentativa indevida.');
     }
 }
+// An HTTP 200 can contain plausible public data even when the search stopped early.
+foreach ([true, 'false', null] as $early) {
+    $calls = 0;
+    $body = $sample + ['terminated_early' => $early];
+    foreach ([false, true] as $forSync) {
+        try {
+            $svc = $make([$response(200, $body)], $calls);
+            if ($forSync) $svc->searchProcesso($number, true);
+            else $svc->consultarFichaPublica($number);
+            throw new LogicException('Consulta interrompida aceita.');
+        } catch (DataJudUpstreamException $error) {
+            if ($error->reason !== 'incomplete') throw $error;
+        }
+    }
+    if ($calls !== 2) throw new LogicException('Consulta interrompida repetida.');
+}
+$calls = 0;
+$withoutShards = $sample;
+unset($withoutShards['_shards']);
+foreach ([$withoutShards, array_replace($sample, ['hits' => ['total' => ['value'=>1,'relation'=>'eq'], 'hits'=>[]]])] as $partial) {
+    try {
+        $make([$response(200, $partial)], $calls)->consultarFichaPublica($number);
+        throw new LogicException('Ficha tratou resultado parcial como ausência.');
+    } catch (DataJudUpstreamException $error) {
+        if ($error->reason !== 'incomplete') throw $error;
+    }
+}
+if ($calls !== 2) throw new LogicException('Ficha repetiu a consulta parcial.');
+$calls = 0;
+if (($make([$response(200, $sample + ['terminated_early'=>false])], $calls)->consultarFichaPublica($number)['resultado_unico_verificado'] ?? false) !== true) {
+    throw new LogicException('Ficha recusou resultado completo.');
+}
+
+$diagnosticLog = tempnam(sys_get_temp_dir(), 'datajud-diagnostic-');
+if ($diagnosticLog === false) throw new LogicException('Não foi possível isolar o log do teste.');
+$previousLog = ini_set('error_log', $diagnosticLog);
+try {
+    $body = $sample;
+    $body['_shards']['failed'] = 1;
+    $body['_shards']['failures'] = [['reason'=>'SENSITIVE_SYNTHETIC_MARKER']];
+    try {
+        $make([$response(200, $body)], $calls)->consultarFichaPublica($number);
+        throw new LogicException('Falha de shard aceita.');
+    } catch (DataJudUpstreamException $error) {
+        if ($error->reason !== 'incomplete') throw $error;
+    }
+    $logged = (string) file_get_contents($diagnosticLog);
+    if (str_contains($logged, 'SENSITIVE_SYNTHETIC_MARKER') || str_contains($logged, $source['numeroProcesso'])
+        || !str_contains($logged, '"reason":"shard_failure"') || !str_contains($logged, '"shards_failed":1')) {
+        throw new LogicException('O log deve conter apenas diagnóstico agregado.');
+    }
+} finally {
+    if ($previousLog !== false) ini_set('error_log', $previousLog);
+    unlink($diagnosticLog);
+}
+
 echo "PASS: falhas HTTP e respostas inválidas não viram ausência; consulta restrita ao tribunal.\n";
