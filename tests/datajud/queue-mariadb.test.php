@@ -94,6 +94,7 @@ $applyOrigem = static function (PDO $connection) use ($origemMigration): void {
     } while ($cursor->nextRowset());
     $cursor->closeCursor();
 };
+$mdlTimeout = (int) $db->query('SELECT @@SESSION.lock_wait_timeout')->fetchColumn();
 $foreignLock = new PDO($dsn, (string) getenv('DATAJUD_TEST_USER'), (string) getenv('DATAJUD_TEST_PASSWORD'), [
     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
 ]);
@@ -109,7 +110,8 @@ try {
 } finally {
     $foreignLock->query("SELECT RELEASE_LOCK($lockExpr)")->fetchColumn();
 }
-if ((int) $db->query("SELECT IS_FREE_LOCK($lockExpr)")->fetchColumn() !== 1) {
+if ((int) $db->query('SELECT @@SESSION.lock_wait_timeout')->fetchColumn() !== $mdlTimeout
+    || (int) $db->query("SELECT IS_FREE_LOCK($lockExpr)")->fetchColumn() !== 1) {
     throw new RuntimeException('The migration left a named lock behind after contention.');
 }
 

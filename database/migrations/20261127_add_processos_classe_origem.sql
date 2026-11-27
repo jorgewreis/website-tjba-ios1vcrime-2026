@@ -3,6 +3,9 @@
 -- Em caso de erro feche a conexão. Backup privado e restore isolado precedem aplicação.
 -- NULL conserva a origem legada desconhecida. Não há backfill nem reconstrução da tabela.
 
+-- Limita a espera pelo metadata lock nativo do ALTER, além do lock nomeado.
+SET @rei345_previous_mdl_timeout = @@SESSION.lock_wait_timeout;
+SET SESSION lock_wait_timeout = 5;
 SET @rei345_lock_name = CONCAT('rei345_classe_origem:', LEFT(SHA2(DATABASE(), 256), 40));
 SET @rei345_lock = IF(@rei345_lock_name IS NULL, 0, GET_LOCK(@rei345_lock_name, 5));
 SET @rei345_table = 0;
@@ -44,6 +47,7 @@ WHERE @rei345_table = 1
     OR (LOCATE('MariaDB', VERSION()) > 0 AND CAST(COLUMN_DEFAULT AS BINARY) = CAST('NULL' AS BINARY)));
 
 SET @rei345_released = IF(@rei345_lock = 1, RELEASE_LOCK(@rei345_lock_name), 0);
+SET SESSION lock_wait_timeout = @rei345_previous_mdl_timeout;
 -- Identificadores deliberadamente inexistentes produzem erro SQL explícito
 -- sem usar SIGNAL preparado (não suportado nos dois motores).
 SET @rei345_sql = CASE
