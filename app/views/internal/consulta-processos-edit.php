@@ -122,10 +122,12 @@ $nivelDisponivel = false;
 $nivelConfirmado = null;
 $varaDisponivel = false;
 $varaLocal = null;
+$orgaoDataJud = ['nome'=>null, 'municipio_ibge'=>null];
 try {
     $repoVara = new ProcessoVaraRepository($connection);
     $varaDisponivel = $repoVara->disponivel();
     if ($varaDisponivel) $varaLocal = $repoVara->porProcesso($processoIdFicha);
+    if (!$sigilosoFicha) $orgaoDataJud = $repoVara->dadosDataJudPorProcesso($processoIdFicha);
 } catch (Throwable $erroVara) {
     $varaDisponivel = false;
     error_log('Não foi possível consultar o registro local da Vara.');
@@ -183,9 +185,12 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             <dl class="ficha-campos">
                 <dt>Segmento</dt><dd><?= $eFicha($origemFicha['segmento'] ?? 'Não informado') ?></dd>
                 <dt>Tribunal</dt><dd><?= $eFicha($origemFicha['tribunal'] ?? 'Não informado') ?></dd>
-                <dt>Comarca</dt><dd><?= $eFicha($origemFicha['comarca'] !== null
+                <dt>Comarca de origem (CNJ)</dt><dd><?= $eFicha($origemFicha['comarca'] !== null
                     ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca'] : ($origemFicha['unidade'] ?? 'Não identificada')) ?></dd>
-                <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($varaLocal ?? 'Não informada') ?></dd>
+                <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($orgaoDataJud['nome'] ?? $varaLocal ?? 'Não informada') ?></dd>
+                <?php if ($orgaoDataJud['municipio_ibge'] !== null): ?>
+                    <dt>Último município informado pelo DataJud (código IBGE)</dt><dd><?= $eFicha($orgaoDataJud['municipio_ibge']) ?></dd>
+                <?php endif; ?>
                 <dt>Classe</dt><dd data-ficha-classe><?= $eFicha($classeNomeAtual !== '' ? $classeNomeAtual : 'Não informada') ?></dd>
                 <dt>Assuntos</dt><dd id="proc-assuntos-resumo" data-ficha-assuntos><?= $eFicha(implode('; ', array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao')))) ?: 'Não informados') ?></dd>
                 <dt>Sigilo no cadastro</dt><dd data-ficha-sigilo><?= $eFicha($rotuloSigiloFicha) ?></dd>
@@ -193,7 +198,7 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <dt>Setor ativo</dt><dd><?= $eFicha($setorNomeExibido) ?></dd>
                 <dt>Prioridades</dt><dd><?= $eFicha(implode('; ', array_filter(array_column($prioridadesFichaEstado['prioridades'] ?? [], 'label'))) ?: 'Nenhuma registrada') ?></dd>
             </dl>
-            <?php if ($acessoSetorial && $varaDisponivel): ?>
+            <?php if ($acessoSetorial && $varaDisponivel && $orgaoDataJud['nome'] === null): ?>
             <form id="processo-vara-form" class="ficha-edicao-campo" data-process-id="<?= $eFicha($processoIdFicha) ?>">
                 <label for="processo-vara-local">Vara local (quando não informada pelo DataJud)</label>
                 <div class="display-flex row row-full flex-wrap align-end">
@@ -288,20 +293,20 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <button type="button" class="btn btn-secondary height-md" id="btn-proc-datajud-sync"
                         data-process-id="<?php echo htmlspecialchars($processoIdFicha, ENT_QUOTES); ?>"
                         data-numero="<?php echo htmlspecialchars((string) ($processo['numero_processo'] ?? ''), ENT_QUOTES); ?>"
-                        aria-describedby="proc-datajud-sync-status">Sincronizar classe e assuntos com o DataJud</button>
+                        aria-describedby="proc-datajud-sync-status">Sincronizar com o DataJud</button>
             <?php endif; ?>
         </div>
         <p class="padding-x-md" id="proc-datajud-sync-status" role="status" aria-live="polite"><?php if (!empty($processo['sigiloso'])): ?>Sincronização indisponível para processos sigilosos.<?php endif; ?></p>
-        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="processo-classe-wrap">
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="proc-classe-atual">Classe atual</label>
-                    <input type="text" class="width-700 height-md" id="proc-classe-atual" value="<?php echo htmlspecialchars($classeNomeAtual !== '' ? $classeNomeAtual : 'Classe não cadastrada', ENT_QUOTES); ?>" readonly>
+                    <span class="ficha-secundario">Classe atual</span>
+                    <p id="proc-classe-atual" class="ficha-catalogo-texto"><?= $eFicha($classeNomeAtual !== '' ? $classeNomeAtual : 'Classe não cadastrada') ?></p>
                 </div>
                 <?php if (!$classeProtegidaFicha): ?>
                 <div class="col">
                     <label for="proc-classe-codigo"><?php echo $classeNomeAtual !== '' ? 'Alterar classe processual' : 'Incluir classe processual'; ?></label>
-                    <input type="text" class="width-300 height-md" id="proc-classe-codigo" inputmode="numeric" placeholder="Ex.: 283" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
+                    <input type="text" class="width-300 height-md" id="proc-classe-codigo" inputmode="numeric" pattern="[0-9]{1,20}" placeholder="Ex.: 283" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
                 </div>
                 <?php endif; ?>
             </div>
@@ -312,8 +317,8 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             <?php else: ?>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md">
                 <div class="col">
-                    <label for="proc-classe-nome-existente">Nome da classe no catálogo</label>
-                    <input type="text" class="width-700 height-md" id="proc-classe-nome-existente" readonly>
+                    <span class="ficha-secundario">Nome da classe no catálogo</span>
+                    <p id="proc-classe-nome-existente" class="ficha-catalogo-texto" aria-live="polite">Informe o código para consultar.</p>
                 </div>
                 <button type="button" class="btn btn-primary height-md" id="btn-proc-classe-vincular" disabled>Salvar classe</button>
             </div>
@@ -328,11 +333,11 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="processo-assunto-codigo">Código do assunto</label>
-                    <input type="text" id="processo-assunto-codigo" inputmode="numeric" class="height-md" placeholder="Ex.: 10247" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
+                    <input type="text" id="processo-assunto-codigo" inputmode="numeric" pattern="[0-9]{1,20}" class="height-md" placeholder="Ex.: 10247" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
                 </div>
-                <div class="col width-700">
-                    <label for="processo-assunto-descricao">Descrição do assunto</label>
-                    <input type="text" id="processo-assunto-descricao" class="width-700 height-md" placeholder="Preenchida automaticamente se o código existir no catálogo" readonly>
+                <div class="col">
+                    <span class="ficha-secundario">Descrição do assunto no catálogo</span>
+                    <p id="processo-assunto-descricao" class="ficha-catalogo-texto" aria-live="polite">Informe o código para consultar.</p>
                 </div>
                 <button type="button" class="btn btn-primary height-md" id="btn-processo-assunto-vincular" disabled>Incluir</button>
             </div>

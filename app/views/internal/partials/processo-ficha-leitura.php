@@ -22,13 +22,16 @@
                 <dl class="ficha-campos">
                     <dt>Segmento</dt><dd><?= $eFicha($origemFicha['segmento'] ?? 'Não informado') ?></dd>
                     <dt>Tribunal</dt><dd><?= $eFicha($origemFicha['tribunal'] ?? 'Não informado') ?></dd>
-                    <dt>Comarca</dt><dd><?php
+                    <dt>Comarca de origem (CNJ)</dt><dd><?php
                         $origemRotulo = $origemFicha['comarca'] !== null
                             ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca']
                             : ($origemFicha['unidade'] ?? 'Não identificada');
                         echo $eFicha($origemRotulo);
                     ?></dd>
-                    <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($varaLocal ?? 'Não informada') ?></dd>
+                    <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($orgaoDataJud['nome'] ?? $varaLocal ?? 'Não informada') ?></dd>
+                    <?php if ($orgaoDataJud['municipio_ibge'] !== null): ?>
+                        <dt>Último município informado pelo DataJud (código IBGE)</dt><dd><?= $eFicha($orgaoDataJud['municipio_ibge']) ?></dd>
+                    <?php endif; ?>
                     <dt>Classe</dt><dd data-ficha-classe><?= $eFicha($classeNomeAtual ?: 'Não informada') ?></dd>
                     <dt>Assuntos</dt><dd data-ficha-assuntos><?php
                         $rotulosAssuntos = array_values(array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao'))));

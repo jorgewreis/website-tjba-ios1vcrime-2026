@@ -165,7 +165,7 @@
         const unlinkAssuntoEndpoint = String(global.PROCESSO_ASSUNTO_UNLINK_ENDPOINT || '/api/processos/assunto-unlink.php');
 
         const codigoInput = global.document.getElementById('processo-assunto-codigo');
-        const descricaoInput = global.document.getElementById('processo-assunto-descricao');
+        const descricaoTexto = global.document.getElementById('processo-assunto-descricao');
         const btnVincularAssunto = global.document.getElementById('btn-processo-assunto-vincular');
         const assuntosList = global.document.getElementById('processo-assuntos-list');
         const parteNomeSelect = global.document.getElementById('processo-parte-nome-selecao');
@@ -200,10 +200,8 @@
             ultimoCodigoConsultado = '';
             codigoVerificadoNoBd = '';
             assuntoEncontradoNoCatalogo = false;
-            if (descricaoInput) {
-                descricaoInput.value = '';
-                descricaoInput.readOnly = true;
-                descricaoInput.placeholder = 'Preenchida automaticamente pelo catálogo';
+            if (descricaoTexto) {
+                descricaoTexto.textContent = 'Informe o código para consultar.';
             }
             atualizarBtnVincularAssunto();
         }
@@ -224,21 +222,17 @@
         }
 
         function aplicarAssuntoEncontrado(assunto) {
-            if (!descricaoInput) {
+            if (!descricaoTexto) {
                 return;
             }
-            descricaoInput.value = String(assunto.descricao || '').trim();
-            descricaoInput.readOnly = true;
-            descricaoInput.placeholder = 'Descrição carregada do catálogo';
+            descricaoTexto.textContent = String(assunto.descricao || '').trim();
         }
 
         function aplicarAssuntoNaoEncontrado() {
-            if (!descricaoInput) {
+            if (!descricaoTexto) {
                 return;
             }
-            descricaoInput.value = '';
-            descricaoInput.readOnly = true;
-            descricaoInput.placeholder = 'Código não encontrado no catálogo';
+            descricaoTexto.textContent = 'Código não encontrado no catálogo.';
         }
 
         function setParteNomeStatus(text, color) {
@@ -440,7 +434,7 @@
             const codigo = codigoInput ? String(codigoInput.value || '').trim() : '';
             if (!/^[0-9]{1,20}$/.test(codigo)) {
                 resetAssuntoLookup();
-                if (codigo && descricaoInput) descricaoInput.placeholder = 'Informe um código numérico';
+                if (codigo && descricaoTexto) descricaoTexto.textContent = 'Informe um código numérico.';
                 return Promise.resolve();
             }
             if (codigo === ultimoCodigoConsultado && assuntoEncontradoNoCatalogo) {
@@ -460,6 +454,7 @@
                     codigoVerificadoNoBd = '';
                     assuntoEncontradoNoCatalogo = false;
                     atualizarBtnVincularAssunto();
+                    if (descricaoTexto) descricaoTexto.textContent = 'Não foi possível consultar o catálogo.';
                     if (exibirToast) {
                         notify('error', 'Erro', (result.body && result.body.error) ? result.body.error : 'Erro ao consultar assunto.');
                     }
@@ -484,9 +479,11 @@
                 }
                 atualizarBtnVincularAssunto();
             }).catch(function () {
+                if (codigoInput?.value.trim() !== codigo) return;
                 codigoVerificadoNoBd = '';
                 assuntoEncontradoNoCatalogo = false;
                 atualizarBtnVincularAssunto();
+                if (descricaoTexto) descricaoTexto.textContent = 'Não foi possível consultar o catálogo.';
                 if (exibirToast) {
                     notify('error', 'Erro', 'Erro de conexão ao consultar assunto.');
                 }
@@ -503,9 +500,6 @@
             if (codigo !== ultimoCodigoConsultado) {
                 codigoVerificadoNoBd = '';
                 assuntoEncontradoNoCatalogo = false;
-                if (descricaoInput) {
-                    descricaoInput.readOnly = true;
-                }
                 atualizarBtnVincularAssunto();
             }
             buscaAssuntoTimer = global.setTimeout(function () {
@@ -591,10 +585,6 @@
                     }
                     codigoInput.value = '';
                     resetAssuntoLookup();
-                    if (descricaoInput) {
-                        descricaoInput.readOnly = true;
-                        descricaoInput.placeholder = 'Preenchida automaticamente se o código existir no catálogo';
-                    }
                     notify('success', 'Sucesso', result.data.action === 'noop' ? 'O assunto já estava vinculado.' : 'Assunto vinculado ao processo.');
                 }).catch(function () {
                     notify('error', 'Erro', 'Erro de conexão ao vincular assunto.');
