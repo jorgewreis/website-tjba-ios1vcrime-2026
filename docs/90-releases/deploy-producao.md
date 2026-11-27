@@ -65,12 +65,25 @@ Reverter o código não desfaz alterações no banco.
    do usuário de deploy no próprio VPS. Se falhar, use a categoria/errno do log
    para direcionar diagnóstico local com acesso autorizado. Não copie dump,
    stderr bruto ou configuração de banco para o GitHub. Falha sem classificação
-   suficiente não justifica alterar permissões ou repetir às cegas.
+   suficiente não justifica alterar permissões ou repetir às cegas. O código
+   `DUMP_VIEW` agora é acompanhado por sondas de leitura (sem registros) e de
+   definição, com apenas o erro numérico e rótulos fixos no log. Isso não
+   altera, ignora ou recria nenhuma view em produção.
 3. **Prova de recuperação.** Teste o mesmo backup em instância MySQL isolada e
    privada, nunca no schema ativo, sem copiar dados da Vara para fora do VPS.
    Valide a abertura da cópia, schema da tabela e recuperação esperada sem
    registrar conteúdo de registros. O checksum confirma integridade, não
-   restaurabilidade; só confirme a recuperação depois do teste.
+   restaurabilidade; só confirme a recuperação depois do teste. Em sessão
+   privada no VPS, como usuário dono da cópia (não root), o script
+   `bash scripts/verify-vara-db-restore.sh ID SHA256 SCHEMA INVENTARIO`
+   usa o nome do schema local e a sequência `objetos=` do `BACKUP OK` (tabelas,
+   views, gatilhos, rotinas e eventos). Ele restaura em MariaDB descartável sem
+   rede, sem agendador, e exige importação completa, inventário equivalente e
+   leitura de tabelas-chave e views. O dump não é enviado ao runner. Se a cópia
+   depender de contas definidoras ausentes nesse ambiente, não declare êxito
+   até restaurar esse pré-requisito exclusivamente no ambiente isolado.
+   Não execute se o host estiver sob carga, com espaço insuficiente ou sem
+   autorização operacional. Sem `RESTORE ISOLADO OK`, não migre.
 4. **Migração.** Na janela autorizada, execute o workflow manual na main sem
    **Somente backup**, selecione **Migrar prioridade**, informe ID e SHA-256 do
    mesmo arquivo e confirme restauração isolada e janela. Antes do DDL, o script
