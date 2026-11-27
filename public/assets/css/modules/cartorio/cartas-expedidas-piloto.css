@@ -76,6 +76,13 @@ body.ce-form-embed{padding:0!important;background:white!important;font-family:sy
 .ce-form-embed .card-page input,.ce-form-embed .card-page select,.ce-form-embed .card-page textarea{max-width:100%!important}
 .ce-form-embed .ce-form-priority{display:grid;gap:5px;padding:9px 15px}
 .ce-form-embed .ce-form-priority select{min-height:44px}
+.ce-form-embed #cadastrar-btn .ce-create-spinner.rotating{
+  display:inline-block;position:static;flex:0 0 1em;width:1em;height:1em;margin:0;
+  vertical-align:middle;border:2px solid currentColor;border-right-color:transparent;
+  border-radius:50%;transform-origin:center;animation:ce-create-turn .75s linear infinite
+}
+@keyframes ce-create-turn{to{transform:rotate(1turn)}}
+@media(prefers-reduced-motion:reduce){.ce-form-embed #cadastrar-btn .ce-create-spinner.rotating{animation:none}}
 .ce-form-embed .ce-rule-now{display:grid;gap:6px;border-bottom:1px solid var(--ce-border);padding:17px 12px}
 .ce-form-embed .ce-rule-now strong{font-size:18px;color:var(--ce-violet)}
 .ce-form-embed .ce-rule-scope{padding:6px 12px;color:var(--ce-muted)}

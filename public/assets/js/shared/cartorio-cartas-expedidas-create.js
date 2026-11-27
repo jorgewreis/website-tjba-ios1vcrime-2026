@@ -33,6 +33,11 @@
             : 0;
         const ccmConfirmed = new Set();
         let cityLookupPending = false;
+        let saving = false;
+        const restoreAfterError = function () {
+            if (settings.retryOnError) gate.setReady();
+            else gate.setInitial();
+        };
         const pendingRequestStorageKey = 'cartorio.cartasExpedidas.pendingRequestKey';
         let pendingRequestSignature = '';
         let pendingRequestKey = '';
@@ -97,14 +102,14 @@
             return;
         }
         App.CartorioCartasExpedidasCreate.confirmCcm = confirmCcm;
-        processoInput?.addEventListener('input', function () { gate.setWaiting(); });
+        processoInput?.addEventListener('input', function () { if (!saving && !cityLookupPending) gate.setWaiting(); });
         global.addEventListener('cnjInvalid', function (event) {
             const id = event && event.detail ? event.detail.inputId : '';
-            if (!id || id === 'filter-processo') gate.setError();
+            if (!saving && !cityLookupPending && (!id || id === 'filter-processo')) gate.setError();
         });
         global.addEventListener('datajudClasseResolved', function (event) {
             const detail = event && event.detail ? event.detail : {};
-            if (!cityLookupPending && (!detail.processoInputId || detail.processoInputId === 'filter-processo')) gate.setReady();
+            if (!saving && !cityLookupPending && (!detail.processoInputId || detail.processoInputId === 'filter-processo')) gate.setReady();
         });
 
         const requiredFields = [
@@ -143,7 +148,7 @@
 
         button.addEventListener('click', async function (event) {
             event.preventDefault();
-            if (button.disabled || cityLookupPending) {
+            if (button.disabled || cityLookupPending || saving) {
                 return;
             }
 
@@ -181,10 +186,15 @@
                     const lookupUrl = new URL(cityLookupEndpoint, global.location.origin);
                     lookupUrl.searchParams.set('cidade', cidadeDestino);
                     lookupUrl.searchParams.set('uf', estadoSelect ? estadoSelect.value : '');
-                    const lookupResponse = await fetch(lookupUrl.toString(), { credentials: 'same-origin' });
-                    const lookupData = await lookupResponse.json();
-                    if (!lookupResponse.ok) {
-                        throw new Error(lookupData.error || 'Não foi possível validar a comarca de destino.');
+                    let lookupData;
+                    if (typeof settings.lookupCity === 'function') {
+                        lookupData = await settings.lookupCity(cidadeDestino, estadoSelect?.value || '');
+                    } else {
+                        const lookupResponse = await fetch(lookupUrl.toString(), { credentials: 'same-origin' });
+                        lookupData = await lookupResponse.json();
+                        if (!lookupResponse.ok) {
+                            throw new Error(lookupData.error || 'Não foi possível validar a comarca de destino.');
+                        }
                     }
                     if (inputSnapshot !== getSubmissionInputSnapshot()) {
                         feedback('Os dados do cadastro mudaram durante a validação da comarca. Confira os campos e tente novamente.', 'error');
@@ -201,7 +211,8 @@
                     }
                 } catch (error) {
                     feedback(error.message || 'Não foi possível validar a comarca de destino.', 'error');
-                    gate.setError();
+                    if (settings.retryOnError) gate.setReady();
+                    else gate.setError();
                     return;
                 } finally {
                     cityLookupPending = false;
@@ -265,8 +276,9 @@
             }
             payload.idempotency_key = pendingRequestKey;
 
+            saving = true;
             gate.setSubmitting();
-            feedback('Enviando dados...', 'info', 'Informação');
+            if (!settings.onSuccess) feedback('Enviando dados...', 'info', 'Informação');
 
             let response = null;
             try {
@@ -276,10 +288,11 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Falha ao salvar a carta expedida.');
+                if (!response.ok || (settings.onSuccess && (typeof data?.id !== 'string' || !data.id.trim()))) {
+                    throw new Error(data?.error || 'Não foi possível confirmar o cadastro. Tente novamente.');
                 }
                 clearPendingRequestKey();
+                if (typeof settings.onSuccess === 'function' && settings.onSuccess() === true) return;
                 if (submitDelayMs > 0) {
                     await new Promise(function (resolve) { setTimeout(resolve, submitDelayMs); });
                 }
@@ -287,7 +300,9 @@
             } catch (error) {
                 if (response && response.status === 409) clearPendingRequestKey();
                 feedback(error.message || 'Não foi possível cadastrar a carta expedida.', 'error');
-                gate.setInitial();
+                restoreAfterError();
+            } finally {
+                saving = false;
             }
         });
     }

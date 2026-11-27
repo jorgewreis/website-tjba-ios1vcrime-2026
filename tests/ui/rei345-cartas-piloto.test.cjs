@@ -44,7 +44,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
     put('app/helpers/CartorioTimelineHelper.php','<?php function cartorioTimelineBuildViewData(...$a){return ["statusLabel"=>"Aguardando envio","cadastro"=>["minorText"=>"Carta cadastrada"]];}');
     stub('services','CartasExpedidasService',`function find($id){return $id === "C1" ? ["processo_origem_id"=>"P1","finalidade"=>"Intimação de Decisão Interlocutória","cidade_destino"=>"Una","uf_destino"=>"BA","prazo_dias"=>30,"status"=>"aguardando envio","prioridade_tarefa"=>"critico"] : null;} function listCartas($f,$limit,$offset){$rows=[
        ["IdCarta"=>"C1","numero_processo"=>"0000041-00.2026.0.00.0000","Status"=>"aguardando envio","EtapaEfetiva"=>"envio","Comarca"=>"Una","Estado"=>"BA","Finalidade"=>"Intimação de Decisão Interlocutória","Prazo"=>30,"bloco_processo_abrir_href"=>"/frame.php?page=consultaprocessosedit","SubtarefasAll"=>[["id"=>"S1","tipo"=>"aguardando_envio"]]],
-       ["IdCarta"=>"C2","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"]]]
+       ["IdCarta"=>"C2","CriadoPor"=>"T2","CriadoPorNome"=>"Noa Silva de Teste","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"]]]
     ];
     if (($f["processo"]??"") === "fixture-paginacao") {
       $original=$rows; $rows=[];
@@ -65,20 +65,43 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
           CREATE TABLE usuario_perfil(usuario TEXT,perfil TEXT); INSERT INTO usuario_perfil VALUES ('T1','ADMIN');");
         return $db;
       }}`);
-    fs.symlinkSync(path.join(root,'public'),path.join(dir,'public'));
+    // Fixture views only use filemtime for these assets; the routes below
+    // serve the real files. Copy versioned assets instead of symlinking.
+    for(const f of [
+      'css/modules/cartorio/cartas-expedidas-piloto.css',
+      'js/modules/cartorio/cartas-expedidas/piloto.js',
+      'js/modules/cartorio/cartas-expedidas/piloto-form.js'
+    ]) copy('public/assets/'+f);
     const roleMap=new Map();
     browser=await chromium.launch({executablePath:process.env.CHROMIUM_BIN||undefined,headless:true});
     for(const [width,role,mayDelete] of [[1640,'ADMIN',true],[1440,'ADMIN',true],[900,'CHEFIA',true],[767,'CHEFIA',true],[390,'DIRETORA',false],[320,'SERVIDOR-CARTORIO',false]]) {
       const p=await browser.newPage({viewport:{width,height:900}});
       p.setDefaultTimeout(5000);
       await p.addInitScript(()=>{Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copied=text;}}});});
-      await p.route('**/*',r=>{
+      let cityCalls=0, createCalls=0, nestedListRequests=0;
+      const createKeys=[];
+      let releaseCreate;
+      await p.route('**/*',async r=>{
         const u=new URL(r.request().url());
         if(u.hostname!=='fixture.test') return r.abort();
         if(u.pathname==='/shell' || u.pathname==='/shell-flush') {
           return r.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/assets/css/shared/layout.css"><style>body{margin:0}'+(u.pathname==='/shell-flush'?'.layout-wraper--home .target-page{margin-top:0}':'')+'</style><div class="layout-wraper--home"><nav class="layout-navbar">Menu flutuante</nav><iframe class="target-page" src="/frame.php?page=cartasexpedidasnova"></iframe></div>'});
         }
+        if(u.pathname==='/api/cartorio-cartas-expedidas/buscar-cidade.php') {
+          cityCalls++;
+          return r.fulfill({json:{found:true,uf:'BA',is_ccm:false}});
+        }
+        if(u.pathname==='/api/cartorio-cartas-expedidas/create.php') {
+          createCalls++;
+          createKeys.push(r.request().postDataJSON().idempotency_key);
+          if(createCalls===1) {
+            await new Promise(resolve=>{releaseCreate=resolve;});
+            return r.fulfill({status:500,json:{error:'Falha temporária sintética'}});
+          }
+          return r.fulfill({status:201,json:{id:'CARTA-SINTETICA'}});
+        }
         if(u.pathname==='/frame.php') {
+          if(u.searchParams.get('page')==='cartasexpedidasnova' && r.request().frame().parentFrame()) nestedListRequests++;
           const key=role+'|'+u.searchParams.get('page')+'|'+u.searchParams.get('piloto')+'|'+u.searchParams.get('id')+'|'+u.searchParams.get('processo')+'|'+u.searchParams.get('page_number')+'|'+u.searchParams.get('status');
           if(!roleMap.has(key)) roleMap.set(key,render(u.searchParams.get('page'),role,u.searchParams.has('piloto'),u.searchParams.get('id'),u.searchParams.get('processo')==='fixture-paginacao',Number(u.searchParams.get('page_number')||1),u.searchParams.get('status')||''));
           return r.fulfill({contentType:'text/html; charset=utf-8',...roleMap.get(key)});
@@ -118,6 +141,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       assert.equal(await finalidade.getAttribute('title'),'Intimação de Decisão Interlocutória');
       assert.equal(await finalidade.textContent(),'Finalidade: Intimação de Decisão Interlocutória');
       assert.equal(await p.locator('.ce-entry').first().locator('.ce-assignee').textContent(),'Responsável pelo envio: Lia Martins');
+      assert.equal(await p.locator('.ce-entry').last().locator('.ce-assignee').textContent(),'Responsável pelo cumprimento: Noa Teste');
       assert.equal(await p.locator('.ce-entry').first().locator('.ce-priority').getAttribute('aria-label'),'Crítico');
       assert.equal(await p.locator('.ce-entry').last().locator('.ce-priority').getAttribute('aria-label'),'Sem prioridade definida');
       await p.locator('.ce-cnj').first().click();
@@ -145,12 +169,56 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       await p.locator('.ce-entry').last().locator('.ce-dropdown summary').click();
       await p.locator('.ce-entry').last().getByRole('button',{name:'Ver detalhes'}).click();
       assert.equal(await p.getByRole('button',{name:'Reiniciar envio'}).count(),1);
+      assert.match(await p.getByRole('tabpanel',{name:'Resumo'}).textContent(),/Responsável pelo cumprimentoNoa Teste/);
       assert.equal(await p.getByRole('link',{name:'Editar',exact:true}).count(),0);
       await p.getByRole('button',{name:'Fechar painel'}).click();
       await p.getByRole('link',{name:'Novo cadastro'}).click();
       const create=p.frameLocator('#ce-panel iframe');
       assert.equal(await create.locator('#ce-prioridade-tarefa').inputValue(),'medio');
-      await p.getByRole('button',{name:'Fechar painel'}).click();
+      if(width===1640 || width===390) {
+        // Prepare the form with a synthetic CNJ and the event which unlocks
+        // it after the lookup; no real DataJud or CREATE call leaves the fixture.
+        await p.evaluate(()=>history.replaceState(null,'',location.href+'&status=aguardando_envio'));
+        await create.locator('body').evaluate(el=>{
+          const doc=el.ownerDocument;
+          doc.querySelector('#filter-processo').value='0000001-69.2020.8.05.0001';
+          const tipo=doc.querySelector('#filter-tipo');
+          tipo.value=[...tipo.options].find(option=>option.value).value;
+          doc.querySelector('#filter-estado').value='BA';
+          doc.defaultView.dispatchEvent(new CustomEvent('datajudClasseResolved',{detail:{processoInputId:'filter-processo'}}));
+        });
+        const cityLookup=p.waitForResponse(r=>r.url().includes('/buscar-cidade.php'));
+        await create.locator('#filter-cidade').fill('Una');
+        await cityLookup;
+        const submit=create.locator('#cadastrar-btn');
+        const savingRequest=p.waitForRequest(r=>r.url().includes('/cartorio-cartas-expedidas/create.php'));
+        await submit.click();
+        await savingRequest;
+        assert.equal(await submit.isDisabled(),true);
+        const spinner=await submit.locator('.ce-create-spinner').evaluate(el=>{
+          const css=getComputedStyle(el);
+          return [css.animationName, css.animationTimingFunction, css.transformOrigin,css.width,css.height];
+        });
+        assert.deepEqual(spinner.slice(0,2),['ce-create-turn','linear']);
+        assert.equal(spinner[3],spinner[4],'spinner remains square');
+        assert.equal(parseFloat(spinner[2]),parseFloat(spinner[3])/2,'spinner rotates around its own center');
+        await create.locator('body').evaluate(el=>el.ownerDocument.defaultView.dispatchEvent(new CustomEvent('datajudClasseResolved')));
+        assert.equal(await submit.isDisabled(),true,'late lookup must not unlock saving');
+        releaseCreate();
+        await submit.getByText('Cadastrar',{exact:true}).waitFor();
+        assert.equal(await create.locator('#filter-cidade').inputValue(),'Una');
+        await submit.click();
+        await p.getByText('Carta cadastrada.',{exact:true}).waitFor();
+        assert.equal(await p.locator('#ce-panel iframe').count(),0);
+        assert.equal(new URL(p.url()).searchParams.get('status'),'aguardando_envio');
+        assert.equal(nestedListRequests,width<=767?1:2,'no list navigations inside the form; only initial shell previews');
+        assert.equal(cityCalls,1,'reuse the city/UF lookup when saving and retrying');
+        assert.equal(createCalls,2);
+        assert.match(createKeys[0],/^[a-f0-9]{64}$/);
+        assert.equal(createKeys[0],createKeys[1],'retry keeps the idempotency key');
+      } else {
+        await p.getByRole('button',{name:'Fechar painel'}).click();
+      }
       if (mayDelete) {
         await p.getByRole('link',{name:'Regra de envio'}).click();
         const rules=p.frameLocator('#ce-panel iframe');

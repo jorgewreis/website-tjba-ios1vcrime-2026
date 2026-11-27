@@ -4,6 +4,36 @@
     const App = global.App || (global.App = {});
     const helpers = App.CartorioCreateHelpers || null;
 
+    // Only the embedded outgoing-letter form opts in. Share one short-lived
+    // result for the exact formatted city + UF, including an ongoing request.
+    function createSharedLookup() {
+        let current = null;
+        return function (cidade, uf) {
+            const formatted = App.ProperNameHelper?.formatProper
+                ? App.ProperNameHelper.formatProper(cidade, 50)
+                : helpers.formatProperName(cidade, 50);
+            const params = new URLSearchParams({cidade: formatted, uf});
+            const key = params.toString();
+            if (current?.key === key && Date.now() < current.until) return current.promise;
+            const entry = {key, until: Infinity};
+            current = entry;
+            entry.promise = global.fetch('/api/cartorio-cartas-expedidas/buscar-cidade.php?' + key, {credentials: 'same-origin'})
+                .then(async function (response) {
+                    const data = await response.json();
+                    if (!response.ok || typeof data?.is_ccm !== 'boolean') {
+                        throw new Error(data?.error || 'Não foi possível validar a comarca de destino.');
+                    }
+                    entry.until = Date.now() + 15000;
+                    return data;
+                })
+                .catch(function (error) {
+                    if (current === entry) current = null;
+                    throw error;
+                });
+            return entry.promise;
+        };
+    }
+
     function initialize(options) {
         const settings = options || {};
         const cidadeInput = global.document.getElementById(settings.cidadeInputId || 'filter-cidade');
@@ -19,6 +49,7 @@
 
         let validationTimer = null;
         let activeRequest = null;
+        let requestSequence = 0;
         let lastBlockedCity = '';
 
         function normalizeForCompare(value) {
@@ -37,6 +68,7 @@
                 activeRequest = null;
             }
 
+            const sequence = ++requestSequence;
             const cidade = cidadeInput.value.trim();
             if (cidade.length < 2) {
                 return;
@@ -44,17 +76,19 @@
 
             const cidadeKey = normalizeForCompare(cidade);
             const ufConsultada = estadoSelect ? estadoSelect.value : '';
-            const controller = typeof global.AbortController === 'function' ? new global.AbortController() : null;
+            const shared = typeof settings.lookupCity === 'function';
+            const controller = !shared && typeof global.AbortController === 'function' ? new global.AbortController() : null;
             activeRequest = controller;
             const endpoint = (settings.endpoint || '') + encodeURIComponent(cidade)
                 + (ufConsultada ? '&uf=' + encodeURIComponent(ufConsultada) : '');
             const requestOptions = { credentials: 'same-origin' };
             if (controller) requestOptions.signal = controller.signal;
 
-            global.fetch(endpoint, requestOptions)
-                .then(function (response) { return response.json(); })
+            const request = shared ? settings.lookupCity(cidade, ufConsultada)
+                : global.fetch(endpoint, requestOptions).then(function (response) { return response.json(); });
+            request
                 .then(function (data) {
-                    if (normalizeForCompare(cidadeInput.value) !== cidadeKey
+                    if (sequence !== requestSequence || normalizeForCompare(cidadeInput.value) !== cidadeKey
                         || (estadoSelect && estadoSelect.value !== ufConsultada)) {
                         return;
                     }
@@ -130,6 +164,7 @@
     }
 
     App.CartorioCityLookup = {
-        initialize: initialize
+        initialize: initialize,
+        createSharedLookup: createSharedLookup
     };
 })(window);

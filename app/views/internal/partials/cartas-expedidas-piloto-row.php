@@ -15,8 +15,18 @@ $responsavelPilotoId = !$fluxoInconsistente ? match ($etapaPiloto) {
 } : '';
 $podeGerenciarCarta = $canDelete || ($usuarioPiloto !== '' && $usuarioPiloto === $responsavelPilotoId);
 $restricaoGerenciarCarta = 'Disponível apenas para o responsável da etapa, Chefia ou Admin';
-$partesResponsavel = preg_split('/\s+/u', $nomeResponsavelEnvio, -1, PREG_SPLIT_NO_EMPTY);
-$nomeCurtoResponsavelEnvio = match (count($partesResponsavel ?: [])) {
+$rotuloResponsavelPiloto = match ($etapaPiloto) {
+    'envio' => 'Responsável pelo envio',
+    'devolucao' => 'Responsável pelo cumprimento',
+    default => 'Responsável',
+};
+$nomeResponsavelPiloto = $responsavelPilotoId !== '' ? match ($etapaPiloto) {
+    'envio' => $nomeResponsavelEnvio,
+    'devolucao' => trim((string) ($row['CriadoPorNome'] ?? '')),
+    default => '',
+} : '';
+$partesResponsavel = preg_split('/\s+/u', $nomeResponsavelPiloto, -1, PREG_SPLIT_NO_EMPTY);
+$nomeCurtoResponsavelPiloto = match (count($partesResponsavel ?: [])) {
     0 => '',
     1 => $partesResponsavel[0],
     default => $partesResponsavel[0] . ' ' . $partesResponsavel[count($partesResponsavel) - 1],
@@ -32,7 +42,7 @@ $nomeCurtoResponsavelEnvio = match (count($partesResponsavel ?: [])) {
   <div class="ce-destino"><span class="ce-visually-hidden">Destino: </span><?= $e($destino ?: '—') ?></div>
   <div class="ce-finalidade" title="<?= $e($finalidade) ?>"><span class="ce-visually-hidden">Finalidade: </span><?= $e($finalidade ?: '—') ?></div>
   <div class="ce-prazo"><span class="ce-visually-hidden">Prazo total: </span><?= $e($prazo !== '' ? $prazo.' dias' : '—') ?><?php if ($prazoRestanteTexto !== ''): ?><small class="<?= $prazoRestanteAlerta?'danger':'' ?>"><?= $e($prazoRestanteTexto) ?></small><?php endif; ?></div>
-  <div class="ce-assignee"><span class="ce-visually-hidden">Responsável pelo envio: </span><?= $e($nomeCurtoResponsavelEnvio ?: '—') ?></div>
+  <div class="ce-assignee"><span class="ce-visually-hidden"><?= $e($rotuloResponsavelPiloto) ?>: </span><?= $e($nomeCurtoResponsavelPiloto ?: '—') ?></div>
   <span class="ce-priority p-<?= $e($prior) ?>" role="img" title="<?= $e($priorLabel) ?>" aria-label="<?= $e($priorLabel) ?>"><?= $e($priorIcon) ?></span>
   <div class="ce-row-actions">
     <?php if ($mostrarContinuar && $subtarefaAtivaId !== ''): ?><button type="button" class="ce-button small" data-ce-action="continuar" data-id="<?= $e($subtarefaAtivaId) ?>"><?= $isAguardandoCumprimento?'Juntar':'Enviar' ?></button><?php endif; ?>
@@ -53,7 +63,7 @@ $nomeCurtoResponsavelEnvio = match (count($partesResponsavel ?: [])) {
   <section class="ce-tab-body" id="ce-resumo" role="tabpanel" aria-labelledby="ce-tab-resumo">
     <dl><dt>Destino</dt><dd><?= $e($destino ?: '—') ?></dd><dt>Finalidade</dt><dd><?= $e($finalidade ?: '—') ?></dd>
       <dt>Prioridade da carta</dt><dd><span class="ce-priority p-<?= $e($prior) ?>" aria-hidden="true"><?= $e($priorIcon) ?></span> <?= $e($priorLabel) ?></dd>
-      <?php if ($nomeCurtoResponsavelEnvio !== ''): ?><dt>Responsável pelo envio</dt><dd><?= $e($nomeCurtoResponsavelEnvio) ?></dd><?php endif; ?>
+      <?php if ($nomeCurtoResponsavelPiloto !== ''): ?><dt><?= $e($rotuloResponsavelPiloto) ?></dt><dd><?= $e($nomeCurtoResponsavelPiloto) ?></dd><?php endif; ?>
       <?php if ($classeTexto !== ''): ?><dt>Classe processual</dt><dd><?= $e($classeTexto) ?></dd><?php endif; ?>
       <?php if ($assuntoTexto !== ''): ?><dt>Assuntos</dt><dd><?= $e($assuntoTexto) ?></dd><?php endif; ?>
       <?php if ($temPrioridadeVisual): ?><dt>Prioridade do processo</dt><dd><?= $e(implode(', ',$prioridadesTexto)) ?></dd><?php endif; ?>

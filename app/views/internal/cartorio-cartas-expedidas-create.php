@@ -251,7 +251,7 @@ if ($ceEmbed) {
             <div class="display-flex row row-fit gap-y-md align-center justify-end">
                 <button class="btn btn-primary btn-with-spinner disabled" id="cadastrar-btn" type="button" disabled aria-disabled="true">
                     <span class="btn-icon-text">Cadastrar</span>
-                    <span class="btn-icon hidden"><i class="fi fi-rr-spinner" aria-hidden="true"></i></span>
+                    <span class="btn-icon hidden<?= $ceEmbed ? ' ce-create-spinner' : '' ?>" aria-hidden="true"><?php if (!$ceEmbed): ?><i class="fi fi-rr-spinner" aria-hidden="true"></i><?php endif; ?></span>
                 </button>
             </div>
         </div>
@@ -303,9 +303,11 @@ if ($ceEmbed) {
                 App.CartorioCreateBootstrap.bindBackButton({ href: '/frame.php?page=cartasexpedidas' });
                 App.CartorioCreateBootstrap.bindClasseResetOnShortProcess();
             }
+            const lookupCity = <?= $ceEmbed ? 'window.App?.CartorioCityLookup?.createSharedLookup()' : 'null' ?>;
             if (window.App && App.CartorioCityLookup) {
                 App.CartorioCityLookup.initialize({
                     endpoint: '/api/cartorio-cartas-expedidas/buscar-cidade.php?cidade=',
+                    lookupCity: lookupCity,
                     blockCcm: true,
                     clearCcmCity: false,
                     onCcmCity: function (city, lookupData) {
@@ -472,7 +474,16 @@ if ($ceEmbed) {
                 return;
             }
             App.CartorioCartasExpedidasCreate.initialize({
-                submitDelayMs: 1000,
+                submitDelayMs: <?= $ceEmbed ? '0' : '1000' ?>,
+<?php if ($ceEmbed): ?>
+                lookupCity: lookupCity,
+                retryOnError: true,
+                onSuccess: function () {
+                    if (parent === window) return false;
+                    parent.postMessage({type: 'ce-piloto-created'}, location.origin);
+                    return true;
+                },
+<?php endif; ?>
                 successRedirect: <?= json_encode($ceReturn) ?>,
                 cityLookupEndpoint: '/api/cartorio-cartas-expedidas/buscar-cidade.php'
             });
