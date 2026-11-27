@@ -478,6 +478,7 @@ if (snapshot69p($peer, ['processos_partes']) !== $before || !$pp->update('AA', [
 }
 
 $fixtureStage = 'classe_prioridades';
+$pdo->exec('ALTER TABLE processos ADD COLUMN classe_origem VARCHAR(10) NULL');
 require_once '/repo/app/services/ProcessoClasseSyncService.php';
 $pdo->exec('ALTER TABLE classes ADD codigo VARCHAR(40), ADD created_at DATETIME, ADD updated_at DATETIME');
 $pdo->exec("UPDATE classes SET codigo='1' WHERE id='C'");
@@ -494,15 +495,18 @@ try {
 } catch (PDOException $error) {
     if ((string) $error->getCode() !== '45000') throw $error;
 }
-if ($pdo->inTransaction() || $peer->query("SELECT classe_id FROM processos WHERE id='CLASS-CASE'")->fetchColumn() !== 'C'
+if ($pdo->inTransaction() || $peer->query("SELECT classe_id,classe_origem FROM processos WHERE id='CLASS-CASE'")->fetch(PDO::FETCH_ASSOC)
+        !== ['classe_id' => 'C', 'classe_origem' => null]
     || (int) $peer->query("SELECT COUNT(*) FROM processo_prioridades WHERE processo_id='CLASS-CASE'")->fetchColumn() !== 1) {
     throw new RuntimeException('Rollback da troca de classe não ocorreu.');
 }
 $pdo->exec('DROP TRIGGER fixture_priority_fail');
 $pdo->exec("UPDATE processos SET classe_id='C1268' WHERE id='CLASS-CASE'");
-foreach ([1,2] as $_) {
-    if ($svcClasse->syncFromDataJud('00000016920208050001','1268','Medida sintética',true)['action'] !== 'noop') {
-        throw new RuntimeException('Reparação de prioridade alterou indevidamente a classe existente.');
+foreach (['updated', 'noop'] as $expectedAction) {
+    if ($svcClasse->syncFromDataJud('00000016920208050001','1268','Medida sintética',true)['action'] !== $expectedAction
+        || $peer->query("SELECT classe_id,classe_origem FROM processos WHERE id='CLASS-CASE'")->fetch(PDO::FETCH_ASSOC)
+            !== ['classe_id' => 'C1268', 'classe_origem' => 'datajud']) {
+        throw new RuntimeException('Reparação de prioridade alterou indevidamente a classe ou sua origem.');
     }
 }
 $priorities = $peer->query("SELECT codigo,origem FROM processo_prioridades WHERE processo_id='CLASS-CASE' ORDER BY codigo")->fetchAll(PDO::FETCH_KEY_PAIR);

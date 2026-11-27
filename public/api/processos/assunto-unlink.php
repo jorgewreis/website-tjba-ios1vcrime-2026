@@ -53,6 +53,12 @@ try {
         throw new RuntimeException('Não foi possível confirmar a alteração do assunto.');
     }
     echo json_encode(['action' => $deleted ? 'deleted' : 'noop'], JSON_UNESCAPED_UNICODE);
+} catch (ProcessoDadoProtegidoException $e) {
+    if (isset($connection) && $connection instanceof PDO && $connection->inTransaction()) {
+        $connection->rollBack();
+    }
+    http_response_code(409);
+    echo json_encode(['error' => $e->getMessage(), 'code' => 'origem_protegida'], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     if (isset($connection) && $connection instanceof PDO && $connection->inTransaction()) {
         $connection->rollBack();

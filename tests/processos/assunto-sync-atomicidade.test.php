@@ -27,17 +27,19 @@ final class AssuntoSqlite extends PDO
 function checkAssunto(bool $condition, string $message): void { if (!$condition) throw new RuntimeException($message); }
 $db = new AssuntoSqlite();
 $db->exec("INSERT INTO processos VALUES ('P','0000001-69.2020.8.05.0001',NULL,NULL,0,NULL,NULL)");
-$db->exec("INSERT INTO assuntos VALUES ('A','1','Manual',NULL,NULL)");
-$db->exec("INSERT INTO processo_assuntos VALUES ('M','P','A','manual',NULL,NULL)");
+$db->exec("INSERT INTO assuntos VALUES ('A','1','Manual',NULL,NULL),('B','9','Manual adicional',NULL,NULL)");
+$db->exec("INSERT INTO processo_assuntos VALUES ('M','P','A','manual',NULL,NULL),('E','P','B','manual',NULL,NULL)");
 $service = new ProcessoAssuntoSyncService($db);
 $cnj = '0000001-69.2020.8.05.0001';
 $result = $service->syncFromDataJud($cnj, [['codigo'=>'1','descricao'=>'Manual']]);
 checkAssunto($result['stats']['inserted'] === 0, 'Manual contado como inserido.');
-checkAssunto($db->query("SELECT origem FROM processo_assuntos WHERE id='M'")->fetchColumn() === 'manual', 'Origem manual alterada.');
+checkAssunto($result['stats']['promoted'] === 1 && $result['action'] === 'updated', 'A confirmação DataJud deve atualizar só a origem.');
+checkAssunto($db->query("SELECT origem FROM processo_assuntos WHERE id='M'")->fetchColumn() === 'datajud', 'Assunto confirmado não ganhou proteção.');
 $service->syncFromDataJud($cnj, [['codigo'=>'2','descricao'=>'Judicial']]);
 checkAssunto(count(array_filter($db->lockingReads, static fn($q) => str_contains($q, 'FROM `assuntos`'))) > 0, 'Catálogo sem leitura atual.');
 checkAssunto(count(array_filter($db->lockingReads, static fn($q) => str_contains($q, 'FROM `processo_assuntos`'))) > 0, 'Vínculos sem leitura atual.');
-checkAssunto($db->query("SELECT origem FROM processo_assuntos WHERE id='M'")->fetchColumn() === 'manual', 'Vínculo manual removido.');
+checkAssunto($db->query("SELECT origem FROM processo_assuntos WHERE id='M'")->fetchColumn() === false, 'Só outra sincronização pode remover vínculo confirmado.');
+checkAssunto($db->query("SELECT origem FROM processo_assuntos WHERE id='E'")->fetchColumn() === 'manual', 'Vínculo manual adicional removido.');
 checkAssunto((int)$db->query("SELECT COUNT(*) FROM processo_assuntos WHERE origem='datajud'")->fetchColumn() === 1, 'Vínculo DataJud ausente.');
 $before = $db->query('SELECT * FROM processo_assuntos ORDER BY id')->fetchAll(PDO::FETCH_ASSOC);
 $db->exec("CREATE TRIGGER falha_delete BEFORE DELETE ON processo_assuntos WHEN OLD.origem='datajud' BEGIN SELECT RAISE(ABORT, 'falha sintetica'); END");
@@ -66,9 +68,19 @@ checkAssunto((int)$db->query("SELECT COUNT(*) FROM processo_assuntos WHERE assun
 $dataJudId = (string)$db->query("SELECT assunto_id FROM processo_assuntos WHERE origem='datajud' LIMIT 1")->fetchColumn();
 checkAssunto($dataJudId !== '', 'Fixture DataJud não existe.');
 $beforeLocks = $db->locks;
-$deletedDataJud = $service->unlinkManual('P', $dataJudId);
+try {
+    $service->unlinkManual('P', $dataJudId);
+    throw new RuntimeException('Desvínculo manual não recusado para assunto DataJud.');
+} catch (ProcessoDadoProtegidoException) {}
 checkAssunto($db->locks === $beforeLocks + 1, 'Tentativa de desvínculo DataJud sem lock do processo.');
-checkAssunto(!$deletedDataJud, 'Desvínculo manual removeu assunto com origem DataJud.');
+try {
+    $service->linkManual('P', '2', 'Renomear manualmente');
+    throw new RuntimeException('Vinculação manual não recusada para assunto DataJud.');
+} catch (ProcessoDadoProtegidoException) {}
+$db->exec("INSERT INTO processos VALUES ('P2','0000000-98.0000.0.00.0000',NULL,NULL,0,NULL,NULL)");
+checkAssunto($service->linkManual('P2', '2', 'Renomear no outro processo'), 'Reuso de assunto ainda não vinculado deve ser permitido.');
+checkAssunto($db->query("SELECT descricao FROM assuntos WHERE codigo='2'")->fetchColumn() === 'Judicial', 'Reuso de código manual renomeou o catálogo sincronizado.');
+checkAssunto(!(new ProcessoAssuntosRepository($db))->upsert('P', $dataJudId), 'Upsert duplicado não é inserção.');
 checkAssunto((string)$db->query("SELECT origem FROM processo_assuntos WHERE assunto_id=" . $db->quote($dataJudId))->fetchColumn() === 'datajud', 'Origem DataJud não foi preservada.');
 $db->beginTransaction();
 $service->linkManual('P', '5', 'Manual cinco');

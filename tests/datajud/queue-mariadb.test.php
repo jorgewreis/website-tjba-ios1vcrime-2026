@@ -79,6 +79,92 @@ if (($result['processados'] ?? 0) !== 0 || ($row['status'] ?? null) !== 'falhou'
     throw new RuntimeException('A stale claimed job was not returned to the retry queue.');
 }
 
+// Same isolated MariaDB runtime also checks provenance migration and
+// native SQL updates. No real process data or network requests.
+$db->exec("CREATE TABLE classes (id CHAR(30) PRIMARY KEY, codigo VARCHAR(20) UNIQUE, nome VARCHAR(80), created_at DATETIME NULL, updated_at DATETIME NULL) ENGINE=InnoDB");
+$db->exec("INSERT INTO classes (id,codigo,nome) VALUES ('CLASS-A','11','Classe sintética A'),('CLASS-B','12','Classe sintética B')");
+$db->exec("UPDATE processos SET classe_id='CLASS-A'");
+$origemMigration = file_get_contents(__DIR__ . '/../../database/migrations/20261127_add_processos_classe_origem.sql');
+if (!is_string($origemMigration) || trim($origemMigration) === '') throw new RuntimeException('Origin migration is missing.');
+$applyOrigem = static function (PDO $connection) use ($origemMigration): void {
+    // Execute in the same physical connection; surface errors from every statement.
+    $cursor = $connection->query($origemMigration);
+    do {
+        if ($cursor->columnCount() > 0) $cursor->fetchAll();
+    } while ($cursor->nextRowset());
+    $cursor->closeCursor();
+};
+$mdlTimeout = (int) $db->query('SELECT @@SESSION.lock_wait_timeout')->fetchColumn();
+$foreignLock = new PDO($dsn, (string) getenv('DATAJUD_TEST_USER'), (string) getenv('DATAJUD_TEST_PASSWORD'), [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+]);
+$lockExpr = "CONCAT('rei345_classe_origem:', LEFT(SHA2(DATABASE(), 256), 40))";
+if ((int) $foreignLock->query("SELECT GET_LOCK($lockExpr, 0)")->fetchColumn() !== 1) {
+    throw new RuntimeException('Failed to take the synthetic migration test lock.');
+}
+try {
+    $applyOrigem($db);
+    throw new RuntimeException('A second session migrated while the named lock was held.');
+} catch (PDOException $e) {
+    if (!str_contains($e->getMessage(), 'REI345_MIGRATION_LOCK_NOT_ACQUIRED')) throw $e;
+} finally {
+    $foreignLock->query("SELECT RELEASE_LOCK($lockExpr)")->fetchColumn();
+}
+if ((int) $db->query('SELECT @@SESSION.lock_wait_timeout')->fetchColumn() !== $mdlTimeout
+    || (int) $db->query("SELECT IS_FREE_LOCK($lockExpr)")->fetchColumn() !== 1) {
+    throw new RuntimeException('The migration left a named lock behind after contention.');
+}
+
+$repo = new ProcessosRepository($db);
+if ($repo->classeOrigemDisponivel()) throw new RuntimeException('Synthetic legacy schema already contains the provenance column.');
+$applyOrigem($db);
+$repo = new ProcessosRepository($db);
+$legacy = $repo->findById($processId);
+if (!$repo->classeOrigemDisponivel() || $legacy === null || $legacy['classe_id'] !== 'CLASS-A' || $legacy['classe_origem'] !== null) {
+    throw new RuntimeException('Additive migration did not preserve unknown provenance and the original class.');
+}
+try {
+    $repo->updateClasseForProcesso($processId, 'CLASS-B');
+    throw new RuntimeException('A manual write was accepted for a populated legacy class.');
+} catch (ProcessoDadoProtegidoException) {}
+
+$classeSync = new ProcessoClasseSyncService($db);
+$established = $classeSync->syncFromDataJud('00000016920208050001', '11', 'Classe sintética A', true, false);
+if (($established['action'] ?? null) !== 'updated' || $repo->findById($processId)['classe_origem'] !== 'datajud') {
+    throw new RuntimeException('Identical verified class did not establish DataJud origin.');
+}
+$applyOrigem($db);
+if ($repo->findById($processId)['classe_origem'] !== 'datajud') {
+    throw new RuntimeException('Reapplying the idempotent migration changed existing provenance.');
+}
+$repo->ensureProcess('0000001-69.2020.8.05.0001', 'CLASS-B');
+try {
+    $repo->updateClasseForProcesso($processId, 'CLASS-B');
+    throw new RuntimeException('A manual write was accepted for a DataJud class.');
+} catch (ProcessoDadoProtegidoException) {}
+if ($repo->findById($processId)['classe_id'] !== 'CLASS-A') {
+    throw new RuntimeException('Direct or indirect manual changes overwrote a DataJud class.');
+}
+$replaced = $classeSync->syncFromDataJud('00000016920208050001', '12', 'Classe sintética B', true, false);
+if (($replaced['action'] ?? null) !== 'updated' || $repo->findById($processId)['classe_id'] !== 'CLASS-B') {
+    throw new RuntimeException('Another verified synchronization did not replace the protected class.');
+}
+// Preserve incompatible pre-existing definitions instead of modifying them or declaring success.
+$db->exec("ALTER TABLE processos DROP COLUMN classe_origem, ADD COLUMN classe_origem VARCHAR(12) NULL DEFAULT NULL");
+$db->exec("UPDATE processos SET classe_origem='legado'");
+try {
+    $applyOrigem($db);
+    throw new RuntimeException('An incompatible existing definition was accepted.');
+} catch (PDOException $e) {
+    if (!str_contains($e->getMessage(), 'REI345_INCOMPATIBLE_CLASSE_ORIGEM')) throw $e;
+}
+if ($db->query('SELECT classe_origem FROM processos')->fetchColumn() !== 'legado'
+    || (int) $db->query("SELECT IS_FREE_LOCK($lockExpr)")->fetchColumn() !== 1) {
+    throw new RuntimeException('An incompatible migration changed data or leaked its lock.');
+}
+$db->exec('DROP TABLE classes');
+echo "PASS: isolated provenance migration applies twice, preserves legacy/DataJud origins, and rejects incompatible schema and contention.\n";
+
 $db->exec('DROP TABLE processo_datajud_sync_queue');
 $db->exec('DROP TABLE processos');
 $db->exec('DROP TABLE usuario_setor');

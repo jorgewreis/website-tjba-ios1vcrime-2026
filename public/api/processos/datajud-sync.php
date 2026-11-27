@@ -213,6 +213,9 @@ try {
 } catch (DataJudAmbiguousResponseException $e) {
     http_response_code(422);
     echo json_encode(['error' => 'O DataJud retornou mais de um registro; nenhum dado foi sincronizado.'], JSON_UNESCAPED_UNICODE);
+} catch (ProcessoClasseOrigemIndisponivelException $e) {
+    http_response_code(503);
+    echo json_encode(['error' => $e->getMessage(), 'code' => 'classe_origem_indisponivel'], JSON_UNESCAPED_UNICODE);
 } catch (DataJudUpstreamException|DataJudLocalSigiloException $e) {
     $e->respondForSync();
 } catch (RuntimeException $e) {

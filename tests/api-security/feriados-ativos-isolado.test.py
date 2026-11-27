@@ -24,7 +24,7 @@ FILES = [
     'app/services/FeriadosService.php', 'app/repositories/FeriadosRepository.php',
     'app/services/EditaisService.php', 'app/repositories/EditaisRepository.php',
     'app/repositories/EditaisSubtarefasRepository.php', 'app/repositories/EditaisAlocadosRepository.php',
-    'app/repositories/ProcessosRepository.php', 'app/services/ProcessoDataJudSyncQueue.php', 'app/repositories/ClassesRepository.php',
+    'app/repositories/ProcessosRepository.php', 'app/helpers/ProcessoDadoProtegidoException.php', 'app/helpers/ProcessoClasseOrigemIndisponivelException.php', 'app/services/ProcessoDataJudSyncQueue.php', 'app/repositories/ClassesRepository.php',
     'app/helpers/IdGenerator.php', 'app/helpers/TextFormatter.php', 'app/helpers/ParentRecordLock.php',
     'app/helpers/CnjValidator.php', 'app/helpers/UserInitialsHelper.php', 'app/helpers/CartorioAlocacaoTipo.php',
     'app/helpers/OrphanSubtarefasCleaner.php', 'app/helpers/CartorioTarefaStatusPrincipalHelper.php',

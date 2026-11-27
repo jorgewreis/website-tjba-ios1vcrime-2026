@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../helpers/ProcessoAssuntoOrigem.php';
+require_once __DIR__ . '/../helpers/ProcessoDadoProtegidoException.php';
 require_once __DIR__ . '/../repositories/AssuntosRepository.php';
 require_once __DIR__ . '/../repositories/ProcessoAssuntosRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
@@ -61,7 +62,7 @@ final class ProcessoAssuntoSyncService
      *   action:'noop'|'updated'|'created',
      *   processo_id:string,
      *   assuntos:list<array{id:string,codigo:string,descricao:string,origem:string}>,
-     *   stats:array{inserted:int,removed:int,unchanged:int}
+     *   stats:array{inserted:int,removed:int,unchanged:int,promoted:int}
      * }
      */
     public function syncFromDataJud(
@@ -118,7 +119,7 @@ final class ProcessoAssuntoSyncService
         $action = 'noop';
         if ($foiCriado) {
             $action = 'created';
-        } elseif ($stats['inserted'] > 0 || $stats['removed'] > 0) {
+        } elseif ($stats['inserted'] > 0 || $stats['removed'] > 0 || $stats['promoted'] > 0) {
             $action = 'updated';
         }
 
@@ -153,7 +154,13 @@ final class ProcessoAssuntoSyncService
             throw new InvalidArgumentException('processo_id é obrigatório.');
         }
         return $this->withProcessLock($processoId, true, function () use ($processoId, $codigo, $descricao): bool {
-            $assuntoId = $this->assuntosRepository->ensureAssunto($codigo, $descricao, true);
+            // A descrição do catálogo é compartilhada: uma vinculação
+            // manual não pode renomear o assunto sincronizado em outro processo.
+            $assunto = $this->assuntosRepository->findByCodigo($codigo, true);
+            $assuntoId = $assunto === null
+                ? $this->assuntosRepository->ensureAssunto($codigo, $descricao, true)
+                : (string) $assunto['id'];
+            $this->assertAssuntoEditavel($processoId, $assuntoId);
             return $this->processoAssuntosRepository->upsert($processoId, $assuntoId, ProcessoAssuntoOrigem::MANUAL, true);
         });
     }
@@ -167,8 +174,17 @@ final class ProcessoAssuntoSyncService
         }
 
         return (bool) $this->withProcessLock($processoId, false, function () use ($processoId, $assuntoId): bool {
+            $this->assertAssuntoEditavel($processoId, $assuntoId);
             return $this->processoAssuntosRepository->deleteByProcessoAndAssunto($processoId, $assuntoId);
         });
+    }
+
+    private function assertAssuntoEditavel(string $processoId, string $assuntoId): void
+    {
+        $vinculo = $this->processoAssuntosRepository->findOneByProcessoAndAssunto($processoId, $assuntoId, true);
+        if (($vinculo['origem'] ?? null) === ProcessoAssuntoOrigem::DATAJUD) {
+            throw new ProcessoDadoProtegidoException('O assunto sincronizado só pode ser alterado por outra sincronização com o DataJud.');
+        }
     }
 
     private function withProcessLock(string $processoId, bool $required, callable $operation): mixed

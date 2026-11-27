@@ -72,6 +72,12 @@ try {
             'descricao' => (string) ($assunto['descricao'] ?? ''),
         ],
     ], JSON_UNESCAPED_UNICODE);
+} catch (ProcessoDadoProtegidoException $e) {
+    if (isset($connection) && $connection instanceof PDO && $connection->inTransaction()) {
+        $connection->rollBack();
+    }
+    http_response_code(409);
+    echo json_encode(['error' => $e->getMessage(), 'code' => 'origem_protegida'], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     if (isset($connection) && $connection instanceof PDO && $connection->inTransaction()) {
         $connection->rollBack();

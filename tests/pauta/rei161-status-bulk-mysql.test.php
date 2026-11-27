@@ -45,6 +45,69 @@ $process = $db->prepare('INSERT INTO processos (id, sigiloso) VALUES (?, ?)');
 foreach ([['P-OPEN', 0], ['P-SECRET', 1], ['P-MINOR', 0], ['P-PRIORITY', 0], ['P-SIG-PRIORITY', 0], ['P-CHILD-PRIORITY', 0], ['P-DV-PRIORITY', 0], ['P-NONBLOCKING', 0], ['P-OBS', 0]] as [$id, $secret]) {
     $process->execute([$id, $secret]);
 }
+// Exercise the exact additive provenance SQL in this same authenticated disposable MySQL 8.4.
+$origemSql = file_get_contents(__DIR__ . '/../../database/migrations/20261127_add_processos_classe_origem.sql');
+rei161Assert(is_string($origemSql) && $origemSql !== '', 'Migração de origem indisponível.');
+$applyOrigem = static function (PDO $connection) use ($origemSql): void {
+    $cursor = $connection->query($origemSql);
+    do {
+        if ($cursor->columnCount() > 0) $cursor->fetchAll();
+    } while ($cursor->nextRowset());
+    $cursor->closeCursor();
+};
+$mdlTimeout = (int) $db->query('SELECT @@SESSION.lock_wait_timeout')->fetchColumn();
+$lockExpr = "CONCAT('rei345_classe_origem:', LEFT(SHA2(DATABASE(), 256), 40))";
+$contender = new PDO($dsn, 'root', $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+rei161Assert((int) $contender->query("SELECT GET_LOCK($lockExpr, 0)")->fetchColumn() === 1, 'Lock sintético não adquirido.');
+try {
+    $applyOrigem($db);
+    throw new RuntimeException('Migração avançou durante lock concorrente.');
+} catch (PDOException $e) {
+    if (!str_contains($e->getMessage(), 'REI345_MIGRATION_LOCK_NOT_ACQUIRED')) throw $e;
+} finally {
+    $contender->query("SELECT RELEASE_LOCK($lockExpr)")->fetchColumn();
+}
+rei161Assert($db->query("SHOW COLUMNS FROM processos LIKE 'classe_origem'")->fetch() === false,
+    'A tentativa com lock concorrente alterou a tabela.');
+$blocked = new PDO($dsn, 'root', $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+$contender->beginTransaction();
+$contender->query("SELECT id FROM processos WHERE id='P-OPEN'")->fetchColumn();
+try {
+    $applyOrigem($blocked);
+    throw new RuntimeException('Migration unexpectedly altered the table during a held metadata lock.');
+} catch (PDOException $e) {
+    if ((int) ($e->errorInfo[1] ?? 0) !== 1205) throw $e;
+    unset($e);
+} finally {
+    // Failed DDL closes its dedicated connection to release the advisory lock.
+    $blocked = null;
+    $contender->rollBack();
+}
+rei161Assert((int) $db->query("SELECT IS_FREE_LOCK($lockExpr)")->fetchColumn() === 1
+    && $db->query("SHOW COLUMNS FROM processos LIKE 'classe_origem'")->fetch() === false,
+    'Metadata lock timeout changed the table or left the migration lock acquired.');
+$applyOrigem($db);
+rei161Assert((int) $db->query('SELECT COUNT(*) FROM processos WHERE classe_origem IS NOT NULL')->fetchColumn() === 0,
+    'A migração preencheu a origem no legado.');
+$db->exec("UPDATE processos SET classe_origem='datajud' WHERE id='P-OPEN'");
+$applyOrigem($db);
+rei161Assert($db->query("SELECT classe_origem FROM processos WHERE id='P-OPEN'")->fetchColumn() === 'datajud',
+    'A reaplicação alterou uma origem já registrada.');
+$db->exec("ALTER TABLE processos ALTER COLUMN classe_origem SET DEFAULT 'manual'");
+try {
+    $applyOrigem($db);
+    throw new RuntimeException('Migração aceitou default incompatível.');
+} catch (PDOException $e) {
+    if (!str_contains($e->getMessage(), 'REI345_INCOMPATIBLE_CLASSE_ORIGEM')) throw $e;
+}
+rei161Assert($db->query("SELECT classe_origem FROM processos WHERE id='P-OPEN'")->fetchColumn() === 'datajud',
+    'A recusa por default incompatível alterou dados.');
+rei161Assert((int) $db->query("SELECT IS_FREE_LOCK($lockExpr)")->fetchColumn() === 1
+    && (int) $db->query('SELECT @@SESSION.lock_wait_timeout')->fetchColumn() === $mdlTimeout,
+    'A recusa deixou o lock de migração adquirido ou mudou a configuração da sessão.');
+$db->exec("ALTER TABLE processos ALTER COLUMN classe_origem SET DEFAULT NULL");
+echo "PASS REI-345 exact additive SQL on disposable MySQL 8.4: apply, reapply, legacy, wrong default, lock release.\n";
+
 // Use the same real Bahia clock as the service. Near midnight, wait at most
 // one minute so a run started at 23:59 does not fail just because of the date.
 while (date('H:i') === '23:59') {
@@ -140,7 +203,7 @@ PHP,
 ];
 $sourceRoot = getenv('REI161_REPO_SOURCE');
 rei161Assert($sourceRoot === '/workspace', 'Raiz da aplicação sintética inválida.');
-$realFiles = ['config/security.php','app/models/Usuario.php','app/helpers/UsuarioPerfisAutorizacao.php','app/helpers/EffectiveAccessProfiles.php','app/helpers/UserAccessHelper.php','app/helpers/ApiErrorReporter.php','app/access/AccessEvaluator.php','app/access/ProfileNormalizer.php','app/access/PageAccessRegistry.php','app/access/AccessAreas.php','app/access/AccessPolicyVersion.php', 'app/services/SalaAudienciasAtaService.php','app/services/SalaAudienciasAtaStorage.php','app/services/ProcessoDataJudSyncQueue.php','app/helpers/SalaAudienciasAtaSigiloHelper.php','app/helpers/PrioridadesProcessuaisCatalog.php','app/helpers/ProcessoBlocoListagemHelper.php','app/helpers/ClasseProcessualListagemHelper.php','app/helpers/IdGenerator.php','app/helpers/ProcessoPrioridadeOrigem.php','app/helpers/ProcessoAssuntoOrigem.php','app/helpers/RegistroMetadataHelper.php','app/repositories/SalaAudienciasPautaRepository.php','app/repositories/SalaAudienciasAtaRepository.php','app/repositories/SalaAudienciasEstudanteInscricaoRepository.php','app/repositories/ProcessoPrioridadesRepository.php','app/repositories/ProcessosRepository.php','app/repositories/ClassesRepository.php','app/repositories/ProcessoAssuntosRepository.php','app/repositories/ProcessosPartesRepository.php','app/helpers/CnjValidator.php','app/helpers/ParentRecordLock.php','app/helpers/TextFormatter.php','app/helpers/CartasExpedidasEstadoFluxo.php','app/helpers/CartasExpedidasUiCopy.php','app/helpers/CartasRecebidasUiCopy.php','app/helpers/CartorioTimelineHelper.php','app/helpers/EditaisUiCopy.php','app/helpers/OficioRegistroMetadataHelper.php','app/helpers/SalaAudienciasInscricaoIndisponivel.php','app/repositories/CartasExpedidasSubtarefasRepository.php','app/repositories/CartasRecebidasSubtarefasRepository.php','app/repositories/EditaisSubtarefasRepository.php','app/config/prioridades_processuais_catalog.php'];
+$realFiles = ['config/security.php','app/models/Usuario.php','app/helpers/UsuarioPerfisAutorizacao.php','app/helpers/EffectiveAccessProfiles.php','app/helpers/UserAccessHelper.php','app/helpers/ApiErrorReporter.php','app/access/AccessEvaluator.php','app/access/ProfileNormalizer.php','app/access/PageAccessRegistry.php','app/access/AccessAreas.php','app/access/AccessPolicyVersion.php', 'app/services/SalaAudienciasAtaService.php','app/services/SalaAudienciasAtaStorage.php','app/services/ProcessoDataJudSyncQueue.php','app/helpers/SalaAudienciasAtaSigiloHelper.php','app/helpers/PrioridadesProcessuaisCatalog.php','app/helpers/ProcessoBlocoListagemHelper.php','app/helpers/ClasseProcessualListagemHelper.php','app/helpers/IdGenerator.php','app/helpers/ProcessoPrioridadeOrigem.php','app/helpers/ProcessoAssuntoOrigem.php','app/helpers/RegistroMetadataHelper.php','app/repositories/SalaAudienciasPautaRepository.php','app/repositories/SalaAudienciasAtaRepository.php','app/repositories/SalaAudienciasEstudanteInscricaoRepository.php','app/repositories/ProcessoPrioridadesRepository.php','app/repositories/ProcessosRepository.php','app/helpers/ProcessoDadoProtegidoException.php','app/helpers/ProcessoClasseOrigemIndisponivelException.php','app/repositories/ClassesRepository.php','app/repositories/ProcessoAssuntosRepository.php','app/repositories/ProcessosPartesRepository.php','app/helpers/CnjValidator.php','app/helpers/ParentRecordLock.php','app/helpers/TextFormatter.php','app/helpers/CartasExpedidasEstadoFluxo.php','app/helpers/CartasExpedidasUiCopy.php','app/helpers/CartasRecebidasUiCopy.php','app/helpers/CartorioTimelineHelper.php','app/helpers/EditaisUiCopy.php','app/helpers/OficioRegistroMetadataHelper.php','app/helpers/SalaAudienciasInscricaoIndisponivel.php','app/repositories/CartasExpedidasSubtarefasRepository.php','app/repositories/CartasRecebidasSubtarefasRepository.php','app/repositories/EditaisSubtarefasRepository.php','app/config/prioridades_processuais_catalog.php'];
 foreach ($realFiles as $file) {
     $destination = $root . '/' . $file;
     $directory = dirname($destination);
