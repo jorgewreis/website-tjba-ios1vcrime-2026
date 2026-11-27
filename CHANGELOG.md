@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0056
+
+**Data:** 2026-11-27 20:14:43 | **Commit:** `6a073a2b` | **Tipo:** `patch`
+
+- test(REI-163): isolate expiry and access assertions
+
 ## V. 1.88.0055
 
 **Data:** 2026-11-27 20:10:41 | **Commit:** `83976ae2` | **Tipo:** `patch`
@@ -7865,5 +7871,6 @@
 
 
 \n
+
 
 

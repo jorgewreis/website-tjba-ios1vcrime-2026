@@ -223,13 +223,14 @@ return true;
 
         db = sqlite3.connect(db_path)
         db.execute("UPDATE processos SET sigiloso=0 WHERE id='process-1'")
-        db.execute("UPDATE sala_audiencias_ata SET expires_at=? WHERE pauta='hearing-valid'", ((datetime.now() - timedelta(seconds=1)).strftime("%Y-%m-%d %H:%M:%S"),))
+        db.execute("UPDATE sala_audiencias_ata SET expires_at='2000-01-01 00:00:00' WHERE pauta='hearing-valid'")
         db.commit()
         db.close()
         status, body, _ = request("/api/sala-audiencias-ata/download.php?pauta=hearing-valid")
         assert status == 400 and b"synthetic-pdf-content" not in body, ("ata expired after enrollment", status, body)
 
         db = sqlite3.connect(db_path)
+        db.execute("UPDATE sala_audiencias_ata SET expires_at='2099-01-01 00:00:00' WHERE pauta='hearing-valid'")
         db.execute("DELETE FROM sala_audiencias_estudante_inscricao WHERE pauta='hearing-valid'")
         db.commit()
         db.close()
