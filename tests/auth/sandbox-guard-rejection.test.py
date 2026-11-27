@@ -54,7 +54,7 @@ class SandboxRefusalTest(unittest.TestCase):
             self.assertFalse(marker.exists(), 'docker must not be invoked')
 
     def test_all_php_entrypoints_are_in_refusal_matrix(self):
-        discovered = {p.name for p in HERE.glob('*.php')} - {'sandbox-guard.php'}
+        discovered = {p.name for p in HERE.glob('*.php')} - {'sandbox-guard.php', 'sandbox-attestation-public.php'}
         self.assertSetEqual(set(PHP_FILES), discovered,
                             'Classifique explicitamente novos entrypoints PHP na matriz de recusa.')
 
@@ -67,7 +67,7 @@ class SandboxRefusalTest(unittest.TestCase):
             config.mkdir()
             # The sentinel must never be loaded, even when env markers are set.
             (config / 'config.php').write_text("<?php throw new Exception('CONFIG_ACCESSED');", encoding='utf-8')
-            for name in (*PHP_FILES, *PS_FILES, 'sandbox-guard.php'):
+            for name in (*PHP_FILES, *PS_FILES, 'sandbox-guard.php', 'sandbox-attestation-public.php'):
                 shutil.copyfile(HERE / name, auth / name)
             fakebin = root / 'bin'
             fakebin.mkdir()

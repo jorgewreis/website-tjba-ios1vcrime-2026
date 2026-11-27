@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0057
+
+**Data:** 2026-11-27 20:32:29 | **Commit:** `b0fdec7c` | **Tipo:** `patch`
+
+- fix(REI-93): attest disposable auth sandbox
+
 ## V. 1.88.0056
 
 **Data:** 2026-11-27 20:14:43 | **Commit:** `6a073a2b` | **Tipo:** `patch`
@@ -7871,6 +7877,7 @@
 
 
 \n
+
 
 
 

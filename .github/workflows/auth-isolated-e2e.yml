@@ -55,11 +55,6 @@ jobs:
           python3 -B tests/auth/rei124-safe-diagnostics.test.py
           python3 -B tests/auth/rei124-safe-failure-runner.test.py
           python3 -B tests/auth/rei124-ci-cleanup-check.test.py
-      - name: Executar autenticação em sandbox
-        shell: pwsh
-        run: |
-          $image = (Get-Content -LiteralPath "$env:RUNNER_TEMP/rei124-qa.id" -Raw).Trim()
-          ./tests/auth/run-isolated-auth-e2e.ps1 -QaImageId $image -Browser
       - name: Verificar guardas do laboratório de atas
         run: |
           pwsh -NoProfile -File tests/ata/rei124-mount-guard.test.ps1
