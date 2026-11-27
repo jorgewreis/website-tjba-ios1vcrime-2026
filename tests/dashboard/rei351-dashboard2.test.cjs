@@ -59,7 +59,7 @@ async function executeDashboard(payload, responseOk = true) {
   assert.equal(data.get('d2-letters').textContent, '8');
   assert.equal(data.get('d2-offices').textContent, '6');
   assert.equal(data.get('d2-queues').textContent, '8');
-  assert.equal(data.get('d2-agenda').textContent, '0');
+  assert.equal(data.get('d2-agenda').textContent, 'Indisponível');
   assert.equal(data.get('d2-lotacao').children[0].children[1].textContent, '0');
 
   const unavailable = await executeDashboard({

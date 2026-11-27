@@ -42,7 +42,7 @@ Fontes examinadas: `public/frame.php`, `app/access/AccessEvaluator.php`, `app/ac
 | Radar | Alguns prazos de cartas expedidas/recebidas; não há lista unificada | Indisponível | Cobertura, calendários, regras e limites das faixas requerem auditoria por módulo |
 | Qualidade | Não existe trilha completa de reabertura/reemissão/checklist | Indisponível | Sem denominadores ou histórico confiável |
 | Prontidão | Pauta pode contar audiências ativas em janela; partes dão informações de expediente/cumprimento; link pode existir na pauta | Bloco geral indisponível | AudIn, semântica de parte/expediente/audiência e disponibilidade de link exigem confirmação |
-| Agenda | `sala_audiencias_pauta`, audiência ativa em janela de sete dias no resumo | Exibir apenas contagem quando não nula | Não equivale a compromissos/prazos unificados nem à lista completa da semana |
+| Agenda | `sala_audiencias_pauta`, resumo legado inclui D0..D+7 via `CURDATE()` | Indisponível até implementar e conciliar D0..D+6 em `America/Bahia` | Limite atual conta uma data além da faixa visual e não prova fuso nem lista autorizada correspondente |
 | Próxima ação | Não há filtro unificado comprovado para tarefas executáveis atribuídas ao usuário | Indisponível | Ordenação e conciliação com links necessitam contrato por módulo |
 | Evolução de produtividade | Série semanal global parcial e conclusões individuais parciais | Indisponível no novo painel | Não usar comparação entre pares: sem coorte elegível, cobertura nem limiar de privacidade |
 | Alertas críticos | Alertas atuais limitam-se a cartas e prazos correlatos | Reutilizar lista apenas como alertas cobertos pelo resumo, sem chamá-la de cobertura global | Não inclui todas as filas/prazos; idade de fila e vencimento devem permanecer distintos |
@@ -60,4 +60,4 @@ Fontes examinadas: `public/frame.php`, `app/access/AccessEvaluator.php`, `app/ac
 - A issue REI-351 tem descrição inicial de protótipo que diverge do escopo aprovado em seu corpo em 27/11/2026; prevalece o texto aprovado mais recente e a sequência indicada pelo usuário.
 - Notion pesquisado nesta sessão; conector respondeu HTTP 401, portanto decisões do Notion não puderam ser recuperadas.
 - A trilha de `dashboard_conclusoes` declara explicitamente que não há carga retroativa (`scripts/migrate-dashboard-conclusoes.php`). Não projetar séries completas a partir dela.
-- A tabela de agenda atual não demonstra escopo por Vara nem deduplicação de prazos/compromissos; manter uso restrito à contagem existente.
+- A tabela de agenda atual não demonstra escopo por Vara nem deduplicação de prazos/compromissos. A contagem legada inclui D+7 e usa `CURDATE()`; Dashboard 2 força `null` até existir intervalo D0..D+6 em `America/Bahia` conciliado com o detalhe. O dashboard atual permanece inalterado.

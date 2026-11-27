@@ -16,7 +16,7 @@ $synthetic = [
         'filas' => [['key' => 'cartas_expedidas', 'type' => 'aguardando_envio', 'label' => 'Carta aguardando envio', 'count' => 0, 'route' => 'cartasexpedidas']],
         'responsaveis_regras' => [], 'responsaveis_proprios' => [], 'prazos_vencidos' => ['expedidas' => 0, 'recebidas' => 0], 'prazos_vencidos_dias' => ['expedidas' => null, 'recebidas' => null], 'cadastros_mensais' => ['labels' => [], 'values' => []]],
     'usuario' => ['7d' => 0, '30d' => 0, 'weekly' => array_fill(0, 7, 0), 'weekly_by_module' => [], 'modules' => [], 'oficios_expedidos_30d' => 0, 'medidas_protetivas_expedidas_30d' => null],
-    'agenda' => ['audiencias_7d' => 0, 'dias_nao_uteis_30d' => null], 'alertas' => [], 'atualizado_em' => '2026-11-27T00:00:00-03:00', 'fila_parcial' => false,
+    'agenda' => ['audiencias_7d' => null, 'dias_nao_uteis_30d' => null], 'alertas' => [], 'atualizado_em' => '2026-11-27T00:00:00-03:00', 'fila_parcial' => false,
     'prazos_proximos_7d' => 0, 'cartas_recebidas_aguardando_devolucao' => 0,
 ];
 

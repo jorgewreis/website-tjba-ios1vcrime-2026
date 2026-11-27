@@ -72,8 +72,8 @@
 
       setText('d2-queues', data.geral?.tarefas_abertas === null || data.geral?.tarefas_abertas === undefined
         ? null : format(data.geral.tarefas_abertas));
-      setText('d2-agenda', data.agenda?.audiencias_7d === null || data.agenda?.audiencias_7d === undefined
-        ? null : format(data.agenda.audiencias_7d));
+      // Defesa adicional: o contrato legado cobre D0..D+7, não o recorte D0..D+6.
+      setText('d2-agenda', null);
       renderQueues(data);
       renderAlerts(data.alertas);
     } catch (cause) {

@@ -11,6 +11,7 @@ require_once dirname(__DIR__, 3) . '/app/helpers/UserAccessHelper.php';
 require_once dirname(__DIR__, 3) . '/app/models/Usuario.php';
 require_once dirname(__DIR__, 3) . '/app/helpers/UsuarioPerfisAutorizacao.php';
 require_once dirname(__DIR__, 3) . '/app/services/DashboardResumoService.php';
+require_once dirname(__DIR__, 3) . '/app/helpers/Dashboard2Payload.php';
 require_once dirname(__DIR__, 3) . '/app/access/AccessEvaluator.php';
 
 header('Content-Type: application/json; charset=UTF-8');
@@ -45,7 +46,7 @@ try {
     $selected = isset($_GET['setor']) ? strtoupper(trim((string) $_GET['setor'])) : null;
     $result = (new DashboardResumoService(Conection::getInstance()->getConnection()))
         ->resumo($userId, $areas, $selected);
-    echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+    echo json_encode(Dashboard2Payload::fromResumo($result), JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 } catch (InvalidArgumentException $e) {
     http_response_code(403);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
