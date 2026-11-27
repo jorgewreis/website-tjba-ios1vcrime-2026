@@ -495,15 +495,18 @@ try {
 } catch (PDOException $error) {
     if ((string) $error->getCode() !== '45000') throw $error;
 }
-if ($pdo->inTransaction() || $peer->query("SELECT classe_id FROM processos WHERE id='CLASS-CASE'")->fetchColumn() !== 'C'
+if ($pdo->inTransaction() || $peer->query("SELECT classe_id,classe_origem FROM processos WHERE id='CLASS-CASE'")->fetch(PDO::FETCH_ASSOC)
+        !== ['classe_id' => 'C', 'classe_origem' => null]
     || (int) $peer->query("SELECT COUNT(*) FROM processo_prioridades WHERE processo_id='CLASS-CASE'")->fetchColumn() !== 1) {
     throw new RuntimeException('Rollback da troca de classe não ocorreu.');
 }
 $pdo->exec('DROP TRIGGER fixture_priority_fail');
 $pdo->exec("UPDATE processos SET classe_id='C1268' WHERE id='CLASS-CASE'");
-foreach ([1,2] as $_) {
-    if ($svcClasse->syncFromDataJud('00000016920208050001','1268','Medida sintética',true)['action'] !== 'noop') {
-        throw new RuntimeException('Reparação de prioridade alterou indevidamente a classe existente.');
+foreach (['updated', 'noop'] as $expectedAction) {
+    if ($svcClasse->syncFromDataJud('00000016920208050001','1268','Medida sintética',true)['action'] !== $expectedAction
+        || $peer->query("SELECT classe_id,classe_origem FROM processos WHERE id='CLASS-CASE'")->fetch(PDO::FETCH_ASSOC)
+            !== ['classe_id' => 'C1268', 'classe_origem' => 'datajud']) {
+        throw new RuntimeException('Reparação de prioridade alterou indevidamente a classe ou sua origem.');
     }
 }
 $priorities = $peer->query("SELECT codigo,origem FROM processo_prioridades WHERE processo_id='CLASS-CASE' ORDER BY codigo")->fetchAll(PDO::FETCH_KEY_PAIR);
