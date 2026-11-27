@@ -51,9 +51,6 @@ final class ProcessoSigiloCadastroService
         if (!$publico && $nivel === null) {
             throw new ProcessoSigiloCadastroErro(400, 'Selecione explicitamente Público ou um nível de 1 a 5.');
         }
-        if ($publico && $confirmacao !== true) {
-            throw new ProcessoSigiloCadastroErro(400, 'Confirme que conferiu no PJe antes de marcar o processo como público.');
-        }
         if ($this->db->inTransaction() || !$this->db->beginTransaction()) {
             throw new RuntimeException('Não foi possível iniciar a transação de sigilo.');
         }
@@ -67,6 +64,10 @@ final class ProcessoSigiloCadastroService
             }
             $this->validarAuditoria();
             $antes = $this->estado($id);
+            $retirandoSigilo = $publico && $antes['sigiloso'];
+            if ($retirandoSigilo && $confirmacao !== true) {
+                throw new ProcessoSigiloCadastroErro(400, 'Confirme que conferiu no PJe antes de marcar o processo como público.');
+            }
             $alerta = $this->haProtecao($id, true);
             $depois = ['sigiloso' => !$publico, 'nivel_sigilo' => $nivel];
             $reduz = $publico || ($antes['sigiloso'] && $antes['nivel_sigilo'] !== null && $nivel < $antes['nivel_sigilo']);
@@ -81,7 +82,7 @@ final class ProcessoSigiloCadastroService
                 $write->bindValue(':id', $id);
                 if (!$write->execute() || $write->rowCount() !== 1) throw new RuntimeException('Sigilo não confirmado.');
                 $auditoriaNova = $depois;
-                if ($publico) $auditoriaNova['conferencia_pje_declarada'] = true;
+                if ($retirandoSigilo) $auditoriaNova['conferencia_pje_declarada'] = true;
                 $this->auditar($id, $ator, $ip, $antes, $auditoriaNova);
             }
             if (!$this->db->commit()) throw new RuntimeException('Sigilo não confirmado.');

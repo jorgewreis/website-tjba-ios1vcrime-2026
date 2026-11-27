@@ -197,6 +197,8 @@ function render(url, perfil) {
             assert.equal(await pg.getByRole('heading',{name:'Dados do processo',exact:true}).count(),1);
             assert.equal(await pg.locator('#processo-vara-local').inputValue(),'Vara local fictícia');
             assert.equal(await pg.locator('#processo-nivel-sigilo').inputValue(),'publico');
+            assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');
+            assert.equal(await pg.getByText(/O nível é informativo|Só é possível informar o nível|Registre a situação conferida no PJe/).count(),0);
             assert.equal(await pg.getByRole('button',{name:'Salvar classificação'}).isDisabled(),true);
             assert.equal(await pg.locator('#processo-sigilo-confirmacao').isVisible(),false);
             assert.equal(await pg.getByText('DataJud',{exact:true}).count(),0,'o assunto sincronizado não carrega selo');

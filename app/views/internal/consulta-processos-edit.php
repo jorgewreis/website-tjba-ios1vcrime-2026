@@ -214,19 +214,20 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <p class="ficha-secundario ficha-edicao-campo">Registro local da Vara indisponível até a atualização do banco.</p>
             <?php endif; ?>
         </section>
+        <?php if ($sigilosoFicha || $podeRegistrarNivel): ?>
         <section class="ficha-secao ficha-editor-summary" aria-labelledby="processo-sigilo-titulo">
             <h2 id="processo-sigilo-titulo">Classificação de sigilo</h2>
             <?php if ($podeRegistrarNivel): ?>
-                <p id="processo-sigilo-orientacao">Registre a situação conferida no PJe. A alteração vale neste sistema e não altera o PJe.</p>
                 <?php if ($protecaoNivel): ?>
                     <p class="ficha-secundario" role="status">Há uma proteção independente. A ficha não permite retirar ou reduzir o sigilo.</p>
                 <?php endif; ?>
                 <?php $nivelInicialFicha = $sigilosoFicha ? (string) ($nivelConfirmado ?? '') : 'publico'; ?>
                 <form id="processo-nivel-sigilo-form" class="display-flex col col-full gap-y-md"
-                      data-process-id="<?= $eFicha($processoIdFicha) ?>" data-inicial="<?= $eFicha($nivelInicialFicha) ?>">
+                      data-process-id="<?= $eFicha($processoIdFicha) ?>" data-inicial="<?= $eFicha($nivelInicialFicha) ?>"
+                      data-sigiloso="<?= $sigilosoFicha ? '1' : '0' ?>">
                     <div class="col">
-                        <label for="processo-nivel-sigilo">Classificação conferida no PJe</label>
-                        <select required id="processo-nivel-sigilo" class="height-md" aria-describedby="processo-sigilo-orientacao">
+                        <label for="processo-nivel-sigilo">Classificação</label>
+                        <select required id="processo-nivel-sigilo" class="height-md">
                             <option value="" disabled <?= $nivelInicialFicha === '' ? 'selected' : '' ?>>Selecione a classificação</option>
                             <option value="publico" <?= $nivelInicialFicha === 'publico' ? 'selected' : '' ?> <?= $protecaoNivel ? 'disabled' : '' ?>>Público</option>
                             <?php foreach (ProcessoNivelSigilo::ROTULOS as $nivel => $rotulo): ?>
@@ -246,6 +247,7 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <p class="ficha-secundario" role="status"><?= $eFicha($bloqueioNivel) ?></p>
             <?php endif; ?>
         </section>
+        <?php endif; ?>
         <?php if ($podeAtribuirSetorResponsavel): ?>
         <section class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" aria-labelledby="responsible-sector-title">
             <div>

@@ -10,7 +10,7 @@
     let salvando = false;
     function atualizar() {
         const alterado = form.dataset.inicial !== select.value;
-        const tornandoPublico = alterado && select.value === 'publico';
+        const tornandoPublico = alterado && form.dataset.sigiloso === '1' && select.value === 'publico';
         aviso.hidden = !tornandoPublico;
         confirmei.required = tornandoPublico;
         if (!tornandoPublico) confirmei.checked = false;

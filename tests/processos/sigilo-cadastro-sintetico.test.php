@@ -91,6 +91,6 @@ $verificar($log['usuario'] === 'INTERNO' && $log['acao'] === 'sigilo-cadastral'
     && json_decode($log['dados_anteriores'], true) === ['sigiloso'=>true,'nivel_sigilo'=>4]
     && json_decode($log['dados_novos'], true) === ['sigiloso'=>false,'nivel_sigilo'=>null,'conferencia_pje_declarada'=>true],
     'Auditoria não contém autoria, valores e confirmação.');
-$verificar($salvar('publico',true)['alterado'] === false && (int) $db->query('SELECT COUNT(*) FROM logs_sistema')->fetchColumn() === 1, 'Repetição criou log duplicado.');
+$verificar($salvar('publico')['alterado'] === false && (int) $db->query('SELECT COUNT(*) FROM logs_sistema')->fetchColumn() === 1, 'Repetição criou log duplicado.');
 $verificar($salvar('3')['alterado'] && $estado() === [1,3], 'Nível não ativou flag sigiloso.');
 echo "PASS: sigilo cadastral sintético, setor/perfis, proteções, confirmação e rollback auditado.\n";
