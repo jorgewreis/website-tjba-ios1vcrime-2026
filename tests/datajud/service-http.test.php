@@ -144,7 +144,7 @@ $sync = $service->searchProcesso($number, true);
 if ($captured['_source'] !== ['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos']
     || $sync['resultado_unico_verificado'] !== true || $sync['assuntos_estado'] !== 'vazio'
     || (int) ($sync['classe']['codigo'] ?? 0) !== 42) throw new LogicException('Projeção de sincronização perdeu informação necessária.');
-foreach ([[429, $empty, 'throttled'], [503, $empty, 'unavailable'], [401, $empty, 'authorization'],
+foreach ([[429, $empty, 'throttled'], [503, $empty, 'unavailable'], [504, null, 'unavailable'], [401, $empty, 'authorization'],
     [200, array_replace($empty, ['_shards'=>['failed'=>1]]), 'incomplete']] as [$status, $body, $expected]) {
     $calls = 0;
     try {
