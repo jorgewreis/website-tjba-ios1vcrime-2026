@@ -24,6 +24,13 @@ try {
     } catch (RuntimeException $e) {
         if (!str_contains($e->getMessage(),'não terminou íntegra') || count(scandir($dir)) !== 3) throw $e;
     }
+    file_put_contents($dump, "#!/bin/sh\nprintf '%s' 'Access denied for user SECRET_REDACT_TEST' >&2\nexit 2\n");
+    try {
+        dumpVaraDatabase($dump, $home, 'localhost', 3306, 'isolated', 'fixture', 'fake');
+        throw new LogicException('Erro de conexão foi aceito.');
+    } catch (VaraBackupFailure $e) {
+        if ($e->reason !== 'DUMP_CONNECTION' || str_contains($e->getMessage(), 'SECRET_REDACT_TEST') || count(scandir($dir)) !== 3) throw $e;
+    }
     echo "PASS: arquivo privado, checksum e recusa/limpeza de dump incompleto.\n";
 } finally {
     if (is_dir($dir)) {
