@@ -297,16 +297,16 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             <?php endif; ?>
         </div>
         <p class="padding-x-md" id="proc-datajud-sync-status" role="status" aria-live="polite"><?php if (!empty($processo['sigiloso'])): ?>Sincronização indisponível para processos sigilosos.<?php endif; ?></p>
-        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md">
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="processo-classe-wrap">
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
-                    <label for="proc-classe-atual">Classe atual</label>
-                    <input type="text" class="width-700 height-md" id="proc-classe-atual" value="<?php echo htmlspecialchars($classeNomeAtual !== '' ? $classeNomeAtual : 'Classe não cadastrada', ENT_QUOTES); ?>" readonly>
+                    <span class="ficha-secundario">Classe atual</span>
+                    <p id="proc-classe-atual" class="ficha-catalogo-texto"><?= $eFicha($classeNomeAtual !== '' ? $classeNomeAtual : 'Classe não cadastrada') ?></p>
                 </div>
                 <?php if (!$classeProtegidaFicha): ?>
                 <div class="col">
                     <label for="proc-classe-codigo"><?php echo $classeNomeAtual !== '' ? 'Alterar classe processual' : 'Incluir classe processual'; ?></label>
-                    <input type="text" class="width-300 height-md" id="proc-classe-codigo" inputmode="numeric" placeholder="Ex.: 283" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
+                    <input type="text" class="width-300 height-md" id="proc-classe-codigo" inputmode="numeric" pattern="[0-9]{1,20}" placeholder="Ex.: 283" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
                 </div>
                 <?php endif; ?>
             </div>
@@ -317,8 +317,8 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             <?php else: ?>
             <div class="display-flex row row-full flex-wrap align-end gap-y-md">
                 <div class="col">
-                    <label for="proc-classe-nome-existente">Nome da classe no catálogo</label>
-                    <input type="text" class="width-700 height-md" id="proc-classe-nome-existente" readonly>
+                    <span class="ficha-secundario">Nome da classe no catálogo</span>
+                    <p id="proc-classe-nome-existente" class="ficha-catalogo-texto" aria-live="polite">Informe o código para consultar.</p>
                 </div>
                 <button type="button" class="btn btn-primary height-md" id="btn-proc-classe-vincular" disabled>Salvar classe</button>
             </div>
@@ -333,11 +333,11 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="processo-assunto-codigo">Código do assunto</label>
-                    <input type="text" id="processo-assunto-codigo" inputmode="numeric" class="height-md" placeholder="Ex.: 10247" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
+                    <input type="text" id="processo-assunto-codigo" inputmode="numeric" pattern="[0-9]{1,20}" class="height-md" placeholder="Ex.: 10247" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
                 </div>
-                <div class="col width-700">
-                    <label for="processo-assunto-descricao">Descrição do assunto</label>
-                    <input type="text" id="processo-assunto-descricao" class="width-700 height-md" placeholder="Preenchida automaticamente se o código existir no catálogo" readonly>
+                <div class="col">
+                    <span class="ficha-secundario">Descrição do assunto no catálogo</span>
+                    <p id="processo-assunto-descricao" class="ficha-catalogo-texto" aria-live="polite">Informe o código para consultar.</p>
                 </div>
                 <button type="button" class="btn btn-primary height-md" id="btn-processo-assunto-vincular" disabled>Incluir</button>
             </div>
