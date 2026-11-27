@@ -26,8 +26,9 @@ $description = (string) ($description ?? '');
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <?php include __DIR__ . '/_internal_head_styles.php'; ?>
         <?php include __DIR__ . '/_toast_script.php'; ?>
+        <?php if (!empty($cartasRulesEmbed)): ?><link rel="stylesheet" href="/assets/css/modules/cartorio/cartas-expedidas-piloto.css"><?php endif; ?>
     </head>
-<body class="page-internal<?php echo !empty($usarFormularioOperacional) ? ' page-operational-form' : ''; ?>">
+<body class="page-internal<?php echo !empty($usarFormularioOperacional) ? ' page-operational-form' : ''; ?><?= !empty($cartasRulesEmbed)?' ce-form-embed':'' ?>">
 
     <div class="spacing-top-page"></div>
 

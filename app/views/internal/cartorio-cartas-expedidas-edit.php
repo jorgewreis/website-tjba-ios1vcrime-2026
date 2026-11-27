@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+$ceEmbed = ($_GET['piloto'] ?? null) === '1';
+$cePilotoCss = '/assets/css/modules/cartorio/cartas-expedidas-piloto.css';
+$cePilotoJs = '/assets/js/modules/cartorio/cartas-expedidas/piloto-form.js';
+$ceReturn = $ceEmbed ? '/frame.php?page=cartasexpedidasnova&piloto_ok=1' : '/frame.php?page=cartasexpedidas';
+
 require_once __DIR__ . '/../../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/TribunaisRepository.php';
 require_once __DIR__ . '/../../helpers/CartorioTimelineHelper.php';
@@ -112,8 +117,8 @@ $statusOptions = [
     'cancelada' => 'Cancelada',
 ];
 
-/** Perfis que podem excluir a tarefa e subtarefas (tabela usuario_perfil). */
-$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA', 'DIRETORA', 'MAGISTRADA'];
+/** Exclusão de Cartas Expedidas: somente Admin ou Chefia, também validado pela API. */
+$perfisPermitidosExcluir = ['ADMIN', 'CHEFIA'];
 $userPerfisEdit = [];
 $userIdEdit = $_SESSION['id_usuario'] ?? null;
 if ($userIdEdit !== null && trim((string) $userIdEdit) !== '') {
@@ -164,6 +169,11 @@ $stateOptions = [
     'SE' => 'Sergipe',
     'TO' => 'Tocantins',
 ];
+if ($ceEmbed) {
+    require_once __DIR__ . '/../../helpers/CartasExpedidasPrioridade.php';
+    $prioridadeEditavel = $carta !== null && array_key_exists('prioridade_tarefa',$carta);
+    $prioridadeInicial = (string)($carta['prioridade_tarefa'] ?? '');
+}
 ?>
 <!DOCTYPE html>
 <html>
@@ -178,8 +188,9 @@ $stateOptions = [
 
         <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
         <?php include __DIR__ . '/_toast_script.php'; ?>
-    </head>
-<body class="page-internal page-operational-form">
+    <?php if ($ceEmbed): ?><link rel="stylesheet" href="<?= $cePilotoCss ?>?v=<?= (int) @filemtime(dirname(__DIR__,3).'/public'.$cePilotoCss) ?>"><?php endif; ?>
+</head>
+<body class="page-internal page-operational-form<?= $ceEmbed?' ce-form-embed':'' ?>">
 
     <div class="spacing-top-page"></div>
 
@@ -254,6 +265,7 @@ $stateOptions = [
                 </div>
             </div>
 
+<?php if ($ceEmbed) require __DIR__ . '/partials/cartas-expedidas-piloto-prioridade.php'; ?>
             <!-- Timeline de subtarefas -->
             <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
 
@@ -264,10 +276,10 @@ $stateOptions = [
         <div class="card-buttons">
             <div class="display-flex row row-fit gap-y-md align-center justify-start">
                 <button class="btn btn-primary-outline btn-cartas-voltar" id="voltar-btn" type="button">Voltar</button>
-                <?php if ($errorMessage === '' && $podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
+                <?php if (!$ceEmbed && $errorMessage === '' && $podeCancelarTarefa && !$tarefaFinalizadaOuCancelada): ?>
                     <button class="btn btn-danger-outline" id="cancelar-tarefa-btn" type="button" title="Alterar status da tarefa para Cancelada (não exclui dados)">Cancelar tarefa</button>
                 <?php endif; ?>
-                <?php if ($errorMessage === '' && $podeExcluirTarefa): ?>
+                <?php if (!$ceEmbed && $errorMessage === '' && $podeExcluirTarefa): ?>
                     <button class="btn btn-danger" id="excluir-tarefa-btn" type="button" title="Excluir esta tarefa e todas as subtarefas">Excluir tarefa</button>
                 <?php endif; ?>
             </div>
@@ -309,8 +321,10 @@ $stateOptions = [
                 const prazoSelect = document.getElementById('filter-prazo');
                 const statusSelect = document.getElementById('filter-status');
                 const observacoesInput = document.getElementById('filter-observacoes');
+                const prioridadeInput = document.getElementById('ce-prioridade-tarefa');
                 const hiddenComarcaInput = document.getElementById('hidden-comarca-id');
                 const initialData = window.__initialCartaData || {};
+                const prioridadeOriginal = prioridadeInput?.value ?? '';
 
                 if (!salvarBtn || !finalidadeSelect || !prazoSelect || !cidadeInput || !estadoSelect) {
                     return;
@@ -361,6 +375,7 @@ $stateOptions = [
 
                 const hasChanges = () => {
                     const current = getCurrentState();
+                    if (prioridadeInput && prioridadeInput.value !== prioridadeOriginal) return true;
                     if (initialData.finalidade !== current.finalidade) return true;
                     if ((initialData.prazoDias || '0').toString() !== current.prazo) return true;
                     if (normalizeCidadeForCompare(initialData.cidade) !== normalizeCidadeForCompare(current.cidade)) return true;
@@ -375,6 +390,7 @@ $stateOptions = [
                 };
 
                 const formElements = [finalidadeSelect, prazoSelect, cidadeInput, estadoSelect];
+                if (prioridadeInput) formElements.push(prioridadeInput);
                 if (statusSelect) formElements.push(statusSelect);
                 if (observacoesInput) formElements.push(observacoesInput);
                 ['input', 'change'].forEach((eventName) => {
@@ -439,6 +455,7 @@ $stateOptions = [
                         uf_destino: payloadState.estado,
                         comarca_destino_id: hiddenComarcaInput.value.trim(),
                     };
+                    if (prioridadeInput?.value) payload.prioridade_tarefa = prioridadeInput.value;
                     if (statusSelect) payload.status = payloadState.status || '';
                     if (observacoesInput) payload.observacoes = payloadState.observacoes || '';
 
@@ -456,7 +473,7 @@ $stateOptions = [
                         if (!response.ok || !data.success) {
                             throw new Error(data.error || 'Falha ao atualizar a carta expedida.');
                         }
-                        window.location.href = '/frame.php?page=cartasexpedidas';
+                        window.location.href = <?= json_encode($ceReturn) ?>;
                     } catch (error) {
                         showFeedback(error.message || 'Erro ao salvar.', 'error');
                         salvarBtn.disabled = false;
@@ -541,7 +558,7 @@ $stateOptions = [
                                 if (data.tarefa_toast) {
                                     queuePostReloadToast('success', 'Sucesso', data.tarefa_toast);
                                 }
-                                window.location.href = '/frame.php?page=cartasexpedidas';
+                                window.location.href = <?= json_encode($ceReturn) ?>;
                                 return;
                             }
                             if (typeof showToast === 'function') showToast({ type: 'error', variant: 'full', title: 'Erro', message: data.error || 'Erro ao excluir a tarefa.' });
@@ -568,5 +585,6 @@ $stateOptions = [
         })();
     </script>
 
+<?php if ($ceEmbed): ?><script src="<?= $cePilotoJs ?>?v=<?= (int) @filemtime(dirname(__DIR__,3).'/public'.$cePilotoJs) ?>" defer></script><?php endif; ?>
 </body>
 </html>

@@ -1,0 +1,61 @@
+<?php
+declare(strict_types=1);
+
+$prior = (string)($prioridadesPiloto[$idCarta] ?? '');
+$priorLabel = CartasExpedidasPrioridade::ROTULOS[$prior] ?? 'Sem prioridade definida';
+$priorIcon = CartasExpedidasPrioridade::ICONES[$prior] ?? '·';
+$numeroVisivel = $numero !== '' ? $numero : trim((string)($row['Processo'] ?? ''));
+$canCancel = !empty($_SESSION['id_usuario']) && !$isTerminal;
+$detailId = 'ce-detail-' . $idCarta;
+?>
+<div class="ce-grid ce-entry">
+  <div class="ce-process">
+    <?php if ($numeroVisivel !== ''): ?><button class="ce-cnj" type="button" data-ce-copy="<?= $e($numeroVisivel) ?>" title="Copiar número do processo" aria-label="<?= $e('Copiar número '.$numeroVisivel) ?>"><?= $e($numeroVisivel) ?></button><?php else: ?>—<?php endif; ?>
+    <?php if ($sigiloso): ?><span class="ce-tag">Sigiloso</span><?php endif; ?>
+    <?php if ($temPrioridadeVisual): ?><span class="ce-tag" title="<?= $e(implode(', ',$prioridadesTexto)) ?>">Prioridade do processo</span><?php endif; ?>
+    <?php if ($groupKey==='conferir'): ?><span class="ce-tag">Etapa a conferir</span><?php endif; ?>
+  </div>
+  <div class="ce-destino"><span class="ce-visually-hidden">Destino: </span><?= $e($destino ?: '—') ?></div>
+  <div class="ce-finalidade" title="<?= $e($finalidade) ?><span class="ce-visually-hidden">Finalidade: </span>"><?= $e($finalidade ?: '—') ?></div>
+  <div class="ce-prazo"><span class="ce-visually-hidden">Prazo total: </span><?= $e($prazo !== '' ? $prazo.' dias' : '—') ?><?php if ($prazoRestanteTexto !== ''): ?><small class="<?= $prazoRestanteAlerta?'danger':'' ?>"><?= $e($prazoRestanteTexto) ?></small><?php endif; ?></div>
+  <div class="ce-assignee"><span class="ce-visually-hidden">Responsável pelo envio: </span><?= $e($nomeResponsavelEnvio ?: '—') ?></div>
+  <span class="ce-priority p-<?= $e($prior) ?>" role="img" title="<?= $e($priorLabel) ?>" aria-label="<?= $e($priorLabel) ?>"><?= $e($priorIcon) ?></span>
+  <div class="ce-row-actions">
+    <?php if ($mostrarContinuar && $subtarefaAtivaId !== ''): ?><button type="button" class="ce-button small" data-ce-action="continuar" data-id="<?= $e($subtarefaAtivaId) ?>"><?= $isAguardandoCumprimento?'Juntar':'Enviar' ?></button><?php endif; ?>
+    <details class="ce-dropdown"><summary aria-label="<?= $e('Ações da carta '.$numeroVisivel) ?>">⋯</summary>
+    <div><button type="button" data-ce-details="<?= $e($detailId) ?>">Ver detalhes</button>
+    <?php if (!$abrirDisabled && $abrirHref !== ''): ?><a href="<?= $e($abrirHref) ?>">Abrir processo</a><?php endif; ?>
+    <?php if ($mostrarCopiaWhatsapp): ?><button type="button" data-ce-copy="<?= $e($whatsappTexto) ?>">Texto para WhatsApp</button><?php endif; ?></div></details>
+  </div>
+</div>
+<template id="<?= $e($detailId) ?>">
+ <div class="ce-detail">
+  <p class="ce-status"><span class="ce-tag"><?= $e($statusVisivelTexto) ?></span></p>
+  <p class="ce-detail-number"><?= $e($numeroVisivel) ?> <?php if ($sigiloso): ?><span class="ce-tag">Sigiloso</span><?php endif; ?></p>
+  <div class="ce-tabs" role="tablist" aria-label="Informações da carta">
+    <button type="button" id="ce-tab-resumo" role="tab" aria-controls="ce-resumo" aria-selected="true" data-ce-tab>Resumo</button>
+    <button type="button" id="ce-tab-historico" role="tab" aria-controls="ce-historico" aria-selected="false" tabindex="-1" data-ce-tab>Histórico (<?= count($historicoLinhas) ?>)</button>
+  </div>
+  <section class="ce-tab-body" id="ce-resumo" role="tabpanel" aria-labelledby="ce-tab-resumo">
+    <dl><dt>Destino</dt><dd><?= $e($destino ?: '—') ?></dd><dt>Finalidade</dt><dd><?= $e($finalidade ?: '—') ?></dd>
+      <dt>Prioridade da carta</dt><dd><span class="ce-priority p-<?= $e($prior) ?>" aria-hidden="true"><?= $e($priorIcon) ?></span> <?= $e($priorLabel) ?></dd>
+      <?php if ($nomeResponsavelEnvio !== ''): ?><dt>Responsável pelo envio</dt><dd><?= $e($nomeResponsavelEnvio) ?></dd><?php endif; ?>
+      <?php if ($classeTexto !== ''): ?><dt>Classe processual</dt><dd><?= $e($classeTexto) ?></dd><?php endif; ?>
+      <?php if ($assuntoTexto !== ''): ?><dt>Assuntos</dt><dd><?= $e($assuntoTexto) ?></dd><?php endif; ?>
+      <?php if ($temPrioridadeVisual): ?><dt>Prioridade do processo</dt><dd><?= $e(implode(', ',$prioridadesTexto)) ?></dd><?php endif; ?>
+    </dl>
+    <div class="ce-metrics"><div><small>Prazo total</small><strong><?= $e($prazo !== '' ? $prazo.' dias' : '—') ?></strong></div><div><small>Dias restantes</small><strong class="<?= $prazoRestanteAlerta?'danger':'' ?>"><?= $e($prazoRestanteTexto!==''?trim($prazoRestanteTexto,'()'):'—') ?></strong></div></div>
+  </section>
+  <section class="ce-tab-body" id="ce-historico" role="tabpanel" aria-labelledby="ce-tab-historico" hidden>
+    <?php if ($historicoLinhas === []): ?><p>Nenhuma movimentação registrada.</p><?php else: ?>
+    <ol class="ce-history"><?php foreach (array_reverse($historicoLinhas) as $linha): ?><li><strong><?= $e($linha['rotulo'] ?? $linha['etapa'] ?? $linha['titulo'] ?? 'Movimentação') ?></strong><br><?= $e($linha['data_hora'] ?? '') ?> <?= $e($linha['autor'] ?? '') ?></li><?php endforeach; ?></ol>
+    <?php endif; ?>
+  </section>
+  <footer class="ce-detail-actions">
+    <?php if ($showEdit): ?><a href="?page=cartasexpedidasedit&amp;id=<?= rawurlencode($idCarta) ?>&amp;piloto=1" class="ce-button" data-ce-frame data-title="Editar carta">Editar</a><?php endif; ?>
+    <?php if ($mostrarReiniciar && !$fluxoInconsistente): ?><button class="ce-button" type="button" data-ce-action="reiniciar" data-id="<?= $e($idCarta) ?>">Reiniciar envio</button><?php endif; ?>
+    <?php if ($canCancel): ?><button class="ce-button danger" type="button" data-ce-action="cancelar" data-id="<?= $e($idCarta) ?>">Cancelar carta</button><?php endif; ?>
+    <?php if ($canDelete): ?><button class="ce-button danger" type="button" data-ce-action="excluir" data-id="<?= $e($idCarta) ?>">Excluir carta</button><?php endif; ?>
+  </footer>
+ </div>
+</template>

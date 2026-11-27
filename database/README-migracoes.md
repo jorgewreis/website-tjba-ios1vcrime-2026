@@ -193,3 +193,22 @@ A permissão individual e a lotação ativa continuam necessárias.
 ## 11. Estado dos arquivos
 
 A lista rastreada e a observação do checkout local estão no [inventário REI-97](../docs/10-architecture/migracoes-inventario-rei97.md). Use `git ls-files database/migrations` no commit candidato para atualizar o inventário; presença no disco ou em outro checkout não demonstra versionamento nem aplicação.
+
+## Prioridade da carta expedida (REI-345)
+
+A rota piloto usa as mesmas cartas do fluxo atual. A migração aditiva
+`migrations/20261127_add_cartas_expedidas_prioridade.sql` deve ser executada pelo
+responsável pelo banco no MariaDB, inicialmente em homologação. Primeiro crie a
+coluna anulável para preservar os registros anteriores; depois configure o
+padrão *Médio* para os novos inserts. Os dois comandos admitem reaplicação; não
+rode atualização em massa. Confirme com `SHOW COLUMNS FROM cartas_expedidas LIKE
+'prioridade_tarefa';` o padrão e que a coluna aceita NULL.
+
+O deploy do código não dispara esta migração. Antes dela, a lista e as duas rotas
+continuam disponíveis; os formulários do piloto não oferecem o campo de
+prioridade. Para homologar todos os critérios, aplique a migração no ambiente de
+teste, crie cartas sintéticas pelos dois fluxos e confirme que uma carta
+preexistente permanece sem prioridade, uma carta nova sem escolha assume Médio
+e uma prioridade escolhida é preservada no cadastro e na edição. Para voltar ao
+fluxo original, use a entrada **Cartas Expedidas**; não apague a coluna nem a
+rota original durante a homologação.

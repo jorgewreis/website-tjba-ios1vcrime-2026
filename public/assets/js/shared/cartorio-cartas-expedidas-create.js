@@ -136,7 +136,8 @@
                 finalidade: helpers.getValue('filter-tipo'),
                 prazo: helpers.getValue('filter-prazo'),
                 estado: helpers.getValue('filter-estado'),
-                cidade: helpers.getValue('filter-cidade')
+                cidade: helpers.getValue('filter-cidade'),
+                prioridade: global.document.getElementById('ce-prioridade-tarefa')?.value || ''
             });
         }
 
@@ -239,6 +240,8 @@
                 usuario: usuarioAtual
             }, helpers.buildClassePayload({ classeValue: classeVal }));
             payload.confirmacao_ccm = confirmacaoCcm;
+            const prioridade = global.document.getElementById('ce-prioridade-tarefa');
+            if (prioridade) payload.prioridade_tarefa = prioridade.value;
 
             const requestSignature = JSON.stringify(payload);
             if (requestSignature !== pendingRequestSignature) {

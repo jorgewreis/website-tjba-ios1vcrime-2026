@@ -24,12 +24,13 @@ $connection = Conection::getInstance()->getConnection();
 
 $userId = $_SESSION['id_usuario'] ?? null;
 $podeExcluir = DeleteAuthorization::usuarioPodeExcluir(
-    $userId !== null ? trim((string) $userId) : null
+    $userId !== null ? trim((string) $userId) : null,
+    DeleteAuthorization::perfisAdminOuChefia()
 );
 
 if (!$podeExcluir) {
     http_response_code(403);
-    echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas admin, chefia, diretora ou magistrada.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['error' => 'Seu perfil não tem permissão para excluir. Apenas Admin ou Chefia.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

@@ -59,6 +59,7 @@ $allowed_pages = [
     'reuspresoscreate'      => $PAGES . '/gabinete-reus-presos-create.php',
     'reuspresosedit'        => $PAGES . '/gabinete-reus-presos-edit.php',
     'cartasexpedidas'       => $PAGES . '/cartorio-cartas-expedidas-list.php',
+    'cartasexpedidasnova'   => $PAGES . '/cartorio-cartas-expedidas-nova.php',
     'cartasexpedidasrules'  => $PAGES . '/cartorio-cartas-expedidas-rules.php',
     'cartasexpedidasedit'   => $PAGES . '/cartorio-cartas-expedidas-edit.php',
     'cartasexpedidascreate' => $PAGES . '/cartorio-cartas-expedidas-create.php',
