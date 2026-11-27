@@ -33,6 +33,14 @@
     dirty = success = false;
     close.focus();
   }
+  function finishCreate() {
+    success = true;
+    dirty = false;
+    exit();
+    const address = new URL(location.href);
+    address.searchParams.set('piloto_ok', 'cadastro');
+    location.replace(address);
+  }
   function showFrame(link) {
     const iframe = document.createElement('iframe');
     iframe.title = link.dataset.title;
@@ -42,9 +50,9 @@
       let url;
       try { url = new URL(iframe.contentWindow.location.href); } catch (_) { return; }
       if (url.searchParams.get('page') === 'cartasexpedidasnova' && url.searchParams.get('piloto_ok') === '1') {
-        success = true;
-        dirty = false;
-        window.location.reload();
+        // Fallback for the older form assets while an updated deploy propagates.
+        if (new URL(iframe.src).searchParams.get('page') === 'cartasexpedidascreate') finishCreate();
+        else { success = true; dirty = false; window.location.reload(); }
         return;
       }
       const formDoc = iframe.contentDocument;
@@ -131,6 +139,7 @@
   window.addEventListener('message', event => {
     if (!frame || event.origin !== location.origin || event.source !== frame.contentWindow) return;
     if (event.data?.type === 'ce-piloto-close') exit();
+    if (event.data?.type === 'ce-piloto-created' && new URL(frame.src).searchParams.get('page') === 'cartasexpedidascreate') finishCreate();
     if (event.data?.type === 'ce-piloto-saved') { success = true; dirty = false; notify('Alterações salvas.'); window.location.reload(); }
   });
   const collapsedForPrint = new Set();
@@ -143,7 +152,7 @@
   });
   const url = new URL(location.href);
   if (url.searchParams.has('piloto_ok')) {
-    notify('Operação concluída.');
+    notify(url.searchParams.get('piloto_ok') === 'cadastro' ? 'Carta cadastrada.' : 'Operação concluída.');
     url.searchParams.delete('piloto_ok');
     history.replaceState(null,'',url);
   }
