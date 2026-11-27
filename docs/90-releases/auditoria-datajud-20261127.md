@@ -36,6 +36,8 @@ O teste visual Playwright da ficha passou em Edge, nas larguras de 1440, 390 e 3
 
 Um caso integrado no teste de serviço usa transporte sintético e passa pelo mapper e pelo filtro real da ficha: classe, assunto, grau e vara chegam para um documento público completo; a variante restrita não os expõe. Essa fixture não simula uma resposta coletada do CNJ nem a operação HTTP autenticada.
 
+Uma fixture HTTP local adicional executa o handler e o filtro reais com autenticação, repositório e DataJud simulados. Ela verifica os quatro campos, recusa inicial de sigilo, rechecagem após mudança de número/exclusão/sigilo e respostas de erro incompleta e ambígua. Não comprova login, banco real, concorrência ou a rede do CNJ.
+
 ## Pendente
 
 1. Após recuperação da origem e respeitando a limitação, consultar os três casos e conferir identidade, completude, classe, assuntos, grau e órgão retornados; registrar a origem de comarca sem inferir lotação atual.
