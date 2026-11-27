@@ -18,34 +18,25 @@
     </header>
     <div class="ficha-grid">
         <div class="ficha-editor">
-            <section class="ficha-secao" aria-labelledby="ficha-origem-titulo">
-                <h2 id="ficha-origem-titulo">Origem pelo número CNJ</h2>
+            <section class="ficha-secao" aria-labelledby="ficha-dados-titulo">
+                <h2 id="ficha-dados-titulo">Dados do processo</h2>
                 <dl class="ficha-campos">
                     <dt>Segmento</dt><dd><?= $eFicha($origemFicha['segmento'] ?? 'Não informado') ?></dd>
                     <dt>Tribunal</dt><dd><?= $eFicha($origemFicha['tribunal'] ?? 'Não informado') ?></dd>
-                    <dt>Comarca de origem</dt><dd><?= $eFicha($origemFicha['comarca'] ?? 'Não identificada') ?></dd>
-                    <dt>Unidade de origem</dt><dd><?= $eFicha($origemFicha['unidade'] ?? 'Não informada') ?></dd>
-                    <dt>Ano</dt><dd><?= $eFicha($origemFicha['ano'] ?? 'Não informado') ?></dd>
-                </dl>
-            </section>
-            <section class="ficha-secao" aria-labelledby="ficha-datajud-titulo">
-                <h2 id="ficha-datajud-titulo">Dados do DataJud</h2>
-                <dl class="ficha-campos">
-                    <dt>Vara</dt><dd data-ficha-vara>Não informada</dd>
-                    <dt>Classe</dt><dd data-ficha-classe>Não informada</dd>
-                    <dt>Assuntos</dt><dd data-ficha-assuntos>Não informados</dd>
-                    <dt>Sigilo</dt><dd data-ficha-sigilo<?= $temNivelFicha ? ' data-ficha-sigilo-local' : '' ?>><?= $eFicha($rotuloSigiloFicha) ?></dd>
-                </dl>
-            </section>
-            <section class="ficha-secao" aria-labelledby="ficha-cadastro-titulo">
-                <h2 id="ficha-cadastro-titulo">Cadastro interno</h2>
-                <dl class="ficha-campos">
-                    <dt>Setor ativo</dt><dd><?= $eFicha($setorNomeExibido) ?></dd>
-                    <dt>Classe cadastrada</dt><dd><?= $eFicha($classeNomeAtual ?: 'Não cadastrada') ?></dd>
-                    <dt>Assuntos cadastrados</dt><dd><?php
-                        $rotulosAssuntos = array_filter(array_column($assuntosFicha, 'assunto_descricao'));
-                        echo $eFicha($rotulosAssuntos ? implode('; ', $rotulosAssuntos) : 'Não cadastrados');
+                    <dt>Comarca de origem</dt><dd><?php
+                        $origemRotulo = $origemFicha['comarca'] !== null
+                            ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca']
+                            : ($origemFicha['unidade'] ?? 'Não identificada');
+                        echo $eFicha($origemRotulo);
                     ?></dd>
+                    <dt>Vara</dt><dd data-ficha-vara>Não informada</dd>
+                    <dt>Classe</dt><dd data-ficha-classe><?= $eFicha($classeNomeAtual ?: 'Não informada') ?></dd>
+                    <dt>Assuntos</dt><dd data-ficha-assuntos><?php
+                        $rotulosAssuntos = array_values(array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao'))));
+                        echo $eFicha($rotulosAssuntos ? implode('; ', $rotulosAssuntos) : 'Não informados');
+                    ?></dd>
+                    <dt>Sigilo</dt><dd data-ficha-sigilo<?= $temNivelFicha ? ' data-ficha-sigilo-local' : '' ?>><?= $eFicha($rotuloSigiloFicha) ?></dd>
+                    <dt>Setor ativo</dt><dd><?= $eFicha($setorNomeExibido) ?></dd>
                     <dt>Prioridades</dt><dd><?php
                         $rotulosPrioridades = array_filter(array_column($prioridadesFichaEstado['prioridades'] ?? [], 'label'));
                         echo $eFicha($rotulosPrioridades ? implode('; ', $rotulosPrioridades) : 'Nenhuma registrada');

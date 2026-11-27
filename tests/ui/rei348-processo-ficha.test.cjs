@@ -31,7 +31,8 @@ function render(url, perfil) {
             'app/helpers/ProcessoNivelSigilo.php','app/DataJud/DataJudTribunalResolver.php','app/access/ProfileNormalizer.php',
             'public/assets/css/shared/processo-ficha.css','public/assets/js/shared/processo-ficha.js',
             'public/assets/css/shared/processo-ficha-modal.css','public/assets/js/shared/processo-ficha-modal.js',
-            'public/assets/css/shared/painel-deslizante.css','public/assets/js/shared/painel-deslizante.js']) copy(f);
+            'public/assets/js/shared/processo-nivel-sigilo.js','public/assets/css/shared/painel-deslizante.css',
+            'public/assets/js/shared/painel-deslizante.js']) copy(f);
         put('fixture.php',`<?php
             require __DIR__ . "/app/repositories/ProcessosRepository.php";
             function appIsHttpsRequest(){return false;}
@@ -59,7 +60,7 @@ function render(url, perfil) {
         stub('repositories','PartesInstituicoesRepository','');
         stub('repositories','ProcessosRepository','function findById($id){return ["id"=>$id,"numero_processo"=>"0001234-76.2026.8.05.0103","sigiloso"=>$id==="P2"]; }');
         stub('services','ConsultaProcessosService',`function get($id){return (new ProcessosRepository())->findById($id)+[
-            "classe_nome"=>"Classe cadastrada fictícia","assuntos"=>[["id"=>"AF","assunto_codigo"=>"100","assunto_descricao"=>"Assunto cadastrado"]],
+            "classe_nome"=>"Classe cadastrada fictícia","classe_origem"=>$id==="P2"?"datajud":"manual","assuntos"=>[["id"=>"VINCULO-AF","assunto_id"=>"AF","origem"=>"manual","assunto_codigo"=>"100","assunto_descricao"=>"Assunto cadastrado"]],
             "partes"=>[["id"=>"PF","parte_id"=>"PF","nome_completo"=>"Pessoa fictícia A","polo"=>"passivo","tipo_parte"=>"reu"]]];}`);
         stub('services','ProcessoPrioridadesService','function getEstadoEdicaoPorProcessoId(...$x){return ["prioridades"=>[["codigo"=>"fixture","label"=>"Réu preso","origem"=>"manual"]],"catalogo"=>[]];}');
         const routeSource = fs.readFileSync(path.join(root,'public/frame.php'),'utf8');
@@ -105,6 +106,13 @@ function render(url, perfil) {
             await pg.getByRole('link',{name:'Ver processo'}).click();
             await pg.getByRole('heading',{name:'Detalhes do processo'}).waitFor();
             assert.equal(await pg.locator('input,select,textarea').count(),0,'modo inicial não tem controles de gravação');
+            assert.equal(await pg.getByRole('heading',{name:'Dados do processo',exact:true}).count(),1);
+            assert.equal(await pg.getByText('Ano',{exact:true}).count(),0);
+            assert.equal(await pg.locator('dt').filter({hasText:/^Classe$/}).count(),1);
+            assert.equal(await pg.locator('dt').filter({hasText:/^Assuntos$/}).count(),1);
+            assert.equal(await pg.locator('[data-ficha-classe]').textContent(),'Classe cadastrada fictícia');
+            assert.equal(await pg.locator('[data-ficha-assuntos]').textContent(),'Assunto cadastrado');
+            assert.deepEqual(JSON.parse(await pg.locator('[data-ficha-datajud]').getAttribute('data-ficha-assuntos-locais')),['Assunto cadastrado']);
             await pg.getByRole('button',{name:'Tentar novamente'}).click();
             await pg.getByText('Vara de destino fictícia').waitFor();
             assert.deepEqual(await pg.locator('[data-ficha-recentes] strong').allTextContents(),['Movimento 4','Movimento 3','Movimento 2']);
@@ -114,7 +122,8 @@ function render(url, perfil) {
             assert.equal(await pg.locator('[data-ficha-todas] b').count(),0);
             assert.equal(await pg.locator('[data-ficha-todas] strong').last().textContent(),'<b>Movimento 1</b>');
             assert.equal(await pg.locator('[data-ficha-vara]').textContent(),'Vara de destino fictícia');
-            assert.match(await pg.locator('#ficha-origem-titulo + dl').textContent(),/Ilhéus/);
+            assert.match(await pg.locator('#ficha-dados-titulo + dl').textContent(),/0103 - Ilhéus/);
+            assert.equal(await pg.locator('[data-ficha-classe]').textContent(),'Classe na fonte');
             assert.deepEqual(await pg.evaluate(()=>document.documentElement.scrollWidth<=innerWidth ? [] :
                 [...document.querySelectorAll('.ficha-shell *')].filter(e=>e.getBoundingClientRect().right>innerWidth)
                     .slice(0,8).map(e=>[e.tagName,e.className,e.getBoundingClientRect().right])),[], 'sem overflow em '+largura);
@@ -128,6 +137,7 @@ function render(url, perfil) {
                 [...document.querySelectorAll('.ficha-shell *')].filter(e=>e.getBoundingClientRect().right>innerWidth)
                     .slice(0,8).map(e=>[e.tagName,e.className,e.getBoundingClientRect().right])),[], 'sem overflow em '+largura);
             assert.ok(await pg.locator('#proc-classe-codigo').isVisible());
+            assert.equal(await pg.locator('#processo-assuntos-list .btn-assunto-desvincular').getAttribute('data-assunto-id'),'AF');
             if (process.env.FICHA_SCREENSHOTS) await pg.screenshot({path:path.join(process.env.FICHA_SCREENSHOTS, 'edicao-' + largura + '.png')});
             assert.ok(await pg.getByRole('button',{name:'Sincronizar classe e assuntos com o DataJud'}).isVisible());
             await pg.locator('#process-responsible-sector-select').selectOption('GB');
@@ -143,6 +153,9 @@ function render(url, perfil) {
             await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P2');
             assert.match(await pg.locator('[data-ficha-sigilo]').textContent(), /Sigilo Mínimo/);
             assert.equal(pedidos,antes);
+            await pg.getByRole('link',{name:'Editar dados'}).click();
+            assert.equal(await pg.locator('#proc-classe-codigo').count(),0);
+            assert.match(await pg.getByText('Classe sincronizada com o DataJud.',{exact:false}).textContent(),/Só outra sincronização/);
             const leituraOutroSetor = await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P2&perfil=SERVIDOR-GABINETE');
             assert.equal(leituraOutroSetor.status(),200);
             assert.equal(await pg.getByText('Pessoa fictícia A').count(),1);
