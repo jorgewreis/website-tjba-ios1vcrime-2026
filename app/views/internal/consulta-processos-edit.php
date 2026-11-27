@@ -200,8 +200,8 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <?php if ($orgaoDataJud['municipio_ibge'] !== null): ?>
                     <dt>Último município informado pelo DataJud (código IBGE)</dt><dd><?= $eFicha($orgaoDataJud['municipio_ibge']) ?></dd>
                 <?php endif; ?>
-                <dt>Classe</dt><dd><?= $eFicha($classeNomeAtual !== '' ? $classeNomeAtual : 'Não informada') ?></dd>
-                <dt>Assuntos</dt><dd id="proc-assuntos-resumo"><?= $eFicha(implode('; ', array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao')))) ?: 'Não informados') ?></dd>
+                <dt>Classe</dt><dd data-ficha-classe><?= $eFicha($classeNomeAtual !== '' ? $classeNomeAtual : 'Não informada') ?></dd>
+                <dt>Assuntos</dt><dd id="proc-assuntos-resumo" data-ficha-assuntos><?= $eFicha(implode('; ', array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao')))) ?: 'Não informados') ?></dd>
                 <dt>Sigilo no cadastro</dt><dd data-ficha-sigilo><?= $eFicha($rotuloSigiloFicha) ?></dd>
                 <?php require __DIR__ . '/partials/processo-ficha-alertas-sigilo.php'; ?>
                 <dt>Setor ativo</dt><dd><?= $eFicha($setorNomeExibido) ?></dd>
