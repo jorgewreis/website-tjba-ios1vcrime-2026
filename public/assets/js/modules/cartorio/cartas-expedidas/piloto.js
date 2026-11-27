@@ -1,11 +1,33 @@
 (() => {
   'use strict';
   const panel = document.getElementById('ce-panel');
+  const layer = document.getElementById('ce-layer');
   const content = document.getElementById('ce-panel-content');
   const close = panel.querySelector('[data-ce-close]');
   const notices = document.getElementById('ce-feedback');
   const title = document.getElementById('ce-panel-title');
-  let trigger, timer, frame, dirty = false, busy = false, success = false;
+  let trigger, timer, frame, dirty = false, busy = false, success = false, closing = false;
+
+  const scrollKey = 'ce-list-scroll-on-close';
+  function enderecoDaLista(address) {
+    const key = new URL(address);
+    key.searchParams.delete('piloto_ok');
+    return key.pathname + key.search;
+  }
+  function lembrarRolagem() {
+    try { sessionStorage.setItem(scrollKey, JSON.stringify([enderecoDaLista(location.href), scrollY])); }
+    catch (_) { /* Lista pode estar em sessão sem armazenamento. */ }
+  }
+  function restaurarRolagem() {
+    try {
+      const ponto = JSON.parse(sessionStorage.getItem(scrollKey) || 'null');
+      if (ponto?.[0] !== enderecoDaLista(location.href)) return;
+      sessionStorage.removeItem(scrollKey);
+      const voltar = () => window.scrollTo(0, ponto[1]);
+      if (document.readyState === 'complete') voltar();
+      else window.addEventListener('load', voltar, {once:true});
+    } catch (_) { /* Não bloquear a página se o armazenamento for indisponível. */ }
+  }
 
   function notify(message) {
     notices.textContent = message;
@@ -14,27 +36,39 @@
     timer = setTimeout(() => { notices.hidden = true; }, 4200);
   }
   function exit(feedback) {
+    if (closing || panel.hidden) return;
     if (dirty && !success && !window.confirm('Descartar as alterações não salvas?')) return;
     const refresh = ['cartasexpedidascreate','cartasexpedidasedit'].includes(framePage());
-    panel.hidden = true;
-    content.replaceChildren();
-    frame = null;
-    dirty = success = false;
-    if (trigger?.isConnected) trigger.focus();
-    if (refresh) {
-      const address = new URL(location.href);
-      if (feedback) address.searchParams.set('piloto_ok', feedback);
-      location.replace(address);
-    }
+    closing = true;
+    const concluir = () => {
+      panel.hidden = true;
+      if (layer.open) layer.close();
+      content.replaceChildren();
+      frame = null;
+      dirty = success = closing = false;
+      if (trigger?.isConnected) trigger.focus({preventScroll:true});
+      if (refresh) {
+        lembrarRolagem();
+        const address = new URL(location.href);
+        if (feedback) address.searchParams.set('piloto_ok', feedback);
+        location.replace(address);
+      }
+    };
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || !panel.animate) concluir();
+    else panel.animate([{transform:'translateX(0)'}, {transform:'translateX(105%)'}],
+      {duration:160,easing:'ease-in',fill:'forwards'}).finished.then(concluir, concluir);
   }
   function show(label, source, node) {
+    if (closing) return;
     if (dirty && !success && !window.confirm('Descartar as alterações não salvas?')) return;
     const menu = source.closest('.ce-dropdown');
     if (!panel.contains(source)) trigger = menu?.querySelector('summary') || source;
     if (menu) menu.open = false;
     title.textContent = label;
     content.replaceChildren(node);
+    panel.getAnimations?.().forEach(animation => animation.cancel());
     panel.hidden = false;
+    if (!layer.open) layer.showModal();
     frame = node instanceof HTMLIFrameElement ? node : null;
     dirty = success = false;
     close.focus();
@@ -133,7 +167,7 @@
         menu.querySelector('summary').focus();
         return;
       }
-      if (!panel.hidden) { event.preventDefault(); exit(); return; }
+      if (!panel.hidden && layer.contains(event.target)) { event.preventDefault(); exit(); return; }
     }
     if (!event.target.matches('[data-ce-tab]') || !['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
     const tabs = [...content.querySelectorAll('[data-ce-tab]')];
@@ -142,6 +176,13 @@
     event.preventDefault();
     switchTab(next);
     next.focus();
+  });
+  layer.addEventListener('cancel', event => { event.preventDefault(); exit(); });
+  let pressionouFora = false;
+  layer.addEventListener('pointerdown', event => { pressionouFora = event.target === layer; });
+  layer.addEventListener('click', event => {
+    if (pressionouFora && event.target === layer) exit();
+    pressionouFora = false;
   });
   window.addEventListener('message', event => {
     if (!frame || event.origin !== location.origin || event.source !== frame.contentWindow) return;
@@ -175,6 +216,7 @@
     collapsedForPrint.forEach(group => { group.open = false; });
     collapsedForPrint.clear();
   });
+  restaurarRolagem();
   const url = new URL(location.href);
   if (url.searchParams.has('piloto_ok')) {
     const feedback = url.searchParams.get('piloto_ok');

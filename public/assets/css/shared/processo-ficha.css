@@ -68,3 +68,5 @@
 .ficha-editor.card-page #btn-proc-datajud-sync:enabled { background:#fff; color:var(--ficha-accent); border:1px solid var(--ficha-accent); box-shadow:none; }
 .ficha-editor.card-page #proc-classe-atual { width:min(100%,23rem); }
 .ficha-editor.card-page #process-responsible-sector-select { width:min(100%,19rem); }
+
+.ficha-no-painel .ficha-shell { padding-top:clamp(16px,2.4vw,34px); }
