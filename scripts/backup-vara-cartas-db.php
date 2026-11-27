@@ -6,38 +6,57 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 
+final class VaraBackupFailure extends RuntimeException
+{
+    public function __construct(public readonly string $reason, string $message = 'Backup não confirmado.')
+    {
+        parent::__construct($message);
+    }
+}
+
+function classifyVaraDumpFailure(string $stderr): string
+{
+    return match (true) {
+        preg_match('/PROCESS privilege|SHOW VIEW|SHOW CREATE|mysql[.]proc|access denied.*(table|routine)|need.*privilege/i', $stderr) === 1 => 'DUMP_PRIVILEGE',
+        preg_match('/access denied for user|cannot connect|can.t connect|unknown server host|connection refused|lost connection/i', $stderr) === 1 => 'DUMP_CONNECTION',
+        preg_match('/unknown (variable|option)|unrecognized option/i', $stderr) === 1 => 'DUMP_CLIENT_OPTIONS',
+        default => 'DUMP_INCOMPLETE',
+    };
+}
+
 function dumpVaraDatabase(string $dump, string $home, string $host, int $port, string $name, string $user, string $pass): array
 {
     if (!preg_match('/^[a-zA-Z0-9_][a-zA-Z0-9_-]*$/D', $name)) {
-        throw new RuntimeException('Nome do banco fora do formato suportado.');
+        throw new VaraBackupFailure('DATABASE_NAME');
     }
     $dir = rtrim($home, '/').'/.vara-db-backups';
     umask(0077);
     if ((!is_dir($dir) && !mkdir($dir, 0700)) || is_link($dir) || (fileperms($dir) & 0777) !== 0700
         || fileowner($dir) !== fileowner($home)) {
-        throw new RuntimeException('Diretório de backup não é privado.');
+        throw new VaraBackupFailure('PRIVATE_DIRECTORY');
     }
     $id = 'vara-'.gmdate('Ymd\THis\Z').'-'.bin2hex(random_bytes(6));
     $cnf = $dir.'/.client-'.$id;
+    $err = $dir.'/.error-'.$id;
     $partial = $dir.'/'.$id.'.partial';
     $final = $dir.'/'.$id.'.sql.gz';
     $quote = static fn(string $v): string => '"'.strtr($v, ["\\"=>"\\\\",'"'=>'\\"',"\n"=>"\\n","\r"=>"\\r","\t"=>"\\t"]).'"';
     try {
-        $opts = "[client]\nprotocol=tcp\nhost=".$quote($host)."\nport=".$port."\nuser=".$quote($user)."\npassword=".$quote($pass)."\n";
-        if (file_put_contents($cnf, $opts) !== strlen($opts)) throw new RuntimeException('Não foi possível preparar a conexão.');
+        $opts = "[client]\nprotocol=".($host === 'localhost' ? 'socket' : 'tcp')."\nhost=".$quote($host)."\nport=".$port."\nuser=".$quote($user)."\npassword=".$quote($pass)."\n";
+        if (file_put_contents($cnf, $opts) !== strlen($opts)) throw new VaraBackupFailure('CLIENT_CONFIG');
         unset($opts);
         $proc = proc_open(
             [$dump, '--defaults-file='.$cnf, '--single-transaction', '--quick', '--skip-lock-tables',
-                '--routines', '--events', '--triggers', '--hex-blob', '--', $name],
-            [0=>['file','/dev/null','r'], 1=>['pipe','w'], 2=>['file','/dev/null','w']], $pipes, null, ['PATH'=>'/usr/bin:/bin']
+                '--routines', '--events', '--triggers', '--hex-blob', '--no-tablespaces', '--', $name],
+            [0=>['file','/dev/null','r'], 1=>['pipe','w'], 2=>['file',$err,'w']], $pipes, null, ['PATH'=>'/usr/bin:/bin']
         );
-        if (!is_resource($proc)) throw new RuntimeException('Não foi possível iniciar a exportação.');
+        if (!is_resource($proc)) throw new VaraBackupFailure('DUMP_START');
         $bytes = 0;
         $tail = '';
         $valid = true;
         $out = gzopen($partial, 'wb6');
         try {
-            if (!$out) throw new RuntimeException('Não foi possível abrir o arquivo de backup.');
+            if (!$out) throw new VaraBackupFailure('BACKUP_OPEN');
             while (!feof($pipes[1])) {
                 $chunk = fread($pipes[1], 65536);
                 if ($chunk === false || gzwrite($out, $chunk) !== strlen($chunk)) {
@@ -53,15 +72,17 @@ function dumpVaraDatabase(string $dump, string $home, string $host, int $port, s
             $exit = proc_close($proc);
         }
         if (!$valid || $exit !== 0 || $bytes === 0 || !str_contains($tail, '-- Dump completed on')) {
-            throw new RuntimeException('A exportação não terminou íntegra; nenhum backup foi publicado.');
+            $reason = classifyVaraDumpFailure((string) @file_get_contents($err, false, null, 0, 8192));
+            throw new VaraBackupFailure($reason, 'A exportação não terminou íntegra; nenhum backup foi publicado.');
         }
         $check = proc_open(['/usr/bin/gzip','-t',$partial], [0=>['file','/dev/null','r'],1=>['file','/dev/null','w'],2=>['file','/dev/null','w']], $unused);
-        if (!is_resource($check) || proc_close($check) !== 0) throw new RuntimeException('Falha na verificação do gzip.');
+        if (!is_resource($check) || proc_close($check) !== 0) throw new VaraBackupFailure('GZIP_CHECK');
         $sha = hash_file('sha256', $partial);
-        if ($sha === false || !rename($partial, $final)) throw new RuntimeException('Não foi possível finalizar a cópia.');
+        if ($sha === false || !rename($partial, $final)) throw new VaraBackupFailure('BACKUP_FINALIZE');
         return ['id'=>$id, 'bytes'=>filesize($final), 'sha256'=>$sha];
     } finally {
         if (is_file($cnf)) unlink($cnf);
+        if (is_file($err)) unlink($err);
         if (is_file($partial)) unlink($partial);
     }
 }
@@ -72,24 +93,26 @@ if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
         $home = realpath((string)getenv('HOME'));
         $root = realpath((string)getcwd());
         if (!$home || !$root || $home === $root || str_starts_with($home.'/', $root.'/')) {
-            throw new RuntimeException('Home privado fora da raiz publicada não identificado.');
+            throw new VaraBackupFailure('HOME_PATH');
         }
         $dump = '/usr/bin/mariadb-dump';
         if (!is_executable($dump)) $dump = '/usr/bin/mysqldump';
-        if (!is_executable($dump) || !is_executable('/usr/bin/gzip')) throw new RuntimeException('Cliente de exportação ou gzip indisponível.');
+        if (!is_executable($dump) || !is_executable('/usr/bin/gzip')) throw new VaraBackupFailure('CLIENT_MISSING');
         require_once $root.'/app/helpers/Conection.php';
         $db = Conection::getInstance()->getConnection();
         $count = (int)$db->query("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE()
           AND TABLE_NAME='cartas_expedidas' AND TABLE_TYPE='BASE TABLE' AND ENGINE='InnoDB'")->fetchColumn();
         $other = (int)$db->query("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE()
           AND TABLE_TYPE='BASE TABLE' AND (ENGINE IS NULL OR ENGINE<>'InnoDB')")->fetchColumn();
-        if ($count !== 1 || $other !== 0) throw new RuntimeException('Alvo ou consistência transacional não confirmados.');
+        if ($count !== 1) throw new VaraBackupFailure('TARGET_TABLE');
+        if ($other !== 0) throw new VaraBackupFailure('NON_TRANSACTIONAL_TABLES');
         unset($db);
         $backup = dumpVaraDatabase($dump, $home, DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS);
         echo "BACKUP OK {$backup['id']} bytes={$backup['bytes']} sha256={$backup['sha256']}\n";
-    } catch (Throwable) {
+    } catch (Throwable $e) {
         // Never emit SQL, credentials, records or database names into Actions logs.
-        fwrite(STDERR, "Backup não confirmado; verificar pré-requisitos e permissões no servidor.\n");
+        $reason = $e instanceof VaraBackupFailure ? $e->reason : 'DATABASE_PREFLIGHT';
+        fwrite(STDERR, "Backup não confirmado. Código: {$reason}\n");
         exit(1);
     }
 }
