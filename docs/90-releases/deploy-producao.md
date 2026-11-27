@@ -50,6 +50,35 @@ nova, e o procedimento de recuperação. Confirme que existe backup restaurável
 e homologue a restauração em ambiente separado antes de mudanças irreversíveis.
 Reverter o código não desfaz alterações no banco.
 
+## Backup e migração de prioridade de Cartas Expedidas
+
+1. **Acesso para recuperação.** Gateway e Actions usam identidades SSH diferentes.
+   Se a chave do Gateway for recusada, confirme a identidade do host e, pelo
+   painel do provedor ou outro acesso administrativo já autorizado, confira a
+   chave **pública** gerenciada para a conta cadastrada. Revalide no Gateway
+   com uma operação somente leitura. Não substitua fingerprints, não remova
+   outras chaves, não enfraqueça o SSH e não use senha como tentativa repetida.
+   Um deploy verde no Actions não confirma o acesso pelo Gateway.
+2. **Backup privado.** Rode o workflow manual na main com **Somente backup**.
+   Esse modo não publica código nem aplica migrações. Guarde somente o ID e o
+   SHA-256 de `BACKUP OK` para referência; o arquivo fica no diretório privado
+   do usuário de deploy no próprio VPS. Se falhar, use a categoria/errno do log
+   para direcionar diagnóstico local com acesso autorizado. Não copie dump,
+   stderr bruto ou configuração de banco para o GitHub. Falha sem classificação
+   suficiente não justifica alterar permissões ou repetir às cegas.
+3. **Prova de recuperação.** Teste o mesmo backup em instância MySQL isolada e
+   privada, nunca no schema ativo, sem copiar dados da Vara para fora do VPS.
+   Valide a abertura da cópia, schema da tabela e recuperação esperada sem
+   registrar conteúdo de registros. O checksum confirma integridade, não
+   restaurabilidade; só confirme a recuperação depois do teste.
+4. **Migração.** Na janela autorizada, execute o workflow manual na main sem
+   **Somente backup**, selecione **Migrar prioridade**, informe ID e SHA-256 do
+   mesmo arquivo e confirme restauração isolada e janela. Antes do DDL, o script
+   recusa arquivo ausente, simbólico, sem permissões privadas, alterado ou com
+   mais de 24 horas. O modo continua integrado ao deploy existente. Confirme
+   o resultado da coluna, padrão e logs de publicação; não use produção para
+   criar registros fictícios. Um merge sozinho não ativa a migração de prioridade.
+
 ## Próxima etapa para releases atômicas
 
 Antes de modificar a estrutura do servidor, identificar o diretório publicado,

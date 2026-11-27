@@ -13,6 +13,16 @@ on:
         description: "Executar migração de prioridade (somente após confirmar recuperação e janela)"
         type: boolean
         default: false
+      backup_prioridade_id:
+        description: "ID do backup privado cuja restauração foi testada"
+        type: string
+      backup_prioridade_sha256:
+        description: "SHA-256 informado pelo backup privado"
+        type: string
+      recuperacao_prioridade_validada:
+        description: "Confirmo restauração isolada deste backup e janela sem novos cadastros"
+        type: boolean
+        default: false
 
 concurrency:
   group: ios1vcrime-production-deploy
@@ -156,6 +166,26 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "cd \"${PROD_PATH}\" && php -r 'require \"app/helpers/Conection.php\"; Conection::getInstance()->getConnection()->query(\"SELECT scope_type, scope_value, attempt_count, lock_level, window_started_at, last_attempt_at, locked_until FROM login_rate_limits LIMIT 0\");'"
 
+      - name: Migrar prioridade de cartas expedidas (PROD, opt-in)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.migrar_prioridade_cartas && !inputs.somente_backup_vara }}
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          PROD_PATH: ${{ secrets.PROD_PATH }}
+          BACKUP_ID: ${{ inputs.backup_prioridade_id }}
+          BACKUP_SHA256: ${{ inputs.backup_prioridade_sha256 }}
+          RECUPERACAO_VALIDADA: ${{ inputs.recuperacao_prioridade_validada }}
+        run: |
+          set -euo pipefail
+          [[ "$RECUPERACAO_VALIDADA" == true && "$BACKUP_ID" =~ ^vara-[0-9]{8}T[0-9]{6}Z-[a-f0-9]{12}$ && "$BACKUP_SHA256" =~ ^[a-f0-9]{64}$ ]] || {
+            echo 'Migração de prioridade bloqueada: informe o ID/hash do backup e confirme a restauração isolada e a janela.'
+            exit 1
+          }
+          printf -v remote_command 'set -e; cd %q && test -f .env && umask 077 && temp_script=$(mktemp /tmp/rei345-cartas.XXXXXX) && trap %q EXIT && cat > "$temp_script" && php "$temp_script" --apply %q %q --restore-confirmed' \
+            "$PROD_PATH" 'rm -f -- "$temp_script"' "$BACKUP_ID" "$BACKUP_SHA256"
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" "$remote_command" < scripts/migrate-cartas-expedidas-prioridade.php
+
       - name: Garantir diretório destino (PROD)
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.somente_backup_vara) }}
         env:
@@ -192,19 +222,6 @@ jobs:
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
           DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
         run: bash .github/scripts/deploy-staged-cartas-migration.sh
-
-      - name: Migrar prioridade de cartas expedidas (PROD, opt-in)
-        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.migrar_prioridade_cartas && !inputs.somente_backup_vara }}
-        env:
-          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
-          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
-          PROD_PATH: ${{ secrets.PROD_PATH }}
-        run: |
-          set -euo pipefail
-          printf -v remote_command 'set -e; cd %q && test -f .env && umask 077 && temp_script=$(mktemp /tmp/rei345-cartas.XXXXXX) && trap %q EXIT && cat > "$temp_script" && php "$temp_script" --apply' \
-            "$PROD_PATH" 'rm -f -- "$temp_script"'
-          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
-            "${DEPLOY_USER}@${DEPLOY_HOST}" "$remote_command" < scripts/migrate-cartas-expedidas-prioridade.php
 
       - name: Aplicar migration de idempotência de guias antes da publicação (PROD)
         if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.somente_backup_vara) }}
