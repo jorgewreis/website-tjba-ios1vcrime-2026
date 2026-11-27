@@ -1,5 +1,5 @@
 from pathlib import Path
-import http.server, os, re, shutil, subprocess, tempfile, threading, unittest, urllib.error, urllib.request
+import gzip, hashlib, http.server, os, re, shutil, subprocess, tempfile, threading, unittest, urllib.error, urllib.request
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = tuple(p.name for p in sorted((ROOT / 'scripts').glob('migrate-*.php'))) + ('drop-enderecos-partes-instituicoes-tables.php', 'drop-medidas-protetivas-tables.php')
 GUARD = "declare(strict_types=1);\n\nif (PHP_SAPI !== 'cli') {\n    http_response_code(403);\n    exit;\n}"
@@ -54,7 +54,25 @@ class MaintenanceGuardTest(unittest.TestCase):
                         refused = subprocess.run([php, str(script)], cwd=root, env=env, capture_output=True, timeout=10)
                         self.assertEqual(refused.returncode, 1, refused.stderr)
                         self.assertFalse(marker.exists(), 'CLI reached connection stub without --apply')
-                        result = subprocess.run([php, str(script), '--apply'], cwd=root, env=env, capture_output=True, timeout=10)
+                        with tempfile.TemporaryDirectory(prefix='rei329-backup-home-') as backup_home:
+                            backup_dir = Path(backup_home) / '.vara-db-backups'
+                            backup_dir.mkdir(mode=0o700)
+                            backup_dir.chmod(0o700)
+                            backup_id = 'vara-20261127T000000Z-123456789abc'
+                            artifact = backup_dir / f'{backup_id}.sql.gz'
+                            artifact.write_bytes(gzip.compress(b'-- isolated test fixture\n'))
+                            artifact.chmod(0o600)
+                            digest = hashlib.sha256(artifact.read_bytes()).hexdigest()
+                            guarded_env = {**env, 'HOME': backup_home}
+                            apply = [php, str(script), '--apply']
+                            refused = subprocess.run(apply, cwd=root, env=guarded_env, capture_output=True, timeout=10)
+                            self.assertEqual(refused.returncode, 1, refused.stderr)
+                            self.assertIn(b'BACKUP_RESTORE_CONFIRMATION', refused.stderr)
+                            self.assertFalse(marker.exists(), 'CLI reached connection stub without recovery evidence')
+                            result = subprocess.run(
+                                [*apply, backup_id, digest, '--restore-confirmed'],
+                                cwd=root, env=guarded_env, capture_output=True, timeout=10
+                            )
                     else:
                         result = subprocess.run([php, str(script)], env=env, capture_output=True, timeout=10)
                     self.assertEqual(result.returncode, 71, result.stderr)
