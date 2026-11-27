@@ -156,7 +156,7 @@
                     ? result.error : 'Não foi possível confirmar a sincronização. Confira a ficha antes de tentar novamente.';
                 return;
             }
-            const changed = [result.classe, result.assuntos].some(item =>
+            const changed = [result.classe, result.assuntos, result.orgao].some(item =>
                 item && (item.action === 'updated' || item.action === 'created'));
             status.textContent = result.message || 'Nenhuma alteração necessária.';
             if (changed) {

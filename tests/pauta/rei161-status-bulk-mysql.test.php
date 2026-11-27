@@ -108,6 +108,58 @@ rei161Assert((int) $db->query("SELECT IS_FREE_LOCK($lockExpr)")->fetchColumn() =
 $db->exec("ALTER TABLE processos ALTER COLUMN classe_origem SET DEFAULT NULL");
 echo "PASS REI-345 exact additive SQL on disposable MySQL 8.4: apply, reapply, legacy, wrong default, lock release.\n";
 
+// Use the exact additive organ DDL on the same guarded MySQL 8.4 container.
+$orgaoSql = file_get_contents(__DIR__ . '/../../database/migrations/20261127_add_processos_orgao_datajud.sql');
+rei161Assert(is_string($orgaoSql) && $orgaoSql !== '', 'Migração exata do órgão não encontrada.');
+$aplicarOrgao = static function () use ($db, $orgaoSql): void {
+    $stmt = $db->query($orgaoSql);
+    do {
+        if ($stmt->columnCount() > 0) $stmt->fetchAll();
+    } while ($stmt->nextRowset());
+    $stmt->closeCursor();
+};
+$aplicarOrgao();
+rei161Assert((int) $db->query('SELECT COUNT(*) FROM processos WHERE vara_nome_datajud IS NOT NULL OR orgao_municipio_ibge_datajud IS NOT NULL')->fetchColumn() === 0,
+    'Migração de órgão alterou linhas legadas.');
+$db->exec("UPDATE processos SET vara_nome_datajud='Vara sintética', orgao_municipio_ibge_datajud='9999999' WHERE id='P-OPEN'");
+$aplicarOrgao();
+rei161Assert($db->query("SELECT orgao_municipio_ibge_datajud FROM processos WHERE id='P-OPEN'")->fetchColumn() === '9999999',
+    'Reaplicação alterou o código municipal persistido.');
+$db->exec("ALTER TABLE processos DROP COLUMN orgao_municipio_ibge_datajud, ALTER COLUMN vara_nome_datajud SET DEFAULT 'incompatível'");
+try {
+    $aplicarOrgao();
+    throw new LogicException('Coluna incompatível aceita.');
+} catch (PDOException $erro) {
+    if (!str_contains($erro->getMessage(), 'ORGAO_DATAJUD_INCOMPATIBLE_COLUMNS')) throw $erro;
+}
+rei161Assert($db->query("SHOW COLUMNS FROM processos LIKE 'orgao_municipio_ibge_datajud'")->fetch() === false,
+    'Migração tocou na tabela apesar da coluna incompatível.');
+$db->exec("ALTER TABLE processos ALTER COLUMN vara_nome_datajud SET DEFAULT NULL");
+$aplicarOrgao();
+rei161Assert($db->query("SELECT vara_nome_datajud FROM processos WHERE id='P-OPEN'")->fetchColumn() === 'Vara sintética',
+    'Migração da coluna ausente alterou a coluna compatível.');
+require_once __DIR__ . '/../../app/repositories/ProcessoVaraRepository.php';
+require_once __DIR__ . '/../../app/DataJud/DataJudOrgaoMetadata.php';
+$db->exec("ALTER TABLE processos ADD COLUMN vara_nome VARCHAR(180) NULL, ADD COLUMN updated_at DATETIME NULL");
+$db->exec("UPDATE processos SET vara_nome='Vara de fallback sintética' WHERE id='P-OPEN'");
+$repoVara = new ProcessoVaraRepository($db);
+$db->beginTransaction();
+$orgao = DataJudOrgaoMetadata::fromMapped(['nome'=>'  Vara nova sintética  ', 'codigoMunicipioIBGE'=>null]);
+rei161Assert($repoVara->registrarDataJud('P-OPEN', $orgao), 'Gravação válida do órgão não confirmou.');
+rei161Assert(!$repoVara->registrarDataJud('P-OPEN', $orgao), 'Orgão idêntico gerou escrita.');
+try {
+    $repoVara->registrar('P-OPEN', null);
+    throw new LogicException('Orgão sincronizado aceitou remover a Vara manualmente.');
+} catch (ProcessoVaraDataJudProtegidaException) {}
+rei161Assert($repoVara->dadosDataJudPorProcesso('P-OPEN') === ['nome'=>'Vara nova sintética','municipio_ibge'=>null],
+    'Leitura transacional do órgão não confirmou campos recebidos.');
+$db->rollBack();
+rei161Assert($repoVara->dadosDataJudPorProcesso('P-OPEN')['nome'] === 'Vara sintética'
+    && $repoVara->porProcesso('P-OPEN') === 'Vara de fallback sintética',
+    'Rollback mudou órgão registrado ou fallback manual.');
+echo "PASS: repositório do órgão DataJud MySQL preservou fallback, protegeu remoção e reverteu alteração.\n";
+echo "PASS: DDL do órgão julgador, nulidade do legado, reaplicação, recusa e schema parcial (MySQL 8.4).\n";
+
 // Use the same real Bahia clock as the service. Near midnight, wait at most
 // one minute so a run started at 23:59 does not fail just because of the date.
 while (date('H:i') === '23:59') {

@@ -122,10 +122,12 @@ $nivelDisponivel = false;
 $nivelConfirmado = null;
 $varaDisponivel = false;
 $varaLocal = null;
+$orgaoDataJud = ['nome'=>null, 'municipio_ibge'=>null];
 try {
     $repoVara = new ProcessoVaraRepository($connection);
     $varaDisponivel = $repoVara->disponivel();
     if ($varaDisponivel) $varaLocal = $repoVara->porProcesso($processoIdFicha);
+    if (!$sigilosoFicha) $orgaoDataJud = $repoVara->dadosDataJudPorProcesso($processoIdFicha);
 } catch (Throwable $erroVara) {
     $varaDisponivel = false;
     error_log('Não foi possível consultar o registro local da Vara.');
@@ -183,9 +185,12 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             <dl class="ficha-campos">
                 <dt>Segmento</dt><dd><?= $eFicha($origemFicha['segmento'] ?? 'Não informado') ?></dd>
                 <dt>Tribunal</dt><dd><?= $eFicha($origemFicha['tribunal'] ?? 'Não informado') ?></dd>
-                <dt>Comarca</dt><dd><?= $eFicha($origemFicha['comarca'] !== null
+                <dt>Comarca de origem (CNJ)</dt><dd><?= $eFicha($origemFicha['comarca'] !== null
                     ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca'] : ($origemFicha['unidade'] ?? 'Não identificada')) ?></dd>
-                <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($varaLocal ?? 'Não informada') ?></dd>
+                <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($orgaoDataJud['nome'] ?? $varaLocal ?? 'Não informada') ?></dd>
+                <?php if ($orgaoDataJud['municipio_ibge'] !== null): ?>
+                    <dt>Último município informado pelo DataJud (código IBGE)</dt><dd><?= $eFicha($orgaoDataJud['municipio_ibge']) ?></dd>
+                <?php endif; ?>
                 <dt>Classe</dt><dd><?= $eFicha($classeNomeAtual !== '' ? $classeNomeAtual : 'Não informada') ?></dd>
                 <dt>Assuntos</dt><dd id="proc-assuntos-resumo"><?= $eFicha(implode('; ', array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao')))) ?: 'Não informados') ?></dd>
                 <dt>Sigilo no cadastro</dt><dd data-ficha-sigilo><?= $eFicha($rotuloSigiloFicha) ?></dd>
@@ -193,7 +198,7 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <dt>Setor ativo</dt><dd><?= $eFicha($setorNomeExibido) ?></dd>
                 <dt>Prioridades</dt><dd><?= $eFicha(implode('; ', array_filter(array_column($prioridadesFichaEstado['prioridades'] ?? [], 'label'))) ?: 'Nenhuma registrada') ?></dd>
             </dl>
-            <?php if ($acessoSetorial && $varaDisponivel): ?>
+            <?php if ($acessoSetorial && $varaDisponivel && $orgaoDataJud['nome'] === null): ?>
             <form id="processo-vara-form" class="ficha-edicao-campo" data-process-id="<?= $eFicha($processoIdFicha) ?>">
                 <label for="processo-vara-local">Vara local (quando não informada pelo DataJud)</label>
                 <div class="display-flex row row-full flex-wrap align-end">
@@ -288,7 +293,7 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <button type="button" class="btn btn-secondary height-md" id="btn-proc-datajud-sync"
                         data-process-id="<?php echo htmlspecialchars($processoIdFicha, ENT_QUOTES); ?>"
                         data-numero="<?php echo htmlspecialchars((string) ($processo['numero_processo'] ?? ''), ENT_QUOTES); ?>"
-                        aria-describedby="proc-datajud-sync-status">Sincronizar classe e assuntos com o DataJud</button>
+                        aria-describedby="proc-datajud-sync-status">Sincronizar com o DataJud</button>
             <?php endif; ?>
         </div>
         <p class="padding-x-md" id="proc-datajud-sync-status" role="status" aria-live="polite"><?php if (!empty($processo['sigiloso'])): ?>Sincronização indisponível para processos sigilosos.<?php endif; ?></p>

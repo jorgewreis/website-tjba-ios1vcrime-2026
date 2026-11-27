@@ -6,8 +6,11 @@ require_once __DIR__ . '/../DataJud/DataJudLocalSigiloException.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../repositories/AssuntosRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
+require_once __DIR__ . '/../repositories/ProcessoVaraRepository.php';
 require_once __DIR__ . '/ProcessoClasseSyncService.php';
 require_once __DIR__ . '/ProcessoAssuntoSyncService.php';
+
+final class ProcessoOrgaoDataJudIndisponivelException extends RuntimeException {}
 
 /** Aplica dados já obtidos e validados do DataJud; não faz chamadas externas. */
 final class ProcessoDataJudSyncService
@@ -32,14 +35,15 @@ final class ProcessoDataJudSyncService
      * completude da resposta de origem antes de chamar este serviço.
      *
      * @param bool $verifiedEmptySubjects True only after the caller verified an explicit empty DataJud source response.
-     * @return array{classe:?array,assuntos:?array}
+     * @return array{classe:?array,assuntos:?array,orgao?:array}
      */
     public function sync(
         string $numero,
         ?array $classe,
         ?array $assuntos,
         bool $verifiedEmptySubjects = false,
-        ?callable $beforeWrite = null
+        ?callable $beforeWrite = null,
+        array $orgao = []
     ): array
     {
         $numero = CnjValidator::digits20OrThrow($numero);
@@ -72,7 +76,7 @@ final class ProcessoDataJudSyncService
                 }
             }
         }
-        if ($classe === null && $assuntos === null) {
+        if ($classe === null && $assuntos === null && $orgao === []) {
             throw new InvalidArgumentException('Nenhum dado DataJud sincronizável.');
         }
         if ($this->db->inTransaction()) throw new RuntimeException('Sincronização requer transação própria.');
@@ -99,11 +103,21 @@ final class ProcessoDataJudSyncService
             }
             if (!empty($local['sigiloso'])) throw new DataJudLocalSigiloException();
 
+            $resultadoOrgao = null;
+            if ($orgao !== []) {
+                $repositorioVara = new ProcessoVaraRepository($this->db);
+                if (!$repositorioVara->dataJudDisponivel()) {
+                    throw new ProcessoOrgaoDataJudIndisponivelException();
+                }
+                $alterouOrgao = $repositorioVara->registrarDataJud((string) $processo['id'], $orgao);
+                $resultadoOrgao = ['action'=>$alterouOrgao ? 'updated' : 'noop'];
+            }
             $resultadoClasse = $classe === null ? null : ($this->classeSync)($numero, $codigo, $descricao);
             $resultadoAssuntos = $assuntos === null ? null : ($this->assuntoSync)($numero, $assuntos, $verifiedEmptySubjects);
             if (!$this->db->inTransaction()) throw new RuntimeException('Transação de sincronização interrompida.');
             if (!$this->db->commit()) throw new RuntimeException('Resultado da confirmação da sincronização é incerto; descarte a conexão.');
-            return ['classe' => $resultadoClasse, 'assuntos' => $resultadoAssuntos];
+            return ['classe' => $resultadoClasse, 'assuntos' => $resultadoAssuntos]
+                + ($resultadoOrgao === null ? [] : ['orgao' => $resultadoOrgao]);
         } catch (Throwable $erro) {
             if ($this->db->inTransaction()) {
                 try { if (!$this->db->rollBack()) throw new RuntimeException('Rollback recusado.'); }
