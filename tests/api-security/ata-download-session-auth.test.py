@@ -197,13 +197,46 @@ return true;
         status, body, _ = request("/api/sala-audiencias-ata/download-interno.php?pauta=hearing-secret", profile="SERVIDOR-AUDIENCIAS")
         assert status == 400 and b"synthetic-pdf-content" not in body, (status, body)
 
+        # Re-evaluate student eligibility at download time, after enrollment.
         db = sqlite3.connect(db_path)
+        db.execute("INSERT INTO sala_audiencias_pauta_parte (pauta, ativo, maioridade) VALUES ('hearing-valid', 1, 'menor')")
+        db.commit()
+        db.close()
+        status, body, _ = request("/api/sala-audiencias-ata/download.php?pauta=hearing-valid")
+        assert status == 400 and b"synthetic-pdf-content" not in body, ("minor added after enrollment", status, body)
+
+        db = sqlite3.connect(db_path)
+        db.execute("DELETE FROM sala_audiencias_pauta_parte WHERE pauta='hearing-valid'")
+        db.execute("INSERT INTO processo_prioridades (id, processo_id, codigo) VALUES ('priority-after-enrollment', 'process-1', 'violencia_domestica')")
+        db.commit()
+        db.close()
+        status, body, _ = request("/api/sala-audiencias-ata/download.php?pauta=hearing-valid")
+        assert status == 400 and b"synthetic-pdf-content" not in body, ("blocking priority added after enrollment", status, body)
+
+        db = sqlite3.connect(db_path)
+        db.execute("DELETE FROM processo_prioridades WHERE id='priority-after-enrollment'")
+        db.execute("UPDATE processos SET sigiloso=1 WHERE id='process-1'")
+        db.commit()
+        db.close()
+        status, body, _ = request("/api/sala-audiencias-ata/download.php?pauta=hearing-valid")
+        assert status == 400 and b"synthetic-pdf-content" not in body, ("secrecy enabled after enrollment", status, body)
+
+        db = sqlite3.connect(db_path)
+        db.execute("UPDATE processos SET sigiloso=0 WHERE id='process-1'")
+        db.execute("UPDATE sala_audiencias_ata SET expires_at='2000-01-01 00:00:00' WHERE pauta='hearing-valid'")
+        db.commit()
+        db.close()
+        status, body, _ = request("/api/sala-audiencias-ata/download.php?pauta=hearing-valid")
+        assert status == 400 and b"synthetic-pdf-content" not in body, ("ata expired after enrollment", status, body)
+
+        db = sqlite3.connect(db_path)
+        db.execute("UPDATE sala_audiencias_ata SET expires_at='2099-01-01 00:00:00' WHERE pauta='hearing-valid'")
         db.execute("DELETE FROM sala_audiencias_estudante_inscricao WHERE pauta='hearing-valid'")
         db.commit()
         db.close()
         status, body, _ = request("/api/sala-audiencias-ata/download.php?pauta=hearing-valid")
         assert status == 400 and b"synthetic-pdf-content" not in body, (status, body)
-        print("PASS HTTP ata download: expired/revoked/inactive sessions; student/internal profiles; enrollment and secrecy gates")
+        print("PASS HTTP ata download: session/profile/enrollment gates and post-enrollment eligibility, secrecy and expiry changes")
     finally:
         server.terminate()
         try:
