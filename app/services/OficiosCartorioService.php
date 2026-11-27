@@ -6,7 +6,6 @@ require_once __DIR__ . '/../repositories/OficiosCartorioSubtarefasRepository.php
 require_once __DIR__ . '/../repositories/OficiosCartorioAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
-require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
@@ -125,6 +124,12 @@ final class OficiosCartorioService
 
     public function create(array $payload): string
     {
+        return $this->createWithNumber($payload)['id'];
+    }
+
+    /** @return array{id: string, numero_oficio: string} */
+    public function createWithNumber(array $payload): array
+    {
         $tipoOficioRaw = trim((string) ($payload['tipo_oficio'] ?? ''));
         if ($tipoOficioRaw === '') {
             throw new InvalidArgumentException('O tipo de ofício é obrigatório.');
@@ -159,7 +164,6 @@ final class OficiosCartorioService
                     $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
                 }
                 $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
-                ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
             }
 
             $tipoOficio = TextFormatter::formatProperName($tipoOficioRaw, 255);
@@ -247,7 +251,7 @@ final class OficiosCartorioService
             }
 
             $this->connection->commit();
-            return $id;
+            return ['id' => $id, 'numero_oficio' => $seq . '/' . $ano];
         } catch (\Throwable $e) {
             $this->connection->rollBack();
             throw $e;

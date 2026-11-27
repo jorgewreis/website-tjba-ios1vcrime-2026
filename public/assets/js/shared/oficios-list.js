@@ -98,45 +98,6 @@
         });
     }
 
-    function resolveToastMessageByKey(key, vars, fallbackMessage) {
-        const catalog = App.ToastCatalog;
-        if (!catalog || typeof catalog.resolve !== 'function') {
-            return Promise.resolve(fallbackMessage);
-        }
-
-        return catalog.resolve(key, vars || {})
-            .then(function (toast) {
-                return (toast && toast.message) ? toast.message : fallbackMessage;
-            })
-            .catch(function () {
-                return fallbackMessage;
-            });
-    }
-
-    function queueByKey(storageKey, key, vars, fallbackPayload) {
-        const catalog = App.ToastCatalog;
-        if (!catalog || typeof catalog.resolve !== 'function') {
-            queuePostReloadToast(storageKey, fallbackPayload);
-            return Promise.resolve();
-        }
-
-        return catalog.resolve(key, vars || {})
-            .then(function (toast) {
-                if (!toast || !toast.message) {
-                    queuePostReloadToast(storageKey, fallbackPayload);
-                    return;
-                }
-                queuePostReloadToast(storageKey, {
-                    type: toast.type || fallbackPayload.type,
-                    title: toast.title || fallbackPayload.title,
-                    message: toast.message
-                });
-            })
-            .catch(function () {
-                queuePostReloadToast(storageKey, fallbackPayload);
-            });
-    }
-
     function bindFilters(config) {
         const applyFilters = function () {
             const oficio = global.document.getElementById(config.searchInputId || 'search-input')?.value?.trim() ?? '';
@@ -246,24 +207,12 @@
         global.document.getElementById(config.clearButtonId)?.addEventListener('click', function () {
             const processInput = global.document.getElementById(config.processInputId || 'filter-processo');
             const typeSelect = global.document.getElementById(config.typeSelectId);
-            const classInput = global.document.getElementById(config.classInputId || 'filter-classe');
-            const hiddenClassCode = global.document.getElementById(config.classCodeInputId || 'hidden-classe-codigo');
-            const hiddenClassDescription = global.document.getElementById(config.classDescriptionInputId || 'hidden-classe-descricao');
 
-            if (processInput) { processInput.value = ''; }
-            if (typeSelect) { typeSelect.selectedIndex = 0; }
-            if (global.DataJudCycle && typeof global.DataJudCycle.resetInputs === 'function') {
-                global.DataJudCycle.resetInputs({
-                    processInput: processInput || null,
-                    classeInput: classInput || null,
-                    classeCodigo: hiddenClassCode || null,
-                    classeDescricao: hiddenClassDescription || null
-                });
-            } else {
-                if (classInput) { classInput.value = ''; classInput.removeAttribute('data-datajud-initial'); }
-                if (hiddenClassCode) { hiddenClassCode.value = ''; }
-                if (hiddenClassDescription) { hiddenClassDescription.value = ''; }
+            if (processInput) {
+                processInput.value = '';
+                delete processInput.dataset.lastCnjDispatchedDigits;
             }
+            if (typeSelect) { typeSelect.selectedIndex = 0; }
 
             if (typeof config.onClear === 'function') {
                 config.onClear(ctx);
@@ -285,92 +234,32 @@
         const gate = (App.CartorioCreateHelpers && typeof App.CartorioCreateHelpers.initCreateButtonGate === 'function')
             ? App.CartorioCreateHelpers.initCreateButtonGate({ button: createButton, initialLabel: 'Novo cadastro', readyLabel: 'Cadastrar' })
             : null;
-        const hasDataJudFlow = !!global.document.querySelector('[data-datajud-related="true"]');
-
-        if (gate && processInput) {
-            const refreshGateState = function () {
-                if (ctx.isAdministrative()) {
-                    gate.setReady();
-                    return;
-                }
-
-                const rawProcess = String(processInput.value || '').trim();
-                const processDigits = rawProcess.replace(/\D/g, '');
-                if (processDigits.length !== 20) {
-                    gate.setWaiting();
-                    return;
-                }
-
-                const classInput = global.document.getElementById(config.classInputId || 'filter-classe');
-                const isClassLoading = !!(classInput && (classInput.value === 'Aguarde...' || classInput.value === 'Consultando DataJud…'));
-                // Libera cadastro com processo valido, mesmo sem classe retornada pelo DataJud.
-                if (!isClassLoading) {
-                    gate.setReady();
-                    return;
-                }
-
-                gate.setWaiting();
-            };
-
-            processInput.addEventListener('input', function () {
-                const digits = String(processInput.value || '').replace(/\D/g, '');
-                if (digits.length < 20) {
-                    gate.setWaiting();
-                    return;
-                }
-                refreshGateState();
-            });
-            const typeSelect = global.document.getElementById(config.typeSelectId || '');
-            typeSelect?.addEventListener('change', function () {
-                refreshGateState();
-            });
-            global.addEventListener('datajudClasseResolved', function (event) {
-                const detail = event && event.detail ? event.detail : {};
-                if (detail.processoInputId && processInput.id && detail.processoInputId !== processInput.id) {
-                    return;
-                }
-                refreshGateState();
-            });
-            global.addEventListener('cnjInvalid', function (event) {
-                const detail = event && event.detail ? event.detail : {};
-                if (detail.inputId && processInput.id && detail.inputId !== processInput.id) {
-                    return;
-                }
-                refreshGateState();
-            });
-            refreshGateState();
-        }
-
-        if (gate && !hasDataJudFlow) {
-            gate.setReady();
-        }
+        let saving = false;
+        gate?.setReady();
 
         createButton?.addEventListener('click', function () {
-            if (gate) {
-                gate.setWaiting();
-            }
-            if (processInput && typeof global.normalizeAndValidateCNJValue === 'function' && !ctx.isAdministrative()) {
-                const normalized = global.normalizeAndValidateCNJValue(processInput.value || '', { toastOnInvalid: true });
+            if (saving) return;
+            const process = String(processInput?.value || '').trim();
+            if (process && typeof global.normalizeAndValidateCNJValue === 'function') {
+                const normalized = global.normalizeAndValidateCNJValue(process, { toastOnInvalid: true });
                 if (!normalized.ok) {
-                    processInput.value = '';
                     processInput.focus();
-                    if (gate) {
-                        gate.setError();
-                    }
                     return;
                 }
                 processInput.value = normalized.formatted;
             }
             const request = config.buildRequest(ctx);
-            if (!request) {
-                if (gate) {
-                    gate.setError();
-                }
-                return;
-            }
-            if (gate) {
-                gate.setSubmitting();
-            }
+            if (!request) return;
+            saving = true;
+            gate?.setSubmitting();
+            createButton.disabled = true;
+            createButton.setAttribute('aria-busy', 'true');
+            const reenable = function () {
+                saving = false;
+                createButton.disabled = false;
+                createButton.removeAttribute('aria-busy');
+                gate?.setReady();
+            };
 
             fetch(config.createEndpoint, {
                 method: 'POST',
@@ -385,41 +274,21 @@
                 })
                 .then(function (result) {
                     if (result.ok && result.data && result.data.id) {
-                        if (typeof config.buildSuccessPayload === 'function') {
-                            const payload = config.buildSuccessPayload(result.data, ctx);
-                            queuePostReloadToast(ctx.storageKey, payload);
-                            if (gate) {
-                                gate.setInitial();
-                            }
-                            global.location.reload();
-                            return;
-                        }
-
-                        const numeroOficio = String(result.data.numero_oficio || '').trim();
-                        const vars = numeroOficio ? { numero_oficio: numeroOficio } : {};
-                        queueByKey(ctx.storageKey, 'oficios.create.success', vars, {
-                            type: 'success',
-                            title: 'Sucesso',
-                            message: 'Ofício registrado com sucesso.'
-                        }).then(function () {
-                            if (gate) {
-                                gate.setInitial();
-                            }
-                            global.location.reload();
-                        });
+                        const numero = String(result.data.numero_oficio || '').trim();
+                        const payload = typeof config.buildSuccessPayload === 'function'
+                            ? config.buildSuccessPayload(result.data, ctx)
+                            : { type: 'success', title: 'Sucesso', message: numero ? 'Ofício ' + numero + ' registrado com sucesso.' : 'Ofício registrado com sucesso.' };
+                        queuePostReloadToast(ctx.storageKey, payload);
+                        global.location.reload();
                         return;
                     }
 
                     notify('error', 'Erro', (result.data && result.data.error) ? result.data.error : 'Falha ao registrar.');
-                    if (gate) {
-                        gate.setInitial();
-                    }
+                    reenable();
                 })
                 .catch(function () {
                     notifyByKey('generic.error.connection', {}, 'error', 'Erro', 'Erro de conexão.');
-                    if (gate) {
-                        gate.setInitial();
-                    }
+                    reenable();
                 });
         });
     }

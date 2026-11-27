@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/OficiosGabineteRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
-require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
@@ -103,7 +102,6 @@ final class OficiosGabineteService
                 $classeId = $this->classesRepository->ensureClass($classeCodigo, $classeNome);
             }
             $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, null);
-            ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
         }
 
         $tipoOficio = TextFormatter::formatProperName($tipoOficioRaw, 255);

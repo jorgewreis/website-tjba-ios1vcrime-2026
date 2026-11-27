@@ -218,9 +218,6 @@ if ($totalPages > 0) {
                 <button type="button" class="btn btn-primary" id="btn-gab-oficio-registrar">Registrar</button>
             </div>
         </div>
-        <input type="hidden" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true">
-        <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
-        <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom border-top">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
@@ -385,7 +382,7 @@ if ($totalPages > 0) {
         </div>
     </div>
 
-    <?php include __DIR__ . '/_datajud_scripts.php'; ?>
+    <?php include __DIR__ . '/_cnj_scripts.php'; ?>
     <script>
         (function() {
 
@@ -428,8 +425,6 @@ if ($totalPages > 0) {
                 buildRequest: function (ctx) {
                     const proc = document.getElementById('filter-processo')?.value?.trim() || '';
                     const tipo = document.getElementById('gab-oficio-tipo')?.value || '';
-                    const cc = document.getElementById('hidden-classe-codigo')?.value || '';
-                    const cd = document.getElementById('hidden-classe-descricao')?.value || '';
                     const admin = ctx.isAdministrative();
 
                     if (!tipo) {
@@ -440,19 +435,9 @@ if ($totalPages > 0) {
                         ctx.notify('error', 'Validação', 'Preencha o número do processo.');
                         return null;
                     }
-                    if (!admin) {
-                        const classeVal = document.getElementById('filter-classe')?.value?.trim() || '';
-                        if (classeVal === 'Aguarde...' || classeVal === 'Consultando DataJud…') {
-                            ctx.notify('error', 'Validação', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
-                            return null;
-                        }
-                    }
-
                     return {
                         numero_processo: proc,
-                        tipo_oficio: tipo,
-                        classe_codigo: admin && !proc ? '' : cc,
-                        classe_descricao: admin && !proc ? '' : cd
+                        tipo_oficio: tipo
                     };
                 },
                 buildSuccessPayload: function () {

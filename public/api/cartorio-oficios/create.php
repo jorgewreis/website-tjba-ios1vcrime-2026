@@ -45,18 +45,9 @@ try {
     $parsed['criado_por'] = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
 
     $service = new OficiosCartorioService($connection);
-    $newId = $service->create($parsed);
-    $row = $service->find($newId);
-    $numeroOficio = null;
-    if (is_array($row)) {
-        $seq = isset($row['numero_sequencial']) ? (int) $row['numero_sequencial'] : 0;
-        $ano = isset($row['ano']) ? (int) $row['ano'] : 0;
-        if ($seq > 0 && $ano > 0) {
-            $numeroOficio = $seq . '/' . $ano;
-        }
-    }
+    $created = $service->createWithNumber($parsed);
     http_response_code(201);
-    echo json_encode(['id' => $newId, 'numero_oficio' => $numeroOficio], JSON_UNESCAPED_UNICODE);
+    echo json_encode($created, JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $exception) {
     http_response_code(400);
     echo json_encode(['error' => $exception->getMessage()], JSON_UNESCAPED_UNICODE);
