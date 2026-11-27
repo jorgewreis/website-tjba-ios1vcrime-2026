@@ -3,14 +3,19 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/ProcessResponsibleSectorDefault.php';
+require_once __DIR__ . '/../helpers/ProcessResponsibleSectorAdminPolicy.php';
+require_once __DIR__ . '/../helpers/ProcessoSetorAuthorization.php';
+require_once __DIR__ . '/../access/AccessEvaluator.php';
 
 final class ResponsibleProcessNotFound extends RuntimeException {}
+final class ResponsibleSectorForbidden extends RuntimeException {}
 
 final class ProcessResponsibleSectorService
 {
     public function __construct(private PDO $connection) {}
 
     /**
+     * @param list<string> $effectiveProfiles Perfis efetivos do operador, não dados da requisição.
      * @return array{process_id:string,previous_sector_id:?string,sector_id:string,is_default:bool,changed:bool}
      */
     public function assign(
@@ -18,8 +23,13 @@ final class ProcessResponsibleSectorService
         ?string $sectorId,
         string $justification,
         string $actorId,
-        string $remoteAddress
+        string $remoteAddress,
+        array $effectiveProfiles
     ): array {
+        if (!AccessEvaluator::canAccessPage('consultaprocessosedit', $effectiveProfiles)) {
+            throw new ResponsibleSectorForbidden('Acesso negado.');
+        }
+        $isAdmin = ProcessResponsibleSectorAdminPolicy::allows($effectiveProfiles);
         $processId = trim($processId);
         $sectorId = $sectorId !== null ? trim($sectorId) : null;
         $actorId = trim($actorId);
@@ -64,8 +74,18 @@ final class ProcessResponsibleSectorService
             );
             $processStatement->execute([':id' => $processId]);
             $process = $processStatement->fetch(PDO::FETCH_ASSOC);
+            $processStatement->closeCursor();
+            // A leitura/edição da ficha não autoriza mover um registro de outro
+            // setor. O registro e a lotação efetiva são revalidados sob lock.
+            if (!$isAdmin && ($process === false
+                || !ProcessoSetorAuthorization::canModifyProcess($this->connection, $actorId, $processId, true))) {
+                throw new ResponsibleSectorForbidden('Acesso negado.');
+            }
             if ($process === false) {
                 throw new ResponsibleProcessNotFound('Processo não encontrado.');
+            }
+            if (!$isAdmin && $sectorId === null) {
+                throw new ResponsibleSectorForbidden('Selecione explicitamente um setor ativo.');
             }
 
             $effectiveSector = $sectorId;
@@ -81,7 +101,9 @@ final class ProcessResponsibleSectorService
                 . ($sectorId === null ? " AND UPPER(TRIM(`codigo_area`)) = 'CARTORIO'" : '') . ' LIMIT 1' . $lockClause
             );
             $sectorStatement->execute([':id' => $effectiveSector]);
-            if ($sectorStatement->fetchColumn() === false) {
+            $validSector = $sectorStatement->fetchColumn() !== false;
+            $sectorStatement->closeCursor();
+            if (!$validSector) {
                 throw new InvalidArgumentException('Selecione um setor ativo existente.');
             }
 

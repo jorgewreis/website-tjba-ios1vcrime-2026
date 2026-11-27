@@ -8,18 +8,11 @@ require_once $basePath . '/app/helpers/ApiErrorReporter.php';
 ApiErrorReporter::register('public/api/processos/setor-responsavel.php');
 require_once $basePath . '/app/helpers/ApiAccessGuard.php';
 require_once $basePath . '/app/helpers/Conection.php';
-require_once $basePath . '/app/helpers/ProcessResponsibleSectorAdminPolicy.php';
 require_once $basePath . '/app/services/ProcessResponsibleSectorService.php';
 
 ApiAccessGuard::requireAccess(['consultaprocessosedit'], true);
 
 $actorId = trim((string) ($_SESSION['id_usuario'] ?? ''));
-$profiles = UsuarioPerfisAutorizacao::perfisDoUsuario($actorId);
-if (!ProcessResponsibleSectorAdminPolicy::allows($profiles)) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Acesso negado.'], JSON_UNESCAPED_UNICODE);
-    exit;
-}
 
 $rawPayload = file_get_contents('php://input');
 $payload = json_decode(is_string($rawPayload) ? $rawPayload : '', true);
@@ -37,15 +30,20 @@ try {
     }
     $justification = $reason;
 
+    $profiles = UsuarioPerfisAutorizacao::perfisDoUsuario($actorId);
     $service = new ProcessResponsibleSectorService(Conection::getInstance()->getConnection());
     $result = $service->assign(
         $processId,
         $sectorId,
         $justification,
         $actorId,
-        (string) ($_SERVER['REMOTE_ADDR'] ?? '')
+        (string) ($_SERVER['REMOTE_ADDR'] ?? ''),
+        $profiles
     );
     echo json_encode(['success' => true] + $result, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+} catch (ResponsibleSectorForbidden $error) {
+    http_response_code(403);
+    echo json_encode(['error' => $error->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (ResponsibleProcessNotFound $error) {
     http_response_code(404);
     echo json_encode(['error' => 'Processo não encontrado.'], JSON_UNESCAPED_UNICODE);

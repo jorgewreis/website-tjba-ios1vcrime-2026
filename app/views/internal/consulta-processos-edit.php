@@ -69,6 +69,8 @@ $linkEdicaoFicha = $linkLeituraFicha . '&modo=editar';
 $linkListaFicha = $retornoFicha ?? '/frame.php?page=consultaprocessos';
 
 $podeAtribuirSetorResponsavel = $modoEdicao && $adminFicha;
+$podeEncaminharSetorResponsavel = $modoEdicao && ($adminFicha || $acessoSetorial)
+    && AccessEvaluator::canAccessPage('consultaprocessosedit', $userPerfils ?? []);
 $setoresResponsaveis = [];
 $setorResponsavelAtual = '';
 $setorCartorioPadrao = null;
@@ -82,7 +84,7 @@ try {
     $stmtSetorAtual->execute([':id' => (string) ($processo['id'] ?? '')]);
     $rowSetorAtual = $stmtSetorAtual->fetch(PDO::FETCH_ASSOC) ?: [];
     $setorResponsavelAtual = trim((string) ($rowSetorAtual['id_setor_responsavel'] ?? ''));
-    if ($setorResponsavelAtual === '' || $podeAtribuirSetorResponsavel) {
+    if ($setorResponsavelAtual === '' || $podeEncaminharSetorResponsavel) {
         $setorCartorioPadrao = ProcessResponsibleSectorDefault::resolve($connection);
     }
     if ($setorResponsavelAtual === '') {
@@ -91,7 +93,7 @@ try {
         $setorNomeExibido = (string) $rowSetorAtual['setor_nome'];
         if ((int) ($rowSetorAtual['setor_ativo'] ?? 0) !== 1) $setorNomeExibido .= ' (inativo)';
     }
-    if ($podeAtribuirSetorResponsavel) {
+    if ($podeEncaminharSetorResponsavel) {
         $stmtSetores = $connection->query('SELECT `id_setor`, `nome` FROM `setores` WHERE `ativo` = 1 ORDER BY `nome` ASC');
         $setoresResponsaveis = $stmtSetores ? $stmtSetores->fetchAll(PDO::FETCH_ASSOC) : [];
     }
@@ -238,7 +240,7 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <p class="ficha-secundario">O nível é informativo e não altera as permissões de acesso.</p>
             </section>
         <?php endif; ?>
-        <?php if ($podeAtribuirSetorResponsavel): ?>
+        <?php if ($podeEncaminharSetorResponsavel): ?>
         <section class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" aria-labelledby="responsible-sector-title">
             <div>
                 <h2 id="responsible-sector-title">Setor ativo</h2>
@@ -500,7 +502,7 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
     <script src="/assets/js/shared/processo-nivel-sigilo.js?v=<?= filemtime(__DIR__ . '/../../../public/assets/js/shared/processo-nivel-sigilo.js') ?>"></script>
     <?php endif; ?>
     <script src="/assets/js/shared/processos-edit.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/processos-edit.js') ?: time(); ?>"></script>
-    <?php if ($podeAtribuirSetorResponsavel && $erroSetorResponsavel === ''): ?>
+    <?php if ($podeEncaminharSetorResponsavel && $erroSetorResponsavel === ''): ?>
     <script src="/assets/js/shared/processo-setor-responsavel.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/processo-setor-responsavel.js') ?: time(); ?>"></script>
     <?php endif; ?>
     <script>
