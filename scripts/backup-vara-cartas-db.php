@@ -24,6 +24,22 @@ function classifyVaraDumpFailure(string $stderr): string
     };
 }
 
+function varaDumpClientOptions(string $dump): array
+{
+    $proc = proc_open([$dump, '--no-defaults', '--version'],
+        [0=>['file','/dev/null','r'], 1=>['pipe','w'], 2=>['file','/dev/null','w']], $pipes);
+    if (!is_resource($proc)) throw new VaraBackupFailure('CLIENT_VERSION');
+    $version = stream_get_contents($pipes[1], 2048);
+    fclose($pipes[1]);
+    if (proc_close($proc) !== 0) throw new VaraBackupFailure('CLIENT_VERSION');
+    if (preg_match('/Mariadb/i', (string)$version)) return [];
+    if (preg_match('/mysqldump\s+Ver\s+8[.]4[.]/i', (string)$version)) {
+        // Logical recovery of one database, not restoration of replication state.
+        return ['--set-gtid-purged=OFF', '--column-statistics=0'];
+    }
+    return [];
+}
+
 function dumpVaraDatabase(string $dump, string $home, string $host, int $port, string $name, string $user, string $pass): array
 {
     if (!preg_match('/^[a-zA-Z0-9_][a-zA-Z0-9_-]*$/D', $name)) {
@@ -45,10 +61,11 @@ function dumpVaraDatabase(string $dump, string $home, string $host, int $port, s
         $opts = "[client]\nprotocol=".($host === 'localhost' ? 'socket' : 'tcp')."\nhost=".$quote($host)."\nport=".$port."\nuser=".$quote($user)."\npassword=".$quote($pass)."\n";
         if (file_put_contents($cnf, $opts) !== strlen($opts)) throw new VaraBackupFailure('CLIENT_CONFIG');
         unset($opts);
+        $extra = varaDumpClientOptions($dump);
         $proc = proc_open(
             [$dump, '--defaults-file='.$cnf, '--single-transaction', '--quick', '--skip-lock-tables',
-                '--routines', '--events', '--triggers', '--hex-blob', '--no-tablespaces', '--', $name],
-            [0=>['file','/dev/null','r'], 1=>['pipe','w'], 2=>['file',$err,'w']], $pipes, null, ['PATH'=>'/usr/bin:/bin']
+                '--routines', '--events', '--triggers', '--hex-blob', '--no-tablespaces', ...$extra, '--', $name],
+            [0=>['file','/dev/null','r'], 1=>['pipe','w'], 2=>['file',$err,'w']], $pipes, null, ['PATH'=>'/usr/bin:/bin','MYSQL_TEST_LOGIN_FILE'=>$cnf.'.no-login']
         );
         if (!is_resource($proc)) throw new VaraBackupFailure('DUMP_START');
         $bytes = 0;
@@ -72,8 +89,16 @@ function dumpVaraDatabase(string $dump, string $home, string $host, int $port, s
             $exit = proc_close($proc);
         }
         if (!$valid || $exit !== 0 || $bytes === 0 || !str_contains($tail, '-- Dump completed on')) {
-            $reason = classifyVaraDumpFailure((string) @file_get_contents($err, false, null, 0, 8192));
-            throw new VaraBackupFailure($reason, 'A exportação não terminou íntegra; nenhum backup foi publicado.');
+            $stderr = (string) @file_get_contents($err, false, null, 0, 8192);
+            $reason = match (true) {
+                !$valid => 'DUMP_WRITE',
+                $exit === 0 && $bytes === 0 => 'DUMP_EMPTY',
+                $exit === 0 => 'DUMP_FOOTER',
+                default => classifyVaraDumpFailure($stderr),
+            };
+            $errno = preg_match('/(?:Got error:|\bError)\s+(1[0-9]{3}|2[0-9]{3}|3[0-9]{3})\b/i', $stderr, $match) ? $match[1] : 'none';
+            throw new VaraBackupFailure($reason . ' exit=' . (int)$exit . ' errno=' . $errno,
+                'A exportação não terminou íntegra; nenhum backup foi publicado.');
         }
         $check = proc_open(['/usr/bin/gzip','-t',$partial], [0=>['file','/dev/null','r'],1=>['file','/dev/null','w'],2=>['file','/dev/null','w']], $unused);
         if (!is_resource($check) || proc_close($check) !== 0) throw new VaraBackupFailure('GZIP_CHECK');
