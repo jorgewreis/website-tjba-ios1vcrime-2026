@@ -38,6 +38,8 @@ Um caso integrado no teste de serviço usa transporte sintético e passa pelo ma
 
 Uma fixture HTTP local adicional executa o handler e o filtro reais com autenticação, repositório e DataJud simulados. Ela verifica os quatro campos, recusa inicial de sigilo, rechecagem após mudança de número/exclusão/sigilo e respostas de erro incompleta e ambígua. Não comprova login, banco real, concorrência ou a rede do CNJ.
 
+O teste HTTP e o teste de interface simulada foram acrescentados ao workflow PHP existente. Ambos passaram no Windows e em contêiner Linux isolado sem rede externa, com checkout montado somente para leitura. O workflow remoto ainda não foi executado nesta candidata.
+
 ## Pendente
 
 1. Após recuperação da origem e respeitando a limitação, consultar os três casos e conferir identidade, completude, classe, assuntos, grau e órgão retornados; registrar a origem de comarca sem inferir lotação atual.
