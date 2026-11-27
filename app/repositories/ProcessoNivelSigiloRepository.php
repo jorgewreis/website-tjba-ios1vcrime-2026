@@ -14,10 +14,11 @@ final class ProcessoNivelSigiloRepository
     public function disponivel(): bool
     {
         if ($this->disponivel === null) {
-            $stmt = $this->db->query(
-                "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()
-                 AND TABLE_NAME = 'processos' AND COLUMN_NAME = 'nivel_sigilo' LIMIT 1"
-            );
+            $sql = $this->db->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite'
+                ? "SELECT 1 FROM pragma_table_info('processos') WHERE name = 'nivel_sigilo'"
+                : "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE()
+                   AND TABLE_NAME = 'processos' AND COLUMN_NAME = 'nivel_sigilo' LIMIT 1";
+            $stmt = $this->db->query($sql);
             $this->disponivel = $stmt !== false && $stmt->fetchColumn() !== false;
         }
         return $this->disponivel;

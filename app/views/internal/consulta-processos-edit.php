@@ -15,6 +15,7 @@ require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 require_once __DIR__ . '/../../helpers/ProcessResponsibleSectorDefault.php';
 require_once __DIR__ . '/../../helpers/ProcessoSetorAuthorization.php';
 require_once __DIR__ . '/../../repositories/ProcessoNivelSigiloRepository.php';
+require_once __DIR__ . '/../../services/ProcessoSigiloCadastroService.php';
 require_once __DIR__ . '/../../repositories/ProcessoVaraRepository.php';
 require_once __DIR__ . '/../../helpers/ProcessoFicha.php';
 require_once __DIR__ . '/../../access/AccessEvaluator.php';
@@ -120,7 +121,8 @@ $origemClasseFicha = $processo['classe_origem'] ?? null;
 $classeProtegidaFicha = $origemClasseFicha === 'datajud'
     || (array_key_exists('classe_origem', $processo) && $classeNomeAtual !== '' && $origemClasseFicha !== 'manual');
 $podeRegistrarNivel = false;
-$nivelDisponivel = false;
+$bloqueioNivel = 'Somente usuários internos vinculados ao setor responsável podem alterar a classificação.';
+$protecaoNivel = false;
 $nivelConfirmado = null;
 $varaDisponivel = false;
 $varaLocal = null;
@@ -134,16 +136,21 @@ try {
     $varaDisponivel = false;
     error_log('Não foi possível consultar o registro local da Vara.');
 }
-if ($sigilosoFicha && $acessoSetorial) {
+if ($acessoSetorial && ProcessoSigiloCadastroService::perfilPermitido($userPerfils ?? [])) {
     try {
         $repoNivel = new ProcessoNivelSigiloRepository($connection);
-        $nivelDisponivel = $repoNivel->disponivel();
-        if ($nivelDisponivel) {
-            $podeRegistrarNivel = $podeAtribuirSetorResponsavel;
+        if ($sigilosoFicha && $repoNivel->disponivel()) {
             $nivelConfirmado = $repoNivel->porIds([$processoIdFicha])[$processoIdFicha] ?? null;
         }
+        if ($modoEdicao) {
+            $preflightNivel = (new ProcessoSigiloCadastroService($connection))->preflight($processoIdFicha);
+            $podeRegistrarNivel = true;
+            $protecaoNivel = $preflightNivel['protecao'];
+        }
+    } catch (ProcessoSigiloCadastroErro $erroNivel) {
+        $bloqueioNivel = $erroNivel->getMessage();
     } catch (Throwable $erroNivel) {
-        $podeRegistrarNivel = false;
+        $bloqueioNivel = 'Não foi possível verificar a disponibilidade da classificação. Nenhuma alteração foi feita.';
         error_log('Não foi possível carregar a classificação local de sigilo.');
     }
 }
@@ -214,36 +221,39 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <p class="ficha-secundario ficha-edicao-campo">Registro local da Vara indisponível até a atualização do banco.</p>
             <?php endif; ?>
         </section>
-        <?php if ($podeRegistrarNivel): ?>
+        <?php if ($sigilosoFicha || $podeRegistrarNivel): ?>
         <section class="ficha-secao ficha-editor-summary" aria-labelledby="processo-sigilo-titulo">
-            <h2 id="processo-sigilo-titulo">Nível de sigilo</h2>
-            <p id="processo-sigilo-orientacao">Registre o nível conferido no PJe. Não altera as permissões de acesso.</p>
-            <form id="processo-nivel-sigilo-form" class="display-flex row row-full flex-wrap align-end gap-y-md" data-process-id="<?= htmlspecialchars($processoIdFicha, ENT_QUOTES) ?>">
-                <div class="col">
-                    <label for="processo-nivel-sigilo">Nível confirmado no PJe</label>
-                    <select required id="processo-nivel-sigilo" class="height-md" aria-describedby="processo-sigilo-orientacao">
-                        <option value="" disabled <?= $nivelConfirmado === null ? 'selected' : '' ?>>Selecione o nível</option>
-                        <?php foreach (ProcessoNivelSigilo::ROTULOS as $nivel => $rotulo): ?>
-                        <option value="<?= $nivel ?>" <?= $nivelConfirmado === $nivel ? 'selected' : '' ?>><?= htmlspecialchars($rotulo, ENT_QUOTES) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary height-md">Salvar nível</button>
-            </form>
-            <p id="processo-nivel-sigilo-status" role="status" aria-live="polite"></p>
-        </section>
-        <?php else: ?>
-            <section class="ficha-secao ficha-editor-summary" aria-labelledby="processo-sigilo-titulo">
-                <h2 id="processo-sigilo-titulo">Nível de sigilo</h2>
-                <?php if (!$sigilosoFicha): ?>
-                    <p class="ficha-secundario">O cadastro é público. Só é possível informar o nível em um processo já marcado como sigiloso.</p>
-                <?php elseif (!$acessoSetorial || !$adminFicha): ?>
-                    <p class="ficha-secundario">Somente a administração com acesso ao setor pode registrar o nível de sigilo.</p>
-                <?php else: ?>
-                    <p class="ficha-secundario">Registro do nível indisponível até a atualização do banco. O processo permanece sigiloso.</p>
+            <h2 id="processo-sigilo-titulo">Classificação de sigilo</h2>
+            <?php if ($podeRegistrarNivel): ?>
+                <?php if ($protecaoNivel): ?>
+                    <p class="ficha-secundario" role="status">Há uma proteção independente. A ficha não permite retirar ou reduzir o sigilo.</p>
                 <?php endif; ?>
-                <p class="ficha-secundario">O nível é informativo e não altera as permissões de acesso.</p>
-            </section>
+                <?php $nivelInicialFicha = $sigilosoFicha ? (string) ($nivelConfirmado ?? '') : 'publico'; ?>
+                <form id="processo-nivel-sigilo-form" class="display-flex col col-full gap-y-md"
+                      data-process-id="<?= $eFicha($processoIdFicha) ?>" data-inicial="<?= $eFicha($nivelInicialFicha) ?>"
+                      data-sigiloso="<?= $sigilosoFicha ? '1' : '0' ?>">
+                    <div class="col">
+                        <label for="processo-nivel-sigilo">Classificação</label>
+                        <select required id="processo-nivel-sigilo" class="height-md">
+                            <option value="" disabled <?= $nivelInicialFicha === '' ? 'selected' : '' ?>>Selecione a classificação</option>
+                            <option value="publico" <?= $nivelInicialFicha === 'publico' ? 'selected' : '' ?> <?= $protecaoNivel ? 'disabled' : '' ?>>Público</option>
+                            <?php foreach (ProcessoNivelSigilo::ROTULOS as $nivel => $rotulo): ?>
+                                <option value="<?= $nivel ?>" <?= $nivelConfirmado === $nivel ? 'selected' : '' ?>
+                                  <?= $protecaoNivel && $nivelConfirmado !== null && $nivel < $nivelConfirmado ? 'disabled' : '' ?>><?= $eFicha($rotulo) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <label id="processo-sigilo-confirmacao" hidden>
+                        <input type="checkbox" id="processo-sigilo-confirmei-pje">
+                        Conferi no PJe que este processo é público e confirmo a retirada do sigilo neste sistema.
+                    </label>
+                    <button type="submit" class="btn btn-primary height-md" disabled>Salvar classificação</button>
+                </form>
+                <p id="processo-nivel-sigilo-status" role="status" aria-live="polite"></p>
+            <?php else: ?>
+                <p class="ficha-secundario" role="status"><?= $eFicha($bloqueioNivel) ?></p>
+            <?php endif; ?>
+        </section>
         <?php endif; ?>
         <?php if ($podeEncaminharSetorResponsavel): ?>
         <section class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" aria-labelledby="responsible-sector-title">

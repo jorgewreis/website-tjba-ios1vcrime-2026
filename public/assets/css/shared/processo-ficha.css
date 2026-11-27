@@ -81,4 +81,5 @@
 .ficha-edicao-campo { margin-top:14px; }
 .ficha-edicao-campo .row { gap:9px; margin-block:5px; }
 
+.ficha-editor.card-page #processo-sigilo-confirmei-pje { width:auto; }
 .ficha-catalogo-texto { margin:3px 0 0; color:var(--ficha-ink); overflow-wrap:anywhere; }
