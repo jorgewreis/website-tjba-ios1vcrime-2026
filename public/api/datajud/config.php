@@ -47,6 +47,6 @@ return [
     /** @deprecated Mantido para compat.: URL completa antiga; o serviço deriva base_url se necessário */
     'endpoint' => $baseUrl . '/api_publica_' . $defaultAlias . '/_search',
     'api_key' => $_ENV['DATAJUD_API_KEY'] ?? getenv('DATAJUD_API_KEY') ?: '',
-    'timeout' => 30,
+    'timeout' => 60,
     'connect_timeout' => 10,
 ];
