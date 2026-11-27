@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0054
+
+**Data:** 2026-11-27 20:01:59 | **Commit:** `3f1b607e` | **Tipo:** `patch`
+
+- test(REI-107): observe lock wait from expected worker
+
 ## V. 1.88.0030
 
 **Data:** 2026-11-25 07:37:33 | **Commit:** `115dd83d` | **Tipo:** `patch`
@@ -7853,3 +7859,4 @@
 
 
 \n
+

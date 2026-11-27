@@ -174,14 +174,14 @@ $waitForLock = static function (array $worker, int $blockingConnection, string $
     $deadline = microtime(true) + 10;
     while (microtime(true) < $deadline) {
         $state = $workerState($db, $worker['slot']);
-        $wait = $db->prepare('SELECT r.PROCESSLIST_ID FROM performance_schema.data_lock_waits w JOIN performance_schema.threads r ON r.THREAD_ID=w.REQUESTING_THREAD_ID JOIN performance_schema.threads b ON b.THREAD_ID=w.BLOCKING_THREAD_ID JOIN performance_schema.data_locks rl ON rl.ENGINE_LOCK_ID=w.REQUESTING_ENGINE_LOCK_ID JOIN performance_schema.data_locks bl ON bl.ENGINE_LOCK_ID=w.BLOCKING_ENGINE_LOCK_ID WHERE b.PROCESSLIST_ID=:blocker AND rl.OBJECT_SCHEMA=DATABASE() AND rl.OBJECT_NAME=:request_table AND bl.OBJECT_SCHEMA=DATABASE() AND bl.OBJECT_NAME=:block_table LIMIT 1');
-        $wait->execute([':blocker' => $blockingConnection, ':request_table' => $parentTable, ':block_table' => $parentTable]);
-        $requester = $wait->fetchColumn();
-        if ($requester !== false) {
-            if ($state === null || (int) $state['connection_id'] !== (int) $requester) {
-                throw new RuntimeException('Lock wait InnoDB não pertence à conexão do worker esperado.');
+        $workerConnection = $state === null ? null : (int) $state['connection_id'];
+        if ($workerConnection !== null && $workerConnection > 0) {
+            $wait = $db->prepare('SELECT r.PROCESSLIST_ID FROM performance_schema.data_lock_waits w JOIN performance_schema.threads r ON r.THREAD_ID=w.REQUESTING_THREAD_ID JOIN performance_schema.threads b ON b.THREAD_ID=w.BLOCKING_THREAD_ID JOIN performance_schema.data_locks rl ON rl.ENGINE_LOCK_ID=w.REQUESTING_ENGINE_LOCK_ID JOIN performance_schema.data_locks bl ON bl.ENGINE_LOCK_ID=w.BLOCKING_ENGINE_LOCK_ID WHERE r.PROCESSLIST_ID=:worker AND b.PROCESSLIST_ID=:blocker AND rl.OBJECT_SCHEMA=DATABASE() AND rl.OBJECT_NAME=:request_table AND bl.OBJECT_SCHEMA=DATABASE() AND bl.OBJECT_NAME=:block_table LIMIT 1');
+            $wait->execute([':worker' => $workerConnection, ':blocker' => $blockingConnection, ':request_table' => $parentTable, ':block_table' => $parentTable]);
+            $requester = $wait->fetchColumn();
+            if ($requester !== false) {
+                return (int) $requester;
             }
-            return (int) $requester;
         }
         if ($state !== null) {
             if (!in_array($state['status'], ['starting', 'running'], true)) {
