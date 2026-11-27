@@ -27,6 +27,7 @@ function render(url, perfil) {
     try {
         for (const f of ['app/views/internal/consulta-processos-edit.php','app/views/internal/partials/processo-ficha-assets.php',
             'app/views/internal/partials/processo-ficha-contexto.php','app/views/internal/partials/processo-ficha-leitura.php',
+            'app/views/internal/partials/processo-ficha-alertas-sigilo.php',
             'app/views/internal/_internal_head_css.php','app/views/internal/_processo_ficha_modal_assets.php','app/helpers/ProcessoFicha.php','app/helpers/CnjValidator.php',
             'app/helpers/ProcessoNivelSigilo.php','app/repositories/ProcessoVaraRepository.php','app/DataJud/DataJudTribunalResolver.php','app/access/ProfileNormalizer.php',
             'public/assets/css/shared/processo-ficha.css','public/assets/js/shared/processo-ficha.js',
@@ -58,10 +59,10 @@ function render(url, perfil) {
         stub('helpers','ProcessResponsibleSectorDefault','static function resolve(...$x){return ["id_setor"=>"CT"];}');
         stub('helpers','ParteDocumentoHelper','');
         stub('repositories','SalaAudienciasPautaParteRepository','function countPartesMenoresAtivasPorProcesso($id){return 0;}');
-        stub('repositories','ProcessoNivelSigiloRepository','function disponivel(){return true;} function porIds($ids){return ["P2"=>2];}');
+        stub('repositories','ProcessoNivelSigiloRepository','function disponivel(){return ($_GET["id"]??"")!=="P6";} function porIds($ids){return ["P2"=>2];}');
         stub('repositories','PartesDocumentosRepository','');
         stub('repositories','PartesInstituicoesRepository','');
-        stub('repositories','ProcessosRepository','function findById($id){return ["id"=>$id,"numero_processo"=>"0001234-76.2026.8.05.0103","sigiloso"=>$id==="P2"]; }');
+        stub('repositories','ProcessosRepository','function findById($id){return ["id"=>$id,"numero_processo"=>"0001234-76.2026.8.05.0103","sigiloso"=>in_array($id,["P2","P6"],true)]; }');
         stub('services','ConsultaProcessosService',`function get($id){return (new ProcessosRepository())->findById($id)+[
             "classe_nome"=>"Classe cadastrada fictícia","classe_origem"=>$id==="P2"?"datajud":"manual","assuntos"=>[
               ["id"=>"VINCULO-AF","assunto_id"=>"AF","origem"=>"manual","assunto_codigo"=>"100","assunto_descricao"=>"Assunto cadastrado"],
@@ -179,6 +180,7 @@ function render(url, perfil) {
             assert.equal(await pg.getByRole('heading',{name:'Dados do processo',exact:true}).count(),1);
             assert.equal(await pg.locator('#processo-vara-local').inputValue(),'Vara local fictícia');
             assert.equal(await pg.locator('#processo-nivel-sigilo').count(),0,'não permite alterar acesso de processo público');
+            assert.equal(await pg.getByText('O cadastro é público. Só é possível informar o nível em um processo já marcado como sigiloso.').isVisible(),true);
             assert.equal(await pg.getByText('DataJud',{exact:true}).count(),0,'o assunto sincronizado não carrega selo');
             assert.equal(await pg.locator('[data-assunto-id="APROT"] .btn-assunto-desvincular').count(),0);
             const codigoClasse = pg.locator('#proc-classe-codigo');
@@ -241,13 +243,20 @@ function render(url, perfil) {
             assert.equal(negada.status(),403);
             await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P3');
             await pg.getByText('Histórico indisponível na base pública por sigilo.').waitFor();
-            assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Sigiloso · nível não informado');
+            assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');
+            assert.equal(await pg.locator('[data-ficha-sigilo-datajud]').isVisible(),true);
+            assert.equal(await pg.locator('[data-ficha-sigilo-datajud]').textContent(),'Restrição indicada pelo DataJud · nível não informado');
             await Promise.all([
                 pg.waitForResponse(r=>r.url().includes('datajud-ficha.php')),
                 pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P4')
             ]);
             await pg.waitForFunction(()=>document.querySelector('[data-ficha-status]').textContent !== 'Movimentações ainda não carregadas.');
-            assert.equal(await pg.locator('[data-ficha-sigilo-local]').textContent(),'Sigiloso · nível não informado');
+            assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');
+            assert.equal(await pg.locator('[data-ficha-alerta-protecao]').isVisible(),true);
+            await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P6&modo=editar');
+            assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Sigiloso · nível não informado');
+            assert.equal(await pg.locator('#processo-nivel-sigilo').count(),0);
+            assert.equal(await pg.getByText('Registro do nível indisponível até a atualização do banco. O processo permanece sigiloso.').isVisible(),true);
             await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P5&modo=editar');
             assert.equal(await pg.getByText('Registro local da Vara indisponível até a atualização do banco.').count(),1);
             assert.equal(await pg.locator('#processo-vara-local').count(),0);
