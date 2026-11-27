@@ -11,16 +11,20 @@ module.exports = function render(root) {
         fs.writeFileSync(file, data);
     };
     const copy = name => put(name, fs.readFileSync(path.join(root, name)));
+    for (const folder of ['helpers','repositories','services','access','DataJud','views/internal']) {
+        const source = path.join(root, 'app', folder);
+        if (fs.existsSync(source)) fs.cpSync(source, path.join(dir, 'app', folder), {recursive:true});
+    }
     const views = {dashboard:'dashboard',process:'consulta-processos-edit',create:'cartorio-guias-create',edit:'cartorio-guias-edit'};
     put('config/security.php', '<?php');
     try {
-        for (const name of [...Object.values(views), '_internal_head_styles','_internal_head_css','_toast_script','_theme_script','_profile_saved_reload_parent','_cartorio_alocacao_direcionada_create','_cartorio_alocacao_direcionada_edit','_cartorio_timeline','_datajud_scripts']) copy('app/views/internal/'+name+'.php');
-        for (const name of ['access/ProfileNormalizer','helpers/ProcessResponsibleSectorDefault','helpers/ParteDocumentoHelper']) copy('app/'+name+'.php');
+        for (const name of [...Object.values(views), '_internal_head_styles','_internal_head_css','_toast_script','_theme_script','_profile_saved_reload_parent','_cartorio_alocacao_direcionada_create','_cartorio_alocacao_direcionada_edit','_cartorio_timeline','_datajud_scripts','_processo_ficha_modal_assets']) copy('app/views/internal/'+name+'.php');
+        for (const name of ['access/ProfileNormalizer','helpers/ProcessResponsibleSectorDefault','helpers/ParteDocumentoHelper','helpers/ProcessoSetorAuthorization','repositories/ProcessoNivelSigiloRepository','services/ProcessoSigiloCadastroService','repositories/ProcessoVaraRepository','services/TjbaCatalogo','helpers/ProcessoFicha','access/AccessEvaluator']) copy('app/'+name+'.php');
         put('app/helpers/Conection.php', `<?php class Conection {
             static function getInstance(){return new self;}
             function getConnection(){
                 $db=new PDO('sqlite::memory:');
-                $db->exec("CREATE TABLE processos(id TEXT, id_setor_responsavel TEXT); CREATE TABLE setores(id_setor TEXT, nome TEXT, ativo INT, codigo_area TEXT); INSERT INTO processos VALUES ('P', NULL); INSERT INTO setores VALUES ('S', 'Cartório', 1, 'CARTORIO')");
+                $db->exec("CREATE TABLE processos(id TEXT, id_setor_responsavel TEXT); CREATE TABLE setores(id_setor TEXT, nome TEXT, ativo INT, codigo_area TEXT); CREATE TABLE usuario_setor(usuario TEXT, setor TEXT); INSERT INTO processos VALUES ('P', NULL); INSERT INTO setores VALUES ('S', 'Cartório', 1, 'CARTORIO'); INSERT INTO usuario_setor VALUES ('FIXTURE', 'S')");
                 return $db;
             }
         }`);
@@ -45,8 +49,8 @@ module.exports = function render(root) {
         ]; }`);
         const html = {};
         for (const [key,view] of Object.entries(views)) {
-            put('render.php', `<?php class Security {static function requireAuthentication(){} static function generateCSRFToken(){return 'fixture';}} require_once __DIR__.'/app/helpers/Conection.php';
-                $_SESSION=['id_usuario'=>'FIXTURE']; $_GET=['id'=>${JSON.stringify(key==='edit'?'G':'P')},'page'=>${JSON.stringify(key==='process'?'consultaprocessosedit':key==='create'?'guiascreate':key==='edit'?'guiasedit':'dashboard')}]; $userPerfils=['ADMIN'];
+            put('render.php', `<?php function appIsHttpsRequest(){return false;} class Security {static function requireAuthentication(){} static function generateCSRFToken(){return 'fixture';}} require_once __DIR__.'/app/helpers/Conection.php';
+                $_SESSION=['id_usuario'=>'FIXTURE']; $_GET=['id'=>${JSON.stringify(key==='edit'?'G':'P')},'page'=>${JSON.stringify(key==='process'?'consultaprocessosedit':key==='create'?'guiascreate':key==='edit'?'guiasedit':'dashboard')},'modo'=>${JSON.stringify(key==='process'?'editar':'')}]; $userPerfils=['ADMIN'];
                 require __DIR__.'/app/views/internal/${view}.php';`);
             html[key]=execFileSync(process.env.PHP_BIN || 'php',['-d','display_errors=stderr',path.join(dir,'render.php')],{encoding:'utf8'});
         }
