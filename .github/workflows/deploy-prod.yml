@@ -5,6 +5,10 @@ on:
     branches: ["main"]
   workflow_dispatch:
     inputs:
+      somente_backup_vara:
+        description: "Somente backup privado do banco da Vara (sem deploy nem migração)"
+        type: boolean
+        default: false
       migrar_prioridade_cartas:
         description: "Executar migração de prioridade (somente após confirmar recuperação e janela)"
         type: boolean
@@ -16,6 +20,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ !inputs.somente_backup_vara || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: production
 
@@ -127,7 +132,21 @@ jobs:
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
         run: bash .github/scripts/deploy-ssh-check.sh
 
+      - name: Backup privado do banco da Vara (sem deploy)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.somente_backup_vara }}
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          PROD_PATH: ${{ secrets.PROD_PATH }}
+        run: |
+          set -euo pipefail
+          printf -v remote_command 'set -e; cd %q && test -f .env && umask 077 && temp_script=$(mktemp /tmp/rei345-backup.XXXXXX) && trap %q EXIT && cat > "$temp_script" && php "$temp_script" --backup' \
+            "$PROD_PATH" 'rm -f -- "$temp_script"'
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" "$remote_command" < scripts/backup-vara-cartas-db.php
+
       - name: Verificar armazenamento do limite de login
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.somente_backup_vara) }}
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
@@ -138,6 +157,7 @@ jobs:
             "cd \"${PROD_PATH}\" && php -r 'require \"app/helpers/Conection.php\"; Conection::getInstance()->getConnection()->query(\"SELECT scope_type, scope_value, attempt_count, lock_level, window_started_at, last_attempt_at, locked_until FROM login_rate_limits LIMIT 0\");'"
 
       - name: Garantir diretório destino (PROD)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.somente_backup_vara) }}
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
@@ -150,6 +170,7 @@ jobs:
             "mkdir -p \"${PROD_PATH}\" && echo \"Diretório OK: ${PROD_PATH}\""
 
       - name: Migrar setor responsável de processos (PROD, antes do sync)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.somente_backup_vara) }}
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
@@ -165,6 +186,7 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" "$remote_command"
 
       - name: Aplicar migration de cartas antes da publicação (PROD)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.somente_backup_vara) }}
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
@@ -172,7 +194,7 @@ jobs:
         run: bash .github/scripts/deploy-staged-cartas-migration.sh
 
       - name: Migrar prioridade de cartas expedidas (PROD, opt-in)
-        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.migrar_prioridade_cartas }}
+        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.migrar_prioridade_cartas && !inputs.somente_backup_vara }}
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
@@ -185,6 +207,7 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" "$remote_command" < scripts/migrate-cartas-expedidas-prioridade.php
 
       - name: Aplicar migration de idempotência de guias antes da publicação (PROD)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.somente_backup_vara) }}
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
@@ -192,6 +215,7 @@ jobs:
         run: bash .github/scripts/deploy-staged-guias-migration.sh
 
       - name: Sync files to server (PROD)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.somente_backup_vara) }}
         env:
           DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
@@ -224,6 +248,7 @@ jobs:
             ./ "${DEPLOY_USER}@${DEPLOY_HOST}:${PROD_PATH}/"
 
       - name: Post-deploy (PROD)
+        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.somente_backup_vara) }}
         run: |
           ssh -i ~/.ssh/id_ed25519 \
             -o IdentitiesOnly=yes \
