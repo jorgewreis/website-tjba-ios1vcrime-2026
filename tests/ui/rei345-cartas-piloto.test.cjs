@@ -44,7 +44,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
     put('app/helpers/CartorioTimelineHelper.php','<?php function cartorioTimelineBuildViewData(...$a){return ["statusLabel"=>"Aguardando envio","cadastro"=>["minorText"=>"Carta cadastrada"]];}');
     stub('services','CartasExpedidasService',`function find($id){return $id === "C1" ? ["processo_origem_id"=>"P1","finalidade"=>"Intimação de Decisão Interlocutória","cidade_destino"=>"Una","uf_destino"=>"BA","prazo_dias"=>30,"status"=>"aguardando envio","prioridade_tarefa"=>"critico"] : null;} function listCartas($f,$limit,$offset){$rows=[
        ["IdCarta"=>"C1","Data"=>date("Y-m-d H:i:s", time()-10*60-5),"bloco_processo_prioridades"=>[["codigo"=>"preso","label"=>"Réu preso"],["codigo"=>"idoso","label"=>"Pessoa idosa"],["codigo"=>"medida","label"=>"Medida protetiva de urgência"]],"numero_processo"=>"0000041-00.2026.0.00.0000","Status"=>"aguardando envio","EtapaEfetiva"=>"envio","Comarca"=>"Una","Estado"=>"BA","Finalidade"=>"Intimação de Decisão Interlocutória","Prazo"=>30,"bloco_processo_abrir_href"=>"/frame.php?page=consultaprocessosedit","SubtarefasAll"=>[["id"=>"S1","tipo"=>"aguardando_envio"]]],
-       ["IdCarta"=>"C2","Data"=>date("Y-m-d H:i:s", time()-90*86400),"CriadoPor"=>"T2","CriadoPorNome"=>"Noa Silva de Teste","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"],["id"=>"S1B","tipo"=>"aguardando_envio","status"=>"concluida","updated_at"=>date("Y-m-d H:i:s", time()-8*86400-60)]]]
+       ["IdCarta"=>"C2","processo_sigiloso"=>true,"Data"=>date("Y-m-d H:i:s", time()-90*86400),"CriadoPor"=>"T2","CriadoPorNome"=>"Noa Silva de Teste","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"],["id"=>"S1B","tipo"=>"aguardando_envio","status"=>"concluida","updated_at"=>date("Y-m-d H:i:s", time()-8*86400-60)]]]
     ];
     if (($f["processo"]??"") === "fixture-paginacao") {
       $original=$rows; $rows=[];
@@ -134,6 +134,10 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       assert.equal(await p.locator('.ce-entry').count(),2);
       assert.deepEqual(await p.locator('[data-ce-stage-seconds]').allTextContents(),['10min','8d']);
       assert.ok(await p.locator('.ce-stage-badge').first().isVisible());
+      const lacre=p.locator('.ce-entry .ce-process-secrecy');
+      assert.equal(await lacre.count(),1,'somente a carta marcada sigilosa tem a tag');
+      assert.deepEqual(await lacre.locator('span').allTextContents(),['Sigiloso','Nível não informado']);
+      assert.ok(await lacre.isVisible());
       const tag=p.locator('.ce-process-priority').first();
       assert.equal(await tag.locator('span').first().textContent(),'Prioridade');
       assert.equal(await tag.getAttribute('title'),'Réu preso, Pessoa idosa, Medida protetiva de urgência');
@@ -182,6 +186,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       await p.locator('.ce-entry').last().getByRole('button',{name:'Ver detalhes'}).click();
       assert.equal(await p.getByRole('button',{name:'Reiniciar envio'}).count(),1);
       assert.match(await p.getByRole('tabpanel',{name:'Resumo'}).textContent(),/Responsável pelo cumprimentoNoa Teste/);
+      assert.deepEqual(await p.locator('#ce-panel .ce-process-secrecy span').allTextContents(),['Sigiloso','Nível não informado']);
       assert.equal(await p.getByRole('link',{name:'Editar',exact:true}).count(),0);
       await p.getByRole('button',{name:'Fechar painel'}).click();
       await p.getByRole('link',{name:'Novo cadastro'}).click();
