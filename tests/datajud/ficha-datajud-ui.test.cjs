@@ -33,6 +33,8 @@ async function run(result, ok, expectsReload) {
 (async()=>{
     await run({success:true, message:'Sem alteração', classe:{action:'noop'}, assuntos:{action:'noop'}},true,false);
     await run({success:true, message:'Assuntos alterados', classe:{action:'noop'}, assuntos:{action:'updated'}},true,true);
+    await run({success:true, message:'Órgão alterado', orgao:{action:'updated'}},true,true);
+    await run({success:true, message:'Órgão igual', orgao:{action:'noop'}},true,false);
     await run({error:'Fonte indisponível'},false,false);
     console.log('PASS: ficha DataJud envia uma vez, recarrega só quando muda e mostra erro sem retry.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

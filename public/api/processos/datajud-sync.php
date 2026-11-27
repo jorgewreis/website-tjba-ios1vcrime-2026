@@ -14,6 +14,7 @@ require_once $basePath . '/app/helpers/CnjValidator.php';
 require_once $basePath . '/app/helpers/ProcessoSetorAuthorization.php';
 require_once $basePath . '/app/repositories/ProcessosRepository.php';
 require_once $basePath . '/app/services/DataJudService.php';
+require_once $basePath . '/app/DataJud/DataJudOrgaoMetadata.php';
 require_once $basePath . '/app/services/ProcessoDataJudSyncService.php';
 
 ApiAccessGuard::requireAccess(['consultaprocessos'], true);
@@ -66,7 +67,7 @@ try {
     if (!empty($processo['sigiloso'])) {
         throw new DataJudLocalSigiloException();
     }
-    $resultadoBusca = (new DataJudService($config))->searchProcesso($digits, true);
+    $resultadoBusca = (new DataJudService($config))->searchProcesso($digits, true, $fromDetails);
     if (($resultadoBusca['resultado_unico_verificado'] ?? null) !== true
         || ($resultadoBusca['sigilo_ausencia_verificada'] ?? null) !== true
         || ($resultadoBusca['fonte_confirmada_para_sincronizacao'] ?? null) !== true) {
@@ -120,10 +121,13 @@ try {
     $classeResultado = null;
     $assuntosResultado = null;
 
-    if ($classeCodigo === '' && $assuntos === []) {
+    // Somente a ação explícita da ficha grava o órgão. O mesmo resultado já
+    // passou pelos gates de completude, número, classe/assuntos e sigilo.
+    $orgao = $fromDetails ? DataJudOrgaoMetadata::fromMapped($resultadoBusca['orgao_julgador'] ?? null) : [];
+    if ($classeCodigo === '' && $assuntos === [] && $orgao === []) {
         http_response_code(422);
         echo json_encode([
-            'error' => 'O DataJud não retornou classe nem assuntos sincronizáveis para este processo.',
+            'error' => 'O DataJud não retornou dados sincronizáveis para este processo.',
             'sigilo_restrito' => !empty($resultadoBusca['sigilo_restrito']),
             'indisponivel_na_base_publica' => !empty($resultadoBusca['indisponivel_na_base_publica']),
         ], JSON_UNESCAPED_UNICODE);
@@ -164,10 +168,12 @@ try {
         $classeCodigo === '' ? null : ['codigo' => $classeCodigo, 'descricao' => $classeDescricao],
         $fromDetails && $estadoAssuntos === 'vazio' ? null : $assuntos,
         !$fromDetails && $estadoAssuntos === 'vazio',
-        $beforeWrite
+        $beforeWrite,
+        $orgao
     );
     $classeResultado = $resultadoSync['classe'];
     $assuntosResultado = $resultadoSync['assuntos'];
+    $orgaoResultado = $resultadoSync['orgao'] ?? null;
 
     $mensagens = [];
     if ($classeResultado !== null) {
@@ -191,11 +197,17 @@ try {
         }
     }
 
+    if ($orgaoResultado !== null) {
+        $mensagens[] = $orgaoResultado['action'] === 'updated'
+            ? 'Órgão julgador atualizado a partir do DataJud.'
+            : 'Órgão julgador já estava sincronizado.';
+    }
     echo json_encode([
         'success' => true,
         'message' => implode(' ', $mensagens),
         'classe' => $classeResultado,
         'assuntos' => $assuntosResultado,
+        'orgao' => $orgaoResultado,
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     if ($autorizacaoSetorialNegada) {
@@ -213,6 +225,10 @@ try {
 } catch (DataJudAmbiguousResponseException $e) {
     http_response_code(422);
     echo json_encode(['error' => 'O DataJud retornou mais de um registro; nenhum dado foi sincronizado.'], JSON_UNESCAPED_UNICODE);
+} catch (ProcessoOrgaoDataJudIndisponivelException $e) {
+    http_response_code(503);
+    echo json_encode(['error'=>'O registro do órgão julgador DataJud ainda não está disponível; nenhum dado foi sincronizado.',
+        'code'=>'orgao_datajud_indisponivel'], JSON_UNESCAPED_UNICODE);
 } catch (ProcessoClasseOrigemIndisponivelException $e) {
     http_response_code(503);
     echo json_encode(['error' => $e->getMessage(), 'code' => 'classe_origem_indisponivel'], JSON_UNESCAPED_UNICODE);

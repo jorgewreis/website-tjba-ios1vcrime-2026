@@ -42,6 +42,9 @@ try {
     if ($alterado) AuditLogger::log($db, $actor, 'processo_vara_local_registrada', ['processo_id' => $id]);
     if (!$db->commit()) throw new RuntimeException('Vara não confirmada.');
     $send(200, ['success'=>true, 'alterado'=>$alterado]);
+} catch (ProcessoVaraDataJudProtegidaException $e) {
+    if ($db !== null && $db->inTransaction()) $db->rollBack();
+    $send(409, ['error'=>$e->getMessage()]);
 } catch (InvalidArgumentException $e) {
     if ($db !== null && $db->inTransaction()) $db->rollBack();
     $send(400, ['error'=>$e->getMessage()]);
