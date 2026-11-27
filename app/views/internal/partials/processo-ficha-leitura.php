@@ -13,7 +13,6 @@
         <nav aria-label="Ações da ficha" class="ficha-acoes">
             <a class="ficha-button" data-fechar-ficha href="<?= $eFicha($linkListaFicha) ?>">Voltar</a>
             <?php if ($podeEditarFicha): ?><a class="ficha-button ficha-primary" href="<?= $eFicha($linkEdicaoFicha) ?>">Editar dados</a><?php endif; ?>
-            <span class="ficha-readonly">Somente leitura</span>
         </nav>
     </header>
     <div class="ficha-grid">
@@ -23,7 +22,7 @@
                 <dl class="ficha-campos">
                     <dt>Segmento</dt><dd><?= $eFicha($origemFicha['segmento'] ?? 'Não informado') ?></dd>
                     <dt>Tribunal</dt><dd><?= $eFicha($origemFicha['tribunal'] ?? 'Não informado') ?></dd>
-                    <dt>Comarca de origem</dt><dd><?php
+                    <dt>Comarca</dt><dd><?php
                         $origemRotulo = $origemFicha['comarca'] !== null
                             ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca']
                             : ($origemFicha['unidade'] ?? 'Não identificada');
@@ -43,15 +42,20 @@
                     ?></dd>
                 </dl>
                 <h3>Partes cadastradas</h3>
-                <?php if ($partes === []): ?><p class="ficha-secundario">Nenhuma parte vinculada.</p><?php else: ?>
-                    <ul class="ficha-partes">
-                        <?php foreach ($partes as $parte): ?>
-                        <li><strong><?= $eFicha(trim((string) ($parte['nome_completo'] ?? '')) ?: 'Nome não informado') ?></strong>
-                        <span><?= $eFicha(match ($parte['polo'] ?? '') {
-                            'ativo'=>'Polo ativo','passivo'=>'Polo passivo','terceiros'=>'Terceiros',default=>'Polo não informado'
-                        }) ?></span></li>
-                        <?php endforeach; ?>
-                    </ul>
+                <?php if ($partesAgrupadasFicha === []): ?><p class="ficha-secundario">Nenhuma parte vinculada.</p><?php else: ?>
+                    <?php foreach ($partesAgrupadasFicha as $polo => $grupoFicha): ?>
+                        <h4 class="ficha-polo" id="ficha-polo-<?= $eFicha($polo) ?>"><?= $eFicha($grupoFicha['rotulo']) ?></h4>
+                        <ul class="ficha-partes" aria-labelledby="ficha-polo-<?= $eFicha($polo) ?>">
+                            <?php foreach ($grupoFicha['partes'] as $itemParteFicha):
+                                $parte = $itemParteFicha['registro'];
+                                $nomeParte = $eFicha(trim((string) ($parte['nome_completo'] ?? '')) ?: 'Nome não informado');
+                            ?>
+                                <li><?php if ($itemParteFicha['destaque']): ?><strong><?= $nomeParte ?></strong><?php else: ?><span class="ficha-parte-nome"><?= $nomeParte ?></span><?php endif; ?>
+                                    <span class="ficha-parte-papel"><?= $eFicha($itemParteFicha['papel']) ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endforeach; ?>
                 <?php endif; ?>
             </section>
         </div>

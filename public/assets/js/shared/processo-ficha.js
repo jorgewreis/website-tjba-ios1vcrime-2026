@@ -92,7 +92,7 @@
                 throw new Error('Resposta de consulta inválida');
             }
             if (dados.estado === 'restrito') {
-                if (typeof dados.sigilo === 'string') texto('sigilo', dados.sigilo);
+                texto('sigilo', (typeof dados.sigilo === 'string' && dados.sigilo.trim()) || 'Sigiloso · nível não informado');
                 status.textContent = 'Histórico indisponível na base pública por sigilo.';
                 return;
             }
