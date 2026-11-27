@@ -56,7 +56,9 @@ jobs:
           DATAJUD_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=datajud_test;charset=utf8mb4
           DATAJUD_TEST_USER: root
           DATAJUD_TEST_PASSWORD: root
-        run: php tests/datajud/queue-mariadb.test.php
+        run: |
+          php tests/datajud/queue-mariadb.test.php
+          php tests/cartas-expedidas/rei345-migracao-mariadb.test.php
       - name: Simular instalação sem gravar dependências
         run: composer install --dry-run --no-dev --no-interaction --no-progress --no-scripts --no-plugins
       - name: Testar listagem unificada de usuários com perfis mistos
