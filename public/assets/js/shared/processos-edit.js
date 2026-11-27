@@ -72,7 +72,7 @@
             const codigo = input.value.trim(), atual = ++consulta;
             codigoVerificado = '';
             salvar.disabled = true;
-            nome.value = '';
+            nome.textContent = 'Informe o código para consultar.';
             if (!/^[0-9]{1,20}$/.test(codigo)) {
                 status.textContent = codigo ? 'Informe um código numérico.' : '';
                 return;
@@ -88,7 +88,7 @@
                     status.textContent = 'Código de classe não encontrado no catálogo.';
                     return;
                 }
-                nome.value = dados.classe.nome;
+                nome.textContent = dados.classe.nome;
                 codigoVerificado = codigo;
                 salvar.disabled = gravando;
                 status.textContent = '';
@@ -99,7 +99,7 @@
         input.addEventListener('input', () => {
             ++consulta;
             global.clearTimeout(timer);
-            nome.value = '';
+            nome.textContent = 'Informe o código para consultar.';
             status.textContent = '';
             salvar.disabled = true;
             codigoVerificado = '';
