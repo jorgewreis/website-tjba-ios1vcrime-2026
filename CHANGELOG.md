@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0054
+
+**Data:** 2026-11-27 19:22:14 | **Commit:** `7f21329d` | **Tipo:** `patch`
+
+- test: make security fixtures portable across Windows and CI
+
 ## V. 1.88.0030
 
 **Data:** 2026-11-25 07:37:33 | **Commit:** `115dd83d` | **Tipo:** `patch`
@@ -7853,3 +7859,4 @@
 
 
 \n
+

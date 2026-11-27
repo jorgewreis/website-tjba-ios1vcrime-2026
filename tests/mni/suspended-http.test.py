@@ -21,6 +21,9 @@ class SuspendedMniTest(unittest.TestCase):
             api = root / "public" / "api" / "mni"
             api.mkdir(parents=True)
             shutil.copy2(ROOT / "public/api/mni/consultar-processo.php", api)
+            reporter = root / "app" / "helpers" / "ApiErrorReporter.php"
+            reporter.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(ROOT / "app/helpers/ApiErrorReporter.php", reporter)
             marker = root / "unexpected-access"
             # Todo include do caminho antigo termina aqui e denuncia seu uso.
             for path in (api / "config.php", root / "app/helpers/BootstrapHelper.php",
