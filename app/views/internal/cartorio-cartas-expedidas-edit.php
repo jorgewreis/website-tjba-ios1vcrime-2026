@@ -472,7 +472,11 @@ if ($ceEmbed) {
                         if (!response.ok || !data.success) {
                             throw new Error(data.error || 'Falha ao atualizar a carta expedida.');
                         }
-                        window.location.href = <?= json_encode($ceReturn) ?>;
+                        if (<?= json_encode($ceEmbed) ?> && parent !== window) {
+                            parent.postMessage({type: 'ce-piloto-updated'}, location.origin);
+                        } else {
+                            window.location.href = <?= json_encode($ceReturn) ?>;
+                        }
                     } catch (error) {
                         showFeedback(error.message || 'Erro ao salvar.', 'error');
                         salvarBtn.disabled = false;
@@ -574,7 +578,7 @@ if ($ceEmbed) {
     <script>
         (() => {
             const btn = document.getElementById('voltar-btn');
-            if (!btn) {
+            if (!btn || (<?= json_encode($ceEmbed) ?> && parent !== window)) {
                 return;
             }
             btn.addEventListener('click', (event) => {

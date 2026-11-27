@@ -13,13 +13,19 @@
     clearTimeout(timer);
     timer = setTimeout(() => { notices.hidden = true; }, 4200);
   }
-  function exit() {
+  function exit(feedback) {
     if (dirty && !success && !window.confirm('Descartar as alterações não salvas?')) return;
+    const refresh = ['cartasexpedidascreate','cartasexpedidasedit'].includes(framePage());
     panel.hidden = true;
     content.replaceChildren();
     frame = null;
     dirty = success = false;
     if (trigger?.isConnected) trigger.focus();
+    if (refresh) {
+      const address = new URL(location.href);
+      if (feedback) address.searchParams.set('piloto_ok', feedback);
+      location.replace(address);
+    }
   }
   function show(label, source, node) {
     if (dirty && !success && !window.confirm('Descartar as alterações não salvas?')) return;
@@ -33,13 +39,13 @@
     dirty = success = false;
     close.focus();
   }
-  function finishCreate() {
+  function framePage() {
+    return frame ? new URL(frame.src).searchParams.get('page') : null;
+  }
+  function finishForm(feedback) {
     success = true;
     dirty = false;
-    exit();
-    const address = new URL(location.href);
-    address.searchParams.set('piloto_ok', 'cadastro');
-    location.replace(address);
+    exit(feedback);
   }
   function showFrame(link) {
     const iframe = document.createElement('iframe');
@@ -51,7 +57,8 @@
       try { url = new URL(iframe.contentWindow.location.href); } catch (_) { return; }
       if (url.searchParams.get('page') === 'cartasexpedidasnova' && url.searchParams.get('piloto_ok') === '1') {
         // Fallback for the older form assets while an updated deploy propagates.
-        if (new URL(iframe.src).searchParams.get('page') === 'cartasexpedidascreate') finishCreate();
+        if (framePage() === 'cartasexpedidascreate') finishForm('cadastro');
+        else if (framePage() === 'cartasexpedidasedit') finishForm('edicao');
         else { success = true; dirty = false; window.location.reload(); }
         return;
       }
@@ -139,7 +146,8 @@
   window.addEventListener('message', event => {
     if (!frame || event.origin !== location.origin || event.source !== frame.contentWindow) return;
     if (event.data?.type === 'ce-piloto-close') exit();
-    if (event.data?.type === 'ce-piloto-created' && new URL(frame.src).searchParams.get('page') === 'cartasexpedidascreate') finishCreate();
+    if (event.data?.type === 'ce-piloto-created' && framePage() === 'cartasexpedidascreate') finishForm('cadastro');
+    if (event.data?.type === 'ce-piloto-updated' && framePage() === 'cartasexpedidasedit') finishForm('edicao');
     if (event.data?.type === 'ce-piloto-saved') { success = true; dirty = false; notify('Alterações salvas.'); window.location.reload(); }
   });
   const tempos = [...document.querySelectorAll('[data-ce-stage-seconds]')];
@@ -169,7 +177,8 @@
   });
   const url = new URL(location.href);
   if (url.searchParams.has('piloto_ok')) {
-    notify(url.searchParams.get('piloto_ok') === 'cadastro' ? 'Carta cadastrada.' : 'Operação concluída.');
+    const feedback = url.searchParams.get('piloto_ok');
+    notify(feedback === 'cadastro' ? 'Carta cadastrada.' : feedback === 'edicao' ? 'Alterações salvas.' : 'Operação concluída.');
     url.searchParams.delete('piloto_ok');
     history.replaceState(null,'',url);
   }
