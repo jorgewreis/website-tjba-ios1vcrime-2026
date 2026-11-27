@@ -33,7 +33,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
   try {
     for(const f of fs.readdirSync(path.join(root,'app/views/internal'))) if(f.startsWith('_')&&f.endsWith('.php')) cpInternal(f);
     for(const f of ['cartorio-cartas-expedidas-list','cartorio-cartas-expedidas-nova','cartorio-cartas-expedidas-create','cartorio-cartas-expedidas-rules','cartorio-cartas-expedidas-edit','partials/cartas-expedidas-v2-row','partials/cartas-expedidas-piloto-list','partials/cartas-expedidas-piloto-row','partials/cartas-expedidas-piloto-prioridade']) cpInternal(f+'.php');
-    for(const f of ['CartasExpedidasPrioridade','CartasExpedidasEstadoFluxo','CartasExpedidasUiCopy','CartasExpedidasEnvioRegra','DeleteAuthorization']) copy('app/helpers/'+f+'.php');
+    for(const f of ['CartasExpedidasPrioridade','CartasExpedidasTempoEtapa','CartasExpedidasEstadoFluxo','CartasExpedidasUiCopy','CartasExpedidasEnvioRegra','DeleteAuthorization']) copy('app/helpers/'+f+'.php');
     copy('app/access/ProfileNormalizer.php');
     stub('helpers','UsuarioPerfisAutorizacao','static function perfisDoUsuario($id){return [$GLOBALS["testrole"]];}');
     stub('helpers','ProcessoBlocoListagemHelper','static function appendBlocoData($db,$rows){return $rows;}');
@@ -43,8 +43,8 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
     stub('repositories','TribunaisRepository','');
     put('app/helpers/CartorioTimelineHelper.php','<?php function cartorioTimelineBuildViewData(...$a){return ["statusLabel"=>"Aguardando envio","cadastro"=>["minorText"=>"Carta cadastrada"]];}');
     stub('services','CartasExpedidasService',`function find($id){return $id === "C1" ? ["processo_origem_id"=>"P1","finalidade"=>"Intimação de Decisão Interlocutória","cidade_destino"=>"Una","uf_destino"=>"BA","prazo_dias"=>30,"status"=>"aguardando envio","prioridade_tarefa"=>"critico"] : null;} function listCartas($f,$limit,$offset){$rows=[
-       ["IdCarta"=>"C1","numero_processo"=>"0000041-00.2026.0.00.0000","Status"=>"aguardando envio","EtapaEfetiva"=>"envio","Comarca"=>"Una","Estado"=>"BA","Finalidade"=>"Intimação de Decisão Interlocutória","Prazo"=>30,"bloco_processo_abrir_href"=>"/frame.php?page=consultaprocessosedit","SubtarefasAll"=>[["id"=>"S1","tipo"=>"aguardando_envio"]]],
-       ["IdCarta"=>"C2","CriadoPor"=>"T2","CriadoPorNome"=>"Noa Silva de Teste","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"]]]
+       ["IdCarta"=>"C1","Data"=>date("Y-m-d H:i:s", time()-10*60-5),"bloco_processo_prioridades"=>[["codigo"=>"preso","label"=>"Réu preso"],["codigo"=>"idoso","label"=>"Pessoa idosa"],["codigo"=>"medida","label"=>"Medida protetiva de urgência"]],"numero_processo"=>"0000041-00.2026.0.00.0000","Status"=>"aguardando envio","EtapaEfetiva"=>"envio","Comarca"=>"Una","Estado"=>"BA","Finalidade"=>"Intimação de Decisão Interlocutória","Prazo"=>30,"bloco_processo_abrir_href"=>"/frame.php?page=consultaprocessosedit","SubtarefasAll"=>[["id"=>"S1","tipo"=>"aguardando_envio"]]],
+       ["IdCarta"=>"C2","Data"=>date("Y-m-d H:i:s", time()-90*86400),"CriadoPor"=>"T2","CriadoPorNome"=>"Noa Silva de Teste","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"],["id"=>"S1B","tipo"=>"aguardando_envio","status"=>"concluida","updated_at"=>date("Y-m-d H:i:s", time()-8*86400-60)]]]
     ];
     if (($f["processo"]??"") === "fixture-paginacao") {
       $original=$rows; $rows=[];
@@ -77,6 +77,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
     for(const [width,role,mayDelete] of [[1640,'ADMIN',true],[1440,'ADMIN',true],[900,'CHEFIA',true],[767,'CHEFIA',true],[390,'DIRETORA',false],[320,'SERVIDOR-CARTORIO',false]]) {
       const p=await browser.newPage({viewport:{width,height:900}});
       p.setDefaultTimeout(5000);
+      if(width===1640) await p.clock.install();
       await p.addInitScript(()=>{Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copied=text;}}});});
       let cityCalls=0, createCalls=0, nestedListRequests=0;
       const createKeys=[];
@@ -124,13 +125,24 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       if(width<=767) {
         const [dest,actions,entry,search,status,goal]=await Promise.all(['.ce-entry .ce-destino','.ce-entry .ce-row-actions','.ce-entry','.ce-toolbar input[type=search]','.ce-toolbar select[name=status]','.ce-toolbar select[name=finalidade]'].map(sel=>p.locator(sel).first().boundingBox()));
         assert.ok(Math.abs((dest.y+dest.height/2)-(actions.y+actions.height/2))<2,'actions must share metadata row');
-        assert.ok(entry.height<118,'mobile row should stay compact');
+        assert.ok(entry.height<138,'mobile row should stay compact at '+width+' (height='+entry.height+')');
         assert.ok(search.width>width-50,'full-width mobile search');
         if(width<480) assert.ok(status.width>width-50 && goal.width>width-50,'use readable full-width filters on phone');
         else assert.ok(Math.abs(status.y-goal.y)<2,'filters should share the row on wider screens');
         assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'list must not overflow horizontally');
       }
       assert.equal(await p.locator('.ce-entry').count(),2);
+      assert.deepEqual(await p.locator('[data-ce-stage-seconds]').allTextContents(),['10min','8d']);
+      assert.ok(await p.locator('.ce-stage-badge').first().isVisible());
+      const tag=p.locator('.ce-process-priority').first();
+      assert.equal(await tag.locator('span').first().textContent(),'Prioridade');
+      assert.equal(await tag.getAttribute('title'),'Réu preso, Pessoa idosa, Medida protetiva de urgência');
+      assert.ok(await tag.locator('.ce-process-priority-values').evaluate(el=>getComputedStyle(el).textOverflow==='ellipsis' && el.scrollWidth>el.clientWidth));
+      if(width>=768) assert.equal(await p.locator('.ce-columns span:nth-child(7)').textContent(),'Tempo na etapa');
+      if(width===1640) {
+        await p.clock.fastForward(61_000);
+        assert.equal(await p.locator('[data-ce-stage-seconds]').first().textContent(),'11min');
+      }
       for (const actions of await p.locator('.ce-row-actions').all()) {
         const action=await actions.locator('.ce-button.small').boundingBox();
         const menu=await actions.locator('summary').boundingBox();
