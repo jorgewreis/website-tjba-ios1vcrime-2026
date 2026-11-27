@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../app/services/ProcessoDataJudSyncService.php';
+require_once __DIR__ . '/../../app/DataJud/DataJudOrgaoMetadata.php';
 
 final class FichaSQLite extends PDO
 {
@@ -91,4 +92,45 @@ try {
 } catch (ProcessoClasseOrigemIndisponivelException) {}
 expectFicha($unmigrated->findById('P')['classe_id'] === $beforeMigration['classe_id'], 'Esquema antigo permitiu alteração desprotegida.');
 expectFicha($service->sync($cnj, null, [['codigo'=>44,'descricao'=>'Manual']])['assuntos']['action'] === 'updated', 'Esquema antigo impediu sincronização exclusiva de assuntos.');
+$db->exec('ALTER TABLE processos ADD COLUMN vara_nome TEXT');
+$db->exec('ALTER TABLE processos ADD COLUMN vara_nome_datajud TEXT');
+$db->exec('ALTER TABLE processos ADD COLUMN orgao_municipio_ibge_datajud TEXT');
+$db->exec("UPDATE processos SET vara_nome='Vara local sintética' WHERE id='P'");
+$repoVara = new ProcessoVaraRepository($db);
+$meta = DataJudOrgaoMetadata::fromMapped(['nome'=>' Vara sintética A ', 'codigoMunicipioIBGE'=>9999999]);
+expectFicha($meta === ['nome'=>'Vara sintética A', 'municipio_ibge'=>'9999999'], 'Metadado não normalizado.');
+expectFicha(DataJudOrgaoMetadata::fromMapped(['nome'=>" inválida\n", 'codigoMunicipioIBGE'=>[1]]) === [], 'Metadado inválido entrou no sync.');
+expectFicha($service->sync($cnj, null, null, orgao: $meta)['orgao']['action'] === 'updated', 'Alteração exclusiva de órgão não confirmada.');
+expectFicha($service->sync($cnj, null, null, orgao: $meta)['orgao']['action'] === 'noop', 'Repetição escreveu órgão novamente.');
+expectFicha($repoVara->porProcesso('P') === 'Vara local sintética', 'A origem DataJud substituiu a coluna manual.');
+$incomplete = DataJudOrgaoMetadata::fromMapped(['nome'=>'Vara sintética B']);
+$service->sync($cnj, null, null, orgao: $incomplete);
+expectFicha($repoVara->dadosDataJudPorProcesso('P') === ['nome'=>'Vara sintética B', 'municipio_ibge'=>'9999999'], 'Campo ausente apagou o dado anterior.');
+$db->beginTransaction();
+try {
+    $repoVara->registrar('P', null);
+    throw new RuntimeException('Vara sincronizada aceitou remoção manual.');
+} catch (ProcessoVaraDataJudProtegidaException) {
+    $db->rollBack();
+}
+try {
+    $service->sync($cnj, null, null, beforeWrite: static fn() => false, orgao: ['nome'=>'Não autorizado']);
+    throw new LogicException('Setor recusado gravou órgão.');
+} catch (RuntimeException) {}
+expectFicha($repoVara->dadosDataJudPorProcesso('P')['nome'] === 'Vara sintética B', 'Recusa setorial alterou órgão.');
+$db->exec("UPDATE processos SET sigiloso=1 WHERE id='P'");
+try {
+    $service->sync($cnj, null, null, orgao: ['nome'=>'Não público']);
+    throw new LogicException('Sigilo local permitiu gravar órgão.');
+} catch (DataJudLocalSigiloException) {}
+$db->exec("UPDATE processos SET sigiloso=0 WHERE id='P'");
+$falhaAssunto = new ProcessoDataJudSyncService($db, assuntoSync: static fn() => throw new RuntimeException('Falha sintética de assunto.'));
+try {
+    $falhaAssunto->sync($cnj, null, [['codigo'=>44,'descricao'=>'Manual']], orgao: ['nome'=>'Não confirmar']);
+    throw new LogicException('Falha de assunto não interrompeu a transação.');
+} catch (RuntimeException $erro) {
+    expectFicha($erro->getMessage() === 'Falha sintética de assunto.', 'Falha inesperada.');
+}
+expectFicha($repoVara->dadosDataJudPorProcesso('P')['nome'] === 'Vara sintética B', 'Órgão persistiu apesar do rollback de assunto.');
+echo "PASS: metadados do órgão, fallback, proteção, permissões, idempotência e rollback sintéticos.\n";
 echo "PASS: precedência DataJud, idempotência, classe legada protegida e leitura sem migração (SQLite sintético).\n";

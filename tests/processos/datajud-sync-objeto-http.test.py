@@ -47,13 +47,14 @@ class ApiAccessGuard { static function requireAccess($pages, $write) {
     (base / 'app/DataJud').mkdir(exist_ok=True)
     shutil.copyfile(ROOT / 'app/DataJud/DataJudUpstreamException.php', base / 'app/DataJud/DataJudUpstreamException.php')
     shutil.copyfile(ROOT / 'app/DataJud/DataJudLocalSigiloException.php', base / 'app/DataJud/DataJudLocalSigiloException.php')
+    shutil.copyfile(ROOT / 'app/DataJud/DataJudOrgaoMetadata.php', base / 'app/DataJud/DataJudOrgaoMetadata.php')
     (base / 'app/services/DataJudService.php').write_text('''<?php
 require_once __DIR__ . '/../DataJud/DataJudUpstreamException.php';
 require_once __DIR__ . '/../DataJud/DataJudLocalSigiloException.php';
 class DataJudService {
   function __construct(array $config) {}
-  function searchProcesso(string $numero): array {
-    file_put_contents(__DIR__.'/source-called', '1');
+  function searchProcesso(string $numero, bool $forSync = false, bool $withOrgao = false): array {
+    file_put_contents(__DIR__.'/source-called', $withOrgao ? 'ficha;' : 'other;', FILE_APPEND);
     return match ($_SERVER['HTTP_X_TEST_RESULT'] ?? 'ok') {
       'throttled' => throw new DataJudUpstreamException('throttled'),
       'incomplete' => throw new DataJudUpstreamException('incomplete'),
@@ -63,6 +64,11 @@ class DataJudService {
       'subjects' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>['codigo'=>null,'descricao'=>null]],
       'partial-class' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>['codigo'=>42,'descricao'=>null]],
       'malformed-class' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>true, 'assuntos_estado'=>'presente', 'assuntos'=>[['codigo'=>7,'descricao'=>'Fonte']], 'classe'=>['unexpected'=>'x']],
+      'orgao-only', 'orgao-missing-sigilo' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false,
+        'sigilo_ausencia_verificada'=>($_SERVER['HTTP_X_TEST_RESULT'] ?? '') === 'orgao-only',
+        'fonte_confirmada_para_sincronizacao'=>true,'assuntos_estado'=>'vazio','assuntos'=>[],
+        'classe'=>['codigo'=>null,'descricao'=>null],
+        'orgao_julgador'=>['nome'=>'Vara sintética','codigoMunicipioIBGE'=>9999999]],
       'no-class-empty' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>false, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>null,'descricao'=>null]],
       'absent-subjects' => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_completos'=>false, 'assuntos_estado'=>'ausente', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
       default => ['resultado_unico_verificado'=>true, 'sigilo_restrito'=>false, 'sigilo_ausencia_verificada'=>true, 'fonte_confirmada_para_sincronizacao'=>true, 'assuntos_estado'=>'vazio', 'assuntos'=>[], 'classe'=>['codigo'=>42,'descricao'=>'Classe']],
@@ -71,9 +77,13 @@ class DataJudService {
 }''', encoding='utf-8')
     (base / 'app/services/ProcessoDataJudSyncService.php').write_text('''<?php class ProcessoDataJudSyncService {
   function __construct($connection, bool $onlyChangedFields=false) {}
-    function sync(string $numero, ?array $classe, ?array $assuntos, bool $verifiedEmptySubjects=false): array {
-    file_put_contents(__DIR__.'/write-called', json_encode([$numero,$classe,$assuntos,$verifiedEmptySubjects]));
-    return ['classe'=>$classe === null ? null : ['action'=>'updated'], 'assuntos'=>$assuntos === null ? null : ['action'=>'updated']];
+    function sync(string $numero, ?array $classe, ?array $assuntos, bool $verifiedEmptySubjects=false,
+      ?callable $beforeWrite = null, array $orgao = []): array {
+    $payload = [$numero,$classe,$assuntos,$verifiedEmptySubjects];
+    if ($orgao !== []) $payload[] = $orgao;
+    file_put_contents(__DIR__.'/write-called', json_encode($payload));
+    return ['classe'=>$classe === null ? null : ['action'=>'updated'], 'assuntos'=>$assuntos === null ? null : ['action'=>'updated'],
+      'orgao'=>$orgao === [] ? null : ['action'=>'updated']];
   }
 }''', encoding='utf-8')
 
@@ -138,6 +148,14 @@ class DataJudService {
         assert request(ficha_id='P1', process='secret')[0] == 422 and not read_marker.exists() and not write_marker.exists()
         assert request(ficha_id='P1')[0] == 200 and write_marker.exists()
         assert json.loads(write_marker.read_text(encoding='utf-8')) == ['12345678901234567890', {'codigo':'42','descricao':'Classe'}, None, False]
+
+        code, body = request(result='orgao-only', ficha_id='P1')
+        assert code == 200 and body.get('orgao') == {'action':'updated'}
+        assert read_marker.read_text(encoding='utf-8') == 'ficha;', 'Deve consultar uma única vez.'
+        assert json.loads(write_marker.read_text(encoding='utf-8'))[4] == {'nome':'Vara sintética','municipio_ibge':'9999999'}
+        assert request(result='orgao-only')[0] == 422 and not write_marker.exists()
+        assert read_marker.read_text(encoding='utf-8') == 'other;'
+        assert request(result='orgao-missing-sigilo', ficha_id='P1')[0] == 422 and not write_marker.exists()
 
         cartorio = 'cartorio-cartas-expedidas/sync-processo-datajud.php'
         for endpoint in ('processos/datajud-sync.php', cartorio):

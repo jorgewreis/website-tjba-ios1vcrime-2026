@@ -29,7 +29,7 @@ final class DataJudService
      *
      * @return array<string, mixed> payload com campos processuais; inclui sigilo_restrito e sigilo_mensagem quando aplicável
      */
-    public function searchProcesso(string $numero, bool $forSync = false): array
+    public function searchProcesso(string $numero, bool $forSync = false, bool $includeSyncOrgao = false): array
     {
         $numero = CnjValidator::digits20OrThrow($numero);
 
@@ -39,7 +39,7 @@ final class DataJudService
             throw new InvalidArgumentException('Tribunal do processo não suportado para consulta no DataJud.');
         }
 
-        $body = $this->buildElasticsearchBody($numero, $forSync);
+        $body = $this->buildElasticsearchBody($numero, $forSync, $includeSyncOrgao);
 
         $attempts = [[$resolvedAlias, DataJudTribunalResolver::buildSearchUrl($baseUrl, $resolvedAlias)]];
 
@@ -150,7 +150,7 @@ final class DataJudService
     /**
      * @return array{query: array<string, mixed>, size: int, track_total_hits: bool, _source: list<string>}
      */
-    private function buildElasticsearchBody(string $numero, bool $forSync): array
+    private function buildElasticsearchBody(string $numero, bool $forSync, bool $includeSyncOrgao): array
     {
         return [
             'query' => [
@@ -165,7 +165,8 @@ final class DataJudService
             'size' => 2,
             'track_total_hits' => true,
             // A sincronização não precisa carregar movimentos ou partes.
-            '_source' => $forSync ? ['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos'] : [
+            '_source' => $forSync ? array_merge(['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos'],
+                $includeSyncOrgao ? ['orgaoJulgador.nome', 'orgaoJulgador.codigoMunicipioIBGE'] : []) : [
                 'numeroProcesso', 'tribunal', 'classe', 'classeProcessual', 'assuntos',
                 'prioridade', 'polo', 'poloAtivo', 'poloPassivo', 'movimentos',
                 'orgaoJulgador', 'nivelSigilo', 'grau', 'formato', 'sistema',

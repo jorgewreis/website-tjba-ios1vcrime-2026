@@ -161,7 +161,7 @@ function render(url, perfil) {
             assert.equal(await pg.getByText('Ano',{exact:true}).count(),0);
             assert.equal(await pg.getByText('Somente leitura',{exact:true}).count(),0);
             assert.equal(await pg.getByText('Comarca de origem',{exact:true}).count(),0);
-            assert.equal(await pg.locator('dt').filter({hasText:/^Comarca$/}).count(),1);
+            assert.equal(await pg.locator('dt').filter({hasText:/^Comarca de origem \(CNJ\)$/}).count(),1);
             assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');
             assert.deepEqual(await pg.locator('.ficha-polo').allTextContents(), ['Polo ativo','Polo passivo','Terceiros','Polo não informado']);
             const papeis = async (polo) => pg.locator('[aria-labelledby="ficha-polo-'+polo+'"] .ficha-parte-papel').allTextContents();
@@ -202,6 +202,13 @@ function render(url, perfil) {
             assert.equal(await pg.getByRole('button',{name:'Salvar classificação'}).isDisabled(),true);
             assert.equal(await pg.locator('#processo-sigilo-confirmacao').isVisible(),false);
             assert.equal(await pg.getByText('DataJud',{exact:true}).count(),0,'o assunto sincronizado não carrega selo');
+            const inputsCatalogo = await pg.locator('#processo-classe-wrap input, #processo-assuntos-wrap input').evaluateAll(nodes => nodes.map(el => el.id));
+            assert.deepEqual(inputsCatalogo,['proc-classe-codigo','processo-assunto-codigo']);
+            for (const campo of ['#proc-classe-atual','#proc-classe-nome-existente','#processo-assunto-descricao']) {
+                assert.equal(await pg.locator(campo).evaluate(el=>el.tagName),'P');
+                assert.equal(await pg.locator(campo).evaluate(el=>el.isContentEditable),false);
+            }
+            assert.equal(await pg.locator('#proc-classe-atual').textContent(),'Classe cadastrada fictícia');
             assert.equal(await pg.locator('[data-assunto-id="APROT"] .btn-assunto-desvincular').count(),0);
             const codigoClasse = pg.locator('#proc-classe-codigo');
             await codigoClasse.fill('99');
@@ -210,19 +217,18 @@ function render(url, perfil) {
             assert.equal(await pg.locator('#btn-proc-classe-vincular').isDisabled(),true);
             await codigoClasse.fill('29');
             await codigoClasse.press('Enter');
-            await pg.waitForFunction(()=>document.querySelector('#proc-classe-nome-existente').value==='Classe oficial 29');
-            assert.equal(await pg.locator('#proc-classe-nome-existente').getAttribute('readonly'),'');
+            await pg.waitForFunction(()=>document.querySelector('#proc-classe-nome-existente').textContent==='Classe oficial 29');
             assert.equal(await pg.locator('#btn-proc-classe-vincular').isEnabled(),true);
             assert.equal(await pg.locator('#proc-classe-nome-novo').count(),0);
             await Promise.all([pg.waitForEvent('load'), pg.locator('#btn-proc-classe-vincular').click()]);
             const codigoAssunto = pg.locator('#processo-assunto-codigo');
             await codigoAssunto.fill('99');
             await codigoAssunto.press('Enter');
-            await pg.waitForFunction(()=>document.querySelector('#processo-assunto-descricao').placeholder==='Código não encontrado no catálogo');
+            await pg.waitForFunction(()=>document.querySelector('#processo-assunto-descricao').textContent==='Código não encontrado no catálogo.');
             assert.equal(await pg.locator('#btn-processo-assunto-vincular').isDisabled(),true);
-            assert.equal(await pg.locator('#processo-assunto-descricao').getAttribute('readonly'),'');
             await codigoAssunto.fill('21');
             await codigoAssunto.press('Enter');
+            await pg.waitForFunction(()=>document.querySelector('#processo-assunto-descricao').textContent==='Assunto oficial 21');
             await pg.locator('#btn-processo-assunto-vincular').click();
             await pg.getByText('21 - Assunto oficial 21',{exact:true}).waitFor();
             await pg.locator('#processo-vara-local').fill('Vara local editada');
@@ -236,7 +242,7 @@ function render(url, perfil) {
             assert.ok(await pg.locator('#proc-classe-codigo').isVisible());
             assert.equal(await pg.locator('#processo-assuntos-list .btn-assunto-desvincular').getAttribute('data-assunto-id'),'AF');
             if (process.env.FICHA_SCREENSHOTS) await pg.screenshot({path:path.join(process.env.FICHA_SCREENSHOTS, 'edicao-' + largura + '.png')});
-            assert.ok(await pg.getByRole('button',{name:'Sincronizar classe e assuntos com o DataJud'}).isVisible());
+            assert.ok(await pg.getByRole('button',{name:'Sincronizar com o DataJud'}).isVisible());
             await pg.locator('#process-responsible-sector-select').selectOption('GB');
             await Promise.all([
                 pg.waitForResponse(r=>r.url().includes('setor-responsavel.php')),
