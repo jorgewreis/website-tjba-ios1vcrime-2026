@@ -7,6 +7,14 @@ $priorIcon = CartasExpedidasPrioridade::ICONES[$prior] ?? '·';
 $numeroVisivel = $numero !== '' ? $numero : trim((string)($row['Processo'] ?? ''));
 $canCancel = !empty($_SESSION['id_usuario']) && !$isTerminal;
 $detailId = 'ce-detail-' . $idCarta;
+$etapaPiloto = (string) ($row['EtapaEfetiva'] ?? '');
+$responsavelPilotoId = !$fluxoInconsistente ? match ($etapaPiloto) {
+    'envio' => trim((string) ($responsavelRegraEnvio['id'] ?? '')),
+    'devolucao' => trim((string) ($row['CriadoPor'] ?? '')),
+    default => '',
+} : '';
+$podeGerenciarCarta = $canDelete || ($usuarioPiloto !== '' && $usuarioPiloto === $responsavelPilotoId);
+$restricaoGerenciarCarta = 'Disponível apenas para o responsável da etapa, Chefia ou Admin';
 $partesResponsavel = preg_split('/\s+/u', $nomeResponsavelEnvio, -1, PREG_SPLIT_NO_EMPTY);
 $nomeCurtoResponsavelEnvio = match (count($partesResponsavel ?: [])) {
     0 => '',
@@ -58,9 +66,12 @@ $nomeCurtoResponsavelEnvio = match (count($partesResponsavel ?: [])) {
     <?php endif; ?>
   </section>
   <footer class="ce-detail-actions">
-    <?php if ($showEdit): ?><a href="?page=cartasexpedidasedit&amp;id=<?= rawurlencode($idCarta) ?>&amp;piloto=1" class="ce-button" data-ce-frame data-title="Editar carta">Editar</a><?php endif; ?>
-    <?php if ($mostrarReiniciar && !$fluxoInconsistente): ?><button class="ce-button" type="button" data-ce-action="reiniciar" data-id="<?= $e($idCarta) ?>">Reiniciar envio</button><?php endif; ?>
-    <?php if ($canCancel): ?><button class="ce-button danger" type="button" data-ce-action="cancelar" data-id="<?= $e($idCarta) ?>">Cancelar carta</button><?php endif; ?>
+    <?php if ($showEdit): ?>
+      <?php if ($podeGerenciarCarta): ?><a href="?page=cartasexpedidasedit&amp;id=<?= rawurlencode($idCarta) ?>&amp;piloto=1" class="ce-button" data-ce-frame data-title="Editar carta">Editar</a>
+      <?php else: ?><button type="button" class="ce-button" disabled title="<?= $e($restricaoGerenciarCarta) ?>">Editar</button><?php endif; ?>
+    <?php endif; ?>
+    <?php if ($mostrarReiniciar && !$fluxoInconsistente): ?><button class="ce-button" type="button" <?php if ($podeGerenciarCarta): ?>data-ce-action="reiniciar" data-id="<?= $e($idCarta) ?>"<?php else: ?>disabled title="<?= $e($restricaoGerenciarCarta) ?>"<?php endif; ?>>Reiniciar envio</button><?php endif; ?>
+    <?php if ($canCancel): ?><button class="ce-button danger" type="button" <?php if ($podeGerenciarCarta): ?>data-ce-action="cancelar" data-id="<?= $e($idCarta) ?>"<?php else: ?>disabled title="<?= $e($restricaoGerenciarCarta) ?>"<?php endif; ?>>Cancelar carta</button><?php endif; ?>
     <?php if ($canDelete): ?><button class="ce-button danger" type="button" data-ce-action="excluir" data-id="<?= $e($idCarta) ?>">Excluir carta</button><?php endif; ?>
   </footer>
  </div>
