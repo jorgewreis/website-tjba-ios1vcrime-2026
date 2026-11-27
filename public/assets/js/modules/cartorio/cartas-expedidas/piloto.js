@@ -142,6 +142,23 @@
     if (event.data?.type === 'ce-piloto-created' && new URL(frame.src).searchParams.get('page') === 'cartasexpedidascreate') finishCreate();
     if (event.data?.type === 'ce-piloto-saved') { success = true; dirty = false; notify('Alterações salvas.'); window.location.reload(); }
   });
+  const tempos = [...document.querySelectorAll('[data-ce-stage-seconds]')];
+  if (tempos.length) {
+    // A idade inicial vem do servidor; o relógio do dispositivo não altera a base.
+    const inicioLocal = performance.now();
+    window.setInterval(() => {
+      const decorrido = Math.floor((performance.now() - inicioLocal) / 1000);
+      for (const tempo of tempos) {
+        const minutos = Math.floor((Number(tempo.dataset.ceStageSeconds) + decorrido) / 60);
+        const horas = Math.floor(minutos / 60);
+        const dias = Math.floor(horas / 24);
+        const meses = Math.floor(dias / 30);
+        const resumo = meses > 0 ? meses + (meses === 1 ? 'mês' : 'meses')
+          : dias > 0 ? dias + 'd' : horas > 0 ? horas + 'h' : minutos > 0 ? minutos + 'min' : '<1min';
+        if (tempo.textContent !== resumo) tempo.textContent = resumo;
+      }
+    }, 15000);
+  }
   const collapsedForPrint = new Set();
   window.addEventListener('beforeprint', () => {
     document.querySelectorAll('.ce-group:not([open])').forEach(group => { collapsedForPrint.add(group); group.open = true; });

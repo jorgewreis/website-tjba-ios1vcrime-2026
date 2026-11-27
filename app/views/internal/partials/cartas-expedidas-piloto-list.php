@@ -9,6 +9,7 @@ $usuarioPiloto = trim((string) ($_SESSION['id_usuario'] ?? ''));
 $canDelete = DeleteAuthorization::usuarioPodeExcluir($usuarioPiloto, DeleteAuthorization::perfisAdminOuChefia());
 $canManageShipping = $usuarioPiloto !== '' && CartasExpedidasEnvioRegra::podeAlterar(UsuarioPerfisAutorizacao::perfisDoUsuario($usuarioPiloto), true);
 $prioridadesPiloto = CartasExpedidasPrioridade::paraCartas($connection, array_column($rows, 'IdCarta'));
+$ceAgora = time();
 $groups = [
     'envio' => ['Aguardando envio', $statusCounts['aguardando_envio'], []],
     'devolucao' => ['Aguardando cumprimento', $statusCounts['aguardando_cumprimento'], []],
@@ -65,7 +66,7 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
     <button class="ce-button" type="submit">Filtrar</button>
     <details class="ce-dropdown"><summary>Exportar</summary><div><a href="<?= $e($exportPdfUrl) ?>">PDF</a><a href="<?= $e($exportCsvUrl) ?>">CSV</a><button type="button" data-ce-print>Imprimir</button></div></details>
   </form>
-  <div class="ce-columns ce-grid" aria-hidden="true"><span>Processo</span><span>Destino</span><span>Finalidade</span><span>Prazo</span><span>Responsável</span><span>Prioridade</span><span>Ações</span></div>
+  <div class="ce-columns ce-grid" aria-hidden="true"><span>Processo</span><span>Destino</span><span>Finalidade</span><span>Prazo</span><span>Responsável</span><span>Prioridade</span><span>Tempo na etapa</span><span>Ações</span></div>
   <?php if ($rows === []): ?><p class="ce-empty">Nenhuma carta encontrada com esses filtros.</p><?php endif; ?>
   <?php foreach ($groups as $groupKey=>[$label,$count,$items]): ?>
   <?php if ($items === []) continue; $nestaPagina = count($items); ?>

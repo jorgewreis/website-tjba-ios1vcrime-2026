@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../../../helpers/CartasExpedidasTempoEtapa.php';
+
 $prior = (string)($prioridadesPiloto[$idCarta] ?? '');
 $priorLabel = CartasExpedidasPrioridade::ROTULOS[$prior] ?? 'Sem prioridade definida';
 $priorIcon = CartasExpedidasPrioridade::ICONES[$prior] ?? '·';
@@ -8,6 +10,12 @@ $numeroVisivel = $numero !== '' ? $numero : trim((string)($row['Processo'] ?? ''
 $canCancel = !empty($_SESSION['id_usuario']) && !$isTerminal;
 $detailId = 'ce-detail-' . $idCarta;
 $etapaPiloto = (string) ($row['EtapaEfetiva'] ?? '');
+$agoraPiloto = $ceAgora ?? time();
+$inicioEtapa = !$isTerminal && !$fluxoInconsistente
+    ? CartasExpedidasTempoEtapa::inicio($etapaPiloto, $row['Data'] ?? null, $row['SubtarefasAll'] ?? [])
+    : null;
+if ($inicioEtapa !== null && $inicioEtapa > $agoraPiloto) $inicioEtapa = null;
+$prioridadesDoProcesso = $temPrioridadeVisual ? implode(', ', array_unique($prioridadesTexto)) : '';
 $responsavelPilotoId = !$fluxoInconsistente ? match ($etapaPiloto) {
     'envio' => trim((string) ($responsavelRegraEnvio['id'] ?? '')),
     'devolucao' => trim((string) ($row['CriadoPor'] ?? '')),
@@ -36,7 +44,9 @@ $nomeCurtoResponsavelPiloto = match (count($partesResponsavel ?: [])) {
   <div class="ce-process">
     <?php if ($numeroVisivel !== ''): ?><button class="ce-cnj" type="button" data-ce-copy="<?= $e($numeroVisivel) ?>" title="Copiar número do processo" aria-label="<?= $e('Copiar número '.$numeroVisivel) ?>"><?= $e($numeroVisivel) ?></button><?php else: ?>—<?php endif; ?>
     <?php if ($sigiloso): ?><span class="ce-tag">Sigiloso</span><?php endif; ?>
-    <?php if ($temPrioridadeVisual): ?><span class="ce-tag" title="<?= $e(implode(', ',$prioridadesTexto)) ?>">Prioridade do processo</span><?php endif; ?>
+    <?php if ($prioridadesDoProcesso !== ''): ?>
+      <span class="ce-process-priority" title="<?= $e($prioridadesDoProcesso) ?>"><span>Prioridade</span><span class="ce-process-priority-values"><?= $e($prioridadesDoProcesso) ?></span></span>
+    <?php endif; ?>
     <?php if ($groupKey==='conferir'): ?><span class="ce-tag">Etapa a conferir</span><?php endif; ?>
   </div>
   <div class="ce-destino"><span class="ce-visually-hidden">Destino: </span><?= $e($destino ?: '—') ?></div>
@@ -44,6 +54,14 @@ $nomeCurtoResponsavelPiloto = match (count($partesResponsavel ?: [])) {
   <div class="ce-prazo"><span class="ce-visually-hidden">Prazo total: </span><?= $e($prazo !== '' ? $prazo.' dias' : '—') ?><?php if ($prazoRestanteTexto !== ''): ?><small class="<?= $prazoRestanteAlerta?'danger':'' ?>"><?= $e($prazoRestanteTexto) ?></small><?php endif; ?></div>
   <div class="ce-assignee"><span class="ce-visually-hidden"><?= $e($rotuloResponsavelPiloto) ?>: </span><?= $e($nomeCurtoResponsavelPiloto ?: '—') ?></div>
   <span class="ce-priority p-<?= $e($prior) ?>" role="img" title="<?= $e($priorLabel) ?>" aria-label="<?= $e($priorLabel) ?>"><?= $e($priorIcon) ?></span>
+  <div class="ce-stage-time">
+    <?php if ($inicioEtapa !== null): ?>
+      <span class="ce-stage-badge" title="<?= $e(($etapaPiloto === 'envio' ? 'Desde o cadastro: ' : 'Desde o envio: ') . date('d/m/Y H:i', $inicioEtapa)) ?>">
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="10" r="7.5"/><path d="M10 5.5V10l2.9 1.7"/></svg>
+        <span class="ce-visually-hidden">Tempo na etapa: </span><span data-ce-stage-seconds="<?= $agoraPiloto - $inicioEtapa ?>"><?= $e(CartasExpedidasTempoEtapa::formatar($inicioEtapa, $agoraPiloto)) ?></span>
+      </span>
+    <?php else: ?><span class="ce-stage-missing" title="Tempo na etapa indisponível">—</span><?php endif; ?>
+  </div>
   <div class="ce-row-actions">
     <?php if ($mostrarContinuar && $subtarefaAtivaId !== ''): ?><button type="button" class="ce-button small" data-ce-action="continuar" data-id="<?= $e($subtarefaAtivaId) ?>"><?= $isAguardandoCumprimento?'Juntar':'Enviar' ?></button><?php endif; ?>
     <details class="ce-dropdown"><summary aria-label="<?= $e('Ações da carta '.$numeroVisivel) ?>">⋯</summary>

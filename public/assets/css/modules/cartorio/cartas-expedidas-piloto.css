@@ -23,7 +23,7 @@
 .ce-button:disabled,.ce-button:disabled:hover{cursor:not-allowed;background:#f7f4f9;color:var(--ce-muted)}
 .ce-button:hover,.ce-dropdown summary:hover{background:#f2ebf9}
 .ce-button.primary:hover{background:#3e096c}
-.ce-grid{display:grid;grid-template-columns:minmax(185px,1.55fr) minmax(90px,.7fr) minmax(112px,1.2fr) minmax(75px,.5fr) minmax(86px,.7fr) minmax(66px,.45fr) minmax(105px,.6fr);gap:10px;align-items:center;padding:10px 16px}
+.ce-grid{display:grid;grid-template-columns:minmax(200px,1.45fr) minmax(85px,.65fr) minmax(122px,1.2fr) minmax(65px,.43fr) minmax(88px,.68fr) minmax(65px,.42fr) minmax(97px,.52fr) minmax(105px,.6fr);gap:10px;align-items:center;padding:10px 16px}
 .ce-columns{border-block:1px solid var(--ce-border);font-weight:650;color:#4f4265;background:#faf7fd}
 .ce-group{border-bottom:1px solid #ede7f3}
 .ce-group>summary{padding:10px 16px;background:#f1ebfa;cursor:pointer;color:#36204f;font-weight:700}
@@ -36,6 +36,13 @@
 .ce-cnj{border:0;padding:5px 0;background:none;cursor:copy;font-family:ui-monospace,monospace!important;font-weight:650!important;color:#2f1e45}
 .ce-cnj:hover{text-decoration:underline}
 .ce-process .ce-tag{margin:1px 3px 1px 0}
+.ce-process-priority{display:flex;width:max-content;max-width:min(233px,100%);margin:4px 0 0;border:1px solid #d8c8ec;border-radius:999px;overflow:hidden;font-size:11.5px;line-height:18px;white-space:nowrap}
+.ce-process-priority>span:first-child{flex:none;padding:0 8px;background:#ece4f6;color:#512783;font-weight:650}
+.ce-process-priority-values{padding:0 8px;min-width:0;overflow:hidden;text-overflow:ellipsis;background:#faf6ff;color:#493759}
+.ce-stage-time{min-width:0}
+.ce-stage-badge{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;padding:3px 7px;border:1px solid #e3d7f3;border-radius:6px;color:#462570;background:#f4eefb;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums}
+.ce-stage-badge svg{width:13px;height:13px;flex:0 0 13px}
+.ce-stage-missing{color:var(--ce-muted)}
 .ce-prazo small{display:block;color:var(--ce-muted)}
 .ce-priority{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:6px;background:var(--ce-lavender);color:#5b3780;font-weight:750}
 .ce-priority.p-baixo{color:#435878}.ce-priority.p-alto{color:#6331a0}.ce-priority.p-urgente{color:#8b5501;background:#fff2d4}.ce-priority.p-critico{color:#9b2634;background:#fde7eb}
@@ -87,8 +94,8 @@ body.ce-form-embed{padding:0!important;background:white!important;font-family:sy
 .ce-form-embed .ce-rule-now strong{font-size:18px;color:var(--ce-violet)}
 .ce-form-embed .ce-rule-scope{padding:6px 12px;color:var(--ce-muted)}
 .ce-workspace:has(.ce-panel:not([hidden])) :is(.ce-finalidade,.ce-assignee,.ce-columns span:nth-child(3),.ce-columns span:nth-child(5)){display:none}
-.ce-workspace:has(.ce-panel:not([hidden])) .ce-grid{grid-template-columns:minmax(160px,1.3fr) minmax(70px,.7fr) minmax(56px,.5fr) minmax(49px,.4fr) minmax(100px,.6fr);gap:5px}
-@media(max-width:1020px){.ce-grid{grid-template-columns:minmax(150px,1.3fr) minmax(68px,.7fr) minmax(59px,.5fr) minmax(56px,.5fr) minmax(96px,.55fr)}.ce-finalidade,.ce-assignee,.ce-columns span:nth-child(3),.ce-columns span:nth-child(5){display:none}.ce-workspace{padding:12px}}
+.ce-workspace:has(.ce-panel:not([hidden])) .ce-grid{grid-template-columns:minmax(128px,1.3fr) minmax(64px,.55fr) minmax(48px,.4fr) minmax(38px,.4fr) minmax(66px,.5fr) minmax(100px,.6fr);gap:5px}
+@media(max-width:1020px){.ce-grid{grid-template-columns:minmax(150px,1.3fr) minmax(68px,.7fr) minmax(59px,.5fr) minmax(56px,.5fr) minmax(75px,.5fr) minmax(96px,.55fr)}.ce-finalidade,.ce-assignee,.ce-columns span:nth-child(3),.ce-columns span:nth-child(5){display:none}.ce-workspace{padding:12px}}
 /* No desktop, a barra flutuante termina em y=80 (16px + 64px).
    Proteja o cabeçalho mesmo quando o iframe começa no topo. */
 @media screen and (min-width:768px){
@@ -112,10 +119,13 @@ body.ce-form-embed{padding:0!important;background:white!important;font-family:sy
   .ce-toolbar .ce-dropdown summary{width:100%}
   .ce-toolbar .ce-button,.ce-dropdown summary,.ce-button.small{min-height:44px}
   .ce-columns{display:none}
-  .ce-entry{grid-template-columns:minmax(0,1fr) minmax(54px,auto) auto 44px;gap:1px 8px;padding:5px 10px 8px}
-  .ce-process{grid-area:1/1/2/4;min-width:0}
+  .ce-entry{grid-template-columns:minmax(0,1fr) minmax(49px,auto) minmax(30px,auto) 68px;gap:1px 6px;padding:5px 10px 8px}
+  .ce-process{grid-area:1/1/2/3;min-width:0}
   .ce-cnj{min-height:44px;max-width:100%;overflow-wrap:anywhere;text-align:left}
-  .ce-entry>.ce-priority{grid-area:1/4;justify-self:center}
+  .ce-entry>.ce-priority{grid-area:1/3;justify-self:center}
+  .ce-stage-time{grid-area:1/4;justify-self:end}
+  .ce-stage-badge{padding-inline:4px;gap:3px;font-size:11px}
+  .ce-stage-time:has(.ce-stage-missing){display:none}
   .ce-destino{grid-area:2/1}
   .ce-prazo{grid-area:2/2;white-space:normal;color:var(--ce-muted)}
   .ce-row-actions{grid-area:2/3/3/5;gap:5px}
@@ -130,6 +140,6 @@ body.ce-form-embed{padding:0!important;background:white!important;font-family:sy
 .ce-form-embed .card-page>div,.ce-form-embed .card-page form>div{max-width:100%}
 .ce-form-embed .ce-rule-now .ce-tag{justify-self:start}
 .ce-form-embed .card-page .filter{max-width:100%}
-@media(min-width:768px) and (max-width:980px){.ce-workspace:has(.ce-panel:not([hidden])) :is(.ce-destino,.ce-columns span:nth-child(2)){display:none}.ce-workspace:has(.ce-panel:not([hidden])) .ce-grid{grid-template-columns:minmax(120px,1.3fr) minmax(48px,.5fr) minmax(34px,.35fr) minmax(90px,.6fr)}}
+@media(min-width:768px) and (max-width:980px){.ce-workspace:has(.ce-panel:not([hidden])) :is(.ce-destino,.ce-columns span:nth-child(2)){display:none}.ce-workspace:has(.ce-panel:not([hidden])) .ce-grid{grid-template-columns:minmax(75px,1.3fr) minmax(34px,.4fr) minmax(25px,.35fr) minmax(61px,.5fr) minmax(90px,.6fr)}}
 .ce-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 @media print{.ce-workspace:has(.ce-panel:not([hidden])) .ce-queue{display:block}}
