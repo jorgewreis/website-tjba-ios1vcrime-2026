@@ -113,6 +113,7 @@
                 return;
             }
             texto('vara', dados.vara);
+            texto('grau', typeof dados.grau === 'string' && dados.grau.trim() ? dados.grau : 'Não informado pelo DataJud');
             texto('classe', dados.classe);
             combinarAssuntos(dados.assuntos);
             dadosMov = (Array.isArray(dados.movimentos) ? dados.movimentos : [])

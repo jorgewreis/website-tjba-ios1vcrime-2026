@@ -137,6 +137,7 @@ final class ProcessoFicha
 
         // Sem nomes de partes, documentos ou complementos de andamentos neste retorno.
         return ['estado'=>'disponivel', 'sigilo'=>'Público', 'vara'=>$texto($data['orgao_julgador']['nome'] ?? null),
+            'grau'=>$texto($data['grau'] ?? null),
             'classe'=>$texto($data['classe']['descricao'] ?? null), 'assuntos'=>array_values(array_unique($assuntos)),
             'movimentos'=>$movimentos];
     }

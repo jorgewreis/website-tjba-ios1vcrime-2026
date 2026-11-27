@@ -26,14 +26,15 @@ check(ProcessoFicha::origem('número inválido')['unidade'] === null, 'não infe
 
 $dados = ['resultado_unico_verificado'=>true, 'sigilo_ausencia_verificada'=>true,
     'orgao_julgador'=>['nome'=>'Vara de destino fictícia'],
-    'classe'=>['descricao'=>'Classe fictícia'],
+    'classe'=>['descricao'=>'Classe fictícia'], 'grau'=>'G1',
     'assuntos'=>[['descricao'=>'Assunto fictício']],
     'polo_passivo'=>['não remeter nomes'],
     'movimentos'=>[['nome'=>'Movimento fictício','dataHora'=>'2026-11-26T12:00:00Z','complementos'=>['não remeter']]],
 ];
 $vistos = ProcessoFicha::dataJudPublico($dados);
 check($vistos['vara'] === 'Vara de destino fictícia' && $origem['comarca'] === 'Ilhéus', 'órgão atual não sobrescreve origem');
-check($vistos['sigilo'] === 'Sem sigilo' && count($vistos['movimentos']) === 1, 'resposta pública confirmada');
+check($vistos['grau'] === 'G1', 'grau informado pela fonte');
+check($vistos['sigilo'] === 'Público' && count($vistos['movimentos']) === 1, 'resposta pública confirmada');
 check(!isset($vistos['polo_passivo'], $vistos['movimentos'][0]['complementos']), 'somente dados necessários');
 check(ProcessoFicha::dataJudPublico(['indisponivel_na_base_publica'=>true]) === ['estado'=>'indisponivel'], 'vazio não é público');
 check(ProcessoFicha::dataJudPublico(['sigilo_restrito'=>true,'nivel_sigilo'=>3] + $dados) === ['estado'=>'restrito','sigilo'=>'Sigilo Médio'], 'resposta restrita não exibe histórico');

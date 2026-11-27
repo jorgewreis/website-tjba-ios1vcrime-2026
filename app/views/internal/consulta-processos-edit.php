@@ -195,6 +195,7 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             <dl class="ficha-campos">
                 <dt>Segmento</dt><dd><?= $eFicha($origemFicha['segmento'] ?? 'Não informado') ?></dd>
                 <dt>Tribunal</dt><dd><?= $eFicha($origemFicha['tribunal'] ?? 'Não informado') ?></dd>
+                <dt>Grau (DataJud)</dt><dd data-ficha-grau>Não consultado nesta visualização</dd>
                 <dt>Comarca de origem (CNJ)</dt><dd><?= $eFicha($origemFicha['comarca'] !== null
                     ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca'] : ($origemFicha['unidade'] ?? 'Não identificada')) ?></dd>
                 <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($orgaoDataJud['nome'] ?? $varaLocal ?? 'Não informada') ?></dd>

@@ -92,10 +92,13 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
     assert.match(restricted.message,/indisponível na base pública por sigilo/);
     assert.equal(restricted.fields.sigilo,'Sigilo local');
     assert.equal(restricted.retry,false);
-    const ok = await render(200,{estado:'disponivel',varA:'ignorado',vara:'Vara de teste',classe:'Classe de teste',movimentos:[]});
+    const ok = await render(200,{estado:'disponivel',varA:'ignorado',vara:'Vara de teste',classe:'Classe de teste',grau:'G1',movimentos:[]});
     assert.match(ok.message,/Nenhuma movimentação/);
     assert.equal(ok.fields.vara,'Vara de teste');
     assert.equal(ok.fields.classe,'Classe de teste');
+    assert.equal(ok.fields.grau,'G1');
+    const withoutDegree = await render(200,{estado:'disponivel',grau:null,movimentos:[]});
+    assert.equal(withoutDegree.fields.grau,'Não informado pelo DataJud');
     const legacy = await render(502,{estado:'erro'});
     assert.match(legacy.message,/Não foi possível consultar/);
     const nonJson = await render(502,null,{broken:true});

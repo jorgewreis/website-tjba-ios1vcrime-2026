@@ -13,9 +13,9 @@ $assuntosLocaisAvulsos = array_values(array_filter(array_map(
         <p class="ficha-secundario">Fonte: API pública do DataJud</p>
         <p data-ficha-status role="status"><?= $sigilosoFicha
             ? 'Processo sigiloso no cadastro. O histórico não é consultado na base pública.'
-            : 'Consulte as movimentações quando precisar.' ?></p>
+            : 'Consulte os dados e as movimentações quando precisar.' ?></p>
         <?php if (!$sigilosoFicha): ?>
-            <button type="button" class="ficha-button" data-ficha-consultar>Consultar movimentações</button>
+            <button type="button" class="ficha-button" data-ficha-consultar>Consultar dados e movimentações</button>
         <?php endif; ?>
         <button type="button" class="ficha-button" data-ficha-tentar hidden>Tentar novamente</button>
         <ol class="ficha-timeline" data-ficha-recentes></ol>

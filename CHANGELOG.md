@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0054
+
+**Data:** 2026-11-27 16:44:48 | **Commit:** `05e212fa` | **Tipo:** `patch`
+
+- fix(datajud): mostrar grau na consulta da ficha
+
 ## V. 1.88.0030
 
 **Data:** 2026-11-25 07:37:33 | **Commit:** `115dd83d` | **Tipo:** `patch`
@@ -7853,3 +7859,4 @@
 
 
 \n
+
