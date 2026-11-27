@@ -36,6 +36,49 @@ function classifyVaraDumpFailure(string $stderr): string
     };
 }
 
+/** Diagnóstico apenas de metadados; nunca devolve SQL, definidores ou nomes privados. */
+function probeVaraViews(PDO $db): array
+{
+    $views = $db->query("SELECT TABLE_NAME FROM information_schema.VIEWS
+        WHERE TABLE_SCHEMA = DATABASE() ORDER BY TABLE_NAME")->fetchAll(PDO::FETCH_COLUMN);
+    $known = ['v_processos_completo' => 'PROCESSOS', 'v_usuarios_completo' => 'USUARIOS'];
+    $report = [];
+    foreach ($views as $name) {
+        $label = $known[$name] ?? 'OUTRA';
+        $quoted = '`' . str_replace('`', '``', (string) $name) . '`';
+        $errors = [];
+        foreach (['LEITURA' => "SELECT 1 FROM $quoted LIMIT 0", 'DDL' => "SHOW CREATE VIEW $quoted"] as $probe => $sql) {
+            try {
+                $stmt = $db->query($sql);
+                if ($stmt === false) {
+                    $errors[] = $probe . ':sem_codigo';
+                    continue;
+                }
+                $stmt->closeCursor();
+            } catch (PDOException $e) {
+                $errno = $e->errorInfo[1] ?? null;
+                $errors[] = $probe . ':' . (is_int($errno) && $errno >= 1000 && $errno <= 3999 ? (string) $errno : 'sem_codigo');
+            }
+        }
+        if ($errors !== []) $report[] = $label . ' ' . implode(',', $errors);
+    }
+    return $report;
+}
+
+/** Contagens de objetos do schema, não há contagem nem exposição de registros. */
+function varaBackupInventory(PDO $db): string
+{
+    $sql = "SELECT
+        (SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_TYPE='BASE TABLE'),
+        (SELECT COUNT(*) FROM information_schema.VIEWS WHERE TABLE_SCHEMA=DATABASE()),
+        (SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE()),
+        (SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA=DATABASE()),
+        (SELECT COUNT(*) FROM information_schema.EVENTS WHERE EVENT_SCHEMA=DATABASE())";
+    $values = $db->query($sql)->fetch(PDO::FETCH_NUM);
+    if (!is_array($values) || count($values) !== 5) throw new VaraBackupFailure('INVENTORY');
+    return implode(':', array_map('intval', $values));
+}
+
 function varaDumpClientOptions(string $dump): array
 {
     $proc = proc_open([$dump, '--no-defaults', '--version'],
@@ -126,6 +169,7 @@ function dumpVaraDatabase(string $dump, string $home, string $host, int $port, s
 
 if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
     if (($argv[1] ?? '') !== '--backup' || !is_file(getcwd().'/.env')) exit(1);
+    $db = null;
     try {
         $home = realpath((string)getenv('HOME'));
         $root = realpath((string)getcwd());
@@ -143,13 +187,23 @@ if (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__) {
           AND TABLE_TYPE='BASE TABLE' AND (ENGINE IS NULL OR ENGINE<>'InnoDB')")->fetchColumn();
         if ($count !== 1) throw new VaraBackupFailure('TARGET_TABLE');
         if ($other !== 0) throw new VaraBackupFailure('NON_TRANSACTIONAL_TABLES');
-        unset($db);
+        $inventory = varaBackupInventory($db);
         $backup = dumpVaraDatabase($dump, $home, DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS);
-        echo "BACKUP OK {$backup['id']} bytes={$backup['bytes']} sha256={$backup['sha256']}\n";
+        if (!hash_equals($inventory, varaBackupInventory($db))) throw new VaraBackupFailure('INVENTORY_CHANGED');
+        echo "BACKUP OK {$backup['id']} bytes={$backup['bytes']} sha256={$backup['sha256']} objetos=$inventory\n";
     } catch (Throwable $e) {
         // Never emit SQL, credentials, records or database names into Actions logs.
         $reason = $e instanceof VaraBackupFailure ? $e->reason : 'DATABASE_PREFLIGHT';
         fwrite(STDERR, "Backup não confirmado. Código: {$reason}\n");
+        if ($db instanceof PDO && str_starts_with($reason, 'DUMP_VIEW ')) {
+            try {
+                $report = probeVaraViews($db);
+                fwrite(STDERR, $report === [] ? "DIAGNOSTICO_VIEWS SEM_FALHA_REPRODUZIDA\n"
+                    : "DIAGNOSTICO_VIEWS " . implode('; ', $report) . "\n");
+            } catch (Throwable) {
+                fwrite(STDERR, "DIAGNOSTICO_VIEWS INDISPONIVEL\n");
+            }
+        }
         exit(1);
     }
 }
