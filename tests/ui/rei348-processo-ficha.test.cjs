@@ -29,7 +29,7 @@ function render(url, perfil) {
             'app/views/internal/partials/processo-ficha-contexto.php','app/views/internal/partials/processo-ficha-leitura.php',
             'app/views/internal/partials/processo-ficha-alertas-sigilo.php',
             'app/views/internal/_internal_head_css.php','app/views/internal/_processo_ficha_modal_assets.php','app/helpers/ProcessoFicha.php','app/helpers/CnjValidator.php',
-            'app/helpers/ProcessoNivelSigilo.php','app/repositories/ProcessoVaraRepository.php','app/DataJud/DataJudTribunalResolver.php','app/access/ProfileNormalizer.php',
+            'app/helpers/ProcessoNivelSigilo.php','app/services/TjbaCatalogo.php','app/repositories/ProcessoVaraRepository.php','app/DataJud/DataJudTribunalResolver.php','app/access/ProfileNormalizer.php',
             'public/assets/css/shared/processo-ficha.css','public/assets/js/shared/processo-ficha.js',
             'public/assets/css/shared/processo-ficha-modal.css','public/assets/js/shared/processo-ficha-modal.js',
             'public/assets/js/shared/processo-nivel-sigilo.js','public/assets/css/shared/painel-deslizante.css',
