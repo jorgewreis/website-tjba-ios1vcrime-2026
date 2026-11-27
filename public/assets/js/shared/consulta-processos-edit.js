@@ -55,7 +55,7 @@
             if (!item || typeof item !== 'object') {
                 return;
             }
-            const id = String(item.id || item.assunto_id || '').trim();
+            const id = String(item.assunto_id || item.id || '').trim();
             const codigo = String(item.codigo || item.assunto_codigo || '').trim();
             const descricao = String(item.descricao || item.assunto_descricao || '').trim();
             const origemInformada = String(item.origem || '').trim();
@@ -591,11 +591,13 @@
 
                     const assunto = result.data.assunto || null;
                     if (assunto && assunto.id) {
-                        assuntosState.push({
+                        const id = String(assunto.id);
+                        const existente = assuntosState.find(item => item.id === id);
+                        if (!existente || assunto.origem === 'datajud') assuntosState.push({
                             id: String(assunto.id),
                             codigo: String(assunto.codigo || codigo),
                             descricao: String(assunto.descricao || descricao || codigo),
-                            origem: 'manual'
+                            origem: assunto.origem || 'manual'
                         });
                         assuntosState = normalizeAssuntos(assuntosState);
                         renderAssuntos(assuntosList, assuntosState);
@@ -606,7 +608,7 @@
                         descricaoInput.readOnly = true;
                         descricaoInput.placeholder = 'Preenchida automaticamente se o código existir no catálogo';
                     }
-                    notify('success', 'Sucesso', 'Assunto vinculado ao processo.');
+                    notify('success', 'Sucesso', result.data.action === 'noop' ? 'O assunto já estava vinculado.' : 'Assunto vinculado ao processo.');
                 }).catch(function () {
                     notify('error', 'Erro', 'Erro de conexão ao vincular assunto.');
                 }).finally(function () {

@@ -112,6 +112,9 @@ $prioridadesFichaEstado = $processoIdFicha !== ''
 $instituicoesPorParteFicha = [];
 $documentosPorParteFicha = [];
 $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
+$origemClasseFicha = $processo['classe_origem'] ?? null;
+$classeProtegidaFicha = $origemClasseFicha === 'datajud'
+    || (array_key_exists('classe_origem', $processo) && $classeNomeAtual !== '' && $origemClasseFicha !== 'manual');
 $podeRegistrarNivel = false;
 $nivelConfirmado = null;
 if ($sigilosoFicha && $acessoSetorial) {
@@ -238,11 +241,18 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                     <label for="proc-classe-atual">Classe atual</label>
                     <input type="text" class="width-700 height-md" id="proc-classe-atual" value="<?php echo htmlspecialchars($classeNomeAtual !== '' ? $classeNomeAtual : 'Classe não cadastrada', ENT_QUOTES); ?>" readonly>
                 </div>
+                <?php if (!$classeProtegidaFicha): ?>
                 <div class="col">
                     <label for="proc-classe-codigo"><?php echo $classeNomeAtual !== '' ? 'Alterar classe processual' : 'Incluir classe processual'; ?></label>
                     <input type="text" class="width-300 height-md" id="proc-classe-codigo" placeholder="Ex.: 283" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
                 </div>
+                <?php endif; ?>
             </div>
+            <?php if ($classeProtegidaFicha): ?>
+                <p class="ficha-secundario"><?= $origemClasseFicha === 'datajud'
+                    ? 'Classe sincronizada com o DataJud. Só outra sincronização pode alterá-la.'
+                    : 'Origem da classe não confirmada. O valor existente fica protegido até confirmação por sincronização.' ?></p>
+            <?php else: ?>
             <div class="display-flex col col-full gap-y-md" id="proc-classe-resultado" style="display: none;">
                 <div class="display-flex row row-full flex-wrap align-end gap-y-md" id="proc-classe-bloco-existente" style="display: none; gap: 12px;">
                     <div class="col">
@@ -259,6 +269,7 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                     <button type="button" class="btn btn-primary height-md" id="btn-proc-classe-cadastrar">Cadastrar e vincular</button>
                 </div>
             </div>
+            <?php endif; ?>
         </div>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Assuntos</h2>

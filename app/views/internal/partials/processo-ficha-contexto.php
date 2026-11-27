@@ -1,10 +1,18 @@
+<?php
+$assuntosLocaisAvulsos = array_values(array_filter(array_map(
+    static fn(array $item): ?string => ($item['origem'] ?? '') === 'datajud' ? null : ($item['assunto_descricao'] ?? null),
+    $assuntosFicha
+)));
+?>
 <aside class="ficha-context-panel" aria-label="Referências e movimentações do processo"
-    <?= !$sigilosoFicha ? 'data-ficha-datajud="' . $eFicha($processoIdFicha) . '"' : '' ?>>
+    <?php if (!$sigilosoFicha): ?>data-ficha-datajud="<?= $eFicha($processoIdFicha) ?>"
+    <?php if (!$modoEdicao): ?>data-ficha-assuntos-locais="<?= $eFicha(json_encode($assuntosLocaisAvulsos, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?>"<?php endif; ?>
+    <?php endif; ?>>
     <?php if ($modoEdicao): ?>
     <section class="ficha-secao">
         <h2>Origem pelo número CNJ</h2>
         <p><?= $eFicha(implode(' · ', array_filter([$origemFicha['segmento'], $origemFicha['tribunal'],
-            $origemFicha['comarca'] !== null ? $origemFicha['comarca'] . ' (origem)' : $origemFicha['unidade']]))) ?: 'Não informada' ?></p>
+            $origemFicha['comarca'] !== null ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca'] : $origemFicha['unidade']]))) ?: 'Não informada' ?></p>
     </section>
     <section class="ficha-secao">
         <h2>Vara informada pelo DataJud</h2>
