@@ -2,6 +2,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../../helpers/CartasExpedidasTempoEtapa.php';
+require_once __DIR__ . '/../../../helpers/ProcessoNivelSigilo.php';
+
+$rotuloSigilo = ProcessoNivelSigilo::rotulo($sigiloso, $row['processo_nivel_sigilo'] ?? null);
 
 $prior = (string)($prioridadesPiloto[$idCarta] ?? '');
 $priorLabel = CartasExpedidasPrioridade::ROTULOS[$prior] ?? 'Sem prioridade definida';
@@ -43,7 +46,7 @@ $nomeCurtoResponsavelPiloto = match (count($partesResponsavel ?: [])) {
 <div class="ce-grid ce-entry">
   <div class="ce-process">
     <?php if ($numeroVisivel !== ''): ?><button class="ce-cnj" type="button" data-ce-copy="<?= $e($numeroVisivel) ?>" title="Copiar número do processo" aria-label="<?= $e('Copiar número '.$numeroVisivel) ?>"><?= $e($numeroVisivel) ?></button><?php else: ?>—<?php endif; ?>
-    <?php if ($sigiloso): ?><span class="ce-double-tag ce-process-secrecy"><span>Sigiloso</span><span>Nível não informado</span></span><?php endif; ?>
+    <?php if ($rotuloSigilo !== null): ?><span class="ce-double-tag ce-process-secrecy" title="<?= $e($rotuloSigilo) ?>"><span>Sigilo</span><span><?= $e($rotuloSigilo) ?></span></span><?php endif; ?>
     <?php if ($prioridadesDoProcesso !== ''): ?>
       <span class="ce-double-tag ce-process-priority" title="<?= $e($prioridadesDoProcesso) ?>"><span>Prioridade</span><span class="ce-process-priority-values"><?= $e($prioridadesDoProcesso) ?></span></span>
     <?php endif; ?>
@@ -73,7 +76,7 @@ $nomeCurtoResponsavelPiloto = match (count($partesResponsavel ?: [])) {
 <template id="<?= $e($detailId) ?>">
  <div class="ce-detail">
   <p class="ce-status"><span class="ce-tag"><?= $e($statusVisivelTexto) ?></span></p>
-  <p class="ce-detail-number"><?= $e($numeroVisivel) ?> <?php if ($sigiloso): ?><span class="ce-double-tag ce-process-secrecy"><span>Sigiloso</span><span>Nível não informado</span></span><?php endif; ?></p>
+  <p class="ce-detail-number"><?= $e($numeroVisivel) ?> <?php if ($rotuloSigilo !== null): ?><span class="ce-double-tag ce-process-secrecy" title="<?= $e($rotuloSigilo) ?>"><span>Sigilo</span><span><?= $e($rotuloSigilo) ?></span></span><?php endif; ?></p>
   <div class="ce-tabs" role="tablist" aria-label="Informações da carta">
     <button type="button" id="ce-tab-resumo" role="tab" aria-controls="ce-resumo" aria-selected="true" data-ce-tab>Resumo</button>
     <button type="button" id="ce-tab-historico" role="tab" aria-controls="ce-historico" aria-selected="false" tabindex="-1" data-ce-tab>Histórico (<?= count($historicoLinhas) ?>)</button>
