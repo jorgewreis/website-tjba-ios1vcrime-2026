@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0058
+
+**Data:** 2026-11-27 20:38:58 | **Commit:** `09f760eb` | **Tipo:** `patch`
+
+- fix(auth): restore Rei69 runner argument compatibility
+
 ## V. 1.88.0057
 
 **Data:** 2026-11-27 20:32:29 | **Commit:** `b0fdec7c` | **Tipo:** `patch`
@@ -7877,6 +7883,7 @@
 
 
 \n
+
 
 
 
