@@ -5,15 +5,16 @@ const path = require('node:path');
 
 const source = fs.readFileSync(path.join(__dirname, '../../public/assets/js/shared/processo-setor-responsavel.js'), 'utf8');
 
-function createForm(fetchImpl) {
+function createForm(fetchImpl, explicitDestination = false) {
   const handlers = {};
   const form = {
-    dataset: { processId: 'PRC-SINTETICO' },
+    dataset: { processId: 'PRC-SINTETICO', explicitDestination: String(explicitDestination) },
     addEventListener(name, callback) { handlers[name] = callback; },
   };
   const elements = {
     'process-responsible-sector-form': form,
-    'process-responsible-sector-select': { value: 'SET-2', selectedIndex: 1, options: [{}, { textContent: 'Gabinete' }] },
+    'process-responsible-sector-select': { value: explicitDestination ? '' : 'SET-2', selectedIndex: explicitDestination ? 0 : 1, options: [{}, { textContent: 'Gabinete' }],
+      addEventListener(name, callback) { handlers['select:' + name] = callback; } },
     'process-responsible-sector-submit': { disabled: false },
     'process-responsible-sector-status': { textContent: '' },
     'process-responsible-sector-current': { textContent: '' },
@@ -54,7 +55,24 @@ async function main() {
   assert.equal(failure.elements['process-responsible-sector-status'].textContent, 'Falha de comunicação. Tente novamente.');
   assert.equal(failure.elements['process-responsible-sector-submit'].disabled, false);
 
-  console.log('PASS: envio same-origin, retorno de sucesso e envio sem justificativa e recuperação de falha de rede.');
+  let explicitRequests = 0;
+  const explicit = createForm(async (url, options) => {
+    explicitRequests += 1;
+    assert.equal(JSON.parse(options.body).setor_id, 'SET-2');
+    return { ok: true, json: async () => ({ success: true, changed: true, sector_id: 'SET-2' }) };
+  }, true);
+  const select = explicit.elements['process-responsible-sector-select'];
+  const submit = explicit.elements['process-responsible-sector-submit'];
+  assert.equal(submit.disabled, true, 'Cartório implícito não pode ser presumido como destino.');
+  await explicit.handlers.submit({ preventDefault() {} });
+  assert.equal(explicitRequests, 0);
+  select.value = 'SET-2';
+  select.selectedIndex = 1;
+  explicit.handlers['select:change']();
+  assert.equal(submit.disabled, false);
+  await explicit.handlers.submit({ preventDefault() {} });
+  assert.equal(explicitRequests, 1);
+  console.log('PASS: destino explícito, envio same-origin, retorno de sucesso e envio sem justificativa e recuperação de falha de rede.');
 }
 
 main().catch((error) => {

@@ -254,12 +254,13 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             <?php if ($erroSetorResponsavel !== ''): ?>
                 <p class="no-data" role="status"><?php echo htmlspecialchars($erroSetorResponsavel, ENT_QUOTES); ?></p>
             <?php else: ?>
-            <form id="process-responsible-sector-form" class="display-flex col col-full gap-y-md" data-process-id="<?php echo htmlspecialchars((string) ($processo['id'] ?? ''), ENT_QUOTES); ?>">
+            <?php $selecaoSetorPendente = !$adminFicha && $setorResponsavelAtual === ''; ?>
+            <form id="process-responsible-sector-form" data-explicit-destination="<?= $adminFicha ? 'false' : 'true' ?>" class="display-flex col col-full gap-y-md" data-process-id="<?php echo htmlspecialchars((string) ($processo['id'] ?? ''), ENT_QUOTES); ?>">
                 <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                     <div class="col">
                         <label for="process-responsible-sector-select">Setor ativo</label>
-                        <select class="width-500 height-md" id="process-responsible-sector-select" name="setor_id">
-                            <?php if ($setorCartorioPadrao === null && $setorResponsavelAtual === ''): ?>
+                        <select class="width-500 height-md" id="process-responsible-sector-select" name="setor_id"<?= $adminFicha ? '' : ' required' ?>>
+                            <?php if ($selecaoSetorPendente || ($setorCartorioPadrao === null && $setorResponsavelAtual === '')): ?>
                             <option value="" selected disabled>Selecione um setor ativo</option>
                             <?php endif; ?>
                             <?php if ($setorResponsavelAtual !== '' && (int) ($rowSetorAtual['setor_ativo'] ?? 0) !== 1): ?>
@@ -268,13 +269,13 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                             <?php foreach ($setoresResponsaveis as $setor):
                                 $idOpcao = (string) ($setor['id_setor'] ?? '');
                                 $opcaoPadrao = $setorCartorioPadrao !== null && $idOpcao === (string) $setorCartorioPadrao['id_setor'];
-                                $opcaoSelecionada = $setorResponsavelAtual === '' ? $opcaoPadrao : $setorResponsavelAtual === $idOpcao;
+                                $opcaoSelecionada = $setorResponsavelAtual === '' ? (!$selecaoSetorPendente && $opcaoPadrao) : $setorResponsavelAtual === $idOpcao;
                             ?>
                             <option value="<?php echo htmlspecialchars($idOpcao, ENT_QUOTES); ?>" <?php echo $opcaoSelecionada ? 'selected' : ''; ?>><?php echo htmlspecialchars((string) ($setor['nome'] ?? ''), ENT_QUOTES); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary height-md" id="process-responsible-sector-submit">Salvar setor</button>
+                    <button type="submit" class="btn btn-primary height-md" id="process-responsible-sector-submit"<?= $selecaoSetorPendente ? ' disabled' : '' ?>>Salvar setor</button>
                 </div>
                 <p id="process-responsible-sector-status" role="status" aria-live="polite"></p>
             </form>
