@@ -27,9 +27,10 @@ function render(url, perfil) {
     try {
         for (const f of ['app/views/internal/consulta-processos-edit.php','app/views/internal/partials/processo-ficha-assets.php',
             'app/views/internal/partials/processo-ficha-contexto.php','app/views/internal/partials/processo-ficha-leitura.php',
-            'app/views/internal/_internal_head_css.php','app/helpers/ProcessoFicha.php','app/helpers/CnjValidator.php',
+            'app/views/internal/_internal_head_css.php','app/views/internal/_processo_ficha_modal_assets.php','app/helpers/ProcessoFicha.php','app/helpers/CnjValidator.php',
             'app/helpers/ProcessoNivelSigilo.php','app/DataJud/DataJudTribunalResolver.php','app/access/ProfileNormalizer.php',
-            'public/assets/css/shared/processo-ficha.css','public/assets/js/shared/processo-ficha.js']) copy(f);
+            'public/assets/css/shared/processo-ficha.css','public/assets/js/shared/processo-ficha.js',
+            'public/assets/css/shared/processo-ficha-modal.css','public/assets/js/shared/processo-ficha-modal.js']) copy(f);
         put('fixture.php',`<?php
             require __DIR__ . "/app/repositories/ProcessosRepository.php";
             function appIsHttpsRequest(){return false;}

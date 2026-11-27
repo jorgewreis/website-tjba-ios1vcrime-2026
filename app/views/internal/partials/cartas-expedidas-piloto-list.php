@@ -36,6 +36,7 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cartas Expedidas | Cartório</title>
 <link rel="stylesheet" href="<?= $css ?>?v=<?= (int)filemtime(dirname(__DIR__,4).'/public'.$css) ?>">
+<?php require_once __DIR__ . '/../_processo_ficha_modal_assets.php'; ?>
 </head>
 <body class="ce-piloto">
 <main class="ce-workspace">
@@ -83,10 +84,12 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
   </nav></footer>
   <?php endif; ?>
  </section>
+ <dialog class="ce-layer" id="ce-layer" aria-labelledby="ce-panel-title">
  <aside id="ce-panel" class="ce-panel" aria-label="Painel da carta" hidden>
    <header><h2 id="ce-panel-title">Detalhes da carta</h2><button type="button" class="ce-close" data-ce-close aria-label="Fechar painel">×</button></header>
    <div id="ce-panel-content"></div>
  </aside>
+ </dialog>
  <div class="ce-toast" id="ce-feedback" aria-live="polite" role="status" hidden></div>
 </main>
 <script src="<?= $js ?>?v=<?= (int)filemtime(dirname(__DIR__,4).'/public'.$js) ?>" defer></script>

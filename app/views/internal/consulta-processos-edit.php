@@ -61,6 +61,7 @@ if ($retornoFicha === null) {
     }
 }
 $paramsFicha = ['page'=>'consultaprocessosedit', 'id'=>$id];
+if (($_GET['ficha_modal'] ?? '') === '1') $paramsFicha['ficha_modal'] = '1';
 if ($retornoFicha !== null) $paramsFicha['voltar'] = $retornoFicha;
 $linkLeituraFicha = '/frame.php?' . http_build_query($paramsFicha, '', '&', PHP_QUERY_RFC3986);
 $linkEdicaoFicha = $linkLeituraFicha . '&modo=editar';

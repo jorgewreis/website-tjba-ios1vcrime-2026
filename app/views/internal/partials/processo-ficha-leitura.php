@@ -11,7 +11,7 @@
         <div><p class="ficha-contexto">Consultas / Processos</p><h1>Detalhes do processo</h1>
         <p class="ficha-numero"><?= $eFicha($processo['numero_processo'] ?? '') ?></p></div>
         <nav aria-label="Ações da ficha" class="ficha-acoes">
-            <a class="ficha-button" href="<?= $eFicha($linkListaFicha) ?>">Voltar</a>
+            <a class="ficha-button" data-fechar-ficha href="<?= $eFicha($linkListaFicha) ?>">Voltar</a>
             <?php if ($podeEditarFicha): ?><a class="ficha-button ficha-primary" href="<?= $eFicha($linkEdicaoFicha) ?>">Editar dados</a><?php endif; ?>
             <span class="ficha-readonly">Somente leitura</span>
         </nav>

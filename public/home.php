@@ -588,7 +588,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
 
                 <!-- CONTENT WRAPER -->
                 <div class="content-wrapper">
-                    <iframe class="target-page" id="frame" title="Área de trabalho da Vara" src="/frame.php?page=<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>"></iframe>
+                    <iframe class="target-page" id="frame" data-ficha-workspace title="Área de trabalho da Vara" src="/frame.php?page=<?php echo htmlspecialchars($defaultHomePage, ENT_QUOTES, 'UTF-8'); ?>"></iframe>
                 </div>
             </div>            
         </div>        
@@ -599,6 +599,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
         <div id="toast-container" class="toast-container" aria-live="polite"></div>
     </div>
 
+    <?php require __DIR__ . '/../app/views/internal/_processo_ficha_modal_assets.php'; ?>
     <script src="/assets/js/shared/prefs.js" defer></script>
     <script src="/assets/js/shared/toast.js" defer></script>
     <script src="/assets/js/shared/navigate-buttons.js" defer></script>

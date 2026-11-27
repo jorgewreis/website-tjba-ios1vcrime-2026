@@ -70,7 +70,8 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
     for(const f of [
       'css/modules/cartorio/cartas-expedidas-piloto.css',
       'js/modules/cartorio/cartas-expedidas/piloto.js',
-      'js/modules/cartorio/cartas-expedidas/piloto-form.js'
+      'js/modules/cartorio/cartas-expedidas/piloto-form.js',
+      'css/shared/processo-ficha-modal.css','js/shared/processo-ficha-modal.js'
     ]) copy('public/assets/'+f);
     // Verifica a renderização real da tag e do template, também sem navegador.
     for (const [nivel, rotulo] of [[null,'Segredo de Justiça'],[1,'Segredo de Justiça'],[2,'Sigilo Mínimo'],[3,'Sigilo Médio'],[4,'Sigilo Intenso'],[5,'Sigilo Absoluto']]) {
@@ -156,6 +157,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
         assert.ok(shellBar && header && header.y>=shellBar.y+shellBar.height+12,'floating shell must not overlap header at '+width+' '+shell);
       }
       await p.goto('http://fixture.test/frame.php?page=cartasexpedidas');
+      const queueWidth=await p.locator('.ce-queue').evaluate(el=>el.getBoundingClientRect().width);
       if(width>=768) {
         const search=await p.getByRole('searchbox',{name:'Pesquisar por processo'}).boundingBox();
         assert.ok(search && search.width>=220 && search.width<=250,'desktop process search must stay compact at '+width);
@@ -176,6 +178,16 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       const lacre=p.locator('.ce-entry [data-ce-indicator="sigilo"]');
       assert.equal(await lacre.count(),1,'somente a carta marcada sigilosa tem cadeado');
       assert.equal(await p.locator('.ce-entry .ce-double-tag').count(),0,'lista não empilha tags');
+      // A folha de estilos do painel não pode reformatar nem esconder a lista.
+      await p.locator('.ce-entry .ce-dropdown summary').first().click();
+      await p.getByRole('button',{name:'Ver detalhes',exact:true}).click();
+      const floating = p.locator('#ce-panel');
+      assert.equal(await floating.evaluate(el=>getComputedStyle(el).position),'absolute');
+      assert.notEqual(await floating.evaluate(el=>getComputedStyle(el).boxShadow),'none');
+      assert.equal(await p.locator('.ce-queue').evaluate(el=>el.getBoundingClientRect().width),queueWidth);
+      assert.ok(await p.locator('.ce-queue').isVisible());
+      await p.getByRole('button',{name:'Fechar painel'}).click();
+      await floating.waitFor({state:'hidden'});
       const priorities=p.getByLabel('Prioridades do processo',{exact:true});
       assert.ok(await priorities.isVisible());
       await priorities.focus();

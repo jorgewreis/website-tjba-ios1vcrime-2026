@@ -89,5 +89,6 @@ Script único: `scripts/migrate-cartas-expedidas-fluxo-2-etapas.php` — remove 
 
 - [CartasExpedidasSubtarefasRepository](../../../app/repositories/CartasExpedidasSubtarefasRepository.php)
 - A única interface de listagem abre em `/frame.php?page=cartasexpedidas`. O endereço `cartasexpedidasnova` continua compatível, com a mesma tela e os mesmos filtros, sem item próprio no menu.
+- Cadastro, edição, detalhes e regra de envio abrem em um painel flutuante à direita, sem modificar a largura da lista. Ao fechar cadastro ou edição, a lista é atualizada mantendo endereço, filtros e rolagem.
 - Views: [cartorio-cartas-expedidas-list.php](../../../app/views/internal/cartorio-cartas-expedidas-list.php), [cartorio-cartas-expedidas-edit.php](../../../app/views/internal/cartorio-cartas-expedidas-edit.php)
 - [cartorio-cartas-recebidas.md](cartorio-cartas-recebidas.md)
