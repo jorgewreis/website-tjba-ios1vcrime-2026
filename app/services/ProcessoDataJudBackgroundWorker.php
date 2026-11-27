@@ -40,6 +40,11 @@ final class ProcessoDataJudBackgroundWorker
                 $this->finish((int) $job['id']);
                 $done++;
             } catch (Throwable $e) {
+                if ($e instanceof DataJudUpstreamException && in_array($e->reason, ['local_throttled', 'pace_unavailable'], true)) {
+                    // O bloqueio local acontece antes de enviar ao CNJ: não consome a tentativa.
+                    $this->defer((int) $job['id'], max(5, min(86400, $e->retryAfter ?? 60)));
+                    break;
+                }
                 $this->fail((int) $job['id']);
                 $failed++;
                 error_log('datajud background sync falhou: ' . get_class($e));
@@ -171,6 +176,17 @@ final class ProcessoDataJudBackgroundWorker
     {
         $q = $this->db->prepare("UPDATE processo_datajud_sync_queue SET status='concluido', processando_em=NULL, atualizado_em=NOW(), updated_at=NOW() WHERE id=:id AND status='cad_inicial_exec'");
         $q->execute([':id' => $id]);
+    }
+
+    private function defer(int $id, int $seconds): void
+    {
+        $q = $this->db->prepare("UPDATE processo_datajud_sync_queue
+            SET status='cadastro_inicial', tentativas=0, processando_em=NULL,
+                proxima_tentativa_em=DATE_ADD(NOW(), INTERVAL :seconds SECOND), updated_at=NOW()
+            WHERE id=:id AND status='cad_inicial_exec'");
+        $q->bindValue(':seconds', $seconds, PDO::PARAM_INT);
+        $q->bindValue(':id', $id, PDO::PARAM_INT);
+        $q->execute();
     }
 
     private function fail(int $id): void

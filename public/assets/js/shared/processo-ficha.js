@@ -59,6 +59,7 @@
         if (historico.open && !todas.children.length) preencher(todas, dadosMov);
     });
     const falhas = Object.freeze({
+        datajud_local_throttled: [429, 'Aguarde antes de iniciar outra consulta ao DataJud.', true],
         datajud_throttled: [503, 'O DataJud limitou a consulta. Aguarde antes de tentar novamente.', true],
         datajud_incomplete: [503, 'O DataJud retornou uma consulta incompleta. Aguarde antes de tentar novamente.', true],
         datajud_transport: [503, 'Não foi possível conectar ao DataJud. Aguarde antes de tentar novamente.', true],
@@ -86,7 +87,9 @@
                 const code = dados?.estado === 'erro' && typeof dados.code === 'string' ? dados.code : '';
                 const falha = Object.hasOwn(falhas, code) ? falhas[code] : null;
                 if (!falha || res.status !== falha[0]) throw new Error('Consulta indisponível');
-                status.textContent = falha[1];
+                const espera = Number.isSafeInteger(dados.retry_after) && dados.retry_after > 0
+                    && (code === 'datajud_throttled' || code === 'datajud_local_throttled') ? dados.retry_after : null;
+                status.textContent = espera ? falha[1] + ' Tempo de espera: ' + espera + ' s.' : falha[1];
                 tentar.hidden = !falha[2];
                 return;
             }

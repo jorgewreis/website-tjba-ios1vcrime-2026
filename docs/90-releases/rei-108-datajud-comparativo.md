@@ -23,3 +23,10 @@ Em leituras autorizadas, houve HTTP 429 e HTTP 200 com falha de shard no índice
 3. A REI-139 trata separadamente da consistência de prioridades derivadas da classe 1268. A REI-113 continua a ser a referência para mudanças no produto comercial.
 
 Fonte da informação processual: [CNJ, API Pública do DataJud](https://www.cnj.jus.br/sistemas/datajud/api-publica/), [acesso](https://datajud-wiki.cnj.jus.br/api-publica/acesso/) e [endpoints](https://datajud-wiki.cnj.jus.br/api-publica/endpoints/).
+ 
+### Frequência de consulta compartilhada
+
+- Para o WebApp e o worker da Vara, um único orçamento local do serviço DataJud: uma chamada ativa por vez, pelo menos 25 segundos entre inícios, portanto até 3 em qualquer janela de 60 segundos. Não representa uma cota oficial do CNJ.
+- O Redis local (loopback, extensão PHP) armazena só horários e identificador aleatório de reserva. Se não estiver disponível, o envio é pausado. Não há espera bloqueante nem repetição automática na tela.
+- Em 429 real, respeitar `Retry-After` quando válido, com intervalo mínimo de 60 segundos. Rejeição do orçamento local não gasta a tentativa inicial do worker; uma chamada que efetivamente chegou ao DataJud não é repetida pela fila.
+- Mantidos os 60 segundos na consulta interativa e o limite da fila. Avaliar 120 s em uma sonda autorizada antes de alterar; o proxy externo também precisa comportar o prazo. Aumentar o tempo não corrige 429 nem índices parciais.

@@ -93,6 +93,17 @@ try {
 } finally {
     $otherWorker->query("SELECT RELEASE_LOCK($batchLock)")->fetchColumn();
 }
+$notSent = new DataJudService([], static function (): array {
+    throw new DataJudUpstreamException('local_throttled', 25);
+});
+$deferred = (new ProcessoDataJudBackgroundWorker($db, $notSent))->run(20);
+$scheduledDelay = (int) $db->query('SELECT TIMESTAMPDIFF(SECOND,NOW(),proxima_tentativa_em) FROM processo_datajud_sync_queue WHERE processo_id=' . $db->quote($id))->fetchColumn();
+if ($deferred !== ['processados'=>0, 'falhas'=>0] || $queueRow($id)['status'] !== 'cadastro_inicial'
+    || (int) $queueRow($id)['tentativas'] !== 0 || $scheduledDelay < 20
+    || $queueRow($processId) !== $legacy) {
+    throw new RuntimeException('Local rate control consumed an attempt or changed legacy work.');
+}
+$db->exec("UPDATE processo_datajud_sync_queue SET proxima_tentativa_em=DATE_SUB(NOW(), INTERVAL 1 MINUTE) WHERE processo_id=" . $db->quote($id));
 $blocked = (new ProcessoDataJudBackgroundWorker($db, $partialClient))->run(20);
 if ($blocked !== ['processados'=>0, 'falhas'=>1] || $callsPartial !== 1
     || $queueRow($id)['status'] !== 'falhou' || (int) $queueRow($id)['tentativas'] !== 1
