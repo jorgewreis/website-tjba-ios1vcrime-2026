@@ -16,6 +16,7 @@ with tempfile.TemporaryDirectory(prefix="rei68-upload-") as tmp:
     for name in (
         "public/api/sala-audiencias-ata/upload.php",
         "config/config.php",
+        "app/helpers/ApiErrorReporter.php",
         "app/helpers/BootstrapHelper.php",
         "app/helpers/AutoloadHelper.php",
         "app/helpers/ApiAccessGuard.php",

@@ -21,6 +21,9 @@ with tempfile.TemporaryDirectory(prefix='student-account-') as tmp:
     endpoint = root / 'public/api/cadastro_estudantes.php'
     endpoint.parent.mkdir(parents=True)
     shutil.copyfile(ROOT / 'public/api/cadastro_estudantes.php', endpoint)
+    reporter = root / 'app/helpers/ApiErrorReporter.php'
+    reporter.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(ROOT / 'app/helpers/ApiErrorReporter.php', reporter)
     put(root, 'config/config.php', '<?php')
     put(root, 'config/security.php', '''<?php class Security {
  static function normalizeCPF($v) { return $v; } static function validarCPF($v) { return true; }
