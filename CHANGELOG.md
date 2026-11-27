@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0059
+
+**Data:** 2026-11-27 20:43:48 | **Commit:** `d36b7aab` | **Tipo:** `patch`
+
+- ci(auth): keep signed E2E off pull request jobs
+
 ## V. 1.88.0058
 
 **Data:** 2026-11-27 20:38:58 | **Commit:** `09f760eb` | **Tipo:** `patch`
@@ -7883,6 +7889,7 @@
 
 
 \n
+
 
 
 
