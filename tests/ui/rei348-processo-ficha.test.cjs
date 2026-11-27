@@ -110,7 +110,7 @@ function render(url, perfil) {
                     if(id==='P3') return rt.fulfill({json:{estado:'restrito',sigilo:null}});
                     if(id==='P4') return rt.fulfill({json:{estado:'disponivel',sigilo:'Público',movimentos:[]}});
                     if(falha){falha=false; return rt.fulfill({status:502,json:{estado:'erro'}});}
-                    return rt.fulfill({json:{estado:'disponivel',vara:'Vara de destino fictícia',classe:'Classe na fonte',
+                    return rt.fulfill({json:{estado:'disponivel',vara:'Vara de destino fictícia',classe:'Classe na fonte',grau:'G1',
                         assuntos:['Assunto na fonte'],sigilo:'Público',movimentos:[
                             {nome:'Movimento 2',data:'2026-11-24T12:00:00Z'}, {nome:'Movimento 4',data:'2026-11-26T12:00:00Z'},
                             {nome:'<b>Movimento 1</b>',data:'2026-11-23T12:00:00Z'}, {nome:'Movimento 3',data:'2026-11-25T12:00:00Z'}]
@@ -177,7 +177,8 @@ function render(url, perfil) {
             assert.equal(await pg.locator('[data-ficha-vara]').textContent(),'Vara local fictícia');
             assert.deepEqual(JSON.parse(await pg.locator('[data-ficha-datajud]').getAttribute('data-ficha-assuntos-locais')),['Assunto cadastrado']);
             assert.equal(pedidos,0,'abrir a ficha não consulta o DataJud');
-            await pg.getByRole('button',{name:'Consultar movimentações'}).click();
+            assert.equal(await pg.locator('[data-ficha-grau]').textContent(),'Não consultado nesta visualização');
+            await pg.getByRole('button',{name:'Consultar dados e movimentações'}).click();
             await pg.getByRole('button',{name:'Tentar novamente'}).click();
             await pg.getByText('Vara de destino fictícia').waitFor();
             assert.deepEqual(await pg.locator('[data-ficha-recentes] strong').allTextContents(),['Movimento 4','Movimento 3','Movimento 2']);
@@ -189,6 +190,7 @@ function render(url, perfil) {
             assert.equal(await pg.locator('[data-ficha-vara]').textContent(),'Vara de destino fictícia');
             assert.match(await pg.locator('#ficha-dados-titulo + dl').textContent(),/0103 - Ilhéus/);
             assert.equal(await pg.locator('[data-ficha-classe]').textContent(),'Classe na fonte');
+            assert.equal(await pg.locator('[data-ficha-grau]').textContent(),'G1');
             assert.deepEqual(await pg.evaluate(()=>document.documentElement.scrollWidth<=innerWidth ? [] :
                 [...document.querySelectorAll('.ficha-shell *')].filter(e=>e.getBoundingClientRect().right>innerWidth)
                     .slice(0,8).map(e=>[e.tagName,e.className,e.getBoundingClientRect().right])),[], 'sem overflow em '+largura);
@@ -270,7 +272,7 @@ function render(url, perfil) {
             const negada = await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P2&perfil=SERVIDOR-GABINETE&modo=editar');
             assert.equal(negada.status(),403);
             await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P2&perfil=SERVIDOR-CARTORIO&modo=editar');
-            assert.equal(await pg.locator('#process-responsible-sector-select').count(),0,'não depende do editor de lotação');
+            assert.equal(await pg.locator('#process-responsible-sector-select').count(),1,'operador autorizado pode encaminhar o setor');
             await pg.locator('#processo-nivel-sigilo').selectOption('publico');
             assert.equal(await pg.locator('#processo-sigilo-confirmacao').isVisible(),true);
             assert.equal(await pg.getByRole('button',{name:'Salvar classificação'}).isDisabled(),true);
@@ -278,7 +280,7 @@ function render(url, perfil) {
             await Promise.all([pg.waitForEvent('load'),pg.getByRole('button',{name:'Salvar classificação'}).click()]);
             assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');
             await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P3');
-            await pg.getByRole('button',{name:'Consultar movimentações'}).click();
+            await pg.getByRole('button',{name:'Consultar dados e movimentações'}).click();
             await pg.getByText('Histórico indisponível na base pública por sigilo.').waitFor();
             assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');
             assert.equal(await pg.locator('[data-ficha-sigilo-datajud]').isVisible(),true);
@@ -286,7 +288,7 @@ function render(url, perfil) {
             await pg.goto('http://fixture.test/frame.php?page=consultaprocessosedit&id=P4');
             await Promise.all([
                 pg.waitForResponse(r=>r.url().includes('datajud-ficha.php')),
-                pg.getByRole('button',{name:'Consultar movimentações'}).click()
+                pg.getByRole('button',{name:'Consultar dados e movimentações'}).click()
             ]);
             await pg.getByText('Nenhuma movimentação retornada pelo DataJud.').waitFor();
             assert.equal(await pg.locator('[data-ficha-sigilo]').textContent(),'Público');

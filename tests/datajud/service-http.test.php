@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../../app/services/DataJudService.php';
+require_once __DIR__ . '/../../app/helpers/ProcessoFicha.php';
 
 $consulta = require __DIR__ . '/../../public/api/datajud/config.php';
 if (($consulta['timeout'] ?? null) !== 60 || ($consulta['connect_timeout'] ?? null) !== 10) {
@@ -127,12 +128,12 @@ if (($captured['size'] ?? null) !== 2 || ($captured['track_total_hits'] ?? null)
 $expectedFields = ['numeroProcesso', 'tribunal', 'classe', 'classeProcessual', 'assuntos', 'prioridade', 'polo', 'poloAtivo', 'poloPassivo', 'movimentos', 'orgaoJulgador', 'nivelSigilo', 'grau', 'formato', 'sistema', 'dataAjuizamento', 'dataHoraUltimaAtualizacao', 'id'];
 if (($captured['_source'] ?? null) !== $expectedFields) throw new LogicException('Query requested source fields outside the institutional mapper contract.');
 $service->consultarFichaPublica($number);
-$expectedFicha = ['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos', 'orgaoJulgador.nome', 'movimentos.nome', 'movimentos.dataHora', 'movimentos.data_hora'];
+$expectedFicha = ['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos', 'grau', 'orgaoJulgador.nome', 'movimentos.nome', 'movimentos.dataHora', 'movimentos.data_hora'];
 if (($captured['_source'] ?? null) !== $expectedFicha || ($captured['track_total_hits'] ?? null) !== true || ($captured['size'] ?? null) !== 2) {
     throw new LogicException('The public case card must not request unused data or drop uniqueness checks.');
 }
 $captured = null;
-$sampleSource = $source + ['classe' => ['codigo' => 42, 'nome' => 'Classe sintética'], 'assuntos' => []];
+$sampleSource = $source + ['classe' => ['codigo' => 42, 'nome' => 'Classe sintética'], 'assuntos' => [], 'grau' => 'G1'];
 $sample = ['timed_out'=>false, '_shards'=>['total'=>1,'successful'=>1,'failed'=>0,'skipped'=>0],
     'hits'=>['total'=>['value'=>1,'relation'=>'eq'],'hits'=>[['_source'=>$sampleSource]]]];
 $service = new DataJudService([], static function (string $url, array $body) use (&$captured, $response, $sample): array {
@@ -143,7 +144,7 @@ $sync = $service->searchProcesso($number, true);
 if ($captured['_source'] !== ['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos']
     || $sync['resultado_unico_verificado'] !== true || $sync['assuntos_estado'] !== 'vazio'
     || (int) ($sync['classe']['codigo'] ?? 0) !== 42) throw new LogicException('Projeção de sincronização perdeu informação necessária.');
-foreach ([[429, $empty, 'throttled'], [503, $empty, 'unavailable'], [401, $empty, 'authorization'],
+foreach ([[429, $empty, 'throttled'], [503, $empty, 'unavailable'], [504, null, 'unavailable'], [401, $empty, 'authorization'],
     [200, array_replace($empty, ['_shards'=>['failed'=>1]]), 'incomplete']] as [$status, $body, $expected]) {
     $calls = 0;
     try {
@@ -182,8 +183,27 @@ foreach ([$withoutShards, array_replace($sample, ['hits' => ['total' => ['value'
 }
 if ($calls !== 2) throw new LogicException('Ficha repetiu a consulta parcial.');
 $calls = 0;
-if (($make([$response(200, $sample + ['terminated_early'=>false])], $calls)->consultarFichaPublica($number)['resultado_unico_verificado'] ?? false) !== true) {
+$fichaResultado = $make([$response(200, $sample + ['terminated_early'=>false])], $calls)->consultarFichaPublica($number);
+if (($fichaResultado['resultado_unico_verificado'] ?? false) !== true || ($fichaResultado['grau'] ?? null) !== 'G1') {
     throw new LogicException('Ficha recusou resultado completo.');
+}
+$capa = $sample;
+$capa['hits']['hits'][0]['_source'] = $sampleSource + [
+    'orgaoJulgador' => ['nome' => 'Vara fictícia'],
+];
+$capa['hits']['hits'][0]['_source']['assuntos'] = [['codigo' => 7, 'nome' => 'Assunto fictício']];
+$fichaPublica = ProcessoFicha::dataJudPublico($make([$response(200, $capa)], $calls)->consultarFichaPublica($number));
+if (($fichaPublica['estado'] ?? null) !== 'disponivel' || ($fichaPublica['grau'] ?? null) !== 'G1'
+    || ($fichaPublica['classe'] ?? null) !== 'Classe sintética'
+    || ($fichaPublica['assuntos'] ?? null) !== ['Assunto fictício']
+    || ($fichaPublica['vara'] ?? null) !== 'Vara fictícia') {
+    throw new LogicException('Metadados públicos não chegaram íntegros à ficha.');
+}
+$capa['hits']['hits'][0]['_source']['nivelSigilo'] = 1;
+$fichaRestrita = ProcessoFicha::dataJudPublico($make([$response(200, $capa)], $calls)->consultarFichaPublica($number));
+if (($fichaRestrita['estado'] ?? null) !== 'restrito'
+    || array_intersect(['grau', 'classe', 'assuntos', 'vara'], array_keys($fichaRestrita)) !== []) {
+    throw new LogicException('Ficha restrita expôs metadados públicos.');
 }
 
 $diagnosticLog = tempnam(sys_get_temp_dir(), 'datajud-diagnostic-');

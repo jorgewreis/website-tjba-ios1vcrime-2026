@@ -45,6 +45,8 @@ jobs:
           php tests/datajud/mapper-sync-real.test.php
           php tests/datajud/tribunal-resolver.test.php
           php tests/datajud/ficha-datajud-differential.test.php
+          python3 -B tests/datajud/ficha-http.test.py
+          node tests/datajud/ficha-datajud-leitura-ui.test.cjs
           php tests/processos-partes/responsible-sector-assignment.test.php
           php tests/processos/sigilo-cadastro-sintetico.test.php
           node tests/datajud/ficha-datajud-ui.test.cjs

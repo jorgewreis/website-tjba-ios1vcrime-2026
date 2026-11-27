@@ -22,6 +22,7 @@
                 <dl class="ficha-campos">
                     <dt>Segmento</dt><dd><?= $eFicha($origemFicha['segmento'] ?? 'Não informado') ?></dd>
                     <dt>Tribunal</dt><dd><?= $eFicha($origemFicha['tribunal'] ?? 'Não informado') ?></dd>
+                    <dt>Grau (DataJud)</dt><dd data-ficha-grau>Não consultado nesta visualização</dd>
                     <dt>Comarca de origem (CNJ)</dt><dd><?php
                         $origemRotulo = $origemFicha['comarca'] !== null
                             ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca']

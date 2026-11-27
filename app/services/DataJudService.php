@@ -209,7 +209,7 @@ final class DataJudService
             // A ficha e a sincronização só requisitam os campos que utilizam.
             '_source' => $forSync ? array_merge(['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos'],
                 $includeSyncOrgao ? ['orgaoJulgador.nome', 'orgaoJulgador.codigoMunicipioIBGE'] : []) : ($apenasFichaPublica ? [
-                'numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos',
+                'numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos', 'grau',
                 'orgaoJulgador.nome', 'movimentos.nome', 'movimentos.dataHora', 'movimentos.data_hora',
             ] : [
                 'numeroProcesso', 'tribunal', 'classe', 'classeProcessual', 'assuntos',
