@@ -144,10 +144,9 @@ if ($sigilosoFicha && $acessoSetorial) {
     }
 }
 // Sinal adicional só afeta a apresentação e não reclassifica o cadastro nem o acesso.
-$temNivelFicha = $sigilosoFicha
-    || !empty($prioridadesFichaEstado['sigiloso_obrigatorio_menor_ou_vd'])
+$alertaProtecaoFicha = !empty($prioridadesFichaEstado['sigiloso_obrigatorio_menor_ou_vd'])
     || in_array('sigiloso', array_column($prioridadesFichaEstado['prioridades'] ?? [], 'codigo'), true);
-$rotuloSigiloFicha = $temNivelFicha
+$rotuloSigiloFicha = $sigilosoFicha
     ? (ProcessoNivelSigilo::ROTULOS[$nivelConfirmado] ?? 'Sigiloso · nível não informado')
     : 'Público';
 if (!$modoEdicao) {
@@ -189,7 +188,8 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($varaLocal ?? 'Não informada') ?></dd>
                 <dt>Classe</dt><dd><?= $eFicha($classeNomeAtual !== '' ? $classeNomeAtual : 'Não informada') ?></dd>
                 <dt>Assuntos</dt><dd id="proc-assuntos-resumo"><?= $eFicha(implode('; ', array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao')))) ?: 'Não informados') ?></dd>
-                <dt>Sigilo</dt><dd data-ficha-sigilo<?= $temNivelFicha ? ' data-ficha-sigilo-local' : '' ?>><?= $eFicha($rotuloSigiloFicha) ?></dd>
+                <dt>Sigilo no cadastro</dt><dd data-ficha-sigilo><?= $eFicha($rotuloSigiloFicha) ?></dd>
+                <?php require __DIR__ . '/partials/processo-ficha-alertas-sigilo.php'; ?>
                 <dt>Setor ativo</dt><dd><?= $eFicha($setorNomeExibido) ?></dd>
                 <dt>Prioridades</dt><dd><?= $eFicha(implode('; ', array_filter(array_column($prioridadesFichaEstado['prioridades'] ?? [], 'label'))) ?: 'Nenhuma registrada') ?></dd>
             </dl>
@@ -225,10 +225,18 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             </form>
             <p id="processo-nivel-sigilo-status" role="status" aria-live="polite"></p>
         </section>
-        <?php elseif ($sigilosoFicha): ?>
-            <p class="ficha-secao ficha-secundario"><?= !$acessoSetorial || !$adminFicha
-                ? 'Somente a administração com acesso ao setor pode registrar o nível de sigilo.'
-                : 'Registro do nível de sigilo indisponível. O processo permanece sigiloso.' ?></p>
+        <?php else: ?>
+            <section class="ficha-secao ficha-editor-summary" aria-labelledby="processo-sigilo-titulo">
+                <h2 id="processo-sigilo-titulo">Nível de sigilo</h2>
+                <?php if (!$sigilosoFicha): ?>
+                    <p class="ficha-secundario">O cadastro é público. Só é possível informar o nível em um processo já marcado como sigiloso.</p>
+                <?php elseif (!$acessoSetorial || !$adminFicha): ?>
+                    <p class="ficha-secundario">Somente a administração com acesso ao setor pode registrar o nível de sigilo.</p>
+                <?php else: ?>
+                    <p class="ficha-secundario">Registro do nível indisponível até a atualização do banco. O processo permanece sigiloso.</p>
+                <?php endif; ?>
+                <p class="ficha-secundario">O nível é informativo e não altera as permissões de acesso.</p>
+            </section>
         <?php endif; ?>
         <?php if ($podeAtribuirSetorResponsavel): ?>
         <section class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" aria-labelledby="responsible-sector-title">

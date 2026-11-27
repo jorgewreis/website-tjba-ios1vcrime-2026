@@ -627,4 +627,5 @@ foreach ($allocationModules as [$domain,$table,$parent]) {
 
 require_once '/repo/tests/processos/vara-migration-contract.php';
 testVaraMigrationContract($pdo, 'A');
+testNivelSigiloMigrationContract($pdo, 'A');
 echo "PASS REI69 pauta cross-process synthetic service regression\n";

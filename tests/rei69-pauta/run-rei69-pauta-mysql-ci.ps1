@@ -22,13 +22,14 @@ $inertConfig = Join-Path $PSScriptRoot 'inert-config.php'
 $securityConfig = Join-Path $repoRoot 'config/security.php'
 $varaTest = Join-Path $repoRoot 'tests/processos/vara-migration-contract.php'
 $varaSql = Join-Path $repoRoot 'database/migrations/20261127_add_processos_vara_nome.sql'
+$nivelSigiloSql = Join-Path $repoRoot 'database/migrations/20261127_add_processos_nivel_sigilo.sql'
 $mysqlImageRef = 'mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903'
 if ($QaImageId -notmatch '^sha256:[a-f0-9]{64}$') { throw 'ID de imagem CI explicito obrigatorio.' }
 $phpImageRef = $QaImageId
 if (Test-Path -LiteralPath (Join-Path $repoRoot '.env')) {
     throw 'Runner recusado: não execute a fixture em checkout com .env.'
 }
-foreach ($path in @($appRoot, $testFile, $inertConfig, $securityConfig, $varaTest, $varaSql)) {
+foreach ($path in @($appRoot, $testFile, $inertConfig, $securityConfig, $varaTest, $varaSql, $nivelSigiloSql)) {
     $item = Get-Item -LiteralPath $path -Force
     if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
         throw 'Runner recusado: source com reparse point.'
@@ -103,9 +104,10 @@ function Assert-RunningPhp {
     $php = Get-OwnedContainer $phpId
     $ports = if ($php.HostConfig.PortBindings) { @($php.HostConfig.PortBindings.PSObject.Properties).Count } else { 0 }
     $mounts = @($php.Mounts)
-    if (-not $php.State.Running -or $php.Image -ne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged -or $ports -ne 0 -or -not $php.HostConfig.ReadonlyRootfs -or @($php.HostConfig.CapDrop) -notcontains 'ALL' -or @($php.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true' -or $mounts.Count -ne 7) { throw 'Topologia PHP pós-start inválida.' }
+    if (-not $php.State.Running -or $php.Image -ne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged -or $ports -ne 0 -or -not $php.HostConfig.ReadonlyRootfs -or @($php.HostConfig.CapDrop) -notcontains 'ALL' -or @($php.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true' -or $mounts.Count -ne 8) { throw 'Topologia PHP pós-start inválida.' }
     if (@($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $appRoot -and $_.Destination -eq '/repo/app' -and -not $_.RW }).Count -ne 1 -or @($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $testFile -and $_.Destination -eq '/test/rei69-pauta-mysql.test.php' -and -not $_.RW }).Count -ne 1 -or @($mounts | Where-Object { $_.Type -eq 'volume' -and $_.Name -eq $volumeName -and $_.Destination -eq '/var/run/mysqld' }).Count -ne 1) { throw 'Mount PHP pós-start inválido.' }
     if (@($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $varaTest -and $_.Destination -eq '/repo/tests/processos/vara-migration-contract.php' -and -not $_.RW }).Count -ne 1 -or @($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $varaSql -and $_.Destination -eq '/repo/database/migrations/20261127_add_processos_vara_nome.sql' -and -not $_.RW }).Count -ne 1) { throw 'Fixture da Vara pós-start inválida.' }
+    if (@($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $nivelSigiloSql -and $_.Destination -eq '/repo/database/migrations/20261127_add_processos_nivel_sigilo.sql' -and -not $_.RW }).Count -ne 1) { throw 'SQL de nível de sigilo pós-start inválida.' }
     if (@($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $inertConfig -and $_.Destination -eq '/repo/config/config.php' -and -not $_.RW }).Count -ne 1 -or @($mounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $securityConfig -and $_.Destination -eq '/repo/config/security.php' -and -not $_.RW }).Count -ne 1) { throw 'Configuração sintética pós-start inválida.' }
 }
 
@@ -222,6 +224,7 @@ try {
         '--mount', $appMount, '--mount', $testMount,
         '--mount', "type=bind,source=$varaTest,target=/repo/tests/processos/vara-migration-contract.php,readonly",
         '--mount', "type=bind,source=$varaSql,target=/repo/database/migrations/20261127_add_processos_vara_nome.sql,readonly",
+        '--mount', "type=bind,source=$nivelSigiloSql,target=/repo/database/migrations/20261127_add_processos_nivel_sigilo.sql,readonly",
         '--mount', "type=bind,source=$inertConfig,target=/repo/config/config.php,readonly",
         '--mount', "type=bind,source=$securityConfig,target=/repo/config/security.php,readonly",
         '--mount', "type=volume,source=$volumeName,target=/var/run/mysqld",
@@ -237,7 +240,7 @@ try {
     $phpMounts = @($php.Mounts)
     $phpPortCount = if ($php.HostConfig.PortBindings) { @($php.HostConfig.PortBindings.PSObject.Properties).Count } else { 0 }
     $phpInvalid = $php.Image -ne $phpImage.Id -or $php.HostConfig.NetworkMode -ne 'none' -or $php.HostConfig.Privileged
-    $phpInvalid = $phpInvalid -or $phpPortCount -ne 0 -or $phpMounts.Count -ne 7
+    $phpInvalid = $phpInvalid -or $phpPortCount -ne 0 -or $phpMounts.Count -ne 8
     $phpInvalid = $phpInvalid -or -not $php.HostConfig.ReadonlyRootfs -or @($php.HostConfig.CapDrop) -notcontains 'ALL'
     $phpInvalid = $phpInvalid -or @($php.HostConfig.SecurityOpt) -notcontains 'no-new-privileges=true'
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $appRoot -and $_.Destination -eq '/repo/app' -and -not $_.RW }).Count -ne 1
@@ -245,6 +248,7 @@ try {
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $inertConfig -and $_.Destination -eq '/repo/config/config.php' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $varaTest -and $_.Destination -eq '/repo/tests/processos/vara-migration-contract.php' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $varaSql -and $_.Destination -eq '/repo/database/migrations/20261127_add_processos_vara_nome.sql' -and -not $_.RW }).Count -ne 1
+    $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $nivelSigiloSql -and $_.Destination -eq '/repo/database/migrations/20261127_add_processos_nivel_sigilo.sql' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'bind' -and $_.Source -eq $securityConfig -and $_.Destination -eq '/repo/config/security.php' -and -not $_.RW }).Count -ne 1
     $phpInvalid = $phpInvalid -or @($phpMounts | Where-Object { $_.Type -eq 'volume' -and $_.Name -eq $volumeName -and $_.Destination -eq '/var/run/mysqld' }).Count -ne 1
     if ($phpInvalid) {

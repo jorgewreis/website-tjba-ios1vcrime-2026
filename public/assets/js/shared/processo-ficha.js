@@ -12,7 +12,7 @@
     function texto(chave, valor) {
         if (typeof valor !== 'string' || !valor.trim()) return;
         const alvo = document.querySelector('[data-ficha-' + chave + ']');
-        if (alvo && !alvo.hasAttribute('data-ficha-sigilo-local')) alvo.textContent = valor;
+        if (alvo) alvo.textContent = valor;
     }
     function combinarAssuntos(remotos) {
         if (!Array.isArray(remotos)) return;
@@ -92,7 +92,13 @@
                 throw new Error('Resposta de consulta inválida');
             }
             if (dados.estado === 'restrito') {
-                texto('sigilo', (typeof dados.sigilo === 'string' && dados.sigilo.trim()) || 'Sigiloso · nível não informado');
+                const aviso = document.querySelector('[data-ficha-sigilo-datajud]');
+                if (aviso) {
+                    const classificacao = typeof dados.sigilo === 'string' && dados.sigilo.trim();
+                    aviso.textContent = 'Restrição indicada pelo DataJud · ' + (classificacao || 'nível não informado');
+                    aviso.hidden = false;
+                    document.getElementById('ficha-sigilo-datajud-rotulo').hidden = false;
+                }
                 status.textContent = 'Histórico indisponível na base pública por sigilo.';
                 return;
             }
@@ -102,7 +108,6 @@
             }
             texto('vara', dados.vara);
             texto('classe', dados.classe);
-            texto('sigilo', dados.sigilo);
             combinarAssuntos(dados.assuntos);
             dadosMov = (Array.isArray(dados.movimentos) ? dados.movimentos : [])
                 .filter(m => m && typeof m.nome === 'string' && m.nome.trim())

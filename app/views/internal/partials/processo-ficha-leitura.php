@@ -34,7 +34,8 @@
                         $rotulosAssuntos = array_values(array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao'))));
                         echo $eFicha($rotulosAssuntos ? implode('; ', $rotulosAssuntos) : 'Não informados');
                     ?></dd>
-                    <dt>Sigilo</dt><dd data-ficha-sigilo<?= $temNivelFicha ? ' data-ficha-sigilo-local' : '' ?>><?= $eFicha($rotuloSigiloFicha) ?></dd>
+                    <dt>Sigilo no cadastro</dt><dd data-ficha-sigilo><?= $eFicha($rotuloSigiloFicha) ?></dd>
+                    <?php require __DIR__ . '/processo-ficha-alertas-sigilo.php'; ?>
                     <dt>Setor ativo</dt><dd><?= $eFicha($setorNomeExibido) ?></dd>
                     <dt>Prioridades</dt><dd><?php
                         $rotulosPrioridades = array_filter(array_column($prioridadesFichaEstado['prioridades'] ?? [], 'label'));
