@@ -94,6 +94,9 @@ try {
         }
     )['classe'];
     echo json_encode($result, JSON_UNESCAPED_UNICODE);
+} catch (ProcessoClasseOrigemIndisponivelException $e) {
+    http_response_code(503);
+    echo json_encode(['error' => $e->getMessage(), 'code' => 'classe_origem_indisponivel'], JSON_UNESCAPED_UNICODE);
 } catch (DataJudUpstreamException|DataJudLocalSigiloException $e) {
     $e->respondForSync();
 } catch (InvalidArgumentException $e) {

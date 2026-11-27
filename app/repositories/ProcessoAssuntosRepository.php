@@ -116,7 +116,7 @@ final class ProcessoAssuntosRepository
     }
 
     /**
-     * Cria ou atualiza vínculo idempotente.
+     * Cria vínculo idempotente sem alterar origem existente.
      * @return bool true quando inseriu vínculo novo; false quando vínculo já existia
      */
     public function upsert(string $processoId, string $assuntoId, string $origem = ProcessoAssuntoOrigem::MANUAL, bool $forUpdate = false): bool
@@ -130,23 +130,13 @@ final class ProcessoAssuntosRepository
         if ($origem === '') {
             $origem = ProcessoAssuntoOrigem::MANUAL;
         }
+        if (!in_array($origem, [ProcessoAssuntoOrigem::MANUAL, ProcessoAssuntoOrigem::DATAJUD], true)) {
+            throw new InvalidArgumentException('Origem de assunto inválida.');
+        }
 
-        $existing = $this->findOneByProcessoAndAssunto($processoId, $assuntoId, $forUpdate);
-        if ($existing !== null) {
-            if ($origem === ProcessoAssuntoOrigem::DATAJUD
-                && trim((string) ($existing['origem'] ?? '')) !== ProcessoAssuntoOrigem::DATAJUD) {
-                return false;
-            }
-            $statement = $this->connection->prepare(
-                sprintf(
-                    'UPDATE `%s` SET `origem` = :origem, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
-                    $this->table
-                )
-            );
-            $statement->bindValue(':id', (string) $existing['id']);
-            $statement->bindValue(':origem', $origem);
-            $statement->execute();
-
+        // Vínculos existentes são imutáveis por upsert. Só a reconciliação
+        // após uma sincronização verificada pode assumir um vínculo manual.
+        if ($this->findOneByProcessoAndAssunto($processoId, $assuntoId, $forUpdate) !== null) {
             return false;
         }
 
@@ -224,10 +214,11 @@ final class ProcessoAssuntosRepository
      * Reconciliacao idempotente da origem DataJud:
      * - adiciona vínculos faltantes com origem datajud;
      * - remove vínculos datajud que não vieram no lote atual;
-     * - preserva vínculos manuais.
+     * - assume os vínculos manuais confirmados no lote;
+     * - preserva os demais vínculos manuais.
      *
      * @param list<string> $assuntoIdsDataJud
-     * @return array{inserted:int, removed:int, unchanged:int}
+     * @return array{inserted:int, removed:int, unchanged:int, promoted:int}
      */
     public function syncDataJudAssuntos(string $processoId, array $assuntoIdsDataJud, bool $forUpdate = false): array
     {
@@ -270,15 +261,22 @@ final class ProcessoAssuntosRepository
             }
         }
 
-        $novosMap = [];
-        foreach ($novosIds as $id) {
-            $novosMap[$id] = true;
-        }
-
-        // Vínculo manual existente satisfaz a presença do assunto, mas mantém
-        // sua origem. upsert() alteraria essa origem para datajud.
         $toInsert = array_values(array_diff($novosIds, array_keys($existingAll)));
         $toRemove = array_values(array_diff(array_keys($existingDataJud), $novosIds));
+        $toPromote = array_values(array_diff(array_intersect($novosIds, array_keys($existingAll)), array_keys($existingDataJud)));
+
+        $promoted = 0;
+        if ($toPromote !== []) {
+            $placeholders = implode(', ', array_fill(0, count($toPromote), '?'));
+            $promote = $this->connection->prepare(sprintf(
+                'UPDATE `%s` SET `origem` = ?, `updated_at` = NOW() WHERE `processo_id` = ?
+                 AND `origem` = ? AND `assunto_id` IN (%s)',
+                $this->table,
+                $placeholders
+            ));
+            $promote->execute([ProcessoAssuntoOrigem::DATAJUD, $processoId, ProcessoAssuntoOrigem::MANUAL, ...$toPromote]);
+            $promoted = $promote->rowCount();
+        }
 
         $inserted = 0;
         foreach ($toInsert as $assuntoId) {
@@ -306,11 +304,11 @@ final class ProcessoAssuntosRepository
             $removed = $delete->rowCount();
         }
 
-        $unchanged = count($novosIds) - $inserted;
+        $unchanged = count($novosIds) - $inserted - $promoted;
         if ($unchanged < 0) {
             $unchanged = 0;
         }
 
-        return ['inserted' => $inserted, 'removed' => $removed, 'unchanged' => $unchanged];
+        return ['inserted' => $inserted, 'removed' => $removed, 'unchanged' => $unchanged, 'promoted' => $promoted];
     }
 }

@@ -25,8 +25,8 @@ $db->exec('CREATE TABLE processos (id TEXT PRIMARY KEY, numero_processo TEXT, cl
 $db->exec('CREATE TABLE assuntos (id TEXT PRIMARY KEY, codigo TEXT UNIQUE, descricao TEXT, created_at TEXT, updated_at TEXT)');
 $db->exec('CREATE TABLE processo_assuntos (id TEXT PRIMARY KEY, processo_id TEXT NOT NULL, assunto_id TEXT NOT NULL, origem TEXT NOT NULL, created_at TEXT, updated_at TEXT, UNIQUE(processo_id, assunto_id))');
 $db->exec("INSERT INTO processos VALUES ('p1','00008323520184013202',NULL,NULL,0,NULL,NULL)");
-$db->exec("INSERT INTO assuntos VALUES ('a1','42','Manual',NULL,NULL),('a2','7','Antigo',NULL,NULL)");
-$db->exec("INSERT INTO processo_assuntos VALUES ('m','p1','a1','manual',NULL,NULL),('d','p1','a2','datajud',NULL,NULL)");
+$db->exec("INSERT INTO assuntos VALUES ('a1','42','Manual',NULL,NULL),('a2','7','Antigo',NULL,NULL),('a5','10','Manual extra',NULL,NULL)");
+$db->exec("INSERT INTO processo_assuntos VALUES ('m','p1','a1','manual',NULL,NULL),('d','p1','a2','datajud',NULL,NULL),('e','p1','a5','manual',NULL,NULL)");
 $sync = new ProcessoDataJudSyncService($db);
 $snapshot = static fn(): array => $db->query('SELECT assunto_id, origem FROM processo_assuntos ORDER BY assunto_id')->fetchAll(PDO::FETCH_ASSOC);
 $before = $snapshot();
@@ -68,7 +68,7 @@ foreach ([null, [['nome' => 'Sem código']], [['codigo'=>42,'nome'=>'Manual'], [
 }
 $payload = $map(['assuntos'=>[['codigo'=>42,'nome'=>'Manual']]]);
 $sync->sync('00008323520184013202', null, $payload['assuntos']);
-if ($snapshot() !== [['assunto_id'=>'a1','origem'=>'manual']]) throw new RuntimeException('Sincronização não preservou vínculo manual ou não removeu automático obsoleto.');
+if ($snapshot() !== [['assunto_id'=>'a1','origem'=>'datajud'], ['assunto_id'=>'a5','origem'=>'manual']]) throw new RuntimeException('Sincronização não assumiu vínculo confirmado, preservou o manual adicional ou removeu o automático obsoleto.');
 
 $db->exec("INSERT INTO assuntos VALUES ('a3','8','DataJud antigo',NULL,NULL)");
 $db->exec("INSERT INTO processo_assuntos VALUES ('d2','p1','a3','datajud',NULL,NULL)");
@@ -80,11 +80,11 @@ try {
     $sync->sync('00008323520184013202', null, $empty['assuntos']);
     throw new LogicException('Lista vazia sem evidência explícita deveria ser rejeitada.');
 } catch (InvalidArgumentException $expected) {}
-if ($snapshot() !== [['assunto_id'=>'a1','origem'=>'manual'], ['assunto_id'=>'a3','origem'=>'datajud']]) {
+if ($snapshot() !== [['assunto_id'=>'a1','origem'=>'datajud'], ['assunto_id'=>'a3','origem'=>'datajud'], ['assunto_id'=>'a5','origem'=>'manual']]) {
     throw new RuntimeException('Lista vazia não autorizada alterou vínculos.');
 }
 $sync->sync('00008323520184013202', null, $empty['assuntos'], true);
-if ($snapshot() !== [['assunto_id'=>'a1','origem'=>'manual']]) {
+if ($snapshot() !== [['assunto_id'=>'a5','origem'=>'manual']]) {
     throw new RuntimeException('Lista vazia não removeu somente vínculos DataJud, ou removeu vínculo manual.');
 }
 $db->exec("INSERT INTO assuntos VALUES ('a4','9','DataJud a preservar',NULL,NULL)");

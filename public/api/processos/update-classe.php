@@ -67,6 +67,12 @@ try {
     }
 
     echo json_encode(array_merge(['success' => true], $result), JSON_UNESCAPED_UNICODE);
+} catch (ProcessoDadoProtegidoException $e) {
+    http_response_code(409);
+    echo json_encode(['error' => $e->getMessage(), 'code' => 'origem_protegida'], JSON_UNESCAPED_UNICODE);
+} catch (ProcessoClasseOrigemIndisponivelException $e) {
+    http_response_code(503);
+    echo json_encode(['error' => $e->getMessage(), 'code' => 'classe_origem_indisponivel'], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);
     echo json_encode(['error' => $e->getMessage()], JSON_UNESCAPED_UNICODE);

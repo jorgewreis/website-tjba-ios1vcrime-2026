@@ -58,7 +58,7 @@ $pdo->exec("SET SESSION sql_mode = 'STRICT_ALL_TABLES'");
 
 $ddl = [
     "CREATE TABLE classes (id VARCHAR(30) PRIMARY KEY, codigo VARCHAR(80) NOT NULL UNIQUE, nome VARCHAR(200) NOT NULL, created_at DATETIME NULL, updated_at DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
-    "CREATE TABLE processos (id VARCHAR(30) PRIMARY KEY, numero_processo VARCHAR(32) NOT NULL UNIQUE, classe_id VARCHAR(30) NULL, data_fato DATE NULL, sigiloso TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NULL, updated_at DATETIME NULL, CONSTRAINT fk_test_processo_classe FOREIGN KEY (classe_id) REFERENCES classes(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+    "CREATE TABLE processos (id VARCHAR(30) PRIMARY KEY, numero_processo VARCHAR(32) NOT NULL UNIQUE, classe_id VARCHAR(30) NULL, classe_origem VARCHAR(10) NULL, data_fato DATE NULL, sigiloso TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NULL, updated_at DATETIME NULL, CONSTRAINT fk_test_processo_classe FOREIGN KEY (classe_id) REFERENCES classes(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE processo_datajud_sync_queue (id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, processo_id VARCHAR(30) NOT NULL UNIQUE, requested_by CHAR(30) NULL, status VARCHAR(16) NOT NULL DEFAULT 'pendente', tentativas SMALLINT UNSIGNED NOT NULL DEFAULT 0, proxima_tentativa_em DATETIME NOT NULL, solicitado_em DATETIME(6) NOT NULL, processando_em DATETIME(6) NULL, created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, atualizado_em DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE tribunais (id VARCHAR(30) PRIMARY KEY, sigla VARCHAR(16) NOT NULL UNIQUE, nome VARCHAR(200) NOT NULL, created_at DATETIME NULL, updated_at DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     "CREATE TABLE comarcas (id VARCHAR(30) PRIMARY KEY, tribunal_id VARCHAR(30) NOT NULL, uf CHAR(2) NOT NULL, nome VARCHAR(200) NOT NULL, cidade VARCHAR(200) NULL, status_cidade VARCHAR(32) NOT NULL, created_at DATETIME NULL, updated_at DATETIME NULL, UNIQUE KEY uq_test_comarca (tribunal_id, uf, nome), CONSTRAINT fk_test_comarca_tribunal FOREIGN KEY (tribunal_id) REFERENCES tribunais(id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
@@ -81,8 +81,8 @@ require_once $repoRoot . '/app/helpers/CnjValidator.php';
 
 $existingCnj = '0000001-69.2020.8.05.0001';
 $pdo->exec("INSERT INTO classes (id, codigo, nome) VALUES ('CLA-OLD', 'OLD', 'Classe anterior')");
-$stmt = $pdo->prepare('INSERT INTO processos (id, numero_processo, classe_id, sigiloso) VALUES (?, ?, ?, 1)');
-$stmt->execute(['PRC-EXISTING', $existingCnj, 'CLA-OLD']);
+$stmt = $pdo->prepare('INSERT INTO processos (id, numero_processo, classe_id, sigiloso, classe_origem) VALUES (?, ?, ?, 1, ?)');
+$stmt->execute(['PRC-EXISTING', $existingCnj, 'CLA-OLD', 'manual']);
 $pdo->exec("INSERT INTO processos (id, numero_processo, classe_id, sigiloso) VALUES ('PRC-EXPLICIT', '0000004-24.2020.8.05.0001', 'CLA-OLD', 0)");
 $base = [
     'numero_processo' => $existingCnj,

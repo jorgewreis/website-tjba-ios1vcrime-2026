@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../helpers/CnjValidator.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
+require_once __DIR__ . '/../helpers/ProcessoDadoProtegidoException.php';
+require_once __DIR__ . '/../helpers/ProcessoClasseOrigemIndisponivelException.php';
 require_once __DIR__ . '/../services/ProcessoDataJudSyncQueue.php';
 
 final class ProcessosRepository
@@ -12,11 +14,31 @@ final class ProcessosRepository
 
     /** @var bool|null cache por instância: servidor suporta REGEXP_REPLACE em SQL */
     private ?bool $supportsRegexpReplaceCache = null;
+    private ?bool $classeOrigemDisponivel = null;
 
     public function __construct(PDO $connection, string $table = 'processos')
     {
         $this->connection = $connection;
         $this->table = $table;
+    }
+
+    public function classeOrigemDisponivel(): bool
+    {
+        if ($this->classeOrigemDisponivel !== null) {
+            return $this->classeOrigemDisponivel;
+        }
+        $driver = $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME);
+        if ($driver === 'sqlite') {
+            $stmt = $this->connection->prepare("SELECT 1 FROM pragma_table_info(:tabela) WHERE name = 'classe_origem'");
+        } else {
+            $stmt = $this->connection->prepare(
+                "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :tabela AND COLUMN_NAME = 'classe_origem' LIMIT 1"
+            );
+        }
+        $stmt->execute([':tabela' => $this->table]);
+        $this->classeOrigemDisponivel = $stmt->fetchColumn() !== false;
+        $stmt->closeCursor();
+        return $this->classeOrigemDisponivel;
     }
 
     /** Retorna o id do processo (existente ou recém-criado). numero_processo formatado (ex. CNJ); classe_id opcional (null = classe não informada); data_fato e sigiloso opcionais. */
@@ -41,10 +63,13 @@ final class ProcessosRepository
             30
         );
 
+        $registrarOrigem = $classeId !== null && $classeId !== '' && $this->classeOrigemDisponivel();
         $statement = $this->connection->prepare(
             sprintf(
-                'INSERT INTO `%s` (`id`, `numero_processo`, `classe_id`, `data_fato`, `sigiloso`, `created_at`, `updated_at`) VALUES (:id, :numero_processo, :classe_id, :data_fato, :sigiloso, NOW(), NOW())',
-                $this->table
+                'INSERT INTO `%s` (`id`, `numero_processo`, `classe_id`, `data_fato`, `sigiloso`, `created_at`, `updated_at`%s) VALUES (:id, :numero_processo, :classe_id, :data_fato, :sigiloso, NOW(), NOW()%s)',
+                $this->table,
+                $registrarOrigem ? ', `classe_origem`' : '',
+                $registrarOrigem ? ", 'manual'" : ''
             )
         );
         $statement->bindValue(':id', $id);
@@ -164,7 +189,7 @@ final class ProcessosRepository
         );
     }
 
-    public function findById(string $id): ?array
+    public function findById(string $id, bool $forUpdate = false): ?array
     {
         $id = trim((string) $id);
         if ($id === '') {
@@ -173,8 +198,10 @@ final class ProcessosRepository
 
         $statement = $this->connection->prepare(
             sprintf(
-                'SELECT `id`, `numero_processo`, `classe_id`, `data_fato`, `sigiloso`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1',
-                $this->table
+                'SELECT `id`, `numero_processo`, `classe_id`, %s, `data_fato`, `sigiloso`, `created_at`, `updated_at` FROM `%s` WHERE `id` = :id LIMIT 1%s',
+                $this->classeOrigemDisponivel() ? '`classe_origem`' : 'NULL AS `classe_origem`',
+                $this->table,
+                $forUpdate && $this->connection->getAttribute(PDO::ATTR_DRIVER_NAME) === 'mysql' ? ' FOR UPDATE' : ''
             )
         );
         $statement->bindValue(':id', $id);
@@ -251,37 +278,92 @@ final class ProcessosRepository
 
     private function updateIfNeeded(string $id, ?string $classeId, ?string $dataFato, ?bool $sigiloso): void
     {
+        // Operações que só garantem o processo (cartas, ofícios, pautas)
+        // continuam normalmente, mas nunca sobrescrevem uma classe protegida.
+        $setClasse = '';
+        if ($classeId !== null && $classeId !== '') {
+            if ($this->classeOrigemDisponivel()) {
+                $permitido = self::condicaoClasseManual();
+                // MySQL avalia SET da esquerda para a direita.
+                $setClasse = "`classe_origem` = CASE WHEN $permitido THEN 'manual' ELSE `classe_origem` END, "
+                    . "`classe_id` = CASE WHEN $permitido THEN :classe_id ELSE `classe_id` END, ";
+            } else {
+                $setClasse = "`classe_id` = CASE WHEN `classe_id` IS NULL OR `classe_id` = '' THEN :classe_id ELSE `classe_id` END, ";
+            }
+        }
+
         $statement = $this->connection->prepare(
             sprintf(
-                'UPDATE `%s` SET `classe_id` = COALESCE(:classe_id, `classe_id`), `data_fato` = COALESCE(:data_fato, `data_fato`), `sigiloso` = COALESCE(:sigiloso, `sigiloso`), `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
-                $this->table
+                'UPDATE `%s` SET %s`data_fato` = COALESCE(:data_fato, `data_fato`), `sigiloso` = COALESCE(:sigiloso, `sigiloso`), `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                $this->table,
+                $setClasse
             )
         );
         $statement->bindValue(':id', $id);
-        $statement->bindValue(':classe_id', $classeId !== null && $classeId !== '' ? $classeId : null);
+        if ($setClasse !== '') $statement->bindValue(':classe_id', $classeId);
         $statement->bindValue(':data_fato', $dataFato);
         $statement->bindValue(':sigiloso', $sigiloso === null ? null : ($sigiloso ? 1 : 0), $sigiloso === null ? PDO::PARAM_NULL : PDO::PARAM_INT);
         $statement->execute();
     }
 
-    /** Atualiza apenas `classe_id` (ex.: sincronização DataJud). */
+    private static function condicaoClasseManual(): string
+    {
+        return "(`classe_origem` = 'manual' OR ((`classe_id` IS NULL OR `classe_id` = '') AND `classe_origem` IS NULL))";
+    }
+
+    public function assertClasseEditavel(array $processo): void
+    {
+        $origem = $processo['classe_origem'] ?? null;
+        if ($origem === 'datajud') {
+            throw new ProcessoDadoProtegidoException('A classe sincronizada só pode ser alterada por outra sincronização com o DataJud.');
+        }
+        if ($origem !== 'manual' && trim((string) ($processo['classe_id'] ?? '')) !== '') {
+            throw new ProcessoDadoProtegidoException('Não é possível editar a classe atual porque não há registro de sua origem. Sincronize com o DataJud para confirmá-la.');
+        }
+        if (!$this->classeOrigemDisponivel()) throw new ProcessoClasseOrigemIndisponivelException();
+    }
+
     public function updateClasseForProcesso(string $processoId, string $classeId): void
+    {
+        $this->gravarClasse($processoId, $classeId, false);
+    }
+
+    /** Chamar somente após a validação da origem DataJud no serviço de sincronização. */
+    public function syncClasseForProcesso(string $processoId, string $classeId): bool
+    {
+        return $this->gravarClasse($processoId, $classeId, true);
+    }
+
+    private function gravarClasse(string $processoId, string $classeId, bool $datajud): bool
     {
         $processoId = trim($processoId);
         $classeId = trim($classeId);
         if ($processoId === '' || $classeId === '') {
             throw new InvalidArgumentException('processo_id e classe_id são obrigatórios.');
         }
+        if (!$this->classeOrigemDisponivel()) throw new ProcessoClasseOrigemIndisponivelException();
 
+        $origem = $datajud ? 'datajud' : 'manual';
+        $permitido = $datajud ? '1 = 1' : self::condicaoClasseManual();
         $statement = $this->connection->prepare(
             sprintf(
-                'UPDATE `%s` SET `classe_id` = :classe_id, `updated_at` = NOW() WHERE `id` = :id LIMIT 1',
+                "UPDATE `%s` SET `classe_id` = :classe_id, `classe_origem` = :origem, `updated_at` = NOW()
+                 WHERE `id` = :id AND $permitido AND (`classe_id` IS NULL OR `classe_id` <> :classe_atual
+                   OR `classe_origem` IS NULL OR `classe_origem` <> :origem_atual) LIMIT 1",
                 $this->table
             )
         );
-        $statement->bindValue(':id', $processoId);
-        $statement->bindValue(':classe_id', $classeId);
-        $statement->execute();
+        $statement->execute([
+            ':classe_id' => $classeId, ':origem' => $origem, ':id' => $processoId,
+            ':classe_atual' => $classeId, ':origem_atual' => $origem,
+        ]);
+        if ($statement->rowCount() > 0) return true;
+        if (!$datajud) {
+            $atual = $this->findById($processoId, $this->connection->inTransaction());
+            if ($atual === null) throw new InvalidArgumentException('Processo não encontrado.');
+            $this->assertClasseEditavel($atual);
+        }
+        return false;
     }
 
     private function normalizeNumber(string $value): string

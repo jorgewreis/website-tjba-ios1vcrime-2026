@@ -28,7 +28,7 @@ final class ProcessoDataJudSyncService
     /**
      * null significa fonte ausente. Lista vazia é uma resposta completa e
      * explícita sem assuntos; reconcilia removendo somente vínculos DataJud e
-     * preservando vínculos manuais. O chamador deve confirmar identidade e
+     * preservando vínculos manuais ausentes da fonte. O chamador deve confirmar identidade e
      * completude da resposta de origem antes de chamar este serviço.
      *
      * @param bool $verifiedEmptySubjects True only after the caller verified an explicit empty DataJud source response.

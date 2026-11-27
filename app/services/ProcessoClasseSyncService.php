@@ -127,6 +127,9 @@ final class ProcessoClasseSyncService
             throw new InvalidArgumentException('Código da classe inválido.');
         }
 
+        if (!$this->processosRepository->classeOrigemDisponivel()) {
+            throw new ProcessoClasseOrigemIndisponivelException();
+        }
         $numeroFormatado = $this->formatarCnj20($digits20);
         $processo = $this->processosRepository->findByNumero($digits20);
         if ($processo !== null) {
@@ -149,7 +152,8 @@ final class ProcessoClasseSyncService
             $currentId = trim((string) ($processo['classe_id'] ?? ''));
             $currentClass = $currentId === '' ? null : $this->classesRepository->findById($currentId);
             if ($currentClass !== null && ClassesRepository::normalizeCodigo((string) ($currentClass['codigo'] ?? '')) === $codigo) {
-                return ['action' => 'noop', 'processo_id' => (string) $processo['id'], 'classe_id' => $currentId];
+                $origemAtualizada = $this->processosRepository->syncClasseForProcesso((string) $processo['id'], $currentId);
+                return ['action' => $origemAtualizada ? 'updated' : 'noop', 'processo_id' => (string) $processo['id'], 'classe_id' => $currentId];
             }
         }
 
@@ -158,7 +162,8 @@ final class ProcessoClasseSyncService
         $classeIdResolved = $this->classesRepository->ensureClass($codigo, $nome);
 
         if ($processo === null) {
-            $pid = $this->processosRepository->ensureProcess($numeroFormatado, $classeIdResolved, null, null);
+            $pid = $this->processosRepository->ensureProcess($numeroFormatado);
+            $this->processosRepository->syncClasseForProcesso($pid, $classeIdResolved);
             $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo);
 
             return [
@@ -172,7 +177,7 @@ final class ProcessoClasseSyncService
         $existingClasseId = trim((string) ($processo['classe_id'] ?? ''));
 
         if ($existingClasseId === '') {
-            $this->processosRepository->updateClasseForProcesso($pid, $classeIdResolved);
+            $this->processosRepository->syncClasseForProcesso($pid, $classeIdResolved);
             $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo);
 
             return [
@@ -184,7 +189,7 @@ final class ProcessoClasseSyncService
 
         $existingClasse = $this->classesRepository->findById($existingClasseId);
         if ($existingClasse === null) {
-            $this->processosRepository->updateClasseForProcesso($pid, $classeIdResolved);
+            $this->processosRepository->syncClasseForProcesso($pid, $classeIdResolved);
             $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo);
 
             return [
@@ -196,15 +201,16 @@ final class ProcessoClasseSyncService
 
         $existingCodigo = ClassesRepository::normalizeCodigo((string) ($existingClasse['codigo'] ?? ''));
         if ($existingCodigo === $codigo) {
+            $origemAtualizada = $this->processosRepository->syncClasseForProcesso($pid, $existingClasseId);
             $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo);
             return [
-                'action' => 'noop',
+                'action' => $origemAtualizada ? 'updated' : 'noop',
                 'processo_id' => $pid,
                 'classe_id' => $existingClasseId,
             ];
         }
 
-        $this->processosRepository->updateClasseForProcesso($pid, $classeIdResolved);
+        $this->processosRepository->syncClasseForProcesso($pid, $classeIdResolved);
         $this->aplicarPrioridadesMedidaProtetivaSeClasse1268($pid, $codigo);
 
         return [
@@ -231,10 +237,11 @@ final class ProcessoClasseSyncService
             throw new InvalidArgumentException('Identificador do processo é obrigatório.');
         }
 
-        $processo = $this->processosRepository->findById($processoId);
+        $processo = $this->processosRepository->findById($processoId, $this->connection->inTransaction());
         if ($processo === null) {
             throw new InvalidArgumentException('Processo não encontrado.');
         }
+        $this->processosRepository->assertClasseEditavel($processo);
         $codigo = ClassesRepository::normalizeCodigo($codigoRaw);
         if ($codigo === '') {
             throw new InvalidArgumentException('Código da classe é obrigatório.');

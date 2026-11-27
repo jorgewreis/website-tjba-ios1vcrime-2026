@@ -478,6 +478,7 @@ if (snapshot69p($peer, ['processos_partes']) !== $before || !$pp->update('AA', [
 }
 
 $fixtureStage = 'classe_prioridades';
+$pdo->exec('ALTER TABLE processos ADD COLUMN classe_origem VARCHAR(10) NULL');
 require_once '/repo/app/services/ProcessoClasseSyncService.php';
 $pdo->exec('ALTER TABLE classes ADD codigo VARCHAR(40), ADD created_at DATETIME, ADD updated_at DATETIME');
 $pdo->exec("UPDATE classes SET codigo='1' WHERE id='C'");
