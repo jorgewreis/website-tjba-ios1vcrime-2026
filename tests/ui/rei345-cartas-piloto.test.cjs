@@ -42,7 +42,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
     stub('repositories','CartasExpedidasSubtarefasRepository','const TIPO_ENVIO="aguardando_envio",TIPO_DEVOLUCAO="aguardando_devolucao",ORDEM_ENVIO=1,ORDEM_DEVOLUCAO=2; function findByCartaId($id){return [];} static function resolverSubtarefaAtivaPorLista($rows){return $rows[0]??null;}');
     stub('repositories','TribunaisRepository','');
     put('app/helpers/CartorioTimelineHelper.php','<?php function cartorioTimelineBuildViewData(...$a){return ["statusLabel"=>"Aguardando envio","cadastro"=>["minorText"=>"Carta cadastrada"]];}');
-    stub('services','CartasExpedidasService',`function find($id){return $id === "C1" ? ["processo_origem_id"=>"P1","finalidade"=>"Intimação de Decisão Interlocutória","cidade_destino"=>"Una","uf_destino"=>"BA","prazo_dias"=>30,"status"=>"aguardando envio","prioridade_tarefa"=>"critico"] : null;} function listCartas($f,$limit,$offset){$rows=[
+    stub('services','CartasExpedidasService',`function find($id){return $id === "C1" ? ["processo_origem_id"=>"P1","finalidade"=>"Intimação de Decisão Interlocutória","cidade_destino"=>"Una","uf_destino"=>"BA","comarca_destino_id"=>"COMARCA-SINTETICA","prazo_dias"=>30,"status"=>"aguardando envio","prioridade_tarefa"=>"critico"] : null;} function listCartas($f,$limit,$offset){$rows=[
        ["IdCarta"=>"C1","Data"=>date("Y-m-d H:i:s", time()-10*60-5),"bloco_processo_prioridades"=>[["codigo"=>"preso","label"=>"Réu preso"],["codigo"=>"idoso","label"=>"Pessoa idosa"],["codigo"=>"medida","label"=>"Medida protetiva de urgência"]],"numero_processo"=>"0000041-00.2026.0.00.0000","Status"=>"aguardando envio","EtapaEfetiva"=>"envio","Comarca"=>"Una","Estado"=>"BA","Finalidade"=>"Intimação de Decisão Interlocutória","Prazo"=>30,"bloco_processo_abrir_href"=>"/frame.php?page=consultaprocessosedit","SubtarefasAll"=>[["id"=>"S1","tipo"=>"aguardando_envio"]]],
        ["IdCarta"=>"C2","processo_sigiloso"=>true,"processo_nivel_sigilo"=>$GLOBALS["nivelFixture"]??null,"bloco_processo_prioridades"=>[["codigo"=>"violencia","label"=>"Violência doméstica"]],"Data"=>date("Y-m-d H:i:s", time()-90*86400),"CriadoPor"=>"T2","CriadoPorNome"=>"Noa Silva de Teste","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"],["id"=>"S1B","tipo"=>"aguardando_envio","status"=>"concluida","updated_at"=>date("Y-m-d H:i:s", time()-8*86400-60)]]]
     ];
@@ -93,7 +93,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       p.setDefaultTimeout(5000);
       if(width===1640) await p.clock.install();
       await p.addInitScript(()=>{Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copied=text;}}});});
-      let cityCalls=0, createCalls=0, nestedListRequests=0;
+      let cityCalls=0, createCalls=0, editCalls=0, nestedListRequests=0, listReloads=0;
       const createKeys=[];
       let releaseCreate;
       await p.route('**/*',async r=>{
@@ -115,8 +115,17 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
           }
           return r.fulfill({status:201,json:{id:'CARTA-SINTETICA'}});
         }
+        if(u.pathname==='/api/cartorio-cartas-expedidas/update.php') {
+          editCalls++;
+          assert.equal(r.request().postDataJSON().prioridade_tarefa,'urgente');
+          if(editCalls===1) return r.fulfill({status:500,json:{error:'Falha temporária de edição sintética'}});
+          return r.fulfill({json:{success:true}});
+        }
         if(u.pathname==='/frame.php') {
-          if(u.searchParams.get('page')==='cartasexpedidasnova' && r.request().frame().parentFrame()) nestedListRequests++;
+          if(u.searchParams.get('page')==='cartasexpedidasnova') {
+            if(r.request().frame().parentFrame()) nestedListRequests++;
+            else listReloads++;
+          }
           const key=role+'|'+u.searchParams.get('page')+'|'+u.searchParams.get('piloto')+'|'+u.searchParams.get('id')+'|'+u.searchParams.get('processo')+'|'+u.searchParams.get('page_number')+'|'+u.searchParams.get('status');
           if(!roleMap.has(key)) roleMap.set(key,render(u.searchParams.get('page'),role,u.searchParams.has('piloto'),u.searchParams.get('id'),u.searchParams.get('processo')==='fixture-paginacao',Number(u.searchParams.get('page_number')||1),u.searchParams.get('status')||''));
           return r.fulfill({contentType:'text/html; charset=utf-8',...roleMap.get(key)});
@@ -209,8 +218,40 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       assert.equal(await edit.locator('#filter-tipo').inputValue(),'Intimação de Decisão Interlocutória');
       assert.equal(await edit.locator('#ce-prioridade-tarefa').inputValue(),'critico');
       assert.equal(await edit.getByText('Subtarefas - Timeline',{exact:true}).count(),0);
-      assert.equal(await edit.locator('#salvar-btn').count(),1);
-      await p.getByRole('button',{name:'Fechar painel'}).click();
+      const saveEdit=edit.locator('#salvar-btn');
+      assert.equal(await saveEdit.count(),1);
+      const expectOneRefresh=async (closePanel, expectedUrl)=>{
+        const before=listReloads;
+        await Promise.all([p.waitForEvent('load'),closePanel()]);
+        assert.equal(await p.locator('#ce-panel iframe').count(),0);
+        assert.equal(await p.locator('#ce-panel').isHidden(),true);
+        assert.equal(listReloads,before+1);
+        assert.equal(p.url(),expectedUrl);
+      };
+      if(width===1640 || width===390) {
+        const before=listReloads;
+        const filteredUrl=await p.evaluate(()=>{
+          const address=new URL(location.href);
+          address.searchParams.set('processo','0000041-00.2026.0.00.0000');
+          history.replaceState(null,'',address);
+          return location.href;
+        });
+        await edit.locator('#ce-prioridade-tarefa').selectOption('urgente');
+        const failedEdit=p.waitForResponse(r=>r.url().includes('/cartorio-cartas-expedidas/update.php') && r.status()===500);
+        await saveEdit.click();
+        await failedEdit;
+        await saveEdit.waitFor();
+        assert.equal(await edit.locator('#ce-prioridade-tarefa').inputValue(),'urgente');
+        assert.equal(listReloads,before,'saving error keeps the editor open and does not refresh the list');
+        await expectOneRefresh(()=>saveEdit.click(),filteredUrl);
+        assert.equal(editCalls,2);
+        assert.equal(await p.getByText('Alterações salvas.',{exact:true}).isVisible(),true);
+      } else {
+        const closeEdit=width===1440
+          ? ()=>edit.locator('#voltar-btn').click()
+          : ()=>p.getByRole('button',{name:'Fechar painel'}).click();
+        await expectOneRefresh(closeEdit,p.url());
+      }
       await p.locator('.ce-entry').last().locator('.ce-dropdown summary').click();
       await p.locator('.ce-entry').last().getByRole('button',{name:'Ver detalhes'}).click();
       assert.equal(await p.getByRole('button',{name:'Reiniciar envio'}).count(),1);
@@ -263,7 +304,10 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
         assert.match(createKeys[0],/^[a-f0-9]{64}$/);
         assert.equal(createKeys[0],createKeys[1],'retry keeps the idempotency key');
       } else {
-        await p.getByRole('button',{name:'Fechar painel'}).click();
+        const closeCreate=width===900
+          ? ()=>create.locator('#filter-cidade').press('Escape')
+          : ()=>p.getByRole('button',{name:'Fechar painel'}).click();
+        await expectOneRefresh(closeCreate,p.url());
       }
       if (mayDelete) {
         await p.getByRole('link',{name:'Regra de envio'}).click();
