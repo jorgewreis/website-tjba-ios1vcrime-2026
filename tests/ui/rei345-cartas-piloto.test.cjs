@@ -336,9 +336,13 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
         assert.equal(refused.status(),403);
         assert.equal(await p.locator('form').count(),0);
       }
-      await p.goto('http://fixture.test/frame.php?page=cartasexpedidas');
-      assert.equal(await p.locator('.carta-expedida-v2-row').count(),2);
-      assert.equal(await p.locator('#ce-panel').count(),0);
+      await p.goto('http://fixture.test/frame.php?page=cartasexpedidasnova&status=aguardando_envio');
+      assert.equal(await p.locator('.carta-expedida-v2-row').count(),0);
+      assert.equal(await p.locator('.ce-entry').count(),1);
+      assert.equal(await p.locator('#ce-panel').count(),1);
+      assert.equal(await p.locator('.ce-toolbar select[name=status]').inputValue(),'aguardando_envio');
+      await p.getByRole('button',{name:'Filtrar'}).click();
+      assert.equal(new URL(p.url()).searchParams.get('page'),'cartasexpedidas');
       await p.goto('http://fixture.test/frame.php?page=cartasexpedidasedit&id=C1');
       assert.equal(await p.getByText('Subtarefas - Timeline',{exact:true}).count(),1);
       assert.equal(await p.locator('#filter-tipo').inputValue(),'Intimação de Decisão Interlocutória');
@@ -365,7 +369,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       }
       await p.close();
     }
-    console.log('PASS: rotas coexistem; seis viewports; cópia, menu por etapa, abas, prioridade, regra e perfis.');
+    console.log('PASS: rota principal e alias; seis viewports; cópia, menu por etapa, abas, prioridade, regra e perfis.');
   } finally {
     if(browser) await browser.close();
     fs.rmSync(dir,{recursive:true,force:true});
