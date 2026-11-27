@@ -56,13 +56,16 @@ const render=(route,role,embed=false)=>{
     fs.symlinkSync(path.join(root,'public'),path.join(dir,'public'));
     const roleMap=new Map();
     browser=await chromium.launch({executablePath:process.env.CHROMIUM_BIN||undefined,headless:true});
-    for(const [width,role,mayDelete] of [[1440,'ADMIN',true],[900,'CHEFIA',true],[390,'DIRETORA',false],[320,'SERVIDOR-CARTORIO',false]]) {
+    for(const [width,role,mayDelete] of [[1440,'ADMIN',true],[900,'CHEFIA',true],[767,'CHEFIA',true],[390,'DIRETORA',false],[320,'SERVIDOR-CARTORIO',false]]) {
       const p=await browser.newPage({viewport:{width,height:900}});
       p.setDefaultTimeout(5000);
       await p.addInitScript(()=>{Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copied=text;}}});});
       await p.route('**/*',r=>{
         const u=new URL(r.request().url());
         if(u.hostname!=='fixture.test') return r.abort();
+        if(u.pathname==='/shell') {
+          return r.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/assets/css/shared/layout.css"><style>body{margin:0}</style><div class="layout-wraper--home"><nav class="layout-navbar">Menu flutuante</nav><iframe class="target-page" src="/frame.php?page=cartasexpedidasnova"></iframe></div>'});
+        }
         if(u.pathname==='/frame.php') {
           const key=role+'|'+u.searchParams.get('page')+'|'+u.searchParams.get('piloto');
           if(!roleMap.has(key)) roleMap.set(key,render(u.searchParams.get('page'),role,u.searchParams.has('piloto')));
@@ -72,7 +75,22 @@ const render=(route,role,embed=false)=>{
         if(u.pathname.startsWith('/assets/') && fs.existsSync(f)) return r.fulfill({path:f});
         return r.fulfill({status:404});
       });
+      if(width<=767) {
+        await p.goto('http://fixture.test/shell');
+        const shellBar=await p.locator('.layout-navbar').boundingBox();
+        const title=await p.frameLocator('iframe').locator('.ce-header h1').boundingBox();
+        assert.ok(shellBar && title && title.y>=shellBar.y+shellBar.height+12,'floating shell must not overlap heading at '+width);
+      }
       await p.goto('http://fixture.test/frame.php?page=cartasexpedidasnova');
+      if(width<=767) {
+        const [dest,actions,entry,search,status,goal]=await Promise.all(['.ce-entry .ce-destino','.ce-entry .ce-row-actions','.ce-entry','.ce-toolbar input[type=search]','.ce-toolbar select[name=status]','.ce-toolbar select[name=finalidade]'].map(sel=>p.locator(sel).first().boundingBox()));
+        assert.ok(Math.abs((dest.y+dest.height/2)-(actions.y+actions.height/2))<2,'actions must share metadata row');
+        assert.ok(entry.height<118,'mobile row should stay compact');
+        assert.ok(search.width>width-50,'full-width mobile search');
+        if(width<480) assert.ok(status.width>width-50 && goal.width>width-50,'use readable full-width filters on phone');
+        else assert.ok(Math.abs(status.y-goal.y)<2,'filters should share the row on wider screens');
+        assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'list must not overflow horizontally');
+      }
       assert.equal(await p.locator('.ce-entry').count(),2);
       assert.equal(await p.locator('.ce-entry').first().locator('.ce-priority').getAttribute('aria-label'),'Crítico');
       assert.equal(await p.locator('.ce-entry').last().locator('.ce-priority').getAttribute('aria-label'),'Sem prioridade definida');
@@ -106,7 +124,7 @@ const render=(route,role,embed=false)=>{
       assert.equal(await p.locator('#ce-panel').count(),0);
       await p.close();
     }
-    console.log('PASS: rotas coexistem; quatro viewports; cópia, menu por etapa, abas, prioridade, regra e perfis.');
+    console.log('PASS: rotas coexistem; cinco viewports; cópia, menu por etapa, abas, prioridade, regra e perfis.');
   } finally {
     if(browser) await browser.close();
     fs.rmSync(dir,{recursive:true,force:true});
