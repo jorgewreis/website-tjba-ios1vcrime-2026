@@ -291,7 +291,6 @@ function cartorio_oficios_label_cumprimento(array $row): string
                     </select>
                 </div>
 
-                <input type="hidden" id="filter-classe" data-datajud-related="true" data-datajud-silent-loading="true" value="" autocomplete="off">
                 <div class="col" id="oficio-meio-envio-row">
                     <label for="oficio-meio-envio">Meio de envio</label>
                     <select class="width-400 height-md" id="oficio-meio-envio" name="meio_envio">
@@ -322,8 +321,6 @@ function cartorio_oficios_label_cumprimento(array $row): string
                 <button type="button" class="btn btn-primary" id="btn-oficio-registrar">Cadastrar</button>
             </div>
         </div>
-        <input type="hidden" id="hidden-classe-codigo" name="classe_codigo">
-        <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
 
         <div class="display-flex row row-full justify-between padding-x-lg padding-y-md border-bottom border-top">
             <div class="display-flex row row-fit justify-start align-center padding-x-sm">
@@ -630,7 +627,7 @@ function cartorio_oficios_label_cumprimento(array $row): string
         </div>
     </div>
 
-    <?php include __DIR__ . '/_datajud_scripts.php'; ?>
+    <?php include __DIR__ . '/_cnj_scripts.php'; ?>
     <script>
         (function() {
 
@@ -714,8 +711,6 @@ function cartorio_oficios_label_cumprimento(array $row): string
                     const tipo = document.getElementById('oficio-tipo')?.value || '';
                     const forma = document.getElementById('oficio-forma-cumprimento')?.value || '';
                     const meio = document.getElementById('oficio-meio-envio')?.value || '';
-                    let cc = document.getElementById('hidden-classe-codigo')?.value || '';
-                    let cd = document.getElementById('hidden-classe-descricao')?.value || '';
                     const admin = sharedCtx.isAdministrative();
 
                     if (!tipo || !forma) {
@@ -726,29 +721,15 @@ function cartorio_oficios_label_cumprimento(array $row): string
                         sharedCtx.notify('error', 'Validação', 'Preencha o número do processo.');
                         return null;
                     }
-                    if (!admin) {
-                        const classeVal = document.getElementById('filter-classe')?.value?.trim() || '';
-                        if (classeVal === 'Aguarde...' || classeVal === 'Consultando DataJud…') {
-                            sharedCtx.notify('error', 'Validação', 'Aguarde a consulta ao DataJud terminar antes de cadastrar.');
-                            return null;
-                        }
-                    }
                     if (forma === 'cartorio' && !meio) {
                         sharedCtx.notify('error', 'Validação', 'Selecione o meio de envio.');
                         return null;
                     }
-                    if (admin && !proc) {
-                        cc = '';
-                        cd = '';
-                    }
-
                     return {
                         numero_processo: proc,
                         tipo_oficio: tipo,
                         forma_cumprimento: forma,
-                        meio_envio: forma === 'cartorio' ? meio : '',
-                        classe_codigo: cc,
-                        classe_descricao: cd
+                        meio_envio: forma === 'cartorio' ? meio : ''
                     };
                 },
                 buildSuccessPayload: function(data) {
