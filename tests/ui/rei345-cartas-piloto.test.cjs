@@ -44,7 +44,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
     put('app/helpers/CartorioTimelineHelper.php','<?php function cartorioTimelineBuildViewData(...$a){return ["statusLabel"=>"Aguardando envio","cadastro"=>["minorText"=>"Carta cadastrada"]];}');
     stub('services','CartasExpedidasService',`function find($id){return $id === "C1" ? ["processo_origem_id"=>"P1","finalidade"=>"Intimação de Decisão Interlocutória","cidade_destino"=>"Una","uf_destino"=>"BA","prazo_dias"=>30,"status"=>"aguardando envio","prioridade_tarefa"=>"critico"] : null;} function listCartas($f,$limit,$offset){$rows=[
        ["IdCarta"=>"C1","Data"=>date("Y-m-d H:i:s", time()-10*60-5),"bloco_processo_prioridades"=>[["codigo"=>"preso","label"=>"Réu preso"],["codigo"=>"idoso","label"=>"Pessoa idosa"],["codigo"=>"medida","label"=>"Medida protetiva de urgência"]],"numero_processo"=>"0000041-00.2026.0.00.0000","Status"=>"aguardando envio","EtapaEfetiva"=>"envio","Comarca"=>"Una","Estado"=>"BA","Finalidade"=>"Intimação de Decisão Interlocutória","Prazo"=>30,"bloco_processo_abrir_href"=>"/frame.php?page=consultaprocessosedit","SubtarefasAll"=>[["id"=>"S1","tipo"=>"aguardando_envio"]]],
-       ["IdCarta"=>"C2","processo_sigiloso"=>true,"processo_nivel_sigilo"=>$GLOBALS["nivelFixture"]??null,"Data"=>date("Y-m-d H:i:s", time()-90*86400),"CriadoPor"=>"T2","CriadoPorNome"=>"Noa Silva de Teste","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"],["id"=>"S1B","tipo"=>"aguardando_envio","status"=>"concluida","updated_at"=>date("Y-m-d H:i:s", time()-8*86400-60)]]]
+       ["IdCarta"=>"C2","processo_sigiloso"=>true,"processo_nivel_sigilo"=>$GLOBALS["nivelFixture"]??null,"bloco_processo_prioridades"=>[["codigo"=>"violencia","label"=>"Violência doméstica"]],"Data"=>date("Y-m-d H:i:s", time()-90*86400),"CriadoPor"=>"T2","CriadoPorNome"=>"Noa Silva de Teste","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"],["id"=>"S1B","tipo"=>"aguardando_envio","status"=>"concluida","updated_at"=>date("Y-m-d H:i:s", time()-8*86400-60)]]]
     ];
     if (($f["processo"]??"") === "fixture-paginacao") {
       $original=$rows; $rows=[];
@@ -76,8 +76,10 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
     for (const [nivel, rotulo] of [[null,'Segredo de Justiça'],[1,'Segredo de Justiça'],[2,'Sigilo Mínimo'],[3,'Sigilo Médio'],[4,'Sigilo Intenso'],[5,'Sigilo Absoluto']]) {
       const {body,status}=render('cartasexpedidasnova','ADMIN',false,null,false,1,'',nivel);
       assert.equal(status,200);
-      assert.equal(body.split('class="ce-double-tag ce-process-secrecy"').length-1,2,'sem sigilo não ganha tag');
-      assert.equal(body.split('<span>Sigilo</span><span>'+rotulo+'</span>').length-1,2,'nível na lista e detalhes');
+      assert.equal(body.split('data-ce-indicator="sigilo"').length-1,1,'sem sigilo não ganha cadeado');
+      assert.ok(body.includes('<dt>Sigilo</dt><dd>'+rotulo+'</dd>'),'nível oficial no resumo do ícone');
+      assert.ok(body.includes('<span>Sigilo</span><span>'+rotulo+'</span>'),'nível nos detalhes continua igual');
+      assert.ok(body.includes('<dt>Prioridade</dt><dd>Violência doméstica</dd>'));
     }
     assert.doesNotMatch(render('cartasexpedidas','ADMIN',false,null,false,1,'',5).body,/ce-process-secrecy/);
     if (process.env.RENDER_ONLY === '1') {
@@ -87,7 +89,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
     const roleMap=new Map();
     browser=await chromium.launch({executablePath:process.env.CHROMIUM_BIN||undefined,headless:true});
     for(const [width,role,mayDelete] of [[1640,'ADMIN',true],[1440,'ADMIN',true],[900,'CHEFIA',true],[767,'CHEFIA',true],[390,'DIRETORA',false],[320,'SERVIDOR-CARTORIO',false]]) {
-      const p=await browser.newPage({viewport:{width,height:900}});
+      const p=await browser.newPage({viewport:{width,height:900},hasTouch:width<=420});
       p.setDefaultTimeout(5000);
       if(width===1640) await p.clock.install();
       await p.addInitScript(()=>{Object.defineProperty(navigator,'clipboard',{value:{writeText:async text=>{window.copied=text;}}});});
@@ -136,7 +138,8 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       }
       if(width<=767) {
         const [dest,actions,entry,search,status,goal]=await Promise.all(['.ce-entry .ce-destino','.ce-entry .ce-row-actions','.ce-entry','.ce-toolbar input[type=search]','.ce-toolbar select[name=status]','.ce-toolbar select[name=finalidade]'].map(sel=>p.locator(sel).first().boundingBox()));
-        assert.ok(Math.abs((dest.y+dest.height/2)-(actions.y+actions.height/2))<2,'actions must share metadata row');
+        if(width>420) assert.ok(Math.abs((dest.y+dest.height/2)-(actions.y+actions.height/2))<2,'actions must share metadata row');
+        else assert.ok(actions.y + actions.height > dest.y && actions.y < dest.y + dest.height + 20,'ações permanecem no bloco da comarca e prazo');
         assert.ok(entry.height<138,'mobile row should stay compact at '+width+' (height='+entry.height+')');
         assert.ok(search.width>width-50,'full-width mobile search');
         if(width<480) assert.ok(status.width>width-50 && goal.width>width-50,'use readable full-width filters on phone');
@@ -146,14 +149,28 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       assert.equal(await p.locator('.ce-entry').count(),2);
       assert.deepEqual(await p.locator('[data-ce-stage-seconds]').allTextContents(),['10min','8d']);
       assert.ok(await p.locator('.ce-stage-badge').first().isVisible());
-      const lacre=p.locator('.ce-entry .ce-process-secrecy');
-      assert.equal(await lacre.count(),1,'somente a carta marcada sigilosa tem a tag');
-      assert.deepEqual(await lacre.locator('span').allTextContents(),['Sigilo','Segredo de Justiça']);
-      assert.ok(await lacre.isVisible());
-      const tag=p.locator('.ce-process-priority').first();
-      assert.equal(await tag.locator('span').first().textContent(),'Prioridade');
-      assert.equal(await tag.getAttribute('title'),'Réu preso, Pessoa idosa, Medida protetiva de urgência');
-      assert.ok(await tag.locator('.ce-process-priority-values').evaluate(el=>getComputedStyle(el).textOverflow==='ellipsis' && el.scrollWidth>el.clientWidth));
+      const lacre=p.locator('.ce-entry [data-ce-indicator="sigilo"]');
+      assert.equal(await lacre.count(),1,'somente a carta marcada sigilosa tem cadeado');
+      assert.equal(await p.locator('.ce-entry .ce-double-tag').count(),0,'lista não empilha tags');
+      const priorities=p.getByLabel('Prioridades do processo',{exact:true});
+      assert.ok(await priorities.isVisible());
+      await priorities.focus();
+      await p.keyboard.press('Enter');
+      const disclosure=priorities.locator('..');
+      assert.ok(await disclosure.locator('dl').isVisible());
+      assert.equal(await disclosure.locator('dd').textContent(),'Réu preso, Pessoa idosa, Medida protetiva de urgência');
+      await p.keyboard.press('Escape');
+      assert.equal(await disclosure.locator('dl').isVisible(),false);
+      assert.ok(await priorities.evaluate(el=>el===document.activeElement));
+      const both=p.getByLabel('Sigilo e prioridades do processo',{exact:true});
+      const cnj=both.locator('xpath=../../button[@data-ce-copy]');
+      const [cnjBox,iconBox]=await Promise.all([cnj.boundingBox(),both.boundingBox()]);
+      assert.ok(cnjBox && iconBox && iconBox.x>=cnjBox.x+cnjBox.width-1 && Math.abs((cnjBox.y+cnjBox.height/2)-(iconBox.y+iconBox.height/2))<2,'ícones ao lado do número em '+width+' '+JSON.stringify({cnjBox,iconBox}));
+      if(width<=420) await p.touchscreen.tap(iconBox.x+iconBox.width/2,iconBox.y+iconBox.height/2);
+      else await both.click();
+      assert.deepEqual(await both.locator('..').locator('dd').allTextContents(),['Segredo de Justiça','Violência doméstica']);
+      await p.locator('.ce-header h1').click();
+      assert.equal(await both.locator('..').locator('dl').isVisible(),false);
       if(width>=768) assert.equal(await p.locator('.ce-columns span:nth-child(7)').textContent(),'Tempo na etapa');
       if(width===1640) {
         await p.clock.fastForward(61_000);

@@ -99,7 +99,7 @@
   }
   document.addEventListener('click', async event => {
     const target = event.target.closest('a,button,summary');
-    document.querySelectorAll('.ce-dropdown[open]').forEach(menu => { if (!menu.contains(event.target)) menu.open = false; });
+    document.querySelectorAll(':is(.ce-dropdown,.ce-process-indicators)[open]').forEach(menu => { if (!menu.contains(event.target)) menu.open = false; });
     if (!target) return;
     if (target.matches('[data-ce-frame]')) { event.preventDefault(); showFrame(target); }
     else if (target.matches('[data-ce-close]')) exit();
@@ -119,7 +119,7 @@
   });
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
-      const menu = event.target.closest('.ce-dropdown[open]');
+      const menu = event.target.closest(':is(.ce-dropdown,.ce-process-indicators)[open]');
       if (menu) {
         event.preventDefault();
         menu.open = false;
