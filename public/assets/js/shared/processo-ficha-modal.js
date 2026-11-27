@@ -2,7 +2,7 @@
     'use strict';
     // A janela principal monta o painel acima do menu e do iframe de trabalho.
     // Páginas abertas fora dela também podem hospedar o painel localmente.
-    if (typeof HTMLDialogElement === 'undefined' || typeof HTMLDialogElement.prototype.showModal !== 'function') return;
+    if (!window.PainelDeslizante || typeof HTMLDialogElement === 'undefined' || typeof HTMLDialogElement.prototype.showModal !== 'function') return;
     try {
         const anfitriao = window.frameElement;
         if (anfitriao?.matches('[data-ficha-workspace], [data-ficha-modal-content]')) return;
@@ -29,12 +29,7 @@
     function fechar() {
         if (!painel?.open || fechando) return;
         fechando = true;
-        if (matchMedia('(prefers-reduced-motion: reduce)').matches || !card.animate) {
-            painel.close();
-        } else {
-            card.animate([{transform:'translateX(0)'}, {transform:'translateX(105%)'}],
-                {duration:160,easing:'ease-in',fill:'forwards'}).finished.then(() => painel.close(), () => painel.close());
-        }
+        window.PainelDeslizante.fechar(painel, card, () => painel.close());
     }
 
     function aoCarregarFicha() {
@@ -62,6 +57,7 @@
         painel.className = 'processo-ficha-layer';
         card = document.createElement('section');
         card.className = 'processo-ficha-modal';
+        card.setAttribute('data-painel-deslizante', '');
         painel.setAttribute('aria-labelledby', 'processo-ficha-modal-titulo');
         const cabecalho = document.createElement('header');
         const titulo = document.createElement('h2');
@@ -91,7 +87,6 @@
         });
         painel.addEventListener('cancel', event => { event.preventDefault(); fechar(); });
         painel.addEventListener('close', () => {
-            card.getAnimations?.().forEach(animacao => animacao.cancel());
             fechando = false;
             quadro.removeAttribute('src');
             document.documentElement.classList.remove('ficha-modal-aberto');
@@ -109,10 +104,9 @@
         if (origem.origin === origemSite && origem.pathname === '/frame.php' && origem.searchParams.has('page')) {
             url.searchParams.set('voltar', origem.pathname + origem.search);
         }
-        painel.showModal();
+        window.PainelDeslizante.abrir(painel, card, botaoFechar);
         document.documentElement.classList.add('ficha-modal-aberto');
         quadro.src = url.href;
-        botaoFechar.focus();
     }
 
     function vincular(doc) {

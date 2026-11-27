@@ -1,0 +1,13 @@
+[data-painel-deslizante] {
+    /* Inclui a margem direita e a sombra, não apenas a largura do card. */
+    transform:translateX(calc(100% + 64px));
+    transition:transform 1.7s cubic-bezier(.45,0,.65,1);
+}
+.painel-visivel > [data-painel-deslizante] {
+    transform:translateX(0);
+    transition-duration:1.3s;
+    transition-timing-function:cubic-bezier(.2,.72,.22,1);
+}
+@media(prefers-reduced-motion:reduce) {
+    [data-painel-deslizante], .painel-visivel > [data-painel-deslizante] { transition:none; }
+}

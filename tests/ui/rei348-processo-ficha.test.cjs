@@ -30,7 +30,9 @@ function render(url, perfil) {
             'app/views/internal/_internal_head_css.php','app/views/internal/_processo_ficha_modal_assets.php','app/helpers/ProcessoFicha.php','app/helpers/CnjValidator.php',
             'app/helpers/ProcessoNivelSigilo.php','app/DataJud/DataJudTribunalResolver.php','app/access/ProfileNormalizer.php',
             'public/assets/css/shared/processo-ficha.css','public/assets/js/shared/processo-ficha.js',
-            'public/assets/css/shared/processo-ficha-modal.css','public/assets/js/shared/processo-ficha-modal.js','public/assets/js/shared/processo-nivel-sigilo.js']) copy(f);
+            'public/assets/css/shared/processo-ficha-modal.css','public/assets/js/shared/processo-ficha-modal.js',
+            'public/assets/js/shared/processo-nivel-sigilo.js','public/assets/css/shared/painel-deslizante.css',
+            'public/assets/js/shared/painel-deslizante.js']) copy(f);
         put('fixture.php',`<?php
             require __DIR__ . "/app/repositories/ProcessosRepository.php";
             function appIsHttpsRequest(){return false;}
