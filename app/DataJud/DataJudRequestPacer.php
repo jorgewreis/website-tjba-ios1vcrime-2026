@@ -20,22 +20,28 @@ local wait = math.max(
 )
 if wait > 0 then return math.ceil(wait / 1000) end
 redis.call('HSET', KEYS[1], 'owner', ARGV[1], 'next', now + tonumber(ARGV[2]), 'lease', now + tonumber(ARGV[3]))
-redis.call('PEXPIRE', KEYS[1], tonumber(ARGV[3]) + 1000)
+redis.call('PEXPIRE', KEYS[1], math.max(redis.call('PTTL', KEYS[1]), tonumber(ARGV[3]) + 1000))
 return 0
 LUA;
 
     private const FINISH = <<<'LUA'
-if redis.call('HGET', KEYS[1], 'owner') ~= ARGV[1] then return 0 end
-local delay = tonumber(ARGV[2])
-if delay > 0 then
+if redis.call('HGET', KEYS[1], 'owner') ~= ARGV[1] then return -1 end
+local seconds = 0
+if ARGV[2] == '429' then
+    local consecutive = math.min(4, (tonumber(redis.call('HGET', KEYS[1], 'limited')) or 0) + 1)
+    redis.call('HSET', KEYS[1], 'limited', consecutive)
+    seconds = tonumber(ARGV[3])
+    if seconds < 0 then seconds = 60 * 2 ^ (consecutive - 1) + tonumber(ARGV[4]) end
     local t = redis.call('TIME')
     local now = t[1] * 1000 + math.floor(t[2] / 1000)
-    local untilTime = math.max(tonumber(redis.call('HGET', KEYS[1], 'cooldown')) or 0, now + delay)
+    local untilTime = math.max(tonumber(redis.call('HGET', KEYS[1], 'cooldown')) or 0, now + seconds * 1000)
     redis.call('HSET', KEYS[1], 'cooldown', untilTime)
-    redis.call('PEXPIRE', KEYS[1], math.max(redis.call('PTTL', KEYS[1]), untilTime - now + 1000))
+    redis.call('PEXPIRE', KEYS[1], math.max(redis.call('PTTL', KEYS[1]), untilTime - now + 600000))
+elseif ARGV[2] == 'healthy' then
+    redis.call('HDEL', KEYS[1], 'limited', 'cooldown')
 end
 redis.call('HDEL', KEYS[1], 'owner', 'lease')
-return 1
+return seconds
 LUA;
 
     private function __construct(private readonly Redis $redis, private readonly string $key) {}
@@ -66,24 +72,30 @@ LUA;
         return $token;
     }
 
-    public function finish(string $token, int $pauseSeconds = 0): void
+    public function finish(string $token, bool $limited = false, ?int $retryAfter = null, bool $healthy = false): int
     {
         try {
-            // O cooldown e a liberação acontecem na mesma operação atômica.
-            $this->redis->eval(self::FINISH, [$this->key, $token, $pauseSeconds * 1000], 1);
+            // A pausa, o contador de respostas 429 e a liberação são atômicos.
+            $state = $limited ? '429' : ($healthy ? 'healthy' : 'other');
+            $wait = $this->redis->eval(self::FINISH, [
+                $this->key, $token, $state, $retryAfter ?? -1, $limited && $retryAfter === null ? random_int(0, 5) : 0,
+            ], 1);
+            if (!is_int($wait) || $wait < 0) throw new RuntimeException('Reserva não reconhecida.');
+            return $wait;
         } catch (Throwable) {
-            // A reserva expira sozinha; não modifica a resposta já obtida.
+            // Não reabre o envio; a reserva expira e o serviço continua protegido.
             error_log('DataJud: não foi possível finalizar a reserva de frequência.');
+            return $limited ? ($retryAfter ?? 60) : 0;
         }
     }
 
-    public static function retryAfter(?string $value, ?int $now = null): int
+    public static function retryAfter(?string $value, ?int $now = null): ?int
     {
         $v = trim($value ?? '');
-        if (preg_match('/^[0-9]{1,12}$/D', $v) === 1) return max(60, (int) $v);
-        if (preg_match('/^[A-Z][a-z]{2}, [0-9]{2} [A-Z][a-z]{2} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT$/D', $v) !== 1) return 60;
+        if (preg_match('/^[0-9]{1,12}$/D', $v) === 1) return (int) $v;
+        if (preg_match('/^[A-Z][a-z]{2}, [0-9]{2} [A-Z][a-z]{2} [0-9]{4} [0-9]{2}:[0-9]{2}:[0-9]{2} GMT$/D', $v) !== 1) return null;
         $date = DateTimeImmutable::createFromFormat('!D, d M Y H:i:s T', $v);
-        if (!$date || $date->format('D, d M Y H:i:s \\G\\M\\T') !== $v) return 60;
-        return max(60, $date->getTimestamp() - ($now ?? time()));
+        if (!$date || $date->format('D, d M Y H:i:s \\G\\M\\T') !== $v) return null;
+        return max(0, $date->getTimestamp() - ($now ?? time()));
     }
 }
