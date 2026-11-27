@@ -14,9 +14,21 @@ final class VaraBackupFailure extends RuntimeException
     }
 }
 
+function varaDumpErrno(string $stderr): string
+{
+    return preg_match('/(?:Got error:|\bError)\s+(1[0-9]{3}|2[0-9]{3}|3[0-9]{3})\b|\((1[0-9]{3}|2[0-9]{3}|3[0-9]{3})\)\s*(?:when |$)/im', $stderr, $match)
+        ? (($match[1] ?? '') !== '' ? $match[1] : $match[2])
+        : 'none';
+}
+
 function classifyVaraDumpFailure(string $stderr): string
 {
+    $errno = varaDumpErrno($stderr);
     return match (true) {
+        in_array($errno, ['1044', '1142', '1227', '1370'], true) => 'DUMP_PRIVILEGE',
+        in_array($errno, ['1045', '2002', '2003', '2005', '2013'], true) => 'DUMP_CONNECTION',
+        in_array($errno, ['1049', '1146'], true) => 'DUMP_SCHEMA',
+        $errno === '1356' => 'DUMP_VIEW',
         preg_match('/PROCESS privilege|SHOW VIEW|SHOW CREATE|mysql[.]proc|access denied.*(table|routine)|need.*privilege/i', $stderr) === 1 => 'DUMP_PRIVILEGE',
         preg_match('/access denied for user|cannot connect|can.t connect|unknown server host|connection refused|lost connection/i', $stderr) === 1 => 'DUMP_CONNECTION',
         preg_match('/unknown (variable|option)|unrecognized option/i', $stderr) === 1 => 'DUMP_CLIENT_OPTIONS',
@@ -96,7 +108,7 @@ function dumpVaraDatabase(string $dump, string $home, string $host, int $port, s
                 $exit === 0 => 'DUMP_FOOTER',
                 default => classifyVaraDumpFailure($stderr),
             };
-            $errno = preg_match('/(?:Got error:|\bError)\s+(1[0-9]{3}|2[0-9]{3}|3[0-9]{3})\b/i', $stderr, $match) ? $match[1] : 'none';
+            $errno = varaDumpErrno($stderr);
             throw new VaraBackupFailure($reason . ' exit=' . (int)$exit . ' errno=' . $errno,
                 'A exportação não terminou íntegra; nenhum backup foi publicado.');
         }

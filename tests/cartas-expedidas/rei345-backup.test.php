@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__.'/../../scripts/backup-vara-cartas-db.php';
+require_once __DIR__.'/../../scripts/migrate-cartas-expedidas-prioridade.php';
 
 $home = sys_get_temp_dir().'/vara-backup-fixture-'.bin2hex(random_bytes(8));
 mkdir($home, 0700);
@@ -22,6 +23,28 @@ try {
     if ((fileperms($file) & 0777) !== 0600 || hash_file('sha256',$file) !== $result['sha256']
         || !str_contains((string)$data,'CREATE TABLE fixture') || count(scandir($dir)) !== 3) {
         throw new RuntimeException('Backup sintético sem integridade, privacidade ou limpeza.');
+    }
+    verifyVaraPriorityBackup($home, $result['id'], $result['sha256']);
+    foreach ([['../other', $result['sha256'], 'BACKUP_REFERENCE'], [$result['id'], str_repeat('0',64), 'BACKUP_DIGEST']] as [$id, $hash, $reason]) {
+        try {
+            verifyVaraPriorityBackup($home, $id, $hash);
+            throw new LogicException('Referência de backup indevida aceita.');
+        } catch (RuntimeException $e) {
+            if ($e->getMessage() !== $reason) throw $e;
+        }
+    }
+    touch($file, time() - 90000);
+    clearstatcache(true, $file);
+    try {
+        verifyVaraPriorityBackup($home, $result['id'], $result['sha256']);
+        throw new LogicException('Backup antigo aceito.');
+    } catch (RuntimeException $e) {
+        if ($e->getMessage() !== 'BACKUP_FRESHNESS') throw $e;
+    }
+    if (varaDumpErrno("mysqldump: Couldn't execute 'statement': denied (1227)") !== '1227'
+        || classifyVaraDumpFailure("mysqldump: Couldn't execute 'statement': invalid view (1356)") !== 'DUMP_VIEW'
+        || classifyVaraDumpFailure("mysqldump: Got error: 1049: Unknown database") !== 'DUMP_SCHEMA') {
+        throw new RuntimeException('Classificação sanitizada incorreta.');
     }
     $setDump("printf 'conteudo incompleto'\nexit 2");
     try {
