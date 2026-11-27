@@ -29,7 +29,17 @@ final class DataJudService
      *
      * @return array<string, mixed> payload com campos processuais; inclui sigilo_restrito e sigilo_mensagem quando aplicável
      */
+    public function consultarFichaPublica(string $numero): array
+    {
+        return $this->buscar($numero, false, false, true);
+    }
+
     public function searchProcesso(string $numero, bool $forSync = false, bool $includeSyncOrgao = false): array
+    {
+        return $this->buscar($numero, $forSync, $includeSyncOrgao, false);
+    }
+
+    private function buscar(string $numero, bool $forSync, bool $includeSyncOrgao, bool $apenasFichaPublica): array
     {
         $numero = CnjValidator::digits20OrThrow($numero);
 
@@ -39,7 +49,7 @@ final class DataJudService
             throw new InvalidArgumentException('Tribunal do processo não suportado para consulta no DataJud.');
         }
 
-        $body = $this->buildElasticsearchBody($numero, $forSync, $includeSyncOrgao);
+        $body = $this->buildElasticsearchBody($numero, $forSync, $includeSyncOrgao, $apenasFichaPublica);
 
         $attempts = [[$resolvedAlias, DataJudTribunalResolver::buildSearchUrl($baseUrl, $resolvedAlias)]];
 
@@ -150,7 +160,7 @@ final class DataJudService
     /**
      * @return array{query: array<string, mixed>, size: int, track_total_hits: bool, _source: list<string>}
      */
-    private function buildElasticsearchBody(string $numero, bool $forSync, bool $includeSyncOrgao): array
+    private function buildElasticsearchBody(string $numero, bool $forSync, bool $includeSyncOrgao, bool $apenasFichaPublica): array
     {
         return [
             'query' => [
@@ -164,14 +174,17 @@ final class DataJudService
             ],
             'size' => 2,
             'track_total_hits' => true,
-            // A sincronização não precisa carregar movimentos ou partes.
+            // A ficha e a sincronização só requisitam os campos que utilizam.
             '_source' => $forSync ? array_merge(['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos'],
-                $includeSyncOrgao ? ['orgaoJulgador.nome', 'orgaoJulgador.codigoMunicipioIBGE'] : []) : [
+                $includeSyncOrgao ? ['orgaoJulgador.nome', 'orgaoJulgador.codigoMunicipioIBGE'] : []) : ($apenasFichaPublica ? [
+                'numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos',
+                'orgaoJulgador.nome', 'movimentos.nome', 'movimentos.dataHora', 'movimentos.data_hora',
+            ] : [
                 'numeroProcesso', 'tribunal', 'classe', 'classeProcessual', 'assuntos',
                 'prioridade', 'polo', 'poloAtivo', 'poloPassivo', 'movimentos',
                 'orgaoJulgador', 'nivelSigilo', 'grau', 'formato', 'sistema',
                 'dataAjuizamento', 'dataHoraUltimaAtualizacao', 'id',
-            ],
+            ]),
         ];
     }
 

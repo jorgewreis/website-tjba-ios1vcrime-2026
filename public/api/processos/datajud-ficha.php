@@ -33,7 +33,7 @@ try {
 
     // A leitura é separada da sincronização; nenhum campo local é gravado.
     if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
-    $data = (new DataJudService($config))->searchProcesso($numero);
+    $data = (new DataJudService($config))->consultarFichaPublica($numero);
     $atual = $repo->findById($id);
     if ($atual === null || !empty($atual['sigiloso']) || $numero !== $atual['numero_processo']) {
         $send(['estado'=>'indisponivel']);

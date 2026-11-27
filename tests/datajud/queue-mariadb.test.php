@@ -82,6 +82,46 @@ if (($result['processados'] ?? 0) !== 0 || ($row['status'] ?? null) !== 'falhou'
     throw new RuntimeException('A stale claimed job was not returned to the retry queue.');
 }
 
+// A partial upstream result must not drain the other queued jobs in the same run.
+$processId2 = 'PRC-00000000000000000000000001';
+$db->exec("INSERT INTO processos (id, numero_processo, id_setor_responsavel, sigiloso)
+ VALUES ('$processId2', '0000002-54.2020.8.05.0001', 'SET-1', 0)");
+ProcessoDataJudSyncQueue::enqueueBestEffort($db, $processId);
+ProcessoDataJudSyncQueue::enqueueBestEffort($db, $processId2);
+$db->exec("UPDATE processo_datajud_sync_queue SET proxima_tentativa_em=DATE_SUB(NOW(), INTERVAL 1 MINUTE)
+ WHERE processo_id=" . $db->quote($processId));
+$partial = $empty;
+$partial['_shards'] = ['total' => 3, 'successful' => 1, 'failed' => 2, 'skipped' => 0];
+$callsPartial = 0;
+$partialClient = new DataJudService([], static function (string $url, array $body) use ($partial, &$callsPartial): array {
+    $callsPartial++;
+    return ['http_code'=>200, 'decoded'=>$partial, 'curl_error'=>'', 'raw'=>''];
+});
+$otherWorker = new PDO($dsn, (string) getenv('DATAJUD_TEST_USER'), (string) getenv('DATAJUD_TEST_PASSWORD'), [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+]);
+$batchLock = "CONCAT('ios1vcrime-dj-worker:', LEFT(SHA2(DATABASE(), 256), 40))";
+if ((int) $otherWorker->query("SELECT GET_LOCK($batchLock, 0)")->fetchColumn() !== 1) throw new RuntimeException('Synthetic worker lock failed.');
+try {
+    $busy = (new ProcessoDataJudBackgroundWorker($db, $partialClient))->run(20);
+    if ($busy !== ['processados'=>0, 'falhas'=>0] || $callsPartial !== 0 || $queueRow()['status'] !== 'pendente') {
+        throw new RuntimeException('A second worker claimed work while the batch lock was held.');
+    }
+} finally {
+    $otherWorker->query("SELECT RELEASE_LOCK($batchLock)")->fetchColumn();
+}
+$blocked = (new ProcessoDataJudBackgroundWorker($db, $partialClient))->run(20);
+$others = $db->query('SELECT status, tentativas FROM processo_datajud_sync_queue WHERE processo_id=' . $db->quote($processId2))->fetch();
+if ($blocked !== ['processados'=>0, 'falhas'=>1] || $callsPartial !== 1
+    || $queueRow()['status'] !== 'falhou' || (int) $queueRow()['tentativas'] !== 1
+    || $others['status'] !== 'pendente' || (int) $others['tentativas'] !== 0
+    || (int) $db->query("SELECT IS_FREE_LOCK($batchLock)")->fetchColumn() !== 1) {
+    throw new RuntimeException('Incomplete DataJud result drained the batch or leaked the worker lock.');
+}
+$db->exec('DELETE FROM processo_datajud_sync_queue WHERE processo_id=' . $db->quote($processId2));
+$db->exec('DELETE FROM processos WHERE id=' . $db->quote($processId2));
+echo "PASS: only one worker, and incomplete results leave the rest of the queue untouched.\n";
+
 // Same isolated MariaDB runtime also checks provenance migration and
 // native SQL updates. No real process data or network requests.
 $db->exec("CREATE TABLE classes (id CHAR(30) PRIMARY KEY, codigo VARCHAR(20) UNIQUE, nome VARCHAR(80), created_at DATETIME NULL, updated_at DATETIME NULL) ENGINE=InnoDB");

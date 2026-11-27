@@ -11,9 +11,24 @@ require_once __DIR__ . '/ProcessoDataJudSyncService.php';
 
 final class ProcessoDataJudBackgroundWorker
 {
+    private const BATCH_LOCK = "CONCAT('ios1vcrime-dj-worker:', LEFT(SHA2(DATABASE(), 256), 40))";
+
     public function __construct(private PDO $db, private DataJudService $dataJud) {}
 
     public function run(int $limit = 20): array
+    {
+        // A tarefa agendada e uma execução manual não devem disputar a API.
+        if ((int) $this->db->query('SELECT GET_LOCK(' . self::BATCH_LOCK . ', 0)')->fetchColumn() !== 1) {
+            return ['processados' => 0, 'falhas' => 0];
+        }
+        try {
+            return $this->runBatch($limit);
+        } finally {
+            $this->db->query('SELECT RELEASE_LOCK(' . self::BATCH_LOCK . ')')->fetchColumn();
+        }
+    }
+
+    private function runBatch(int $limit): array
     {
         $done = 0;
         $failed = 0;
@@ -28,7 +43,7 @@ final class ProcessoDataJudBackgroundWorker
                 $this->retry((int) $job['id'], (int) $job['tentativas']);
                 $failed++;
                 error_log('datajud background sync falhou: ' . get_class($e));
-                if ($e instanceof DataJudUpstreamException && in_array($e->reason, ['throttled', 'authorization', 'unavailable', 'transport'], true)) {
+                if ($e instanceof DataJudUpstreamException && in_array($e->reason, ['throttled', 'authorization', 'unavailable', 'transport', 'incomplete'], true)) {
                     // Deixe os outros itens para a próxima execução, sem consumir
                     // suas tentativas durante uma indisponibilidade da origem.
                     break;
