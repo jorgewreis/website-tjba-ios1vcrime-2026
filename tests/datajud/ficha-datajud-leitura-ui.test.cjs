@@ -76,6 +76,16 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
     const edit = await render(503,{estado:'erro',code:'datajud_throttled'},{editMode:true,manualTry:true});
     assert.match(edit.message,/limitou a consulta/);
     assert.equal(edit.retry,true);
+    const editOk = await render(200, {estado:'disponivel', vara:'Vara fictícia', classe:'Classe fictícia',
+        assuntos:['Remoto'], movimentos:[]}, {editMode:true,localSubjects:'["Manual"]'});
+    assert.equal(editOk.fields.vara,'Vara fictícia');
+    assert.equal(editOk.fields.classe,'Classe fictícia');
+    assert.equal(editOk.fields.assuntos,'Remoto; Manual');
+    const editMissing = await render(200, {estado:'disponivel', vara:'', classe:'',
+        assuntos:[], movimentos:[]}, {editMode:true,localSubjects:'["Manual"]'});
+    assert.equal(editMissing.fields.vara,'Vara local');
+    assert.equal(editMissing.fields.classe,'Classe local');
+    assert.equal(editMissing.fields.assuntos,'Manual');
     const restricted = await render(200,{estado:'restrito',sigilo:'Sigilo externo'});
     assert.match(restricted.message,/indisponível na base pública por sigilo/);
     assert.equal(restricted.fields.sigilo,'Sigilo local');
@@ -103,5 +113,5 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
     assert.equal(oldMarkup.fields.assuntos,'Assuntos locais');
     const badData = await render(200,{estado:'disponivel',assuntos:['Remoto']},{localSubjects:'não JSON'});
     assert.equal(badData.fields.assuntos,'Remoto');
-    console.log('PASS: 23 cenários sintéticos de feedback e preservação da ficha DataJud.');
+    console.log('PASS: 25 cenários sintéticos de feedback e preservação da ficha DataJud.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

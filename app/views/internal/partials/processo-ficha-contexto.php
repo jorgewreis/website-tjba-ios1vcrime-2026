@@ -6,7 +6,8 @@ $assuntosLocaisAvulsos = array_values(array_filter(array_map(
 ?>
 <aside class="ficha-context-panel" aria-label="Referências e movimentações do processo"
     <?php if (!$sigilosoFicha): ?>data-ficha-datajud="<?= $eFicha($processoIdFicha) ?>"
-    <?php if ($modoEdicao): ?>data-ficha-consulta-manual<?php else: ?>data-ficha-assuntos-locais="<?= $eFicha(json_encode($assuntosLocaisAvulsos, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?>"<?php endif; ?>
+    <?php if ($modoEdicao): ?>data-ficha-consulta-manual<?php endif; ?>
+    data-ficha-assuntos-locais="<?= $eFicha(json_encode($assuntosLocaisAvulsos, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?>"
     <?php endif; ?>>
     <section class="ficha-secao">
         <h2>Últimas movimentações</h2>

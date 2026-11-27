@@ -186,8 +186,8 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <dt>Comarca</dt><dd><?= $eFicha($origemFicha['comarca'] !== null
                     ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca'] : ($origemFicha['unidade'] ?? 'Não identificada')) ?></dd>
                 <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($varaLocal ?? 'Não informada') ?></dd>
-                <dt>Classe</dt><dd><?= $eFicha($classeNomeAtual !== '' ? $classeNomeAtual : 'Não informada') ?></dd>
-                <dt>Assuntos</dt><dd id="proc-assuntos-resumo"><?= $eFicha(implode('; ', array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao')))) ?: 'Não informados') ?></dd>
+                <dt>Classe</dt><dd data-ficha-classe><?= $eFicha($classeNomeAtual !== '' ? $classeNomeAtual : 'Não informada') ?></dd>
+                <dt>Assuntos</dt><dd id="proc-assuntos-resumo" data-ficha-assuntos><?= $eFicha(implode('; ', array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao')))) ?: 'Não informados') ?></dd>
                 <dt>Sigilo no cadastro</dt><dd data-ficha-sigilo><?= $eFicha($rotuloSigiloFicha) ?></dd>
                 <?php require __DIR__ . '/partials/processo-ficha-alertas-sigilo.php'; ?>
                 <dt>Setor ativo</dt><dd><?= $eFicha($setorNomeExibido) ?></dd>
