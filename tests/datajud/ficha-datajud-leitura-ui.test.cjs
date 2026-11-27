@@ -7,18 +7,19 @@ const vm = require('node:vm');
 
 const script = fs.readFileSync(path.join(__dirname, '../../public/assets/js/shared/processo-ficha.js'), 'utf8');
 
-async function render(http, payload, {broken = false, manualTry = false, localSubjects, subjectsOnField = false} = {}) {
+async function render(http, payload, {broken = false, manualTry = false, localSubjects, subjectsOnField = false, editMode = false} = {}) {
     const calls = [];
     const status = {textContent: ''};
     const retry = {hidden: false, addEventListener(_event, listener) { this.onClick = listener; }};
+    const start = {hidden: false, addEventListener(_event, listener) { this.onClick = listener; }};
     const list = {children: [], replaceChildren(...entries) { this.children = entries; }};
     const history = {hidden: true, addEventListener() {}};
     const fields = {vara: 'Vara local', classe: 'Classe local', sigilo: 'Sigilo local', assuntos: 'Assuntos locais'};
-    const pane = {dataset: {fichaDatajud: 'PROCESSO_SINTETICO', fichaAssuntosLocais: subjectsOnField ? undefined : localSubjects}, querySelector(key) {
-        return ({'[data-ficha-status]':status, '[data-ficha-tentar]':retry, '[data-ficha-recentes]':list,
+    const pane = {dataset: {fichaDatajud: 'PROCESSO_SINTETICO', fichaConsultaManual: editMode ? '' : undefined, fichaAssuntosLocais: subjectsOnField ? undefined : localSubjects}, querySelector(key) {
+        return ({'[data-ficha-status]':status, '[data-ficha-tentar]':retry, '[data-ficha-consultar]':start, '[data-ficha-recentes]':list,
             '[data-ficha-historico]':history, '[data-ficha-todas]':list})[key];
     }};
-    const document = {querySelector(key) {
+    const document = {getElementById: () => null, querySelector(key) {
         if (key === '[data-ficha-datajud]') return pane;
         const field = key.replace(/^\[data-ficha-(.+)\]$/, '$1');
         return {dataset: {fichaAssuntosLocais: subjectsOnField && field === 'assuntos' ? localSubjects : undefined}, hasAttribute: () => field === 'sigilo', set textContent(val) { fields[field] = val; }};
@@ -32,6 +33,12 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
         return response;
     }});
     await new Promise(setImmediate);
+    if (editMode) {
+        assert.equal(calls.length, 0, 'edição não deve abrir consulta paralela automaticamente');
+        assert.equal(start.hidden, false);
+        await Promise.all([start.onClick(), start.onClick()]);
+        assert.equal(start.hidden, true);
+    }
     assert.deepEqual(calls, [['/api/processos/datajud-ficha.php','POST',
         {processo_id:'PROCESSO_SINTETICO'}, 'same-origin','no-store']]);
     if (manualTry) {
@@ -66,6 +73,9 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
     const empty = await render(200,{estado:'indisponivel'});
     assert.match(empty.message,/Não há dados públicos verificáveis/);
     assert.equal(empty.retry,false);
+    const edit = await render(503,{estado:'erro',code:'datajud_throttled'},{editMode:true,manualTry:true});
+    assert.match(edit.message,/limitou a consulta/);
+    assert.equal(edit.retry,true);
     const restricted = await render(200,{estado:'restrito',sigilo:'Sigilo externo'});
     assert.match(restricted.message,/indisponível na base pública por sigilo/);
     assert.equal(restricted.fields.sigilo,'Sigilo local');
@@ -93,5 +103,5 @@ async function render(http, payload, {broken = false, manualTry = false, localSu
     assert.equal(oldMarkup.fields.assuntos,'Assuntos locais');
     const badData = await render(200,{estado:'disponivel',assuntos:['Remoto']},{localSubjects:'não JSON'});
     assert.equal(badData.fields.assuntos,'Remoto');
-    console.log('PASS: 22 cenários sintéticos de feedback e preservação da ficha DataJud.');
+    console.log('PASS: 23 cenários sintéticos de feedback e preservação da ficha DataJud.');
 })().catch(error => { console.error(error); process.exitCode = 1; });

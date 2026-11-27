@@ -3,6 +3,7 @@
     const painel = document.querySelector('[data-ficha-datajud]');
     if (!painel) return;
     const status = painel.querySelector('[data-ficha-status]');
+    const consultarBotao = painel.querySelector('[data-ficha-consultar]');
     const tentar = painel.querySelector('[data-ficha-tentar]');
     const recentes = painel.querySelector('[data-ficha-recentes]');
     const historico = painel.querySelector('[data-ficha-historico]');
@@ -72,6 +73,7 @@
         if (carregando) return;
         carregando = true;
         tentar.hidden = true;
+        if (consultarBotao) consultarBotao.hidden = true;
         status.textContent = 'Consultando o DataJud…';
         try {
             const res = await fetch('/api/processos/datajud-ficha.php', {
@@ -97,7 +99,8 @@
                     const classificacao = typeof dados.sigilo === 'string' && dados.sigilo.trim();
                     aviso.textContent = 'Restrição indicada pelo DataJud · ' + (classificacao || 'nível não informado');
                     aviso.hidden = false;
-                    document.getElementById('ficha-sigilo-datajud-rotulo').hidden = false;
+                    const rotulo = document.getElementById('ficha-sigilo-datajud-rotulo');
+                    if (rotulo) rotulo.hidden = false;
                 }
                 status.textContent = 'Histórico indisponível na base pública por sigilo.';
                 return;
@@ -125,5 +128,9 @@
         }
     }
     tentar.addEventListener('click', consultar);
-    consultar();
+    if (painel.dataset.fichaConsultaManual !== undefined) {
+        consultarBotao?.addEventListener('click', consultar);
+    } else {
+        consultar();
+    }
 })();
