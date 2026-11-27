@@ -177,6 +177,36 @@
         const campo = form.querySelector('#processo-vara-local');
         const botao = form.querySelector('button[type="submit"]');
         const status = form.querySelector('#processo-vara-status');
+        const filtro = form.querySelector('#processo-catalogo-filtro');
+        const comarca = form.querySelector('#processo-catalogo-comarca');
+        const vara = form.querySelector('#processo-catalogo-vara');
+        const catalogo = form.querySelector('#processo-catalogo-dados');
+        if (filtro && comarca && vara && catalogo) {
+            try {
+                const dados = JSON.parse(catalogo.textContent);
+                const montar = () => {
+                    vara.options.length = 1;
+                    const nomes = dados[comarca.value];
+                    vara.disabled = !Array.isArray(nomes) || nomes.length === 0;
+                    if (vara.disabled) return;
+                    [...new Set(nomes)].sort((a, b) => a.localeCompare(b, 'pt-BR')).forEach(nome => {
+                        const option = global.document.createElement('option');
+                        option.value = nome;
+                        option.textContent = nome;
+                        vara.append(option);
+                    });
+                    vara.value = '';
+                };
+                comarca.addEventListener('change', montar);
+                vara.addEventListener('change', () => {
+                    if (vara.value) campo.value = vara.value;
+                });
+                montar();
+                filtro.hidden = false;
+            } catch (error) {
+                // A edição local continua disponível se o catálogo não puder ser lido.
+            }
+        }
         form.addEventListener('submit', async event => {
             event.preventDefault();
             if (botao.disabled) return;

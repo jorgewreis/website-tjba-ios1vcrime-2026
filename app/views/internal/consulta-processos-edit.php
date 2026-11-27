@@ -17,6 +17,7 @@ require_once __DIR__ . '/../../helpers/ProcessoSetorAuthorization.php';
 require_once __DIR__ . '/../../repositories/ProcessoNivelSigiloRepository.php';
 require_once __DIR__ . '/../../services/ProcessoSigiloCadastroService.php';
 require_once __DIR__ . '/../../repositories/ProcessoVaraRepository.php';
+require_once __DIR__ . '/../../services/TjbaCatalogo.php';
 require_once __DIR__ . '/../../helpers/ProcessoFicha.php';
 require_once __DIR__ . '/../../access/AccessEvaluator.php';
 
@@ -208,7 +209,39 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <dt>Prioridades</dt><dd><?= $eFicha(implode('; ', array_filter(array_column($prioridadesFichaEstado['prioridades'] ?? [], 'label'))) ?: 'Nenhuma registrada') ?></dd>
             </dl>
             <?php if ($acessoSetorial && $varaDisponivel && $orgaoDataJud['nome'] === null): ?>
+            <?php $catalogoVara = TjbaCatalogo::ler(TjbaCatalogo::caminho()); ?>
             <form id="processo-vara-form" class="ficha-edicao-campo" data-process-id="<?= $eFicha($processoIdFicha) ?>">
+                <?php if ($catalogoVara !== null): ?>
+                    <?php
+                    $nomesComarcas = $catalogoVara['dados']['comarcas'];
+                    natcasesort($nomesComarcas);
+                    $varasAtivas = [];
+                    foreach ($catalogoVara['dados']['unidades'] as $unidadeCatalogo) {
+                        $comarcaCatalogo = $unidadeCatalogo['comarca'];
+                        if ($unidadeCatalogo['ativa'] && isset($nomesComarcas[$comarcaCatalogo])) {
+                            $varasAtivas[$comarcaCatalogo][] = $unidadeCatalogo['nome'];
+                        }
+                    }
+                    $comarcaSugerida = $origemFicha['comarca'] === 'Ilhéus' && $origemFicha['unidade'] === '0103' ? 2146 : 0;
+                    ?>
+                    <div id="processo-catalogo-filtro" hidden>
+                        <label for="processo-catalogo-comarca">Comarca para filtrar varas do TJBA</label>
+                        <select id="processo-catalogo-comarca" class="height-md">
+                            <option value="">Escolha uma comarca</option>
+                            <?php foreach ($nomesComarcas as $idCatalogo => $nomeCatalogo): ?>
+                            <?php if (isset($varasAtivas[$idCatalogo])): ?>
+                            <option value="<?= (int) $idCatalogo ?>" <?= $idCatalogo === $comarcaSugerida ? 'selected' : '' ?>><?= $eFicha($nomeCatalogo) ?></option>
+                            <?php endif; ?>
+                            <?php endforeach; ?>
+                        </select>
+                        <label for="processo-catalogo-vara">Vara no catálogo</label>
+                        <select id="processo-catalogo-vara" class="height-md" disabled>
+                            <option value="">Escolha uma vara</option>
+                        </select>
+                        <p class="ficha-secundario">A comarca filtra a lista; não altera a comarca de origem nem comprova onde o processo tramita.</p>
+                    </div>
+                    <script type="application/json" id="processo-catalogo-dados"><?= json_encode($varasAtivas, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE) ?></script>
+                <?php endif; ?>
                 <label for="processo-vara-local">Vara local (quando não informada pelo DataJud)</label>
                 <div class="display-flex row row-full flex-wrap align-end">
                     <input type="text" id="processo-vara-local" class="height-md" maxlength="<?= ProcessoVaraRepository::TAMANHO_MAXIMO ?>" value="<?= $eFicha($varaLocal ?? '') ?>">
