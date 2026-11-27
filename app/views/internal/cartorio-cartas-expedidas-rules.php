@@ -98,7 +98,7 @@ include __DIR__ . '/_cartorio_rules_head.php';
     </form>
     <?php endif; ?>
     <div class="display-flex row row-full padding-x-md padding-y-md">
-        <a href="<?= $ceEmbed ? '/frame.php?page=cartasexpedidasnova' : '/frame.php?page=cartasexpedidas' ?>" <?= $ceEmbed ? 'data-ce-rule-back' : '' ?>><?= $ceEmbed ? 'Cancelar' : 'Voltar para cartas expedidas' ?></a>
+        <a href="/frame.php?page=cartasexpedidas" <?= $ceEmbed ? 'data-ce-rule-back' : '' ?>><?= $ceEmbed ? 'Cancelar' : 'Voltar para cartas expedidas' ?></a>
     </div>
 </div>
 <?php if ($ceEmbed): ?><script src="<?= $cePilotoJs ?>" defer></script><?php endif; ?>

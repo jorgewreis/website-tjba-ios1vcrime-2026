@@ -55,7 +55,7 @@
       if (iframe !== frame) return;
       let url;
       try { url = new URL(iframe.contentWindow.location.href); } catch (_) { return; }
-      if (url.searchParams.get('page') === 'cartasexpedidasnova' && url.searchParams.get('piloto_ok') === '1') {
+      if (['cartasexpedidas', 'cartasexpedidasnova'].includes(url.searchParams.get('page')) && url.searchParams.get('piloto_ok') === '1') {
         // Fallback for the older form assets while an updated deploy propagates.
         if (framePage() === 'cartasexpedidascreate') finishForm('cadastro');
         else if (framePage() === 'cartasexpedidasedit') finishForm('edicao');

@@ -18,7 +18,7 @@ const cpInternal = f => copy('app/views/internal/'+f);
 const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status='',nivel=null)=>{
   const file={
     cartasexpedidas:'cartorio-cartas-expedidas-list.php',
-    cartasexpedidasnova:'cartorio-cartas-expedidas-nova.php',
+    cartasexpedidasnova:'cartorio-cartas-expedidas-list.php',
     cartasexpedidascreate:'cartorio-cartas-expedidas-create.php',
     cartasexpedidasedit:'cartorio-cartas-expedidas-edit.php',
     cartasexpedidasrules:'cartorio-cartas-expedidas-rules.php'
@@ -32,7 +32,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
   let browser;
   try {
     for(const f of fs.readdirSync(path.join(root,'app/views/internal'))) if(f.startsWith('_')&&f.endsWith('.php')) cpInternal(f);
-    for(const f of ['cartorio-cartas-expedidas-list','cartorio-cartas-expedidas-nova','cartorio-cartas-expedidas-create','cartorio-cartas-expedidas-rules','cartorio-cartas-expedidas-edit','partials/cartas-expedidas-v2-row','partials/cartas-expedidas-piloto-list','partials/cartas-expedidas-piloto-row','partials/cartas-expedidas-piloto-prioridade']) cpInternal(f+'.php');
+    for(const f of ['cartorio-cartas-expedidas-list','cartorio-cartas-expedidas-create','cartorio-cartas-expedidas-rules','cartorio-cartas-expedidas-edit','partials/cartas-expedidas-v2-row','partials/cartas-expedidas-piloto-list','partials/cartas-expedidas-piloto-row','partials/cartas-expedidas-piloto-prioridade']) cpInternal(f+'.php');
     for(const f of ['CartasExpedidasPrioridade','ProcessoNivelSigilo','CartasExpedidasTempoEtapa','CartasExpedidasEstadoFluxo','CartasExpedidasUiCopy','CartasExpedidasEnvioRegra','DeleteAuthorization']) copy('app/helpers/'+f+'.php');
     copy('app/access/ProfileNormalizer.php');
     stub('helpers','UsuarioPerfisAutorizacao','static function perfisDoUsuario($id){return [$GLOBALS["testrole"]];}');
@@ -74,16 +74,31 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
     ]) copy('public/assets/'+f);
     // Verifica a renderização real da tag e do template, também sem navegador.
     for (const [nivel, rotulo] of [[null,'Segredo de Justiça'],[1,'Segredo de Justiça'],[2,'Sigilo Mínimo'],[3,'Sigilo Médio'],[4,'Sigilo Intenso'],[5,'Sigilo Absoluto']]) {
-      const {body,status}=render('cartasexpedidasnova','ADMIN',false,null,false,1,'',nivel);
+      const {body,status}=render('cartasexpedidas','ADMIN',false,null,false,1,'',nivel);
       assert.equal(status,200);
       assert.equal(body.split('data-ce-indicator="sigilo"').length-1,1,'sem sigilo não ganha cadeado');
       assert.ok(body.includes('<dt>Sigilo</dt><dd>'+rotulo+'</dd>'),'nível oficial no resumo do ícone');
       assert.ok(body.includes('<span>Sigilo</span><span>'+rotulo+'</span>'),'nível nos detalhes continua igual');
       assert.ok(body.includes('<dt>Prioridade</dt><dd>Violência doméstica</dd>'));
     }
-    assert.doesNotMatch(render('cartasexpedidas','ADMIN',false,null,false,1,'',5).body,/ce-process-secrecy/);
+    const frameSource = fs.readFileSync(path.join(root,'public/frame.php'),'utf8');
+    const homeSource = fs.readFileSync(path.join(root,'public/home.php'),'utf8');
+    for (const route of ['cartasexpedidas','cartasexpedidasnova']) {
+      assert.match(frameSource, new RegExp("'" + route + "' +=> \\$PAGES \\. '/cartorio-cartas-expedidas-list\\.php'"));
+    }
+    assert.equal((homeSource.match(/target: 'cartasexpedidas'/g) || []).length, 1);
+    assert.doesNotMatch(homeSource, /target: 'cartasexpedidasnova'/);
+    for (const route of ['cartasexpedidas','cartasexpedidasnova']) {
+      const {body,status} = render(route,'ADMIN',false,null,true,2,'aguardando_cumprimento',5);
+      assert.equal(status,200);
+      assert.match(body, /name="page" value="cartasexpedidas"/);
+      assert.match(body, /Página 2 de 2/);
+      assert.match(body, /value="aguardando_cumprimento" selected/);
+      assert.match(body, /page=cartasexpedidas&amp;status=aguardando_cumprimento/);
+      assert.doesNotMatch(body, /Voltar à versão atual|carta-expedida-v2-row/);
+    }
     if (process.env.RENDER_ONLY === '1') {
-      console.log('Renderização PHP de todos os níveis e do legado: OK');
+      console.log('Renderização PHP de todos os níveis e das duas URLs compatíveis: OK');
       return;
     }
     const roleMap=new Map();
@@ -100,7 +115,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
         const u=new URL(r.request().url());
         if(u.hostname!=='fixture.test') return r.abort();
         if(u.pathname==='/shell' || u.pathname==='/shell-flush') {
-          return r.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/assets/css/shared/layout.css"><style>body{margin:0}'+(u.pathname==='/shell-flush'?'.layout-wraper--home .target-page{margin-top:0}':'')+'</style><div class="layout-wraper--home"><nav class="layout-navbar">Menu flutuante</nav><iframe class="target-page" src="/frame.php?page=cartasexpedidasnova"></iframe></div>'});
+          return r.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/assets/css/shared/layout.css"><style>body{margin:0}'+(u.pathname==='/shell-flush'?'.layout-wraper--home .target-page{margin-top:0}':'')+'</style><div class="layout-wraper--home"><nav class="layout-navbar">Menu flutuante</nav><iframe class="target-page" src="/frame.php?page=cartasexpedidas"></iframe></div>'});
         }
         if(u.pathname==='/api/cartorio-cartas-expedidas/buscar-cidade.php') {
           cityCalls++;
@@ -122,7 +137,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
           return r.fulfill({json:{success:true}});
         }
         if(u.pathname==='/frame.php') {
-          if(u.searchParams.get('page')==='cartasexpedidasnova') {
+          if(u.searchParams.get('page')==='cartasexpedidas') {
             if(r.request().frame().parentFrame()) nestedListRequests++;
             else listReloads++;
           }
@@ -140,7 +155,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
         const header=await p.frameLocator('iframe').locator('.ce-header').boundingBox();
         assert.ok(shellBar && header && header.y>=shellBar.y+shellBar.height+12,'floating shell must not overlap header at '+width+' '+shell);
       }
-      await p.goto('http://fixture.test/frame.php?page=cartasexpedidasnova');
+      await p.goto('http://fixture.test/frame.php?page=cartasexpedidas');
       if(width>=768) {
         const search=await p.getByRole('searchbox',{name:'Pesquisar por processo'}).boundingBox();
         assert.ok(search && search.width>=220 && search.width<=250,'desktop process search must stay compact at '+width);
@@ -328,7 +343,7 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       assert.equal(await p.getByText('Subtarefas - Timeline',{exact:true}).count(),1);
       assert.equal(await p.locator('#filter-tipo').inputValue(),'Intimação de Decisão Interlocutória');
       if(width===1640) {
-        await p.goto('http://fixture.test/frame.php?page=cartasexpedidasnova&processo=fixture-paginacao');
+        await p.goto('http://fixture.test/frame.php?page=cartasexpedidas&processo=fixture-paginacao');
         const envio=p.locator('details.ce-group.envio');
         const outras=p.locator('details.ce-group.devolucao');
         assert.equal(await p.locator('details.ce-group').first().getAttribute('class'),'ce-group envio');
@@ -340,11 +355,11 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
         await p.getByRole('link',{name:'Próxima'}).click();
         assert.equal(await envio.locator('.ce-entry').count(),17);
         assert.equal(await outras.locator('.ce-entry').count(),1);
-        await p.goto('http://fixture.test/frame.php?page=cartasexpedidasnova&processo=fixture-paginacao&status=aguardando_envio');
+        await p.goto('http://fixture.test/frame.php?page=cartasexpedidas&processo=fixture-paginacao&status=aguardando_envio');
         assert.equal(await envio.locator('.ce-entry').count(),17);
         assert.equal(await outras.count(),0);
         assert.equal(await p.getByRole('link',{name:'Próxima'}).count(),0);
-        await p.goto('http://fixture.test/frame.php?page=cartasexpedidasnova&processo=fixture-paginacao&status=aguardando_cumprimento');
+        await p.goto('http://fixture.test/frame.php?page=cartasexpedidas&processo=fixture-paginacao&status=aguardando_cumprimento');
         assert.equal(await envio.count(),0);
         assert.equal(await outras.locator('.ce-entry').count(),15);
       }

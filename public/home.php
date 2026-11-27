@@ -626,7 +626,6 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                 section: 'Cartório',
                 items: [
                     { iconImage: '/assets/icons/Email-Action-Send-2--Streamline-Ultimate.png', label: 'Cartas Expedidas', target: 'cartasexpedidas' },
-                    { iconImage: '/assets/icons/Email-Action-Send-2--Streamline-Ultimate.png', label: 'Cartas Expedidas (nova)', target: 'cartasexpedidasnova' },
                     { iconImage: '/assets/icons/Email-Action-Read-Document--Streamline-Ultimate.png', label: 'Cartas Recebidas', target: 'cartasrecebidas' },
                     { iconImage: '/assets/icons/Newspaper-Fold--Streamline-Ultimate.png', label: 'Editais', target: 'editais' },
                     { iconImage: '/assets/icons/Certified-Diploma-2--Streamline-Ultimate.png', label: 'Cejusc', target: 'cejusc' },

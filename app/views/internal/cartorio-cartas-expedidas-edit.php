@@ -4,7 +4,7 @@ declare(strict_types=1);
 $ceEmbed = ($_GET['piloto'] ?? null) === '1';
 $cePilotoCss = '/assets/css/modules/cartorio/cartas-expedidas-piloto.css';
 $cePilotoJs = '/assets/js/modules/cartorio/cartas-expedidas/piloto-form.js';
-$ceReturn = $ceEmbed ? '/frame.php?page=cartasexpedidasnova&piloto_ok=1' : '/frame.php?page=cartasexpedidas';
+$ceReturn = $ceEmbed ? '/frame.php?page=cartasexpedidas&piloto_ok=1' : '/frame.php?page=cartasexpedidas';
 
 require_once __DIR__ . '/../../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../../repositories/TribunaisRepository.php';
