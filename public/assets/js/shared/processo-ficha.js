@@ -14,6 +14,31 @@
         const alvo = document.querySelector('[data-ficha-' + chave + ']');
         if (alvo && !alvo.hasAttribute('data-ficha-sigilo-local')) alvo.textContent = valor;
     }
+    function combinarAssuntos(remotos) {
+        if (!Array.isArray(remotos)) return;
+        const alvo = document.querySelector('[data-ficha-assuntos]');
+        const raw = painel.dataset.fichaAssuntosLocais ?? alvo?.dataset?.fichaAssuntosLocais ?? '[]';
+        let locais = [];
+        try {
+            const dadosLocais = JSON.parse(raw);
+            if (Array.isArray(dadosLocais)) locais = dadosLocais;
+        } catch (_) {
+            // Mantém compatibilidade com fichas anteriores sem a lista local em JSON.
+        }
+
+        const rotulos = [];
+        const vistos = new Set();
+        for (const valor of [...remotos, ...locais]) {
+            if (typeof valor !== 'string' || !valor.trim()) continue;
+            const rotulo = valor.trim();
+            const chave = rotulo.normalize('NFC').replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR');
+            if (vistos.has(chave)) continue;
+            vistos.add(chave);
+            rotulos.push(rotulo);
+        }
+        // Sem rótulos válidos, o texto já renderizado no servidor fica intacto.
+        texto('assuntos', rotulos.join('; '));
+    }
     function preencher(lista, movimentos) {
         lista.replaceChildren(...movimentos.map(mov => {
             const item = document.createElement('li');
@@ -32,6 +57,17 @@
             ? 'Mostrar apenas as recentes' : 'Ver todas as movimentações';
         if (historico.open && !todas.children.length) preencher(todas, dadosMov);
     });
+    const falhas = Object.freeze({
+        datajud_throttled: [503, 'O DataJud limitou a consulta. Aguarde antes de tentar novamente.', true],
+        datajud_incomplete: [503, 'O DataJud retornou uma consulta incompleta. Aguarde antes de tentar novamente.', true],
+        datajud_transport: [503, 'Não foi possível conectar ao DataJud. Aguarde antes de tentar novamente.', true],
+        datajud_unavailable: [503, 'O DataJud está temporariamente indisponível. Aguarde antes de tentar novamente.', true],
+        datajud_authorization: [502, 'O DataJud recusou a autenticação da integração. Informe a equipe responsável.', false],
+        datajud_not_configured: [503, 'A integração do DataJud não está configurada. Informe a equipe responsável.', false],
+        datajud_ambiguous: [409, 'O DataJud retornou mais de um registro. Confira a ficha na fonte institucional.', false],
+        datajud_not_queryable: [422, 'Este processo não pôde ser consultado no DataJud. Confira o cadastro.', false]
+    });
+
     async function consultar() {
         if (carregando) return;
         carregando = true;
@@ -43,21 +79,31 @@
                 headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({processo_id:painel.dataset.fichaDatajud})
             });
-            if (!res.ok) throw new Error('Consulta indisponível');
             const dados = await res.json();
+            if (!res.ok) {
+                const code = dados?.estado === 'erro' && typeof dados.code === 'string' ? dados.code : '';
+                const falha = Object.hasOwn(falhas, code) ? falhas[code] : null;
+                if (!falha || res.status !== falha[0]) throw new Error('Consulta indisponível');
+                status.textContent = falha[1];
+                tentar.hidden = !falha[2];
+                return;
+            }
+            if (dados?.estado !== 'restrito' && dados?.estado !== 'disponivel' && dados?.estado !== 'indisponivel') {
+                throw new Error('Resposta de consulta inválida');
+            }
             if (dados.estado === 'restrito') {
                 if (typeof dados.sigilo === 'string') texto('sigilo', dados.sigilo);
                 status.textContent = 'Histórico indisponível na base pública por sigilo.';
                 return;
             }
             if (dados.estado !== 'disponivel') {
-                status.textContent = 'Dados não disponíveis na base pública para este processo.';
+                status.textContent = 'Não há dados públicos verificáveis para este processo.';
                 return;
             }
             texto('vara', dados.vara);
             texto('classe', dados.classe);
             texto('sigilo', dados.sigilo);
-            if (Array.isArray(dados.assuntos)) texto('assuntos', dados.assuntos.filter(s => typeof s === 'string').join('; '));
+            combinarAssuntos(dados.assuntos);
             dadosMov = (Array.isArray(dados.movimentos) ? dados.movimentos : [])
                 .filter(m => m && typeof m.nome === 'string' && m.nome.trim())
                 .map(m => ({nome:m.nome, instante: typeof m.data === 'string' ? Date.parse(m.data) : NaN}))
