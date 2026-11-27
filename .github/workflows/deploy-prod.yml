@@ -4,6 +4,11 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+    inputs:
+      migrar_prioridade_cartas:
+        description: "Executar migração de prioridade (somente após confirmar recuperação e janela)"
+        type: boolean
+        default: false
 
 concurrency:
   group: ios1vcrime-production-deploy
@@ -165,6 +170,19 @@ jobs:
           DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
           DEPLOY_TARGET_PATH: ${{ secrets.PROD_PATH }}
         run: bash .github/scripts/deploy-staged-cartas-migration.sh
+
+      - name: Migrar prioridade de cartas expedidas (PROD, opt-in)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.migrar_prioridade_cartas }}
+        env:
+          DEPLOY_USER: ${{ env.DEPLOY_USER_EFFECTIVE }}
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST_EFFECTIVE }}
+          PROD_PATH: ${{ secrets.PROD_PATH }}
+        run: |
+          set -euo pipefail
+          printf -v remote_command 'set -e; cd %q && test -f .env && umask 077 && temp_script=$(mktemp /tmp/rei345-cartas.XXXXXX) && trap %q EXIT && cat > "$temp_script" && php "$temp_script" --apply' \
+            "$PROD_PATH" 'rm -f -- "$temp_script"'
+          ssh -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" "$remote_command" < scripts/migrate-cartas-expedidas-prioridade.php
 
       - name: Aplicar migration de idempotência de guias antes da publicação (PROD)
         env:
