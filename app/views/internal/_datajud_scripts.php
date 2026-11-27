@@ -1,8 +1,7 @@
 <?php
 declare(strict_types=1);
 /**
- * Módulo único de consulta DataJud no front: cnj.js → datajud-cycle-helper → datajud-api.
- * Mesma ordem e cache-bust em todas as telas que disparam classe processual via API pública.
+ * Validação CNJ e preenchimento a partir do cadastro local; não consulta a API pública.
  */
 $djBase = __DIR__ . '/../../../public/assets/js/modules/datajud';
 $cycleM = @filemtime($djBase . '/datajud-cycle-helper.js') ?: time();
