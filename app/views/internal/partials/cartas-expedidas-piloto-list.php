@@ -40,7 +40,6 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
   <header class="ce-header">
    <div><p class="ce-eyebrow">Cartório / Expedição <span class="ce-tag">Versão piloto</span></p><h1>Cartas Expedidas</h1><p>1ª Vara Crime · Cartas expedidas do cartório</p></div>
    <div class="ce-tools">
-    <a href="?page=cartasexpedidas">Versão atual</a>
     <a class="ce-button" href="?page=cartasexpedidasrules&amp;piloto=1" data-ce-frame data-title="Regra de envio de cartas">Regra de envio</a>
     <a class="ce-button primary" href="?page=cartasexpedidascreate&amp;piloto=1" data-ce-frame data-title="Nova carta expedida">+ Novo cadastro</a>
    </div>

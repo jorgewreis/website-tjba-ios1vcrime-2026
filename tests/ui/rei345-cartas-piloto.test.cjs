@@ -40,16 +40,16 @@ const render=(route,role,embed=false)=>{
     stub('repositories','AlocacoesRegrasRepository','function findByRegra($key){return ["usuario_id"=>"T1"];}');
     stub('repositories','CartasExpedidasSubtarefasRepository','const TIPO_ENVIO="aguardando_envio",TIPO_DEVOLUCAO="aguardando_devolucao",ORDEM_ENVIO=1,ORDEM_DEVOLUCAO=2; static function resolverSubtarefaAtivaPorLista($rows){return $rows[0]??null;}');
     stub('services','CartasExpedidasService',`function listCartas(...$a){return ["total"=>2,"rows"=>[
-       ["IdCarta"=>"C1","numero_processo"=>"0000041-00.2026.0.00.0000","Status"=>"aguardando envio","EtapaEfetiva"=>"envio","Comarca"=>"Una","Estado"=>"BA","Finalidade"=>"Citação","Prazo"=>30,"bloco_processo_abrir_href"=>"/frame.php?page=consultaprocessosedit","SubtarefasAll"=>[["id"=>"S1","tipo"=>"aguardando_envio"]]],
+       ["IdCarta"=>"C1","numero_processo"=>"0000041-00.2026.0.00.0000","Status"=>"aguardando envio","EtapaEfetiva"=>"envio","Comarca"=>"Una","Estado"=>"BA","Finalidade"=>"Intimação de Decisão Interlocutória","Prazo"=>30,"bloco_processo_abrir_href"=>"/frame.php?page=consultaprocessosedit","SubtarefasAll"=>[["id"=>"S1","tipo"=>"aguardando_envio"]]],
        ["IdCarta"=>"C2","numero_processo"=>"0000042-00.2026.0.00.0000","Status"=>"aguardando cumprimento","EtapaEfetiva"=>"devolucao","Comarca"=>"Uruçuca","Estado"=>"BA","Finalidade"=>"Intimação","Prazo"=>20,"SubtarefasAll"=>[["id"=>"S2","tipo"=>"aguardando_devolucao"]]]
-    ]];} function getStatusCounts($f){return ["aguardando envio"=>1,"aguardando cumprimento"=>1];} function getFinalidadeCounts($f){return ["Citação"=>1,"Intimação"=>1];}`);
+    ]];} function getStatusCounts($f){return ["aguardando envio"=>1,"aguardando cumprimento"=>1];} function getFinalidadeCounts($f){return ["Intimação de Decisão Interlocutória"=>1,"Intimação"=>1];}`);
     put('fixture.php',`<?php
       class Security {static function generateCSRFToken(){return 'fixture-token';}}
       class Conection {static function getInstance(){return new self;}
        function getConnection(){
         $db=new PDO('sqlite::memory:');
         $db->exec("CREATE TABLE cartas_expedidas(id TEXT,prioridade_tarefa TEXT); INSERT INTO cartas_expedidas VALUES ('C1','critico'),('C2',NULL);
-          CREATE TABLE usuarios(id_usuario TEXT,nome TEXT,sobrenome TEXT,cadastro_ativo INT); INSERT INTO usuarios VALUES ('T1','Lia','Martins',1);
+          CREATE TABLE usuarios(id_usuario TEXT,nome TEXT,sobrenome TEXT,cadastro_ativo INT); INSERT INTO usuarios VALUES ('T1','Lia','Bastos Facundo de Martins',1);
           CREATE TABLE usuario_perfil(usuario TEXT,perfil TEXT); INSERT INTO usuario_perfil VALUES ('T1','ADMIN');");
         return $db;
       }}`);
@@ -63,8 +63,8 @@ const render=(route,role,embed=false)=>{
       await p.route('**/*',r=>{
         const u=new URL(r.request().url());
         if(u.hostname!=='fixture.test') return r.abort();
-        if(u.pathname==='/shell') {
-          return r.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/assets/css/shared/layout.css"><style>body{margin:0}</style><div class="layout-wraper--home"><nav class="layout-navbar">Menu flutuante</nav><iframe class="target-page" src="/frame.php?page=cartasexpedidasnova"></iframe></div>'});
+        if(u.pathname==='/shell' || u.pathname==='/shell-flush') {
+          return r.fulfill({contentType:'text/html; charset=utf-8',body:'<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/assets/css/shared/layout.css"><style>body{margin:0}'+(u.pathname==='/shell-flush'?'.layout-wraper--home .target-page{margin-top:0}':'')+'</style><div class="layout-wraper--home"><nav class="layout-navbar">Menu flutuante</nav><iframe class="target-page" src="/frame.php?page=cartasexpedidasnova"></iframe></div>'});
         }
         if(u.pathname==='/frame.php') {
           const key=role+'|'+u.searchParams.get('page')+'|'+u.searchParams.get('piloto');
@@ -75,11 +75,11 @@ const render=(route,role,embed=false)=>{
         if(u.pathname.startsWith('/assets/') && fs.existsSync(f)) return r.fulfill({path:f});
         return r.fulfill({status:404});
       });
-      if(width<=767) {
-        await p.goto('http://fixture.test/shell');
+      for(const shell of width<=767 ? ['/shell'] : ['/shell','/shell-flush']) {
+        await p.goto('http://fixture.test'+shell);
         const shellBar=await p.locator('.layout-navbar').boundingBox();
-        const title=await p.frameLocator('iframe').locator('.ce-header h1').boundingBox();
-        assert.ok(shellBar && title && title.y>=shellBar.y+shellBar.height+12,'floating shell must not overlap heading at '+width);
+        const header=await p.frameLocator('iframe').locator('.ce-header').boundingBox();
+        assert.ok(shellBar && header && header.y>=shellBar.y+shellBar.height+12,'floating shell must not overlap header at '+width+' '+shell);
       }
       await p.goto('http://fixture.test/frame.php?page=cartasexpedidasnova');
       if(width<=767) {
@@ -92,6 +92,11 @@ const render=(route,role,embed=false)=>{
         assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'list must not overflow horizontally');
       }
       assert.equal(await p.locator('.ce-entry').count(),2);
+      assert.equal(await p.locator('.ce-tools a[href="?page=cartasexpedidas"]').count(),0);
+      const finalidade=p.locator('.ce-entry').first().locator('.ce-finalidade');
+      assert.equal(await finalidade.getAttribute('title'),'Intimação de Decisão Interlocutória');
+      assert.equal(await finalidade.textContent(),'Finalidade: Intimação de Decisão Interlocutória');
+      assert.equal(await p.locator('.ce-entry').first().locator('.ce-assignee').textContent(),'Responsável pelo envio: Lia Martins');
       assert.equal(await p.locator('.ce-entry').first().locator('.ce-priority').getAttribute('aria-label'),'Crítico');
       assert.equal(await p.locator('.ce-entry').last().locator('.ce-priority').getAttribute('aria-label'),'Sem prioridade definida');
       await p.locator('.ce-cnj').first().click();
@@ -99,7 +104,11 @@ const render=(route,role,embed=false)=>{
       await p.locator('.ce-entry').first().locator('.ce-dropdown summary').click();
       assert.deepEqual(await p.locator('.ce-entry').first().locator('.ce-dropdown > div > *').allTextContents(),['Ver detalhes','Abrir processo','Texto para WhatsApp']);
       await p.getByRole('button',{name:'Ver detalhes'}).first().click();
-      assert.equal(await p.getByRole('tabpanel',{name:'Resumo'}).isVisible(),true);
+      const resumo=p.getByRole('tabpanel',{name:'Resumo'});
+      assert.equal(await resumo.isVisible(),true);
+      assert.match(await resumo.textContent(),/FinalidadeIntimação de Decisão Interlocutória/);
+      assert.match(await resumo.textContent(),/Responsável pelo envioLia Martins/);
+      assert.doesNotMatch(await resumo.textContent(),/Bastos Facundo/);
       assert.equal(await p.getByRole('link',{name:'Editar',exact:true}).count(),1);
       assert.equal(await p.getByRole('button',{name:'Excluir carta'}).count(),Number(mayDelete));
       assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'overflow at '+width);
@@ -117,7 +126,7 @@ const render=(route,role,embed=false)=>{
       await p.getByRole('button',{name:'Fechar painel'}).click();
       await p.getByRole('link',{name:'Regra de envio'}).click();
       const rules=p.frameLocator('#ce-panel iframe');
-      assert.match(await rules.locator('.ce-rule-now').textContent(),/Lia Martins/);
+      assert.match(await rules.locator('.ce-rule-now').textContent(),/Lia Bastos Facundo de Martins/);
       assert.equal(await rules.locator('[name=csrf_token]').count(),role==='ADMIN'||role==='DIRETORA'?1:0);
       await p.goto('http://fixture.test/frame.php?page=cartasexpedidas');
       assert.equal(await p.locator('.carta-expedida-v2-row').count(),2);

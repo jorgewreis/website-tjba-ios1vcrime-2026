@@ -81,6 +81,9 @@ body.ce-form-embed{padding:0!important;background:white!important;font-family:sy
 .ce-workspace:has(.ce-panel:not([hidden])) :is(.ce-finalidade,.ce-assignee,.ce-columns span:nth-child(3),.ce-columns span:nth-child(5)){display:none}
 .ce-workspace:has(.ce-panel:not([hidden])) .ce-grid{grid-template-columns:minmax(160px,1.3fr) minmax(70px,.7fr) minmax(56px,.5fr) minmax(49px,.4fr) minmax(100px,.6fr);gap:5px}
 @media(max-width:1020px){.ce-grid{grid-template-columns:minmax(150px,1.3fr) minmax(68px,.7fr) minmax(59px,.5fr) minmax(56px,.5fr) minmax(96px,.55fr)}.ce-finalidade,.ce-assignee,.ce-columns span:nth-child(3),.ce-columns span:nth-child(5){display:none}.ce-workspace{padding:12px}}
+/* No desktop, a barra flutuante termina em y=80 (16px + 64px).
+   Proteja o cabeçalho mesmo quando o iframe começa no topo. */
+@media screen and (min-width:768px){.ce-workspace{padding-block-start:104px}}
 @media (max-width: 767px) {
   /* No home móvel, o iframe começa em y=0 sob a barra fixa (8px + 56px).
      Reserve a mesma folga das demais páginas internas, sem alterar o shell. */
@@ -91,7 +94,6 @@ body.ce-form-embed{padding:0!important;background:white!important;font-family:sy
   .ce-panel iframe{height:calc(100dvh - 156px)}
   .ce-header{display:grid;justify-content:stretch;padding:14px 12px;gap:12px}
   .ce-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 8px}
-  .ce-tools>a:first-child{grid-column:1/-1;justify-self:start;display:flex;align-items:center;min-height:44px}
   .ce-tools .ce-button{padding-inline:6px;text-align:center;min-height:44px}
   .ce-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));padding:10px 12px;gap:8px}
   .ce-toolbar input[type=search],.ce-toolbar select{grid-column:1/-1;width:100%;min-width:0;font-size:16px;min-height:44px}
