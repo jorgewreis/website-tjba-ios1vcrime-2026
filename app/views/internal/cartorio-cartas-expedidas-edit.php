@@ -130,7 +130,7 @@ $podeExcluirTarefa = count(array_intersect($userPerfisEdit, $perfisPermitidosExc
 /** Perfis que podem cancelar a tarefa (apenas altera status para Cancelada): servidor, admin, diretora, magistrada. */
 $podeCancelarTarefa = $userIdEdit !== '';
 $tarefaFinalizadaOuCancelada = in_array($statusAtual ?? '', ['cancelada', 'concluída'], true);
-$timelineData = $carta !== null
+$timelineData = !$ceEmbed && $carta !== null
     ? cartorioTimelineBuildViewData('cartas_expedidas', [
         'task' => $carta,
         'task_status' => $statusAtual,
@@ -266,8 +266,7 @@ if ($ceEmbed) {
             </div>
 
 <?php if ($ceEmbed) require __DIR__ . '/partials/cartas-expedidas-piloto-prioridade.php'; ?>
-            <!-- Timeline de subtarefas -->
-            <?php include __DIR__ . '/_cartorio_timeline.php'; ?>
+            <?php if (!$ceEmbed) include __DIR__ . '/_cartorio_timeline.php'; ?>
 
             <input type="hidden" id="hidden-carta-id" value="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
             <input type="hidden" id="hidden-comarca-id" value="<?php echo htmlspecialchars($comarcaDestinoId, ENT_QUOTES); ?>">
