@@ -138,4 +138,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-107): observe lock wait from expected worker** `[3f1b607e]`
 - **test(REI-163): revalidate ata eligibility after enrollment** `[83976ae2]`
 - **test(REI-163): isolate expiry and access assertions** `[6a073a2b]`
+- **test(REI-66): verify concurrent CPF creation in MySQL** `[4bf097d7]`
 
