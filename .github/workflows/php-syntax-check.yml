@@ -46,6 +46,7 @@ jobs:
           php tests/datajud/tribunal-resolver.test.php
           php tests/datajud/ficha-datajud-differential.test.php
           php tests/processos-partes/responsible-sector-assignment.test.php
+          php tests/processos/sigilo-cadastro-sintetico.test.php
           node tests/datajud/ficha-datajud-ui.test.cjs
           node tests/processos-partes/responsible-sector-ui.test.js
           php tests/instituicoes-publicas/access-policy.test.php

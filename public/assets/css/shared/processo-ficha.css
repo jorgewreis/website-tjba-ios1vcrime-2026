@@ -80,3 +80,5 @@
 .ficha-editor.card-page .ficha-editor-summary { padding-inline:clamp(12px,2.2vw,20px); }
 .ficha-edicao-campo { margin-top:14px; }
 .ficha-edicao-campo .row { gap:9px; margin-block:5px; }
+
+.ficha-editor.card-page #processo-sigilo-confirmei-pje { width:auto; }
