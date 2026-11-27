@@ -46,7 +46,7 @@ final class CartasExpedidasService
         $this->alocadosRepository = new CartasExpedidasAlocadosRepository($connection);
     }
 
-    public function listCartas(array $filters, int $limit, int $offset): array
+    public function listCartas(array $filters, ?int $limit, int $offset): array
     {
         $rows = $this->repository->fetchList($filters, $limit, $offset);
         foreach ($rows as $i => $row) {
@@ -67,7 +67,7 @@ final class CartasExpedidasService
         }
         return [
             'rows' => $rows,
-            'total' => $this->repository->count($filters),
+            'total' => $limit === null ? count($rows) : $this->repository->count($filters),
         ];
     }
 
