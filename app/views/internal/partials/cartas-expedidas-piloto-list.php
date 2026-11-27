@@ -85,7 +85,7 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
   <?php endif; ?>
  </section>
  <dialog class="ce-layer" id="ce-layer" aria-labelledby="ce-panel-title">
- <aside id="ce-panel" class="ce-panel" aria-label="Painel da carta" hidden>
+ <aside id="ce-panel" class="ce-panel" data-painel-deslizante aria-label="Painel da carta" hidden>
    <header><h2 id="ce-panel-title">Detalhes da carta</h2><button type="button" class="ce-close" data-ce-close aria-label="Fechar painel">×</button></header>
    <div id="ce-panel-content"></div>
  </aside>

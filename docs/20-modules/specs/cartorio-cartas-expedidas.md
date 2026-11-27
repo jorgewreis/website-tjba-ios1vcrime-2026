@@ -92,3 +92,5 @@ Script único: `scripts/migrate-cartas-expedidas-fluxo-2-etapas.php` — remove 
 - Cadastro, edição, detalhes e regra de envio abrem em um painel flutuante à direita, sem modificar a largura da lista. Ao fechar cadastro ou edição, a lista é atualizada mantendo endereço, filtros e rolagem.
 - Views: [cartorio-cartas-expedidas-list.php](../../../app/views/internal/cartorio-cartas-expedidas-list.php), [cartorio-cartas-expedidas-edit.php](../../../app/views/internal/cartorio-cartas-expedidas-edit.php)
 - [cartorio-cartas-recebidas.md](cartorio-cartas-recebidas.md)
+
+A transição do painel começa integralmente fora da tela: 1,3 s na entrada, 1,7 s na saída; desativada quando o usuário prefere movimento reduzido.
