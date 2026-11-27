@@ -105,7 +105,9 @@ try {
     $ready = $false
     for ($i = 0; $i -lt 90; $i++) {
         try {
-            $probe = Invoke-DockerSafe @('exec', $mysqlId, 'mysql', '--protocol=socket', '--socket=/var/run/mysqld/mysqld.sock', '-uroot', 'auth_test', '-N', '-B', '-e', 'SELECT 1')
+            $pid1 = Invoke-DockerSafe @('exec', $mysqlId, 'cat', '/proc/1/comm')
+            if (($pid1 | Select-Object -Last 1).Trim() -cne 'mysqld') { throw 'Servidor MySQL definitivo ainda não iniciou.' }
+            $probe = Invoke-DockerSafe @('exec', $mysqlId, 'mysql', '--protocol=tcp', '--host=127.0.0.1', '--port=3306', '-uroot', 'auth_test', '-N', '-B', '-e', 'SELECT 1')
             if (($probe | Select-Object -Last 1).Trim() -eq '1') { $ready = $true; break }
         } catch { }
         Start-Sleep -Seconds 1

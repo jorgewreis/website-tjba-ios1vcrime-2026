@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0058
+
+**Data:** 2026-11-27 20:38:06 | **Commit:** `ccd9a09d` | **Tipo:** `patch`
+
+- fix(REI-66): wait for MySQL TCP readiness
+
 ## V. 1.88.0057
 
 **Data:** 2026-11-27 20:34:41 | **Commit:** `4bf097d7` | **Tipo:** `patch`
@@ -7877,6 +7883,7 @@
 
 
 \n
+
 
 
 
