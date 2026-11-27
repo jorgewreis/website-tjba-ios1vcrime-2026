@@ -6,7 +6,6 @@ require_once __DIR__ . '/../repositories/GuiasSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/GuiasAlocadosRepository.php';
 require_once __DIR__ . '/../repositories/AlocacoesRegrasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
-require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ClassesRepository.php';
@@ -252,7 +251,6 @@ final class GuiasService
         } elseif (strlen($digits) === 20) {
             $processoId = $this->processosRepository->ensureProcess($numeroFormatado, null, $dataFato, null);
         }
-        if ($processoId !== null) ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoId);
 
         if ($parteId !== '' && $processoId !== null) {
             $existente = $this->processosPartesRepository->findByProcessoAndParte($processoId, $parteId);

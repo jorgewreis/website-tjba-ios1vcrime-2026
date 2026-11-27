@@ -6,7 +6,6 @@ $assuntosLocaisAvulsos = array_values(array_filter(array_map(
 ?>
 <aside class="ficha-context-panel" aria-label="Referências e movimentações do processo"
     <?php if (!$sigilosoFicha): ?>data-ficha-datajud="<?= $eFicha($processoIdFicha) ?>"
-    <?php if ($modoEdicao): ?>data-ficha-consulta-manual<?php endif; ?>
     data-ficha-assuntos-locais="<?= $eFicha(json_encode($assuntosLocaisAvulsos, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?>"
     <?php endif; ?>>
     <section class="ficha-secao">
@@ -14,8 +13,8 @@ $assuntosLocaisAvulsos = array_values(array_filter(array_map(
         <p class="ficha-secundario">Fonte: API pública do DataJud</p>
         <p data-ficha-status role="status"><?= $sigilosoFicha
             ? 'Processo sigiloso no cadastro. O histórico não é consultado na base pública.'
-            : ($modoEdicao ? 'Consulte as movimentações quando precisar.' : 'Movimentações ainda não carregadas.') ?></p>
-        <?php if ($modoEdicao && !$sigilosoFicha): ?>
+            : 'Consulte as movimentações quando precisar.' ?></p>
+        <?php if (!$sigilosoFicha): ?>
             <button type="button" class="ficha-button" data-ficha-consultar>Consultar movimentações</button>
         <?php endif; ?>
         <button type="button" class="ficha-button" data-ficha-tentar hidden>Tentar novamente</button>

@@ -51,7 +51,6 @@ final class ProcessosRepository
         $existing = $this->findByDigits($digits);
         if ($existing !== null) {
             $this->updateIfNeeded($existing['id'], $classeId, $dataFato, $preservarSigiloExistente ? null : $sigiloso);
-            ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, (string) $existing['id']);
             return (string) $existing['id'];
         }
 
@@ -79,7 +78,9 @@ final class ProcessosRepository
         $statement->bindValue(':sigiloso', $sigiloso ? 1 : 0, PDO::PARAM_INT);
         $statement->execute();
 
-        ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $id);
+        if (!$sigiloso) {
+            ProcessoDataJudSyncQueue::enqueueFirstRegistration($this->connection, $id);
+        }
 
         return $id;
     }

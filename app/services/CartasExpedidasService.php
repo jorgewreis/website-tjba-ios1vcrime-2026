@@ -11,7 +11,6 @@ require_once __DIR__ . '/../repositories/TribunaisRepository.php';
 require_once __DIR__ . '/../repositories/ComarcasRepository.php';
 require_once __DIR__ . '/../repositories/VarasRepository.php';
 require_once __DIR__ . '/../repositories/CartasExpedidasAlocadosRepository.php';
-require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 require_once __DIR__ . '/../helpers/IdGenerator.php';
 require_once __DIR__ . '/../helpers/TextFormatter.php';
 require_once __DIR__ . '/../helpers/CartorioSubtarefaUsuarioSessao.php';
@@ -188,7 +187,6 @@ final class CartasExpedidasService
             $classeId = $this->classesRepository->ensureClass((string) $classeCodigo, $classeNome !== '' ? TextFormatter::formatProperName((string) $classeNome, 200) : (string) $classeCodigo);
         }
         $processoOrigemId = $this->processosRepository->ensureProcess($numeroFormatado, $classeId, null, $sigiloso, true);
-        ProcessoDataJudSyncQueue::enqueueBestEffort($this->connection, $processoOrigemId);
 
         $tribunalDestinoSigla = 'TJ' . $ufDestino;
         $tribunalDestinoId = $this->tribunaisRepository->ensureTribunal($tribunalDestinoSigla, 'Tribunal de Justiça do Estado');

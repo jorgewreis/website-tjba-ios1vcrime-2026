@@ -119,6 +119,11 @@ $service->searchProcesso($number);
 if (($captured['size'] ?? null) !== 2 || ($captured['track_total_hits'] ?? null) !== true) throw new LogicException('Exact total not requested');
 $expectedFields = ['numeroProcesso', 'tribunal', 'classe', 'classeProcessual', 'assuntos', 'prioridade', 'polo', 'poloAtivo', 'poloPassivo', 'movimentos', 'orgaoJulgador', 'nivelSigilo', 'grau', 'formato', 'sistema', 'dataAjuizamento', 'dataHoraUltimaAtualizacao', 'id'];
 if (($captured['_source'] ?? null) !== $expectedFields) throw new LogicException('Query requested source fields outside the institutional mapper contract.');
+$service->consultarFichaPublica($number);
+$expectedFicha = ['numeroProcesso', 'nivelSigilo', 'classe', 'classeProcessual', 'assuntos', 'orgaoJulgador.nome', 'movimentos.nome', 'movimentos.dataHora', 'movimentos.data_hora'];
+if (($captured['_source'] ?? null) !== $expectedFicha || ($captured['track_total_hits'] ?? null) !== true || ($captured['size'] ?? null) !== 2) {
+    throw new LogicException('The public case card must not request unused data or drop uniqueness checks.');
+}
 $captured = null;
 $sampleSource = $source + ['classe' => ['codigo' => 42, 'nome' => 'Classe sintética'], 'assuntos' => []];
 $sample = ['timed_out'=>false, '_shards'=>['total'=>1,'successful'=>1,'failed'=>0,'skipped'=>0],

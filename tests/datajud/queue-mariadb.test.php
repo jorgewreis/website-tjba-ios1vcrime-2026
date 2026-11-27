@@ -37,14 +37,14 @@ $processId = 'PRC-00000000000000000000000000';
 require_once __DIR__ . '/../processos/vara-migration-contract.php';
 testVaraMigrationContract($db, $processId);
 testNivelSigiloMigrationContract($db, $processId);
-$queueRow = static fn(): array|false => $db->query('SELECT status, requested_by, tentativas, solicitado_em, processando_em FROM processo_datajud_sync_queue WHERE processo_id = ' . $db->quote($processId))->fetch();
+$queueRow = static fn(string $id): array|false => $db->query('SELECT status, requested_by, tentativas, solicitado_em, processando_em FROM processo_datajud_sync_queue WHERE processo_id = ' . $db->quote($id))->fetch();
+$repo = new ProcessosRepository($db);
 $_SESSION = [];
-ProcessoDataJudSyncQueue::enqueueBestEffort($db, $processId);
-if ($queueRow() !== false) throw new RuntimeException('An unattributed request created a background job.');
+ProcessoDataJudSyncQueue::enqueueFirstRegistration($db, $processId);
+if ($queueRow($processId) !== false) throw new RuntimeException('An unattributed request created a job.');
 $_SESSION = ['id_usuario' => 'USR-00000000000000000000000000'];
-ProcessoDataJudSyncQueue::enqueueBestEffort($db, $processId);
-$row = $queueRow();
-if (($row['status'] ?? null) !== 'pendente' || ($row['requested_by'] ?? null) !== $_SESSION['id_usuario'] || (int) ($row['tentativas'] ?? -1) !== 0) throw new RuntimeException('First enqueue did not create an attributed pending job.');
+$repo->ensureProcess('0000001-69.2020.8.05.0001');
+if ($queueRow($processId) !== false) throw new RuntimeException('Reusing an already registered process queued a first registration.');
 $db->beginTransaction();
 $authorized = ProcessoSetorAuthorization::canModifyProcess($db, $_SESSION['id_usuario'], $processId, true);
 $db->rollBack();
@@ -54,33 +54,76 @@ $denied = ProcessoSetorAuthorization::canModifyProcess($db, 'USR-OUTRO-SETOR', $
 $db->rollBack();
 if ($denied) throw new RuntimeException('A user outside the responsible sector was authorized.');
 
-$db->exec("UPDATE processo_datajud_sync_queue SET status='concluido', tentativas=6 WHERE processo_id=" . $db->quote($processId));
-ProcessoDataJudSyncQueue::enqueueBestEffort($db, $processId);
-$row = $queueRow();
-if (($row['status'] ?? null) !== 'pendente' || (int) ($row['tentativas'] ?? -1) !== 0) throw new RuntimeException('A new process use did not requeue completed work.');
-
-$db->exec("UPDATE processo_datajud_sync_queue SET status='processando', processando_em=NOW(6) WHERE processo_id=" . $db->quote($processId));
-$claimedAt = (string) $db->query('SELECT processando_em FROM processo_datajud_sync_queue WHERE processo_id=' . $db->quote($processId))->fetchColumn();
-usleep(2000);
-ProcessoDataJudSyncQueue::enqueueBestEffort($db, $processId);
-$row = $queueRow();
-if (($row['status'] ?? null) !== 'processando' || (string) ($row['solicitado_em'] ?? '') <= $claimedAt) throw new RuntimeException('A use during processing was not scheduled for a follow-up sync.');
-
-$db->exec("UPDATE processo_datajud_sync_queue SET status='pendente', proxima_tentativa_em=NOW(), processando_em=NULL WHERE processo_id=" . $db->quote($processId));
-$empty = ['timed_out' => false, '_shards' => ['total' => 1, 'successful' => 1, 'failed' => 0, 'skipped' => 0], 'hits' => ['total' => ['value' => 0, 'relation' => 'eq'], 'hits' => []]];
-$client = new DataJudService([], static function (string $url, array $body) use ($empty): array {
-    return ['http_code' => 200, 'decoded' => $empty, 'curl_error' => '', 'raw' => ''];
-});
-$result = (new ProcessoDataJudBackgroundWorker($db, $client))->run(1);
-$row = $queueRow();
-if (($result['processados'] ?? 0) !== 1 || ($row['status'] ?? null) !== 'concluido') throw new RuntimeException('MariaDB worker could not claim and finish a valid empty lookup.');
-
-$db->exec("UPDATE processo_datajud_sync_queue SET status='processando', tentativas=0, processando_em=DATE_SUB(NOW(6), INTERVAL 16 MINUTE) WHERE processo_id=" . $db->quote($processId));
-$result = (new ProcessoDataJudBackgroundWorker($db, $client))->run(1);
-$row = $queueRow();
-if (($result['processados'] ?? 0) !== 0 || ($row['status'] ?? null) !== 'falhou' || (int) ($row['tentativas'] ?? 0) !== 1 || $row['processando_em'] !== null) {
-    throw new RuntimeException('A stale claimed job was not returned to the retry queue.');
+$id = $repo->ensureProcess('0000002-54.2020.8.05.0001');
+$row = $queueRow($id);
+if (($row['status'] ?? null) !== 'cadastro_inicial' || ($row['requested_by'] ?? null) !== $_SESSION['id_usuario'] || (int) ($row['tentativas'] ?? -1) !== 0) {
+    throw new RuntimeException('The first new registration did not create one attributed job.');
 }
+$repo->ensureProcess('0000002-54.2020.8.05.0001');
+ProcessoDataJudSyncQueue::enqueueFirstRegistration($db, $id);
+if ($queueRow($id) !== $row) throw new RuntimeException('Reuse or a duplicated enqueue changed the first job.');
+$restricted = $repo->ensureProcess('0000003-39.2020.8.05.0001', null, null, true);
+if ($queueRow($restricted) !== false) throw new RuntimeException('A restricted registration created an API job.');
+
+$db->exec("UPDATE processos SET id_setor_responsavel='SET-1' WHERE id=" . $db->quote($id));
+$db->exec("INSERT INTO processo_datajud_sync_queue (processo_id, requested_by, status, tentativas, proxima_tentativa_em, solicitado_em, created_at, updated_at)
+ VALUES (" . $db->quote($processId) . ", 'USR-00000000000000000000000000', 'pendente', 0, DATE_SUB(NOW(), INTERVAL 1 MINUTE), NOW(6), NOW(), NOW())");
+$legacy = $queueRow($processId);
+$id2 = $repo->ensureProcess('0000004-24.2020.8.05.0001');
+$db->exec("UPDATE processos SET id_setor_responsavel='SET-1' WHERE id=" . $db->quote($id2));
+$db->exec("UPDATE processo_datajud_sync_queue SET proxima_tentativa_em=DATE_SUB(NOW(), INTERVAL 1 MINUTE) WHERE processo_id=" . $db->quote($id));
+$empty = ['timed_out' => false, '_shards' => ['total' => 1, 'successful' => 1, 'failed' => 0, 'skipped' => 0], 'hits' => ['total' => ['value' => 0, 'relation' => 'eq'], 'hits' => []]];
+$partial = $empty;
+$partial['_shards'] = ['total' => 3, 'successful' => 1, 'failed' => 2, 'skipped' => 0];
+$callsPartial = 0;
+$partialClient = new DataJudService([], static function (string $url, array $body) use ($partial, &$callsPartial): array {
+    $callsPartial++;
+    return ['http_code'=>200, 'decoded'=>$partial, 'curl_error'=>'', 'raw'=>''];
+});
+$otherWorker = new PDO($dsn, (string) getenv('DATAJUD_TEST_USER'), (string) getenv('DATAJUD_TEST_PASSWORD'), [
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+]);
+$batchLock = "CONCAT('ios1vcrime-dj-worker:', LEFT(SHA2(DATABASE(), 256), 40))";
+if ((int) $otherWorker->query("SELECT GET_LOCK($batchLock, 0)")->fetchColumn() !== 1) throw new RuntimeException('Synthetic worker lock failed.');
+try {
+    $busy = (new ProcessoDataJudBackgroundWorker($db, $partialClient))->run(20);
+    if ($busy !== ['processados'=>0, 'falhas'=>0] || $callsPartial !== 0 || $queueRow($id)['status'] !== 'cadastro_inicial') {
+        throw new RuntimeException('A second worker claimed work while the batch lock was held.');
+    }
+} finally {
+    $otherWorker->query("SELECT RELEASE_LOCK($batchLock)")->fetchColumn();
+}
+$blocked = (new ProcessoDataJudBackgroundWorker($db, $partialClient))->run(20);
+if ($blocked !== ['processados'=>0, 'falhas'=>1] || $callsPartial !== 1
+    || $queueRow($id)['status'] !== 'falhou' || (int) $queueRow($id)['tentativas'] !== 1
+    || $queueRow($id2)['status'] !== 'cadastro_inicial' || (int) $queueRow($id2)['tentativas'] !== 0
+    || $queueRow($processId) !== $legacy
+    || (int) $db->query("SELECT IS_FREE_LOCK($batchLock)")->fetchColumn() !== 1) {
+    throw new RuntimeException('Incomplete DataJud result drained the batch, changed the legacy row or leaked the lock.');
+}
+$repo->ensureProcess('0000002-54.2020.8.05.0001');
+ProcessoDataJudSyncQueue::enqueueFirstRegistration($db, $id);
+$db->exec("UPDATE processo_datajud_sync_queue SET proxima_tentativa_em=NOW() WHERE processo_id=" . $db->quote($id));
+$callsOk = 0;
+$client = new DataJudService([], static function (string $url, array $body) use ($empty, &$callsOk): array {
+    $callsOk++;
+    return ['http_code'=>200, 'decoded'=>$empty, 'curl_error'=>'', 'raw'=>''];
+});
+$result = (new ProcessoDataJudBackgroundWorker($db, $client))->run(20);
+if ($result !== ['processados'=>1, 'falhas'=>0] || $callsOk !== 1 || $queueRow($id2)['status'] !== 'concluido'
+    || $queueRow($id)['status'] !== 'falhou' || $queueRow($processId) !== $legacy) {
+    throw new RuntimeException('A legacy or failed job retried, or another first registration did not run.');
+}
+$db->exec("UPDATE processo_datajud_sync_queue SET status='cad_inicial_exec', processando_em=DATE_SUB(NOW(6), INTERVAL 16 MINUTE) WHERE processo_id=" . $db->quote($id2));
+(new ProcessoDataJudBackgroundWorker($db, $client))->run(20);
+if ($callsOk !== 1 || $queueRow($id2)['status'] !== 'falhou' || $queueRow($id2)['processando_em'] !== null
+    || $queueRow($processId) !== $legacy) {
+    throw new RuntimeException('An interrupted first lookup retried or modified a legacy job.');
+}
+foreach ([$id, $id2, $restricted] as $extra) {
+    $db->exec('DELETE FROM processos WHERE id=' . $db->quote($extra));
+}
+echo "PASS: one lookup on new registration, no retries or legacy work, no duplicate workers.\n";
 
 // Same isolated MariaDB runtime also checks provenance migration and
 // native SQL updates. No real process data or network requests.
@@ -172,4 +215,4 @@ $db->exec('DROP TABLE processo_datajud_sync_queue');
 $db->exec('DROP TABLE processos');
 $db->exec('DROP TABLE usuario_setor');
 $db->exec('DROP TABLE setores');
-echo "PASS: MariaDB queue migration, retry, concurrent use, worker claim and stale-job recovery.\n";
+echo "PASS: MariaDB queue migration, first registration, concurrency and legacy isolation.\n";

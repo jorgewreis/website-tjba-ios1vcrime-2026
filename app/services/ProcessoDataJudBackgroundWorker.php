@@ -11,9 +11,24 @@ require_once __DIR__ . '/ProcessoDataJudSyncService.php';
 
 final class ProcessoDataJudBackgroundWorker
 {
+    private const BATCH_LOCK = "CONCAT('ios1vcrime-dj-worker:', LEFT(SHA2(DATABASE(), 256), 40))";
+
     public function __construct(private PDO $db, private DataJudService $dataJud) {}
 
     public function run(int $limit = 20): array
+    {
+        // A tarefa agendada e uma execução manual não devem disputar a API.
+        if ((int) $this->db->query('SELECT GET_LOCK(' . self::BATCH_LOCK . ', 0)')->fetchColumn() !== 1) {
+            return ['processados' => 0, 'falhas' => 0];
+        }
+        try {
+            return $this->runBatch($limit);
+        } finally {
+            $this->db->query('SELECT RELEASE_LOCK(' . self::BATCH_LOCK . ')')->fetchColumn();
+        }
+    }
+
+    private function runBatch(int $limit): array
     {
         $done = 0;
         $failed = 0;
@@ -25,10 +40,10 @@ final class ProcessoDataJudBackgroundWorker
                 $this->finish((int) $job['id']);
                 $done++;
             } catch (Throwable $e) {
-                $this->retry((int) $job['id'], (int) $job['tentativas']);
+                $this->fail((int) $job['id']);
                 $failed++;
                 error_log('datajud background sync falhou: ' . get_class($e));
-                if ($e instanceof DataJudUpstreamException && in_array($e->reason, ['throttled', 'authorization', 'unavailable', 'transport'], true)) {
+                if ($e instanceof DataJudUpstreamException && in_array($e->reason, ['throttled', 'authorization', 'unavailable', 'transport', 'incomplete'], true)) {
                     // Deixe os outros itens para a próxima execução, sem consumir
                     // suas tentativas durante uma indisponibilidade da origem.
                     break;
@@ -40,22 +55,24 @@ final class ProcessoDataJudBackgroundWorker
 
     private function claim(): ?array
     {
-        // MariaDB 10.4 does not support SKIP LOCKED. A short advisory lock
-        // serializes only claim/recovery; claimed work runs concurrently.
+        // A trava curta preserva a compatibilidade com o coletor legado durante o deploy.
         $lock = (int) $this->db->query("SELECT GET_LOCK('ios1vcrime-datajud-claim', 5)")->fetchColumn();
         if ($lock !== 1) return null;
         try {
-            // Recover jobs whose worker died after claiming them.
-            $this->db->exec("UPDATE processo_datajud_sync_queue SET status = IF(tentativas + 1 >= 8, 'esgotado', 'falhou'), tentativas = tentativas + 1, proxima_tentativa_em = DATE_ADD(NOW(), INTERVAL 2 MINUTE), processando_em = NULL, updated_at = NOW() WHERE status = 'processando' AND processando_em < DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
+            // Não é possível saber se uma execução interrompida chegou à API.
+            // Encerra a tentativa sem reabrir o trabalho nem mexer na fila legada.
+            $this->db->exec("UPDATE processo_datajud_sync_queue SET status='falhou', processando_em=NULL, updated_at=NOW()
+                WHERE status='cad_inicial_exec' AND processando_em < DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
             $this->db->beginTransaction();
-            $q = $this->db->query("SELECT id, processo_id, requested_by, tentativas FROM processo_datajud_sync_queue WHERE status IN ('pendente','falhou') AND requested_by IS NOT NULL AND proxima_tentativa_em <= NOW() ORDER BY proxima_tentativa_em, id LIMIT 1 FOR UPDATE");
+            $q = $this->db->query("SELECT id, processo_id, requested_by FROM processo_datajud_sync_queue WHERE status='cadastro_inicial' AND tentativas=0 AND requested_by IS NOT NULL AND proxima_tentativa_em <= NOW() ORDER BY proxima_tentativa_em, id LIMIT 1 FOR UPDATE");
             $job = $q->fetch(PDO::FETCH_ASSOC);
             if (!is_array($job)) {
                 $this->db->commit();
                 return null;
             }
-            $u = $this->db->prepare("UPDATE processo_datajud_sync_queue SET status='processando', processando_em=NOW(6), updated_at=NOW() WHERE id=:id");
+            $u = $this->db->prepare("UPDATE processo_datajud_sync_queue SET status='cad_inicial_exec', tentativas=1, processando_em=NOW(6), updated_at=NOW() WHERE id=:id AND status='cadastro_inicial'");
             $u->execute([':id' => (int) $job['id']]);
+            if ($u->rowCount() !== 1) throw new RuntimeException('Cadastro inicial não reservado para o DataJud.');
             $this->db->commit();
             return $job;
         } catch (Throwable $e) {
@@ -152,20 +169,13 @@ final class ProcessoDataJudBackgroundWorker
 
     private function finish(int $id): void
     {
-        $q = $this->db->prepare("UPDATE processo_datajud_sync_queue SET status=IF(solicitado_em > processando_em, 'pendente', 'concluido'), processando_em=NULL, atualizado_em=NOW(), updated_at=NOW() WHERE id=:id");
+        $q = $this->db->prepare("UPDATE processo_datajud_sync_queue SET status='concluido', processando_em=NULL, atualizado_em=NOW(), updated_at=NOW() WHERE id=:id AND status='cad_inicial_exec'");
         $q->execute([':id' => $id]);
     }
 
-    private function retry(int $id, int $attempts): void
+    private function fail(int $id): void
     {
-        $next = $attempts + 1;
-        $status = $next >= 8 ? 'esgotado' : 'falhou';
-        $delay = min(1440, 2 ** min($next, 10));
-        $q = $this->db->prepare("UPDATE processo_datajud_sync_queue SET status=:status, tentativas=:attempts, proxima_tentativa_em=DATE_ADD(NOW(), INTERVAL :delay MINUTE), processando_em=NULL, updated_at=NOW() WHERE id=:id");
-        $q->bindValue(':status', $status);
-        $q->bindValue(':attempts', $next, PDO::PARAM_INT);
-        $q->bindValue(':delay', $delay, PDO::PARAM_INT);
-        $q->bindValue(':id', $id, PDO::PARAM_INT);
-        $q->execute();
+        $q = $this->db->prepare("UPDATE processo_datajud_sync_queue SET status='falhou', processando_em=NULL, updated_at=NOW() WHERE id=:id AND status='cad_inicial_exec'");
+        $q->execute([':id' => $id]);
     }
 }

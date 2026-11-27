@@ -8,7 +8,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/PartesRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosPartesRepository.php';
-require_once __DIR__ . '/ProcessoDataJudSyncQueue.php';
 
 class ReuManager
 {
@@ -74,7 +73,6 @@ class ReuManager
         if ($processo === null) {
             return [];
         }
-        ProcessoDataJudSyncQueue::enqueueBestEffort($this->pdo, (string) $processo['id']);
         $partes = $this->processosPartesRepository->findByProcessoId((string) $processo['id']);
         $tiposPassivos = ['reu', 'indiciado', 'sentenciado', 'requerido'];
         $out = [];
@@ -102,7 +100,6 @@ class ReuManager
             return false;
         }
         $processoId = trim($this->processosRepository->ensureProcess($numeroProcesso, null, null, null));
-        ProcessoDataJudSyncQueue::enqueueBestEffort($this->pdo, $processoId);
         if ($processoId === '') {
             throw new RuntimeException('A preparação do processo não retornou um identificador.');
         }
