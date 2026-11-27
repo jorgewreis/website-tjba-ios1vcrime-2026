@@ -9,9 +9,14 @@ $cePilotoJs = '/assets/js/modules/cartorio/cartas-expedidas/piloto-form.js';
 require_once __DIR__ . '/../../helpers/CartasExpedidasEnvioRegra.php';
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 
-$connection = Conection::getInstance()->getConnection();
 $actor = trim((string) ($_SESSION['id_usuario'] ?? ''));
-$podeAlterarRegra = $actor !== '' && CartasExpedidasEnvioRegra::podeAlterar(UsuarioPerfisAutorizacao::perfisDoUsuario($actor));
+$podeAlterarRegra = $actor !== '' && CartasExpedidasEnvioRegra::podeAlterar(UsuarioPerfisAutorizacao::perfisDoUsuario($actor), $ceEmbed);
+if ($ceEmbed && !$podeAlterarRegra) {
+    http_response_code(403);
+    header('Content-Type: text/plain; charset=UTF-8');
+    exit('Sem permissão para acessar a regra de envio.');
+}
+$connection = Conection::getInstance()->getConnection();
 $error = '';
 $saved = false;
 $users = [];
