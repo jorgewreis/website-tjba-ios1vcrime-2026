@@ -48,7 +48,15 @@ class MaintenanceGuardTest(unittest.TestCase):
                     result = subprocess.run([cgi], env=env, capture_output=True, timeout=10)
                     self.assertIn(b'Status: 403', result.stdout)
                     self.assertFalse(marker.exists(), 'HTTP reached connection stub')
-                    result = subprocess.run([php, str(script)], env=env, capture_output=True, timeout=10)
+                    if name == 'migrate-cartas-expedidas-prioridade.php':
+                        # The new migration must refuse to load the DB connector without explicit opt-in.
+                        (root / '.env').touch()
+                        refused = subprocess.run([php, str(script)], cwd=root, env=env, capture_output=True, timeout=10)
+                        self.assertEqual(refused.returncode, 1, refused.stderr)
+                        self.assertFalse(marker.exists(), 'CLI reached connection stub without --apply')
+                        result = subprocess.run([php, str(script), '--apply'], cwd=root, env=env, capture_output=True, timeout=10)
+                    else:
+                        result = subprocess.run([php, str(script)], env=env, capture_output=True, timeout=10)
                     self.assertEqual(result.returncode, 71, result.stderr)
                     self.assertEqual(marker.read_text(), 'stub')
                     marker.unlink()
