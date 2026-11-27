@@ -34,6 +34,8 @@ if (!is_string($migration) || trim($migration) === '') throw new RuntimeExceptio
 $db->exec($migration);
 
 $processId = 'PRC-00000000000000000000000000';
+require_once __DIR__ . '/../processos/vara-migration-contract.php';
+testVaraMigrationContract($db, $processId);
 $queueRow = static fn(): array|false => $db->query('SELECT status, requested_by, tentativas, solicitado_em, processando_em FROM processo_datajud_sync_queue WHERE processo_id = ' . $db->quote($processId))->fetch();
 $_SESSION = [];
 ProcessoDataJudSyncQueue::enqueueBestEffort($db, $processId);

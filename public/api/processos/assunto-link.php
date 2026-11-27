@@ -21,8 +21,7 @@ if (!is_array($payload)) {
 }
 
 $processoId = trim((string) ($payload['processo_id'] ?? ''));
-$codigo = trim((string) ($payload['codigo'] ?? ''));
-$descricao = trim((string) ($payload['descricao'] ?? ''));
+$codigo = $payload['codigo'] ?? null;
 
 try {
     $usuarioId = isset($_SESSION['id_usuario']) ? trim((string) $_SESSION['id_usuario']) : '';
@@ -38,10 +37,9 @@ try {
         exit;
     }
 
-    $codigoNormalizado = AssuntosRepository::normalizeCodigo($codigo);
-    if ($codigoNormalizado === '') {
+    if (!is_string($codigo) || !preg_match('/^[0-9]{1,20}$/D', trim($codigo)) || array_key_exists('descricao', $payload) || array_key_exists('nome', $payload)) {
         http_response_code(400);
-        echo json_encode(['error' => 'Código do assunto é obrigatório.'], JSON_UNESCAPED_UNICODE);
+        echo json_encode(['error' => 'Informe somente o código numérico do assunto do catálogo.'], JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -56,10 +54,21 @@ try {
         exit;
     }
 
-    $service = new ProcessoAssuntoSyncService($connection);
-    $inserted = $service->linkManual($processoId, $codigoNormalizado, $descricao);
+    $codigoNormalizado = trim($codigo);
     $assuntoRepo = new AssuntosRepository($connection);
-    $assunto = $assuntoRepo->findByCodigo($codigoNormalizado);
+    $assunto = $assuntoRepo->findByCodigo($codigoNormalizado, true);
+    if ($assunto === null) {
+        throw new InvalidArgumentException('Código de assunto não encontrado no catálogo.');
+    }
+    $vinculo = (new ProcessoAssuntosRepository($connection))->findOneByProcessoAndAssunto($processoId, (string) $assunto['id'], true);
+    if (($vinculo['origem'] ?? null) === 'datajud') {
+        $connection->rollBack();
+        http_response_code(409);
+        echo json_encode(['error' => 'Somente outra sincronização pode alterar o assunto confirmado pelo DataJud.', 'code' => 'origem_protegida'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    $service = new ProcessoAssuntoSyncService($connection);
+    $inserted = $service->linkManual($processoId, $codigoNormalizado, (string) $assunto['descricao']);
     if (!$connection->commit()) {
         throw new RuntimeException('Não foi possível confirmar a alteração do assunto.');
     }

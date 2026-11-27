@@ -8,18 +8,6 @@ $assuntosLocaisAvulsos = array_values(array_filter(array_map(
     <?php if (!$sigilosoFicha): ?>data-ficha-datajud="<?= $eFicha($processoIdFicha) ?>"
     <?php if (!$modoEdicao): ?>data-ficha-assuntos-locais="<?= $eFicha(json_encode($assuntosLocaisAvulsos, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE)) ?>"<?php endif; ?>
     <?php endif; ?>>
-    <?php if ($modoEdicao): ?>
-    <section class="ficha-secao">
-        <h2>Origem pelo número CNJ</h2>
-        <p><?= $eFicha(implode(' · ', array_filter([$origemFicha['segmento'], $origemFicha['tribunal'],
-            $origemFicha['comarca'] !== null ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca'] : $origemFicha['unidade']]))) ?: 'Não informada' ?></p>
-    </section>
-    <section class="ficha-secao">
-        <h2>Vara informada pelo DataJud</h2>
-        <p data-ficha-vara>Não informada</p>
-        <p>Sigilo: <span data-ficha-sigilo<?= $temNivelFicha ? ' data-ficha-sigilo-local' : '' ?>><?= $eFicha($rotuloSigiloFicha) ?></span></p>
-    </section>
-    <?php endif; ?>
     <section class="ficha-secao">
         <h2>Últimas movimentações</h2>
         <p class="ficha-secundario">Fonte: API pública do DataJud</p>

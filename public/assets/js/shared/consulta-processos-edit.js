@@ -88,6 +88,8 @@
         }
 
         const lista = normalizeAssuntos(assuntos);
+        const resumo = global.document.getElementById('proc-assuntos-resumo');
+        if (resumo) resumo.textContent = [...new Set(lista.map(item => item.descricao).filter(Boolean))].join('; ') || 'Não informados';
         if (lista.length === 0) {
             container.innerHTML = '<div class="col no-data"><span class="major-info">Nenhum assunto vinculado.</span></div>';
             return;
@@ -99,7 +101,7 @@
                 : item.descricao;
             const control = item.origem === 'manual'
                 ? '  <button type="button" class="btn btn-secondary-outline height-sm btn-assunto-desvincular" data-assunto-id="' + item.id + '">Remover</button>'
-                : '  <span class="label label-default">' + escapeHtml(item.origem === 'datajud' ? 'DataJud' : 'Origem não identificada') + '</span>';
+                : '';
             return [
                 '<div class="display-flex row row-full justify-between align-center border-bottom padding-y-sm" data-assunto-id="' + item.id + '">',
                 '  <div class="display-flex col" style="width:auto; flex:1 1 auto;">',
@@ -200,8 +202,8 @@
             assuntoEncontradoNoCatalogo = false;
             if (descricaoInput) {
                 descricaoInput.value = '';
-                descricaoInput.readOnly = false;
-                descricaoInput.placeholder = 'Informe a descrição se o código não estiver no catálogo';
+                descricaoInput.readOnly = true;
+                descricaoInput.placeholder = 'Preenchida automaticamente pelo catálogo';
             }
             atualizarBtnVincularAssunto();
         }
@@ -211,11 +213,7 @@
             if (codigo === '' || codigo !== codigoVerificadoNoBd) {
                 return false;
             }
-            if (assuntoEncontradoNoCatalogo) {
-                return true;
-            }
-            const descricao = descricaoInput ? String(descricaoInput.value || '').trim() : '';
-            return descricao !== '';
+            return assuntoEncontradoNoCatalogo;
         }
 
         function atualizarBtnVincularAssunto() {
@@ -239,8 +237,8 @@
                 return;
             }
             descricaoInput.value = '';
-            descricaoInput.readOnly = false;
-            descricaoInput.placeholder = 'Código não cadastrado — informe a descrição para vincular';
+            descricaoInput.readOnly = true;
+            descricaoInput.placeholder = 'Código não encontrado no catálogo';
         }
 
         function setParteNomeStatus(text, color) {
@@ -440,11 +438,12 @@
             const opts = options || {};
             const exibirToast = opts.exibirToast !== false;
             const codigo = codigoInput ? String(codigoInput.value || '').trim() : '';
-            if (codigo === '') {
+            if (!/^[0-9]{1,20}$/.test(codigo)) {
                 resetAssuntoLookup();
+                if (codigo && descricaoInput) descricaoInput.placeholder = 'Informe um código numérico';
                 return Promise.resolve();
             }
-            if (codigo === ultimoCodigoConsultado && descricaoInput && descricaoInput.readOnly) {
+            if (codigo === ultimoCodigoConsultado && assuntoEncontradoNoCatalogo) {
                 return Promise.resolve();
             }
 
@@ -456,6 +455,7 @@
                     return { ok: response.ok, body: body };
                 });
             }).then(function (result) {
+                if (codigoInput?.value.trim() !== codigo) return;
                 if (!result.ok || (result.body && result.body.error)) {
                     codigoVerificadoNoBd = '';
                     assuntoEncontradoNoCatalogo = false;
@@ -480,7 +480,7 @@
                 assuntoEncontradoNoCatalogo = false;
                 aplicarAssuntoNaoEncontrado();
                 if (exibirToast) {
-                    notify('info', 'Assunto não encontrado', 'Informe a descrição para vincular manualmente.');
+                    notify('info', 'Assunto não encontrado', 'Use um código cadastrado no catálogo para vincular manualmente.');
                 }
                 atualizarBtnVincularAssunto();
             }).catch(function () {
@@ -504,7 +504,7 @@
                 codigoVerificadoNoBd = '';
                 assuntoEncontradoNoCatalogo = false;
                 if (descricaoInput) {
-                    descricaoInput.readOnly = false;
+                    descricaoInput.readOnly = true;
                 }
                 atualizarBtnVincularAssunto();
             }
@@ -551,27 +551,15 @@
                 }
             });
             codigoInput.addEventListener('input', function () {
-                const codigo = String(codigoInput.value || '').trim();
-                if (codigo === '') {
-                    resetAssuntoLookup();
-                    return;
-                }
+                resetAssuntoLookup();
                 scheduleBuscarAssunto();
-            });
-        }
-
-        if (descricaoInput) {
-            descricaoInput.addEventListener('input', function () {
-                if (!descricaoInput.readOnly) {
-                    atualizarBtnVincularAssunto();
-                }
             });
         }
 
         if (btnVincularAssunto && codigoInput && processoId) {
             btnVincularAssunto.addEventListener('click', function () {
                 const codigo = String(codigoInput.value || '').trim();
-                const descricao = descricaoInput ? String(descricaoInput.value || '').trim() : '';
+                if (!podeVincularAssunto()) return;
                 if (!codigo) {
                     notify('error', 'Código obrigatório', 'Informe o código do assunto para vincular.');
                     codigoInput.focus();
@@ -581,8 +569,7 @@
                 btnVincularAssunto.disabled = true;
                 postJson(linkAssuntoEndpoint, {
                     processo_id: processoId,
-                    codigo: codigo,
-                    descricao: descricao
+                    codigo: codigo
                 }).then(function (result) {
                     if (!result.data || result.data.error) {
                         notify('error', 'Erro', result.data && result.data.error ? result.data.error : 'Erro ao vincular assunto.');
@@ -596,7 +583,7 @@
                         if (!existente || assunto.origem === 'datajud') assuntosState.push({
                             id: String(assunto.id),
                             codigo: String(assunto.codigo || codigo),
-                            descricao: String(assunto.descricao || descricao || codigo),
+                            descricao: String(assunto.descricao || codigo),
                             origem: assunto.origem || 'manual'
                         });
                         assuntosState = normalizeAssuntos(assuntosState);

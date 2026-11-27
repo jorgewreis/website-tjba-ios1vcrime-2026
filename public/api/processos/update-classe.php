@@ -22,8 +22,7 @@ if (!is_array($payload)) {
 }
 
 $processoId = trim((string) ($payload['processo_id'] ?? ''));
-$codigo = (string) ($payload['codigo'] ?? '');
-$nome = isset($payload['nome']) ? (string) $payload['nome'] : null;
+$codigo = $payload['codigo'] ?? null;
 
 try {
     if ($processoId === '') {
@@ -54,8 +53,14 @@ try {
             echo json_encode(['error' => 'Acesso negado ao processo.'], JSON_UNESCAPED_UNICODE);
             exit;
         }
+        if (!is_string($codigo) || !preg_match('/^[0-9]{1,20}$/D', trim($codigo)) || array_key_exists('nome', $payload) || array_key_exists('descricao', $payload)) {
+            throw new InvalidArgumentException('Informe somente o código numérico da classe do catálogo.');
+        }
+        if ((new ClassesRepository($connection))->findByCodigo(trim($codigo)) === null) {
+            throw new InvalidArgumentException('Código de classe não encontrado no catálogo.');
+        }
         $service = new ProcessoClasseSyncService($connection);
-        $result = $service->updateClasseManual($processoId, $codigo, $nome);
+        $result = $service->updateClasseManual($processoId, trim($codigo), null);
         if (!$connection->commit()) {
             throw new RuntimeException('Não foi possível confirmar a atualização.');
         }
