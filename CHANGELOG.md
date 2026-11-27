@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0055
+
+**Data:** 2026-11-27 20:10:41 | **Commit:** `83976ae2` | **Tipo:** `patch`
+
+- test(REI-163): revalidate ata eligibility after enrollment
+
 ## V. 1.88.0054
 
 **Data:** 2026-11-27 20:01:59 | **Commit:** `3f1b607e` | **Tipo:** `patch`
@@ -7859,4 +7865,5 @@
 
 
 \n
+
 
