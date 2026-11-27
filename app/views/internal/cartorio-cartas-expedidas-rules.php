@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+$ceEmbed = ($_GET['piloto'] ?? null) === '1';
+$cePilotoCss = '/assets/css/modules/cartorio/cartas-expedidas-piloto.css';
+$cePilotoJs = '/assets/js/modules/cartorio/cartas-expedidas/piloto-form.js';
+
+
 require_once __DIR__ . '/../../helpers/CartasExpedidasEnvioRegra.php';
 require_once __DIR__ . '/../../helpers/UsuarioPerfisAutorizacao.php';
 
@@ -52,16 +57,17 @@ try {
 $locationAll = 'Interno - Cartório - Cartas Expedidas -';
 $nomeCurtoModulo = 'Cartas Expedidas';
 $usarFormularioOperacional = true;
+$cartasRulesEmbed = $ceEmbed;
 $description = 'Configure o responsável pela fila de cartas aguardando envio.';
 include __DIR__ . '/_cartorio_rules_head.php';
 ?>
 <div class="container-full card-page">
     <div class="card-title"><h1 class="title-page">Regra de envio de cartas</h1></div>
     <div class="display-flex row row-full padding-x-md padding-y-md border-bottom">
-        <p>Responsável atual: <strong><?php echo $e($current['nome'] ?? 'Nenhum servidor definido'); ?></strong></p>
+        <p<?= $ceEmbed?' class="ce-rule-now"':'' ?>>Responsável atual: <strong><?php echo $e($current['nome'] ?? 'Nenhum servidor definido'); ?></strong><?php if ($ceEmbed && $current !== null): ?><span class="ce-tag">Regra ativa</span><?php endif; ?></p>
     </div>
     <?php if ($error !== '' || $saved): ?>
-    <div class="display-flex row row-full padding-x-md padding-y-md border-bottom" role="status">
+    <div <?= $ceEmbed && $saved?'data-ce-rule-saved':'' ?> class="display-flex row row-full padding-x-md padding-y-md border-bottom" role="status">
         <?php echo $e($error !== '' ? $error : 'Regra atualizada com sucesso.'); ?>
     </div>
     <?php endif; ?>
@@ -79,15 +85,17 @@ include __DIR__ . '/_cartorio_rules_head.php';
                 </select>
             </div>
         </div>
+        <?php if ($ceEmbed): ?><p class="ce-rule-scope">A mesma pessoa aparece no Dashboard em Aguardando envio e Prazo vencido.</p><?php endif; ?>
         <div class="card-buttons">
             <button type="submit" class="btn btn-primary" name="action" value="save">Salvar regra</button>
-            <button type="submit" class="btn btn-danger-outline" name="action" value="clear" formnovalidate>Remover alocação</button>
+            <?php if (!$ceEmbed || $current !== null): ?><button type="submit" class="btn btn-danger-outline" name="action" value="clear" formnovalidate <?= $ceEmbed ? 'data-ce-rule-remove' : '' ?>>Remover alocação</button><?php endif; ?>
         </div>
     </form>
     <?php endif; ?>
     <div class="display-flex row row-full padding-x-md padding-y-md">
-        <a href="/frame.php?page=cartasexpedidas">Voltar para cartas expedidas</a>
+        <a href="<?= $ceEmbed ? '/frame.php?page=cartasexpedidasnova' : '/frame.php?page=cartasexpedidas' ?>" <?= $ceEmbed ? 'data-ce-rule-back' : '' ?>><?= $ceEmbed ? 'Cancelar' : 'Voltar para cartas expedidas' ?></a>
     </div>
 </div>
+<?php if ($ceEmbed): ?><script src="<?= $cePilotoJs ?>" defer></script><?php endif; ?>
 </body>
 </html>

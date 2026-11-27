@@ -22,7 +22,7 @@ try {
     error_log('cartas expedidas: não foi possível carregar a regra de envio');
 }
 
-$routePage = trim((string) ($_GET['page'] ?? 'cartasexpedidas'));
+$routePage = !empty($cartasPiloto) ? 'cartasexpedidasnova' : trim((string) ($_GET['page'] ?? 'cartasexpedidas'));
 if ($routePage === '') {
     $routePage = 'cartasexpedidas';
 }
@@ -53,6 +53,12 @@ try {
     $service = new CartasExpedidasService($connection);
     $listResult = $service->listCartas($filters, $itemsPerPage, $offset);
 } catch (\Throwable $exception) {
+    if (!empty($cartasPiloto)) {
+        http_response_code(503);
+        error_log('cartas expedidas (nova): não foi possível carregar a lista');
+        echo '<p>Não foi possível carregar a lista. <a href="?page=cartasexpedidas">Voltar à versão atual</a>.</p>';
+        return;
+    }
     die('Erro ao carregar os dados: ' . $exception->getMessage());
 }
 
@@ -157,6 +163,10 @@ $listSearchV = @filemtime($assetsRoot . '/js/shared/list-search.js') ?: time();
 $pageHelpersV = @filemtime($assetsRoot . '/js/shared/page-helpers.js') ?: time();
 $toastCatalogV = @filemtime($assetsRoot . '/js/shared/toast-catalog.js') ?: time();
 $userContextV = @filemtime($assetsRoot . '/js/shared/user-context.js') ?: time();
+if (!empty($cartasPiloto)) {
+    require __DIR__ . '/partials/cartas-expedidas-piloto-list.php';
+    return;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

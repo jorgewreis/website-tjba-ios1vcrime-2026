@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+$ceEmbed = ($_GET['piloto'] ?? null) === '1';
+$cePilotoCss = '/assets/css/modules/cartorio/cartas-expedidas-piloto.css';
+$cePilotoJs = '/assets/js/modules/cartorio/cartas-expedidas/piloto-form.js';
+$ceReturn = $ceEmbed ? '/frame.php?page=cartasexpedidasnova&piloto_ok=1' : '/frame.php?page=cartasexpedidas';
+
 header('Content-Type: text/html; charset=UTF-8');
 if (function_exists('mb_internal_encoding')) {
     mb_internal_encoding('UTF-8');
@@ -147,6 +152,11 @@ foreach ($currentUserPerfis as $perfilRaw) {
     }
 }
 $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
+if ($ceEmbed) {
+    require_once __DIR__ . '/../../helpers/CartasExpedidasPrioridade.php';
+    $prioridadeEditavel = CartasExpedidasPrioridade::disponivel($connection);
+    $prioridadeInicial = CartasExpedidasPrioridade::PADRAO;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -160,9 +170,10 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
     <?php include __DIR__ . '/_internal_head_css.php'; ?>
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
+<?php if ($ceEmbed): ?><link rel="stylesheet" href="<?= $cePilotoCss ?>?v=<?= (int) @filemtime(dirname(__DIR__,3).'/public'.$cePilotoCss) ?>"><?php endif; ?>
 </head>
 
-<body class="page-internal page-operational-form">
+<body class="page-internal page-operational-form<?= $ceEmbed?' ce-form-embed':'' ?>">
 
     <div class="spacing-top-page"></div>
     <div class="header-page">
@@ -231,6 +242,8 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
         <input type="hidden" id="hidden-classe-descricao" name="classe_descricao">
         <input type="hidden" id="filter-sistema-envio" name="sistema_envio" value="outro">
 
+<?php if ($ceEmbed) require __DIR__ . '/partials/cartas-expedidas-piloto-prioridade.php'; ?>
+<?php if ($ceEmbed): ?><p class="ce-rule-scope">Ao cadastrar, a carta entra na fila Aguardando envio.</p><?php endif; ?>
         <div class="card-buttons">
             <div class="display-flex row row-fit gap-y-md align-center justify-start">
                 <button class="btn btn-primary-outline btn-cartas-voltar" id="voltar-btn" type="button" data-allow-during-loading="true">Voltar</button>
@@ -460,6 +473,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
             }
             App.CartorioCartasExpedidasCreate.initialize({
                 submitDelayMs: 1000,
+                successRedirect: <?= json_encode($ceReturn) ?>,
                 cityLookupEndpoint: '/api/cartorio-cartas-expedidas/buscar-cidade.php'
             });
 
@@ -521,6 +535,7 @@ $sessionUserName = trim((string) ($_SESSION['nome'] ?? ''));
             })();
         })();
     </script>
+<?php if ($ceEmbed): ?><script src="<?= $cePilotoJs ?>?v=<?= (int) @filemtime(dirname(__DIR__,3).'/public'.$cePilotoJs) ?>" defer></script><?php endif; ?>
 </body>
 
 </html>

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../helpers/CartasExpedidasPrioridade.php';
+
 require_once __DIR__ . '/../repositories/CartasExpedidasRepository.php';
 require_once __DIR__ . '/../repositories/CartasExpedidasSubtarefasRepository.php';
 require_once __DIR__ . '/../repositories/ProcessosRepository.php';
@@ -91,6 +93,7 @@ final class CartasExpedidasService
 
     public function create(array $payload): string
     {
+        if (array_key_exists('prioridade_tarefa', $payload)) CartasExpedidasPrioridade::validar($payload['prioridade_tarefa']);
         $processo = trim((string) ($payload['processo'] ?? $payload['numero_processo'] ?? ''));
         if ($processo === '') {
             throw new InvalidArgumentException('O número do processo é obrigatório.');
@@ -234,6 +237,7 @@ final class CartasExpedidasService
             $row['idempotency_payload_hash'] = $payloadHash;
         }
 
+        if (array_key_exists('prioridade_tarefa', $payload)) $row['prioridade_tarefa'] = $payload['prioridade_tarefa'];
         $this->repository->insert($row);
 
         $this->subtarefasRepository->create(
@@ -283,6 +287,8 @@ final class CartasExpedidasService
             'observacoes' => trim((string) ($payload['observacoes'] ?? '')),
             'sigilo_solicitado' => !empty($payload['nivel_sigilo']) ? 1 : 0,
         ];
+        // Os pedidos antigos sem campo conservam exatamente o hash anterior.
+        if (array_key_exists('prioridade_tarefa', $payload)) $canonical['prioridade_tarefa'] = $payload['prioridade_tarefa'];
         return hash('sha256', json_encode($canonical, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
     }
 
@@ -542,6 +548,7 @@ final class CartasExpedidasService
             throw new InvalidArgumentException('O identificador informado é inválido.');
         }
 
+        if (array_key_exists('prioridade_tarefa', $payload)) CartasExpedidasPrioridade::validar($payload['prioridade_tarefa']);
         return $this->repository->update($id, $payload);
     }
 

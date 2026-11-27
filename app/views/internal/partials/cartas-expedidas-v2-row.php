@@ -229,6 +229,10 @@ $iconSigilo = '/assets/icons/View-Off--Streamline-Ultimate.png';
 $iconPrioridade = '/assets/icons/Alert-Diamond--Streamline-Ultimate.png';
 $iconAbrir = '/assets/icons/Cartas-Resize-Expand-Corner--Streamline-Ultimate.png';
 $iconSincronizar = '/assets/icons/Server-Sync-1--Streamline-Ultimate.png';
+if (!empty($cartasPiloto)) {
+    require __DIR__ . '/cartas-expedidas-piloto-row.php';
+    return;
+}
 ?>
 <div class="register-line full carta-expedida-v2-row" data-carta-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>" data-registro-id="<?php echo htmlspecialchars($idCarta, ENT_QUOTES); ?>">
     <div class="left carta-expedida-left">

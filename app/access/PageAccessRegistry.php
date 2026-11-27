@@ -56,6 +56,7 @@ final class PageAccessRegistry
             'oficioscartorioedit' => $areaCartorio,
             'oficiosrules' => $areaCartorio,
             'cartasexpedidas' => $areaCartorio,
+            'cartasexpedidasnova' => $areaCartorio,
             'cartasexpedidasrules' => $areaCartorio,
             'cartasexpedidasedit' => $areaCartorio,
             'cartasexpedidascreate' => $areaCartorio,

@@ -169,6 +169,10 @@ final class CartasExpedidasRepository
         $idempotencyPlaceholders = array_key_exists('idempotency_key', $row)
             ? ', :idempotency_key, :idempotency_payload_hash'
             : '';
+        if (array_key_exists('prioridade_tarefa', $row)) {
+            $idempotencyValues .= ', `prioridade_tarefa`';
+            $idempotencyPlaceholders .= ', :prioridade_tarefa';
+        }
         $statement = $this->connection->prepare(sprintf(
             'INSERT INTO `%s` (`id`, `processo_origem_id`, `numero_processo_origem`, `finalidade`, `prazo_dias`, `comarca_destino_id`, `cidade_destino`, `uf_destino`, `numero_processo_destino`, `vara_destino_id`, `vara_destino_nome`, `status`, `observacoes`, `criado_por`, `atualizado_por`%s, `created_at`, `updated_at`) VALUES (:id, :processo_origem_id, :numero_processo_origem, :finalidade, :prazo_dias, :comarca_destino_id, :cidade_destino, :uf_destino, :numero_processo_destino, :vara_destino_id, :vara_destino_nome, :status, :observacoes, :criado_por, :atualizado_por%s, NOW(), NOW())',
             $this->table,
@@ -195,6 +199,7 @@ final class CartasExpedidasRepository
             $statement->bindValue(':idempotency_key', $row['idempotency_key']);
             $statement->bindValue(':idempotency_payload_hash', $row['idempotency_payload_hash']);
         }
+        if (array_key_exists('prioridade_tarefa', $row)) $statement->bindValue(':prioridade_tarefa', $row['prioridade_tarefa']);
         $statement->execute();
 
         return (string) $row['id'];
@@ -256,7 +261,7 @@ final class CartasExpedidasRepository
     {
         $allowed = [
             'finalidade', 'prazo_dias', 'comarca_destino_id', 'cidade_destino', 'uf_destino',
-            'numero_processo_destino', 'vara_destino_id', 'vara_destino_nome', 'status', 'observacoes',
+            'numero_processo_destino', 'vara_destino_id', 'vara_destino_nome', 'status', 'observacoes', 'prioridade_tarefa',
         ];
         $set = [];
         $params = [':id' => $id];
