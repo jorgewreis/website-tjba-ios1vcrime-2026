@@ -70,3 +70,9 @@
 .ficha-editor.card-page #process-responsible-sector-select { width:min(100%,19rem); }
 
 .ficha-no-painel .ficha-shell { padding-top:clamp(16px,2.4vw,34px); }
+
+/* Reduz ligeiramente a tipografia só na ficha inserida no card. */
+.ficha-no-painel .ficha-processo { font-size:.9375rem; }
+.ficha-no-painel .ficha-header h1 { font-size:clamp(22px,3.4vw,32px); }
+.ficha-no-painel .ficha-numero { font-size:clamp(14px,2.1vw,20px); }
+.ficha-no-painel :is(.ficha-secao,.ficha-editor) h2 { font-size:clamp(16px,2vw,20px); }

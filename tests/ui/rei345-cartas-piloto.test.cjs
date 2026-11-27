@@ -71,7 +71,8 @@ const render=(route,role,embed=false,id=null,paginada=false,pageNumber=1,status=
       'css/modules/cartorio/cartas-expedidas-piloto.css',
       'js/modules/cartorio/cartas-expedidas/piloto.js',
       'js/modules/cartorio/cartas-expedidas/piloto-form.js',
-      'css/shared/processo-ficha-modal.css','js/shared/processo-ficha-modal.js'
+      'css/shared/processo-ficha-modal.css','js/shared/processo-ficha-modal.js',
+      'css/shared/painel-deslizante.css','js/shared/painel-deslizante.js'
     ]) copy('public/assets/'+f);
     // Verifica a renderização real da tag e do template, também sem navegador.
     for (const [nivel, rotulo] of [[null,'Segredo de Justiça'],[1,'Segredo de Justiça'],[2,'Sigilo Mínimo'],[3,'Sigilo Médio'],[4,'Sigilo Intenso'],[5,'Sigilo Absoluto']]) {

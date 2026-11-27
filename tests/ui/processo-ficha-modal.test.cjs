@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const {chromium} = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const root = path.resolve(__dirname,'../..');
 const ficha = '/frame.php?page=consultaprocessosedit&id=PROC-FICTICIO';
-const modalAssets = '<link rel="stylesheet" href="/assets/css/shared/processo-ficha-modal.css"><script src="/assets/js/shared/processo-ficha-modal.js" defer></script>';
+const modalAssets = '<link rel="stylesheet" href="/assets/css/shared/painel-deslizante.css"><script src="/assets/js/shared/painel-deslizante.js" defer></script><link rel="stylesheet" href="/assets/css/shared/processo-ficha-modal.css"><script src="/assets/js/shared/processo-ficha-modal.js" defer></script>';
 const doc = (head, body) => '<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1">' + head + '<body>' + body + '</body>';
 (async () => {
     const nav = fs.readFileSync(path.join(root,'public/home.php'),'utf8');
