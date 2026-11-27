@@ -15,6 +15,7 @@ require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 require_once __DIR__ . '/../../helpers/ProcessResponsibleSectorDefault.php';
 require_once __DIR__ . '/../../helpers/ProcessoSetorAuthorization.php';
 require_once __DIR__ . '/../../repositories/ProcessoNivelSigiloRepository.php';
+require_once __DIR__ . '/../../repositories/ProcessoVaraRepository.php';
 require_once __DIR__ . '/../../helpers/ProcessoFicha.php';
 require_once __DIR__ . '/../../access/AccessEvaluator.php';
 
@@ -117,11 +118,23 @@ $origemClasseFicha = $processo['classe_origem'] ?? null;
 $classeProtegidaFicha = $origemClasseFicha === 'datajud'
     || (array_key_exists('classe_origem', $processo) && $classeNomeAtual !== '' && $origemClasseFicha !== 'manual');
 $podeRegistrarNivel = false;
+$nivelDisponivel = false;
 $nivelConfirmado = null;
+$varaDisponivel = false;
+$varaLocal = null;
+try {
+    $repoVara = new ProcessoVaraRepository($connection);
+    $varaDisponivel = $repoVara->disponivel();
+    if ($varaDisponivel) $varaLocal = $repoVara->porProcesso($processoIdFicha);
+} catch (Throwable $erroVara) {
+    $varaDisponivel = false;
+    error_log('Não foi possível consultar o registro local da Vara.');
+}
 if ($sigilosoFicha && $acessoSetorial) {
     try {
         $repoNivel = new ProcessoNivelSigiloRepository($connection);
-        if ($repoNivel->disponivel()) {
+        $nivelDisponivel = $repoNivel->disponivel();
+        if ($nivelDisponivel) {
             $podeRegistrarNivel = $podeAtribuirSetorResponsavel;
             $nivelConfirmado = $repoNivel->porIds([$processoIdFicha])[$processoIdFicha] ?? null;
         }
@@ -166,8 +179,36 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
         <div class="ficha-editor card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">
         <input type="hidden" id="proc-id" value="<?php echo htmlspecialchars((string) ($processo['id'] ?? ''), ENT_QUOTES); ?>">
+        <section class="ficha-secao ficha-editor-summary" aria-labelledby="ficha-editar-dados">
+            <h2 id="ficha-editar-dados">Dados do processo</h2>
+            <dl class="ficha-campos">
+                <dt>Segmento</dt><dd><?= $eFicha($origemFicha['segmento'] ?? 'Não informado') ?></dd>
+                <dt>Tribunal</dt><dd><?= $eFicha($origemFicha['tribunal'] ?? 'Não informado') ?></dd>
+                <dt>Comarca</dt><dd><?= $eFicha($origemFicha['comarca'] !== null
+                    ? $origemFicha['unidade'] . ' - ' . $origemFicha['comarca'] : ($origemFicha['unidade'] ?? 'Não identificada')) ?></dd>
+                <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($varaLocal ?? 'Não informada') ?></dd>
+                <dt>Classe</dt><dd><?= $eFicha($classeNomeAtual !== '' ? $classeNomeAtual : 'Não informada') ?></dd>
+                <dt>Assuntos</dt><dd id="proc-assuntos-resumo"><?= $eFicha(implode('; ', array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao')))) ?: 'Não informados') ?></dd>
+                <dt>Sigilo</dt><dd data-ficha-sigilo<?= $temNivelFicha ? ' data-ficha-sigilo-local' : '' ?>><?= $eFicha($rotuloSigiloFicha) ?></dd>
+                <dt>Setor ativo</dt><dd><?= $eFicha($setorNomeExibido) ?></dd>
+                <dt>Prioridades</dt><dd><?= $eFicha(implode('; ', array_filter(array_column($prioridadesFichaEstado['prioridades'] ?? [], 'label'))) ?: 'Nenhuma registrada') ?></dd>
+            </dl>
+            <?php if ($acessoSetorial && $varaDisponivel): ?>
+            <form id="processo-vara-form" class="ficha-edicao-campo" data-process-id="<?= $eFicha($processoIdFicha) ?>">
+                <label for="processo-vara-local">Vara local (quando não informada pelo DataJud)</label>
+                <div class="display-flex row row-full flex-wrap align-end">
+                    <input type="text" id="processo-vara-local" class="height-md" maxlength="<?= ProcessoVaraRepository::TAMANHO_MAXIMO ?>" value="<?= $eFicha($varaLocal ?? '') ?>">
+                    <button type="submit" class="btn btn-primary height-md">Salvar Vara local</button>
+                </div>
+                <p class="ficha-secundario">Deixe em branco para remover a anotação local. A informação do DataJud tem precedência.</p>
+                <p id="processo-vara-status" role="status"></p>
+            </form>
+            <?php elseif ($acessoSetorial): ?>
+                <p class="ficha-secundario ficha-edicao-campo">Registro local da Vara indisponível até a atualização do banco.</p>
+            <?php endif; ?>
+        </section>
         <?php if ($podeRegistrarNivel): ?>
-        <section class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" aria-labelledby="processo-sigilo-titulo">
+        <section class="ficha-secao ficha-editor-summary" aria-labelledby="processo-sigilo-titulo">
             <h2 id="processo-sigilo-titulo">Nível de sigilo</h2>
             <p id="processo-sigilo-orientacao">Registre o nível conferido no PJe. Não altera as permissões de acesso.</p>
             <form id="processo-nivel-sigilo-form" class="display-flex row row-full flex-wrap align-end gap-y-md" data-process-id="<?= htmlspecialchars($processoIdFicha, ENT_QUOTES) ?>">
@@ -184,6 +225,10 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             </form>
             <p id="processo-nivel-sigilo-status" role="status" aria-live="polite"></p>
         </section>
+        <?php elseif ($sigilosoFicha): ?>
+            <p class="ficha-secao ficha-secundario"><?= !$acessoSetorial || !$adminFicha
+                ? 'Somente a administração com acesso ao setor pode registrar o nível de sigilo.'
+                : 'Registro do nível de sigilo indisponível. O processo permanece sigiloso.' ?></p>
         <?php endif; ?>
         <?php if ($podeAtribuirSetorResponsavel): ?>
         <section class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" aria-labelledby="responsible-sector-title">
@@ -248,7 +293,7 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                 <?php if (!$classeProtegidaFicha): ?>
                 <div class="col">
                     <label for="proc-classe-codigo"><?php echo $classeNomeAtual !== '' ? 'Alterar classe processual' : 'Incluir classe processual'; ?></label>
-                    <input type="text" class="width-300 height-md" id="proc-classe-codigo" placeholder="Ex.: 283" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
+                    <input type="text" class="width-300 height-md" id="proc-classe-codigo" inputmode="numeric" placeholder="Ex.: 283" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
                 </div>
                 <?php endif; ?>
             </div>
@@ -257,22 +302,14 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
                     ? 'Classe sincronizada com o DataJud. Só outra sincronização pode alterá-la.'
                     : 'Origem da classe não confirmada. O valor existente fica protegido até confirmação por sincronização.' ?></p>
             <?php else: ?>
-            <div class="display-flex col col-full gap-y-md" id="proc-classe-resultado" style="display: none;">
-                <div class="display-flex row row-full flex-wrap align-end gap-y-md" id="proc-classe-bloco-existente" style="display: none; gap: 12px;">
-                    <div class="col">
-                        <label for="proc-classe-nome-existente">Classe encontrada no banco</label>
-                        <input type="text" class="width-700 height-md" id="proc-classe-nome-existente" readonly>
-                    </div>
-                    <button type="button" class="btn btn-primary height-md" id="btn-proc-classe-vincular"><?php echo $classeNomeAtual !== '' ? 'Alterar classe' : 'Incluir classe'; ?></button>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md">
+                <div class="col">
+                    <label for="proc-classe-nome-existente">Nome da classe no catálogo</label>
+                    <input type="text" class="width-700 height-md" id="proc-classe-nome-existente" readonly>
                 </div>
-                <div class="display-flex row row-full flex-wrap align-end gap-y-md" id="proc-classe-bloco-novo" style="display: none; gap: 12px;">
-                    <div class="col">
-                        <label for="proc-classe-nome-novo">Nome da classe (não cadastrada)</label>
-                        <input type="text" class="width-700 height-md" id="proc-classe-nome-novo" maxlength="200" placeholder="Informe o nome para cadastrar a classe">
-                    </div>
-                    <button type="button" class="btn btn-primary height-md" id="btn-proc-classe-cadastrar">Cadastrar e vincular</button>
-                </div>
+                <button type="button" class="btn btn-primary height-md" id="btn-proc-classe-vincular" disabled>Salvar classe</button>
             </div>
+            <p id="proc-classe-status" class="ficha-secundario" role="status"></p>
             <?php endif; ?>
         </div>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
@@ -283,7 +320,7 @@ $partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
             <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="processo-assunto-codigo">Código do assunto</label>
-                    <input type="text" id="processo-assunto-codigo" class="height-md" placeholder="Ex.: 10247" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
+                    <input type="text" id="processo-assunto-codigo" inputmode="numeric" class="height-md" placeholder="Ex.: 10247" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
                 </div>
                 <div class="col width-700">
                     <label for="processo-assunto-descricao">Descrição do assunto</label>

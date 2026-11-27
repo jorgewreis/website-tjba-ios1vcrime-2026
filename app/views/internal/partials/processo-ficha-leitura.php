@@ -28,7 +28,7 @@
                             : ($origemFicha['unidade'] ?? 'Não identificada');
                         echo $eFicha($origemRotulo);
                     ?></dd>
-                    <dt>Vara</dt><dd data-ficha-vara>Não informada</dd>
+                    <dt>Vara</dt><dd data-ficha-vara><?= $eFicha($varaLocal ?? 'Não informada') ?></dd>
                     <dt>Classe</dt><dd data-ficha-classe><?= $eFicha($classeNomeAtual ?: 'Não informada') ?></dd>
                     <dt>Assuntos</dt><dd data-ficha-assuntos><?php
                         $rotulosAssuntos = array_values(array_unique(array_filter(array_column($assuntosFicha, 'assunto_descricao'))));

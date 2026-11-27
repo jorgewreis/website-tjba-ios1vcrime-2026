@@ -43,30 +43,6 @@
         }
     }
 
-    function resetEstado() {
-        const resultado = global.document.getElementById('proc-classe-resultado');
-        const blocoExistente = global.document.getElementById('proc-classe-bloco-existente');
-        const blocoNovo = global.document.getElementById('proc-classe-bloco-novo');
-        const inputExistente = global.document.getElementById('proc-classe-nome-existente');
-        const inputNovo = global.document.getElementById('proc-classe-nome-novo');
-
-        if (resultado) {
-            resultado.style.display = 'none';
-        }
-        if (blocoExistente) {
-            blocoExistente.style.display = 'none';
-        }
-        if (blocoNovo) {
-            blocoNovo.style.display = 'none';
-        }
-        if (inputExistente) {
-            inputExistente.value = '';
-        }
-        if (inputNovo) {
-            inputNovo.value = '';
-        }
-    }
-
     function setBusy(button, busy) {
         if (!button) {
             return;
@@ -83,170 +59,77 @@
         }
     }
 
-    var BUSCA_CLASSE_DEBOUNCE_MS = 1000;
-    var buscaClasseTimer = null;
-
-    function clearBuscaClasseTimer() {
-        if (buscaClasseTimer !== null) {
-            global.clearTimeout(buscaClasseTimer);
-            buscaClasseTimer = null;
-        }
-    }
-
-    function scheduleBuscarClasse() {
-        clearBuscaClasseTimer();
-        const inputCodigo = global.document.getElementById('proc-classe-codigo');
-        const codigo = inputCodigo ? String(inputCodigo.value || '').trim() : '';
-        if (codigo === '') {
-            return;
-        }
-        buscaClasseTimer = global.setTimeout(function () {
-            buscaClasseTimer = null;
-            buscarClasse();
-        }, BUSCA_CLASSE_DEBOUNCE_MS);
-    }
-
-    function buscarClasse() {
-        const inputCodigo = global.document.getElementById('proc-classe-codigo');
-        const btnBuscar = global.document.getElementById('btn-proc-classe-buscar');
-        const codigo = inputCodigo ? String(inputCodigo.value || '').trim() : '';
-
-        if (codigo === '') {
-            notify('error', 'Código obrigatório', 'Informe o código da classe para consultar.');
-            if (inputCodigo) {
-                inputCodigo.focus();
+    function iniciarClasse() {
+        const input = global.document.getElementById('proc-classe-codigo');
+        const nome = global.document.getElementById('proc-classe-nome-existente');
+        const salvar = global.document.getElementById('btn-proc-classe-vincular');
+        const status = global.document.getElementById('proc-classe-status');
+        const id = global.document.getElementById('proc-id')?.value;
+        if (!input || !nome || !salvar || !status || !id) return;
+        let timer, consulta = 0, codigoVerificado = '', gravando = false;
+        async function buscar() {
+            global.clearTimeout(timer);
+            const codigo = input.value.trim(), atual = ++consulta;
+            codigoVerificado = '';
+            salvar.disabled = true;
+            nome.value = '';
+            if (!/^[0-9]{1,20}$/.test(codigo)) {
+                status.textContent = codigo ? 'Informe um código numérico.' : '';
+                return;
             }
-            return;
-        }
-
-        resetEstado();
-        setBusy(btnBuscar, true);
-
-        global.fetch('/api/classes/find-by-codigo.php?codigo=' + encodeURIComponent(codigo), {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' }
-        })
-            .then(function (response) {
-                return response.json().then(function (json) {
-                    return { ok: response.ok, data: json };
-                });
-            })
-            .then(function (result) {
-                setBusy(btnBuscar, false);
-
-                if (!result.ok) {
-                    const msg = (result.data && result.data.error) ? result.data.error : 'Não foi possível consultar a classe.';
-                    notify('error', 'Erro', msg);
+            status.textContent = 'Consultando catálogo…';
+            try {
+                const resposta = await global.fetch('/api/classes/find-by-codigo.php?codigo=' + encodeURIComponent(codigo),
+                    {credentials:'same-origin', headers:{Accept:'application/json'}});
+                const dados = await resposta.json();
+                if (atual !== consulta || input.value.trim() !== codigo) return;
+                if (!resposta.ok) throw new Error('Catálogo indisponível.');
+                if (!dados.classe?.nome) {
+                    status.textContent = 'Código de classe não encontrado no catálogo.';
                     return;
                 }
-
-                const resultado = global.document.getElementById('proc-classe-resultado');
-                if (resultado) {
-                    resultado.style.display = '';
-                }
-
-                if (result.data && result.data.classe) {
-                    const blocoExistente = global.document.getElementById('proc-classe-bloco-existente');
-                    const inputExistente = global.document.getElementById('proc-classe-nome-existente');
-                    if (inputExistente) {
-                        inputExistente.value = String(result.data.classe.nome || '');
-                    }
-                    if (blocoExistente) {
-                        blocoExistente.style.display = '';
-                    }
-                    notify('info', 'Classe encontrada', 'Confirme para vincular ao processo.');
-                } else {
-                    const blocoNovo = global.document.getElementById('proc-classe-bloco-novo');
-                    if (blocoNovo) {
-                        blocoNovo.style.display = '';
-                    }
-                    const inputNovo = global.document.getElementById('proc-classe-nome-novo');
-                    if (inputNovo) {
-                        inputNovo.focus();
-                    }
-                    notify('info', 'Classe não encontrada', 'Informe o nome para cadastrar e vincular ao processo.');
-                }
-            })
-            .catch(function () {
-                setBusy(btnBuscar, false);
-                notify('error', 'Erro', 'Falha de comunicação ao consultar a classe.');
-            });
-    }
-
-    function enviarAtualizacao(payload, button, mensagemSucesso) {
-        const processoId = (global.document.getElementById('proc-id') || {}).value || '';
-        if (!processoId) {
-            notify('error', 'Processo inválido', 'Identificador do processo não encontrado.');
-            return;
+                nome.value = dados.classe.nome;
+                codigoVerificado = codigo;
+                salvar.disabled = gravando;
+                status.textContent = '';
+            } catch (erro) {
+                if (atual === consulta) status.textContent = 'Não foi possível consultar o catálogo de classes.';
+            }
         }
-
-        setBusy(button, true);
-        const body = Object.assign({ processo_id: processoId }, payload || {});
-
-        global.fetch('/api/processos/update-classe.php', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(body)
-        })
-            .then(function (response) {
-                return response.json().then(function (json) {
-                    return { ok: response.ok, data: json };
+        input.addEventListener('input', () => {
+            ++consulta;
+            global.clearTimeout(timer);
+            nome.value = '';
+            status.textContent = '';
+            salvar.disabled = true;
+            codigoVerificado = '';
+            timer = global.setTimeout(buscar, 1000);
+        });
+        input.addEventListener('keydown', event => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault(); buscar();
+        });
+        salvar.addEventListener('click', async () => {
+            if (gravando || !codigoVerificado || codigoVerificado !== input.value.trim()) return;
+            gravando = true;
+            setBusy(salvar, true);
+            try {
+                const resposta = await global.fetch('/api/processos/update-classe.php', {
+                    method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({processo_id:id, codigo:codigoVerificado})
                 });
-            })
-            .then(function (result) {
-                if (!result.ok) {
-                    setBusy(button, false);
-                    const msg = (result.data && result.data.error) ? result.data.error : 'Não foi possível atualizar a classe do processo.';
-                    notify('error', 'Erro', msg);
-                    return;
-                }
-
-                queuePostReloadToast('success', 'Classe atualizada', mensagemSucesso || 'Classe vinculada ao processo com sucesso.');
+                const dados = await resposta.json();
+                if (!resposta.ok || dados.success !== true) throw new Error(dados.error || 'Classe não atualizada.');
+                queuePostReloadToast('success', 'Classe atualizada', 'Classe vinculada ao processo.');
                 global.location.reload();
-            })
-            .catch(function () {
-                setBusy(button, false);
-                notify('error', 'Erro', 'Falha de comunicação ao atualizar a classe.');
-            });
-    }
-
-    function vincularExistente() {
-        const inputCodigo = global.document.getElementById('proc-classe-codigo');
-        const codigo = inputCodigo ? String(inputCodigo.value || '').trim() : '';
-        if (codigo === '') {
-            notify('error', 'Código obrigatório', 'Informe o código da classe.');
-            return;
-        }
-
-        const button = global.document.getElementById('btn-proc-classe-vincular');
-        enviarAtualizacao({ codigo: codigo }, button, 'Classe vinculada ao processo.');
-    }
-
-    function cadastrarNova() {
-        const inputCodigo = global.document.getElementById('proc-classe-codigo');
-        const inputNome = global.document.getElementById('proc-classe-nome-novo');
-        const codigo = inputCodigo ? String(inputCodigo.value || '').trim() : '';
-        const nome = inputNome ? String(inputNome.value || '').trim() : '';
-
-        if (codigo === '') {
-            notify('error', 'Código obrigatório', 'Informe o código da classe.');
-            return;
-        }
-        if (nome === '') {
-            notify('error', 'Nome obrigatório', 'Informe o nome da classe para cadastrar.');
-            if (inputNome) {
-                inputNome.focus();
+            } catch (erro) {
+                status.textContent = erro.message || 'Não foi possível atualizar a classe.';
+            } finally {
+                gravando = false;
+                setBusy(salvar, false);
+                salvar.disabled = !codigoVerificado || codigoVerificado !== input.value.trim();
             }
-            return;
-        }
-
-        const button = global.document.getElementById('btn-proc-classe-cadastrar');
-        enviarAtualizacao({ codigo: codigo, nome: nome }, button, 'Classe cadastrada e vinculada ao processo.');
+        });
     }
 
     async function sincronizarFichaDataJud() {
@@ -288,38 +171,38 @@
         }
     }
 
+    function iniciarVaraLocal() {
+        const form = global.document.getElementById('processo-vara-form');
+        if (!form) return;
+        const campo = form.querySelector('#processo-vara-local');
+        const botao = form.querySelector('button[type="submit"]');
+        const status = form.querySelector('#processo-vara-status');
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            if (botao.disabled) return;
+            setBusy(botao, true);
+            status.textContent = 'Salvando Vara local…';
+            try {
+                const resposta = await global.fetch('/api/processos/vara.php', {
+                    method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({processo_id:form.dataset.processId, vara:campo.value})
+                });
+                const dados = await resposta.json();
+                if (!resposta.ok || dados.success !== true) throw new Error(dados.error || 'Vara não confirmada.');
+                global.location.reload();
+            } catch (erro) {
+                status.textContent = erro.message || 'Não foi possível salvar a Vara.';
+                setBusy(botao, false);
+            }
+        });
+    }
+
     function initialize() {
         flushPostReloadToast();
 
         global.document.getElementById('btn-proc-datajud-sync')?.addEventListener('click', sincronizarFichaDataJud);
-        global.document.getElementById('btn-proc-classe-buscar')?.addEventListener('click', buscarClasse);
-        global.document.getElementById('btn-proc-classe-vincular')?.addEventListener('click', vincularExistente);
-        global.document.getElementById('btn-proc-classe-cadastrar')?.addEventListener('click', cadastrarNova);
-
-        const inputCodigo = global.document.getElementById('proc-classe-codigo');
-        if (inputCodigo) {
-            inputCodigo.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    clearBuscaClasseTimer();
-                    buscarClasse();
-                }
-            });
-            inputCodigo.addEventListener('input', function () {
-                resetEstado();
-                scheduleBuscarClasse();
-            });
-        }
-
-        const inputNomeNovo = global.document.getElementById('proc-classe-nome-novo');
-        if (inputNomeNovo) {
-            inputNomeNovo.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    cadastrarNova();
-                }
-            });
-        }
+        iniciarClasse();
+        iniciarVaraLocal();
     }
 
     App.ProcessosEdit = App.ProcessosEdit || {};

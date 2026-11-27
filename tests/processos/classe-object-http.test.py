@@ -29,7 +29,9 @@ with tempfile.TemporaryDirectory(prefix='rei76-classe-objeto-') as tmp:
     $_SESSION = ['id_usuario'=>'synthetic'];
   }
 }''', encoding='utf-8')
-    (base / 'app/helpers/Conection.php').write_text('''<?php class Conection { static function getInstance(){return new self;} function getConnection(){return new stdClass;} }''', encoding='utf-8')
+    (base / 'app/helpers/Conection.php').write_text('''<?php class Conection { static function getInstance(){return new self;} function getConnection(){return new class { private bool $active=false; function beginTransaction(){return $this->active=true;} function inTransaction(){return $this->active;} function commit(){$this->active=false; return true;} function rollBack(){$this->active=false; return true;} };} }''', encoding='utf-8')
+    (base / 'app/helpers/ApiErrorReporter.php').write_text('<?php final class ApiErrorReporter { static function register(...$a) {} }', encoding='utf-8')
+    (base / 'app/helpers/ProcessoSetorAuthorization.php').write_text('<?php final class ProcessoSetorAuthorization { static function canModifyProcess(...$a) { return true; } }', encoding='utf-8')
     (base / 'app/helpers/BootstrapHelper.php').write_text('<?php', encoding='utf-8')
     (base / 'app/helpers/CnjValidator.php').write_text('''<?php class CnjValidator { static function digits20OrThrow(string $n): string { if ($n !== '12345678901234567890') throw new InvalidArgumentException('CNJ inválido'); return $n; } }''', encoding='utf-8')
     (base / 'app/repositories/ProcessosRepository.php').write_text('''<?php class ProcessosRepository {
@@ -37,7 +39,7 @@ with tempfile.TemporaryDirectory(prefix='rei76-classe-objeto-') as tmp:
   function findByNumero(string $n): ?array { return ($_SERVER['HTTP_X_TEST_PROCESS'] ?? 'exists') === 'missing' ? null : ['id'=>'P1','numero_processo'=>$n]; }
   function findById(string $id): ?array { return ($_SERVER['HTTP_X_TEST_PROCESS'] ?? 'exists') === 'missing' ? null : ['id'=>$id,'numero_processo'=>'12345678901234567890']; }
 }''', encoding='utf-8')
-    (base / 'app/services/ProcessoClasseSyncService.php').write_text('''<?php class ProcessoClasseSyncService {
+    (base / 'app/services/ProcessoClasseSyncService.php').write_text('''<?php class ClassesRepository { function __construct($db) {} function findByCodigo($codigo){return $codigo==="42"?["id"=>"C"]:null;} } class ProcessoClasseSyncService {
   function __construct($db) {}
   function readByNumero20(string $n): array { file_put_contents(__DIR__.'/read-called','1'); return ['processo'=>['numero_processo'=>$n],'classe'=>null]; }
   function updateClasseManual(string $id,string $c,?string $n): array { file_put_contents(__DIR__.'/update-called','1'); return ['action'=>'linked','processo_id'=>$id,'classe'=>['codigo'=>$c,'nome'=>$n ?? '']]; }
@@ -48,7 +50,7 @@ with tempfile.TemporaryDirectory(prefix='rei76-classe-objeto-') as tmp:
     env={k:os.environ[k] for k in ('PATH','SYSTEMROOT','WINDIR','TEMP','TMP') if k in os.environ}
     server=subprocess.Popen(['php','-S',f'127.0.0.1:{port}','-t',str(base/'public')],env=env,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     read_marker=base/'app/services/read-called'; update_marker=base/'app/services/update-called'
-    def request(endpoint, method, process='exists', profile='internal', origin='ok'):
+    def request(endpoint, method, process='exists', profile='internal', origin='ok', payload=None):
         read_marker.unlink(missing_ok=True); update_marker.unlink(missing_ok=True)
         headers={'X-Test-Profile':profile,'X-Test-Process':process}
         url=f'http://127.0.0.1:{port}/api/processos/{endpoint}'
@@ -57,7 +59,7 @@ with tempfile.TemporaryDirectory(prefix='rei76-classe-objeto-') as tmp:
             data=None
         else:
             headers.update({'Origin':f'http://127.0.0.1:{port}','X-Test-Origin':origin,'Content-Type':'application/json'})
-            data=json.dumps({'processo_id':'P1','codigo':'42','nome':'Classe'}).encode()
+            data=json.dumps(payload if payload is not None else {'processo_id':'P1','codigo':'42'}).encode()
         req=urllib.request.Request(url,data=data,headers=headers,method=method)
         try:
             with urllib.request.urlopen(req,timeout=3) as response: return response.status,json.loads(response.read())
@@ -79,6 +81,8 @@ with tempfile.TemporaryDirectory(prefix='rei76-classe-objeto-') as tmp:
         assert request('classe-read.php','POST')[0]==405 and not read_marker.exists()
         assert request('update-classe.php','POST',process='missing')[0]==404 and not update_marker.exists()
         assert request('update-classe.php','POST')[0]==200 and update_marker.exists()
+        assert request('update-classe.php','POST',payload={'processo_id':'P1','codigo':'42','nome':'Nome digitado'})[0]==400 and not update_marker.exists()
+        assert request('update-classe.php','POST',payload={'processo_id':'P1','codigo':'43'})[0]==400 and not update_marker.exists()
         assert request('update-classe.php','POST',profile='external')[0]==403 and not update_marker.exists()
         assert request('update-classe.php','POST',origin='bad')[0]==403 and not update_marker.exists()
     finally:
