@@ -15,35 +15,87 @@ require_once __DIR__ . '/../../access/ProfileNormalizer.php';
 require_once __DIR__ . '/../../helpers/ProcessResponsibleSectorDefault.php';
 require_once __DIR__ . '/../../helpers/ProcessoSetorAuthorization.php';
 require_once __DIR__ . '/../../repositories/ProcessoNivelSigiloRepository.php';
+require_once __DIR__ . '/../../helpers/ProcessoFicha.php';
+require_once __DIR__ . '/../../access/AccessEvaluator.php';
 
-$id = trim((string) ($_GET['id'] ?? ''));
+$id = is_string($_GET['id'] ?? null) ? trim($_GET['id']) : '';
 if ($id === '') { header('Location: /frame.php?page=consultaprocessos'); exit; }
 $connection = Conection::getInstance()->getConnection();
+header('Cache-Control: private, no-store');
+
+$adminFicha = in_array('ADMIN', ProfileNormalizer::normalize($userPerfils ?? []), true);
+$acessoSetorial = false;
+try {
+    $acessoSetorial = ProcessoSetorAuthorization::canAccessProcess(
+        $connection, (string) ($_SESSION['id_usuario'] ?? ''), $id, false
+    );
+} catch (Throwable $erroAcesso) {
+    error_log('Não foi possível verificar o acesso setorial à ficha do processo.');
+}
+$podeEditarFicha = $acessoSetorial || $adminFicha;
+$modoEdicao = ($_GET['modo'] ?? '') === 'editar';
+if ($modoEdicao && !$podeEditarFicha) {
+    http_response_code(403);
+    require __DIR__ . '/errors/403.php';
+    return;
+}
 $service = new ConsultaProcessosService($connection);
 $processo = $service->get($id);
 if ($processo === null) { header('Location: /frame.php?page=consultaprocessos'); exit; }
+// Leitura interna segue o acesso da rota; setor é condição de mutação, não de leitura.
+$sigilosoFicha = !empty($processo['sigiloso']);
+$podeEditarPrioridadesFicha = $acessoSetorial && AccessEvaluator::canAccessPage('salapautaedit', $userPerfils ?? []);
+$podeEditarVinculoFicha = $acessoSetorial && AccessEvaluator::canAccessPage('processospartesedit', $userPerfils ?? []);
+$podeEditarPessoaFicha = $acessoSetorial && AccessEvaluator::canAccessPage('consultapartesedit', $userPerfils ?? []);
 
-$podeAtribuirSetorResponsavel = in_array('ADMIN', ProfileNormalizer::normalize($userPerfils ?? []), true);
+$eFicha = static fn(mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+$origemFicha = ProcessoFicha::origem((string) ($processo['numero_processo'] ?? ''));
+$retornoFicha = is_string($_GET['voltar'] ?? null) ? ProcessoFicha::retorno($_GET['voltar']) : null;
+if ($retornoFicha === null) {
+    $referer = parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''));
+    $host = parse_url((appIsHttpsRequest() ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? ''));
+    if (is_array($referer) && is_array($host) && isset($referer['host'], $host['host'])
+        && strcasecmp($referer['host'], $host['host']) === 0 && ($referer['scheme'] ?? '') === ($host['scheme'] ?? '')
+        && ($referer['port'] ?? null) === ($host['port'] ?? null) && !isset($referer['user']) && !isset($referer['pass'])) {
+        $retornoFicha = ProcessoFicha::retorno(($referer['path'] ?? '') . '?' . ($referer['query'] ?? ''));
+    }
+}
+$paramsFicha = ['page'=>'consultaprocessosedit', 'id'=>$id];
+if ($retornoFicha !== null) $paramsFicha['voltar'] = $retornoFicha;
+$linkLeituraFicha = '/frame.php?' . http_build_query($paramsFicha, '', '&', PHP_QUERY_RFC3986);
+$linkEdicaoFicha = $linkLeituraFicha . '&modo=editar';
+$linkListaFicha = $retornoFicha ?? '/frame.php?page=consultaprocessos';
+
+$podeAtribuirSetorResponsavel = $modoEdicao && $adminFicha;
 $setoresResponsaveis = [];
 $setorResponsavelAtual = '';
 $setorCartorioPadrao = null;
 $erroSetorResponsavel = '';
-if ($podeAtribuirSetorResponsavel) {
-    try {
-        $stmtSetorAtual = $connection->prepare(
-            'SELECT p.`id_setor_responsavel`, s.`nome` AS `setor_nome`, s.`ativo` AS `setor_ativo` '
-            . 'FROM `processos` p LEFT JOIN `setores` s ON s.`id_setor` = p.`id_setor_responsavel` WHERE p.`id` = :id LIMIT 1'
-        );
-        $stmtSetorAtual->execute([':id' => (string) ($processo['id'] ?? '')]);
-        $rowSetorAtual = $stmtSetorAtual->fetch(PDO::FETCH_ASSOC) ?: [];
-        $setorResponsavelAtual = trim((string) ($rowSetorAtual['id_setor_responsavel'] ?? ''));
+$setorNomeExibido = 'Não informado';
+try {
+    $stmtSetorAtual = $connection->prepare(
+        'SELECT p.`id_setor_responsavel`, s.`nome` AS `setor_nome`, s.`ativo` AS `setor_ativo` '
+        . 'FROM `processos` p LEFT JOIN `setores` s ON s.`id_setor` = p.`id_setor_responsavel` WHERE p.`id` = :id LIMIT 1'
+    );
+    $stmtSetorAtual->execute([':id' => (string) ($processo['id'] ?? '')]);
+    $rowSetorAtual = $stmtSetorAtual->fetch(PDO::FETCH_ASSOC) ?: [];
+    $setorResponsavelAtual = trim((string) ($rowSetorAtual['id_setor_responsavel'] ?? ''));
+    if ($setorResponsavelAtual === '' || $podeAtribuirSetorResponsavel) {
         $setorCartorioPadrao = ProcessResponsibleSectorDefault::resolve($connection);
+    }
+    if ($setorResponsavelAtual === '') {
+        $setorNomeExibido = $setorCartorioPadrao !== null ? 'Cartório (padrão)' : 'Não informado';
+    } elseif (!empty($rowSetorAtual['setor_nome'])) {
+        $setorNomeExibido = (string) $rowSetorAtual['setor_nome'];
+        if ((int) ($rowSetorAtual['setor_ativo'] ?? 0) !== 1) $setorNomeExibido .= ' (inativo)';
+    }
+    if ($podeAtribuirSetorResponsavel) {
         $stmtSetores = $connection->query('SELECT `id_setor`, `nome` FROM `setores` WHERE `ativo` = 1 ORDER BY `nome` ASC');
         $setoresResponsaveis = $stmtSetores ? $stmtSetores->fetchAll(PDO::FETCH_ASSOC) : [];
-    } catch (Throwable $error) {
-        error_log('Não foi possível carregar setores para atribuição ADMIN (' . get_class($error) . ').');
-        $erroSetorResponsavel = 'Não foi possível carregar os setores agora.';
     }
+} catch (Throwable $error) {
+    error_log('Não foi possível carregar o setor na ficha (' . get_class($error) . ').');
+    $erroSetorResponsavel = 'Não foi possível carregar os setores agora.';
 }
 
 $partes = $processo['partes'] ?? [];
@@ -55,25 +107,34 @@ $nMenoresPauta = $processoIdFicha !== ''
 $prioridadesFichaEstado = $processoIdFicha !== ''
     ? (new ProcessoPrioridadesService($connection))->getEstadoEdicaoPorProcessoId($processoIdFicha, $nMenoresPauta)
     : null;
-$partesInstituicoesRepoFicha = new PartesInstituicoesRepository($connection);
-$partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
+
 $instituicoesPorParteFicha = [];
 $documentosPorParteFicha = [];
 $classeNomeAtual = trim((string) ($processo['classe_nome'] ?? ''));
 $podeRegistrarNivel = false;
 $nivelConfirmado = null;
-if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
+if ($sigilosoFicha && $acessoSetorial) {
     try {
         $repoNivel = new ProcessoNivelSigiloRepository($connection);
-        $podeRegistrarNivel = $repoNivel->disponivel() && ProcessoSetorAuthorization::canAccessProcess(
-            $connection, (string) ($_SESSION['id_usuario'] ?? ''), $processoIdFicha, false
-        );
-        if ($podeRegistrarNivel) $nivelConfirmado = $repoNivel->porIds([$processoIdFicha])[$processoIdFicha] ?? null;
+        if ($repoNivel->disponivel()) {
+            $podeRegistrarNivel = $podeAtribuirSetorResponsavel;
+            $nivelConfirmado = $repoNivel->porIds([$processoIdFicha])[$processoIdFicha] ?? null;
+        }
     } catch (Throwable $erroNivel) {
         $podeRegistrarNivel = false;
         error_log('Não foi possível carregar a classificação local de sigilo.');
     }
 }
+$rotuloSigiloFicha = $sigilosoFicha
+    ? (ProcessoNivelSigilo::ROTULOS[$nivelConfirmado] ?? 'Sigiloso · nível não informado')
+    : 'Não informado';
+$temNivelFicha = $sigilosoFicha;
+if (!$modoEdicao) {
+    require __DIR__ . '/partials/processo-ficha-leitura.php';
+    return;
+}
+$partesInstituicoesRepoFicha = new PartesInstituicoesRepository($connection);
+$partesDocumentosRepoFicha = new PartesDocumentosRepository($connection);
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -84,18 +145,17 @@ if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
 
     <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/3.0.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <?php include __DIR__ . '/_toast_script.php'; ?>
+    <?php require __DIR__ . '/partials/processo-ficha-assets.php'; ?>
 </head>
-<body class="page-internal page-operational-form">
-    <div class="spacing-top-page"></div>
-    <div class="header-page">
-        <div class="location"><span class="all">Interno - Consultas -</span> <span class="specific">Processo</span></div>
-        <div class="display-flex row row-full justify-between align-center flex-wrap gap-y-md" style="gap: 12px;">
-            <div class="display-flex col" style="width: auto; flex: 1 1 auto;">
-                <h1 class="title-page"><?php echo htmlspecialchars($processo['numero_processo'] ?? 'Processo'); ?></h1>
-            </div>
-        </div>
-    </div>
-    <div class="container-full card-page">
+<body class="page-internal page-operational-form ficha-processo">
+    <main class="ficha-shell">
+        <header class="ficha-header">
+            <div><p class="ficha-contexto">Consultas / Processos</p><h1>Editar dados do processo</h1>
+            <p class="ficha-numero"><?= $eFicha($processo['numero_processo'] ?? '') ?></p></div>
+            <a class="ficha-button" href="<?= $eFicha($linkLeituraFicha) ?>">Voltar aos detalhes</a>
+        </header>
+        <div class="ficha-grid">
+        <div class="ficha-editor card-page">
         <input type="hidden" id="processo-id" value="<?php echo htmlspecialchars($processo['id'] ?? ''); ?>">
         <input type="hidden" id="proc-id" value="<?php echo htmlspecialchars((string) ($processo['id'] ?? ''), ENT_QUOTES); ?>">
         <?php if ($podeRegistrarNivel): ?>
@@ -120,7 +180,7 @@ if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
         <?php if ($podeAtribuirSetorResponsavel): ?>
         <section class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" aria-labelledby="responsible-sector-title">
             <div>
-                <h2 id="responsible-sector-title">Unidade responsável</h2>
+                <h2 id="responsible-sector-title">Setor ativo</h2>
                 <p id="process-responsible-sector-current" aria-live="polite">
                     <?php if ($erroSetorResponsavel !== ''): ?>Não foi possível verificar a unidade responsável.
                     <?php elseif ($setorResponsavelAtual === '' && $setorCartorioPadrao !== null): ?>Unidade padrão: Cartório
@@ -151,15 +211,18 @@ if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary height-md" id="process-responsible-sector-submit">Registrar atribuição</button>
+                    <button type="submit" class="btn btn-primary height-md" id="process-responsible-sector-submit">Salvar setor</button>
                 </div>
                 <p id="process-responsible-sector-status" role="status" aria-live="polite"></p>
             </form>
             <?php endif; ?>
         </section>
         <?php endif; ?>
+        <?php if (!$acessoSetorial): ?>
+            <p class="ficha-secao" role="status">A edição de classe, assuntos, prioridades e partes exige acesso ao setor responsável.</p>
+        <?php else: ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <h2>Classe processual</h2>
+            <h2>Classe e assuntos</h2>
             <?php if (empty($processo['sigiloso'])): ?>
                 <button type="button" class="btn btn-secondary height-md" id="btn-proc-datajud-sync"
                         data-process-id="<?php echo htmlspecialchars($processoIdFicha, ENT_QUOTES); ?>"
@@ -174,8 +237,6 @@ if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
                     <label for="proc-classe-atual">Classe atual</label>
                     <input type="text" class="width-700 height-md" id="proc-classe-atual" value="<?php echo htmlspecialchars($classeNomeAtual !== '' ? $classeNomeAtual : 'Classe não cadastrada', ENT_QUOTES); ?>" readonly>
                 </div>
-            </div>
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
                 <div class="col">
                     <label for="proc-classe-codigo"><?php echo $classeNomeAtual !== '' ? 'Alterar classe processual' : 'Incluir classe processual'; ?></label>
                     <input type="text" class="width-300 height-md" id="proc-classe-codigo" placeholder="Ex.: 283" maxlength="20" autocomplete="off" title="Consulta automática após 1 s sem digitar; Enter consulta na hora.">
@@ -198,23 +259,6 @@ if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
                 </div>
             </div>
         </div>
-        <?php if ($prioridadesFichaEstado !== null): ?>
-        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
-            <h2>Prioridades</h2>
-        </div>
-        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="prioridades-processuais-wrap">
-            <div id="prioridades-processuais-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
-            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
-                <div class="col">
-                    <label for="prioridade-catalog-select">Incluir prioridade</label>
-                    <select class="width-500 height-md" id="prioridade-catalog-select">
-                        <option value="" selected disabled>Selecione...</option>
-                    </select>
-                </div>
-                <button type="button" class="btn btn-primary height-md" id="btn-prioridade-adicionar">Adicionar</button>
-            </div>
-        </div>
-        <?php endif; ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Assuntos</h2>
         </div>
@@ -232,6 +276,23 @@ if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
                 <button type="button" class="btn btn-primary height-md" id="btn-processo-assunto-vincular" disabled>Incluir</button>
             </div>
         </div>
+        <?php if ($prioridadesFichaEstado !== null && $podeEditarPrioridadesFicha): ?>
+        <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
+            <h2>Prioridades</h2>
+        </div>
+        <div class="display-flex col col-full padding-x-md padding-y-md border-bottom gap-y-md" id="prioridades-processuais-wrap">
+            <div id="prioridades-processuais-list" class="display-flex col col-full gap-y-sm" aria-live="polite"></div>
+            <div class="display-flex row row-full flex-wrap align-end gap-y-md" style="gap:12px;">
+                <div class="col">
+                    <label for="prioridade-catalog-select">Incluir prioridade</label>
+                    <select class="width-500 height-md" id="prioridade-catalog-select">
+                        <option value="" selected disabled>Selecione...</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary height-md" id="btn-prioridade-adicionar">Adicionar</button>
+            </div>
+        </div>
+        <?php endif; ?>
         <div class="display-flex row row-full align-center justify-between padding-x-md padding-y-md border-bottom">
             <h2>Adicionar parte</h2>
         </div>
@@ -419,8 +480,8 @@ if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
                         </div>
                     </div>
                     <div class="display-flex row row-fit justify-end gap-y-sm align-center">
-                        <button type="button" class="btn btn-editar" data-nav-href="/frame.php?page=processospartesedit&id=<?php echo urlencode((string) ($p['id'] ?? '')); ?>" title="Editar vínculo"><i class="fi fi-rr-pen-square"></i></button>
-                        <button type="button" class="btn btn-editar" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode((string) ($p['parte_id'] ?? '')); ?>" title="Ir para o cadastro da parte"><i class="fi fi-rr-user-link"></i></button>
+                        <?php if ($podeEditarVinculoFicha): ?><button type="button" class="btn btn-editar" data-nav-href="/frame.php?page=processospartesedit&id=<?php echo urlencode((string) ($p['id'] ?? '')); ?>" title="Editar vínculo"><i class="fi fi-rr-pen-square"></i></button><?php endif; ?>
+                        <?php if ($podeEditarPessoaFicha): ?><button type="button" class="btn btn-editar" data-nav-href="/frame.php?page=consultapartesedit&id=<?php echo urlencode((string) ($p['parte_id'] ?? '')); ?>" title="Ir para o cadastro da parte"><i class="fi fi-rr-user-link"></i></button><?php endif; ?>
                         <button type="button" class="btn-editar stop btn-desvincular" data-id="<?php echo htmlspecialchars((string) ($p['id'] ?? ''), ENT_QUOTES); ?>" data-processo-id="<?php echo htmlspecialchars((string) ($processo['id'] ?? ''), ENT_QUOTES); ?>" title="Remover parte"><i class="fi fi-rr-cross-circle"></i></button>
                     </div>
                 </div>
@@ -434,14 +495,15 @@ if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
                 </div>
             </div>
         <?php endif; ?>
-        <div class="display-flex row row-full justify-end gap-y-md padding-x-md padding-y-md border-top">
-            <button type="button" class="btn btn-secondary" data-nav-href="/frame.php?page=consultaprocessos">Voltar</button>
+        <?php endif; // acesso de edição ao setor ?>
         </div>
-    </div>
-    <?php if ($prioridadesFichaEstado !== null): ?>
+        <?php require __DIR__ . '/partials/processo-ficha-contexto.php'; ?>
+        </div>
+    </main>
+    <?php if ($prioridadesFichaEstado !== null && $podeEditarPrioridadesFicha): ?>
     <script>
-        window.PROCESSO_PRIORIDADES_PROCESSO_ID = <?php echo json_encode($processoIdFicha, JSON_UNESCAPED_UNICODE); ?>;
-        window.PROCESSO_PRIORIDADES_INITIAL = <?php echo json_encode($prioridadesFichaEstado, JSON_UNESCAPED_UNICODE); ?>;
+        window.PROCESSO_PRIORIDADES_PROCESSO_ID = <?php echo json_encode($processoIdFicha, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
+        window.PROCESSO_PRIORIDADES_INITIAL = <?php echo json_encode($prioridadesFichaEstado, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
     </script>
     <script src="/assets/js/modules/audiencias/pauta-edit-prioridades.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/modules/audiencias/pauta-edit-prioridades.js') ?: time(); ?>"></script>
     <?php endif; ?>
@@ -453,8 +515,8 @@ if ($podeAtribuirSetorResponsavel && !empty($processo['sigiloso'])) {
     <script src="/assets/js/shared/processo-setor-responsavel.js?v=<?php echo @filemtime(__DIR__ . '/../../../public/assets/js/shared/processo-setor-responsavel.js') ?: time(); ?>"></script>
     <?php endif; ?>
     <script>
-        window.PROCESSO_ASSUNTOS_PROCESSO_ID = <?php echo json_encode($processoIdFicha, JSON_UNESCAPED_UNICODE); ?>;
-        window.PROCESSO_ASSUNTOS_INITIAL = <?php echo json_encode($assuntosFicha, JSON_UNESCAPED_UNICODE); ?>;
+        window.PROCESSO_ASSUNTOS_PROCESSO_ID = <?php echo json_encode($processoIdFicha, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
+        window.PROCESSO_ASSUNTOS_INITIAL = <?php echo json_encode($assuntosFicha, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_INVALID_UTF8_SUBSTITUTE); ?>;
         window.PROCESSO_ASSUNTO_FIND_ENDPOINT = '/api/assuntos/find-by-codigo.php';
         window.PROCESSO_ASSUNTO_LINK_ENDPOINT = '/api/processos/assunto-link.php';
         window.PROCESSO_ASSUNTO_UNLINK_ENDPOINT = '/api/processos/assunto-unlink.php';
