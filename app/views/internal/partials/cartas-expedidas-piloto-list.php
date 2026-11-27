@@ -34,7 +34,7 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cartas Expedidas (nova) | Cartório</title>
+<title>Cartas Expedidas | Cartório</title>
 <link rel="stylesheet" href="<?= $css ?>?v=<?= (int)filemtime(dirname(__DIR__,4).'/public'.$css) ?>">
 </head>
 <body class="ce-piloto">
@@ -52,7 +52,7 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
    </div>
   </header>
   <form method="get" class="ce-toolbar">
-    <input type="hidden" name="page" value="cartasexpedidasnova">
+    <input type="hidden" name="page" value="cartasexpedidas">
     <input type="search" name="processo" aria-label="Pesquisar por processo" placeholder="Pesquisar por processo" value="<?= $e($processoFilter) ?>">
     <select name="status" aria-label="Status da carta">
      <option value="">Todos os status</option>
