@@ -40,6 +40,24 @@ assert.doesNotMatch(ficha,/id="process-responsible-sector-reason"/);
 assert.match(ficha,/id="proc-datajud-sync-status"/);
 
 (async()=>{
+    const callbacks = {}, calls = [];
+    const input = {value:'0000001-69.2020.8.05.0001', id:'audiencia-processo', dataset:{}};
+    const hidden = {value:'', addEventListener(){}, removeAttribute(){}, setAttribute(){}};
+    const localDoc = {
+        readyState:'complete',
+        getElementById:function(id) {return id==='audiencia-processo'?input:id==='audiencia-classe'?hidden:null;}
+    };
+    const page = {
+        addEventListener:(event,fn)=>{callbacks[event]=fn;},
+        DataJudCycle:{cancelPrevious(){},getOperationId(){return 1;},isStaleOperation(){return false;}},
+    };
+    vm.runInNewContext(read('public/assets/js/modules/datajud/datajud-api.js'),{
+        window:page, document:localDoc, AbortController, setTimeout:()=>1, clearTimeout(){},
+        fetch:async(url)=>{calls.push(url); return {ok:true,json:async()=>({classe:null})};},
+    });
+    callbacks.cnjValidated({detail:{digits:'00000016920208050001'}});
+    await new Promise(setImmediate);
+    assert.deepEqual(calls,['/api/processos/classe-read.php?numero=00000016920208050001']);
     const controls={};
     for(const id of ['form','select','submit','status','current']) controls['process-responsible-sector-'+id]={};
     const el=id=>controls['process-responsible-sector-'+id];
