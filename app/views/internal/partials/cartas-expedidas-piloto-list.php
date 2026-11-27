@@ -40,7 +40,7 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
 <main class="ce-workspace">
  <section class="ce-queue" aria-label="Fila de cartas expedidas">
   <header class="ce-header">
-   <div><p class="ce-eyebrow">Cartório / Expedição <span class="ce-tag">Versão piloto</span></p><h1>Cartas Expedidas</h1><p>1ª Vara Crime · Cartas expedidas do cartório</p></div>
+   <div><p class="ce-eyebrow">Cartório / Expedição </p><h1>Cartas Expedidas</h1><p>1ª Vara Crime · Cartas expedidas do cartório</p></div>
    <div class="ce-tools">
     <?php if ($canManageShipping): ?>
     <a class="ce-button" href="?page=cartasexpedidasrules&amp;piloto=1" data-ce-frame data-title="Regra de envio de cartas">Regra de envio</a>
@@ -70,15 +70,17 @@ $js = '/assets/js/modules/cartorio/cartas-expedidas/piloto.js';
   <?php foreach ($groups as $groupKey=>[$label,$count,$items]): ?>
   <?php if ($items === []) continue; $nestaPagina = count($items); ?>
   <details class="ce-group <?= $e($groupKey) ?>" <?= in_array($groupKey,['encerrada','cancelada'],true)&&$statusFilter===''?'':'open' ?>>
-    <summary><span class="ce-dot"></span><?= $e($label) ?> <span class="ce-tag" title="Cartas nesta página" aria-label="<?= $e($nestaPagina . ' nesta página') ?>"><?= $e($nestaPagina) ?></span><?php if ($totalPages > 1 && $count !== null && $count > $nestaPagina): ?> <small><?= $e($count) ?> no total</small><?php endif; ?></summary>
+    <summary><span class="ce-dot"></span><?= $e($label) ?> <span class="ce-tag" title="Cartas nesta página" aria-label="<?= $e($nestaPagina . ' nesta página') ?>"><?= $e($nestaPagina) ?></span><?php if ($totalPages > 1 && $groupKey !== 'envio' && $count !== null && $count > $nestaPagina): ?> <small><?= $e($count) ?> no total</small><?php endif; ?></summary>
     <?php foreach ($items as $row) require __DIR__ . '/cartas-expedidas-v2-row.php'; ?>
   </details>
   <?php endforeach; ?>
-  <footer class="ce-pagination"><span><?= $e($startItem) ?> a <?= $e($endItem) ?> de <?= $e($totalDocuments) ?> cartas</span><nav aria-label="Paginação">
+  <?php if ($totalDocuments > 0): ?>
+  <footer class="ce-pagination"><span><?= $e($startItem) ?> a <?= $e($endItem) ?> de <?= $e($totalDocuments) ?> <?= $envioPiloto !== [] ? 'nas demais etapas' : 'cartas' ?></span><nav aria-label="Paginação">
     <?php if ($currentPage>1): ?><a class="ce-button" href="<?= $e($hrefPage($currentPage-1)) ?>">Anterior</a><?php endif; ?>
     <span>Página <?= $e($currentPage) ?> de <?= $e($totalPages) ?></span>
     <?php if ($currentPage<$totalPages): ?><a class="ce-button" href="<?= $e($hrefPage($currentPage+1)) ?>">Próxima</a><?php endif; ?>
   </nav></footer>
+  <?php endif; ?>
  </section>
  <aside id="ce-panel" class="ce-panel" aria-label="Painel da carta" hidden>
    <header><h2 id="ce-panel-title">Detalhes da carta</h2><button type="button" class="ce-close" data-ce-close aria-label="Fechar painel">×</button></header>

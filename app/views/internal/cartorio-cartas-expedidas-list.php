@@ -49,9 +49,24 @@ $filters = [
 ];
 $offset = ($currentPage - 1) * $itemsPerPage;
 
+$envioPiloto = [];
+$envioFiltro = in_array($statusFilter, ['aguardando_envio', 'aguardando envio', 'em_andamento'], true);
 try {
     $service = new CartasExpedidasService($connection);
-    $listResult = $service->listCartas($filters, $itemsPerPage, $offset);
+    $filtrosPaginados = $filters;
+    if (!empty($cartasPiloto) && ($statusFilter === '' || $envioFiltro)) {
+        $filtrosEnvio = array_replace($filters, ['status' => 'aguardando_envio']);
+        $envioPiloto = $service->listCartas($filtrosEnvio, null, 0)['rows'];
+        $filtrosPaginados['piloto_sem_envio'] = true;
+    }
+    $listResult = !empty($cartasPiloto) && $envioFiltro
+        ? ['rows' => [], 'total' => 0]
+        : $service->listCartas($filtrosPaginados, $itemsPerPage, $offset);
+    if (!empty($cartasPiloto) && $listResult['total'] > 0
+        && $currentPage > ($ultima = (int) ceil($listResult['total'] / $itemsPerPage))) {
+        $currentPage = $ultima;
+        $listResult = $service->listCartas($filtrosPaginados, $itemsPerPage, ($currentPage - 1) * $itemsPerPage);
+    }
 } catch (\Throwable $exception) {
     if (!empty($cartasPiloto)) {
         http_response_code(503);
@@ -62,8 +77,14 @@ try {
     die('Erro ao carregar os dados: ' . $exception->getMessage());
 }
 
-$rows = $listResult['rows'] ?? [];
-$rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, $rows);
+$linhasPaginadas = $listResult['rows'] ?? [];
+if ($envioPiloto !== []) {
+    // Uma transição concorrente entre as duas consultas não pode duplicar a carta na página.
+    $idsEnvio = array_fill_keys(array_column($envioPiloto, 'IdCarta'), true);
+    $linhasPaginadas = array_values(array_filter($linhasPaginadas,
+        static fn (array $carta): bool => !isset($idsEnvio[$carta['IdCarta']])));
+}
+$rows = ProcessoBlocoListagemHelper::appendBlocoData($connection, array_merge($envioPiloto, $linhasPaginadas));
 $registroListViewerContext = RegistroMetadataHelper::viewerContextFromSession();
 $totalDocuments = (int) ($listResult['total'] ?? 0);
 
@@ -78,7 +99,7 @@ if ($totalDocuments === 0) {
 }
 
 $offset = ($currentPage - 1) * $itemsPerPage;
-$displayedCount = count($rows);
+$displayedCount = count($linhasPaginadas);
 $startItem = $displayedCount > 0 ? $offset + 1 : 0;
 $endItem = $displayedCount > 0 ? $offset + $displayedCount : 0;
 

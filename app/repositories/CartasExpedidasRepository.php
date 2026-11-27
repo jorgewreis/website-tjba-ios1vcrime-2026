@@ -26,7 +26,7 @@ final class CartasExpedidasRepository
         $this->table = $table;
     }
 
-    public function fetchList(array $filters, int $limit, int $offset): array
+    public function fetchList(array $filters, ?int $limit, int $offset): array
     {
         [$whereClause, $params] = $this->buildFilterClause($filters, 'ce', true);
 
@@ -36,18 +36,21 @@ final class CartasExpedidasRepository
 
         // Ordem oficial da listagem: data de cadastro (mais recente primeiro).
         $sql = sprintf(
-            'SELECT ce.`id` AS `IdCarta`, ce.`numero_processo_origem` AS `Processo`, ce.`finalidade` AS `Finalidade`, ce.`prazo_dias` AS `Prazo`, ce.`cidade_destino` AS `Comarca`, ce.`uf_destino` AS `Estado`, ce.`status` AS `Status`, ce.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome`%s FROM %s %s ORDER BY ce.`created_at` DESC LIMIT :limit OFFSET :offset',
+            'SELECT ce.`id` AS `IdCarta`, ce.`numero_processo_origem` AS `Processo`, ce.`finalidade` AS `Finalidade`, ce.`prazo_dias` AS `Prazo`, ce.`cidade_destino` AS `Comarca`, ce.`uf_destino` AS `Estado`, ce.`status` AS `Status`, ce.`created_at` AS `Data`, COALESCE(cl.`nome`, \'Classe não informada\') AS `ClasseNome`%s FROM %s %s ORDER BY ce.`created_at` DESC, ce.`id` DESC%s',
             $auditSelect,
             $fromClause,
-            $whereClause ? 'WHERE ' . $whereClause : ''
+            $whereClause ? 'WHERE ' . $whereClause : '',
+            $limit !== null ? ' LIMIT :limit OFFSET :offset' : ''
         );
 
         $statement = $this->connection->prepare($sql);
         foreach ($params as $name => $value) {
             $statement->bindValue($name, $value);
         }
-        $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
+        if ($limit !== null) {
+            $statement->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $statement->bindValue(':offset', $offset, PDO::PARAM_INT);
+        }
         $statement->execute();
 
         return $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -392,6 +395,11 @@ final class CartasExpedidasRepository
             // Fluxos ambíguos permanecem na lista geral para reconciliação explícita.
             $states = CartasExpedidasEstadoFluxo::consultaEstados();
             $clauses[] = "EXISTS (SELECT 1 FROM ({$states}) fluxo WHERE fluxo.id={$prefix}`id` AND fluxo.etapa<>'encerrada')";
+        }
+
+        if (($filters['piloto_sem_envio'] ?? false) === true) {
+            $states = CartasExpedidasEstadoFluxo::consultaEstados();
+            $clauses[] = "EXISTS (SELECT 1 FROM ({$states}) fila WHERE fila.id={$prefix}`id` AND fila.etapa<>'envio')";
         }
 
         return [implode(' AND ', $clauses), $params];
