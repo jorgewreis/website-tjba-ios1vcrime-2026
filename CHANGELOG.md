@@ -2,17 +2,15 @@
 
 ## V. 1.88.0062
 
-**Data:** 2026-11-27 21:17:57 | **Commit:** `f58371c0` | **Tipo:** `patch`
+**Data:** 2026-11-27 21:22:26 | **Commit:** `3a8903a2` | **Tipo:** `patch`
 
-- fix(auth): bind attestation to target on private cgroups [patch]
+- docs(REI-116): reconcile remaining timeout references
 
 ## V. 1.88.0061
 
-**Data:** 2026-11-27 21:06:10 | **Commit:** `3b26b75d` | **Tipo:** `patch`
+**Data:** 2026-11-27 21:19:03 | **Commit:** `60e978c8` | **Tipo:** `patch`
 
-- fix(auth): rotate REI-93 attestation key [patch]
-
-# Changelog
+- fix(REI-116): align inactivity timeout policy to four hours
 
 ## V. 1.88.0060
 
