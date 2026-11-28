@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0060
+
+**Data:** 2026-11-27 21:06:10 | **Commit:** `3b26b75d` | **Tipo:** `patch`
+
+- fix(auth): rotate REI-93 attestation key [patch]
+
 ## V. 1.88.0058
 
 **Data:** 2026-11-27 20:38:06 | **Commit:** `ccd9a09d` | **Tipo:** `patch`
@@ -7883,6 +7889,7 @@
 
 
 \n
+
 
 
 
