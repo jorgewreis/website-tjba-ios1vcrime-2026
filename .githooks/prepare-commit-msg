@@ -125,7 +125,7 @@ analyze_commit_type() {
 
     # CI/CD
     case "$file" in
-      .github/*|.gitlab-ci.yml|.travis.yml|Jenkinsfile|azure-pipelines.yml|bitbucket-pipelines.yml)
+      .github/*|.travis.yml|Jenkinsfile|azure-pipelines.yml|bitbucket-pipelines.yml)
         score_ci=$((score_ci + 3))
         debug "  → ci (+3)"
         ;;
