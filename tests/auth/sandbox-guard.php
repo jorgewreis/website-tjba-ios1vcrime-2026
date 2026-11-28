@@ -47,7 +47,7 @@ if (str_contains($sandboxPayload, "\r")) {
 }
 $sandboxLines = explode("\n", $sandboxPayload);
 $sandboxExpectedKeys = [
-    'v', 'iat', 'exp', 'run_id', 'target_id', 'network_internal', 'network_id',
+    'v', 'iat', 'exp', 'run_id', 'target_id', 'target_nonce_sha256', 'network_internal', 'network_id',
     'mysql_id', 'app_id', 'client_id', 'mailpit_id', 'browser_id',
     'binds', 'ports', 'privileged', 'publish_all_ports', 'mysql_tmpfs',
 ];
@@ -70,7 +70,7 @@ foreach ($sandboxLines as $sandboxIndex => $sandboxLine) {
 
 $sandboxDecimal = '/^(0|[1-9][0-9]{0,17})$/';
 $sandboxId64 = '/^[a-f0-9]{64}$/';
-if ($sandboxClaims['v'] !== '2'
+if ($sandboxClaims['v'] !== '3'
     || preg_match($sandboxDecimal, $sandboxClaims['iat']) !== 1
     || preg_match($sandboxDecimal, $sandboxClaims['exp']) !== 1
     || preg_match('/^[a-f0-9]{32}$/', $sandboxClaims['run_id']) !== 1
@@ -111,10 +111,17 @@ foreach (['/proc/self/cgroup', '/proc/1/cgroup'] as $sandboxCgroupPath) {
     }
 }
 $sandboxAllowedIds = [$sandboxClaims['app_id'], $sandboxClaims['client_id']];
-if (!in_array($sandboxClaims['target_id'], $sandboxAllowedIds, true)) {
+if (!in_array($sandboxClaims['target_id'], $sandboxAllowedIds, true)
+    || preg_match($sandboxId64, $sandboxClaims['target_nonce_sha256']) !== 1) {
     sandbox_attestation_reject();
 }
 require_once __DIR__ . '/sandbox-cgroup-policy.inc.php';
-if (!sandbox_attestation_target_matches_cgroup($sandboxCgroup, $sandboxClaims['target_id'], $sandboxAllowedIds)) {
+if (!sandbox_attestation_target_matches_cgroup(
+    $sandboxCgroup,
+    $sandboxClaims['target_id'],
+    $sandboxAllowedIds,
+    $sandboxClaims['target_nonce_sha256'],
+    '/tmp/.auth-test-attestation-nonce'
+)) {
     sandbox_attestation_reject();
 }

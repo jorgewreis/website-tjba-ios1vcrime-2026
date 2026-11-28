@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0063
+
+**Data:** 2026-11-27 21:41:27 | **Commit:** `24f20112` | **Tipo:** `patch`
+
+- fix(REI-93): bind sandbox attestation to local nonce
+
 ## V. 1.88.0062
 
 **Data:** 2026-11-27 21:22:26 | **Commit:** `3a8903a2` | **Tipo:** `patch`
@@ -7907,3 +7913,4 @@
 
 
 \n
+

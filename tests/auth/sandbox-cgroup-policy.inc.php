@@ -2,9 +2,22 @@
 declare(strict_types=1);
 
 /** @param list<string> $allowedIds */
-function sandbox_attestation_target_matches_cgroup(string $cgroup, string $targetId, array $allowedIds): bool
+function sandbox_attestation_target_matches_cgroup(
+    string $cgroup,
+    string $targetId,
+    array $allowedIds,
+    string $expectedNonceHash,
+    string $noncePath
+): bool
 {
-    if (preg_match('/^[a-f0-9]{64}$/', $targetId) !== 1 || !in_array($targetId, $allowedIds, true)) {
+    if (preg_match('/^[a-f0-9]{64}$/', $targetId) !== 1
+        || preg_match('/^[a-f0-9]{64}$/', $expectedNonceHash) !== 1
+        || !in_array($targetId, $allowedIds, true)) {
+        return false;
+    }
+
+    $nonce = @file_get_contents($noncePath);
+    if (!is_string($nonce) || !hash_equals($expectedNonceHash, hash('sha256', $nonce))) {
         return false;
     }
 
