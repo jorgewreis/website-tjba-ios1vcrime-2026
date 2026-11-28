@@ -47,7 +47,7 @@ if (str_contains($sandboxPayload, "\r")) {
 }
 $sandboxLines = explode("\n", $sandboxPayload);
 $sandboxExpectedKeys = [
-    'v', 'iat', 'exp', 'run_id', 'network_internal', 'network_id',
+    'v', 'iat', 'exp', 'run_id', 'target_id', 'network_internal', 'network_id',
     'mysql_id', 'app_id', 'client_id', 'mailpit_id', 'browser_id',
     'binds', 'ports', 'privileged', 'publish_all_ports', 'mysql_tmpfs',
 ];
@@ -70,7 +70,7 @@ foreach ($sandboxLines as $sandboxIndex => $sandboxLine) {
 
 $sandboxDecimal = '/^(0|[1-9][0-9]{0,17})$/';
 $sandboxId64 = '/^[a-f0-9]{64}$/';
-if ($sandboxClaims['v'] !== '1'
+if ($sandboxClaims['v'] !== '2'
     || preg_match($sandboxDecimal, $sandboxClaims['iat']) !== 1
     || preg_match($sandboxDecimal, $sandboxClaims['exp']) !== 1
     || preg_match('/^[a-f0-9]{32}$/', $sandboxClaims['run_id']) !== 1
@@ -110,15 +110,11 @@ foreach (['/proc/self/cgroup', '/proc/1/cgroup'] as $sandboxCgroupPath) {
         $sandboxCgroup .= $sandboxCgroupText . "\n";
     }
 }
-if (preg_match('/(?:docker[-\/]|\/containers\/)([a-f0-9]{64})/', $sandboxCgroup, $sandboxCgroupMatch) !== 1
-    && preg_match('/docker-([a-f0-9]{64})\.scope/', $sandboxCgroup, $sandboxCgroupMatch) !== 1) {
+$sandboxAllowedIds = [$sandboxClaims['app_id'], $sandboxClaims['client_id']];
+if (!in_array($sandboxClaims['target_id'], $sandboxAllowedIds, true)) {
     sandbox_attestation_reject();
 }
-$sandboxContainerId = $sandboxCgroupMatch[1];
-$sandboxAllowedIds = [$sandboxClaims['app_id'], $sandboxClaims['client_id']];
-if ($sandboxClaims['browser_id'] !== 'none') {
-    $sandboxAllowedIds[] = $sandboxClaims['browser_id'];
-}
-if (!in_array($sandboxContainerId, $sandboxAllowedIds, true)) {
+require_once __DIR__ . '/sandbox-cgroup-policy.inc.php';
+if (!sandbox_attestation_target_matches_cgroup($sandboxCgroup, $sandboxClaims['target_id'], $sandboxAllowedIds)) {
     sandbox_attestation_reject();
 }

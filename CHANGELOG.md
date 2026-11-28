@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0061
+
+**Data:** 2026-11-27 21:17:57 | **Commit:** `f58371c0` | **Tipo:** `patch`
+
+- fix(auth): bind attestation to target on private cgroups [patch]
+
 ## V. 1.88.0060
 
 **Data:** 2026-11-27 21:06:10 | **Commit:** `3b26b75d` | **Tipo:** `patch`
@@ -7889,6 +7895,7 @@
 
 
 \n
+
 
 
 
