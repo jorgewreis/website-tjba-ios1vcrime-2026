@@ -60,6 +60,7 @@ jobs:
           pwsh -NoProfile -File tests/ata/rei124-mount-guard.test.ps1
           python3 -B tests/ata/rei124-ata-service-guard.test.py
           python3 -B tests/ata/rei124-ata-runner-refusal.test.py
+          npm ci --prefix tests/ata --ignore-scripts --no-audit --no-fund
       - name: Executar serviço de atas no laboratório isolado
         shell: pwsh
         run: |

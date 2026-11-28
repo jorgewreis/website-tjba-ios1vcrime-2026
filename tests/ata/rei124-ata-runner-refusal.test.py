@@ -26,7 +26,7 @@ if a and a[0]=='rm':
 sys.exit(9)
 '''
 with tempfile.TemporaryDirectory(prefix='rei124-ata-fake-') as tmp:
- root=Path(tmp);(root/'app').mkdir();(root/'public').mkdir();(root/'config').mkdir();a=root/'tests'/'ata';a.mkdir(parents=True);shutil.copyfile(HERE/'run-rei124-ata-service-isolated.ps1',a/'run.ps1');shutil.copyfile(HERE/'rei124-mount-guard.ps1',a/'rei124-mount-guard.ps1');(a/'rei124-ata-service-mysql.test.php').write_text('<?php',encoding='utf-8');(a/'rei124-ata-http-mysql.test.php').write_text('<?php',encoding='utf-8');bin=root/'bin';bin.mkdir();fake=bin/'fake.py';fake.write_text(FAKE,encoding='utf-8')
+ root=Path(tmp);(root/'app').mkdir();(root/'public').mkdir();(root/'config').mkdir();a=root/'tests'/'ata';a.mkdir(parents=True);shutil.copyfile(HERE/'run-rei124-ata-service-isolated.ps1',a/'run.ps1');shutil.copyfile(HERE/'rei124-mount-guard.ps1',a/'rei124-mount-guard.ps1');(a/'rei124-ata-service-mysql.test.php').write_text('<?php',encoding='utf-8');(a/'rei124-ata-http-mysql.test.php').write_text('<?php',encoding='utf-8');(a/'rei124-ata-ui-fixture.php').write_text('<?php',encoding='utf-8');(a/'rei124-ata-browser.cjs').write_text("'use strict';",encoding='utf-8');(a/'node_modules'/'playwright-core').mkdir(parents=True);(a/'node_modules'/'playwright-core'/'package.json').write_text('{"version":"1.64.1"}',encoding='utf-8');bin=root/'bin';bin.mkdir();fake=bin/'fake.py';fake.write_text(FAKE,encoding='utf-8')
  if os.name=='nt': (bin/'docker.cmd').write_text(f'@"{sys.executable}" "{fake}" %*\r\n',encoding='utf-8')
  else: f=bin/'docker';f.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{fake}" "$@"\n',encoding='utf-8');f.chmod(0o700)
  pwsh=shutil.which('pwsh') or shutil.which('powershell');assert pwsh

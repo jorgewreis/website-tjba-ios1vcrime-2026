@@ -1,16 +1,32 @@
 # Changelog
 
-## V. 1.88.0061
+# Changelog
+
+## V. 1.88.0062
 
 **Data:** 2026-11-27 21:17:57 | **Commit:** `f58371c0` | **Tipo:** `patch`
 
 - fix(auth): bind attestation to target on private cgroups [patch]
 
-## V. 1.88.0060
+## V. 1.88.0061
 
 **Data:** 2026-11-27 21:06:10 | **Commit:** `3b26b75d` | **Tipo:** `patch`
 
 - fix(auth): rotate REI-93 attestation key [patch]
+
+# Changelog
+
+## V. 1.88.0060
+
+**Data:** 2026-11-27 21:08:32 | **Commit:** `4e927772` | **Tipo:** `patch`
+
+- fix(ci): resolve pinned Playwright image locally
+
+## V. 1.88.0059
+
+**Data:** 2026-11-27 21:04:36 | **Commit:** `efd4c039` | **Tipo:** `patch`
+
+- test(REI-68): exercise ata upload with Playwright
 
 ## V. 1.88.0058
 
@@ -7895,10 +7911,3 @@
 
 
 \n
-
-
-
-
-
-
-
