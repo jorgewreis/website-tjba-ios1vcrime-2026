@@ -1,22 +1,16 @@
 # Changelog
 
-## V. 1.88.0059
-
-**Data:** 2026-11-27 20:43:48 | **Commit:** `d36b7aab` | **Tipo:** `patch`
-
-- ci(auth): keep signed E2E off pull request jobs
-
 ## V. 1.88.0058
 
-**Data:** 2026-11-27 20:38:58 | **Commit:** `09f760eb` | **Tipo:** `patch`
+**Data:** 2026-11-27 20:38:06 | **Commit:** `ccd9a09d` | **Tipo:** `patch`
 
-- fix(auth): restore Rei69 runner argument compatibility
+- fix(REI-66): wait for MySQL TCP readiness
 
 ## V. 1.88.0057
 
-**Data:** 2026-11-27 20:32:29 | **Commit:** `b0fdec7c` | **Tipo:** `patch`
+**Data:** 2026-11-27 20:34:41 | **Commit:** `4bf097d7` | **Tipo:** `patch`
 
-- fix(REI-93): attest disposable auth sandbox
+- test(REI-66): verify concurrent CPF creation in MySQL
 
 ## V. 1.88.0056
 
@@ -7889,7 +7883,6 @@
 
 
 \n
-
 
 
 
