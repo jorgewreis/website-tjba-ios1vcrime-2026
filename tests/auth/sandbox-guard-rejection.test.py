@@ -36,16 +36,26 @@ class SandboxRefusalTest(unittest.TestCase):
 $app = str_repeat('a', 64);
 $client = str_repeat('b', 64);
 $other = str_repeat('c', 64);
+$noncePath = tempnam(sys_get_temp_dir(), 'rei93-cgroup-');
+$nonce = $app . "\n" . str_repeat('d', 64);
+file_put_contents($noncePath, $nonce);
+$nonceHash = hash('sha256', $nonce);
 $cases = [
-    sandbox_attestation_target_matches_cgroup("0::/\n", $app, [$app, $client]),
-    !sandbox_attestation_target_matches_cgroup("0::/\n", $other, [$app, $client]),
-    sandbox_attestation_target_matches_cgroup("0::/\n2:cpu:/docker/$app\n", $app, [$app, $client]),
-    !sandbox_attestation_target_matches_cgroup("0::/\n2:cpu:/docker/$other\n", $app, [$app, $client]),
-    sandbox_attestation_target_matches_cgroup("0::/docker/$app\n", $app, [$app, $client]),
-    !sandbox_attestation_target_matches_cgroup("0::/\n", 'invalid', [$app, $client]),
-    !sandbox_attestation_target_matches_cgroup('', $app, [$app, $client]),
-    !sandbox_attestation_target_matches_cgroup("0::/scope\n", $app, [$app, $client]),
+    sandbox_attestation_target_matches_cgroup("0::/\n", $app, [$app, $client], $nonceHash, $noncePath),
+    !sandbox_attestation_target_matches_cgroup("0::/\n", $other, [$app, $client], $nonceHash, $noncePath),
+    sandbox_attestation_target_matches_cgroup("0::/\n2:cpu:/docker/$app\n", $app, [$app, $client], $nonceHash, $noncePath),
+    !sandbox_attestation_target_matches_cgroup("0::/\n2:cpu:/docker/$other\n", $app, [$app, $client], $nonceHash, $noncePath),
+    sandbox_attestation_target_matches_cgroup("0::/docker/$app\n", $app, [$app, $client], $nonceHash, $noncePath),
+    !sandbox_attestation_target_matches_cgroup("0::/\n", 'invalid', [$app, $client], $nonceHash, $noncePath),
+    !sandbox_attestation_target_matches_cgroup("0::/\n", $app, [$app, $client], str_repeat('e', 64), $noncePath),
+    !sandbox_attestation_target_matches_cgroup("0::/\n", $app, [$app, $client], $nonceHash, $noncePath . '.missing'),
+    !sandbox_attestation_target_matches_cgroup('', $app, [$app, $client], $nonceHash, $noncePath),
+    !sandbox_attestation_target_matches_cgroup("0::/scope\n", $app, [$app, $client], $nonceHash, $noncePath),
+    sandbox_attestation_mount_namespace_matches('mnt:[4026533000]', 'mnt:[4026533000]'),
+    !sandbox_attestation_mount_namespace_matches('mnt:[4026533000]', 'mnt:[4026533001]'),
+    !sandbox_attestation_mount_namespace_matches('invalid', 'mnt:[4026533000]'),
 ];
+unlink($noncePath);
 if (in_array(false, $cases, true)) { exit(1); }
 '''
         result = subprocess.run([php, '-r', code, str(HERE / 'sandbox-cgroup-policy.inc.php')],

@@ -14,3 +14,4 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(ci): resolve pinned Playwright image locally** `[ac9f59fe]`
 - **fix(REI-116): align inactivity timeout policy to four hours** `[60e978c8]`
 - **docs(REI-116): reconcile remaining timeout references** `[3a8903a2]`
+- **fix(REI-93): bind sandbox attestation to local nonce** `[24f20112]`
