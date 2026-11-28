@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0064
+
+**Data:** 2026-11-27 22:03:44 | **Commit:** `658db10a` | **Tipo:** `patch`
+
+- test(guias): align REI-105 MySQL fixture
+
 ## V. 1.88.0063
 
 **Data:** 2026-11-27 21:41:27 | **Commit:** `24f20112` | **Tipo:** `patch`

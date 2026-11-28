@@ -27,7 +27,7 @@ if ((string) $db->query('SELECT DATABASE()')->fetchColumn() !== 'rei105_test'
 }
 
 foreach ([
-    'CREATE TABLE guias (id VARCHAR(64) PRIMARY KEY, numero_processo VARCHAR(64), denunciado VARCHAR(100), tipo VARCHAR(100), status VARCHAR(32), data_fato DATE NULL, dias_multa INT NULL, valor_multa DECIMAL(10,2) NULL, updated_at DATETIME NULL) ENGINE=InnoDB',
+    'CREATE TABLE guias (id VARCHAR(64) PRIMARY KEY, numero_processo VARCHAR(64), processo_id VARCHAR(64) NULL, parte_id VARCHAR(64) NULL, denunciado VARCHAR(100), tipo VARCHAR(100), status VARCHAR(32), data_fato DATE NULL, dias_multa INT NULL, valor_multa DECIMAL(10,2) NULL, updated_at DATETIME NULL) ENGINE=InnoDB',
     'CREATE TABLE guias_subtarefas (id VARCHAR(64) PRIMARY KEY, guia_id VARCHAR(64) NOT NULL, tipo VARCHAR(64) NOT NULL, ordem INT NOT NULL, status VARCHAR(32) NOT NULL, dados_especificos JSON NULL, created_at DATETIME NULL, updated_at DATETIME NULL, KEY (guia_id, ordem)) ENGINE=InnoDB',
     'CREATE TABLE dashboard_conclusoes (id CHAR(36) PRIMARY KEY, usuario_id VARCHAR(64), modulo VARCHAR(64), area VARCHAR(32), referencia_interna VARCHAR(64), concluido_em DATETIME) ENGINE=InnoDB',
     'CREATE TABLE guias_alocados (id VARCHAR(30) PRIMARY KEY, guia_id VARCHAR(64), usuario_id VARCHAR(64), tipo VARCHAR(32), created_at DATETIME, UNIQUE KEY (guia_id, usuario_id)) ENGINE=InnoDB',
