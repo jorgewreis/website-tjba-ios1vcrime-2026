@@ -149,8 +149,9 @@ echo base64_encode($signature);
     if ($text -notmatch '^[A-Za-z0-9+/]{86}==$') { throw 'Assinatura de atestação inválida.' }
     return $text
 }
-function New-SandboxAttestation {
+function New-SandboxAttestation([string]$targetId) {
     Assert-ActiveTopology
+    if ($targetId -notin @($app, $client)) { throw 'Alvo da atestação fora dos contêineres de aplicação.' }
     $iat = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
     $browserId = 'none'
     if ($Browser) {
@@ -158,10 +159,11 @@ function New-SandboxAttestation {
         $browserId = $browserContainer
     }
     $payload = (@(
-        'v=1',
+        'v=2',
         "iat=$iat",
         "exp=$($iat + 600)",
         "run_id=$runId",
+        "target_id=$targetId",
         'network_internal=true',
         "network_id=$networkId",
         "mysql_id=$mysql",
@@ -195,14 +197,14 @@ function Get-SandboxProcessEnv {
     return $envArgs
 }
 function App([string[]]$a) {
-    New-SandboxAttestation
+    New-SandboxAttestation $app
     $dockerArgs = @('exec') + @(Get-SandboxProcessEnv) + @($app) + $a
     return D $dockerArgs
 }
 function Run-AppTest([string]$testFile, [string[]]$arguments = @()) {
     Write-Output "STEP $testFile"
     if ($testFile -eq 'password-reset-states.test.php') {
-        New-SandboxAttestation
+        New-SandboxAttestation $app
         $resetEnv = @(Get-SandboxProcessEnv)
         $previousErrorActionPreference = $ErrorActionPreference
         $ErrorActionPreference = 'Continue'
@@ -270,7 +272,7 @@ try {
         else { Copy-Tree $source }
     }
     D @('exec',$client,'mkdir','-p','/workspace/tests/auth')|Out-Null
-    foreach($clientTest in @('http-auth-flow.test.php', 'http-ready.test.php', 'rei158-http-concurrency.test.php', 'sandbox-guard.php', 'sandbox-attestation-public.php')) { D @('cp',(Join-Path $root "tests/auth/$clientTest"),"${client}:/workspace/tests/auth/$clientTest")|Out-Null }
+    foreach($clientTest in @('http-auth-flow.test.php', 'http-ready.test.php', 'rei158-http-concurrency.test.php', 'sandbox-guard.php', 'sandbox-attestation-public.php', 'sandbox-cgroup-policy.inc.php')) { D @('cp',(Join-Path $root "tests/auth/$clientTest"),"${client}:/workspace/tests/auth/$clientTest")|Out-Null }
     $runtime="APP_ENV=testing`nAUTH_TEST_ISOLATION=isolated-auth-test`nDB_HOST=mysql`nDB_PORT=3306`nDB_NAME=auth_test_e2e`nDB_USER=root`nDB_PASS=$pass`nDB_CHARSET=utf8mb4`nMAIL_DRIVER=smtp`nMAIL_HOST=mailpit`nMAIL_PORT=1025`nMAIL_USER=auth-test`nMAIL_PASSWORD=$pass`nMAIL_ENCRYPTION=none`nMAIL_FROM_ADDRESS=no-reply@auth-test.invalid`nMAIL_FROM_NAME=Auth E2E`nAPP_URL=https://auth-test.invalid`n"
     $runtime|& docker --context $dockerContext exec -i $app sh -c 'umask 077; cat > /workspace/tests/auth/.env.test.runtime'; if($LASTEXITCODE -ne 0){throw 'Não foi possível criar configuração interna.'}
     Assert-ActiveTopology
@@ -297,7 +299,7 @@ try {
     $token=(App @('php','/workspace/tests/auth/http-reset-token.fixture.php')|Select-Object -Last 1).Trim(); if($token -notmatch '^[a-f0-9]{64}$'){throw 'Token sintético inválido.'}
     D @('exec','-d','--env','PHP_CLI_SERVER_WORKERS=4',$app,'sh','-c','cd /workspace && exec php -S 0.0.0.0:8080 -t public >/tmp/auth-e2e-app.log 2>&1')|Out-Null
     for($i=0; $i -lt 30; $i++) {
-        New-SandboxAttestation
+        New-SandboxAttestation $client
         $probe = Start-Process -FilePath 'docker' -ArgumentList (@('--context', $dockerContext, 'exec') + @(Get-SandboxProcessEnv) + @($client, 'php', '/workspace/tests/auth/http-ready.test.php')) -Wait -PassThru -NoNewWindow
         if($probe.ExitCode -eq 0){break}
         Start-Sleep -Seconds 1
@@ -313,9 +315,9 @@ try {
         Assert-ActiveTopology
     }
     if ($Browser) { Run-AppTest 'login-rate-limit.fixture.php' @('seed') }
-    New-SandboxAttestation
+    New-SandboxAttestation $client
     D (@('exec','--workdir','/workspace') + @(Get-SandboxProcessEnv) + @('--env',"E2E_RESET_TOKEN=$token",$client,'php','tests/auth/http-auth-flow.test.php'))|Write-Output
-    New-SandboxAttestation
+    New-SandboxAttestation $client
     D (@('exec','--workdir','/workspace') + @(Get-SandboxProcessEnv) + @($client,'php','tests/auth/rei158-http-concurrency.test.php'))|Write-Output
     Run-AppTest 'rei158-http-lock-wait.test.php'
     Run-AppTest 'password-reset-states.test.php'

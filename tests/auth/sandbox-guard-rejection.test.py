@@ -29,6 +29,29 @@ MESSAGE = 'comprovado'
 
 
 class SandboxRefusalTest(unittest.TestCase):
+    def test_signed_target_supports_private_cgroup_v2_and_rejects_mismatch(self):
+        php = shutil.which('php')
+        self.assertIsNotNone(php, 'PHP is required')
+        code = r'''require $argv[1];
+$app = str_repeat('a', 64);
+$client = str_repeat('b', 64);
+$other = str_repeat('c', 64);
+$cases = [
+    sandbox_attestation_target_matches_cgroup("0::/\n", $app, [$app, $client]),
+    !sandbox_attestation_target_matches_cgroup("0::/\n", $other, [$app, $client]),
+    sandbox_attestation_target_matches_cgroup("0::/\n2:cpu:/docker/$app\n", $app, [$app, $client]),
+    !sandbox_attestation_target_matches_cgroup("0::/\n2:cpu:/docker/$other\n", $app, [$app, $client]),
+    sandbox_attestation_target_matches_cgroup("0::/docker/$app\n", $app, [$app, $client]),
+    !sandbox_attestation_target_matches_cgroup("0::/\n", 'invalid', [$app, $client]),
+    !sandbox_attestation_target_matches_cgroup('', $app, [$app, $client]),
+    !sandbox_attestation_target_matches_cgroup("0::/scope\n", $app, [$app, $client]),
+];
+if (in_array(false, $cases, true)) { exit(1); }
+'''
+        result = subprocess.run([php, '-r', code, str(HERE / 'sandbox-cgroup-policy.inc.php')],
+                                text=True, capture_output=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr or result.stdout)
+
     def test_generic_cleanup_refuses_before_docker(self):
         with tempfile.TemporaryDirectory(prefix='auth-cleanup-refusal-') as temp:
             root = Path(temp)
@@ -54,7 +77,7 @@ class SandboxRefusalTest(unittest.TestCase):
             self.assertFalse(marker.exists(), 'docker must not be invoked')
 
     def test_all_php_entrypoints_are_in_refusal_matrix(self):
-        discovered = {p.name for p in HERE.glob('*.php')} - {'sandbox-guard.php', 'sandbox-attestation-public.php'}
+        discovered = {p.name for p in HERE.glob('*.php')} - {'sandbox-guard.php', 'sandbox-attestation-public.php', 'sandbox-cgroup-policy.inc.php'}
         self.assertSetEqual(set(PHP_FILES), discovered,
                             'Classifique explicitamente novos entrypoints PHP na matriz de recusa.')
 
@@ -67,7 +90,7 @@ class SandboxRefusalTest(unittest.TestCase):
             config.mkdir()
             # The sentinel must never be loaded, even when env markers are set.
             (config / 'config.php').write_text("<?php throw new Exception('CONFIG_ACCESSED');", encoding='utf-8')
-            for name in (*PHP_FILES, *PS_FILES, 'sandbox-guard.php', 'sandbox-attestation-public.php'):
+            for name in (*PHP_FILES, *PS_FILES, 'sandbox-guard.php', 'sandbox-attestation-public.php', 'sandbox-cgroup-policy.inc.php'):
                 shutil.copyfile(HERE / name, auth / name)
             fakebin = root / 'bin'
             fakebin.mkdir()
