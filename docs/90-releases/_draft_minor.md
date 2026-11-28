@@ -4,9 +4,143 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 
 ## Entradas Pendentes
 
-- **fix(REI-93): attest disposable auth sandbox** `[b0fdec7c]`
-- **fix(auth): restore Rei69 runner argument compatibility** `[09f760eb]`
-- **ci(auth): keep signed E2E off pull request jobs** `[d36b7aab]`
+- **feat(processos): padronizar bloco nas listagens** `[eab869d1]`
+- **feat(cartorio): adicionar bloco de historico v2** `[aa9a2ca6]`
+- **feat(listagens): replicar bloco de historico** `[e16555d7]`
+- **fix(historico): ajustar rotulos e autor de movimentacao** `[f667f197]`
+- **fix(cartas-expedidas): alinhar status e historico ao mockup** `[c32dba0e]`
+- **fix(cartas-expedidas): corrigir fundo e espacos do registro** `[1fb81950]`
+- **feat(cartorio): ajustar cadastro e botoes das cartas** `[1a58b2d5]`
+- **fix(cartorio): manter spinner dentro do botao** `[4dc1dd5d]`
+- **feat(dashboard): exibir prazos vencidos e colorir badges** `[4961782d]`
+- **fix(dashboard): corrigir visibilidade e contagem de prazos** `[179e10f9]`
+- **fix(dashboard): ocultar linha com fila zerada** `[9dcbe8ad]`
+- **feat(dashboard): alertar prazo de expedida excedido** `[34f918ec]`
+- **fix(dashboard): ordenar indicadores por urgencia** `[29770c32]`
+- **refactor(editais): alinhar telas ao padrão v2 e remover alocações** `[3204f114]`
+- **fix(editais): ajustar timeline em telas pequenas** `[147df2d0]`
+- **fix(editais): ajustar altura das linhas da listagem** `[16bad15e]`
+- **fix(editais): alinhar cabeçalho e filtros ao padrão de cartas** `[5c03c81d]`
+- **fix(editais): alinhar lista e formulários ao padrão de cartas** `[03110ab8]`
+- **fix(editais): acertar alinhamento fino do formulario** `[00f2688d]`
+- **fix(editais): eliminar overflow em telas estreitas** `[bad0b91d]`
+- **fix(editais): ajustar colunas e icone de expansao** `[52713ec0]`
+- **fix(editais): adaptar campos de edicao no celular** `[31d5d654]`
+- **fix(editais): manter botoes do cadastro em linha no celular** `[6a3cd2e6]`
+- **refactor(editais): estruturar tabela em colunas responsivas** `[119812cd]`
+- **fix(editais): alinhar colunas da tabela ao mockup** `[17a86be3]`
+- **fix(editais): aplicar layout responsivo da tabela** `[ad2d88a5]`
+- **fix(editais): ajustar posições das colunas no desktop** `[91a65180]`
+- **fix(editais): remover recuos herdados das colunas** `[efc1b8ce]`
+- **style(editais): redesenhar blocos das linhas** `[d2047e97]`
+- **fix(editais): exibir ações nas linhas mobile** `[e26f4ce4]`
+- **fix(editais): adequar ações em telas estreitas** `[9967b2fb]`
+- **fix(editais): reforcar contraste das acoes** `[c3f876fb]`
+- **fix(editais): reutilizar estrutura visual das linhas de cartas** `[b2898c5e]`
+- **fix(editais): igualar altura das linhas a cartas** `[8052c5fa]`
+- **fix(editais): habilitar foco no botao de etapas** `[2246f121]`
+- **fix(editais): copiar numero sem duplicar texto no hover** `[c790236b]`
+- **fix(editais): ajustar bloco processual em telas pequenas** `[4259ba61]`
+- **fix(editais): restringir cancelamento a pagina de edicao** `[48113cd2]`
+- **feat(dashboard): mostrar editais aguardando publicacao** `[f5b90998]`
+- **style(menu): ajustar cabecalhos do menu lateral** `[671cf309]`
+- **fix(menu): atualizar cache dos estilos da home** `[c2bb31f7]`
+- **style(menu): refinar tipografia dos cabecalhos** `[087915c6]`
+- **fix(menu): atualizar versao e fonte dos estilos** `[04ff9b77]`
+- **style(menu): refinar itens e estados do menu** `[ca1cfd21]`
+- **fix(cache): gerar versao do css pelo conteudo** `[d9ea27e7]`
+- **style(menu): ajustar estado hover dos itens** `[5572f6f6]`
+- **fix(home): corrigir caminho do icone inicial** `[b27255b2]`
+- **feat(menu): atualizar modulos do menu** `[5ac1a46f]`
+- **style(menu): usar icones de imagem nos links do cartorio** `[7a903f2b]`
+- **style(menu): atualizar icone de tarefas** `[980efe8a]`
+- **style(menu): separar classes dos icones** `[0ab47a77]`
+- **style(menu): finalizar estilos dos icones de lista** `[7688cad2]`
+- **feat(cartorio): add tasks list page** `[e5e8dea9]`
+- **feat(cartorio): filtrar tarefas por status servidor e tipo** `[ea965899]`
+- **style(cartorio): atualizar modelo visual de tarefas** `[f9f9d1ed]`
+- **style(cartorio): reproduzir visual da lista de tarefas** `[7cdf2d84]`
+- **style(cartorio): ajustar lista de tarefas** `[63c5aacc]`
+- **style(cartorio): adicionar botoes de tarefas** `[55a06f4e]`
+- **feat(cartorio): ordenar tarefas por processo** `[b83eb846]`
+- **feat(cartorio): criar pagina de cadastro de tarefas** `[7f2d37b5]`
+- **feat(cartorio): salvar cadastro de tarefas** `[d6a27466]`
+- **style(cartorio): exibir somente seta ativa** `[efde0afa]`
+- **style(cartorio): usar imagens na paginacao** `[d9f91630]`
+- **feat(cartorio): adicionar especificacao do documento** `[9557353e]`
+- **feat(cartorio): restringir botao de automacao** `[7a89d2e3]`
+- **feat(cartorio): validar processo no cadastro de tarefas** `[2f28b2b0]`
+- **feat(cartorio): exibir tarefas e atualizar status** `[9622ad55]`
+- **feat(cartorio): exibir tempo curto das tarefas** `[2a4fab85]`
+- **feat(cartorio): colorir status e congelar tempo finalizado** `[fc824324]`
+- **feat(cartorio): ordenar tarefas por usuario e prioridade** `[266443b1]`
+- **style(cartorio): separar linhas das tarefas** `[98b1c0d8]`
+- **style(cartorio): ajustar feedback de cnj valido** `[a100d233]`
+- **feat(cartorio): destacar e limpar cnj invalido** `[97ca88ec]`
+- **feat(cartorio): preparar regras e local padrao de tarefas** `[c3698f57]`
+- **feat(tarefas): comparar condicoes de regras de automacao** `[425237e6]`
+- **feat(tarefas): validar regras e resolver precedencia** `[dca8c332]`
+- **feat(tarefas): persistir regras e lotes de reprocessamento** `[e405bb25]`
+- **feat(tarefas): preparar eventos prazos e vinculos de sequencia** `[f71df1f9]`
+- **feat(tarefas): processar eventos de automacao transacionais** `[2795ec54]`
+- **feat(tarefas): processar fila e reavaliacao em lotes** `[d6253d8a]`
+- **chore(deploy): preparar banco para automacao de tarefas** `[6b0c22f7]`
+- **fix(tarefas): preservar sequencias na retencao** `[66f1eb49]`
+- **feat(tarefas): registrar eventos nas alteracoes manuais** `[15fc1b21]`
+- **feat(tarefas): sugerir e alterar responsavel pela tarefa** `[18bf7f5b]`
+- **feat(tarefas): mostrar alertas de prazo no dashboard** `[5137a104]`
+- **feat(tarefas): preparar editor visual de automacoes** `[45efa807]`
+- **feat(tarefas): agendar automacao e usar horario da bahia** `[a76b9eeb]`
+- **feat(tarefas): permitir nova tentativa segura de falhas** `[4671c428]`
+- **fix(dashboard): alinhar alertas de tarefas ao visual existente** `[338d3a49]`
+- **feat(tarefas): disponibilizar administracao de automacoes** `[c6cd2421]`
+- **fix(tarefas): sincronizar regras e preservar prazos desativados** `[2cf61fb7]`
+- **fix(tarefas): respeitar precedencia de prazos entre eventos** `[36177e9e]`
+- **feat(tarefas): monitorar execucao automatica no deploy** `[d6695038]`
+- **fix(tarefas): alinhar botoes e largura das regras** `[80bac740]`
+- **feat(tarefas): incluir comprovante de envio** `[8bd425fb]`
+- **fix(tarefas): reaplicar status sem recriar sequencia** `[d5c637f7]`
+- **fix(tarefas): verificar versao ativa do agendador** `[62b3d65e]`
+- **fix(tarefas): permitir propagacao estavel de status** `[1eaee5e3]`
+- **fix(tarefas): manter nome curto na lista de responsaveis** `[edb4006a]`
+- **fix(tarefas): permitir alertas a toda equipe interna** `[e3d2036e]`
+- **test(tarefas): verificar pagina eventos e sequencias** `[0d69c32f]`
+- **test(tarefas): verificar atribuicao apos usuario inativo** `[e1a74460]`
+- **fix(tarefas): ocultar campo de status quando nao aplicavel** `[71674dfe]`
+- **fix(tarefas): remover itens temporarios apos processamento** `[4beab6de]`
+- **test(tarefas): verificar sequencia apos conclusao automatica** `[31ea9a48]`
+- **test(tarefas): verificar marcos de inicio dos prazos** `[e69ef7a0]`
+- **fix(tarefas): confirmar dependencias do agendador** `[59a46387]`
+- **feat(tarefas): ajustar frequencia da automacao por horario** `[95165080]`
+- **feat(tarefas): atualizar especificacoes de documentos** `[fbfadbcf]`
+- **fix(tarefas): preservar regras com especificacoes anteriores** `[e383383d]`
+- **feat(tarefas): organizar regras e permitir exclusao inativa** `[1c45e534]`
+- **fix(skills): limitar PDFs a 20 MB** `[04abf0e4]`
+- **fix(oficios): ocultar mensagem de consulta DataJud** `[afc674f4]`
+- **feat(skills): dividir PDF por tamanho** `[63831f6b]`
+- **feat(skills): melhorar apresentacao e orientacoes** `[996d1af4]`
+- **style(skills): alinhar visual das ferramentas de PDF** `[f13b6367]`
+- **feat(skills): aprimorar conversao e divisao de PDF** `[9b49d3f0]`
+- **docs: adicionar prompts para Archify** `[f1e66a8a]`
+- **fix(security): proteger APIs operacionais** `[8bfc5ba7]`
+- **fix(security): endurecer login e recuperação de senha** `[c76bb0b6]`
+- **fix(deploy): preservar dono do arquivo .env** `[2240560e]`
+- **fix(deploy): restaurar acesso do PHP ao ambiente** `[bf8c16f1]`
+- **docs(deploy): esclarecer efeitos condicionais** `[0ce844e1]`
+- **test: cover isolated login and password reset flows** `[eeada51f]`
+- **fix: remove residual auth test networks** `[f37f0361]`
+- **fix: preserve prior ata on replacement failure** `[bc57c55c]`
+- **fix: handle PDF tool cancellation safely** `[2cfddb29]`
+- **docs: corrigir orientacao de permissoes de deploy** `[7dfe4acd]`
+- **fix: validar origem completa em requisicoes POST** `[ffebadd1]`
+- **fix(security): proteger mutações de processos** `[296ed18c]`
+- **test: make security fixtures portable across Windows and CI** `[7f21329d]`
+- **test(REI-107): observe lock wait from expected worker** `[3f1b607e]`
+- **test(REI-163): revalidate ata eligibility after enrollment** `[83976ae2]`
+- **test(REI-163): isolate expiry and access assertions** `[6a073a2b]`
+- **test(REI-66): verify concurrent CPF creation in MySQL** `[4bf097d7]`
+- **fix(REI-66): wait for MySQL TCP readiness** `[ccd9a09d]`
+- **test(REI-68): exercise ata upload with Playwright** `[efd4c039]`
+- **fix(ci): resolve pinned Playwright image locally** `[4e927772]`
+- **feat(skills): add experimental PDF intelligence engine** `[d772fb86]`
 
-- **test(REI-68): exercise ata upload with Playwright** `[17a5f62f]`
-- **fix(ci): resolve pinned Playwright image locally** `[ac9f59fe]`
