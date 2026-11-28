@@ -1,0 +1,92 @@
+name: Autenticação — E2E isolado confiável
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: auth-e2e-trusted-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: read
+jobs:
+  auth-e2e-trusted:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: auth-test-attestation
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Obter imagens por digest
+        run: |
+          docker pull php@sha256:64ffb7411253121bbeb0d9eba37ce85e88d2a60d698e5debbd66bac71b20f3c2
+          docker pull composer@sha256:511d2a96fce74de098b54224d59146fb8b6a7735d4e301f16c87c062e511900d
+          docker pull mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903
+          docker pull axllent/mailpit@sha256:df6c2541907e1be6fac21f509927cf6ed771617a1f4b361ef66d97bd05593d2d
+          docker pull mcr.microsoft.com/playwright@sha256:ee15712262f017b8157421b212b12099146645f44b1bc5c0514cbbe6a229b1d0
+      - name: Construir runtime sem rede
+        run: docker build --network none --pull=false --iidfile "$RUNNER_TEMP/rei124-qa.id" -t rei124-auth-qa:ci tests/auth/ci-runtime
+      - name: Instalar dependências fixadas sem scripts ou plugins
+        run: |
+          python3 -B tests/auth/rei124-check-composer-inputs.test.py
+          python3 -B tests/auth/rei124-check-composer-inputs.py
+          stage="$(mktemp -d "$RUNNER_TEMP/rei124-composer.XXXXXXXX")"
+          trap 'rm -rf -- "$stage"' EXIT
+          mkdir "$stage/.home"
+          touch "$stage/composer.json" "$stage/composer.lock"
+          docker run --rm --label fokus.auth-e2e=rei124-ci-prep --network bridge \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/workspace/.home --env COMPOSER_HOME=/workspace/.home/composer \
+            --mount "type=bind,source=$stage,target=/workspace" \
+            --mount "type=bind,source=$PWD/composer.json,target=/workspace/composer.json,readonly" \
+            --mount "type=bind,source=$PWD/composer.lock,target=/workspace/composer.lock,readonly" \
+            --workdir /workspace \
+            "$(cat "$RUNNER_TEMP/rei124-qa.id")" composer \
+            install --no-dev --no-scripts --no-plugins --prefer-dist --no-interaction --no-progress --optimize-autoloader
+          rmdir "$PWD/vendor"
+          mv "$stage/vendor" "$PWD/vendor"
+          docker run --rm --label fokus.auth-e2e=rei124-ci-prep --network none \
+            --mount "type=bind,source=$PWD/composer.json,target=/workspace/composer.json,readonly" \
+            --mount "type=bind,source=$PWD/composer.lock,target=/workspace/composer.lock,readonly" \
+            --mount "type=bind,source=$PWD/vendor,target=/workspace/vendor,readonly" --workdir /workspace \
+            "$(cat "$RUNNER_TEMP/rei124-qa.id")" composer check-platform-reqs --no-dev
+      - name: Verificar diagnóstico sanitizado
+        run: |
+          python3 -B tests/auth/rei124-safe-diagnostics.test.py
+          python3 -B tests/auth/rei124-safe-failure-runner.test.py
+          python3 -B tests/auth/rei124-ci-cleanup-check.test.py
+      - name: Executar autenticação em sandbox descartável
+        shell: pwsh
+        env:
+          AUTH_TEST_SANDBOX_PRIVATE_KEY: ${{ secrets.AUTH_TEST_SANDBOX_PRIVATE_KEY }}
+        run: |
+          $encoded = $env:AUTH_TEST_SANDBOX_PRIVATE_KEY
+          if ([string]::IsNullOrWhiteSpace($encoded)) { throw 'Chave privada de atestação ausente; sandbox descartável não comprovado.' }
+          try { $privateKey = [Convert]::FromBase64String($encoded) } catch { throw 'Chave privada de atestação inválida; sandbox descartável não comprovado.' }
+          if ($privateKey.Length -ne 64) { throw 'Chave privada de atestação inválida; sandbox descartável não comprovado.' }
+          $keyPath = Join-Path $env:RUNNER_TEMP 'auth-test-attestation.key'
+          try {
+            [IO.File]::WriteAllBytes($keyPath, $privateKey)
+            & chmod 600 -- $keyPath
+            if ($LASTEXITCODE -ne 0) { throw 'Não foi possível proteger a chave privada de atestação.' }
+            $env:AUTH_TEST_ATTESTATION_KEY = $keyPath
+            $image = (Get-Content -LiteralPath "$env:RUNNER_TEMP/rei124-qa.id" -Raw).Trim()
+            ./tests/auth/run-isolated-auth-e2e.ps1 -QaImageId $image -Browser
+          } finally {
+            $env:AUTH_TEST_ATTESTATION_KEY = $null
+            if (Test-Path -LiteralPath $keyPath) { Remove-Item -LiteralPath $keyPath -Force }
+            if ($null -ne $privateKey) { [Array]::Clear($privateKey, 0, $privateKey.Length) }
+            $env:AUTH_TEST_SANDBOX_PRIVATE_KEY = $null
+          }
+      - name: Verificar resíduos do sandbox
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          auth_containers=$(docker ps -aq --filter label=fokus.auth-e2e)
+          auth_networks=$(docker network ls -q --filter label=fokus.auth-e2e)
+          auth_volumes=$(docker volume ls -q --filter label=fokus.auth-e2e)
+          test -z "$auth_containers"
+          test -z "$auth_networks"
+          test -z "$auth_volumes"

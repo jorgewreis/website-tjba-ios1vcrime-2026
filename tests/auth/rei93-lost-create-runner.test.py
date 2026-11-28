@@ -50,10 +50,13 @@ class LostCreateRunner(unittest.TestCase):
    else:
     f=fake/'docker';f.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n',encoding='utf8');f.chmod(0o700)
    pwsh=shutil.which('pwsh') or shutil.which('powershell');self.assertIsNotNone(pwsh)
+   key_fd, key_path = tempfile.mkstemp(prefix='rei93-attestation-key-')
+   os.write(key_fd, b'\x11'*64); os.close(key_fd)
+   self.addCleanup(lambda: os.path.exists(key_path) and os.remove(key_path))
    for scenario in ['one','ambiguous','late']:
     state=root/'state.json';state.unlink(missing_ok=True)
-    env=os.environ.copy();env.pop('DOCKER_HOST',None);env.pop('DOCKER_CONTEXT',None)
-    env.update({'PATH':str(fake)+os.pathsep+env.get('PATH',''),'REI93_STATE':str(state),'REI93_SCENARIO':scenario})
+    env=os.environ.copy();env.pop('DOCKER_HOST',None);env.pop('DOCKER_CONTEXT',None);env.pop('AUTH_TEST_ATTESTATION_KEY',None)
+    env.update({'PATH':str(fake)+os.pathsep+env.get('PATH',''),'REI93_STATE':str(state),'REI93_SCENARIO':scenario,'AUTH_TEST_ATTESTATION_KEY':key_path})
     p=subprocess.run([pwsh,'-NoProfile','-NonInteractive','-File',str(auth/'run-isolated-auth-e2e.ps1')],env=env,text=True,capture_output=True,timeout=30)
     self.assertNotEqual(p.returncode,0,(p.stdout,p.stderr))
     self.assertNotIn('PASS auth-test-runner',p.stdout+p.stderr)

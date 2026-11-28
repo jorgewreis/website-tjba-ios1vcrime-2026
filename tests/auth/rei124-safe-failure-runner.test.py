@@ -35,11 +35,14 @@ with tempfile.TemporaryDirectory(prefix='rei124-auth-failure-') as tmp:
  if os.name=='nt':(bin/'docker.cmd').write_text(f'@"{sys.executable}" "{fake}" %*\r\n')
  else:f=bin/'docker';f.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{fake}" "$@"\n');f.chmod(0o700)
  pwsh=shutil.which('pwsh') or shutil.which('powershell');assert pwsh
- env=os.environ.copy();env.pop('DOCKER_HOST',None);env.pop('DOCKER_CONTEXT',None);env.update({'PATH':str(bin)+os.pathsep+env.get('PATH',''),'REI124_STATE':str(root/'state.json')})
+ key_fd, key_path = tempfile.mkstemp(prefix='rei93-attestation-key-')
+ os.write(key_fd, b'\x11'*64); os.close(key_fd)
+ env=os.environ.copy();env.pop('DOCKER_HOST',None);env.pop('DOCKER_CONTEXT',None);env.pop('AUTH_TEST_ATTESTATION_KEY',None);env.update({'PATH':str(bin)+os.pathsep+env.get('PATH',''),'REI124_STATE':str(root/'state.json'),'AUTH_TEST_ATTESTATION_KEY':key_path})
  result=subprocess.run([pwsh,'-NoProfile','-File',str(auth/'run-isolated-auth-e2e.ps1')],env=env,capture_output=True,text=True,timeout=40)
  assert result.returncode!=0 and 'RUNNER_FAILURE' in result.stdout
  assert 'REI124_SYNTHETIC_SECRET_SENTINEL' not in result.stdout+result.stderr
  data=json.loads((root/'state.json').read_text());assert data['items']=={} and data.get('network_removed')
  assert data.get('start_attempted') and data.get('created_before_failure')==4, 'Did not reach intended start failure'
  assert not data.get('exec_attempted'), 'Execution continued after start failure'
+ os.remove(key_path)
 print('PASS runner completo: erro sanitizado e limpeza de recursos sinteticos')
