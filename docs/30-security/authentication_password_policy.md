@@ -46,7 +46,7 @@ Bootstrap e endurecimento de sessão:
 - o cookie usa `SameSite=Lax`;
 - o atributo `Secure` é aplicado quando a requisição está em HTTPS;
 - `session.use_strict_mode=1` e `session.use_only_cookies=1` fazem parte do bootstrap oficial;
-- existe expiração absoluta baseada em `SESSION_LIFETIME` e timeout de inatividade de **60 minutos** baseado em `SESSION_IDLE_TIMEOUT`.
+- existe expiração absoluta baseada em `SESSION_LIFETIME` e timeout de inatividade de **4 horas** baseado em `SESSION_IDLE_TIMEOUT`.
 
 ## 4. Controle de tentativas de login
 O fluxo oficial de login aplica contenção de tentativas mal-sucedidas no backend, antes da criação da sessão autenticada.
@@ -121,5 +121,5 @@ O modelo oficial vigente é:
 - **sessão PHP**
 - **token aleatório persistido em hash no banco**
 - **validação server-side em páginas e endpoints internos**
-- **timeout de inatividade de 60 minutos**
+- **timeout de inatividade de 4 horas**
 - **reset por link com token único e expiração**

@@ -18,7 +18,7 @@ O fluxo oficial de autenticação da Área Restrita é baseado em:
 - criação de sessão PHP após login bem-sucedido;
 - geração de token aleatório no servidor;
 - persistência do **hash** desse token na tabela de usuários com prazo de expiração;
-- timeout de inatividade de **60 minutos**;
+- timeout de inatividade de **4 horas**;
 - revalidação do token persistido a cada acesso à área autenticada e aos endpoints administrativos dependentes da sessão.
 
 Na prática:
