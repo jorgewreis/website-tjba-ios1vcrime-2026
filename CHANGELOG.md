@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0061
+
+**Data:** 2026-11-27 21:19:03 | **Commit:** `60e978c8` | **Tipo:** `patch`
+
+- fix(REI-116): align inactivity timeout policy to four hours
+
 ## V. 1.88.0060
 
 **Data:** 2026-11-27 21:08:32 | **Commit:** `4e927772` | **Tipo:** `patch`
@@ -7895,3 +7901,4 @@
 
 
 \n
+

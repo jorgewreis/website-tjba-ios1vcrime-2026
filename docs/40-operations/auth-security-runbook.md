@@ -78,7 +78,7 @@ Arquivo principal:
 
 ## 6. Timeout de inatividade
 
-O sistema opera com timeout de inatividade de 60 minutos.
+O sistema opera com timeout de inatividade de 4 horas.
 
 Quando houver relato de “sessão expirada”, verificar:
 
