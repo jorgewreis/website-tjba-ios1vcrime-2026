@@ -8,6 +8,7 @@ require_once __DIR__ . '/../helpers/CartasExpedidasEnvioRegra.php';
 final class DashboardResumoService
 {
     private PDO $pdo;
+    private bool $strictDashboard2Metrics;
     private const MODULES = [
         'cartas_expedidas' => ['label'=>'Cartas expedidas','table' => 'cartas_expedidas_subtarefas', 'parent' => 'cartas_expedidas', 'fk' => 'carta_expedida_id', 'route' => 'cartasexpedidas', 'types'=>['aguardando_envio'=>'Envio de carta expedida','aguardando_devolucao'=>'Cumprimento de carta expedida']],
         'cartas_recebidas' => ['label'=>'Cartas recebidas','table' => 'cartas_recebidas_subtarefas', 'parent' => 'cartas_recebidas', 'fk' => 'carta_recebida_id', 'route' => 'cartasrecebidas', 'types'=>['cumprimento'=>'Cumprimento de carta recebida','devolucao'=>'Devolução de carta recebida']],
@@ -16,7 +17,11 @@ final class DashboardResumoService
         'oficios' => ['label'=>'Ofícios','table' => 'oficios_cartorio_subtarefas', 'parent' => 'oficios_cartorio', 'fk' => 'oficio_cartorio_id', 'route' => 'oficioscartorio', 'types'=>['enviar_oficio'=>'Envio de ofício']],
     ];
 
-    public function __construct(PDO $pdo) { $this->pdo = $pdo; }
+    public function __construct(PDO $pdo, bool $strictDashboard2Metrics = false)
+    {
+        $this->pdo = $pdo;
+        $this->strictDashboard2Metrics = $strictDashboard2Metrics;
+    }
 
     public static function areasAutorizadas(array $profiles): array
     {
@@ -53,12 +58,26 @@ final class DashboardResumoService
         for($i=29;$i>=0;$i--){$day=(new DateTimeImmutable('today'))->modify('-'.$i.' days');$last30DaysDates[]=$day->format('Y-m-d');$last30DaysLabels[]=$day->format('d/m');}
         foreach(['expedidas'=>'cartas_expedidas','recebidas'=>'cartas_recebidas'] as $kind=>$table){
             try {
-                if (!$this->tableExists($table)) continue;
+                if (!$this->tableExists($table)) {
+                    if ($this->strictDashboard2Metrics) $last30DaysLetters[$kind] = array_fill(0, 30, null);
+                    continue;
+                }
                 // Cadastros são uma série histórica; filas operacionais usam o snapshot do fluxo abaixo.
                 $lettersRegistered[$kind]=0;
                 $recent=$this->pdo->query("SELECT DATE(created_at) dia, COUNT(*) total FROM `{$table}` WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 29 DAY) AND created_at < DATE_ADD(CURDATE(), INTERVAL 1 DAY) GROUP BY DATE(created_at)");
-                foreach($recent->fetchAll(PDO::FETCH_ASSOC) as $dayRow){$idx=array_search(substr((string)$dayRow['dia'],0,10),$last30DaysDates,true);if($idx!==false){$count=(int)$dayRow['total'];$last30DaysLetters[$kind][$idx]=$count;$lettersRegistered[$kind]+=$count;}}
-            } catch(Throwable $e) { error_log('dashboard resumo [cadastros '.$kind.']: '.$e->getMessage()); }
+                $hasUnmappedDay = false;
+                foreach($recent->fetchAll(PDO::FETCH_ASSOC) as $dayRow){$idx=array_search(substr((string)$dayRow['dia'],0,10),$last30DaysDates,true);$count=(int)$dayRow['total'];if($idx!==false){$last30DaysLetters[$kind][$idx]=$count;$lettersRegistered[$kind]+=$count;}else{$hasUnmappedDay=true;}}
+                if ($this->strictDashboard2Metrics && $hasUnmappedDay) {
+                    $lettersRegistered[$kind] = null;
+                    $last30DaysLetters[$kind] = array_fill(0, 30, null);
+                }
+            } catch(Throwable $e) {
+                if ($this->strictDashboard2Metrics) {
+                    $lettersRegistered[$kind] = null;
+                    $last30DaysLetters[$kind] = array_fill(0, 30, null);
+                }
+                error_log('dashboard resumo [cadastros '.$kind.']: '.$e->getMessage());
+            }
         }
         foreach(['cartorio'=>'oficios_cartorio','gabinete'=>'oficios_gabinete'] as $kind=>$table){
             try {
