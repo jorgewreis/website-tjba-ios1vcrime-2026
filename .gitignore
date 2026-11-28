@@ -129,6 +129,8 @@ database/backup/
 # Generated / Minified
 # =========================
 *.min.js
+!public/assets/ocr/tesseract/7.0.0/tesseract.min.js
+!public/assets/ocr/tesseract/7.0.0/worker.min.js
 *.min.css
 *.map
 

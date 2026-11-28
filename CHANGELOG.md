@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0061
+
+**Data:** 2026-11-27 21:30:22 | **Commit:** `d772fb86` | **Tipo:** `patch`
+
+- feat(skills): add experimental PDF intelligence engine
+
 ## V. 1.88.0060
 
 **Data:** 2026-11-27 21:08:32 | **Commit:** `4e927772` | **Tipo:** `patch`
@@ -7895,3 +7901,4 @@
 
 
 \n
+

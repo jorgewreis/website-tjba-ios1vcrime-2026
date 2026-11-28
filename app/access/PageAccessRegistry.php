@@ -92,6 +92,7 @@ final class PageAccessRegistry
             'usuariosedit' => ['kind' => 'gestao'],
             'skills' => ['kind' => 'all_internal'],
             'skillspdfmarkdown' => ['kind' => 'all_internal'],
+            'skillspdfintelligence' => ['kind' => 'all_internal'],
             'skillspdfsplit' => ['kind' => 'all_internal'],
             'feriadoscreate' => ['kind' => 'gestao'],
             'feriadosedit' => ['kind' => 'gestao'],

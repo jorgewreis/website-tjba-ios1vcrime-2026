@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>PDF Intelligence OCR local smoke</title>
+</head>
+<body>
+    <h1>OCR local com fixture sintética</h1>
+    <p id="status" role="status">Executando</p>
+    <pre id="output"></pre>
+    <script src="../../public/assets/ocr/tesseract/7.0.0/tesseract.min.js"></script>
+    <script src="../../public/assets/js/modules/skills/pdf-intelligence-core.js"></script>
+    <script src="../../public/assets/js/modules/skills/pdf-intelligence-tesseract.js"></script>
+    <script>
+        (async function () {
+            var status = document.getElementById('status');
+            try {
+                var adapter = App.PdfIntelligenceTesseract.createAdapter({ basePath: '/assets/ocr/tesseract/7.0.0/' });
+                var result = await adapter.recognizePage({
+                    getViewport: function (settings) { return { width: 300 * settings.scale, height: 80 * settings.scale }; },
+                    render: function (renderSettings) {
+                        var context = renderSettings.canvasContext;
+                        context.fillStyle = '#ffffff';
+                        context.fillRect(0, 0, 600, 160);
+                        context.fillStyle = '#111111';
+                        context.font = 'bold 42px Arial';
+                        context.textBaseline = 'middle';
+                        context.fillText('FICHA FICTICIA 2026', 18, 80);
+                        return { promise: Promise.resolve(), cancel: function () {} };
+                    }
+                }, 1, { scale: 2 });
+                var text = result.blocks.map(function (block) { return block.text; }).join(' ');
+                document.getElementById('output').textContent = text;
+                if (!/FICHA\s+FICTICIA\s+2026/i.test(text)) throw new Error('Texto sintético esperado não foi reconhecido.');
+                status.textContent = 'PASS';
+                document.body.dataset.status = 'pass';
+                await adapter.terminate();
+            } catch (error) {
+                status.textContent = 'FAIL · ' + error.message;
+                document.body.dataset.status = 'fail';
+            }
+        }());
+    </script>
+</body>
+</html>

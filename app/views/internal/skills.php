@@ -40,6 +40,21 @@ Security::requireAuthentication();
             <div><h2 id="skills-tools-title">Ferramentas disponíveis</h2><p>Confira como funciona e acesse a ferramenta desejada.</p></div>
         </div>
         <div class="skills-list">
+            <article class="skills-item" aria-labelledby="skills-intelligence-title">
+                <div class="skills-item-heading">
+                    <span class="skills-icon" aria-hidden="true">OCR</span>
+                    <div><h3 id="skills-intelligence-title">PDF Intelligence Engine <span class="skills-experimental-badge">Experimental</span></h3><p>Compare extração nativa, OCR local em português e fluxo híbrido por página.</p></div>
+                </div>
+                <div class="skills-instructions">
+                    <h4>Limites da experiência</h4>
+                    <ol>
+                        <li>Os PDFs são processados no navegador, sem envio a APIs externas.</li>
+                        <li>Confira identificadores e demais campos críticos no PDF original.</li>
+                        <li>A ferramenta original continua disponível durante a avaliação.</li>
+                    </ol>
+                </div>
+                <div class="skills-item-footer"><button type="button" class="btn btn-primary height-md" data-nav-href="/frame.php?page=skillspdfintelligence" aria-label="Abrir ferramenta experimental PDF Intelligence Engine">Abrir versão experimental</button></div>
+            </article>
             <article class="skills-item" aria-labelledby="skills-markdown-title">
                 <div class="skills-item-heading">
                     <span class="skills-icon" aria-hidden="true">MD</span>

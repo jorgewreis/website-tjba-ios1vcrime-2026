@@ -75,6 +75,7 @@ $allowed_pages = [
     'feriadosedit'          => $PAGES . '/feriados-edit.php',
     'skills'                => $PAGES . '/skills.php',
     'skillspdfmarkdown'     => $PAGES . '/skills-pdf-markdown.php',
+    'skillspdfintelligence' => $PAGES . '/skills-pdf-intelligence.php',
     'skillspdfsplit'        => $PAGES . '/skills-pdf-split.php',
     'alterardados'          => $PAGES . '/alterar-dados-pessoais.php',
     'consultapartes'        => $PAGES . '/consulta-partes-list.php',
