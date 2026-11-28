@@ -16,4 +16,3 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **docs(REI-116): reconcile remaining timeout references** `[3a8903a2]`
 - **fix(REI-93): bind sandbox attestation to local nonce** `[24f20112]`
 - **test(guias): align REI-105 MySQL fixture** `[fa8363f0]`
-
