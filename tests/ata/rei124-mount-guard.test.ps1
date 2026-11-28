@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'rei124-mount-guard.ps1')
-$bindPaths = @('/repo/app','/repo/config','/repo/public','/repo/tests/ata/rei124-ata-service-mysql.test.php','/repo/tests/ata/rei124-ata-http-mysql.test.php')
+$bindPaths = @('/repo/app','/repo/config','/repo/public','/repo/tests/ata/rei124-ata-service-mysql.test.php','/repo/tests/ata/rei124-ata-http-mysql.test.php','/repo/tests/ata/rei124-ata-ui-fixture.php')
 function Make-Info([bool]$listedTmpfs) {
     $mounts = @($bindPaths | ForEach-Object { [pscustomobject]@{Type='bind';Destination=$_;RW=$false} })
     if ($listedTmpfs) { $mounts += [pscustomobject]@{Type='tmpfs';Destination='/tmp';RW=$true}; $mounts += [pscustomobject]@{Type='tmpfs';Destination='/repo/storage';RW=$true} }

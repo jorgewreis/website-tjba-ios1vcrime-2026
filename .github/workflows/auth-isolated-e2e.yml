@@ -65,11 +65,13 @@ jobs:
           pwsh -NoProfile -File tests/ata/rei124-mount-guard.test.ps1
           python3 -B tests/ata/rei124-ata-service-guard.test.py
           python3 -B tests/ata/rei124-ata-runner-refusal.test.py
+          npm ci --prefix tests/ata --ignore-scripts --no-audit --no-fund
       - name: Executar serviço de atas no laboratório isolado
         shell: pwsh
         run: |
           $image = (Get-Content -LiteralPath "$env:RUNNER_TEMP/rei124-qa.id" -Raw).Trim()
-          ./tests/ata/run-rei124-ata-service-isolated.ps1 -QaImageId $image
+          $browserImage = 'sha256:ee15712262f017b8157421b212b12099146645f44b1bc5c0514cbbe6a229b1d0'
+          ./tests/ata/run-rei124-ata-service-isolated.ps1 -QaImageId $image -PlaywrightImageId $browserImage
       - name: Verificar resíduos do sandbox
         if: always()
         shell: bash

@@ -1,6 +1,7 @@
 function Assert-Rei124AtaMounts($Info) {
     $expectedBinds = @('/repo/app','/repo/config','/repo/public',
-        '/repo/tests/ata/rei124-ata-service-mysql.test.php','/repo/tests/ata/rei124-ata-http-mysql.test.php')
+        '/repo/tests/ata/rei124-ata-service-mysql.test.php','/repo/tests/ata/rei124-ata-http-mysql.test.php',
+        '/repo/tests/ata/rei124-ata-ui-fixture.php')
     $expectedTmpfs = @('/tmp','/repo/storage')
     $mounts = @($Info.Mounts | Where-Object { $null -ne $_ })
     $binds = @($mounts | Where-Object { $_.Type -eq 'bind' })
