@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0065
+
+**Data:** 2026-11-28 10:01:27 | **Commit:** `e95d997e` | **Tipo:** `patch`
+
+- fix(cejusc): ensure priorities on process changes
+
 ## V. 1.88.0064
 
 **Data:** 2026-11-27 22:03:44 | **Commit:** `658db10a` | **Tipo:** `patch`
@@ -7919,3 +7925,4 @@
 
 
 \n
+

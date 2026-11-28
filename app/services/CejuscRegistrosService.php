@@ -93,7 +93,9 @@ final class CejuscRegistrosService
                 $this->connection->rollBack();
                 return false;
             }
-            $data['nome_parte'] = $this->ensureParteVinculada($data, false);
+            // Preserve a prioridade histórica no processo anterior: a origem pode representar
+            // outras causas que o esquema atual não consegue distinguir. Garanta a do destino.
+            $data['nome_parte'] = $this->ensureParteVinculada($data, true);
             if (!$this->repository->update($id, $data)) {
                 throw new RuntimeException('Não foi possível atualizar o registro CEJUSC.');
             }

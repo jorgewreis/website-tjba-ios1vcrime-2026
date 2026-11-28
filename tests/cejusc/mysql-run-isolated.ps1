@@ -2,13 +2,17 @@ $ErrorActionPreference = 'Stop'
 $tag = [Guid]::NewGuid().ToString('N')
 $dbName = "fokus-cejusc-db-$tag"
 $phpName = "fokus-cejusc-php-$tag"
+$networkName = "fokus-cejusc-net-$tag"
 $password = [Guid]::NewGuid().ToString('N')
 $database = "cejusc_$tag"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $dbId = $null
 $phpId = $null
+$networkId = $null
 try {
-    $dbId = docker run -d --name $dbName --label "fokus.cejusc-test=$tag" --network none --tmpfs /var/lib/mysql --tmpfs /var/run/mysqld -e "MYSQL_ROOT_PASSWORD=$password" -e MYSQL_ROOT_HOST=% -e "MYSQL_DATABASE=$database" mysql:8.4.7
+    $networkId = docker network create --internal --label "fokus.cejusc-test=$tag" $networkName
+    if ($LASTEXITCODE -ne 0 -or -not $networkId) { throw 'Falha criando rede interna isolada.' }
+    $dbId = docker run -d --name $dbName --label "fokus.cejusc-test=$tag" --network $networkName --tmpfs /var/lib/mysql --tmpfs /var/run/mysqld -e "MYSQL_ROOT_PASSWORD=$password" -e MYSQL_ROOT_HOST=% -e "MYSQL_DATABASE=$database" mysql:8.4.7
     if ($LASTEXITCODE -ne 0 -or -not $dbId) { throw 'Falha criando MySQL efêmero.' }
     $ready = $false
     for ($i = 0; $i -lt 60; $i++) {
@@ -19,7 +23,9 @@ try {
         Start-Sleep -Seconds 1
     }
     if (-not $ready) { throw 'MySQL efêmero não ficou pronto.' }
-    $phpId = docker run -d --name $phpName --label "fokus.cejusc-test=$tag" --network "container:$dbId" --entrypoint sleep fokus-law-linux-qa:20261107-php857-node2413 300
+    $dbHost = docker inspect $dbId --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}'
+    if ($LASTEXITCODE -ne 0 -or -not $dbHost) { throw 'IP privado do MySQL descartável não confirmado.' }
+    $phpId = docker run -d --name $phpName --label "fokus.cejusc-test=$tag" --network $networkName --entrypoint sleep fokus-law-linux-qa:20261107-php857-node2413 300
     if ($LASTEXITCODE -ne 0 -or -not $phpId) { throw 'Falha criando executor PHP efêmero.' }
     docker exec $phpId mkdir -p /work/app /work/config /work/tests/cejusc
     if ($LASTEXITCODE -ne 0) { throw 'Falha preparando executor.' }
@@ -31,7 +37,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Falha copiando classe Security.' }
     docker cp (Join-Path $PSScriptRoot 'mysql-isolated.test.php') "${phpId}:/work/tests/cejusc/"
     if ($LASTEXITCODE -ne 0) { throw 'Falha copiando teste.' }
-    docker exec -e CEJUSC_DISPOSABLE_TEST=1 -e "CEJUSC_TEST_PASSWORD=$password" -e "CEJUSC_TEST_DATABASE=$database" $phpId php /work/tests/cejusc/mysql-isolated.test.php
+    docker exec -e CEJUSC_DISPOSABLE_TEST=1 -e "CEJUSC_TEST_PASSWORD=$password" -e "CEJUSC_TEST_DATABASE=$database" -e "CEJUSC_TEST_HOST=$dbHost" $phpId php /work/tests/cejusc/mysql-isolated.test.php
     if ($LASTEXITCODE -ne 0) { throw 'Teste MySQL falhou.' }
 } finally {
     foreach ($resource in @($phpId, $dbId)) {
@@ -43,5 +49,12 @@ try {
                 if ($LASTEXITCODE -ne 0) { Write-Warning "Remoção falhou para container identificado $resource" }
             } else { Write-Warning "Container não removido: identidade não confirmada ($resource)." }
         }
+    }
+    if ($networkId) {
+        $networkInfo = docker network inspect $networkId | ConvertFrom-Json
+        if ($LASTEXITCODE -eq 0 -and $networkInfo[0].Labels.'fokus.cejusc-test' -eq $tag) {
+            docker network rm $networkId | Out-Null
+            if ($LASTEXITCODE -ne 0) { Write-Warning "Remoção falhou para rede identificada $networkId" }
+        } else { Write-Warning "Rede não removida: identidade não confirmada ($networkId)." }
     }
 }
