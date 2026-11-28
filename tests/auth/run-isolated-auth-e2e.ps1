@@ -154,7 +154,9 @@ function New-SandboxAttestation([string]$targetId) {
     if ($targetId -notin @($app, $client)) { throw 'Alvo da atestação fora dos contêineres de aplicação.' }
     $nonce = "$targetId`n$(Secret)"
     $nonceBytes = [Text.Encoding]::UTF8.GetBytes($nonce)
-    $nonceHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData($nonceBytes)).ToLowerInvariant()
+    $sha256 = [Security.Cryptography.SHA256]::Create()
+    try { $nonceHash = ([BitConverter]::ToString($sha256.ComputeHash($nonceBytes))).Replace('-', '').ToLowerInvariant() }
+    finally { $sha256.Dispose() }
     $nonceEncoded = [Convert]::ToBase64String($nonceBytes)
     $noncePath = '/tmp/.auth-test-attestation-nonce'
     $nonceWriter = 'umask(0077); $encoded = trim(stream_get_contents(STDIN)); $nonce = base64_decode($encoded, true); if (!is_string($nonce)) { exit(2); } if (file_put_contents("' + $noncePath + '", $nonce, LOCK_EX) !== strlen($nonce)) { exit(3); }'
@@ -162,6 +164,8 @@ function New-SandboxAttestation([string]$targetId) {
     if ($LASTEXITCODE -ne 0) { throw 'Não foi possível vincular a atestação ao contêiner-alvo.' }
     $storedNonceHash = (D @('exec', $targetId, 'php', '-r', 'echo hash_file("sha256", $argv[1]);', $noncePath) | Select-Object -Last 1).Trim()
     if ($storedNonceHash -cne $nonceHash) { throw 'Nonce local do contêiner não corresponde à atestação.' }
+    $targetMountNamespace = (D @('exec', $targetId, 'php', '-r', 'echo readlink("/proc/self/ns/mnt");') | Select-Object -Last 1).Trim()
+    if ($targetMountNamespace -notmatch '^mnt:\[[0-9]+\]$') { throw 'Namespace de montagem do contêiner-alvo inválido.' }
     Assert-ActiveTopology
     $iat = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
     $browserId = 'none'
@@ -170,12 +174,13 @@ function New-SandboxAttestation([string]$targetId) {
         $browserId = $browserContainer
     }
     $payload = (@(
-        'v=3',
+        'v=4',
         "iat=$iat",
         "exp=$($iat + 600)",
         "run_id=$runId",
         "target_id=$targetId",
         "target_nonce_sha256=$nonceHash",
+        "target_mount_namespace=$targetMountNamespace",
         'network_internal=true',
         "network_id=$networkId",
         "mysql_id=$mysql",

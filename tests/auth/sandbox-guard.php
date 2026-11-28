@@ -47,7 +47,7 @@ if (str_contains($sandboxPayload, "\r")) {
 }
 $sandboxLines = explode("\n", $sandboxPayload);
 $sandboxExpectedKeys = [
-    'v', 'iat', 'exp', 'run_id', 'target_id', 'target_nonce_sha256', 'network_internal', 'network_id',
+    'v', 'iat', 'exp', 'run_id', 'target_id', 'target_nonce_sha256', 'target_mount_namespace', 'network_internal', 'network_id',
     'mysql_id', 'app_id', 'client_id', 'mailpit_id', 'browser_id',
     'binds', 'ports', 'privileged', 'publish_all_ports', 'mysql_tmpfs',
 ];
@@ -70,7 +70,7 @@ foreach ($sandboxLines as $sandboxIndex => $sandboxLine) {
 
 $sandboxDecimal = '/^(0|[1-9][0-9]{0,17})$/';
 $sandboxId64 = '/^[a-f0-9]{64}$/';
-if ($sandboxClaims['v'] !== '3'
+if ($sandboxClaims['v'] !== '4'
     || preg_match($sandboxDecimal, $sandboxClaims['iat']) !== 1
     || preg_match($sandboxDecimal, $sandboxClaims['exp']) !== 1
     || preg_match('/^[a-f0-9]{32}$/', $sandboxClaims['run_id']) !== 1
@@ -123,5 +123,10 @@ if (!sandbox_attestation_target_matches_cgroup(
     $sandboxClaims['target_nonce_sha256'],
     '/tmp/.auth-test-attestation-nonce'
 )) {
+    sandbox_attestation_reject();
+}
+$sandboxMountNamespace = @readlink('/proc/self/ns/mnt');
+if (!is_string($sandboxMountNamespace)
+    || !sandbox_attestation_mount_namespace_matches($sandboxClaims['target_mount_namespace'], $sandboxMountNamespace)) {
     sandbox_attestation_reject();
 }

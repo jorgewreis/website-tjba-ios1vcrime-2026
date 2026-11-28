@@ -51,6 +51,9 @@ $cases = [
     !sandbox_attestation_target_matches_cgroup("0::/\n", $app, [$app, $client], $nonceHash, $noncePath . '.missing'),
     !sandbox_attestation_target_matches_cgroup('', $app, [$app, $client], $nonceHash, $noncePath),
     !sandbox_attestation_target_matches_cgroup("0::/scope\n", $app, [$app, $client], $nonceHash, $noncePath),
+    sandbox_attestation_mount_namespace_matches('mnt:[4026533000]', 'mnt:[4026533000]'),
+    !sandbox_attestation_mount_namespace_matches('mnt:[4026533000]', 'mnt:[4026533001]'),
+    !sandbox_attestation_mount_namespace_matches('invalid', 'mnt:[4026533000]'),
 ];
 unlink($noncePath);
 if (in_array(false, $cases, true)) { exit(1); }

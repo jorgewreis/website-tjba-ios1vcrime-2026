@@ -29,3 +29,10 @@ function sandbox_attestation_target_matches_cgroup(
     // Private cgroup v2 exposes 0::/; the signed target is scoped by docker exec.
     return preg_match('/(?:^|\n)0::\/(?:\n|$)/', $cgroup) === 1;
 }
+
+function sandbox_attestation_mount_namespace_matches(string $expected, string $actual): bool
+{
+    return preg_match('/^mnt:\[[0-9]+\]$/', $expected) === 1
+        && preg_match('/^mnt:\[[0-9]+\]$/', $actual) === 1
+        && hash_equals($expected, $actual);
+}
