@@ -4,6 +4,7 @@ require_once __DIR__ . '/../config/security.php';
 require_once __DIR__ . '/../app/helpers/bootstrap.php';
 require_once __DIR__ . '/../app/models/Usuario.php';
 require_once __DIR__ . '/../app/helpers/Conection.php';
+require_once __DIR__ . '/../app/access/AccessEvaluator.php';
 
 // Impedir cache: a home só pode ser servida após verificação em cada request
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -100,6 +101,13 @@ foreach ($userPerfisDb as $p) {
     }
 }
 $defaultHomePage = $isUsuarioExterno ? 'dashboardexterno' : 'dashboard';
+$dashboard2Enabled = in_array(
+    strtolower((string) envValue('DASHBOARD2_ENABLED', '0')),
+    ['1', 'true', 'yes', 'on'],
+    true
+);
+$showDashboard2TestLink = $dashboard2Enabled
+    && AccessEvaluator::canAccessPage('dashboard2', $userPerfisEfectivos);
 
 /** Nome completo e linha de perfil/lotação para o badge do avatar (navbar). */
 $userDisplayFullName = trim((string) ($userName ?? ''));
@@ -500,6 +508,14 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
                             <span class="text"><?php echo $isUsuarioExterno ? 'Início' : 'Dashboard'; ?></span>
                         </button>
                     </li>
+                    <?php if ($showDashboard2TestLink): ?>
+                    <li class="menu-item">
+                        <button type="button" class="menu-link" data-target="dashboard2">
+                            <i class="fi fi-br-layout-fluid" aria-hidden="true"></i>
+                            <span class="text">Dashboard 2 (teste)</span>
+                        </button>
+                    </li>
+                    <?php endif; ?>
                 </ul>
             </nav>
 
@@ -610,6 +626,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
     <script>
         /** Página inicial do iframe (dashboard interno ou início externo). Alinhado ao PHP $defaultHomePage. */
         const DEFAULT_HOME_PAGE = <?php echo json_encode($defaultHomePage, JSON_UNESCAPED_UNICODE); ?>;
+        const SHOW_DASHBOARD2_TEST_LINK = <?php echo json_encode($showDashboard2TestLink, JSON_UNESCAPED_UNICODE); ?>;
         /** Mesmo critério de app/helpers/UserAccessHelper.php — menu não deve exibir rotas internas. */
         const IS_USUARIO_EXTERNO = <?php echo json_encode($isUsuarioExterno, JSON_UNESCAPED_UNICODE); ?>;
         /** Perfil ESTUDANTE no cadastro (externo: recursos em Estudantes; ver public/frame.php). */
@@ -763,6 +780,7 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             const perfis = await fetchUserPerfis(refreshPerfis === true);
             const permittedSections = getPermittedSections(perfis);
             buildMenuForSections(permittedSections, normalizePerfis(perfis));
+            appendDashboard2TestLink();
             appendLogoutItem();
         }
 
@@ -932,6 +950,25 @@ if (!empty($_SESSION['flash_profile_saved_toast'])) {
             });
             li.appendChild(link);
             menuRoot.appendChild(li);
+        }
+
+        function appendDashboard2TestLink() {
+            if (!SHOW_DASHBOARD2_TEST_LINK || IS_USUARIO_EXTERNO) return;
+
+            const menuRoot = document.querySelector('.menu-inner');
+            if (!menuRoot) return;
+
+            const li = document.createElement('li');
+            li.className = 'menu-item';
+            const link = document.createElement('button');
+            link.type = 'button';
+            link.className = 'menu-link';
+            link.dataset.target = 'dashboard2';
+            link.innerHTML = '<i class="fi fi-br-layout-fluid" aria-hidden="true"></i><span class="text">Dashboard 2 (teste)</span>';
+            li.appendChild(link);
+            const logout = menuRoot.querySelector('.menu-item-logout');
+            if (logout) menuRoot.insertBefore(li, logout);
+            else menuRoot.appendChild(li);
         }
 
         function itemAllowedForUser(item, perfis) {
