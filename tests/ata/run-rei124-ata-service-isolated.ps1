@@ -1,5 +1,5 @@
 [CmdletBinding()]
-param([string]$QaImageId = '')
+param([string]$QaImageId = '', [string]$PlaywrightImageId = '')
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
@@ -7,6 +7,9 @@ $appRoot = Join-Path $repoRoot 'app'
 . (Join-Path $PSScriptRoot 'rei124-mount-guard.ps1')
 $testFile = Join-Path $PSScriptRoot 'rei124-ata-service-mysql.test.php'
 $httpFile = Join-Path $PSScriptRoot 'rei124-ata-http-mysql.test.php'
+$uiFixture = Join-Path $PSScriptRoot 'rei124-ata-ui-fixture.php'
+$browserTest = Join-Path $PSScriptRoot 'rei124-ata-browser.cjs'
+$playwrightCore = Join-Path $PSScriptRoot 'node_modules/playwright-core'
 $publicRoot = Join-Path $repoRoot 'public'
 $configRoot = Join-Path $repoRoot 'config'
 if ($env:DOCKER_HOST -or $env:DOCKER_CONTEXT) { throw 'Selecao de daemon por ambiente recusada.' }
@@ -17,6 +20,11 @@ if ($LASTEXITCODE -ne 0 -or -not $context) { throw 'Contexto Docker invalido.' }
 $dockerHost = [string]$context.Endpoints.docker.Host
 if ($dockerHost -notin @('npipe:////./pipe/dockerDesktopLinuxEngine','unix:///var/run/docker.sock')) { throw 'Daemon Docker nao local recusado.' }
 $mysqlImage = 'mysql@sha256:0426ec38c7a10aa45ba383887df7878f74ee70e2fd589c7b69207f3577901903'
+$playwrightImage = 'mcr.microsoft.com/playwright@sha256:ee15712262f017b8157421b212b12099146645f44b1bc5c0514cbbe6a229b1d0'
+if ($PlaywrightImageId -ne '') {
+    if ($PlaywrightImageId -notmatch '^sha256:[a-f0-9]{64}$') { throw 'ID da imagem Playwright invalido.' }
+    $playwrightImage = $PlaywrightImageId
+}
 $phpImage = 'fokus-law-linux-qa@sha256:459cc8bd25b38009a8cf9a0ef5399d131f4f2001a1376d89389f673a92de430b'
 if ($QaImageId -ne '') {
     if ($QaImageId -notmatch '^sha256:[a-f0-9]{64}$') { throw 'ID de imagem QA invalido.' }
@@ -57,7 +65,7 @@ function Remove-OwnedContainer([string]$id) {
 
 try {
     if (Test-Path -LiteralPath (Join-Path $repoRoot '.env')) { throw 'Runner recusado: checkout contÃ©m .env.' }
-    foreach ($path in @($appRoot, $testFile, $httpFile, $publicRoot, $configRoot)) {
+    foreach ($path in @($appRoot, $testFile, $httpFile, $uiFixture, $browserTest, $playwrightCore, $publicRoot, $configRoot)) {
         $item = Get-Item -LiteralPath $path -Force
         if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) { throw 'Runner recusado: app ou teste contÃ©m reparse point.' }
     }
@@ -68,7 +76,8 @@ try {
     }
     $mysqlImageId = (Invoke-DockerSafe @('image', 'inspect', '--format', '{{.Id}}', $mysqlImage) | Select-Object -Last 1).Trim()
     $phpImageId = (Invoke-DockerSafe @('image', 'inspect', '--format', '{{.Id}}', $phpImage) | Select-Object -Last 1).Trim()
-    if (-not $mysqlImageId -or -not $phpImageId) { throw 'Imagem Docker necessÃ¡ria ausente.' }
+    $playwrightImageDigest = (Invoke-DockerSafe @('image', 'inspect', '--format', '{{.Id}}', $playwrightImage) | Select-Object -Last 1).Trim()
+    if (-not $mysqlImageId -or -not $phpImageId -or -not $playwrightImageDigest) { throw 'Imagem Docker necessÃ¡ria ausente.' }
 
     $creationPending = $true
     $mysqlId = (Invoke-DockerSafe @('create', '--name', $databaseName, '--label', "$label=$runId", '--network', 'none', '--memory', '1g', '--cpus', '1', '--tmpfs', '/var/lib/mysql:rw,size=512m', '--tmpfs', '/var/run/mysqld:rw,size=32m', '--env', "MYSQL_ROOT_PASSWORD=$password", '--env', 'MYSQL_ROOT_HOST=%', '--env', 'MYSQL_DATABASE=rei124ata_test', $mysqlImageId) | Select-Object -Last 1).Trim()
@@ -91,10 +100,11 @@ try {
     $appMount = "type=bind,source=$appRoot,target=/repo/app,readonly"
     $testMount = "type=bind,source=$testFile,target=/repo/tests/ata/rei124-ata-service-mysql.test.php,readonly"
     $httpMount = "type=bind,source=$httpFile,target=/repo/tests/ata/rei124-ata-http-mysql.test.php,readonly"
+    $fixtureMount = "type=bind,source=$uiFixture,target=/repo/tests/ata/rei124-ata-ui-fixture.php,readonly"
     $publicMount = "type=bind,source=$publicRoot,target=/repo/public,readonly"
     $configMount = "type=bind,source=$configRoot,target=/repo/config,readonly"
     $creationPending = $true
-    $phpId = (Invoke-DockerSafe @('create', '--name', $phpName, '--label', "$label=$runId", '--network', "container:$mysqlId", '--memory', '768m', '--cpus', '1', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges=true', '--tmpfs', '/tmp:rw,size=128m,noexec,nosuid,nodev', '--tmpfs', '/repo/storage:rw,size=64m,noexec,nosuid,nodev', '--mount', $appMount, '--mount', $testMount, '--mount', $httpMount, '--mount', $publicMount, '--mount', $configMount, '--env', 'DB_HOST=127.0.0.1', '--env', 'DB_NAME=rei124ata_test', '--env', 'DB_USER=root', '--env', "DB_PASS=$password", '--env', 'REI124ATA_TEST_DISPOSABLE=1', '--env', "REI124ATA_TEST_MARKER=$marker", '--entrypoint', 'sleep', $phpImageId, '300') | Select-Object -Last 1).Trim()
+    $phpId = (Invoke-DockerSafe @('create', '--name', $phpName, '--label', "$label=$runId", '--network', "container:$mysqlId", '--memory', '768m', '--cpus', '1', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges=true', '--tmpfs', '/tmp:rw,size=128m,noexec,nosuid,nodev', '--tmpfs', '/repo/storage:rw,size=64m,noexec,nosuid,nodev', '--mount', $appMount, '--mount', $testMount, '--mount', $httpMount, '--mount', $fixtureMount, '--mount', $publicMount, '--mount', $configMount, '--env', 'DB_HOST=127.0.0.1', '--env', 'DB_NAME=rei124ata_test', '--env', 'DB_USER=root', '--env', "DB_PASS=$password", '--env', 'REI124ATA_TEST_DISPOSABLE=1', '--env', "REI124ATA_TEST_MARKER=$marker", '--entrypoint', 'sleep', $phpImageId, '300') | Select-Object -Last 1).Trim()
     if ($phpId -notmatch '^[a-f0-9]{64}$') { throw 'ID PHP descartavel invalido.' }
     $creationPending = $false
     $phpInfo = @((Invoke-DockerSafe @('inspect', $phpId)) | ConvertFrom-Json)[0]
@@ -106,9 +116,20 @@ try {
     $diagnosticStage = 'php-http-setup'
     Invoke-DockerSafe @('exec', $phpId, 'php', '/repo/tests/ata/rei124-ata-http-mysql.test.php', 'setup')
     $diagnosticStage = 'php-http-servidor'
-    Invoke-DockerSafe @('exec', '-d', $phpId, 'php', '-d', 'display_errors=0', '-S', '127.0.0.1:18766', '-t', '/repo/public') | Out-Null
+    Invoke-DockerSafe @('exec', '-d', $phpId, 'php', '-d', 'display_errors=0', '-d', 'session.save_path=/tmp/ios1vcrime_sess', '-d', 'session.use_strict_mode=0', '-S', '127.0.0.1:18766', '-t', '/repo/public', '/repo/tests/ata/rei124-ata-ui-fixture.php') | Out-Null
     $diagnosticStage = 'php-http-check'
     Invoke-DockerSafe @('exec', $phpId, 'php', '/repo/tests/ata/rei124-ata-http-mysql.test.php', 'check')
+    $diagnosticStage = 'playwright-upload'
+    $browserMount = "type=bind,source=$browserTest,target=/tests/rei124-ata-browser.cjs,readonly"
+    $playwrightMount = "type=bind,source=$playwrightCore,target=/node_modules/playwright-core,readonly"
+    $browserArgs = @('run', '--rm', '--label', "$label=$runId", '--network', "container:$phpId", '--memory', '2g', '--cpus', '2', '--shm-size', '1g', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges=true', '--tmpfs', '/tmp:rw,size=256m,nosuid,nodev', '--mount', $browserMount, '--mount', $playwrightMount, '--entrypoint', 'node', $playwrightImageDigest, '/tests/rei124-ata-browser.cjs')
+    $browserOutput = & docker --host $dockerHost @browserArgs 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        $safeBrowserOutput = (($browserOutput | Out-String).Trim() -replace '[\r\n]+', ' ')
+        if ($safeBrowserOutput.Length -gt 2500) { $safeBrowserOutput = $safeBrowserOutput.Substring(0, 2500) }
+        throw "Execucao Playwright falhou (codigo $LASTEXITCODE): $safeBrowserOutput"
+    }
+    $browserOutput | Write-Output
 } finally {
     if ($creationPending) {
         # Uma criacao pode terminar apos a consulta; o resultado permanece incerto.

@@ -8,3 +8,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **fix(auth): restore Rei69 runner argument compatibility** `[09f760eb]`
 - **ci(auth): keep signed E2E off pull request jobs** `[d36b7aab]`
 
+- **test(REI-68): exercise ata upload with Playwright** `[17a5f62f]`
+- **fix(ci): resolve pinned Playwright image locally** `[ac9f59fe]`
