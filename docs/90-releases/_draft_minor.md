@@ -140,4 +140,5 @@ Este arquivo acumula mudanças incrementais para a próxima release MINOR.
 - **test(REI-163): isolate expiry and access assertions** `[6a073a2b]`
 - **test(REI-66): verify concurrent CPF creation in MySQL** `[4bf097d7]`
 - **fix(REI-66): wait for MySQL TCP readiness** `[ccd9a09d]`
+- **test(REI-68): exercise ata upload with Playwright** `[efd4c039]`
 
