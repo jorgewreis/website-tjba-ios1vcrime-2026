@@ -9,12 +9,18 @@ const frame = fs.readFileSync(path.join(root, 'public/frame.php'), 'utf8');
 const api = fs.readFileSync(path.join(root, 'public/api/dashboard/resumo-v2.php'), 'utf8');
 const access = fs.readFileSync(path.join(root, 'app/access/PageAccessRegistry.php'), 'utf8');
 const oldView = fs.readFileSync(path.join(root, 'app/views/internal/dashboard.php'), 'utf8');
+const home = fs.readFileSync(path.join(root, 'public/home.php'), 'utf8');
 
 assert.match(frame, /'dashboard'\s+=>\s+\$PAGES\s*\.\s*'\/dashboard\.php'/);
 assert.match(frame, /'dashboard2'\s+=>\s+\$PAGES\s*\.\s*'\/dashboard-2\.php'/);
 assert.match(frame, /DASHBOARD2_ENABLED',\s*'0'/);
 assert.match(api, /AccessEvaluator::canAccessPage\('dashboard2'/);
 assert.match(access, /'dashboard2'\s*=>\s*\['kind'\s*=>\s*'all_internal'\]/);
+assert.match(home, /DASHBOARD2_ENABLED',\s*'0'/);
+assert.match(home, /AccessEvaluator::canAccessPage\('dashboard2',\s*\$userPerfisEfectivos\)/);
+assert.match(home, /appendDashboard2TestLink\(\);[\s\S]*appendLogoutItem\(\);/);
+assert.match(home, /link\.dataset\.target\s*=\s*'dashboard2'/);
+assert.match(home, /Dashboard 2 \(teste\)/);
 assert.match(view, /Visão geral[\s\S]*Meu trabalho[\s\S]*Fluxo operacional/);
 assert.match(view, /Lotação[\s\S]*Criticidade[\s\S]*Radar de prazos[\s\S]*Qualidade operacional[\s\S]*Prontidão das audiências/);
 assert.match(view, /Agenda[\s\S]*Próxima ação[\s\S]*Evolução de produtividade[\s\S]*Alertas críticos/);
