@@ -4,11 +4,20 @@ declare(strict_types=1);
 /** Local visual fixture only. Bind the PHP server to 127.0.0.1; no DB or real records are used. */
 $root = dirname(__DIR__, 2);
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$syntheticDates = [];
+$syntheticLettersSent = [];
+$syntheticLettersReceived = [];
+$syntheticToday = new DateTimeImmutable('2026-11-27');
+for ($offset = 29; $offset >= 0; $offset--) {
+    $syntheticDates[] = $syntheticToday->modify('-' . $offset . ' days')->format('d/m');
+    $syntheticLettersSent[] = ($offset % 6) + 1;
+    $syntheticLettersReceived[] = ($offset % 4) + 1;
+}
 $synthetic = [
     'geral' => [
         'tarefas_abertas' => 0,
         'filas' => [],
-        'cartas_cadastradas' => ['expedidas' => 0, 'recebidas' => 0, 'ultimos_30_dias' => ['labels' => [], 'expedidas' => [], 'recebidas' => []]],
+        'cartas_cadastradas' => ['expedidas' => array_sum($syntheticLettersSent), 'recebidas' => array_sum($syntheticLettersReceived), 'ultimos_30_dias' => ['labels' => $syntheticDates, 'expedidas' => $syntheticLettersSent, 'recebidas' => $syntheticLettersReceived]],
         'oficios_cadastrados' => ['ano' => ['cartorio' => 0, 'gabinete' => 0], 'ultimos_30_dias' => ['labels' => [], 'cartorio' => [], 'gabinete' => []]],
         'cadastros_mensais' => ['labels' => [], 'values' => []], 'conclusoes_semanais' => array_fill(0, 7, 0),
     ],

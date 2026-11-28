@@ -44,7 +44,7 @@ try {
     }
     $areas = DashboardResumoService::areasAutorizadas($profiles);
     $selected = isset($_GET['setor']) ? strtoupper(trim((string) $_GET['setor'])) : null;
-    $result = (new DashboardResumoService(Conection::getInstance()->getConnection()))
+    $result = (new DashboardResumoService(Conection::getInstance()->getConnection(), true))
         ->resumo($userId, $areas, $selected);
     echo json_encode(Dashboard2Payload::fromResumo($result), JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 } catch (InvalidArgumentException $e) {

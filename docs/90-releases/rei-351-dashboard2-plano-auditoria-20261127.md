@@ -19,11 +19,11 @@ Execução: branch `feat/rei-351-dashboard2`, worktree isolada `D:\Projects\Clie
 | --- | --- | --- |
 | Planejamento | Escopo, ordem, segurança, critérios e branch isolada | Feito; este documento e worktree dedicada |
 | Auditoria de fontes e métricas | Matriz por bloco e limites de cada fonte | Auditoria inicial feita; lacunas registradas abaixo |
-| Desenvolvimento | Página/endpoints isolados, sem alterar o painel atual | Implementação inicial em andamento |
-| Testes | Acesso, estados, responsividade e regressão de dashboard | Pendente |
-| Correções e novos testes | Corrigir resultados observados e repetir | Pendente |
-| Homologação isolada | Ambas as páginas, sintético, desktop/mobile e conciliação | Pendente; ambiente ainda não identificado/configurado |
-| PR revisável | Branch publicada e PR atualizado com evidências | Pendente; sem merge |
+| Desenvolvimento | Página/endpoints isolados, sem alterar o painel atual | Candidato local revisado em branch separada; aguardando PR de acompanhamento |
+| Testes | Acesso, estados, responsividade e regressão de dashboard | PASS local: acesso/flag, contrato de agenda, JavaScript e Playwright desktop/mobile para ambas as páginas |
+| Correções e novos testes | Corrigir resultados observados e repetir | PASS local: serviço v2 falha fechado, totais conciliados com 30 dias, filas parciais e alternativa HTML acessível |
+| Homologação isolada | Ambas as páginas, sintético, desktop/mobile e conciliação | Pendente; a prévia Playwright local é sintética e não constitui homologação |
+| PR revisável | Branch publicada e PR atualizado com evidências | Pendente; sem merge por esta execução |
 
 ## Auditoria de fontes
 
@@ -61,3 +61,13 @@ Fontes examinadas: `public/frame.php`, `app/access/AccessEvaluator.php`, `app/ac
 - Notion pesquisado nesta sessão; conector respondeu HTTP 401, portanto decisões do Notion não puderam ser recuperadas.
 - A trilha de `dashboard_conclusoes` declara explicitamente que não há carga retroativa (`scripts/migrate-dashboard-conclusoes.php`). Não projetar séries completas a partir dela.
 - A tabela de agenda atual não demonstra escopo por Vara nem deduplicação de prazos/compromissos. A contagem legada inclui D+7 e usa `CURDATE()`; Dashboard 2 força `null` até existir intervalo D0..D+6 em `America/Bahia` conciliado com o detalhe. O dashboard atual permanece inalterado.
+
+## Atualização de implementação e evidências locais
+
+- Follow-up isolado a partir de `origin/main` em `d2e11b56034cb5d0b59496a9e32a0afe0165a822`, branch `feat/rei-351-dashboard2-followup-20261127`; o checkout compartilhado e as outras worktrees não foram alterados.
+- O endpoint Dashboard 2 passa a usar o modo estrito do serviço de resumo para cartas: tabela ausente, consulta com erro ou data sem correspondência no intervalo resulta em contagem/série `null`. O construtor padrão do resumo legado não muda, preservando o dashboard atual.
+- Cartões e gráfico de cartas só mostram valores quando há 30 pontos válidos e a soma de cada série coincide com seu total. Uma tabela semântica com os 30 dias expõe os mesmos valores a leitores de tela; o canvas fica oculto da árvore de acessibilidade.
+- Testes executados nesta revisão: `php -l` no serviço, view e endpoint; `php tests/dashboard/rei351-dashboard2-frame.test.php`; `php tests/dashboard/rei351-dashboard2-payload.test.php`; `node tests/dashboard/rei351-dashboard2.test.cjs`; `node tests/dashboard/rei351-dashboard2-browser.test.cjs`; `git diff --check`.
+- Resultado do Playwright 1.65.1: PASS em desktop (1680 px) e celular (390 px), sem overflow nem erros de console/JavaScript, para as duas páginas. Totais de cartas sintéticas 105 e 73 conciliam com suas séries de 30 pontos. A flag visual informa que a prévia é local e sintética, não homologação.
+- Capturas locais: `C:\Users\jorge\AppData\Local\Temp\rei351-followup-20261127-final\dashboard2-desktop.png`, `dashboard2-mobile.png`, `dashboard-desktop.png` e `dashboard-mobile.png`.
+- Permanecem pendentes: executar a suíte com falha real de PDO em ambiente descartável, validar fuso `America/Bahia` e contratos com o banco de homologação, conciliar listas autorizadas e registrar resultado da homologação. Notion continuou inacessível (HTTP 401 reportado pela consulta anterior); nenhuma credencial ou dado real foi usado.
