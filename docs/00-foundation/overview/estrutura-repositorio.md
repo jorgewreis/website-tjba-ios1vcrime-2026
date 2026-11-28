@@ -45,10 +45,6 @@ Objetivo: padronizar a organização, facilitar manutenção, revisão e automa�
 
 ## .config/
 
-- `.config/builderio/data.json`  
-  **Por quê:** configurações específicas de integração/geração de conteúdo (quando aplicável).  
-  **Tipo:** JSON de configuração; deve ser versionável se não contiver segredos.
-
 - `.config/app.paths.json` (exemplo recomendado)  
   **Por quê:** centralizar caminhos/padrões usados por scripts e CI (evita hardcode).  
   **Tipo:** JSON simples com roots e aliases do projeto.
