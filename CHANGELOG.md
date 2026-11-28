@@ -1,7 +1,5 @@
 # Changelog
 
-# Changelog
-
 ## V. 1.88.0062
 
 **Data:** 2026-11-27 21:17:57 | **Commit:** `f58371c0` | **Tipo:** `patch`
