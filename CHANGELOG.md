@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0060
+
+**Data:** 2026-11-27 21:08:32 | **Commit:** `4e927772` | **Tipo:** `patch`
+
+- fix(ci): resolve pinned Playwright image locally
+
 ## V. 1.88.0059
 
 **Data:** 2026-11-27 21:04:36 | **Commit:** `efd4c039` | **Tipo:** `patch`
@@ -7889,6 +7895,7 @@
 
 
 \n
+
 
 
 
