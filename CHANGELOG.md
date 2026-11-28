@@ -1,5 +1,11 @@
 # Changelog
 
+## V. 1.88.0062
+
+**Data:** 2026-11-27 21:22:26 | **Commit:** `3a8903a2` | **Tipo:** `patch`
+
+- docs(REI-116): reconcile remaining timeout references
+
 ## V. 1.88.0061
 
 **Data:** 2026-11-27 21:19:03 | **Commit:** `60e978c8` | **Tipo:** `patch`
@@ -7901,3 +7907,4 @@
 
 
 \n
+
