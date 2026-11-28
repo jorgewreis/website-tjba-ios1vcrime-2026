@@ -36,7 +36,7 @@ final class AccessEvaluator
         }
 
         // O dashboard também atende usuários internos sem perfil composto de setor.
-        if ($page === 'dashboard'
+        if (in_array($page, ['dashboard', 'dashboard2'], true)
             && array_intersect($norm, ['SERVIDOR', 'ESTAGIARIO', 'CARTORIO', 'GABINETE', 'AUDIENCIA'])) {
             return true;
         }
